@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
+		1F065AB617AF925A003867C4 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F065AB517AF925A003867C4 /* ScriptingBridge.framework */; };
 		1F07D766138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
 		1F07D767138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
 		1F07D768138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */; };
@@ -592,9 +593,6 @@
 		1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
 		1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
-		1F5F1AFD17AEAB8700C03FF5 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FDDEBFD17AE5D1500D72362 /* ScriptingBridge.framework */; };
-		1F5F1AFF17AEAB9100C03FF5 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5F1AFE17AEAB9100C03FF5 /* ScriptingBridge.framework */; };
-		1F5F1B0117AEAB9B00C03FF5 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5F1B0017AEAB9B00C03FF5 /* ScriptingBridge.framework */; };
 		1F689572140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
 		1F689573140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
 		1F689574140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
@@ -1010,7 +1008,6 @@
 		1FDCDAC31462914300476792 /* BlinkPro.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */; };
 		1FDCDAD41462945600476792 /* BlinkPro.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */; };
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
-		1FDDEBFE17AE5D1500D72362 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FDDEBFD17AE5D1500D72362 /* ScriptingBridge.framework */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FE50E60164D1B6200840B18 /* available.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5A164D1B6200840B18 /* available.tiff */; };
@@ -1664,6 +1661,7 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
+		1F065AB517AF925A003867C4 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
 		1F07D75A138BDF5900C91AD7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
 		1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoMirrorWindowController.py; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
@@ -1720,8 +1718,6 @@
 		1F5C06D214041B98001DA3EF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
 		1F5C0760140436E4001DA3EF /* SessionInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoController.py; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
-		1F5F1AFE17AEAB9100C03FF5 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
-		1F5F1B0017AEAB9B00C03FF5 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		1F689570140BA93100DA5329 /* panel-info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "panel-info.png"; path = "icons/panel-info.png"; sourceTree = "<group>"; };
 		1F68969F140CE18E00DA5329 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = screenshot.png; path = icons/screenshot.png; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
@@ -1819,7 +1815,6 @@
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
-		1FDDEBFD17AE5D1500D72362 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
 		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FE50E5A164D1B6200840B18 /* available.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = available.tiff; sourceTree = "<group>"; };
 		1FE50E5B164D1B6200840B18 /* away.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = away.tiff; sourceTree = "<group>"; };
@@ -2000,7 +1995,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FDDEBFE17AE5D1500D72362 /* ScriptingBridge.framework in Frameworks */,
+				1F065AB617AF925A003867C4 /* ScriptingBridge.framework in Frameworks */,
 				DE4E6F12174F9DBC00E1D5F9 /* libpython2.7.dylib in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
@@ -2013,7 +2008,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F5F1AFF17AEAB9100C03FF5 /* ScriptingBridge.framework in Frameworks */,
 				1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */,
 				1F35D06917894FFF00C6FE38 /* libpython2.7.dylib in Frameworks */,
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
@@ -2027,7 +2021,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F5F1AFD17AEAB8700C03FF5 /* ScriptingBridge.framework in Frameworks */,
 				1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
@@ -2040,7 +2033,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F5F1B0117AEAB9B00C03FF5 /* ScriptingBridge.framework in Frameworks */,
 				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
 				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
@@ -2076,6 +2068,7 @@
 			children = (
 				DE3AC1CA174F7F57009A6CE3 /* Python.framework */,
 				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
+				1F065AB517AF925A003867C4 /* ScriptingBridge.framework */,
 				1F27973115D24E2C00FB33D9 /* Security.framework */,
 				1F27973315D24E3500FB33D9 /* Carbon.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
@@ -2139,14 +2132,15 @@
 		1F226DE312B54FBE0010A8B2 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				29B97323FDCFA39411CA2CEA /* SystemFrameworks */,
+				1F2271F012B551AC0010A8B2 /* LocalFrameworks */,
 				1F2271F112B551B40010A8B2 /* Resources */,
-				1F2271F012B551AC0010A8B2 /* Frameworks */,
 				1FB30809146D5598001430B5 /* mime.types */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
 		};
-		1F2271F012B551AC0010A8B2 /* Frameworks */ = {
+		1F2271F012B551AC0010A8B2 /* LocalFrameworks */ = {
 			isa = PBXGroup;
 			children = (
 				1FBF2B3D179151D9002E110B /* Sparkle.framework */,
@@ -2159,7 +2153,7 @@
 				1F22722B12B554000010A8B2 /* liblzo.1.dylib */,
 				1F22722C12B554000010A8B2 /* libtasn1.3.dylib */,
 			);
-			name = Frameworks;
+			name = LocalFrameworks;
 			sourceTree = "<group>";
 		};
 		1F2271F112B551B40010A8B2 /* Resources */ = {
@@ -2262,15 +2256,11 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				1F5F1B0017AEAB9B00C03FF5 /* ScriptingBridge.framework */,
-				1F5F1AFE17AEAB9100C03FF5 /* ScriptingBridge.framework */,
-				1FDDEBFD17AE5D1500D72362 /* ScriptingBridge.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				1F0F2AA415456DAD00ECB98E /* BlinkPlugin */,
-				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
 			name = MacSip;
@@ -2291,7 +2281,7 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
-		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+		29B97323FDCFA39411CA2CEA /* SystemFrameworks */ = {
 			isa = PBXGroup;
 			children = (
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
@@ -2299,7 +2289,7 @@
 				1F0F2A9E15456DAD00ECB98E /* Cocoa.framework */,
 				1F0F2AA015456DAD00ECB98E /* Other Frameworks */,
 			);
-			name = Frameworks;
+			name = SystemFrameworks;
 			sourceTree = "<group>";
 		};
 		2B01283F109391FF009B2112 /* ServerTools */ = {
