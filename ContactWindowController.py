@@ -3426,7 +3426,7 @@ class ContactWindowController(NSWindowController):
         session_history = SessionHistory()
         if contact.uris:
             remote_uris = list(uri.uri for uri in contact.uris)
-            results = session_history.get_entries(count=10, remote_focus="0", remote_uris=remote_uris)
+            results = session_history.get_entries(count=10, remote_uris=remote_uris)
             self.renderLastCallsEntriesForContact(results)
 
     @run_in_gui_thread
@@ -3469,10 +3469,10 @@ class ContactWindowController(NSWindowController):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
-        entries = {'incoming': [], 'outgoing': [], 'missed': [], 'conferences': []}
+        entries = {'incoming': [], 'outgoing': [], 'missed': []}
 
         session_history = SessionHistory()
-        results = session_history.get_entries(direction='incoming', status= 'completed', count=count, remote_focus="0")
+        results = session_history.get_entries(direction='incoming', status= 'completed', count=count)
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
@@ -3497,7 +3497,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['incoming'].append(item)
 
-        results = session_history.get_entries(direction='outgoing', count=count, remote_focus="0")
+        results = session_history.get_entries(direction='outgoing', count=count)
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
@@ -3522,7 +3522,7 @@ class ContactWindowController(NSWindowController):
             }
             entries['outgoing'].append(item)
 
-        results = session_history.get_entries(direction='incoming', status='missed', count=count, remote_focus="0")
+        results = session_history.get_entries(direction='incoming', status='missed', count=count)
 
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
@@ -3546,28 +3546,6 @@ class ContactWindowController(NSWindowController):
             "participants": result.participants.split(",") if result.participants else []
             }
             entries['missed'].append(item)
-
-        results = session_history.get_entries(count=count, remote_focus="1")
-
-        for result in results:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            contact = self.getFirstContactMatchingURI(target_uri)
-            if contact and contact.name and contact.name != target_uri:
-                display_name = contact.name
-                fancy_uri = '%s <%s>' % (display_name, target_uri)
-            item = {
-            "streams": result.media_types.split(","),
-            "account": result.local_uri,
-            "remote_party": fancy_uri,
-            "target_uri": target_uri,
-            "status": result.status,
-            "failure_reason": result.failure_reason,
-            "start_time": format_date(result.start_time),
-            "duration": result.end_time - result.start_time,
-            "focus": result.remote_focus,
-            "participants":result.participants.split(",") if result.participants else []
-            }
-            entries['conferences'].append(item)
 
         self.renderHistoryEntriesInHistoryMenu(entries)
         self.renderHistoryEntriesInStatusBarMenu(entries)
@@ -3660,27 +3638,9 @@ class ContactWindowController(NSWindowController):
                 icon.setSize_(NSMakeSize(14,14))
                 lastItem.setImage_(icon)
 
-        if entries['conferences']:
-            menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Conferences", "", "")
-            lastItem.setEnabled_(False)
-
-            for item in entries['conferences']:
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "conferenceHistoryClicked:", "")
-                lastItem.setAttributedTitle_(self.format_history_menu_item(item))
-                lastItem.setIndentationLevel_(1)
-                lastItem.setTarget_(self)
-                lastItem.setRepresentedObject_(item)
-                image = get_icon_history_result(item['streams'], '', item['status'])
-                if image:
-                    icon = NSImage.imageNamed_(image)
-                    icon.setScalesWhenResized_(True)
-                    icon.setSize_(NSMakeSize(14,14))
-                    lastItem.setImage_(icon)
-
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
-        lastItem.setEnabled_(True if entries['conferences'] or entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
+        lastItem.setEnabled_(True if entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
 
