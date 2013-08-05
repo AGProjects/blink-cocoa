@@ -1028,6 +1028,7 @@
 		1FEC3E9114D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9214D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9314D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
+		1FEDE7CE17AFD33C0038C579 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F065AB517AF925A003867C4 /* ScriptingBridge.framework */; };
 		1FF2F5B213AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5B313AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5B413AB406A00502BDB /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
@@ -1659,7 +1660,6 @@
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AB517AF925A003867C4 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
 		1F07D75A138BDF5900C91AD7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
@@ -1669,10 +1669,8 @@
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0E260C1402F097004AED9C /* blink-crypto.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-crypto.icns"; sourceTree = "<group>"; };
 		1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
-		1F0F2A9E15456DAD00ECB98E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		1F0F2AA115456DAD00ECB98E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		1F0F2AA215456DAD00ECB98E /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
-		1F0F2AA315456DAD00ECB98E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1F0F2AA615456DAD00ECB98E /* BlinkPlugin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BlinkPlugin-Info.plist"; sourceTree = "<group>"; };
 		1F0F2AA815456DAD00ECB98E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0F2AAA15456DAD00ECB98E /* BlinkPlugin-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlinkPlugin-Prefix.pch"; sourceTree = "<group>"; };
@@ -1831,7 +1829,6 @@
 		1FFB38691432026D003B29ED /* display_red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red.png; path = icons/display_red.png; sourceTree = "<group>"; };
 		1FFB38D6143209E0003B29ED /* display_red_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red_16.png; path = icons/display_red_16.png; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2B0128481093922A009B2112 /* AccountSettings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AccountSettings.py; sourceTree = "<group>"; };
 		2B01284D10939236009B2112 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AccountSettings.xib; sourceTree = "<group>"; };
@@ -2008,6 +2005,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FEDE7CE17AFD33C0038C579 /* ScriptingBridge.framework in Frameworks */,
 				1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */,
 				1F35D06917894FFF00C6FE38 /* libpython2.7.dylib in Frameworks */,
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
@@ -2063,23 +2061,6 @@
 			name = Classes;
 			sourceTree = "<group>";
 		};
-		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				DE3AC1CA174F7F57009A6CE3 /* Python.framework */,
-				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
-				1F065AB517AF925A003867C4 /* ScriptingBridge.framework */,
-				1F27973115D24E2C00FB33D9 /* Security.framework */,
-				1F27973315D24E3500FB33D9 /* Carbon.framework */,
-				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
-				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
-				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
-				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
-				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
-			);
-			name = "Linked Frameworks";
-			sourceTree = "<group>";
-		};
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -2097,16 +2078,6 @@
 				1FA4907A154963040011EE27 /* AddressBook */,
 			);
 			name = Plugins;
-			sourceTree = "<group>";
-		};
-		1F0F2AA015456DAD00ECB98E /* Other Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1F0F2AA115456DAD00ECB98E /* AppKit.framework */,
-				1F0F2AA215456DAD00ECB98E /* CoreData.framework */,
-				1F0F2AA315456DAD00ECB98E /* Foundation.framework */,
-			);
-			name = "Other Frameworks";
 			sourceTree = "<group>";
 		};
 		1F0F2AA415456DAD00ECB98E /* BlinkPlugin */ = {
@@ -2132,36 +2103,30 @@
 		1F226DE312B54FBE0010A8B2 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				1FEDE7CF17AFD4C50038C579 /* C-Libraries */,
+				1F2271F012B551AC0010A8B2 /* CustomFrameworks */,
+				1F2271F112B551B40010A8B2 /* PythonPackages */,
 				29B97323FDCFA39411CA2CEA /* SystemFrameworks */,
-				1F2271F012B551AC0010A8B2 /* LocalFrameworks */,
-				1F2271F112B551B40010A8B2 /* Resources */,
 				1FB30809146D5598001430B5 /* mime.types */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
 		};
-		1F2271F012B551AC0010A8B2 /* LocalFrameworks */ = {
+		1F2271F012B551AC0010A8B2 /* CustomFrameworks */ = {
 			isa = PBXGroup;
 			children = (
 				1FBF2B3D179151D9002E110B /* Sparkle.framework */,
 				DE4E6F0F174F9C0900E1D5F9 /* Python.framework */,
-				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
-				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
-				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
-				1F22722712B554000010A8B2 /* libgnutls.26.dylib */,
-				1F22722812B554000010A8B2 /* libgpg-error.0.dylib */,
-				1F22722B12B554000010A8B2 /* liblzo.1.dylib */,
-				1F22722C12B554000010A8B2 /* libtasn1.3.dylib */,
 			);
-			name = LocalFrameworks;
+			name = CustomFrameworks;
 			sourceTree = "<group>";
 		};
-		1F2271F112B551B40010A8B2 /* Resources */ = {
+		1F2271F112B551B40010A8B2 /* PythonPackages */ = {
 			isa = PBXGroup;
 			children = (
 				1FCF1D1E12B57D1400F71BE5 /* lib */,
 			);
-			name = Resources;
+			name = PythonPackages;
 			sourceTree = "<group>";
 		};
 		1F2615A712BD8FFA00B402E1 /* Conference */ = {
@@ -2253,6 +2218,21 @@
 			path = icons/presence;
 			sourceTree = "<group>";
 		};
+		1FEDE7CF17AFD4C50038C579 /* C-Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
+				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
+				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
+				1F22722712B554000010A8B2 /* libgnutls.26.dylib */,
+				1F22722812B554000010A8B2 /* libgpg-error.0.dylib */,
+				1F22722B12B554000010A8B2 /* liblzo.1.dylib */,
+				1F22722C12B554000010A8B2 /* libtasn1.3.dylib */,
+				2B0CE28E10C2F2BC00325F30 /* libz.dylib */,
+			);
+			name = "C-Libraries";
+			sourceTree = "<group>";
+		};
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
@@ -2284,10 +2264,16 @@
 		29B97323FDCFA39411CA2CEA /* SystemFrameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */,
-				1F0F2A9E15456DAD00ECB98E /* Cocoa.framework */,
-				1F0F2AA015456DAD00ECB98E /* Other Frameworks */,
+				1F0F2AA115456DAD00ECB98E /* AppKit.framework */,
+				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				1F0F2AA215456DAD00ECB98E /* CoreData.framework */,
+				1F27973315D24E3500FB33D9 /* Carbon.framework */,
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
+				DE3AC1CA174F7F57009A6CE3 /* Python.framework */,
+				1F065AB517AF925A003867C4 /* ScriptingBridge.framework */,
+				1F27973115D24E2C00FB33D9 /* Security.framework */,
 			);
 			name = SystemFrameworks;
 			sourceTree = "<group>";
@@ -4259,6 +4245,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -4298,6 +4285,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks\"",
 				);
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
