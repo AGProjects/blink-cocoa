@@ -568,12 +568,11 @@ class SMSViewController(NSObject):
             timestamp=ISOTimestamp(message.cpim_timestamp)
             is_html = False if message.content_type == 'text' else True
 
-            if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
-                self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session established', timestamp, False)
+            #if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
+            #   self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session established', timestamp, False)
 
-            if message.media_type == 'sms' and last_media_type == 'chat':
-                self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session ended', last_chat_timestamp, False)
-                self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
+            #if message.media_type == 'sms' and last_media_type == 'chat':
+            #   self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
 
             self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type='sms')
 
