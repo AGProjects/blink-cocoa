@@ -573,7 +573,10 @@ class ChatViewController(NSObject):
         return True
 
     def isScrolling_(self, scrollTop):
-        if not self.handle_scrolling or self.collaboration_editor_active:
+        if not self.handle_scrolling:
+            return
+
+        if self.collaboration_editor_active:
             return
 
         if scrollTop < 0:

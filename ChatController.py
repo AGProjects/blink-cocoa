@@ -189,6 +189,9 @@ class ChatController(MediaStream):
         NSBundle.loadNibNamed_owner_("ChatView", self)
 
         self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+        if self.sessionController.account is BonjourAccount():
+            self.chatViewController.setHandleScrolling_(False)
+            self.chatViewController.lastMessagesLabel.setHidden_(True)
 
         if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_smileys:
             self.chatViewController.expandSmileys = False
