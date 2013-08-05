@@ -59,24 +59,34 @@ class MusicInterface(object):
         self.application = SBApplication.applicationWithBundleIdentifier_(self.application_id)
     
     def play(self):
+        if self.application is None:
+            return
         self.application.playOnce_(None)
 
     def getVolume(self):
+        if self.application is None:
+            return 0
         if not self.application.isRunning():
             return 0.0
         return self.application.soundVolume()
     
     def setVolume_(self, volume):
+        if self.application is None:
+            return
         if not self.application.isRunning():
             return
         self.application.setSoundVolume_(volume)
     
     def getState(self):
+        if self.application is None:
+            return
         if not self.application.isRunning():
             return False
         return self.application.playerState()
 
     def pause_application(self):
+        if self.application is None:
+            return
         if not self.application.isRunning():
             return
         self.application.pause()
@@ -87,7 +97,8 @@ class MusicInterface(object):
         self._pause()
     
     def _pause(self):
-        notification_center = NotificationCenter()
+        if self.application is None:
+            return
         if not self.application.isRunning():
             return
         state = self.getState()
@@ -105,6 +116,8 @@ class MusicInterface(object):
         self._resume()
 
     def _resume(self):
+        if self.application is None:
+            return
         if not self.application.isRunning():
             return
         if self.paused:
@@ -130,6 +143,8 @@ class SpotifyInterface(MusicInterface):
     application_id = 'com.spotify.client'
 
     def play(self):
+        if self.application is None:
+            return
         self.application.play()
 
     @run_in_thread('Spotify-interface')
@@ -148,9 +163,13 @@ class VLCInterface(MusicInterface):
     is_playing_status = True
     
     def getVolume(self):
+        if self.application is None:
+            return 0
         return self.application.audioVolume()
     
     def setVolume_(self, volume):
+        if self.application is None:
+            return
         self.application.setAudioVolume_(volume)
     
     def play(self):
