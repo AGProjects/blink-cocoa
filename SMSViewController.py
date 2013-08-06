@@ -285,12 +285,11 @@ class SMSViewController(NSObject):
     def _NH_SIPMessageDidFail(self, sender, data):
         self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
-        call_id = data.headers['Call-ID'].body
+        call_id = message.call_id
 
         if message.content_type != "application/im-iscomposing+xml":
             self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
             message.status='failed'
-            message.call_id = call_id
             self.add_to_history(message)
             BlinkLogger().log_info(u"Outgoing SMS %s from %s to %s delivery failed: %s" % (call_id, self.local_uri, self.remote_uri, data.reason))
 
@@ -366,12 +365,13 @@ class SMSViewController(NSObject):
 
         id=str(message_request)
         if content_type != "application/im-iscomposing+xml":
-            BlinkLogger().log_info(u"Sent %s SMS message to %s" % (content_type, self.target_uri))
+            BlinkLogger().log_info(u"Sent %s SMS message %s to %s" % (content_type, message_request._request.call_id, self.target_uri))
             self.enableIsComposing = True
             message = self.messages.pop(msgid)
             message.status='sent'
+            message.call_id = message_request._request.call_id
         else:
-            message = MessageInfo(id, content_type=content_type)
+            message = MessageInfo(id, content_type=content_type, call_id=message_request._request.call_id)
 
         self.messages[id] = message
         return message
