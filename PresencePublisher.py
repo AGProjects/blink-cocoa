@@ -119,6 +119,7 @@ class PresencePublisher(object):
     last_service_timestamp = {}
     last_logged_status = None
     first_start_logged = False
+    application_ended = False
 
     # Cleanup old base64 encoded icons
     _cleanedup_accounts = set()
@@ -128,6 +129,7 @@ class PresencePublisher(object):
         BlinkLogger().log_debug('Starting Presence Publisher')
         NotificationCenter().add_observer(self, name="SIPApplicationWillStart")
         NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
+        NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -143,6 +145,9 @@ class PresencePublisher(object):
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="XCAPManagerDidReloadData")
         nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+
+    def _NH_SIPApplicationDidEnd(self, notification):
+        self.application_ended = True
 
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
@@ -418,6 +423,9 @@ class PresencePublisher(object):
             return None
 
     def publish(self):
+        if self.application_ended:
+            return
+
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
         if selected_item is None:
             return None
