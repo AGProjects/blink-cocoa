@@ -1228,7 +1228,7 @@ class SessionHistoryReplicator(object):
                                 message= '<h3>Outgoing Audio Call</h3>'
                                 message += '<p>Call duration: %s' % duration
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True))
+                            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=False))
         except (KeyError, ValueError):
             pass
         except Exception, e:
