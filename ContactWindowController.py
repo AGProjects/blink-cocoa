@@ -2145,22 +2145,34 @@ class ContactWindowController(NSWindowController):
         else:
             selected_contact = contact
             settings = SIPSimpleSettings()
-                #if settings.gui.use_availability_for_sessions:
-                #    local_aors = set()
-                #if isinstance(selected_contact, BlinkPresenceContact):
-                #   for device in contact.presence_state['devices'].values():
-                #       for device_account in device['accounts']:
-                #            local_aors.add(device_account)
-                #    if local_aors and AccountManager().default_account.id not in local_aors:
-                #        random_local_aor = local_aors.pop()
-                #        account = AccountManager().get_account(random_local_aor)
-                #        BlinkLogger().log_info('Use account %s for which we are authorized instead of default selected account' % account.id)
+            uri_type = 'SIP'
             if uri:
+                uri = uri.split(";")[0]
                 target = uri
+                try:
+                    uri_type = (contact_uri.type for contact_uri in contact.uris if contact_uri.uri.startswith(uri)).next()
+                except StopIteration:
+                    pass
             else:
-                target = contact.uri
-                if hasattr(contact, 'uri_type') and contact.uri_type is not None and contact.uri_type.lower() == 'xmpp':
-                    target += ';xmpp'
+                uri = contact.uri.split(";")[0]
+                target = uri
+                try:
+                    uri_type = (contact_uri.type for contact_uri in contact.uris if contact_uri.uri.startswith(uri)).next()
+                except StopIteration:
+                    pass
+
+            if uri_type == 'XMPP' and isinstance(selected_contact, BlinkPresenceContact):
+                try:
+                    matched_accounts = selected_contact.pidfs_map['sip:%s' % str(uri)].keys()
+                except KeyError:
+                    matched_accounts = None
+
+                if matched_accounts and AccountManager().default_account.id not in matched_accounts:
+                    random_local_aor = matched_accounts.pop()
+                    account = AccountManager().get_account(random_local_aor)
+                    BlinkLogger().log_info('Auto-selecting account %s authorized by XMPP contact' % account.id)
+
+                target += ';xmpp'
 
         if account is None:
             account = self.getAccountWitDialPlan(target)
