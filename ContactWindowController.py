@@ -1316,7 +1316,7 @@ class ContactWindowController(NSWindowController):
 
     @run_in_gui_thread
     def _NH_SIPSessionLoggedToHistory(self, notification):
-        self.updateHistoryMenu()
+        #self.updateHistoryMenu()
         if self.new_audio_sample_rate and not self.has_audio:
             settings = SIPSimpleSettings()
             settings.audio.sample_rate = self.new_audio_sample_rate
