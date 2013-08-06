@@ -688,7 +688,7 @@ class ContactWindowController(NSWindowController):
 
     def showWindow_(self, sender):
         if NSApp.delegate().applicationName == 'SIP2SIP':
-            self.window().setTitle_('SIP2SIP Beta Release')
+            self.window().setTitle_('SIP2SIP')
         else:
             settings = SIPSimpleSettings()
             if settings.service_provider.name:
