@@ -2945,13 +2945,13 @@ class ContactListModel(CustomListModel):
         if notification.data.direction == 'incoming':
             if notification.data.missed:
                 if settings.contacts.enable_missed_calls_group:
-                    self.missed_calls_group.load_history(force_reload)
+                    self.missed_calls_group.load_history(force_reload=True)
             else:
                 if settings.contacts.enable_incoming_calls_group:
-                    self.incoming_calls_group.load_history(force_reload)
+                    self.incoming_calls_group.load_history(force_reload=True)
         else:
             if settings.contacts.enable_outgoing_calls_group:
-                self.outgoing_calls_group.load_history(force_reload)
+                self.outgoing_calls_group.load_history(force_reload=True)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
