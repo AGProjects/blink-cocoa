@@ -1760,7 +1760,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.refresh_contacts(results)
 
     @allocate_autorelease_pool
-    @run_in_gui_thread
+    @run_in_green_thread
     def refresh_contacts(self, results):
         for blink_contact in self.contacts:
             self.contacts.remove(blink_contact)
@@ -2922,10 +2922,12 @@ class ContactListModel(CustomListModel):
             self.contact_backup_timer.invalidate()
         self.contact_backup_timer = None
 
-    @run_in_gui_thread
+    @run_in_green_thread
     def reload_history_groups(self, force_reload=False):
-        if NSApp.delegate().applicationName != 'Blink Lite':
-            settings = SIPSimpleSettings()
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+
+        settings = SIPSimpleSettings()
         if settings.contacts.enable_missed_calls_group:
             self.missed_calls_group.load_history(force_reload)
 
@@ -2936,7 +2938,20 @@ class ContactListModel(CustomListModel):
             self.incoming_calls_group.load_history(force_reload)
 
     def _NH_AudioCallLoggedToHistory(self, notification):
-        self.reload_history_groups()
+        if NSApp.delegate().applicationName == 'Blink Lite':
+            return
+
+        settings = SIPSimpleSettings()
+        if notification.data.direction == 'incoming':
+            if notification.data.missed:
+                if settings.contacts.enable_missed_calls_group:
+                    self.missed_calls_group.load_history(force_reload)
+            else:
+                if settings.contacts.enable_incoming_calls_group:
+                    self.incoming_calls_group.load_history(force_reload)
+        else:
+            if settings.contacts.enable_outgoing_calls_group:
+                self.outgoing_calls_group.load_history(force_reload)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
