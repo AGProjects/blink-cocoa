@@ -1226,13 +1226,17 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, sender=lookup)
         settings = SIPSimpleSettings()
 
-        if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port,
-                         parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
-        elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
-            uri = SIPURI(host=self.account.id.domain)
-            self.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+        if isinstance(self.account, Account):
+            if self.account.sip.outbound_proxy is not None:
+                proxy = self.account.sip.outbound_proxy
+                uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+                self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+            elif self.account.sip.always_use_my_proxy:
+                uri = SIPURI(host=self.account.id.domain)
+                self.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+            else:
+                uri = target_uri
+                self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
         else:
             uri = target_uri
             self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
@@ -1521,7 +1525,6 @@ class SessionController(NSObject):
         self.notification_center.remove_observer(self, sender=lookup)
         message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
-        lookup = None
 
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
@@ -1532,7 +1535,6 @@ class SessionController(NSObject):
             self.setRoutesFailed("No routes found to SIP Proxy")
         else:
             self.setRoutesResolved(routes)
-        lookup = None
 
     def _NH_SystemWillSleep(self, sender, data):
         self.end()
