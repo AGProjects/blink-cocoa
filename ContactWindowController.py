@@ -3352,7 +3352,7 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         chat_privacy = self.historyMenu.itemWithTag_(101)
         chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
-        self.get_session_history_entries(2 if NSApp.delegate().applicationName == 'Blink Lite' else 8)
+        self.get_session_history_entries(2 if NSApp.delegate().applicationName == 'Blink Lite' else 10)
 
     def getAccountWitDialPlan(self, uri):
         try:
