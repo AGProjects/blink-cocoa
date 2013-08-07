@@ -1393,9 +1393,9 @@ class ChatHistoryReplicator(object):
                     BlinkLogger().log_debug(u"Failed to encrypt replication data for %s: %s" % (account, e))
                     return
 
-            self.outgoing_entries[account][data.entry['msgid']] = {'data': entry,
-                                                                   'id'   : data.entry['msgid']
-                                                                  }
+                self.outgoing_entries[account][data.entry['msgid']] = {'data': entry,
+                                                                       'id'   : data.entry['msgid']
+                                                                      }
 
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         if isinstance(sender, Account) and sender.enabled:
