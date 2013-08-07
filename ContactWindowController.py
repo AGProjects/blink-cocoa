@@ -80,6 +80,7 @@ import hashlib
 import os
 import re
 import random
+import shutil
 import string
 import ldap
 import uuid
@@ -90,7 +91,7 @@ from itertools import chain
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
-from application.system import unlink
+from application.system import unlink, makedirs
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.addressbook import AddressbookManager, ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
@@ -451,8 +452,30 @@ class ContactWindowController(NSWindowController):
         self.setAlwaysOnTop()
         self.setSpeechRecognition()
 
+        path = ApplicationData.get('presence')
+        makedirs(path)
+
         try:
-            with open(ApplicationData.get('presence_notes_history.pickle'), 'r') as f:
+            with open(ApplicationData.get('presence_notes_history.pickle')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('presence_notes_history.pickle')
+            dst = ApplicationData.get('presence/presence_notes_history.pickle')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        try:
+            with open(ApplicationData.get('presence_offline_note.pickle')): pass
+        except IOError:
+            pass
+        else:
+            unlink(ApplicationData.get('presence_offline_note.pickle'))
+
+        try:
+            with open(ApplicationData.get('presence/presence_notes_history.pickle'), 'r') as f:
                 self.presence_notes_history.extend(cPickle.load(f))
         except TypeError:
             # data is corrupted, reset it
@@ -2708,7 +2731,7 @@ class ContactWindowController(NSWindowController):
     def deletePresenceHistory_(self, sender):
         self.setLastPresenceActivity()
         self.presence_notes_history.clear()
-        storage_path = ApplicationData.get('presence_notes_history.pickle')
+        storage_path = ApplicationData.get('presence/presence_notes_history.pickle')
         try:
             cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
@@ -2944,7 +2967,7 @@ class ContactWindowController(NSWindowController):
                 pass
 
             self.presence_notes_history.append(history_object)
-            storage_path = ApplicationData.get('presence_notes_history.pickle')
+            storage_path = ApplicationData.get('presence/presence_notes_history.pickle')
             try:
                 cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
             except (cPickle.PickleError, IOError):
