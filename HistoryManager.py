@@ -1604,7 +1604,7 @@ class ChatHistoryReplicator(object):
     def updateTimer_(self, timer):
         if self.paused:
             return
-        accounts = (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.enabled and not account.chat.disable_replication and account.server.settings_url and account.id not in self.disabled_accounts)
+        accounts = (account for account in AccountManager().iter_accounts() if account is not BonjourAccount() and account.enabled and not account.chat.disable_replication and account.server.settings_url and account.chat.replication_password and account.id not in self.disabled_accounts)
         for account in accounts:
             try:
                 outgoing_entries = self.outgoing_entries[account.id]
