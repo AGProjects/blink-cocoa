@@ -22,9 +22,11 @@ import objc
 import cPickle
 import random
 import re
+import shutil
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from application.system import makedirs
 from resources import ApplicationData
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -134,6 +136,7 @@ class JoinConferenceWindowController(NSObject):
 
         self.updatePopupButtons()
 
+
     def dealloc(self):
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidRemoveServer')
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidUpdateServer')
@@ -167,7 +170,22 @@ class JoinConferenceWindowController(NSObject):
         self.updatePopupButtons()
 
     def loadConfigurations(self):
-        self.storage_path = ApplicationData.get('conference_configurations.pickle')
+        path = ApplicationData.get('conference')
+        makedirs(path)
+
+        try:
+            with open(ApplicationData.get('conference_configurations.pickle')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('conference_configurations.pickle')
+            dst = ApplicationData.get('conference/conference_configurations.pickle')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        self.storage_path = ApplicationData.get('conference/conference_configurations.pickle')
         try:
             self.conference_configurations = cPickle.load(open(self.storage_path))
         except:
