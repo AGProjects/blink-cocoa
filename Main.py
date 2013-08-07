@@ -3,8 +3,9 @@
 
 import os
 import sys
-from util import stick_mode
+from util import memory_stick_mode
 
+from Foundation import NSBundle
 import Foundation
 assert Foundation.NSThread.isMultiThreaded()
 
@@ -52,11 +53,10 @@ class NSLogger(object):
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
-if stick_mode():
+if memory_stick_mode():
     from resources import ApplicationData
     from Foundation import NSBundle
-    ApplicationData._cached_directory = os.path.join(NSBundle.mainBundle().bundlePath(), 'Contents', 'Data')
-
+    ApplicationData._cached_directory = os.path.join(os.path.dirname(NSBundle.mainBundle().bundlePath()), 'Data')
 
 # import modules containing classes required to start application and load MainMenu.nib
 import BlinkAppDelegate

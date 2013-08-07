@@ -460,6 +460,6 @@ class DictDiffer(object):
     def unchanged(self):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
 
-def stick_mode():
-    return unicodedata.normalize('NFC', NSBundle.mainBundle().bundlePath()).startswith('/Volumes/Blink')
+def memory_stick_mode():
+    return unicodedata.normalize('NFC', NSBundle.mainBundle().bundlePath()).startswith('/Volumes/Blink Stick')
 
