@@ -17,7 +17,6 @@ from application.python.descriptor import WriteOnceAttribute
 from resources import ApplicationData, Resources
 from sipsimple.configuration.datatypes import Hostname
 
-
 ## PSTN datatypes
 
 class Digits(str):

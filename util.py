@@ -8,11 +8,13 @@ __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 
            'AccountInfo', 'DictDiffer']
 
 from AppKit import NSApp, NSRunAlertPanel
-from Foundation import NSAutoreleasePool, NSThread
+from Foundation import NSAutoreleasePool, NSBundle, NSThread
 
 import platform
 import re
 import shlex
+import unicodedata
+
 from datetime import datetime
 
 from application.python.decorator import decorator, preserve_signature
@@ -457,4 +459,7 @@ class DictDiffer(object):
         return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
     def unchanged(self):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
+
+def stick_mode():
+    return unicodedata.normalize('NFC', NSBundle.mainBundle().bundlePath()).startswith('/Volumes/Blink')
 

@@ -15,6 +15,7 @@ from sipsimple.util import ISOTimestamp
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
 
 
+
 class AnsweringMachineSettings(SettingsGroup):
     enabled = Setting(type=bool, default=False)
     show_in_alert_panel = Setting(type=bool, default=True)

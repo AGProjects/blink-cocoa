@@ -1627,7 +1627,6 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "chat.disable_collaboration_editor": HiddenOption,
-"chat.replication_password": HiddenOption,
 "contacts.missed_calls_period": HiddenOption,
 "contacts.incoming_calls_period": HiddenOption,
 "contacts.outgoing_calls_period": HiddenOption,

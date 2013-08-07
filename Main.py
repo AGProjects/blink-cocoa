@@ -3,15 +3,16 @@
 
 import os
 import sys
+from util import stick_mode
 
 import Foundation
 assert Foundation.NSThread.isMultiThreaded()
+
 
 # Make mimetypes use our copy of the file in order to work with sandboxing
 import mimetypes
 resource_path = unicode(Foundation.NSBundle.mainBundle().resourcePath())
 mimetypes.init(os.path.join(resource_path, "mime.types"))
-
 
 class NSLogger(object):
     closed = False
@@ -50,6 +51,11 @@ class NSLogger(object):
 
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
+
+if stick_mode():
+    from resources import ApplicationData
+    from Foundation import NSBundle
+    ApplicationData._cached_directory = os.path.join(NSBundle.mainBundle().bundlePath(), 'Contents', 'Data')
 
 
 # import modules containing classes required to start application and load MainMenu.nib

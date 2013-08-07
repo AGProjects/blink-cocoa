@@ -350,6 +350,9 @@ class PreferencesController(NSWindowController, object):
             if NSApp.delegate().applicationName == 'SIP2SIP' and section in ('auth', 'sip', 'xcap', 'ldap', 'nat_traversal', 'web_alert', 'conference', 'message_summary', 'msrp', 'gui'):
                 continue
 
+            if NSApp.delegate().applicationName in ('Blink Lite', 'Blink Pro'):
+                PreferenceOptionTypes['chat.replication_password'] = HiddenOption
+
             if section == 'tls':
                 continue
 
