@@ -1,6 +1,13 @@
 # Copyright (C) 2009-2013 AG Projects. See LICENSE for details.
 #
 
+from AppKit import (NSApp,
+                    NSEventTrackingRunLoopMode)
+
+from Foundation import (NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer)
+
 import datetime
 import time
 from dateutil.tz import tzlocal
@@ -23,6 +30,7 @@ from BlinkLogger import BlinkLogger
 
 HANGUP_TONE_THROTLE_DELAY = 2.0
 CHAT_TONE_THROTLE_DELAY = 3.0
+
 
 
 class Ringer(object):
@@ -65,13 +73,32 @@ class Ringer(object):
     last_hangup_tone_time = 0
     chat_beep_time = 0
 
+    @property
+    def sessionControllersManager(self):
+        return NSApp.delegate().contactsWindowController.sessionControllersManager
+
     def __init__(self, owner):
         BlinkLogger().log_debug('Starting Ringtone Manager')
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="SIPApplicationDidStart")
         self.owner = owner
         self.started = False
+        self.cleanupTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "cleanupTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSEventTrackingRunLoopMode)
 
+    def cleanupTimer_(self, timer):
+        # Some sessions can remain hanging indefintely due to illegal state errors, this timer will purge them
+        outgoing_sessions = list(sessionController.session for sessionController in self.sessionControllersManager.sessionControllers if sessionController.session is not None and sessionController.session.direction == 'outgoing')
+        incoming_sessions = list(sessionController.session for sessionController in self.sessionControllersManager.sessionControllers if sessionController.session is not None and sessionController.session.direction == 'incoming')
+
+        for session in self.incoming_audio_sessions.keys():
+            if session not in incoming_sessions:
+                self.handle_session_end(session)
+
+        for session in self.ringing_sessions.copy():
+            if session not in outgoing_sessions:
+                self.handle_session_end(session)
 
     def start(self):
         notification_center = NotificationCenter()
@@ -87,6 +114,7 @@ class Ringer(object):
     def stop(self):
         if not self.started:
             return
+
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, name="BlinkFileTransferDidEnd")
         notification_center.remove_observer(self, name="AudioStreamDidChangeHoldState")
@@ -94,6 +122,8 @@ class Ringer(object):
         notification_center.remove_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.remove_observer(self, name="ConferenceHasAddedAudio")
         notification_center.remove_observer(self, name="BlinkWillCancelProposal")
+        self.cleanupTimer.invalidate()
+        self.cleanupTimer = None
 
     def update_playing_ringtones(self, account=None):
         settings = SIPSimpleSettings()
