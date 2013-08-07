@@ -327,6 +327,7 @@ class ContactWindowController(NSWindowController):
     sync_presence_at_start = False
     new_audio_sample_rate = None
     last_status_per_device =  {}
+    created_accounts = set()
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -380,6 +381,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
         nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
+        nc.add_observer(self, name="CFGSettingsObjectWasCreated")
         nc.add_observer(self, name="ChatReplicationJournalEntryReceived")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="MediaStreamDidInitialize")
@@ -1038,6 +1040,9 @@ class ContactWindowController(NSWindowController):
         self.accounts.insert(account.order, AccountInfo(account))
         self.refreshAccountList()
 
+    def newAccountHasBeenAddedNotice_(self, timer):
+        NSApp.stopModalWithCode_(NSAlertAlternateReturn)
+
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
@@ -1045,11 +1050,6 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPAccountDidActivate(self, notification):
         account = notification.sender
-        if account is not BonjourAccount() and not account.chat.disable_replication and not account.chat.replication_password:
-            if NSApp.delegate().applicationName in ('Blink Pro'):
-                # iCloud is used for password sync
-                account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
-                account.save()
         self.refreshAccountList()
 
     def _NH_BonjourGroupWasActivated(self, notification):
@@ -1233,6 +1233,39 @@ class ContactWindowController(NSWindowController):
 
     def _NH_ActiveAudioSessionChanged(self, notification):
         self.updateParticipantsView()
+
+    def _NH_CFGSettingsObjectWasCreated(self, notification):
+        if isinstance(notification.sender, Account):
+            account = notification.sender
+
+            if account is not BonjourAccount() and not account.chat.replication_password:
+                if NSApp.delegate().applicationName == 'Blink Lite':
+                    pass
+                elif NSApp.delegate().applicationName == 'Blink Pro':
+                    # Blink Pro is using iCloud for password sync so is safe to create it on any Blink instance
+                    account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+                    account.save()
+                elif NSApp.delegate().applicationName == 'SIP2SIP':
+                    if account.id in self.created_accounts:
+                        # We have created the account so is safe to auto-generate chat replication password
+                        account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+                        account.save()
+                    else:
+                        NSApp.activateIgnoringOtherApps_(True)
+                        panel = NSGetInformationalAlertPanel("New Account Added",
+                                                             "To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.",
+                                                             'OK', None, None)
+                        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(20, self, "newAccountHasBeenAddedNotice:", panel, False)
+                        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
+                        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+                        session = NSApp.beginModalSessionForWindow_(panel)
+                        while True:
+                            ret = NSApp.runModalSession_(session)
+                            if ret != NSRunContinuesResponse:
+                                break
+                        NSApp.endModalSession_(session)
+                        panel.close()
+                        NSReleaseAlertPanel(panel)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()

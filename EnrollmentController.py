@@ -379,6 +379,8 @@ class EnrollmentController(NSObject):
         except ValueError, e:
             NSRunAlertPanel("Sign Up to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
             return False
+        else:
+            NSApp.delegate().contactsWindowController.created_accounts.add(account.id)
 
         account.display_name = display_name
         account.auth.password = password
