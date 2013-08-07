@@ -139,7 +139,7 @@ class SessionHistoryEntry(SQLObject):
     session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
     local_idx         = DatabaseIndex('local_uri')
     remote_idx        = DatabaseIndex('remote_uri')
-    hidden            = IntCol(default=0),
+    hidden            = IntCol(default=0)
     am_filename       = UnicodeCol(sqlType='LONGTEXT')
 
 
