@@ -1518,6 +1518,9 @@ class ChatHistoryReplicator(object):
         else:
             replication_password = acc.chat.replication_password
 
+        if not replication_password:
+            return
+
         notify_data = {}
         for entry in results:
             try:
