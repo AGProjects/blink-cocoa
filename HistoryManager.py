@@ -19,6 +19,7 @@ from AppKit import (NSApp,
 import cjson
 import cPickle
 import os
+import shutil
 import time
 import urlparse
 import urllib
@@ -1283,20 +1284,60 @@ class ChatHistoryReplicator(object):
         notification_center.add_observer(self, name='SIPAccountManagerDidStart')
         notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         notification_center.add_observer(self, name='SystemWillSleep')
+
+        path = ApplicationData.get('chat_replication')
+        makedirs(path)
+
         try:
-            with open(ApplicationData.get('chat_replication_journal.pickle'), 'r') as f:
+            with open(ApplicationData.get('chat_replication_journal.pickle')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('chat_replication_journal.pickle')
+            dst = ApplicationData.get('chat_replication/chat_replication_journal.pickle')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        try:
+            with open(ApplicationData.get('chat_replication_delete_journal.pickle')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('chat_replication_delete_journal.pickle')
+            dst = ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        try:
+            with open(ApplicationData.get('chat_replication_timestamp.pickle')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('chat_replication_timestamp.pickle')
+            dst = ApplicationData.get('chat_replication/chat_replication_timestamp.pickle')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        try:
+            with open(ApplicationData.get('chat_replication/chat_replication_journal.pickle'), 'r') as f:
                 self.outgoing_entries = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
             pass
 
         try:
-            with open(ApplicationData.get('chat_replication_delete_journal.pickle'), 'r') as f:
+            with open(ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle'), 'r') as f:
                 self.for_delete_entries = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
             pass
 
         try:
-            with open(ApplicationData.get('chat_replication_timestamp.pickle'), 'r') as f:
+            with open(ApplicationData.get('chat_replication/chat_replication_timestamp.pickle'), 'r') as f:
                 self.last_journal_timestamp = cPickle.load(f)
         except (IOError, cPickle.UnpicklingError):
             pass
@@ -1306,21 +1347,21 @@ class ChatHistoryReplicator(object):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
     def save_delete_journal_on_disk(self):
-        storage_path = ApplicationData.get('chat_replication_delete_journal.pickle')
+        storage_path = ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle')
         try:
             cPickle.dump(self.for_delete_entries, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
             pass
 
     def save_journal_on_disk(self):
-        storage_path = ApplicationData.get('chat_replication_journal.pickle')
+        storage_path = ApplicationData.get('chat_replication/chat_replication_journal.pickle')
         try:
             cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
             pass
 
     def save_journal_timestamp_on_disk(self):
-        storage_path = ApplicationData.get('chat_replication_timestamp.pickle')
+        storage_path = ApplicationData.get('chat_replication/chat_replication_timestamp.pickle')
         try:
             cPickle.dump(self.last_journal_timestamp, open(storage_path, "w+"))
         except (cPickle.PickleError, IOError):
