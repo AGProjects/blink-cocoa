@@ -461,5 +461,5 @@ class DictDiffer(object):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
 
 def memory_stick_mode():
-    return unicodedata.normalize('NFC', NSBundle.mainBundle().bundlePath()).startswith('/Volumes/Blink Stick')
+    return unicodedata.normalize('NFC', NSBundle.mainBundle().bundlePath()).lower().startswith('/volumes/blink stick')
 
