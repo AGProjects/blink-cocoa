@@ -26,14 +26,14 @@ class MusicApplications(object):
         self.must_pause = False
         self.itunes = iTunesInterface(self)
         self.spotify = SpotifyInterface(self)
-        self.vlc = VLCInterface(self)
-        
+        #self.vlc = VLCInterface(self)
+    
     @run_in_thread('Music-interface')
     def pause(self):
         self.is_pausing = True
         self.itunes.pause()
         self.spotify.pause()
-        self.vlc.pause()
+        #self.vlc.pause()
         self.is_pausing = False
         self.notification_center.post_notification('MusicPauseDidExecute', sender=self)
 
@@ -43,7 +43,7 @@ class MusicApplications(object):
         self.is_resuming = True
         self.itunes.resume()
         self.spotify.resume()
-        self.vlc.resume()
+        #self.vlc.resume()
         self.is_resuming = False
 
 
