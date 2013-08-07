@@ -1046,8 +1046,10 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPAccountDidActivate(self, notification):
         account = notification.sender
         if account is not BonjourAccount() and not account.chat.disable_replication and not account.chat.replication_password:
-            account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
-            account.save()
+            if NSApp.delegate().applicationName in ('Blink Pro'):
+                # iCloud is used for password sync
+                account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+                account.save()
         self.refreshAccountList()
 
     def _NH_BonjourGroupWasActivated(self, notification):
