@@ -3230,6 +3230,7 @@ class ContactListModel(CustomListModel):
                 pass
             else:
                 self.blocked_contacts_group.contacts.remove(policy_contact)
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
                 changes += 1
 
             # add to pending if we have watchers
