@@ -25,7 +25,6 @@ class ApplicationData(object):
             application_name = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
             path = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, True)[0])
             cls._cached_directory = os.path.join(path, application_name)
-            print 'Application data storage folder: %s' % cls._cached_directory
         return cls._cached_directory
 
     @classmethod
