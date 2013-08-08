@@ -30,6 +30,10 @@
              <array>
              <string>com.apple.iTunes.playback</string>
              </array>
+             <key>com.apple.Mail</key>
+             <array>
+             <string>com.apple.Mail.compose<string>
+             </array>
         </dict>
 </dict>
 </plist>
