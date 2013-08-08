@@ -34,6 +34,10 @@
              <array>
              <string>com.apple.Mail.compose<string>
              </array>
+             <key>com.spotify.client</key>
+             <array>
+             <string>com.spotify.client.playback</string>
+             </array>
         </dict>
 </dict>
 </plist>
