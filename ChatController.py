@@ -1963,9 +1963,9 @@ class ConferenceScreenSharingHandler(object):
             #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
 
             if self.log_first_frame:
-                self.sessionController.log_info('Sending %s bytes %s screen width' % (format_size(len(jpeg)), image.size().width))
+                self.delegate.sessionController.log_info('Sending %s bytes %s screen width' % (format_size(len(jpeg)), image.size().width))
                 self.log_first_frame = False
-            self.sessionController.log_debug('Sending %s bytes %s screen width ' % (format_size(len(jpeg)), image.size().width))
+            self.delegate.sessionController.log_debug('Sending %s bytes %s screen width ' % (format_size(len(jpeg)), image.size().width))
             self.may_send = False
             if self.stream:
                 self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=ISOTimestamp.now())
