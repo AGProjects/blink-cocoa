@@ -2192,6 +2192,7 @@ class ContactWindowController(NSWindowController):
     def startSessionToSelectedContact(self, media_type, uri=None):
         selected_contact = None
         account = None
+        uri_type = 'SIP'
         try:
             contact = self.getSelectedContacts()[0]
             BlinkLogger().log_info(u"Starting %s session to selected contact %s" % (media_type, contact.name))
@@ -2203,22 +2204,20 @@ class ContactWindowController(NSWindowController):
         else:
             selected_contact = contact
             settings = SIPSimpleSettings()
-            uri_type = 'SIP'
             if uri:
-                uri = uri.split(";")[0]
                 target = uri
+                uri = uri.split(";")[0]
                 try:
                     uri_type = (contact_uri.type for contact_uri in contact.uris if contact_uri.uri.startswith(uri)).next()
                 except StopIteration:
                     pass
             else:
+                target = contact.uri
                 uri = contact.uri.split(";")[0]
-                target = uri
                 try:
                     uri_type = (contact_uri.type for contact_uri in contact.uris if contact_uri.uri.startswith(uri)).next()
                 except StopIteration:
                     pass
-
             if uri_type == 'XMPP' and isinstance(selected_contact, BlinkPresenceContact):
                 try:
                     matched_accounts = selected_contact.pidfs_map['sip:%s' % str(uri)].keys()
@@ -2230,7 +2229,8 @@ class ContactWindowController(NSWindowController):
                     account = AccountManager().get_account(random_local_aor)
                     BlinkLogger().log_info('Auto-selecting account %s authorized by XMPP contact' % account.id)
 
-                target += ';xmpp'
+                if ';xmpp' not in target:
+                    target += ';xmpp'
 
         if account is None:
             account = self.getAccountWitDialPlan(target)
