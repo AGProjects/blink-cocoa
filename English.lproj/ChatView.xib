@@ -95,7 +95,7 @@
 							<object class="NSSearchField" id="291604928">
 								<reference key="NSNextResponder" ref="114616325"/>
 								<int key="NSvFlags">297</int>
-								<string key="NSFrame">{{319, 405}, {162, 19}}</string>
+								<string key="NSFrame">{{319, 404}, {162, 19}}</string>
 								<reference key="NSSuperview" ref="114616325"/>
 								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView" ref="547378293"/>
@@ -297,7 +297,7 @@
 												<string key="NSFrameSize">{467, 63}</string>
 												<reference key="NSSuperview" ref="990089647"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="846183669"/>
+												<reference key="NSNextKeyView" ref="993419595"/>
 												<object class="NSTextContainer" key="NSTextContainer" id="521967624">
 													<object class="NSLayoutManager" key="NSLayoutManager">
 														<object class="NSTextStorage" key="NSTextStorage">
@@ -416,7 +416,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 								<string key="NSFrameSize">{468, 65}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="993419595"/>
+								<reference key="NSNextKeyView" ref="990089647"/>
 								<int key="NSsFlags">133778</int>
 								<reference key="NSVScroller" ref="846183669"/>
 								<reference key="NSHScroller" ref="993419595"/>
@@ -431,7 +431,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 								<string key="NSFrame">{{466, 37}, {34, 30}}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="237726633">
 									<int key="NSCellFlags">-2076180416</int>
