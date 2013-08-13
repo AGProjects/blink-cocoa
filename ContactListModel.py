@@ -2406,6 +2406,7 @@ class ContactListModel(CustomListModel):
             group.group.expanded = True
             group.group.save()
 
+    @run_in_green_thread
     def reloadAddressbook_(self, notification):
         settings = SIPSimpleSettings()
         if settings.contacts.enable_address_book:
