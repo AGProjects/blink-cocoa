@@ -52,6 +52,8 @@ import time
 import unicodedata
 import uuid
 
+from gnutls.errors import GNUTLSError
+
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from itertools import chain
@@ -1411,7 +1413,7 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
             reason = 'Connection has been closed'
-        elif data.reason == 'A TLS packet with unexpected length was received.':
+        elif data.failure is not None and data.failure.type is GNUTLSError:
             reason = 'TLS connection error'
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout'):
             reason = 'Network connectivity failure'
