@@ -523,7 +523,8 @@ class AudioController(MediaStream):
                 self.audioStatus.setStringValue_(u"Enter DTMF using keyboard")
                 self.audioStatus.sizeToFit()
             else:
-                self.updateAudioStatusWithCodecInformation()
+                if not self.hangup_reason:
+                    self.updateAudioStatusWithCodecInformation()
 
     def transferFailed_(self, timer):
         self.changeStatus(STREAM_CONNECTED)
@@ -652,9 +653,11 @@ class AudioController(MediaStream):
             NSApp.delegate().contactsWindowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
-                self.updateAudioStatusWithSessionState(u"Audio removed")
+                self.updateAudioStatusWithSessionState(u"Audio Removed")
             elif oldstatus == STREAM_WAITING_DNS_LOOKUP:
                 self.updateAudioStatusWithSessionState(u"Session Cancelled")
+            else:
+                self.updateAudioStatusWithSessionState(u"Audio Ended")
         elif status == STREAM_CANCELLING:
             self.updateAudioStatusWithSessionState(u"Cancelling Request...")
         elif status == STREAM_INCOMING:
@@ -1103,6 +1106,7 @@ class AudioController(MediaStream):
         if self.sessionController.account.rtp.hangup_on_timeout:
             self.sessionController.log_info(u'Audio stream has timeout, ending audio stream')
             self.hangup_reason = u"Audio Timeout"
+            self.updateAudioStatusWithSessionState(self.hangup_reason)
             self.end()
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
