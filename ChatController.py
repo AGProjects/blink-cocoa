@@ -1336,7 +1336,14 @@ class ChatController(MediaStream):
             if self.chatViewController:
                 self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
+    def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.notification_center.remove_observer(self, sender=self.sessionController)
+        self.notification_center.discard_observer(self, sender=self.stream)
+
     def _NH_BlinkSessionDidFail(self, sender, data):
+        self.notification_center.remove_observer(self, sender=self.sessionController)
+        self.notification_center.discard_observer(self, sender=self.stream)
+
         reason = data.failure_reason or data.reason
         if reason != 'Session Cancelled':
             if self.last_failure_reason != reason:
@@ -1398,8 +1405,6 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
-        self.notification_center.remove_observer(self, sender=sender)
-        self.notification_center.remove_observer(self, sender=self.sessionController)
         if self.mediastream_started:
             close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
             self.showSystemMessage(close_message, ISOTimestamp.now())
@@ -1478,6 +1483,10 @@ class ChatController(MediaStream):
         self.startDeallocTimer()
 
     def reset(self):
+        self.notification_center.discard_observer(self, sender=self.stream)
+        self.stream = ChatStream()
+        self.notification_center.add_observer(self, sender=self.stream)
+
         self.mediastream_failed = False
         self.mediastream_ended = False
         self.session_succeeded = False
@@ -1747,7 +1756,7 @@ class OutgoingMessageHandler(NSObject):
                 self.add_to_history(message)
 
         if self.stream:
-            NotificationCenter().remove_observer(self, sender=self.stream)
+            NotificationCenter().discard_observer(self, sender=self.stream)
             self.stream = None
 
     def markMessage(self, message, state):
@@ -1882,7 +1891,7 @@ class ConferenceScreenSharingHandler(object):
             self.screenSharingTimer = None
 
         if self.stream:
-            NotificationCenter().remove_observer(self, sender=self.stream)
+            NotificationCenter().discard_observer(self, sender=self.stream)
             self.stream = None
 
     @allocate_autorelease_pool
