@@ -84,6 +84,7 @@ from application.python import Null
 from application.python.descriptor import classproperty
 from application.python.types import Singleton
 from application.system import makedirs, unlink
+from eventlib import api
 from eventlib.green import urllib2
 from itertools import chain
 from sipsimple.configuration import DuplicateIDError
@@ -93,6 +94,7 @@ from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Group
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.payloads import prescontent
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.threading import run_in_thread
 from sipsimple.util import ISOTimestamp
 from twisted.internet.error import ConnectionLost
 from zope.interface import implements
@@ -1909,21 +1911,28 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
     def __init__(self, name=u'Address Book'):
         super(AddressBookBlinkGroup, self).__init__(name, expanded=False)
 
+    @run_in_thread('addressbook')
+    @allocate_autorelease_pool
     def loadAddressBook(self):
+        nc = NotificationCenter()
         BlinkLogger().log_debug('Loading Contacts from System Address Book')
         for blink_contact in self.contacts:
             self.contacts.remove(blink_contact)
             blink_contact.destroy()
 
         book = AddressBook.ABAddressBook.sharedAddressBook()
+
         if book is None:
+            nc.post_notification("BlinkContactsHaveChanged", sender=self)
             return
+
         for ab_contact in book.people():
             blink_contact = SystemAddressBookBlinkContact(ab_contact)
             if blink_contact.uris:
                 self.contacts.append(blink_contact)
         self.sortContacts()
         BlinkLogger().log_debug('System Address Book Contacts loaded')
+        nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
 
 class CustomListModel(NSObject):
@@ -2406,12 +2415,10 @@ class ContactListModel(CustomListModel):
             group.group.expanded = True
             group.group.save()
 
-    @run_in_green_thread
     def reloadAddressbook_(self, notification):
         settings = SIPSimpleSettings()
         if settings.contacts.enable_address_book:
             self.addressbook_group.loadAddressBook()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.addressbook_group)
 
     def hasContactMatchingURI(self, uri, exact_match=False):
         return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
