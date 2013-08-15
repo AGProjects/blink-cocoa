@@ -90,10 +90,14 @@ class AudioController(MediaStream):
     sessionMenu = objc.IBOutlet()
 
     zRTPBox = objc.IBOutlet()
-    zRTPStatusButton = objc.IBOutlet()
+    zRTPStatusEncryptedButton = objc.IBOutlet()
+    zRTPStatusUnEncryptedButton = objc.IBOutlet()
     zRTPSecureSinceLabel = objc.IBOutlet()
     zRTPVerifyButton = objc.IBOutlet()
     zRTPVerifyHash = objc.IBOutlet()
+    zRTPLine = objc.IBOutlet()
+    zRTPinfoButton = objc.IBOutlet()
+    zrtp_active = False
 
     recordingImage = 0
     audioEndTime = None
@@ -117,7 +121,8 @@ class AudioController(MediaStream):
 
     status = STREAM_IDLE
     normal_height = 59
-    zrtp_height = 118
+    zrtp_nonactive_height = 85
+    zrtp_active_height = 148
     hangup_reason = None
 
 
@@ -148,7 +153,9 @@ class AudioController(MediaStream):
 
         NSBundle.loadNibNamed_owner_("AudioSession", self)
         # TODO: hide zrtp area until implemented -adi
-        self.setNormalViewHeight(self.view.frame())
+        #self.setNormalViewHeight(self.view.frame())
+        self.setZRTPViewHeight(self.view.frame())
+
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.sessionController.target_uri, exact_match=True)
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
@@ -741,6 +748,20 @@ class AudioController(MediaStream):
 
         MediaStream.changeStatus(self, newstate, fail_reason)
 
+    def toggleZRTPStatus(self):
+        self.zrtp_active = not self.zrtp_active
+        self.zRTPStatusEncryptedButton.setHidden_(not self.zrtp_active)
+        self.zRTPStatusUnEncryptedButton.setHidden_(self.zrtp_active)
+        self.zRTPSecureSinceLabel.setHidden_(not self.zrtp_active)
+        self.zRTPVerifyHash.setHidden_(not self.zrtp_active)
+        self.zRTPBox.setHidden_(not self.zrtp_active)
+        self.zRTPLine.setHidden_(not self.zrtp_active)
+        self.zRTPVerifyButton.setHidden_(not self.zrtp_active)
+        self.zRTPinfoButton.setHidden_(not self.zrtp_active)
+        self.zRTPBox.setFillColor_(NSColor.greenColor() if self.zrtp_active else NSColor.whiteColor())
+        self.setZRTPViewHeight(self.view.frame())
+        NSApp.delegate().contactsWindowController.audioSessionsListView.relayout()
+
     def toggleHeight(self):
         frame = self.view.frame()
         if frame.size.height == self.normal_height:
@@ -750,8 +771,11 @@ class AudioController(MediaStream):
 
     def setZRTPViewHeight(self, frame):
         frame.size.height = self.zrtp_height
-        self.zRTPBox.setHidden_(False)
         self.view.setFrame_(frame)
+
+    @property
+    def zrtp_height(self):
+        return self.zrtp_active_height if self.zrtp_active else self.zrtp_nonactive_height
 
     def setNormalViewHeight(self, frame):
         frame.size.height = self.normal_height
@@ -999,6 +1023,10 @@ class AudioController(MediaStream):
         pass
 
     @objc.IBAction
+    def userClickedZRTPStatusButton_(self, sender):
+        self.toggleZRTPStatus()
+
+    @objc.IBAction
     def userClickedAudioButton_(self, sender):
         seg = sender.selectedSegment()
         if sender == self.conferenceSegmented and seg == 0:
@@ -1100,6 +1128,10 @@ class AudioController(MediaStream):
         self.ice_negotiation_status = data.reason
         # TODO: remove stream if the reason is that all candidates failed probing
         #self.end()
+
+    @run_in_gui_thread
+    def _NH_AudioStreamSupportsZRTP(self, sender, data):
+        self.setZRTPViewHeight()
 
     @run_in_gui_thread
     def _NH_AudioStreamDidTimeout(self, sender, data):
