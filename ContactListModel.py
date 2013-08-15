@@ -1913,25 +1913,95 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
 
     @run_in_thread('addressbook')
     @allocate_autorelease_pool
-    def loadAddressBook(self):
+    def loadAddressBook(self, changedRecords=None):
         nc = NotificationCenter()
-        BlinkLogger().log_debug('Loading Contacts from System Address Book')
-        for blink_contact in self.contacts:
-            self.contacts.remove(blink_contact)
-            blink_contact.destroy()
-
+        updatedRecords = []
+        deletedRecords = []
+        insertedRecords = []
         book = AddressBook.ABAddressBook.sharedAddressBook()
+        logger = BlinkLogger()
 
-        if book is None:
-            nc.post_notification("BlinkContactsHaveChanged", sender=self)
-            return
+        if changedRecords:
+            try:
+                updatedRecords = changedRecords['ABUpdatedRecords']
+            except KeyError:
+               pass
 
-        for ab_contact in book.people():
-            blink_contact = SystemAddressBookBlinkContact(ab_contact)
-            if blink_contact.uris:
-                self.contacts.append(blink_contact)
+            try:
+                deletedRecords = changedRecords['ABDeletedRecords']
+            except KeyError:
+                pass
+
+            try:
+                insertedRecords = changedRecords['ABInsertedRecords']
+            except KeyError:
+                pass
+    
+            # deleted
+            if deletedRecords:
+                for blink_contact in self.contacts:
+                    for record in deletedRecords:
+                        if blink_contact.id == record:
+                            logger.log_debug('Deleted System Address Book contact %s' % blink_contact.name)
+                            self.contacts.remove(blink_contact)
+                            blink_contact.destroy()
+            # inserted
+            for record in insertedRecords:
+                ab_contact = book.recordForUniqueId_(record)
+                if type(ab_contact) != AddressBook.ABPerson:
+                    continue
+
+                blink_contact = SystemAddressBookBlinkContact(ab_contact)
+                if blink_contact.uris:
+                    logger.log_debug('Loaded System Address Book contact %s' % blink_contact.name)
+                    self.contacts.append(blink_contact)
+                else:
+                    blink_contact.destroy()
+
+            # updated
+            if updatedRecords:
+                for blink_contact in self.contacts:
+                    for record in updatedRecords:
+                        if blink_contact.id != record:
+                            continue
+
+                        ab_contact = book.recordForUniqueId_(record)
+                        
+                        if type(ab_contact) != AddressBook.ABPerson:
+                            continue
+                        
+                        self.contacts.remove(blink_contact)
+                        blink_contact.destroy()
+
+                        blink_contact = SystemAddressBookBlinkContact(ab_contact)
+                        if blink_contact.uris:
+                            logger.log_debug('Reloaded System Address Book contact %s' % blink_contact.name)
+                            self.contacts.append(blink_contact)
+                        else:
+                            logger.log_debug('Deleted System Address Book contact %s' % blink_contact.name)
+                            blink_contact.destroy()
+
+        else:
+            BlinkLogger().log_debug('Loading Contacts from System Address Book')
+            for blink_contact in self.contacts:
+                self.contacts.remove(blink_contact)
+                blink_contact.destroy()
+
+            if book is None:
+                nc.post_notification("BlinkContactsHaveChanged", sender=self)
+                return
+
+            for i, ab_contact in enumerate(book.people()):
+                if i % 10  == 0:
+                    time.sleep(0.01)
+                blink_contact = SystemAddressBookBlinkContact(ab_contact)
+                if blink_contact.uris:
+                    self.contacts.append(blink_contact)
+                else:
+                    blink_contact.destroy()
+            BlinkLogger().log_debug('System Address Book Contacts loaded')
+
         self.sortContacts()
-        BlinkLogger().log_debug('System Address Book Contacts loaded')
         nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
 
@@ -2400,7 +2470,7 @@ class ContactListModel(CustomListModel):
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
         ns_nc.addObserver_selector_name_object_(self, "groupCollapsed:", NSOutlineViewItemDidCollapseNotification, self.contactOutline)
-        ns_nc.addObserver_selector_name_object_(self, "reloadAddressbook:", AddressBook.kABDatabaseChangedNotification, None)
+        #ns_nc.addObserver_selector_name_object_(self, "reloadAddressbook:", AddressBook.kABDatabaseChangedNotification, None)
         ns_nc.addObserver_selector_name_object_(self, "reloadAddressbook:", AddressBook.kABDatabaseChangedExternallyNotification, None)
 
     def groupCollapsed_(self, notification):
@@ -2418,7 +2488,7 @@ class ContactListModel(CustomListModel):
     def reloadAddressbook_(self, notification):
         settings = SIPSimpleSettings()
         if settings.contacts.enable_address_book:
-            self.addressbook_group.loadAddressBook()
+            self.addressbook_group.loadAddressBook(notification.userInfo())
 
     def hasContactMatchingURI(self, uri, exact_match=False):
         return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
