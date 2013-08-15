@@ -385,6 +385,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="CFGSettingsObjectWasCreated")
         nc.add_observer(self, name="ChatReplicationJournalEntryReceived")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
+        nc.add_observer(self, name="LDAPDirectorySearchFoundContact")
         nc.add_observer(self, name="MediaStreamDidInitialize")
         nc.add_observer(self, name="SIPApplicationWillStart")
         nc.add_observer(self, name="SIPApplicationWillEnd")
@@ -670,10 +671,12 @@ class ContactWindowController(NSWindowController):
             if self.ldap_directory:
                 self.ldap_directory.disconnect()
             self.ldap_directory = LdapDirectory(active_account.ldap)
+            self.ldap_search = LdapSearch(self.ldap_directory)
         else:
             if self.ldap_directory:
                 self.ldap_directory.disconnect()
                 self.ldap_directory = None
+                self.ldap_search = None
 
     def setup(self, sipManager):
         self.backend = sipManager
@@ -1685,9 +1688,6 @@ class ContactWindowController(NSWindowController):
         self.addContactToConferenceDialPad.setEnabled_(False)
         self.addContactButtonDialPad.setEnabled_(False)
         self.updateStartSessionButtons()
-        if self.ldap_search:
-            self.ldap_search = None
-            NotificationCenter().discard_observer(self, name="LDAPDirectorySearchFoundContact")
 
     @objc.IBAction
     def blockContact_(self, sender):
@@ -2117,12 +2117,9 @@ class ContactWindowController(NSWindowController):
             if active_account:
                 # perform LDAP search
                 if len(text) > 3 and self.ldap_directory is not None:
-                    NotificationCenter().discard_observer(self, name="LDAPDirectorySearchFoundContact")
                     self.ldap_found_contacts = []
-                    if self.ldap_search:
+                    if self.ldap_search.ldap_query_id is not None:
                         self.ldap_search.cancel()
-                    self.ldap_search = LdapSearch(self.ldap_directory)
-                    NotificationCenter().add_observer(self, name="LDAPDirectorySearchFoundContact", sender=self.ldap_search)
                     self.ldap_search.search(text)
 
                 # create a syntetic contact with what we typed
@@ -5379,45 +5376,50 @@ class LdapSearch(object):
 
     @run_in_thread('ldap-query')
     def search(self, keyword):
-        if self.ldap_directory:
-            self.ldap_directory.connect()
-            if self.ldap_directory.connected:
-                filter = "cn=" + "*" + keyword.encode("utf-8") + "*"
+        if not self.ldap_directory:
+            return
+
+        self.ldap_directory.connect()
+        if self.ldap_directory.connected:
+            filter = "cn=" + "*" + keyword.encode("utf-8") + "*"
+            try:
+                self.ldap_query_id = self.ldap_directory.l.search(self.ldap_directory.dn, ldap.SCOPE_SUBTREE, filter)
+            except ldap.LDAPError:
+                return
+
+            while 1:
                 try:
-                    self.ldap_query_id = self.ldap_directory.l.search(self.ldap_directory.dn, ldap.SCOPE_SUBTREE, filter)
+                    result_type, result_data = self.ldap_directory.l.result(self.ldap_query_id, all=0)
                 except ldap.LDAPError:
                     return
 
-                while 1:
-                    try:
-                        result_type, result_data = self.ldap_directory.l.result(self.ldap_query_id, all=0)
-                    except ldap.LDAPError:
-                        return
-
-                    if (result_data == []):
-                        break
-                    else:
-                        if result_type == ldap.RES_SEARCH_ENTRY:
-                            for dn, entry in result_data:
-                                uris = []
-                                if entry.has_key('telephoneNumber'):
-                                    for _entry in entry['telephoneNumber']:
-                                        address = ('telephone', str(_entry))
-                                        uris.append(address)
-                                if entry.has_key('workNumber'):
-                                    for _entry in entry['workNumber']:
-                                        address = ('work', str(_entry))
-                                        uris.append(address)
-                                if entry.has_key('mobile'):
-                                    for _entry in entry['mobile']:
-                                        address = ('mobile', str(_entry))
-                                        uris.append(address)
-                                if entry.has_key('SIPIdentitySIPURI'):
-                                    for _entry in entry['SIPIdentitySIPURI']:
-                                        address = ('sip', sip_prefix_pattern.sub("", str(_entry)))
-                                        uris.append(address)
-                                if uris:
-                                    data = NotificationData(name=entry['cn'][0], uris=uris)
-                                    NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
-                self.ldap_query_id = None
-
+                if (result_data == []):
+                    break
+                else:
+                    if result_type == ldap.RES_SEARCH_ENTRY:
+                        i = 1
+                        for dn, entry in result_data:
+                            if i % 10 == 0:
+                                time.sleep(0.01)
+                            uris = []
+                            i += 1
+                            if entry.has_key('telephoneNumber'):
+                                for _entry in entry['telephoneNumber']:
+                                    address = ('telephone', str(_entry))
+                                    uris.append(address)
+                            if entry.has_key('workNumber'):
+                                for _entry in entry['workNumber']:
+                                    address = ('work', str(_entry))
+                                    uris.append(address)
+                            if entry.has_key('mobile'):
+                                for _entry in entry['mobile']:
+                                    address = ('mobile', str(_entry))
+                                    uris.append(address)
+                            if entry.has_key('SIPIdentitySIPURI'):
+                                for _entry in entry['SIPIdentitySIPURI']:
+                                    address = ('sip', sip_prefix_pattern.sub("", str(_entry)))
+                                    uris.append(address)
+                            if uris:
+                                data = NotificationData(name=entry['cn'][0], uris=uris)
+                                NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
+            self.ldap_query_id = None
