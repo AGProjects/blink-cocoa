@@ -859,6 +859,7 @@ class SessionController(NSObject):
         self.streamHandlers = []
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, name='MusicPauseDidExecute')
         self.notification_center.add_observer(self, sender=self)
         self.selected_contact = None
         self.cancelledStream = None
@@ -901,6 +902,7 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, name='MusicPauseDidExecute')
         self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
         self.selected_contact = None
@@ -947,6 +949,7 @@ class SessionController(NSObject):
         self.identifier = SessionIdentifierSerial
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
+        self.notification_center.add_observer(self, name='MusicPauseDidExecute')
         self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
         self.selected_contact = None
@@ -984,6 +987,7 @@ class SessionController(NSObject):
     def startDeallocTimer(self):
         self.notification_center.remove_observer(self, sender=self)
         self.notification_center.remove_observer(self, name='SystemWillSleep')
+        self.notification_center.remove_observer(self, name='MusicPauseDidExecute')
         self.destroyInfoPanel()
 
         if self.dealloc_timer is None:
@@ -1343,7 +1347,6 @@ class SessionController(NSObject):
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
                             MusicApplications().pause()
-                            self.notification_center.add_observer(self, sender=MusicApplications())
                         else:
                             self.waitingForITunes = False
 
@@ -1453,6 +1456,7 @@ class SessionController(NSObject):
             self.connectSession()
 
     def connectSession(self):
+        self.log_info('Starting outgoing session to %s' % format_identity_to_string(self.target_uri, format='compact'))
         if self.dealloc_timer is not None and self.dealloc_timer.isValid():
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
@@ -1460,7 +1464,6 @@ class SessionController(NSObject):
         if self.session is None:
             return
 
-        self.log_info('Starting outgoing session to %s' % format_identity_to_string(self.target_uri, format='compact'))
         streams = [s.stream for s in self.streamHandlers]
         target_uri = SIPURI.new(self.target_uri)
         if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
@@ -1542,7 +1545,6 @@ class SessionController(NSObject):
     def _NH_MusicPauseDidExecute(self, sender, data):
         if not self.waitingForITunes:
             return
-        self.notification_center.remove_observer(self, sender=sender)
         self.waitingForITunes = False
         if self.routes:
             self.connectSession()
