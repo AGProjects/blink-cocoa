@@ -760,10 +760,9 @@ class ChatController(MediaStream):
 
             if self.chatViewController:
                 if call_id is not None and call_id != message.sip_callid and  message.media_type == 'chat':
-                    self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session established', timestamp, False)
+                    self.chatViewController.showSystemMessage(message.sip_callid, 'Connection established', timestamp, False)
 
                 if message.media_type == 'sms' and last_media_type == 'chat':
-                    #self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session ended', last_chat_timestamp, False)
                     self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
 
                 self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type)
@@ -1386,7 +1385,7 @@ class ChatController(MediaStream):
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat session established to %s" % endpoint)
-        self.showSystemMessage("Chat session established", ISOTimestamp.now())
+        self.showSystemMessage("Connection established", ISOTimestamp.now())
 
         # Set nickname if available
         nickname = self.sessionController.nickname
@@ -1406,8 +1405,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
-            close_message = "%s has left the conversation" % self.sessionController.getTitleShort()
-            self.showSystemMessage(close_message, ISOTimestamp.now())
+            self.showSystemMessage('Connection closed', ISOTimestamp.now())
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.outgoing_message_handler.setDisconnected()
         self.screensharing_handler.setDisconnected()
