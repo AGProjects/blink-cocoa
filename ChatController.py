@@ -1335,13 +1335,15 @@ class ChatController(MediaStream):
             if self.chatViewController:
                 self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
-    def _NH_BlinkSessionDidEnd(self, sender, data):
-        self.notification_center.remove_observer(self, sender=self.sessionController)
+    def remove_observers(self):
+        self.notification_center.discard_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
 
+    def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.remove_observers()
+
     def _NH_BlinkSessionDidFail(self, sender, data):
-        self.notification_center.remove_observer(self, sender=self.sessionController)
-        self.notification_center.discard_observer(self, sender=self.stream)
+        self.remove_observers()
 
         reason = data.failure_reason or data.reason
         if reason != 'Session Cancelled':
@@ -1474,8 +1476,8 @@ class ChatController(MediaStream):
             self.outgoing_message_handler.setDisconnected()
         if self.screensharing_handler:
             self.screensharing_handler.setDisconnected()
-        self.reset()
         self.closeWindow()
+        self.remove_observers()
         self.startDeallocTimer()
 
     def reset(self):
