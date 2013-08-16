@@ -1083,8 +1083,8 @@ class ChatController(MediaStream):
                     contactWindow.historyViewer.filterByURIs(('bonjour', ))
                 else:
                     contactWindow.historyViewer.filterByURIs((format_identity_to_string(self.sessionController.target_uri),))
+                days = 1
                 if self.chatViewController.scrolling_zoom_factor:
-                    days = 1
                     if self.chatViewController.scrolling_zoom_factor == 1:
                         days = 1
                     elif self.chatViewController.scrolling_zoom_factor == 2:
