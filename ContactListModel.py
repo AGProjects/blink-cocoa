@@ -1936,7 +1936,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
                 insertedRecords = changedRecords['ABInsertedRecords']
             except KeyError:
                 pass
-    
+
             # deleted
             if deletedRecords:
                 for blink_contact in self.contacts:
@@ -1966,10 +1966,10 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
                             continue
 
                         ab_contact = book.recordForUniqueId_(record)
-                        
+
                         if type(ab_contact) != AddressBook.ABPerson:
                             continue
-                        
+
                         self.contacts.remove(blink_contact)
                         blink_contact.destroy()
 
