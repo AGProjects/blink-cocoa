@@ -1674,6 +1674,7 @@ SettingDescription = {
                       'audio.reject_anonymous': 'Reject Anonymous Callers',
                       'audio.directory': 'Recordings Directory',
                       'audio.silent': 'Silence Audible Alerts',
+                      'audio.pause_music': 'Pause iTunes during Calls',
                       'audio.automatic_device_switch': 'Switch to New Devices when Plugged-in',
                       'audio.enable_aec': 'Enable Acoustic Echo Cancellation',
                       'answering_machine.max_recording_duration': 'Maximum Duration',

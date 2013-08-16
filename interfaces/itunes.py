@@ -9,6 +9,7 @@ from ScriptingBridge import SBApplication
 from application.notification import NotificationCenter
 from application.python.types import Singleton
 
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 
 from util import allocate_autorelease_pool
@@ -30,6 +31,9 @@ class MusicApplications(object):
     
     @run_in_thread('Music-interface')
     def pause(self):
+        settings = SIPSimpleSettings()
+        if not settings.audio.pause_music:
+            return
         self.is_pausing = True
         self.itunes.pause()
         self.spotify.pause()
@@ -39,6 +43,9 @@ class MusicApplications(object):
 
     @run_in_thread('Music-interface')
     def resume(self):
+        settings = SIPSimpleSettings()
+        if not settings.audio.pause_music:
+            return
         self.must_pause = False
         self.is_resuming = True
         self.itunes.resume()
