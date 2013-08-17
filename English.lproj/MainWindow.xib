@@ -3142,8 +3142,8 @@ IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 			</object>
 			<object class="NSDrawer" id="767709542">
 				<nil key="NSNextResponder"/>
-				<string key="NSContentSize">{265, 100}</string>
-				<string key="NSMinContentSize">{265, 0}</string>
+				<string key="NSContentSize">{270, 100}</string>
+				<string key="NSMinContentSize">{270, 0}</string>
 				<string key="NSMaxContentSize">{10000, 10000}</string>
 				<int key="NSPreferredEdge">2</int>
 				<double key="NSLeadingOffset">0.0</double>
