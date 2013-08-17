@@ -1539,8 +1539,15 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setStringValue_(u"Hold by Remote")
                     self.audioStatus.setHidden_(False)
                 elif audio_stream.status ==  STREAM_CONNECTED:
+                    if audio_stream.stream.sample_rate >= 32000:
+                        hd_label = 'UWB Audio'
+                    elif audio_stream.stream.sample_rate >= 16000:
+                        hd_label = 'WB Audio'
+                    else:
+                        hd_label = 'PSTN Audio'
+
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.audioStatus.setStringValue_(u"%s (%s)" % ("HD Audio" if audio_stream.stream.sample_rate > 8000 else "Audio", beautify_audio_codec(audio_stream.stream.codec)))
+                    self.audioStatus.setStringValue_(u"%s (%s)" % (hd_label, beautify_audio_codec(audio_stream.stream.codec)))
                     self.audioStatus.setHidden_(False)
 
             elif session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
