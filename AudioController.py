@@ -1072,7 +1072,7 @@ class AudioController(MediaStream):
                 self.stream.muted = self.mutedInConference
                 sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), 0)
             elif segment_action == 'call_transfer':
-                point = sender.convertPointToBase_(NSZeroPoint)
+                point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
                 point.x += sender.widthForSegment_(0)
                 point.y -= NSHeight(sender.frame())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
