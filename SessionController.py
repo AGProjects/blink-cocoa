@@ -107,11 +107,15 @@ class SessionControllersManager(object):
         self.ringer = Ringer(self)
         self.incomingSessions = set()
         self.activeAudioStreams = set()
-        self.pause_music = True
         self.redial_uri = None
 
         SessionHistoryReplicator()
         ChatHistoryReplicator()
+
+
+    @property
+    def pause_music(self):
+        return SIPSimpleSettings().audio.pause_music
 
     @property
     def alertPanel(self):
@@ -1343,7 +1347,7 @@ class SessionController(NSObject):
                         OUTBOUND_AUDIO_CALLS += 1
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
 
-                    if self.sessionControllersManager.pause_music:
+                    if SIPSimpleSettings().audio.pause_music:
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
                             MusicApplications().pause()
