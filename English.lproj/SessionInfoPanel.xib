@@ -464,7 +464,7 @@
 											<object class="NSTextFieldCell" key="NSCell" id="741608754">
 												<int key="NSCellFlags">68157504</int>
 												<int key="NSCellFlags2">272761856</int>
-												<string key="NSContents">G722</string>
+												<string key="NSContents">OPUS</string>
 												<reference key="NSSupport" ref="26"/>
 												<reference key="NSControlView" ref="500929529"/>
 												<reference key="NSBackgroundColor" ref="72485129"/>
@@ -540,7 +540,7 @@
 											<object class="NSTextFieldCell" key="NSCell" id="942860492">
 												<int key="NSCellFlags">68157504</int>
 												<int key="NSCellFlags2">272761856</int>
-												<string key="NSContents">16000 Hz</string>
+												<string key="NSContents">32000 Hz</string>
 												<reference key="NSSupport" ref="26"/>
 												<reference key="NSControlView" ref="29535500"/>
 												<reference key="NSBackgroundColor" ref="72485129"/>
@@ -559,7 +559,7 @@
 											<object class="NSTextFieldCell" key="NSCell" id="258313891">
 												<int key="NSCellFlags">68157504</int>
 												<int key="NSCellFlags2">71435264</int>
-												<string key="NSContents">sRTP:</string>
+												<string key="NSContents">SRTP Encryption:</string>
 												<reference key="NSSupport" ref="26"/>
 												<reference key="NSControlView" ref="542930665"/>
 												<reference key="NSBackgroundColor" ref="72485129"/>
@@ -570,7 +570,7 @@
 										<object class="NSTextField" id="1029371424">
 											<reference key="NSNextResponder" ref="816442184"/>
 											<int key="NSvFlags">268</int>
-											<string key="NSFrame">{{118, 240}, {102, 14}}</string>
+											<string key="NSFrame">{{118, 240}, {183, 14}}</string>
 											<reference key="NSSuperview" ref="816442184"/>
 											<reference key="NSWindow"/>
 											<reference key="NSNextKeyView" ref="932281720"/>
@@ -867,7 +867,7 @@
 											<string key="NSFrame">{{119, 20}, {173, 53}}</string>
 											<reference key="NSSuperview" ref="816442184"/>
 											<reference key="NSWindow"/>
-											<reference key="NSNextKeyView"/>
+											<reference key="NSNextKeyView" ref="502250675"/>
 											<string key="NSClassName">CBGraphView</string>
 										</object>
 										<object class="NSImageView" id="1006011014">
@@ -1001,6 +1001,7 @@
 											<string key="NSFrame">{{118, 14}, {171, 14}}</string>
 											<reference key="NSSuperview" ref="310435195"/>
 											<reference key="NSWindow"/>
+											<reference key="NSNextKeyView"/>
 											<bool key="NSEnabled">YES</bool>
 											<object class="NSTextFieldCell" key="NSCell" id="900406132">
 												<int key="NSCellFlags">68157504</int>
@@ -1114,7 +1115,7 @@
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="211225077"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1440, 878}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMinSize">{315, 655}</string>
 				<string key="NSMaxSize">{1200, 655}</string>
 				<string key="NSFrameAutosaveName">session-info-panel</string>

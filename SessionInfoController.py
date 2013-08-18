@@ -280,7 +280,15 @@ class SessionInfoController(NSObject):
                     self.audio_sample_rate.setStringValue_("%0.fkHz" % sample_rate)
                 except TypeError:
                     pass
-                self.audio_srtp_active.setStringValue_('Enabled' if self.audio_stream.stream.srtp_active else 'Disabled')
+
+                if self.audio_stream.zrtp_active:
+                    label = 'zRTP Diffie-Hellman'
+                elif self.audio_stream.stream.srtp_active:
+                    label = 'SDES'
+                else:
+                    label = 'Disabled'
+
+                self.audio_srtp_active.setStringValue_(label)
                 self.audio_srtp_lock.setHidden_(False if self.audio_stream.stream.srtp_active else True)
             else:
                 self.audio_codec.setStringValue_('')
