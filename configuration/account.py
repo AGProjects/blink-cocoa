@@ -77,7 +77,7 @@ class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
     use_srtp_without_tls = Setting(type=bool, default=True)
     hangup_on_timeout = Setting(type=bool, default=True)
-    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
+    srtp_encryption = Setting(type=SRTPEncryption, default='disabled')
 
 
 class BonjourRTPSettingsExtension(RTPSettings):
