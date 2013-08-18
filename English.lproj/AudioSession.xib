@@ -42,7 +42,7 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSCustomView" id="1005">
-				<reference key="NSNextResponder"/>
+				<nil key="NSNextResponder"/>
 				<int key="NSvFlags">268</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="NSButton" id="2310863">
@@ -50,7 +50,6 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{245, 37}, {16, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="182486928"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="44578391">
@@ -81,7 +80,6 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 37}, {244, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="414512458"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="481585753">
@@ -120,7 +118,6 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{4, 20}, {66, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="820836428"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="420729772">
@@ -151,7 +148,6 @@
 						</set>
 						<string key="NSFrame">{{7, 37}, {14, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="2310863"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="1067246760">
@@ -174,7 +170,6 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{72, 21}, {16, 12}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="163338663"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="451413128">
@@ -200,8 +195,6 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
@@ -257,7 +250,6 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{153, 2}, {110, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="88869251"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="177104667">
@@ -320,7 +312,6 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{173, 2}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="452112932"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="383047219">
@@ -367,7 +358,6 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{173, 2}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="491586822"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="710252372">
@@ -421,7 +411,6 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 5}, {171, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="347238004"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="1026873649">
@@ -452,7 +441,6 @@
 						</set>
 						<string key="NSFrame">{{5, 5}, {17, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="507355065"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="71900893">
@@ -472,8 +460,6 @@
 					</object>
 				</array>
 				<string key="NSFrameSize">{265, 57}</string>
-				<reference key="NSSuperview"/>
-				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="327816639"/>
 				<string key="NSClassName">AudioSession</string>
 			</object>
@@ -639,7 +625,7 @@
 					<object class="NSMenuItem" id="988426374">
 						<reference key="NSMenu" ref="885894404"/>
 						<bool key="NSIsDisabled">YES</bool>
-						<string key="NSTitle">Audio Call Encryption Status</string>
+						<string key="NSTitle">Encryption Status (SRTP)</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
@@ -654,65 +640,78 @@
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">20</int>
 					</object>
 					<object class="NSMenuItem" id="257817874">
 						<reference key="NSMenu" ref="885894404"/>
-						<string key="NSTitle">zRTP Enabled</string>
+						<string key="NSTitle">Encrypt using Diffie-Hellman key exchange (zRTP)</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
-						<int key="NSTag">1</int>
+						<int key="NSTag">21</int>
+					</object>
+					<object class="NSMenuItem" id="31328276">
+						<reference key="NSMenu" ref="885894404"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Show confirm identity phrase</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">23</int>
+					</object>
+					<object class="NSMenuItem" id="1031939370">
+						<reference key="NSMenu" ref="885894404"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Confirm Identity by verbally comparing the phrase</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">22</int>
+					</object>
+					<object class="NSMenuItem" id="412811994">
+						<reference key="NSMenu" ref="885894404"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">zRTP is compromised (Man-in-the-middle detected)</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">24</int>
 					</object>
 					<object class="NSMenuItem" id="371011418">
 						<reference key="NSMenu" ref="885894404"/>
 						<bool key="NSIsDisabled">YES</bool>
-						<int key="NSIndent">2</int>
-						<string key="NSTitle">Encryption key is known only by the end-points</string>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Encryption key is only known by the SIP end-points</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">25</int>
 					</object>
 					<object class="NSMenuItem" id="402484161">
 						<reference key="NSMenu" ref="885894404"/>
 						<bool key="NSIsDisabled">YES</bool>
-						<int key="NSIndent">2</int>
+						<int key="NSIndent">1</int>
 						<string key="NSTitle">Man-in-the-middle attacks are always detected</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">26</int>
 					</object>
-					<object class="NSMenuItem" id="1031939370">
+					<object class="NSMenuItem" id="467583564">
 						<reference key="NSMenu" ref="885894404"/>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Identity Confirmed</string>
+						<string key="NSTitle">More information about zRTP</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
-						<int key="NSTag">2</int>
-					</object>
-					<object class="NSMenuItem" id="31328276">
-						<reference key="NSMenu" ref="885894404"/>
-						<int key="NSIndent">1</int>
-						<string key="NSTitle">Show Confirm Identity Phrase</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="295702650"/>
-						<reference key="NSMixedImage" ref="631877669"/>
-						<int key="NSTag">3</int>
-					</object>
-					<object class="NSMenuItem" id="412811994">
-						<reference key="NSMenu" ref="885894404"/>
-						<int key="NSIndent">1</int>
-						<string key="NSTitle">zRTP compromised</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="295702650"/>
-						<reference key="NSMixedImage" ref="631877669"/>
-						<int key="NSTag">4</int>
+						<int key="NSTag">27</int>
 					</object>
 					<object class="NSMenuItem" id="225210153">
 						<reference key="NSMenu" ref="885894404"/>
@@ -723,33 +722,23 @@
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">10</int>
 					</object>
 					<object class="NSMenuItem" id="721730324">
 						<reference key="NSMenu" ref="885894404"/>
 						<bool key="NSIsDisabled">YES</bool>
-						<string key="NSTitle">sRTP Enabled</string>
-						<string key="NSKeyEquiv"/>
-						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSOnImage" ref="295702650"/>
-						<reference key="NSMixedImage" ref="631877669"/>
-						<int key="NSTag">10</int>
-					</object>
-					<object class="NSMenuItem" id="54314240">
-						<reference key="NSMenu" ref="885894404"/>
-						<bool key="NSIsDisabled">YES</bool>
-						<int key="NSIndent">1</int>
-						<string key="NSTitle">Encryption key is known by the server</string>
+						<string key="NSTitle">Encrypted using key exchanged over SIP signaling (SDES)</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">11</int>
 					</object>
-					<object class="NSMenuItem" id="802629358">
+					<object class="NSMenuItem" id="54314240">
 						<reference key="NSMenu" ref="885894404"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Man-in-the-middle attacks cannot be detected</string>
+						<string key="NSTitle">SIP Service Provider is always in possesion of the encryption key</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
@@ -760,12 +749,64 @@
 						<reference key="NSMenu" ref="885894404"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Encryption key can be sniffed over the network</string>
+						<string key="NSTitle">Internet Provider can see the encryption key (SIP signaling not encrypted)</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">14</int>
+					</object>
+					<object class="NSMenuItem" id="802629358">
+						<reference key="NSMenu" ref="885894404"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Man-in-the-middle attacks cannot be detected</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">13</int>
+					</object>
+					<object class="NSMenuItem" id="561131950">
+						<reference key="NSMenu" ref="885894404"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">More information about SDES</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">15</int>
+					</object>
+					<object class="NSMenuItem" id="436558372">
+						<reference key="NSMenu" ref="885894404"/>
+						<bool key="NSIsDisabled">YES</bool>
+						<bool key="NSIsSeparator">YES</bool>
+						<string key="NSTitle"/>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">30</int>
+					</object>
+					<object class="NSMenuItem" id="1020670174">
+						<reference key="NSMenu" ref="885894404"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">Media stream is not encrypted</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">31</int>
+					</object>
+					<object class="NSMenuItem" id="834222570">
+						<reference key="NSMenu" ref="885894404"/>
+						<int key="NSIndent">1</int>
+						<string key="NSTitle">More information about SRTP</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">39</int>
 					</object>
 				</array>
 				<bool key="NSNoAutoenable">YES</bool>
@@ -983,7 +1024,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">zrtpSegmented</string>
+						<string key="label">encryptionSegmented</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="507355065"/>
 					</object>
@@ -991,7 +1032,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">zrtpMenu</string>
+						<string key="label">encryptionMenu</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="885894404"/>
 					</object>
@@ -999,7 +1040,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="257817874"/>
 					</object>
@@ -1007,7 +1048,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="412811994"/>
 					</object>
@@ -1015,7 +1056,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="31328276"/>
 					</object>
@@ -1023,7 +1064,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="1031939370"/>
 					</object>
@@ -1031,7 +1072,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="721730324"/>
 					</object>
@@ -1039,7 +1080,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="54314240"/>
 					</object>
@@ -1047,7 +1088,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="371011418"/>
 					</object>
@@ -1055,7 +1096,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="402484161"/>
 					</object>
@@ -1063,7 +1104,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="523635204"/>
 					</object>
@@ -1071,11 +1112,43 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBActionConnection" key="connection">
-						<string key="label">userClickedZrtpMenuItem:</string>
+						<string key="label">userClickedEncryptionMenuItem:</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="802629358"/>
 					</object>
 					<int key="connectionID">283</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedEncryptionMenuItem:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="467583564"/>
+					</object>
+					<int key="connectionID">289</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedEncryptionMenuItem:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="561131950"/>
+					</object>
+					<int key="connectionID">291</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedEncryptionMenuItem:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="834222570"/>
+					</object>
+					<int key="connectionID">294</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedEncryptionMenuItem:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="1020670174"/>
+					</object>
+					<int key="connectionID">297</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -1464,14 +1537,19 @@
 							<reference ref="225210153"/>
 							<reference ref="257817874"/>
 							<reference ref="412811994"/>
-							<reference ref="31328276"/>
 							<reference ref="1031939370"/>
 							<reference ref="721730324"/>
 							<reference ref="54314240"/>
 							<reference ref="371011418"/>
 							<reference ref="402484161"/>
-							<reference ref="523635204"/>
 							<reference ref="802629358"/>
+							<reference ref="523635204"/>
+							<reference ref="467583564"/>
+							<reference ref="561131950"/>
+							<reference ref="436558372"/>
+							<reference ref="834222570"/>
+							<reference ref="31328276"/>
+							<reference ref="1020670174"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -1538,6 +1616,31 @@
 					<object class="IBObjectRecord">
 						<int key="objectID">282</int>
 						<reference key="object" ref="802629358"/>
+						<reference key="parent" ref="885894404"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">288</int>
+						<reference key="object" ref="467583564"/>
+						<reference key="parent" ref="885894404"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">290</int>
+						<reference key="object" ref="561131950"/>
+						<reference key="parent" ref="885894404"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">292</int>
+						<reference key="object" ref="436558372"/>
+						<reference key="parent" ref="885894404"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">293</int>
+						<reference key="object" ref="834222570"/>
+						<reference key="parent" ref="885894404"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">296</int>
+						<reference key="object" ref="1020670174"/>
 						<reference key="parent" ref="885894404"/>
 					</object>
 				</array>
@@ -1611,6 +1714,11 @@
 				<string key="274.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="278.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="282.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="288.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="290.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="292.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="293.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="296.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<object class="NSMutableDictionary" key="30.IBAttributePlaceholdersKey">
 					<string key="NS.key.0">AccessibilityDescription</string>
@@ -1690,7 +1798,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">285</int>
+			<int key="maxID">297</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1700,10 +1808,10 @@
 					<dictionary class="NSMutableDictionary" key="actions">
 						<string key="userClickedAudioButton:">id</string>
 						<string key="userClickedBlindTransferMenuItem:">id</string>
+						<string key="userClickedEncryptionMenuItem:">id</string>
 						<string key="userClickedSessionInfoButton:">id</string>
 						<string key="userClickedSessionMenuItem:">id</string>
 						<string key="userClickedTransferMenuItem:">id</string>
-						<string key="userClickedZrtpMenuItem:">id</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="actionInfosByName">
 						<object class="IBActionInfo" key="userClickedAudioButton:">
@@ -1712,6 +1820,10 @@
 						</object>
 						<object class="IBActionInfo" key="userClickedBlindTransferMenuItem:">
 							<string key="name">userClickedBlindTransferMenuItem:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedEncryptionMenuItem:">
+							<string key="name">userClickedEncryptionMenuItem:</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBActionInfo" key="userClickedSessionInfoButton:">
@@ -1726,16 +1838,14 @@
 							<string key="name">userClickedTransferMenuItem:</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBActionInfo" key="userClickedZrtpMenuItem:">
-							<string key="name">userClickedZrtpMenuItem:</string>
-							<string key="candidateClassName">id</string>
-						</object>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="outlets">
 						<string key="audioSegmented">id</string>
 						<string key="audioStatus">id</string>
 						<string key="conferenceSegmented">id</string>
 						<string key="elapsed">id</string>
+						<string key="encryptionMenu">id</string>
+						<string key="encryptionSegmented">id</string>
 						<string key="info">id</string>
 						<string key="label">id</string>
 						<string key="sessionInfoButton">id</string>
@@ -1745,8 +1855,6 @@
 						<string key="transferMenu">id</string>
 						<string key="transferSegmented">id</string>
 						<string key="view">id</string>
-						<string key="zrtpMenu">id</string>
-						<string key="zrtpSegmented">id</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
 						<object class="IBToOneOutletInfo" key="audioSegmented">
@@ -1763,6 +1871,14 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="elapsed">
 							<string key="name">elapsed</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="encryptionMenu">
+							<string key="name">encryptionMenu</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="encryptionSegmented">
+							<string key="name">encryptionSegmented</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="info">
@@ -1799,14 +1915,6 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="view">
 							<string key="name">view</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="zrtpMenu">
-							<string key="name">zrtpMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="zrtpSegmented">
-							<string key="name">zrtpSegmented</string>
 							<string key="candidateClassName">id</string>
 						</object>
 					</dictionary>

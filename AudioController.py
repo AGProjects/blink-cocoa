@@ -27,7 +27,9 @@ from Foundation import (NSBundle,
                         NSString,
                         NSThread,
                         NSTimer,
-                        NSZeroPoint)
+                        NSZeroPoint,
+                        NSURL,
+                        NSWorkspace)
 import objc
 
 import datetime
@@ -92,12 +94,13 @@ class AudioController(MediaStream):
     transferMenu = objc.IBOutlet()
     sessionMenu = objc.IBOutlet()
 
-    zrtpSegmented = objc.IBOutlet()
-    zrtpMenu = objc.IBOutlet()
-    zrtp_supported = True # stream supports zRTP
-    zrtp_active = False # stream is engaging zRTP
-    zrtp_verified = False # peer has been verified
-    zrtp_is_ok = True # zrtp is ecnrypted ok
+    encryptionSegmented = objc.IBOutlet()
+    encryptionMenu = objc.IBOutlet()
+    # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
+    zrtp_supported = False          # stream supports zRTP
+    zrtp_active = False             # stream is engaging zRTP
+    zrtp_verified = False           # zRTP peer has been verified
+    zrtp_is_ok = True               # zRTP is encrypted ok
     zrtp_show_verify_phrase = False # show verify phrase
 
     recordingImage = 0
@@ -201,16 +204,12 @@ class AudioController(MediaStream):
         self.transferEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
         self.recordingEnabled = True if NSApp.delegate().applicationName != 'Blink Lite' else False
 
-        if self.zrtp_supported and self.transferEnabled:
-            self.zrtpSegmented.setHidden_(False)
+        if self.transferEnabled:
+            self.encryptionSegmented.setHidden_(False)
             self.transferSegmented.setHidden_(True)
             self.audioSegmented.setHidden_(True)
-        elif self.transferEnabled:
-            self.zrtpSegmented.setHidden_(True)
-            self.transferSegmented.setHidden_(False)
-            self.audioSegmented.setHidden_(True)
         else:
-            self.zrtpSegmented.setHidden_(True)
+            self.encryptionSegmented.setHidden_(True)
             self.transferSegmented.setHidden_(True)
             self.audioSegmented.setHidden_(False)
 
@@ -255,10 +254,10 @@ class AudioController(MediaStream):
             self.transferSegmented.setEnabled_forSegment_(False, 2)
             self.transferSegmented.cell().setToolTip_forSegment_("Take over the call", 0)
 
-            self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 1)
-            self.zrtpSegmented.setEnabled_forSegment_(False, 2)
-            self.zrtpSegmented.setEnabled_forSegment_(False, 3)
-            self.zrtpSegmented.cell().setToolTip_forSegment_("Take over the call", 1)
+            self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 1)
+            self.encryptionSegmented.setEnabled_forSegment_(False, 2)
+            self.encryptionSegmented.setEnabled_forSegment_(False, 3)
+            self.encryptionSegmented.cell().setToolTip_forSegment_("Take over the call", 1)
 
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
@@ -344,12 +343,12 @@ class AudioController(MediaStream):
         self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
 
-        self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 1)
-        self.zrtpSegmented.cell().setToolTip_forSegment_("Call transfer", 2)
-        self.zrtpSegmented.cell().setToolTip_forSegment_("Put the call on hold", 2)
-        self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 2)
-        self.zrtpSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 3)
-        self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 3)
+        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 1)
+        self.encryptionSegmented.cell().setToolTip_forSegment_("Call transfer", 2)
+        self.encryptionSegmented.cell().setToolTip_forSegment_("Put the call on hold", 2)
+        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 2)
+        self.encryptionSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 3)
+        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 3)
 
         self.updateAudioStatusWithCodecInformation()
         self.answeringMachine.stop()
@@ -481,23 +480,19 @@ class AudioController(MediaStream):
         NSApp.delegate().contactsWindowController.addAudioSessionToConference(self)
         self.audioSegmented.setHidden_(True)
         self.transferSegmented.setHidden_(True)
-        self.zrtpSegmented.setHidden_(True)
+        self.encryptionSegmented.setHidden_(True)
         self.conferenceSegmented.setHidden_(False)
         self.view.setConferencing_(True)
         self.updateLabelColor()
 
     def removeFromConference(self):
         NSApp.delegate().contactsWindowController.removeAudioSessionFromConference(self)
-        if self.transferEnabled and self.zrtp_supported:
-            self.zrtpSegmented.setHidden_(False)
+        if self.transferEnabled:
+            self.encryptionSegmented.setHidden_(False)
             self.transferSegmented.setHidden_(True)
             self.audioSegmented.setHidden_(True)
-        elif self.transferEnabled:
-            self.zrtpSegmented.setHidden_(True)
-            self.transferSegmented.setHidden_(False)
-            self.audioSegmented.setHidden_(True)
         else:
-            self.zrtpSegmented.setHidden_(True)
+            self.encryptionSegmented.setHidden_(True)
             self.transferSegmented.setHidden_(True)
             self.audioSegmented.setHidden_(False)
 
@@ -541,13 +536,13 @@ class AudioController(MediaStream):
                     timer.invalidate()
                 self.audioEndTime = None
 
-        if self.stream and self.stream.recording_active and (self.audioSegmented or self.transferSegmented or self.zrtpSegmented):
+        if self.stream and self.stream.recording_active and (self.audioSegmented or self.transferSegmented or self.encryptionSegmented):
             if self.isConferencing:
                 self.conferenceSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 2)
             else:
                 self.audioSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 1)
                 self.transferSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 2)
-                self.zrtpSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 3)
+                self.encryptionSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 3)
 
             self.recordingImage += 1
             if self.recordingImage >= len(RecordingImages):
@@ -669,8 +664,8 @@ class AudioController(MediaStream):
                 if self.holdByLocal:
                     self.audioSegmented.setSelected_forSegment_(True, 0)
                     self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 0)
-                    self.zrtpSegmented.setSelected_forSegment_(True, 2)
-                    self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 2)
+                    self.encryptionSegmented.setSelected_forSegment_(True, 2)
+                    self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 2)
                     self.transferSegmented.setSelected_forSegment_(True, 1)
                     self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), 1)
                     self.conferenceSegmented.setSelected_forSegment_(True, 1)
@@ -678,8 +673,8 @@ class AudioController(MediaStream):
                 else:
                     self.audioSegmented.setSelected_forSegment_(False, 0)
                     self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
-                    self.zrtpSegmented.setSelected_forSegment_(False, 2)
-                    self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 2)
+                    self.encryptionSegmented.setSelected_forSegment_(False, 2)
+                    self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 2)
                     self.transferSegmented.setSelected_forSegment_(False, 1)
                     self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
                     self.conferenceSegmented.setSelected_forSegment_(False, 1)
@@ -687,8 +682,8 @@ class AudioController(MediaStream):
             else:
                 self.audioSegmented.setSelected_forSegment_(True, 1)
                 self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
-                self.zrtpSegmented.setSelected_forSegment_(True, 3)
-                self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 3)
+                self.encryptionSegmented.setSelected_forSegment_(True, 3)
+                self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 3)
                 self.transferSegmented.setSelected_forSegment_(True, 2)
                 self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
 
@@ -735,9 +730,9 @@ class AudioController(MediaStream):
         if status == STREAM_CONNECTED:
             self.audioSegmented.setEnabled_forSegment_(True, 0)
 
-            self.zrtpSegmented.setEnabled_forSegment_(True, 0)
-            self.zrtpSegmented.setEnabled_forSegment_(True, 1)
-            self.zrtpSegmented.setEnabled_forSegment_(True, 2)
+            self.encryptionSegmented.setEnabled_forSegment_(True, 0)
+            self.encryptionSegmented.setEnabled_forSegment_(True, 1)
+            self.encryptionSegmented.setEnabled_forSegment_(True, 2)
 
             self.transferSegmented.setEnabled_forSegment_(True, 0)
             self.transferSegmented.setEnabled_forSegment_(True, 1)
@@ -747,12 +742,12 @@ class AudioController(MediaStream):
 
             if not self.answeringMachine:
                 self.audioSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 1)
-                self.zrtpSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 3)
+                self.encryptionSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 3)
                 self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
                 self.conferenceSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
 
             self.audioSegmented.setEnabled_forSegment_(True, 2)
-            self.zrtpSegmented.setEnabled_forSegment_(True, 4)
+            self.encryptionSegmented.setEnabled_forSegment_(True, 4)
             self.transferSegmented.setEnabled_forSegment_(True, 3)
             self.conferenceSegmented.setEnabled_forSegment_(True, 3)
         elif status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING):
@@ -762,8 +757,8 @@ class AudioController(MediaStream):
             self.audioSegmented.setEnabled_forSegment_(True, 2)
 
             for i in range(4):
-                self.zrtpSegmented.setEnabled_forSegment_(False, i)
-            self.zrtpSegmented.setEnabled_forSegment_(True, 4)
+                self.encryptionSegmented.setEnabled_forSegment_(False, i)
+            self.encryptionSegmented.setEnabled_forSegment_(True, 4)
 
             for i in range(3):
                 self.transferSegmented.setEnabled_forSegment_(False, i)
@@ -778,7 +773,7 @@ class AudioController(MediaStream):
                 self.audioSegmented.setEnabled_forSegment_(False, i)
 
             for i in range(5):
-                self.zrtpSegmented.setEnabled_forSegment_(False, i)
+                self.encryptionSegmented.setEnabled_forSegment_(False, i)
 
             for i in range(4):
                 self.transferSegmented.setEnabled_forSegment_(False, i)
@@ -790,7 +785,7 @@ class AudioController(MediaStream):
                 self.audioSegmented.setEnabled_forSegment_(False, i)
 
             for i in range(5):
-                self.zrtpSegmented.setEnabled_forSegment_(False, i)
+                self.encryptionSegmented.setEnabled_forSegment_(False, i)
 
             for i in range(4):
                 self.transferSegmented.setEnabled_forSegment_(False, i)
@@ -900,28 +895,54 @@ class AudioController(MediaStream):
             self.info.setStringValue_("")
 
     def menuWillOpen_(self, menu):
-        if menu == self.zrtpMenu:
-            item = menu.itemWithTag_(1)
-            item.setState_(NSOnState if self.zrtp_active else NSOffState)
+        if menu == self.encryptionMenu:
+            i = 20
+            while True:
+                item = menu.itemWithTag_(i)
+                if not item:
+                    break
+                item.setHidden_(not self.zrtp_supported)
+                i += 1
 
-            item = menu.itemWithTag_(2)
-            item.setState_(NSOnState if self.zrtp_verified else NSOffState)
+            i = 10
 
-            item = menu.itemWithTag_(3)
-            item.setTitle_('Show Confirm Identity Phrase' if not self.zrtp_show_verify_phrase else 'Hide Confirm Identity Phrase')
+            while True:
+                item = menu.itemWithTag_(i)
+                if not item:
+                    break
+                item.setHidden_(self.zrtp_active or (self.stream and not self.stream.srtp_active))
+                i += 1
 
-            item = menu.itemWithTag_(4)
-            item.setState_(NSOnState if not self.zrtp_is_ok else NSOffState)
-
-            item = menu.itemWithTag_(10)
+            item = menu.itemWithTag_(11)
             item.setState_(NSOnState if (self.stream and self.stream.srtp_active) else NSOffState)
             item.setEnabled_(self.stream and self.stream.srtp_active)
 
-            item = menu.itemWithTag_(11)
-            item.setHidden_(self.sessionController.account is BonjourAccount())
+            item = menu.itemWithTag_(12)
+            item.setHidden_(self.sessionController.account is BonjourAccount() or self.zrtp_active)
 
-            item = menu.itemWithTag_(13)
+            item = menu.itemWithTag_(14)
             item.setHidden_(self.session and self.session.transport == "tls")
+
+            item = menu.itemWithTag_(21)
+            item.setState_(NSOnState if self.zrtp_active else NSOffState)
+            title = '%s using Diffie-Hellman key exchange (zRTP)' % ('Encrypted' if self.zrtp_active else 'Encrypt')
+            item.setTitle_(title)
+
+            item = menu.itemWithTag_(22)
+            item.setState_(NSOnState if self.zrtp_verified else NSOffState)
+            item.setEnabled_(self.zrtp_active and self.zrtp_show_verify_phrase)
+            item.setTitle_('Identity Confirmed' if self.zrtp_verified else 'Confirm Identity by verbally comparing the phrase')
+
+            item = menu.itemWithTag_(23)
+            item.setTitle_('Show Confirm Identity Phrase' if not self.zrtp_show_verify_phrase else 'Hide Confirm Identity Phrase')
+            item.setEnabled_(self.zrtp_active)
+
+            item = menu.itemWithTag_(24)
+            item.setEnabled_(self.zrtp_active)
+            item.setState_(NSOnState if not self.zrtp_is_ok else NSOffState)
+
+            item = menu.itemWithTag_(31)
+            item.setHidden_(self.zrtp_active or (self.stream and self.stream.srtp_active))
 
         elif menu == self.transferMenu:
             while menu.numberOfItems() > 1:
@@ -1092,37 +1113,42 @@ class AudioController(MediaStream):
                     image = 'NSLockLockedTemplate'
             else:
                 image = 'NSLockUnlockedTemplate'
-        self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_(image), 0)
+        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_(image), 0)
 
     @objc.IBAction
-    def userClickedZrtpMenuItem_(self, sender):
+    def userClickedEncryptionMenuItem_(self, sender):
         tag = sender.tag()
-        if tag == 1:
+        if tag == 21:
             self.zrtp_active = not self.zrtp_active
+            if not self.zrtp_active:
+                self.zrtp_show_verify_phrase = False
             self.update_encryption_icon()
-
-        elif tag == 2:
+        elif tag == 22:
             self.zrtp_verified = not self.zrtp_verified
             if self.zrtp_verified:
                 self.zrtp_show_verify_phrase = False
             self.update_encryption_icon()
-
-        elif tag == 3:
+        elif tag == 23:
             self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
             if self.zrtp_show_verify_phrase:
                 self.updateAudioStatusWithSessionState('Trojan, Dinosaur', True)
-
-        elif tag == 4:
+        elif tag == 24:
             self.zrtp_is_ok = not self.zrtp_is_ok
             self.update_encryption_icon()
+        elif tag == 27:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/ZRTP"))
+        elif tag == 16:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/SDES"))
+        elif tag == 39:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol"))
 
 
     @objc.IBAction
     def userClickedAudioButton_(self, sender):
         seg = sender.selectedSegment()
-        if sender == self.zrtpSegmented and seg == 0:
+        if sender == self.encryptionSegmented and seg == 0:
             segment_action = 'zrtp'
-        elif sender == self.zrtpSegmented and seg == 1:
+        elif sender == self.encryptionSegmented and seg == 1:
             segment_action = 'take_over_answering_machine' if self.answeringMachine else 'call_transfer'
         elif sender == self.conferenceSegmented and seg == 0:
             segment_action = 'mute_conference'
@@ -1133,14 +1159,14 @@ class AudioController(MediaStream):
         else:
             segment_action = None
 
-        if (self.zrtp_supported and self.transferEnabled) or sender == self.conferenceSegmented:
+        if sender == self.conferenceSegmented:
+            hold_segment = 1
+            record_segment = 2
+            stop_segment = 3
+        elif self.transferEnabled:
             hold_segment = 2
             record_segment = 3
             stop_segment = 4
-        elif self.transferEnabled or sender == self.conferenceSegmented:
-           hold_segment = 1
-           record_segment = 2
-           stop_segment = 3
         else:
            hold_segment = None if self.answeringMachine else 0
            record_segment = 1
@@ -1185,7 +1211,7 @@ class AudioController(MediaStream):
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                                                                                                                           NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                                                                                                                           sender.window().graphicsContext(), 0, 1, 0)
-                NSMenu.popUpContextMenu_withEvent_forView_(self.zrtpMenu, event, sender)
+                NSMenu.popUpContextMenu_withEvent_forView_(self.encryptionMenu, event, sender)
             elif segment_action == 'take_over_answering_machine':
                 if self.holdByLocal:
                     self.view.setSelected_(True)
@@ -1277,13 +1303,13 @@ class AudioController(MediaStream):
         self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 1)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
-        self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 3)
+        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 3)
         self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), 2)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
-        self.zrtpSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 3)
+        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 3)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
         self.addRecordingToHistory(data.filename)
@@ -1310,7 +1336,7 @@ class AudioController(MediaStream):
             else:
                 tip = "Hold"
             self.audioSegmented.cell().setToolTip_forSegment_(tip, 0)
-            self.zrtpSegmented.cell().setToolTip_forSegment_(tip, 2)
+            self.encryptionSegmented.cell().setToolTip_forSegment_(tip, 2)
             self.transferSegmented.cell().setToolTip_forSegment_(tip, 1)
             if data.on_hold and not self.holdByLocal:
                 self.hold()
