@@ -1137,7 +1137,7 @@ class AudioController(MediaStream):
             self.update_encryption_icon()
         elif tag == 27:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/ZRTP"))
-        elif tag == 16:
+        elif tag == 15:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/SDES"))
         elif tag == 39:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol"))
