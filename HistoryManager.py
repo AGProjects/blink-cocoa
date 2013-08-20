@@ -1327,19 +1327,19 @@ class ChatHistoryReplicator(object):
         try:
             with open(ApplicationData.get('chat_replication/chat_replication_journal.pickle'), 'r') as f:
                 self.outgoing_entries = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
+        except Exception:
             pass
 
         try:
             with open(ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle'), 'r') as f:
                 self.for_delete_entries = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
+        except Exception:
             pass
 
         try:
             with open(ApplicationData.get('chat_replication/chat_replication_timestamp.pickle'), 'r') as f:
                 self.last_journal_timestamp = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
+        except Exception:
             pass
 
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(80.0, self, "updateTimer:", None, True)
