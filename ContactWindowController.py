@@ -549,15 +549,16 @@ class ContactWindowController(NSWindowController):
         self.closeAudioInputDeviceForLevelMeter()
 
         settings = SIPSimpleSettings()
-        if settings.audio.input_device is None:
+        input_device = settings.audio.input_device
+        if input_device is None:
             return
 
         audioDevices = NSArray.alloc().initWithArray_(QTKit.QTCaptureDevice.inputDevicesWithMediaType_(QTKit.QTMediaTypeSound))
-        if settings.audio.input_device == 'system_default':
+        if input_device == 'system_default':
             selectedAudioDevice = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeSound)
         else:
             try:
-                selectedAudioDevice = (device for device in audioDevices if unicode(device).startswith(settings.audio.input_device)).next()
+                selectedAudioDevice = (device for device in audioDevices if unicode(device).startswith(input_device)).next()
             except StopIteration:
                 selectedAudioDevice = None
 
