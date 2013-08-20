@@ -83,9 +83,7 @@ class Ringer(object):
         notification_center.add_observer(self, name="SIPApplicationDidStart")
         self.owner = owner
         self.started = False
-        self.cleanupTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "cleanupTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSEventTrackingRunLoopMode)
+        self.cleanupTimer = None
 
     def cleanupTimer_(self, timer):
         # Some sessions can remain hanging indefintely due to illegal state errors, this timer will purge them
@@ -109,6 +107,9 @@ class Ringer(object):
         notification_center.add_observer(self, name="ConferenceHasAddedAudio")
         notification_center.add_observer(self, name="BlinkWillCancelProposal")
 
+        self.cleanupTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "cleanupTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSEventTrackingRunLoopMode)
         self.started = True
 
     def stop(self):
