@@ -3391,25 +3391,41 @@ class ContactWindowController(NSWindowController):
         item.setEnabled_(False)
 
         settings = SIPSimpleSettings()
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.missed_calls_group.name, "toggleHistoryGroup:", "")
-        item.setIndentationLevel_(1)
-        item.setRepresentedObject_(self.model.missed_calls_group)
-        item.setState_(NSOnState if settings.contacts.enable_missed_calls_group else NSOffState)
+        if NSApp.delegate().applicationName != 'Blink Lite':
+            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.missed_calls_group.name, "toggleGroupVisibility:", "")
+            item.setIndentationLevel_(1)
+            item.setRepresentedObject_(self.model.missed_calls_group)
+            item.setState_(NSOnState if settings.contacts.enable_missed_calls_group else NSOffState)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.incoming_calls_group.name, "toggleHistoryGroup:", "")
-        item.setIndentationLevel_(1)
-        item.setRepresentedObject_(self.model.incoming_calls_group)
-        item.setState_(NSOnState if settings.contacts.enable_incoming_calls_group else NSOffState)
+            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.incoming_calls_group.name, "toggleGroupVisibility:", "")
+            item.setIndentationLevel_(1)
+            item.setRepresentedObject_(self.model.incoming_calls_group)
+            item.setState_(NSOnState if settings.contacts.enable_incoming_calls_group else NSOffState)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.outgoing_calls_group.name, "toggleHistoryGroup:", "")
-        item.setIndentationLevel_(1)
-        item.setRepresentedObject_(self.model.outgoing_calls_group)
-        item.setState_(NSOnState if settings.contacts.enable_outgoing_calls_group else NSOffState)
+            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.addressbook_group.name, "toggleGroupVisibility:", "")
+            item.setIndentationLevel_(1)
+            item.setRepresentedObject_(self.model.addressbook_group)
+            item.setState_(NSOnState if settings.contacts.enable_address_book else NSOffState)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.online_contacts_group.name, "toggleHistoryGroup:", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.addressbook_group.name, "toggleGroupVisibility:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.addressbook_group)
+        item.setState_(NSOnState if settings.contacts.enable_address_book else NSOffState)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.online_contacts_group.name, "toggleGroupVisibility:", "")
         item.setIndentationLevel_(1)
         item.setRepresentedObject_(self.model.online_contacts_group)
         item.setState_(NSOnState if settings.contacts.enable_online_group else NSOffState)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.blocked_contacts_group.name, "toggleGroupVisibility:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.blocked_contacts_group)
+        item.setState_(NSOnState if settings.contacts.enable_blocked_group else NSOffState)
+
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.no_group.name, "toggleGroupVisibility:", "")
+        item.setIndentationLevel_(1)
+        item.setRepresentedObject_(self.model.no_group)
+        item.setState_(NSOnState if settings.contacts.enable_no_group else NSOffState)
 
     def updateHistoryMenu(self):
         if self.historyMenu.numberOfItems() < 6:
@@ -3458,7 +3474,7 @@ class ContactWindowController(NSWindowController):
                 group.group.save()
 
     @objc.IBAction
-    def toggleHistoryGroup_(self, sender):
+    def toggleGroupVisibility_(self, sender):
         settings = SIPSimpleSettings()
         group = sender.representedObject()
         if group == self.model.missed_calls_group:
@@ -3469,6 +3485,12 @@ class ContactWindowController(NSWindowController):
             settings.contacts.enable_outgoing_calls_group = not settings.contacts.enable_outgoing_calls_group
         elif group == self.model.online_contacts_group:
             settings.contacts.enable_online_group = not settings.contacts.enable_online_group
+        elif group == self.model.addressbook_group:
+            settings.contacts.enable_address_book = not settings.contacts.enable_address_book
+        elif group == self.model.blocked_contacts_group:
+            settings.contacts.enable_blocked_group = not settings.contacts.enable_blocked_group
+        elif group == self.model.no_group:
+            settings.contacts.enable_no_group = not settings.contacts.enable_no_group
         settings.save()
 
 

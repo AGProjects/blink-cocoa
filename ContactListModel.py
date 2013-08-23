@@ -3103,6 +3103,17 @@ class ContactListModel(CustomListModel):
                 self.saveGroupPosition()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+        if notification.data.modified.has_key("contacts.enable_no_group"):
+            if settings.contacts.enable_no_group and self.no_group not in self.groupsList:
+                position = len(self.groupsList) if self.groupsList else 0
+                self.groupsList.insert(position, self.no_group)
+                self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+            elif not settings.contacts.enable_no_group and self.no_group in self.groupsList:
+                self.groupsList.remove(self.no_group)
+                self.saveGroupPosition()
+                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
         if isinstance(notification.sender, Account):
             account = notification.sender
             if set(['enabled', 'presence.enabled']).intersection(notification.data.modified) and not account.enabled or not account.presence.enabled:
@@ -3499,10 +3510,11 @@ class ContactListModel(CustomListModel):
                 group.save()
             self.groupsList.insert(index, self.all_contacts_group)
         elif group.id == "no_group":
-            if not group.position:
-                group.position = max(len(self.groupsList)-1, 0)
-                group.save()
-            self.groupsList.insert(index, self.no_group)
+            if settings.contacts.enable_no_group:
+                if not group.position:
+                    group.position = max(len(self.groupsList)-1, 0)
+                    group.save()
+                self.groupsList.insert(index, self.no_group)
         elif group.id == "blocked_contacts":
             if settings.contacts.enable_blocked_group:
                 if not group.position:

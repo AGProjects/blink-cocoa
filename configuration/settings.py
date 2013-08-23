@@ -112,6 +112,7 @@ class ContactsSettings(SettingsGroup):
     enable_incoming_calls_group = Setting(type=bool, default=False)
     enable_missed_calls_group = Setting(type=bool, default=True)
     enable_outgoing_calls_group = Setting(type=bool, default=False)
+    enable_no_group = Setting(type=bool, default=False)
     enable_blocked_group = Setting(type=bool, default=False)
     enable_online_group = Setting(type=bool, default=False)
     missed_calls_period = Setting(type=NonNegativeInteger, default=7)
