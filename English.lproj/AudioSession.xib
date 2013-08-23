@@ -42,14 +42,54 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSCustomView" id="1005">
-				<nil key="NSNextResponder"/>
+				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">268</int>
 				<array class="NSMutableArray" key="NSSubviews">
+					<object class="NSSegmentedControl" id="338462680">
+						<reference key="NSNextResponder" ref="1005"/>
+						<int key="NSvFlags">-2147483380</int>
+						<string key="NSFrame">{{152, 2}, {111, 20}}</string>
+						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView" ref="507355065"/>
+						<string key="NSReuseIdentifierKey">_NS:9</string>
+						<bool key="NSEnabled">YES</bool>
+						<object class="NSSegmentedCell" key="NSCell" id="16574656">
+							<int key="NSCellFlags">67108864</int>
+							<int key="NSCellFlags2">131072</int>
+							<object class="NSFont" key="NSSupport" id="918598106">
+								<string key="NSName">LucidaGrande</string>
+								<double key="NSSize">11</double>
+								<int key="NSfFlags">16</int>
+							</object>
+							<string key="NSCellIdentifier">_NS:9</string>
+							<reference key="NSControlView" ref="338462680"/>
+							<array class="NSMutableArray" key="NSSegmentImages">
+								<object class="NSSegmentItem">
+									<double key="NSSegmentItemWidth">52</double>
+									<string key="NSSegmentItemLabel">Confirm</string>
+									<int key="NSSegmentItemTag">1</int>
+									<int key="NSSegmentItemImageScaling">0</int>
+								</object>
+								<object class="NSSegmentItem">
+									<double key="NSSegmentItemWidth">52</double>
+									<string key="NSSegmentItemLabel">Hangup</string>
+									<int key="NSSegmentItemTag">2</int>
+									<int key="NSSegmentItemImageScaling">0</int>
+								</object>
+							</array>
+							<int key="NSSelectedSegment">1</int>
+							<int key="NSTrackingMode">2</int>
+							<int key="NSSegmentStyle">1</int>
+						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
+					</object>
 					<object class="NSButton" id="2310863">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{245, 37}, {16, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="182486928"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="44578391">
@@ -80,6 +120,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 37}, {244, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="414512458"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="481585753">
@@ -116,8 +157,9 @@
 					<object class="NSTextField" id="182486928">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{4, 20}, {66, 16}}</string>
+						<string key="NSFrame">{{4, 21}, {259, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="820836428"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="420729772">
@@ -148,6 +190,7 @@
 						</set>
 						<string key="NSFrame">{{7, 37}, {14, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="2310863"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="1067246760">
@@ -170,6 +213,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{72, 21}, {16, 12}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="163338663"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="451413128">
@@ -195,6 +239,8 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
@@ -250,6 +296,7 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{153, 2}, {110, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="88869251"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="177104667">
@@ -312,6 +359,7 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{173, 2}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="452112932"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="383047219">
@@ -358,6 +406,7 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{173, 2}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="491586822"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="710252372">
@@ -409,19 +458,16 @@
 					<object class="NSTextField" id="163338663">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">266</int>
-						<string key="NSFrame">{{4, 5}, {171, 14}}</string>
+						<string key="NSFrame">{{4, 6}, {171, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="347238004"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="1026873649">
 							<int key="NSCellFlags">68157504</int>
 							<int key="NSCellFlags2">4326400</int>
 							<string key="NSContents">Established</string>
-							<object class="NSFont" key="NSSupport">
-								<string key="NSName">LucidaGrande</string>
-								<double key="NSSize">11</double>
-								<int key="NSfFlags">16</int>
-							</object>
+							<reference key="NSSupport" ref="918598106"/>
 							<reference key="NSControlView" ref="163338663"/>
 							<reference key="NSBackgroundColor" ref="340367070"/>
 							<reference key="NSTextColor" ref="741058806"/>
@@ -441,7 +487,8 @@
 						</set>
 						<string key="NSFrame">{{5, 5}, {17, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
-						<reference key="NSNextKeyView" ref="507355065"/>
+						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView" ref="338462680"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="71900893">
 							<int key="NSCellFlags">134217728</int>
@@ -460,6 +507,8 @@
 					</object>
 				</array>
 				<string key="NSFrameSize">{265, 57}</string>
+				<reference key="NSSuperview"/>
+				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="327816639"/>
 				<string key="NSClassName">AudioSession</string>
 			</object>
@@ -688,6 +737,7 @@
 						<string key="NSTitle">Encryption key is known only by the end-points</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">25</int>
@@ -699,6 +749,7 @@
 						<string key="NSTitle">Encryption is guranteed end-to-end</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">28</int>
@@ -710,6 +761,7 @@
 						<string key="NSTitle">Man-in-the-middle attacks are always detected</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">26</int>
@@ -752,6 +804,7 @@
 						<string key="NSTitle">SIP Service Provider has access to the encryption key</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">12</int>
@@ -763,6 +816,7 @@
 						<string key="NSTitle">Internet Provider can access the encryption key (SIP signaling is not encrypted)</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">14</int>
@@ -774,6 +828,7 @@
 						<string key="NSTitle">Man-in-the-middle attacks cannot be reliably detected</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">13</int>
@@ -785,6 +840,7 @@
 						<string key="NSTitle">Encryption is guaranteed only to the next-hop</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
+						<int key="NSState">1</int>
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">16</int>
@@ -1189,6 +1245,22 @@
 					<int key="connectionID">301</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedZRTPConfirmButton:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="338462680"/>
+					</object>
+					<int key="connectionID">327</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">zRTPConfirmButton</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="338462680"/>
+					</object>
+					<int key="connectionID">328</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">menu</string>
 						<reference key="source" ref="1005"/>
@@ -1318,100 +1390,9 @@
 							<reference ref="327816639"/>
 							<reference ref="2310863"/>
 							<reference ref="507355065"/>
+							<reference ref="338462680"/>
 						</array>
 						<reference key="parent" ref="0"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">2</int>
-						<reference key="object" ref="327816639"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="481585753"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">3</int>
-						<reference key="object" ref="481585753"/>
-						<reference key="parent" ref="327816639"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">6</int>
-						<reference key="object" ref="182486928"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="420729772"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">7</int>
-						<reference key="object" ref="420729772"/>
-						<reference key="parent" ref="182486928"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">23</int>
-						<reference key="object" ref="414512458"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="1067246760"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">24</int>
-						<reference key="object" ref="1067246760"/>
-						<reference key="parent" ref="414512458"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">26</int>
-						<reference key="object" ref="820836428"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="451413128"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">27</int>
-						<reference key="object" ref="451413128"/>
-						<reference key="parent" ref="820836428"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">30</int>
-						<reference key="object" ref="452112932"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="20176183"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-						<string key="objectName">Session Control Buttons</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">31</int>
-						<reference key="object" ref="163338663"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="1026873649"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">32</int>
-						<reference key="object" ref="347238004"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="71900893"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">33</int>
-						<reference key="object" ref="71900893"/>
-						<reference key="parent" ref="347238004"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">34</int>
-						<reference key="object" ref="1026873649"/>
-						<reference key="parent" ref="163338663"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">35</int>
-						<reference key="object" ref="20176183"/>
-						<reference key="parent" ref="452112932"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">53</int>
@@ -1459,37 +1440,9 @@
 						<reference key="parent" ref="590086273"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">71</int>
-						<reference key="object" ref="88869251"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="710252372"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-						<string key="objectName">Session Control Buttons</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">72</int>
-						<reference key="object" ref="710252372"/>
-						<reference key="parent" ref="88869251"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">87</int>
 						<reference key="object" ref="797801247"/>
 						<reference key="parent" ref="590086273"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">89</int>
-						<reference key="object" ref="491586822"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="383047219"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-						<string key="objectName">Session Control Buttons</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">90</int>
-						<reference key="object" ref="383047219"/>
-						<reference key="parent" ref="491586822"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">93</int>
@@ -1515,19 +1468,6 @@
 						<reference key="parent" ref="590086273"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">166</int>
-						<reference key="object" ref="2310863"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="44578391"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">167</int>
-						<reference key="object" ref="44578391"/>
-						<reference key="parent" ref="2310863"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">170</int>
 						<reference key="object" ref="384091754"/>
 						<reference key="parent" ref="590086273"/>
@@ -1551,20 +1491,6 @@
 						<int key="objectID">178</int>
 						<reference key="object" ref="326434177"/>
 						<reference key="parent" ref="590086273"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">198</int>
-						<reference key="object" ref="507355065"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="177104667"/>
-						</array>
-						<reference key="parent" ref="1005"/>
-						<string key="objectName">Session Control Buttons</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">199</int>
-						<reference key="object" ref="177104667"/>
-						<reference key="parent" ref="507355065"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">202</int>
@@ -1693,6 +1619,166 @@
 						<reference key="object" ref="91065773"/>
 						<reference key="parent" ref="885894404"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">166</int>
+						<reference key="object" ref="2310863"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="44578391"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">167</int>
+						<reference key="object" ref="44578391"/>
+						<reference key="parent" ref="2310863"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">2</int>
+						<reference key="object" ref="327816639"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="481585753"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">3</int>
+						<reference key="object" ref="481585753"/>
+						<reference key="parent" ref="327816639"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">6</int>
+						<reference key="object" ref="182486928"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="420729772"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">7</int>
+						<reference key="object" ref="420729772"/>
+						<reference key="parent" ref="182486928"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">23</int>
+						<reference key="object" ref="414512458"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="1067246760"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">24</int>
+						<reference key="object" ref="1067246760"/>
+						<reference key="parent" ref="414512458"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">26</int>
+						<reference key="object" ref="820836428"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="451413128"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">27</int>
+						<reference key="object" ref="451413128"/>
+						<reference key="parent" ref="820836428"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">30</int>
+						<reference key="object" ref="452112932"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="20176183"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+						<string key="objectName">Session Control Buttons</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">35</int>
+						<reference key="object" ref="20176183"/>
+						<reference key="parent" ref="452112932"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">198</int>
+						<reference key="object" ref="507355065"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="177104667"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+						<string key="objectName">Session Control Buttons</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">199</int>
+						<reference key="object" ref="177104667"/>
+						<reference key="parent" ref="507355065"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">71</int>
+						<reference key="object" ref="88869251"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="710252372"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+						<string key="objectName">Session Control Buttons</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">72</int>
+						<reference key="object" ref="710252372"/>
+						<reference key="parent" ref="88869251"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">31</int>
+						<reference key="object" ref="163338663"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="1026873649"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">34</int>
+						<reference key="object" ref="1026873649"/>
+						<reference key="parent" ref="163338663"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">32</int>
+						<reference key="object" ref="347238004"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="71900893"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">33</int>
+						<reference key="object" ref="71900893"/>
+						<reference key="parent" ref="347238004"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">89</int>
+						<reference key="object" ref="491586822"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="383047219"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+						<string key="objectName">Session Control Buttons</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">90</int>
+						<reference key="object" ref="383047219"/>
+						<reference key="parent" ref="491586822"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">325</int>
+						<reference key="object" ref="338462680"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="16574656"/>
+						</array>
+						<reference key="parent" ref="1005"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">326</int>
+						<reference key="object" ref="16574656"/>
+						<reference key="parent" ref="338462680"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -1744,7 +1830,7 @@
 					<object class="IBToolTipAttribute" key="NS.object.0">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="414512458"/>
-						<string key="toolTip">SIP signaling is encrypted</string>
+						<string key="toolTip">SIP signaling with the next hop is encrypted using TLS. This does not guarantee that communication with subsequent hops are also encrypted.</string>
 					</object>
 				</object>
 				<string key="23.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1799,6 +1885,9 @@
 					</object>
 				</object>
 				<string key="32.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="325.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<integer value="1" key="326.IBNSSegmentedControlInspectorSelectedSegmentMetadataKey"/>
+				<string key="326.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="33.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="34.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="35.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -1850,7 +1939,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">301</int>
+			<int key="maxID">330</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1864,6 +1953,7 @@
 						<string key="userClickedSessionInfoButton:">id</string>
 						<string key="userClickedSessionMenuItem:">id</string>
 						<string key="userClickedTransferMenuItem:">id</string>
+						<string key="userClickedZRTPConfirmButton:">id</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="actionInfosByName">
 						<object class="IBActionInfo" key="userClickedAudioButton:">
@@ -1890,6 +1980,10 @@
 							<string key="name">userClickedTransferMenuItem:</string>
 							<string key="candidateClassName">id</string>
 						</object>
+						<object class="IBActionInfo" key="userClickedZRTPConfirmButton:">
+							<string key="name">userClickedZRTPConfirmButton:</string>
+							<string key="candidateClassName">id</string>
+						</object>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="outlets">
 						<string key="audioSegmented">id</string>
@@ -1907,6 +2001,7 @@
 						<string key="transferMenu">id</string>
 						<string key="transferSegmented">id</string>
 						<string key="view">id</string>
+						<string key="zRTPConfirmButton">id</string>
 					</dictionary>
 					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
 						<object class="IBToOneOutletInfo" key="audioSegmented">
@@ -1967,6 +2062,10 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="view">
 							<string key="name">view</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="zRTPConfirmButton">
+							<string key="name">zRTPConfirmButton</string>
 							<string key="candidateClassName">id</string>
 						</object>
 					</dictionary>

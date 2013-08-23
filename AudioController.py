@@ -94,6 +94,8 @@ class AudioController(MediaStream):
     transferMenu = objc.IBOutlet()
     sessionMenu = objc.IBOutlet()
 
+    zRTPConfirmButton = objc.IBOutlet()
+
     encryptionSegmented = objc.IBOutlet()
     encryptionMenu = objc.IBOutlet()
     # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
@@ -830,6 +832,10 @@ class AudioController(MediaStream):
         if not self.session:
             return
 
+        if self.zrtp_show_verify_phrase:
+            self.elapsed.setStringValue_('Confirm verbally zRTP encryption phrase:')
+            return
+
         if self.session.end_time:
             now = self.session.end_time
         else:
@@ -915,7 +921,7 @@ class AudioController(MediaStream):
 
             item = menu.itemWithTag_(11)
             item.setState_(NSOnState if (self.stream and self.stream.srtp_active) else NSOffState)
-            item.setEnabled_(self.stream and self.stream.srtp_active)
+            #item.setEnabled_(self.stream and self.stream.srtp_active)
 
             item = menu.itemWithTag_(12)
             item.setHidden_(self.sessionController.account is BonjourAccount() or self.zrtp_active)
@@ -1116,12 +1122,31 @@ class AudioController(MediaStream):
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_(image), 0)
 
     @objc.IBAction
+    def userClickedZRTPConfirmButton_(self, sender):
+        if sender.selectedSegment() == 0:
+            self.zRTPConfirmButton.setHidden_(True)
+            self.zrtp_show_verify_phrase = False
+            self.zrtp_verified = True
+            self.updateAudioStatusWithCodecInformation()
+        elif sender.selectedSegment() == 1:
+            self.zrtp_show_verify_phrase = False
+            self.zrtp_verified = False
+            self.end()
+            self.hangup_reason = u"zRTP Verify Failed"
+            self.updateAudioStatusWithSessionState('Session Ended', True)
+
+        self.updateDuration()
+        self.update_encryption_icon()
+
+    @objc.IBAction
     def userClickedEncryptionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 21:
             self.zrtp_active = not self.zrtp_active
-            if not self.zrtp_active:
-                self.zrtp_show_verify_phrase = False
+            if not self.zrtp_verified:
+                self.zrtp_show_verify_phrase = True
+                self.zRTPConfirmButton.setHidden_(False)
+                self.updateAudioStatusWithSessionState('Trojan, Dinosaur', True)
             self.update_encryption_icon()
         elif tag == 22:
             self.zrtp_verified = not self.zrtp_verified
@@ -1129,6 +1154,7 @@ class AudioController(MediaStream):
                 self.zrtp_show_verify_phrase = False
             self.update_encryption_icon()
         elif tag == 23:
+            self.zRTPConfirmButton.setHidden_(False)
             self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
             if self.zrtp_show_verify_phrase:
                 self.updateAudioStatusWithSessionState('Trojan, Dinosaur', True)
