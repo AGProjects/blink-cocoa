@@ -946,7 +946,7 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedActionsButton_(self, sender):
-        point = sender.convertPointToBase_(NSZeroPoint)
+        point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                     NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                     sender.window().graphicsContext(), 0, 1, 0)
