@@ -3402,11 +3402,6 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_(self.model.incoming_calls_group)
             item.setState_(NSOnState if settings.contacts.enable_incoming_calls_group else NSOffState)
 
-            item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.addressbook_group.name, "toggleGroupVisibility:", "")
-            item.setIndentationLevel_(1)
-            item.setRepresentedObject_(self.model.addressbook_group)
-            item.setState_(NSOnState if settings.contacts.enable_address_book else NSOffState)
-
         item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.addressbook_group.name, "toggleGroupVisibility:", "")
         item.setIndentationLevel_(1)
         item.setRepresentedObject_(self.model.addressbook_group)
