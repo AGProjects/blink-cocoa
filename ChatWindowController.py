@@ -1058,7 +1058,7 @@ class ChatWindowController(NSWindowController):
                     item.setTitle_('My fingerprint is %s' % str(my_fingerprint))
 
                     item = menu.itemWithTag_(3)
-                    item.setTitle_('Always require encryption with %s' % display_name)
+                    item.setTitle_('Always require OTR encryption with %s' % display_name)
 
                     if selectedSession.contact is not None:
                         item.setEnabled_(True)
@@ -1074,20 +1074,20 @@ class ChatWindowController(NSWindowController):
                         if chat_stream.status == STREAM_CONNECTED:
                             if selectedSession.session.remote_focus:
                                 item.setEnabled_(False)
-                                item.setTitle_('Encryption is not possible within a multi-party conference')
+                                item.setTitle_('OTR encryption is not possible within a multi-party conference')
                             else:
                                 if chat_stream.require_encryption and chat_stream.is_encrypted:
                                     item.setEnabled_(False)
                                 else:
                                     item.setEnabled_(True)
-                                item.setTitle_('Activate encryption for this session' if not chat_stream.is_encrypted else 'Deactivate encryption for this session')
+                                item.setTitle_('Activate OTR encryption for this session' if not chat_stream.is_encrypted else 'Deactivate OTR encryption for this session')
                         else:
                             item.setEnabled_(False)
-                            item.setTitle_('Encryption is possible after connection is established')
+                            item.setTitle_('OTR encryption is possible after connection is established')
 
                     else:
                         item.setEnabled_(False)
-                        item.setTitle_('Encryption is disabled in Chat preferences')
+                        item.setTitle_('OTR encryption is disabled in Chat preferences')
 
                     if settings.chat.enable_encryption:
                         ctx = chat_stream.otr_account.getContext(selectedSession.call_id)

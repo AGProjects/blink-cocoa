@@ -1724,7 +1724,7 @@ SettingDescription = {
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
                       'chat.disable_collaboration_editor': 'Disable Collaboration Editor',
-                      'chat.enable_encryption': 'Encryption',
+                      'chat.enable_encryption': 'OTR Encryption',
                       'contacts.enable_address_book': 'Show Address Book',
                       'contacts.enable_incoming_calls_group': 'Show Incoming Calls',
                       'contacts.enable_missed_calls_group': 'Show Missed Calls',
