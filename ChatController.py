@@ -891,7 +891,7 @@ class ChatController(MediaStream):
                         self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-red"))
                         try:
                             old_fingerprint = self.new_fingerprints[str(fingerprint)]
-                        except:
+                        except KeyError:
                             self.new_fingerprints[str(fingerprint)] = True
                             self.notify_changed_fingerprint()
                     else:
