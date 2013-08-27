@@ -34,4 +34,5 @@ Third party dependencies
  * sqlobject
  * python-ldap == 2.3.13
  * M2Crypto
-
+ * python-potr
+ * crypto

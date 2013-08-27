@@ -51,7 +51,11 @@ import os
 import time
 import unicodedata
 import uuid
+import potr
+import potr.crypt
+import potr.context
 
+from dateutil.tz import tzlocal
 from gnutls.errors import GNUTLSError
 
 from application.notification import IObserver, NotificationCenter, NotificationData
@@ -69,6 +73,7 @@ from sipsimple.util import ISOTimestamp
 import ChatWindowController
 from BlinkLogger import BlinkLogger
 from ChatViewController import ChatViewController, MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
+from ChatOTR import BlinkOtrAccount
 from ContactListModel import encode_icon, decode_icon
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -162,6 +167,7 @@ class ChatController(MediaStream):
     message_count_from_history = 0
 
     nickname_request_map = {} # message id -> nickname
+    new_fingerprints = {}
 
     @classmethod
     def createStream(self):
@@ -178,15 +184,19 @@ class ChatController(MediaStream):
         self.remoteIcon = None
         self.share_screen_in_conference = False
 
+        self.previous_is_encrypted = False
         self.history_msgid_list=set()
 
         self.remote_uri = format_identity_to_string(self.sessionController.remotePartyObject)
         self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
 
+        self.require_encryption = self.sessionController.contact.contact.require_encryption if self.sessionController.contact is not None else True
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
         self.notification_center.add_observer(self, name='ChatReplicationJournalEntryReceived')
+        self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
+        self.notification_center.add_observer(self, name='OTRPrivateKeyDidChange')
 
         NSBundle.loadNibNamed_owner_("ChatView", self)
 
@@ -210,7 +220,38 @@ class ChatController(MediaStream):
         self.history = ChatHistory()
         self.backend = SIPManager()
 
+        self.init_otr()
+
         return self
+
+    def init_otr(self):
+        peer_options = {}
+        if self.sessionController.contact is not None:
+            peer_options['REQUIRE_ENCRYPTION'] = self.sessionController.contact.contact.require_encryption
+        settings = SIPSimpleSettings()
+        peer_options['ALLOW_V2'] = settings.chat.enable_encryption
+
+        self.otr_account = BlinkOtrAccount(peer_options=peer_options)
+        self.otr_account.loadTrusts()
+
+    def setEncryptionState(self, ctx):
+        if self.previous_is_encrypted != self.is_encrypted:
+            self.previous_is_encrypted = self.is_encrypted
+            fingerprint = str(ctx.getCurrentKey())
+            self.sessionController.log_info('Remote OTR fingerprint %s' %fingerprint)
+        self.updateEncryptionWidgets()
+
+    @property
+    def otr_status(self):
+        ctx = self.otr_account.getContext(self.sessionController.call_id)
+        finished = ctx.state == potr.context.STATE_FINISHED
+        encrypted = finished or ctx.state == potr.context.STATE_ENCRYPTED
+        trusted = encrypted and bool(ctx.getCurrentTrust())
+        return (encrypted, trusted, finished)
+
+    @property
+    def is_encrypted(self):
+        return self.otr_status[0]
 
     @property
     def screensharing_allowed(self):
@@ -352,6 +393,35 @@ class ChatController(MediaStream):
 
     def validateToolbarItem_(self, item):
         return True
+
+    def userClickedEncryptionMenu_(self, sender):
+        tag = sender.tag()
+        ctx = self.otr_account.getContext(self.sessionController.call_id)
+        if tag == 3: # required
+            self.require_encryption = not self.require_encryption
+            if self.sessionController.contact is not None:
+                self.sessionController.contact.contact.require_encryption = self.require_encryption
+                self.sessionController.contact.contact.save()
+
+            self.otr_account.peer_options['REQUIRE_ENCRYPTION'] = self.require_encryption
+            if self.status == STREAM_CONNECTED and self.require_encryption:
+                self.outgoing_message_handler.propose_otr()
+
+        elif tag == 4: # active
+            if self.status == STREAM_CONNECTED and self.is_encrypted:
+                ctx.disconnect()
+            else:
+                self.outgoing_message_handler.propose_otr()
+        elif tag == 5: # verified
+            fingerprint = ctx.getCurrentKey()
+            if fingerprint:
+                otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                if otr_fingerprint_verified:
+                    self.otr_account.removeFingerprint(self.sessionController.remoteSIPAddress, str(fingerprint))
+                else:
+                    self.otr_account.setTrust(self.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
+
+        self.chatWindowController.revalidateToolbar()
 
     @objc.IBAction
     def userClickedFullScreenToolbarButton_(self, sender):
@@ -808,6 +878,34 @@ class ChatController(MediaStream):
         if self.mustShowUnreadMessages:
             self.chatWindowController.noteNewMessageForSession_(self.sessionController)
 
+    def updateEncryptionWidgets(self):
+        if self.status == STREAM_CONNECTED:
+            ctx = self.otr_account.getContext(self.sessionController.call_id)
+            fingerprint = ctx.getCurrentKey()
+            otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+            if self.is_encrypted:
+                if otr_fingerprint_verified:
+                    self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
+                else:
+                    if self.otr_account.getTrusts(self.sessionController.remoteSIPAddress):
+                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-red"))
+                        try:
+                            old_fingerprint = self.new_fingerprints[str(fingerprint)]
+                        except:
+                            self.new_fingerprints[str(fingerprint)] = True
+                            self.notify_changed_fingerprint()
+                    else:
+                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-orange"))
+            else:
+                settings = SIPSimpleSettings()
+                if not settings.chat.enable_encryption:
+                    self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
+                else:
+                    self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green" if self.is_encrypted else "unlocked-red"))
+        else:
+            self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
+
+
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
         settings = SIPSimpleSettings()
@@ -817,7 +915,11 @@ class ChatController(MediaStream):
 
         for item in toolbar.visibleItems():
             identifier = item.itemIdentifier()
-            if identifier == 'connect_button':
+            if identifier == 'encryption':
+                self.updateEncryptionWidgets()
+                item.setEnabled_(True)
+
+            elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
                     item.setEnabled_(True)
                     item.setToolTip_('Click to cancel the chat session')
@@ -895,6 +997,32 @@ class ChatController(MediaStream):
             elif identifier == 'sendfile':
                 item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
 
+    def notify_changed_fingerprint(self):
+        log_text = '%s changed encryption fingerprint' % self.sessionController.getTitleShort()
+        self.showSystemMessage(log_text, ISOTimestamp.now(), True)
+
+        settings = SIPSimpleSettings()
+        if not settings.audio.silent:
+            this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+            volume = 0.8
+
+            if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+                if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                    volume = settings.sounds.night_volume.volume/100.0
+            elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+                if this_hour < settings.sounds.night_volume.end_hour:
+                    volume = settings.sounds.night_volume.volume/100.0
+                elif this_hour >=  settings.sounds.night_volume.start_hour:
+                    volume = settings.sounds.night_volume.volume/100.0
+
+            NSApp.delegate().contactsWindowController.speech_synthesizer.setVolume_(volume)
+            NSApp.delegate().contactsWindowController.speech_synthesizer.startSpeakingString_(log_text)
+
+        nc_title = 'Chat Encryption Warning'
+        nc_subtitle = self.sessionController.getTitleShort()
+        nc_body = 'Encryption fingerprint has changed'
+        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
     def validateToolbarButton(self, item):
         """
         Called automatically by Cocoa in ChatWindowController to enable/disable each toolbar item
@@ -908,7 +1036,11 @@ class ChatController(MediaStream):
             if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().applicationName != 'Blink Lite':
                 return True
 
-            if identifier == 'connect_button':
+            if identifier == 'encryption':
+                self.updateEncryptionWidgets()
+                return True
+
+            elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
                     return True
                 elif self.status in (STREAM_PROPOSING, STREAM_CONNECTED):
@@ -1243,13 +1375,55 @@ class ChatController(MediaStream):
             recipient = message.recipients[0]
             private = data.private
             text = message.body
+            sender_aor = format_identity_to_string(sender)
+            status = 'delivered'
+
+            try:
+                ctx = self.otr_account.getContext(self.sessionController.call_id)
+                text, tlvs = ctx.receiveMessage(text, appdata={'stream': self.stream})
+                self.setEncryptionState(ctx)
+                if text is None:
+                    return
+            except potr.context.NotOTRMessage, e:
+                self.sessionController.log_debug('Message %s is not an OTR message' % msgid)
+            except potr.context.UnencryptedMessage, e:
+                tlvs = []
+                status = 'failed'
+                log = 'Message %s is not encrypted, while encryption was expected' % msgid
+                self.sessionController.log_error(log)
+                self.showSystemMessage(log, ISOTimestamp.now(), True)
+            except potr.context.NotEncryptedError, e:
+                # we got some encrypted data
+                log = 'Encrypted message %s is unreadable, as you have disabled encryption' % msgid
+                status = 'failed'
+                self.sessionController.log_error(log)
+                self.showSystemMessage(log, ISOTimestamp.now(), True)
+                return
+            except potr.context.ErrorReceived, e:
+                status = 'failed'
+                # got a protocol error
+                log = 'Encrypted message %s protocol error: %s' % (msgid, e.args[0].error)
+                self.sessionController.log_error(log)
+                self.showSystemMessage(log, ISOTimestamp.now(), True)
+                return
+            except potr.crypt.InvalidParameterError, e:
+                status = 'failed'
+                # received a packet we cannot process (probably tampered or
+                # sent to wrong session)
+                log = 'Encrypted message %s has been tampered with' % msgid
+                self.sessionController.log_error(log)
+                self.showSystemMessage(log, ISOTimestamp.now(), True)
+            except RuntimeError, e:
+                status = 'failed'
+                self.sessionController.log_error('Encrypted message has runtime error: %s' % e)
+
             timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
             name = format_identity_to_string(sender, format='compact')
-            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender), self.session.remote_focus)
+            icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_aor, self.session.remote_focus)
             recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             if self.chatViewController:
-                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state="delivered", is_html=is_html, media_type='chat')
+                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state=status, is_html=is_html, media_type='chat')
 
             tab = self.chatViewController.outputView.window()
             tab_is_key = tab.isKeyWindow() if tab else False
@@ -1260,13 +1434,13 @@ class ChatController(MediaStream):
                 # notify growl
                 growl_data = NotificationData()
                 growl_data.sender = format_identity_to_string(sender, format='compact')
-                growl_data.content = html2txt(message.body[0:400]) if message.content_type == 'text/html' else message.body[0:400]
+                growl_data.content = html2txt(text[0:400]) if message.content_type == 'text/html' else text[0:400]
                 NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
                 NSApp.requestUserAttention_(NSInformationalRequest)
 
                 nc_title = 'Chat Message Received'
                 nc_subtitle = format_identity_to_string(sender, format='full')
-                nc_body = html2txt(message.body[0:400]) if message.content_type == 'text/html' else message.body[0:400]
+                nc_body = html2txt(text[0:400]) if message.content_type == 'text/html' else text[0:400]
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
             NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
@@ -1383,6 +1557,7 @@ class ChatController(MediaStream):
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.changeStatus(STREAM_CONNECTED)
         self.mediastream_started = True
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
@@ -1399,16 +1574,15 @@ class ChatController(MediaStream):
         # needed to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-        self.changeStatus(STREAM_CONNECTED)
         if self.sessionController.account is BonjourAccount():
             self.sendOwnIcon()
 
     def _NH_MediaStreamDidEnd(self, sender, data):
+        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
             self.showSystemMessage('Connection closed', ISOTimestamp.now())
-        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.outgoing_message_handler.setDisconnected()
         self.screensharing_handler.setDisconnected()
         self.reset()
@@ -1429,6 +1603,31 @@ class ChatController(MediaStream):
 
         self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
+
+    def _NH_OTRPrivateKeyDidChange(self, sender, data):
+        if self.status == STREAM_CONNECTED and self.is_encrypted:
+            otr_context_id = self.sessionController.call_id
+            ctx = self.otr_account.getContext(otr_context_id)
+            ctx.disconnect()
+            self.init_otr()
+            self.outgoing_message_handler.propose_otr()
+        else:
+            self.init_otr()
+
+        self.chatWindowController.revalidateToolbar()
+
+    def _NH_CFGSettingsObjectDidChange(self, sender, data):
+        settings = SIPSimpleSettings()
+        if data.modified.has_key("chat.enable_encryption"):
+            if self.status == STREAM_CONNECTED:
+                if self.is_encrypted and not settings.chat.enable_encryption:
+                    otr_context_id = self.sessionController.call_id
+                    ctx = self.otr_account.getContext(otr_context_id)
+                    ctx.disconnect()
+                elif settings.chat.enable_encryption and not self.is_encrypted:
+                    self.outgoing_message_handler.propose_otr()
+
+            self.chatWindowController.revalidateToolbar()
 
     def _NH_ChatReplicationJournalEntryReceived(self, sender, data):
         if self.status == STREAM_CONNECTED:
@@ -1492,6 +1691,7 @@ class ChatController(MediaStream):
         self.last_failure_reason = None
         self.remoteIcon = None
         self.share_screen_in_conference = False
+        self.previous_is_encrypted = False
 
         self.videoContainer.hideVideo()
         self.exitFullScreen()
@@ -1506,6 +1706,7 @@ class ChatController(MediaStream):
 
     def startDeallocTimer(self):
         self.removeFromSession()
+        self.otr_account = None
 
         if not self.session_was_active:
             self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController)
@@ -1523,6 +1724,9 @@ class ChatController(MediaStream):
         self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
         self.notification_center.remove_observer(self, name='ChatReplicationJournalEntryReceived')
+        self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
+        self.notification_center.remove_observer(self, name='OTRPrivateKeyDidChange')
+
         self.notification_center = None
 
         # remove GUI observers
@@ -1625,8 +1829,22 @@ class OutgoingMessageHandler(NSObject):
         self.connected = None
         self.history = None
 
+    def propose_otr(self):
+        if self.delegate.delegate.status != STREAM_CONNECTED:
+            return
+
+        otr_context_id = self.delegate.sessionController.call_id
+        ctx = self.delegate.delegate.otr_account.getContext(otr_context_id)
+        newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, '?OTRv2?', appdata={'stream':self.delegate.delegate.stream})
+        self.delegate.delegate.setEncryptionState(ctx)
+        try:
+            self.stream.send_message(newmsg, timestamp=ISOTimestamp.now())
+        except ChatStreamError, e:
+            pass
+
     def _send(self, msgid):
         message = self.messages.pop(msgid)
+        message.status = "sent"
         if message.private and message.recipient is not None:
             try:
                 id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
@@ -1639,8 +1857,25 @@ class OutgoingMessageHandler(NSObject):
                 return False
         else:
             try:
-                id = self.stream.send_message(message.text, timestamp=message.timestamp)
+                if self.delegate.delegate.sessionController.account is BonjourAccount():
+                    newmsg = message.text
+                else:
+                    otr_context_id = self.delegate.sessionController.call_id
+                    ctx = self.delegate.delegate.otr_account.getContext(otr_context_id)
+                    newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.text, appdata={'stream':self.delegate.delegate.stream})
+                    self.delegate.delegate.setEncryptionState(ctx)
+                id = self.stream.send_message(newmsg, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
+                if 'has requested end-to-end encryption but this software does not support this feature' in newmsg:
+                    self.delegate.sessionController.log_error(u"Error sending chat message %s: OTR not started remotely" % msgid)
+                    message.status='failed'
+                    self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Remote party has not started OTR protocol", ISOTimestamp.now(), True)
+
+
+            except potr.context.NotEncryptedError, e:
+                self.delegate.sessionController.log_error('Chat message was not send. Either end your private OTR conversation, or restart it')
+                return False
+
             except ChatStreamError, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
@@ -1648,7 +1883,6 @@ class OutgoingMessageHandler(NSObject):
                 self.add_to_history(message)
                 return False
 
-        message.status = "sent"
         self.messages[id] = message
 
         return True
@@ -1681,8 +1915,8 @@ class OutgoingMessageHandler(NSObject):
                 try:
                     self._send(msgid)
                 except Exception, e:
-                    self.delegate.sessionController.log_error(u"Error sending chat message: %s" % e)
-                    self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Message delivery failure", timestamp, True)
+                    self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
+                    self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="failed", recipient=recipient_html)
                 else:
                     self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
             else:
@@ -1711,9 +1945,12 @@ class OutgoingMessageHandler(NSObject):
             self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
 
     def setConnected(self, stream):
+        self.stream = stream
         self.no_report_received_messages = {}
         self.connected = True
-        self.stream = stream
+        if self.delegate.delegate.require_encryption:
+            self.propose_otr()
+
         NotificationCenter().add_observer(self, sender=stream)
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
         for msgid in pending:
@@ -1775,8 +2012,12 @@ class OutgoingMessageHandler(NSObject):
                     del self.no_report_received_messages[message.msgid]
                 except KeyError:
                     pass
-                message.status='delivered'
-                self.markMessage(message, MSG_STATE_DELIVERED)
+                if message.status != 'failed':
+                    # this can happen if we highjacked the conection with OTR, and we sent a bogus message out if encryption failed
+                    message.status='delivered'
+                    self.markMessage(message, MSG_STATE_DELIVERED)
+                else:
+                    self.markMessage(message, MSG_STATE_FAILED)
                 self.add_to_history(message)
                 self.lastDeliveredTime = time.time()
         except KeyError:

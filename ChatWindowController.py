@@ -69,6 +69,7 @@ from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.applications.chat import CPIMIdentity
+from sipsimple.configuration.settings import SIPSimpleSettings
 from urllib import unquote
 from zope.interface import implements
 
@@ -129,6 +130,7 @@ class ChatWindowController(NSWindowController):
     screenShareMenu = objc.IBOutlet()
     conferenceScreenSharingMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
+    encryptionMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
     participantsTableView = objc.IBOutlet()
@@ -142,6 +144,7 @@ class ChatWindowController(NSWindowController):
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
     micLevelIndicator = objc.IBOutlet()
+    encryptionIconMenuItem = objc.IBOutlet()
 
     conferenceFilesView = objc.IBOutlet()
     participantsView = objc.IBOutlet()
@@ -980,6 +983,15 @@ class ChatWindowController(NSWindowController):
                 chatStream.userClickedScreenSharingMenu_(sender)
 
     @objc.IBAction
+    def userClickedEncryptionMenu_(self, sender):
+        # dispatch the click to the active session
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                chatStream.userClickedEncryptionMenu_(sender)
+
+    @objc.IBAction
     def userClickedScreenshotMenu_(self, sender):
         # dispatch the click to the active session
         selectedSession = self.selectedSessionController()
@@ -1009,7 +1021,96 @@ class ChatWindowController(NSWindowController):
                 self.viewSharedScreen(uri, participant.name, participant.screensharing_url)
 
     def menuWillOpen_(self, menu):
-        if menu == self.participantMenu:
+        if menu == self.encryptionMenu:
+            settings = SIPSimpleSettings()
+            item = menu.itemWithTag_(1)
+            item.setHidden_(not settings.chat.enable_encryption)
+
+            item = menu.itemWithTag_(2)
+            item.setHidden_(not settings.chat.enable_encryption)
+
+            item = menu.itemWithTag_(3)
+            item.setEnabled_(False)
+            item.setState_(NSOffState)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(4)
+            item.setState_(NSOffState)
+            item.setEnabled_(False)
+            item.setState_(NSOffState)
+
+            item = menu.itemWithTag_(5)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(6)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(7)
+            item.setHidden_(True)
+
+            selectedSession = self.selectedSessionController()
+            if selectedSession:
+                chat_stream = selectedSession.streamHandlerOfType("chat")
+                if chat_stream:
+                    display_name = selectedSession.getTitleShort()
+                    item = menu.itemWithTag_(1)
+                    my_fingerprint = chat_stream.otr_account.getPrivkey()
+                    item.setTitle_('My fingerprint is %s' % str(my_fingerprint))
+
+                    item = menu.itemWithTag_(3)
+                    item.setTitle_('Always require encryption with %s' % display_name)
+
+                    if selectedSession.contact is not None:
+                        item.setEnabled_(True)
+                        item.setState_(NSOnState if chat_stream.require_encryption else NSOffState)
+                        item.setHidden_(not settings.chat.enable_encryption)
+                    else:
+                        item.setEnabled_(False)
+                        item.setHidden_(True)
+                        item.setState_(NSOffState)
+
+                    item = menu.itemWithTag_(4)
+                    if settings.chat.enable_encryption:
+                        if chat_stream.status == STREAM_CONNECTED:
+                            if selectedSession.session.remote_focus:
+                                item.setEnabled_(False)
+                                item.setTitle_('Encryption is not possible within a multi-party conference')
+                            else:
+                                if chat_stream.require_encryption and chat_stream.is_encrypted:
+                                    item.setEnabled_(False)
+                                else:
+                                    item.setEnabled_(True)
+                                item.setTitle_('Activate encryption for this session' if not chat_stream.is_encrypted else 'Deactivate encryption for this session')
+                        else:
+                            item.setEnabled_(False)
+                            item.setTitle_('Encryption is possible after connection is established')
+
+                    else:
+                        item.setEnabled_(False)
+                        item.setTitle_('Encryption is disabled in Chat preferences')
+
+                    if settings.chat.enable_encryption:
+                        ctx = chat_stream.otr_account.getContext(selectedSession.call_id)
+                        fingerprint = ctx.getCurrentKey()
+
+                        if fingerprint:
+                            item = menu.itemWithTag_(6)
+                            item.setHidden_(False)
+
+                            item = menu.itemWithTag_(7)
+                            item.setHidden_(False)
+
+                            fingerprint_verified = chat_stream.otr_account.getTrust(selectedSession.remoteSIPAddress, str(fingerprint))
+                            item.setEnabled_(False)
+                            item.setTitle_("%s's fingerprint is %s" % (display_name, fingerprint) if fingerprint is not None else 'No Fingerprint Discovered')
+
+                            item = menu.itemWithTag_(5)
+                            item.setEnabled_(True if fingerprint else False)
+                            item.setHidden_(False)
+                            item.setTitle_("I have verified %s's fingerprint" % display_name)
+                            item.setState_(NSOnState if fingerprint_verified else NSOffState)
+
+        elif menu == self.participantMenu:
             session = self.selectedSessionController()
             if session:
                 item = self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL)

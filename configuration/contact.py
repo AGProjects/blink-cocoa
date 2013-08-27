@@ -10,7 +10,7 @@ __all__ = ['BlinkContactExtension', 'BlinkGroupExtension']
 from application.configuration.datatypes import Boolean
 
 from sipsimple.addressbook import ContactExtension, GroupExtension, SharedSetting
-from sipsimple.configuration import Setting, SettingsGroup
+from sipsimple.configuration import Setting, SettingsGroup, RuntimeSetting
 
 SharedSetting.set_namespace('ag-projects:blink')
 
@@ -26,6 +26,7 @@ class BlinkContactExtension(ContactExtension):
     default_uri = SharedSetting(type=str, default=None, nillable=True)
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)
+    require_encryption = SharedSetting(type=Boolean, default=False, nillable=True)
 
     icon_info = IconSettings
 

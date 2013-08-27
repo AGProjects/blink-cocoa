@@ -522,6 +522,9 @@ class ContactWindowController(NSWindowController):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSDefaultRunLoopMode)
 
+        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+        self.speech_synthesizer.setDelegate_(self)
+
         self.loaded = True
 
     @property
@@ -986,10 +989,6 @@ class ContactWindowController(NSWindowController):
             self.tellMeWhenContactBecomesAvailableList.discard(contact)
             settings = SIPSimpleSettings()
             if not self.speech_synthesizer_active and contact.name and not self.has_audio and not settings.audio.silent:
-                if self.speech_synthesizer is None:
-                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
-                    self.speech_synthesizer.setDelegate_(self)
-
                 settings = SIPSimpleSettings()
                 this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
                 volume = 0.8
@@ -1741,9 +1740,6 @@ class ContactWindowController(NSWindowController):
 
             settings = SIPSimpleSettings()
             if not self.speech_synthesizer_active and not self.has_audio and not settings.audio.silent:
-                if self.speech_synthesizer is None:
-                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
-                    self.speech_synthesizer.setDelegate_(self)
 
                 settings = SIPSimpleSettings()
                 this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))

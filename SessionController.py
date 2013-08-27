@@ -993,6 +993,7 @@ class SessionController(NSObject):
         self.notification_center.remove_observer(self, name='SystemWillSleep')
         self.notification_center.remove_observer(self, name='MusicPauseDidExecute')
         self.destroyInfoPanel()
+        self.contact = None
 
         if self.dealloc_timer is None:
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, True)
@@ -1209,7 +1210,7 @@ class SessionController(NSObject):
         self.call_id = None
         self.from_tag = None
         self.to_tag = None
-        self.contact = None
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
         for item in self.invited_participants:
             item.destroy()
         self.invited_participants = []

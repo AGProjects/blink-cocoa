@@ -62,6 +62,7 @@ from zope.interface import implements
 
 from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
+from ChatOTR import BlinkOtrAccount
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
@@ -1205,6 +1206,48 @@ class NightVolumeOption(Option):
         else:
             self.slider.setEnabled_(False)
 
+class OTRSettings(Option):
+    view = objc.IBOutlet()
+    generateButton = objc.IBOutlet()
+    labelText = objc.IBOutlet()
+    enabled = objc.IBOutlet()
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 526, 24))
+
+    def __init__(self, object, name, option, description=None):
+        self.otr_account = BlinkOtrAccount()
+        self.key = self.otr_account.getPrivkey()
+        Option.__init__(self, object, name, option, description)
+        self.caption = makeLabel(description or formatName(name))
+        self.setSpacing_(8)
+        self.addSubview_(self.caption)
+
+        NSBundle.loadNibNamed_owner_("OTRSettings", self)
+        self.updateFingerprint()
+
+        self.addSubview_(self.view)
+
+    def updateFingerprint(self):
+        self.labelText.setStringValue_(str(self.key) if self.key else 'Please generate the private key')
+
+    def _store(self):
+        self.set(bool(self.enabled.state()))
+
+    @objc.IBAction
+    def changeValue_(self, sender):
+        self.store()
+
+    def restore(self):
+        value = self.get()
+        self.enabled.setState_(NSOnState if value else NSOffState)
+
+    @objc.IBAction
+    def generate_(self, sender):
+        self.otr_account.dropPrivkey()
+        self.key = self.otr_account.getPrivkey()
+        NotificationCenter().post_notification("OTRPrivateKeyDidChange")
+        self.updateFingerprint()
 
 class AecSliderOption(Option):
 
@@ -1627,6 +1670,7 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "chat.disable_collaboration_editor": HiddenOption,
+"chat.enable_encryption": OTRSettings,
 "contacts.missed_calls_period": HiddenOption,
 "contacts.incoming_calls_period": HiddenOption,
 "contacts.outgoing_calls_period": HiddenOption,
@@ -1680,6 +1724,7 @@ SettingDescription = {
                       'answering_machine.max_recording_duration': 'Maximum Duration',
                       'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
                       'chat.disable_collaboration_editor': 'Disable Collaboration Editor',
+                      'chat.enable_encryption': 'Encryption',
                       'contacts.enable_address_book': 'Show Address Book',
                       'contacts.enable_incoming_calls_group': 'Show Incoming Calls',
                       'contacts.enable_missed_calls_group': 'Show Missed Calls',

@@ -138,7 +138,6 @@ class AnsweringMachine(object):
     def _NH_AudioStreamDidStopRecordingAudio(self, notification):
         BlinkLogger().log_info(u"Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
         self.addAnsweringMachineRecordingToHistory(notification.data.filename, self.duration)
-        NotificationCenter().post_notification
         data = NotificationData(filename=notification.data.filename)
         NotificationCenter().post_notification("AnsweringMachineRecordingDidEnd", sender=self.session, data=data)
 
