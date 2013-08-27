@@ -1380,7 +1380,7 @@ class ChatController(MediaStream):
 
             try:
                 ctx = self.otr_account.getContext(self.sessionController.call_id)
-                text, tlvs = ctx.receiveMessage(text, appdata={'stream': self.stream})
+                text, tlvs = ctx.receiveMessage(text.encode('utf-8'), appdata={'stream': self.stream})
                 self.setEncryptionState(ctx)
                 if text is None:
                     return
@@ -1417,6 +1417,8 @@ class ChatController(MediaStream):
                 status = 'failed'
                 self.sessionController.log_error('Encrypted message has runtime error: %s' % e)
 
+            # It was encoded earlier because potr only supports bytes
+            text = text.decode('utf-8')
             timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
             name = format_identity_to_string(sender, format='compact')
@@ -1862,7 +1864,8 @@ class OutgoingMessageHandler(NSObject):
                 else:
                     otr_context_id = self.delegate.sessionController.call_id
                     ctx = self.delegate.delegate.otr_account.getContext(otr_context_id)
-                    newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.text, appdata={'stream':self.delegate.delegate.stream})
+                    newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.text.encode('utf-8'), appdata={'stream':self.delegate.delegate.stream})
+                    newmsg = newmsg.decode('utf-8')
                     self.delegate.delegate.setEncryptionState(ctx)
                 id = self.stream.send_message(newmsg, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
@@ -1870,12 +1873,9 @@ class OutgoingMessageHandler(NSObject):
                     self.delegate.sessionController.log_error(u"Error sending chat message %s: OTR not started remotely" % msgid)
                     message.status='failed'
                     self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Remote party has not started OTR protocol", ISOTimestamp.now(), True)
-
-
             except potr.context.NotEncryptedError, e:
                 self.delegate.sessionController.log_error('Chat message was not send. Either end your private OTR conversation, or restart it')
                 return False
-
             except ChatStreamError, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
