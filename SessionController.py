@@ -1332,6 +1332,13 @@ class SessionController(NSObject):
                         self.info_panel.show()
                         self.info_panel.window.setFrame_display_animate_(self.info_panel_last_frame, True, True)
                 else:
+                    if SIPSimpleSettings().audio.pause_music:
+                        if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
+                            self.waitingForITunes = True
+                            MusicApplications().pause()
+                        else:
+                            self.waitingForITunes = False
+
                     self.lookup_destination(self.target_uri)
 
                     outdev = SIPSimpleSettings().audio.output_device
@@ -1346,13 +1353,6 @@ class SessionController(NSObject):
                         global OUTBOUND_AUDIO_CALLS
                         OUTBOUND_AUDIO_CALLS += 1
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
-
-                    if SIPSimpleSettings().audio.pause_music:
-                        if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
-                            self.waitingForITunes = True
-                            MusicApplications().pause()
-                        else:
-                            self.waitingForITunes = False
 
         else:
             if self.canProposeMediaStreamChanges():
