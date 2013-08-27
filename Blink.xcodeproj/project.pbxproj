@@ -593,6 +593,10 @@
 		1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
 		1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
+		1F683AC817CD32960090A902 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
+		1F683AC917CD32960090A902 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
+		1F683ACA17CD32960090A902 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
+		1F683ACB17CD32960090A902 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
 		1F689572140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
 		1F689573140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
 		1F689574140BA93100DA5329 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
@@ -1744,6 +1748,7 @@
 		1F5C06D214041B98001DA3EF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
 		1F5C0760140436E4001DA3EF /* SessionInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoController.py; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
+		1F683AC717CD32960090A902 /* locked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-red.png"; path = "icons/locked-red.png"; sourceTree = "<group>"; };
 		1F689570140BA93100DA5329 /* panel-info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "panel-info.png"; path = "icons/panel-info.png"; sourceTree = "<group>"; };
 		1F68969F140CE18E00DA5329 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = screenshot.png; path = icons/screenshot.png; sourceTree = "<group>"; };
 		1F6963F117BF770900985747 /* locked-green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-green.png"; path = "icons/locked-green.png"; sourceTree = "<group>"; };
@@ -1771,7 +1776,7 @@
 		1F9268F514868A82006F2FD8 /* EMKeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EMKeychainItem.m; path = keychain/EMKeychainItem.m; sourceTree = "<group>"; };
 		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
 		1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-darkgray.png"; path = "icons/unlocked-darkgray.png"; sourceTree = "<group>"; };
-		1F946C9B17CB60D50056ADB4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/OTRSettings.xib; sourceTree = "<group>"; };
+		1F946C9B17CB60D50056ADB4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/OTRSettings.xib; sourceTree = "<group>"; };
 		1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Clearcom.entitlements; sourceTree = "<group>"; };
 		1F94DEA8168B758D00168FBA /* blink-gold.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-gold.icns"; sourceTree = "<group>"; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
@@ -2355,6 +2360,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F683AC717CD32960090A902 /* locked-red.png */,
 				1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */,
 				1F6963FB17BF777D00985747 /* locked-orange.png */,
 				1F6963FC17BF777D00985747 /* locked-yellow.png */,
@@ -3116,6 +3122,7 @@
 				1FF3737117C9E656007418EB /* ChatOTR.py in Resources */,
 				1F946C8F17CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9817CB60D50056ADB4 /* OTRSettings.xib in Resources */,
+				1F683AC917CD32960090A902 /* locked-red.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3369,6 +3376,7 @@
 				1FF3737317C9E656007418EB /* ChatOTR.py in Resources */,
 				1F946C9117CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9A17CB60D50056ADB4 /* OTRSettings.xib in Resources */,
+				1F683ACB17CD32960090A902 /* locked-red.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3618,6 +3626,7 @@
 				1FF3737217C9E656007418EB /* ChatOTR.py in Resources */,
 				1F946C9017CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9917CB60D50056ADB4 /* OTRSettings.xib in Resources */,
+				1F683ACA17CD32960090A902 /* locked-red.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3865,6 +3874,7 @@
 				1FF3737017C9E656007418EB /* ChatOTR.py in Resources */,
 				1F946C8E17CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9717CB60D50056ADB4 /* OTRSettings.xib in Resources */,
+				1F683AC817CD32960090A902 /* locked-red.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

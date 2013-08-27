@@ -888,7 +888,7 @@ class ChatController(MediaStream):
                     self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
                 else:
                     if self.otr_account.getTrusts(self.sessionController.remoteSIPAddress):
-                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-red"))
+                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-red"))
                         try:
                             old_fingerprint = self.new_fingerprints[str(fingerprint)]
                         except KeyError:
