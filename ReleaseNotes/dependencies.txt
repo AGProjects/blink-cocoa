@@ -23,11 +23,11 @@ Dependencies
 Platform requirements
 
  * MacOSX >= 10.6
- * XCode >= 4.3.2
+ * XCode >= 4.6.2
 
 Third party dependencies
 
- * SIP SIMPLE Client SDK >= 0.20
+ * SIP SIMPLE Client SDK >= 1.0.0
  * Growl python bindings
  * python-cjson
  * formencode
@@ -35,4 +35,4 @@ Third party dependencies
  * python-ldap == 2.3.13
  * M2Crypto
  * python-potr
- * crypto
+
