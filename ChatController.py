@@ -664,6 +664,10 @@ class ChatController(MediaStream):
             output_frame.size.height = 0
             self.outputContainer.setFrame_(output_frame)
 
+            self.chatViewController.searchMessagesBox.setHidden_(True)
+            self.chatViewController.lastMessagesLabel.setHidden_(True)
+            self.chatViewController.showRelatedMessagesButton.setHidden_(True)
+
             self.video_frame_visible = True
 
         else:
@@ -681,6 +685,17 @@ class ChatController(MediaStream):
             # output frame
             output_frame.size.height = view_height - input_frame.size.height - splitter_height
             self.outputContainer.setFrame_(output_frame)
+
+            # output view frame
+            search_box_height = 27
+
+            output_view_frame = self.chatViewController.outputView.frame()
+            output_view_frame.size.height = output_frame.size.height - search_box_height
+            self.chatViewController.outputView.setFrame_(output_view_frame)
+
+            self.chatViewController.searchMessagesBox.setHidden_(False)
+            self.chatViewController.lastMessagesLabel.setHidden_(False)
+            self.chatViewController.showRelatedMessagesButton.setHidden_(False)
 
             self.video_frame_visible = False
 

@@ -216,12 +216,10 @@ class ChatWindowController(NSWindowController):
 
             if not self.sessionControllersManager.isMediaTypeSupported('video'):
                 for identifier in ('video', 'maximize'):
-                    try:
-                        item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
-                    except StopIteration:
-                        pass
-                    else:
-                        item.setEnabled_(False)
+                    for idx, item in enumerate(self.toolbar.visibleItems()):
+                        if item.itemIdentifier() == identifier:
+                            self.toolbar.removeItemAtIndex_(idx)
+                            break
 
         return self
 

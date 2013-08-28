@@ -7,9 +7,7 @@ import objc
 
 
 class VideoView(NSView):
-    # TODO: replace this view with an OpenGL view that can stream from pjmedia video buffer -adi
-    # http://webrtc.googlecode.com/svn/trunk/src/modules/video_render/main/source/mac/
-    # https://trac.pjsip.org/repos/wiki/ReleaseNotes-2.0
+    # TODO: replace this view with PJSIP SDL view -adi
 
     delegate = None
     videoView = objc.IBOutlet()

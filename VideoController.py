@@ -2,5 +2,4 @@
 #
 
 class VideoController(object):
-    # TODO: Somehow the word VideoController is tainted and cannot be used by Cocoa. Chose another one.
     pass

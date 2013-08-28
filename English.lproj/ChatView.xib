@@ -94,11 +94,11 @@
 							</object>
 							<object class="NSSearchField" id="291604928">
 								<reference key="NSNextResponder" ref="114616325"/>
-								<int key="NSvFlags">297</int>
+								<int key="NSvFlags">265</int>
 								<string key="NSFrame">{{319, 404}, {162, 19}}</string>
 								<reference key="NSSuperview" ref="114616325"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="547378293"/>
+								<reference key="NSNextKeyView" ref="910231189"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSSearchFieldCell" key="NSCell" id="227301157">
@@ -257,7 +257,7 @@
 						<string key="NSFrameSize">{501, 426}</string>
 						<reference key="NSSuperview" ref="595707376"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="131228892"/>
+						<reference key="NSNextKeyView" ref="547378293"/>
 						<string key="NSClassName">NSView</string>
 					</object>
 					<object class="NSCustomView" id="894993968">
@@ -297,7 +297,7 @@
 												<string key="NSFrameSize">{467, 63}</string>
 												<reference key="NSSuperview" ref="990089647"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="993419595"/>
+												<reference key="NSNextKeyView" ref="846183669"/>
 												<object class="NSTextContainer" key="NSTextContainer" id="521967624">
 													<object class="NSLayoutManager" key="NSLayoutManager">
 														<object class="NSTextStorage" key="NSTextStorage">
@@ -416,7 +416,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 								<string key="NSFrameSize">{468, 65}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="990089647"/>
+								<reference key="NSNextKeyView" ref="993419595"/>
 								<int key="NSsFlags">133778</int>
 								<reference key="NSVScroller" ref="846183669"/>
 								<reference key="NSHScroller" ref="993419595"/>

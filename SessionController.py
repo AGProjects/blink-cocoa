@@ -67,8 +67,7 @@ OUTBOUND_AUDIO_CALLS = 0
 StreamHandlerForType = {
     "chat" : ChatController,
     "audio" : AudioController,
-#    "video" : VideoController,
-    "video" : ChatController,
+    "video" : VideoController,
     "file-transfer" : FileTransferController,
     "screen-sharing" : ScreenSharingController,
     "screen-sharing-server" : ScreenSharingServerController,
@@ -504,8 +503,7 @@ class SessionControllersManager(object):
             return False
 
         if 'video' in stream_type_list:
-            # TODO: enable Video -adi
-            return False
+            return self.isMediaTypeSupported('video')
 
         return True
 
