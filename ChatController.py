@@ -827,7 +827,6 @@ class ChatController(MediaStream):
         call_id = None
         seen_sms = {}
         last_media_type = None
-        last_chat_timestamp = None
 
         for message in messages:
             if message.status == 'failed':
@@ -835,7 +834,7 @@ class ChatController(MediaStream):
 
             if message.sip_callid != '' and message.media_type == 'sms':
                 try:
-                    seen = seen_sms[message.sip_callid]
+                    seen_sms[message.sip_callid]
                 except KeyError:
                     seen_sms[message.sip_callid] = True
                 else:
@@ -862,8 +861,6 @@ class ChatController(MediaStream):
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
-            if message.media_type == 'chat':
-                last_chat_timestamp = timestamp
 
         if scrollToMessageId is not None:
             self.chatViewController.scrollToId(scrollToMessageId)
@@ -913,7 +910,7 @@ class ChatController(MediaStream):
                     if self.otr_account.getTrusts(self.sessionController.remoteSIPAddress):
                         self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-red"))
                         try:
-                            old_fingerprint = self.new_fingerprints[str(fingerprint)]
+                            self.new_fingerprints[str(fingerprint)]
                         except KeyError:
                             self.new_fingerprints[str(fingerprint)] = True
                             self.notify_changed_fingerprint()
@@ -1414,7 +1411,6 @@ class ChatController(MediaStream):
                 except potr.context.NotOTRMessage, e:
                     self.sessionController.log_debug('Message %s is not an OTR message' % msgid)
                 except potr.context.UnencryptedMessage, e:
-                    tlvs = []
                     status = 'failed'
                     log = 'Message %s is not encrypted, while encryption was expected' % msgid
                     self.sessionController.log_error(log)
@@ -1878,7 +1874,7 @@ class OutgoingMessageHandler(NSObject):
         self.delegate.delegate.setEncryptionState(ctx)
         try:
             self.stream.send_message(newmsg, timestamp=ISOTimestamp.now())
-        except ChatStreamError, e:
+        except ChatStreamError:
             pass
 
     def _send(self, msgid):
