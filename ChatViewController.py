@@ -279,7 +279,6 @@ class ChatViewController(NSObject):
             self.search_text = None
 
         call_ids = set()
-        visible_ids = set()
         if self.search_text is not None:
             for message in self.rendered_messages:
                 if self.search_text.lower() in message.text.lower():
@@ -333,14 +332,14 @@ class ChatViewController(NSObject):
 
                     self.htmlBoxVisible('c%s' % message.msgid)
                     self.markFound(message.msgid)
-                    visible_ids.add(message.msgid)
+                    call_ids.discard(message.msgid)
                 else:
                     self.htmlBoxHidden('c%s' % message.msgid)
         else:
             for message in self.rendered_messages:
                 self.htmlBoxVisible('c%s' % message.msgid)
 
-        self.related_messages = [message for call_id in call_ids for message in self.rendered_messages if message.call_id == call_id if call_id not in visible_ids]
+        self.related_messages = [message for message in self.rendered_messages if message.call_id in call_ids]
 
         if self.show_related_messages:
             for message in self.related_messages:
