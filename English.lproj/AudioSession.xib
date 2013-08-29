@@ -157,7 +157,7 @@
 					<object class="NSTextField" id="182486928">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">268</int>
-						<string key="NSFrame">{{4, 21}, {259, 16}}</string>
+						<string key="NSFrame">{{4, 21}, {73, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="820836428"/>
@@ -211,7 +211,7 @@
 					<object class="NSTextField" id="820836428">
 						<reference key="NSNextResponder" ref="1005"/>
 						<int key="NSvFlags">266</int>
-						<string key="NSFrame">{{72, 21}, {16, 12}}</string>
+						<string key="NSFrame">{{72, 21}, {191, 15}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="163338663"/>
@@ -240,7 +240,6 @@
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
