@@ -274,9 +274,7 @@ class ChatViewController(NSObject):
         for message in self.rendered_messages:
             self.unmarkFound(message.msgid)
 
-        self.search_text = unicode(self.searchMessagesBox.stringValue()).strip()
-        if len(self.search_text) == 0:
-            self.search_text = None
+        self.search_text = unicode(self.searchMessagesBox.stringValue()).strip() or None
 
         call_ids = set()
         if self.search_text is not None:
