@@ -703,7 +703,7 @@ class ChatController(MediaStream):
 
             self.chatViewController.searchMessagesBox.setHidden_(False)
             self.chatViewController.lastMessagesLabel.setHidden_(False)
-            self.chatViewController.showRelatedMessagesButton.setHidden_(not len(list(self.chatViewController.related_messages)))
+            self.chatViewController.showRelatedMessagesButton.setHidden_(not self.chatViewController.related_messages)
 
             self.video_frame_visible = False
 

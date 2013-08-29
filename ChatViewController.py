@@ -340,14 +340,14 @@ class ChatViewController(NSObject):
             for message in self.rendered_messages:
                 self.htmlBoxVisible('c%s' % message.msgid)
 
-        self.related_messages = (message for call_id in call_ids for message in self.rendered_messages if message.call_id == call_id if call_id not in visible_ids)
+        self.related_messages = [message for call_id in call_ids for message in self.rendered_messages if message.call_id == call_id if call_id not in visible_ids]
 
         if self.show_related_messages:
             for message in self.related_messages:
                 self.htmlBoxVisible('c%s' % message.msgid)
             self.show_related_messages = False
 
-        if len(list(self.related_messages)):
+        if self.related_messages:
             self.showRelatedMessagesButton.setHidden_(False)
 
     def htmlBoxVisible(self, msgid):
