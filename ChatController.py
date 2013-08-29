@@ -168,6 +168,7 @@ class ChatController(MediaStream):
 
     nickname_request_map = {} # message id -> nickname
     new_fingerprints = {}
+    otr_account = None
 
     @classmethod
     def createStream(self):
@@ -219,17 +220,24 @@ class ChatController(MediaStream):
 
         self.history = ChatHistory()
         self.backend = SIPManager()
-
         self.init_otr()
 
         return self
 
-    def init_otr(self):
-        peer_options = {}
-        if self.sessionController.contact is not None:
-            peer_options['REQUIRE_ENCRYPTION'] = self.sessionController.contact.contact.require_encryption
-        settings = SIPSimpleSettings()
-        peer_options['ALLOW_V2'] = settings.chat.enable_encryption
+    def init_otr(self, disable_encryption=False):
+        from ChatOTR import DEFAULT_OTR_FLAGS
+        peer_options = DEFAULT_OTR_FLAGS
+        if disable_encryption:
+            peer_options['REQUIRE_ENCRYPTION'] = False
+            peer_options['ALLOW_V2'] = False
+            peer_options['SEND_TAG'] = False
+            peer_options['WHITESPACE_START_AKE'] = False
+            peer_options['ERROR_START_AKE'] = False
+        else:
+            if self.sessionController.contact is not None:
+                peer_options['REQUIRE_ENCRYPTION'] = self.sessionController.contact.contact.require_encryption
+            settings = SIPSimpleSettings()
+            peer_options['ALLOW_V2'] = settings.chat.enable_encryption
 
         self.otr_account = BlinkOtrAccount(peer_options=peer_options)
         self.otr_account.loadTrusts()
@@ -404,13 +412,13 @@ class ChatController(MediaStream):
                 self.sessionController.contact.contact.save()
 
             self.otr_account.peer_options['REQUIRE_ENCRYPTION'] = self.require_encryption
-            if self.status == STREAM_CONNECTED and self.require_encryption:
+            if self.status == STREAM_CONNECTED and self.require_encryption and not self.sessionController.remote_focus:
                 self.outgoing_message_handler.propose_otr()
 
         elif tag == 4: # active
             if self.status == STREAM_CONNECTED and self.is_encrypted:
                 ctx.disconnect()
-            else:
+            elif not self.sessionController.remote_focus:
                 self.outgoing_message_handler.propose_otr()
         elif tag == 5: # verified
             fingerprint = ctx.getCurrentKey()
@@ -916,7 +924,10 @@ class ChatController(MediaStream):
                 if not settings.chat.enable_encryption:
                     self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
                 else:
-                    self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green" if self.is_encrypted else "unlocked-red"))
+                    if self.sessionController.remote_focus:
+                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
+                    else:
+                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green" if self.is_encrypted else "unlocked-red"))
         else:
             self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
 
@@ -1393,44 +1404,45 @@ class ChatController(MediaStream):
             sender_aor = format_identity_to_string(sender)
             status = 'delivered'
 
-            try:
-                ctx = self.otr_account.getContext(self.sessionController.call_id)
-                text, tlvs = ctx.receiveMessage(text.encode('utf-8'), appdata={'stream': self.stream})
-                self.setEncryptionState(ctx)
-                if text is None:
+            if not self.sessionController.remote_focus:
+                try:
+                    ctx = self.otr_account.getContext(self.sessionController.call_id)
+                    text, tlvs = ctx.receiveMessage(text.encode('utf-8'), appdata={'stream': self.stream})
+                    self.setEncryptionState(ctx)
+                    if text is None:
+                        return
+                except potr.context.NotOTRMessage, e:
+                    self.sessionController.log_debug('Message %s is not an OTR message' % msgid)
+                except potr.context.UnencryptedMessage, e:
+                    tlvs = []
+                    status = 'failed'
+                    log = 'Message %s is not encrypted, while encryption was expected' % msgid
+                    self.sessionController.log_error(log)
+                    self.showSystemMessage(log, ISOTimestamp.now(), True)
+                except potr.context.NotEncryptedError, e:
+                    # we got some encrypted data
+                    log = 'Encrypted message %s is unreadable, as you have disabled encryption' % msgid
+                    status = 'failed'
+                    self.sessionController.log_error(log)
+                    self.showSystemMessage(log, ISOTimestamp.now(), True)
                     return
-            except potr.context.NotOTRMessage, e:
-                self.sessionController.log_debug('Message %s is not an OTR message' % msgid)
-            except potr.context.UnencryptedMessage, e:
-                tlvs = []
-                status = 'failed'
-                log = 'Message %s is not encrypted, while encryption was expected' % msgid
-                self.sessionController.log_error(log)
-                self.showSystemMessage(log, ISOTimestamp.now(), True)
-            except potr.context.NotEncryptedError, e:
-                # we got some encrypted data
-                log = 'Encrypted message %s is unreadable, as you have disabled encryption' % msgid
-                status = 'failed'
-                self.sessionController.log_error(log)
-                self.showSystemMessage(log, ISOTimestamp.now(), True)
-                return
-            except potr.context.ErrorReceived, e:
-                status = 'failed'
-                # got a protocol error
-                log = 'Encrypted message %s protocol error: %s' % (msgid, e.args[0].error)
-                self.sessionController.log_error(log)
-                self.showSystemMessage(log, ISOTimestamp.now(), True)
-                return
-            except potr.crypt.InvalidParameterError, e:
-                status = 'failed'
-                # received a packet we cannot process (probably tampered or
-                # sent to wrong session)
-                log = 'Encrypted message %s has been tampered with' % msgid
-                self.sessionController.log_error(log)
-                self.showSystemMessage(log, ISOTimestamp.now(), True)
-            except RuntimeError, e:
-                status = 'failed'
-                self.sessionController.log_error('Encrypted message has runtime error: %s' % e)
+                except potr.context.ErrorReceived, e:
+                    status = 'failed'
+                    # got a protocol error
+                    log = 'Encrypted message %s protocol error: %s' % (msgid, e.args[0].error)
+                    self.sessionController.log_error(log)
+                    self.showSystemMessage(log, ISOTimestamp.now(), True)
+                    return
+                except potr.crypt.InvalidParameterError, e:
+                    status = 'failed'
+                    # received a packet we cannot process (probably tampered or
+                    # sent to wrong session)
+                    log = 'Encrypted message %s has been tampered with' % msgid
+                    self.sessionController.log_error(log)
+                    self.showSystemMessage(log, ISOTimestamp.now(), True)
+                except RuntimeError, e:
+                    status = 'failed'
+                    self.sessionController.log_error('Encrypted message has runtime error: %s' % e)
 
             # It was encoded earlier because potr only supports bytes
             text = text.decode('utf-8')
@@ -1575,6 +1587,9 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.changeStatus(STREAM_CONNECTED)
+
+        self.init_otr(disable_encryption=self.sessionController.remote_focus)
+
         self.mediastream_started = True
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
@@ -1622,6 +1637,8 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_FAILED, data.reason)
 
     def _NH_OTRPrivateKeyDidChange(self, sender, data):
+        if self.sessionController.remote_focus:
+            return
         if self.status == STREAM_CONNECTED and self.is_encrypted:
             otr_context_id = self.sessionController.call_id
             ctx = self.otr_account.getContext(otr_context_id)
@@ -1634,6 +1651,8 @@ class ChatController(MediaStream):
         self.chatWindowController.revalidateToolbar()
 
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
+        if self.sessionController.remote_focus:
+            return
         settings = SIPSimpleSettings()
         if data.modified.has_key("chat.enable_encryption"):
             if self.status == STREAM_CONNECTED:
@@ -1850,6 +1869,9 @@ class OutgoingMessageHandler(NSObject):
         if self.delegate.delegate.status != STREAM_CONNECTED:
             return
 
+        if self.delegate.delegate.sessionController.remote_focus:
+            return
+
         otr_context_id = self.delegate.sessionController.call_id
         ctx = self.delegate.delegate.otr_account.getContext(otr_context_id)
         newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, '?OTRv2?', appdata={'stream':self.delegate.delegate.stream})
@@ -1875,6 +1897,8 @@ class OutgoingMessageHandler(NSObject):
         else:
             try:
                 if self.delegate.delegate.sessionController.account is BonjourAccount():
+                    newmsg = message.text
+                elif self.delegate.delegate.sessionController.remote_focus:
                     newmsg = message.text
                 else:
                     otr_context_id = self.delegate.sessionController.call_id
@@ -1963,7 +1987,7 @@ class OutgoingMessageHandler(NSObject):
         self.stream = stream
         self.no_report_received_messages = {}
         self.connected = True
-        if self.delegate.delegate.require_encryption:
+        if self.delegate.delegate.require_encryption and not self.delegate.delegate.sessionController.remote_focus:
             self.propose_otr()
 
         NotificationCenter().add_observer(self, sender=stream)
