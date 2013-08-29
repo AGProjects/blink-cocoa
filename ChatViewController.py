@@ -4,35 +4,19 @@
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
            'MSG_STATE_SENDING', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED']
 
-from AppKit import (NSApp,
-                    NSCommandKeyMask,
-                    NSDragOperationNone,
-                    NSDragOperationCopy,
-                    NSFilenamesPboardType,
-                    NSShiftKeyMask,
-                    NSTextDidChangeNotification)
-from Foundation import (NSArray,
-                        NSDate,
-                        NSMakeRange,
-                        NSNotificationCenter,
-                        NSObject,
-                        NSTextView,
-                        NSTimer,
-                        NSURL,
-                        NSURLRequest,
-                        NSWorkspace)
-from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
-import objc
-
 import calendar
 import cgi
 import datetime
+import objc
 import os
 import re
 import time
 import urllib
 import uuid
 
+from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification
+from Foundation import NSArray, NSDate, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL, NSURLRequest, NSWorkspace
+from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
