@@ -282,7 +282,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "<img class='photobox' src='file:"+iconpath+"'/>"+
     "<div class='"+box_class+"' id='"+msgid+"'>"+
          "<div class='header'>"+
-             "<div class='recipient_self'>"+sender+"</div>"+
+             "<div class='recipient_self' id='r"+msgid+"'>"+sender+"</div>"+
              "<div class='timestamp_hidden' id='t"+msgid+"'>" +timestamp+"</div>"+
              "<div class='state' id='s"+msgid+"'>Sending...</div>"+
          "</div>"+
@@ -432,6 +432,11 @@ function markFailed(msgid)
   msg = document.getElementById('t'+msgid)
   if (msg != null)
       msg.style.display = "block";
+      msg.style.color = "white"
+
+   msg = document.getElementById('r'+msgid)
+    if (msg != null)
+    msg.style.color = "white"
 
   msg = document.getElementById('s'+msgid)
   if (msg != null)
