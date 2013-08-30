@@ -21,7 +21,7 @@ from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOrigin
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import ISOTimestamp
-
+from resources import Resources
 from SmileyManager import SmileyManager
 from util import escape_html
 
@@ -428,6 +428,7 @@ class ChatViewController(NSObject):
             self.messageQueue.append(script)
 
     def showMessage(self, call_id, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat'):
+        lock_icon_path = Resources.get('locked-green.png')
         if not history_entry and not self.delegate.isOutputFrameVisible():
             self.delegate.showChatViewWhileVideoActive()
 
@@ -451,7 +452,7 @@ class ChatViewController(NSObject):
             else:
                 label = cgi.escape(self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
 
-        script = """renderMessage('%s', '%s', '%s', '%s', "%s", '%s', '%s', %s)""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private)
+        script = """renderMessage('%s', '%s', '%s', '%s', "%s", '%s', '%s', %s, '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private, lock_icon_path)
 
         if self.finishedLoading:
             self.executeJavaScript(script)

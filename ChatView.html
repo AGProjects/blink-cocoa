@@ -159,6 +159,12 @@ body
   text-align: right;
 }
 
+.lock {
+    width: 15px;
+    float: right ;
+    display : none;
+}
+
 .timestamp_hidden {
   color: #436294;
   font-family: Lucida Grande, Helvetica, Arial;
@@ -236,7 +242,7 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private)
+function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath)
 {
   var chat_session;
   var content;
@@ -283,7 +289,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "<div class='"+box_class+"' id='"+msgid+"'>"+
          "<div class='header'>"+
              "<div class='recipient_self' id='r"+msgid+"'>"+sender+"</div>"+
-             "<div class='timestamp_hidden' id='t"+msgid+"'>" +timestamp+"</div>"+
+             "<div class='timestamp_hidden' id='t"+msgid+"'><img id='l"+msgid+"' class=lock src='file:"+lockiconpath+"'/>"+timestamp+"</div>"+
              "<div class='state' id='s"+msgid+"'>Sending...</div>"+
          "</div>"+
          "<div class='message' id='b"+msgid+"'>"+
@@ -299,7 +305,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "<div class='"+box_class+"'>"+
          "<div class='header'>"+
              "<div class='recipient'>"+sender+"</div>"+
-             "<div class='timestamp'>"+status+"</div>"+
+             "<div class='timestamp'><img id='l"+msgid+"' class=lock src='file:"+lockiconpath+"'/>"+status+"</div>"+
          "</div>"+
          "<div class='message' id='b"+msgid+"'>"+
             "<span class='body'>"+text+"</span>"+
