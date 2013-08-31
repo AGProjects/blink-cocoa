@@ -347,7 +347,6 @@ class SMSViewController(NSObject):
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         BlinkLogger().log_error(u"DNS Lookup failed: %s" % msg)
-        self.chatViewController.showSystemMessage("", "Cannot send SMS message to %s\n%s" % (self.target_uri, msg))
         for msgid, text, content_type in self.queue:
             message = self.messages.pop(msgid)
             if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
