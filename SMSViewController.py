@@ -369,7 +369,7 @@ class SMSViewController(NSObject):
 
         id=str(message_request)
         if content_type != "application/im-iscomposing+xml":
-            BlinkLogger().log_info(u"Sent %s SMS message %s to %s" % (content_type, message_request._request.call_id, self.target_uri))
+            BlinkLogger().log_info(u"Sending %s SMS message %s to %s" % (content_type, message_request._request.call_id, self.target_uri))
             self.enableIsComposing = True
             message = self.messages.pop(msgid)
             message.status='sent'
