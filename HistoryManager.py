@@ -421,11 +421,11 @@ class ChatMessage(SQLObject):
     remote_idx        = DatabaseIndex('remote_uri')
     uuid              = StringCol()
     journal_id        = StringCol()
-
+    encryption        = StringCol(default='')
 
 class ChatHistory(object):
     __metaclass__ = Singleton
-    __version__ = 4
+    __version__ = 5
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -517,11 +517,25 @@ class ChatHistory(object):
             except Exception, e:
                 BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
+        if next_upgrade_version < 5:
+            query = "update chat_messages set status = 'failed' where status = 'sent'"
+            try:
+                self.db.queryAll(query)
+            except Exception, e:
+                pass
+
+            query = "alter table chat_messages add column 'encryption' TEXT default '' ";
+            try:
+                self.db.queryAll(query)
+            except dberrors.OperationalError, e:
+                if not str(e).startswith('duplicate column name'):
+                    BlinkLogger().log_error(u"Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id=''):
+    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
         try:
             if not journal_id and not skip_replication:
                 settings = SIPSimpleSettings()
@@ -543,7 +557,8 @@ class ChatHistory(object):
                     'content_type'        : content_type,
                     'private'             : private,
                     'status'              : status,
-                    'call_id'             : call_id
+                    'call_id'             : call_id,
+                    'encryption'          : encryption
                 }
 
                 notification_center = NotificationCenter()
@@ -580,7 +595,8 @@ class ChatHistory(object):
                           private             = private,
                           status              = status,
                           uuid                = uuid,
-                          journal_id          = journal_id
+                          journal_id          = journal_id,
+                          encryption          = encryption
                           )
             return True
         except dberrors.DuplicateEntryError:
@@ -1601,12 +1617,15 @@ class ChatHistoryReplicator(object):
                 try:
                     self.last_journal_timestamp[account]['msgid_list'].append(data['msgid'])
                     try:
-                        call_id = data['call_id']
+                        data['call_id']
                     except KeyError:
-                        call_id = ''
                         data['call_id'] = ''
+                    try:
+                        data['encryption']
+                    except KeyError:
+                        data['encryption'] = ''
 
-                    ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id, call_id=call_id)
+                    ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id, call_id=data['call_id'], encryption=data['encryption'])
                     now = datetime(*time.localtime()[:6])
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
                     elapsed = now - start_time

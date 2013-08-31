@@ -160,9 +160,8 @@ body
 }
 
 .lock {
-    width: 15px;
+    width: 14px;
     float: right ;
-    display : none;
 }
 
 .timestamp_hidden {
@@ -443,6 +442,10 @@ function markFailed(msgid)
    msg = document.getElementById('r'+msgid)
     if (msg != null)
     msg.style.color = "white"
+
+   msg = document.getElementById('l'+msgid)
+    if (msg != null)
+    msg.style.display = "none"
 
   msg = document.getElementById('s'+msgid)
   if (msg != null)

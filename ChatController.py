@@ -857,7 +857,7 @@ class ChatController(MediaStream):
                 if message.media_type == 'sms' and last_media_type == 'chat':
                     self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
 
-                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type)
+                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
@@ -1400,22 +1400,32 @@ class ChatController(MediaStream):
             text = message.body
             sender_aor = format_identity_to_string(sender)
             status = 'delivered'
+            encryption = ''
 
             if not self.sessionController.remote_focus:
                 try:
                     ctx = self.otr_account.getContext(self.sessionController.call_id)
                     text, tlvs = ctx.receiveMessage(text.encode('utf-8'), appdata={'stream': self.stream})
                     self.setEncryptionState(ctx)
+                    fingerprint = ctx.getCurrentKey()
+                    if fingerprint:
+                        otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                        if otr_fingerprint_verified:
+                            encryption = 'verified'
+                        else:
+                            encryption = 'unverified'
                     if text is None:
                         return
                 except potr.context.NotOTRMessage, e:
                     self.sessionController.log_debug('Message %s is not an OTR message' % msgid)
                 except potr.context.UnencryptedMessage, e:
+                    encryption = 'failed'
                     status = 'failed'
                     log = 'Message %s is not encrypted, while encryption was expected' % msgid
                     self.sessionController.log_error(log)
                     self.showSystemMessage(log, ISOTimestamp.now(), True)
                 except potr.context.NotEncryptedError, e:
+                    encryption = 'failed'
                     # we got some encrypted data
                     log = 'Encrypted message %s is unreadable, as you have disabled encryption' % msgid
                     status = 'failed'
@@ -1430,6 +1440,7 @@ class ChatController(MediaStream):
                     self.showSystemMessage(log, ISOTimestamp.now(), True)
                     return
                 except potr.crypt.InvalidParameterError, e:
+                    encryption = 'failed'
                     status = 'failed'
                     # received a packet we cannot process (probably tampered or
                     # sent to wrong session)
@@ -1437,6 +1448,7 @@ class ChatController(MediaStream):
                     self.sessionController.log_error(log)
                     self.showSystemMessage(log, ISOTimestamp.now(), True)
                 except RuntimeError, e:
+                    encryption = 'failed'
                     status = 'failed'
                     self.sessionController.log_error('Encrypted message has runtime error: %s' % e)
 
@@ -1448,7 +1460,7 @@ class ChatController(MediaStream):
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_aor, self.session.remote_focus)
             recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
             if self.chatViewController:
-                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state=status, is_html=is_html, media_type='chat')
+                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', name, icon, text, timestamp, is_private=private, recipient=recipient_html, state=status, is_html=is_html, media_type='chat', encryption=encryption)
 
             tab = self.chatViewController.outputView.window()
             tab_is_key = tab.isKeyWindow() if tab else False
@@ -1472,7 +1484,7 @@ class ChatController(MediaStream):
 
             # save to history
             if 'Welcome to SylkServer!' not in text:
-                message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text')
+                message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text', encryption=encryption)
                 self.outgoing_message_handler.add_to_history(message)
 
     def _NH_ChatStreamGotComposingIndication(self, stream, data):
@@ -1671,7 +1683,7 @@ class ChatController(MediaStream):
 
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(data['cpim_to'])
         timestamp = ISOTimestamp(data['cpim_timestamp'])
-        self.chatViewController.showMessage(data['call_id'], data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True, media_type='chat')
+        self.chatViewController.showMessage(data['call_id'], data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True, media_type='chat', encryption=data['encryption'])
 
     def resetIsComposingTimer(self, refresh):
         if self.remoteTypingTimer:
@@ -1798,7 +1810,7 @@ class ChatController(MediaStream):
 
 
 class MessageInfo(object):
-    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text', pending=False):
+    def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, private=False, status=None, content_type='text', pending=False, encryption=''):
         self.msgid = msgid
         self.direction = direction
         self.sender = sender
@@ -1809,6 +1821,7 @@ class MessageInfo(object):
         self.status = status
         self.content_type = content_type
         self.pending = pending
+        self.encryption = encryption
 
 
 class OutgoingMessageHandler(NSObject):
@@ -1902,6 +1915,13 @@ class OutgoingMessageHandler(NSObject):
                     newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.text.encode('utf-8'), appdata={'stream':self.delegate.delegate.stream})
                     newmsg = newmsg.decode('utf-8')
                     self.delegate.delegate.setEncryptionState(ctx)
+                    fingerprint = ctx.getCurrentKey()
+                    otr_fingerprint_verified = self.otr_account.getTrust(self.delegate.delegate.remoteSIPAddress, str(fingerprint))
+                    if otr_fingerprint_verified:
+                        message.encryption = 'verified'
+                    else:
+                        message.encryption = 'unverified'
+
                 id = self.stream.send_message(newmsg, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
                 if 'has requested end-to-end encryption but this software does not support this feature' in newmsg:
