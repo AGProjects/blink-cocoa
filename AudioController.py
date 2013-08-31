@@ -134,7 +134,7 @@ class AudioController(MediaStream):
         return AudioStream()
 
     def reset(self):
-        self.notification_center.remove_observer(self, sender=self.stream)
+        self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
         super(AudioController, self).reset()
@@ -272,7 +272,7 @@ class AudioController(MediaStream):
 
     def startOutgoing(self, is_update):
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.notification_center.add_observer(self, sender=self.stream)
+        self.reset()
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         NSApp.delegate().contactsWindowController.showAudioSession(self)
@@ -280,8 +280,8 @@ class AudioController(MediaStream):
 
     def sessionStateChanged(self, state, detail):
         if state == STATE_CONNECTING:
-            self.updateAudioStatusWithSessionState(u"Connecting...")
             self.updateTLSIcon()
+            self.changeStatus(STREAM_CONNECTING)
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
             if detail.startswith("DNS Lookup"):
@@ -657,7 +657,7 @@ class AudioController(MediaStream):
             self.updateAudioStatusWithSessionState(u"Ringing...")
         elif status == STREAM_CONNECTING:
             self.updateTLSIcon()
-            self.updateAudioStatusWithSessionState(u"Initiating Session...")
+            self.updateAudioStatusWithSessionState(u"Connecting...")
         elif status == STREAM_PROPOSING:
             self.updateTLSIcon()
             self.updateAudioStatusWithSessionState(u"Adding Audio...")
@@ -715,8 +715,8 @@ class AudioController(MediaStream):
                 if fail_reason == "remote":
                     self.updateAudioStatusWithSessionState(u"Session Ended by Remote")
                 elif fail_reason == "local":
-                    print_status = self.hangup_reason if self.hangup_reason else u"Session Ended"
-                    self.updateAudioStatusWithSessionState(print_status)
+                    status = self.hangup_reason if self.hangup_reason else u"Session Ended"
+                    self.updateAudioStatusWithSessionState(status)
                 else:
                     self.updateAudioStatusWithSessionState(fail_reason)
             self.audioStatus.sizeToFit()
