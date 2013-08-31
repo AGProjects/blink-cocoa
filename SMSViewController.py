@@ -348,10 +348,15 @@ class SMSViewController(NSObject):
     def setRoutesFailed(self, msg):
         BlinkLogger().log_error(u"DNS Lookup failed: %s" % msg)
         for msgid, text, content_type in self.queue:
-            message = self.messages.pop(msgid)
-            if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
-                message.status='failed'
-                self.add_to_history(message)
+            try:
+                message = self.messages.pop(msgid)
+            except KeyError:
+                pass
+            else:
+                if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
+                    message.status='failed'
+                    self.add_to_history(message)
+
         self.queue = []
 
     def _sendMessage(self, msgid, text, content_type="text/plain"):
