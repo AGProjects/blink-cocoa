@@ -330,8 +330,6 @@ class ChatController(MediaStream):
     def changeStatus(self, newstate, fail_reason=None):
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
-        if self.status == STREAM_FAILED:
-            self.reset()
 
     def openChatWindow(self):
         if self.chatWindowController is None:
@@ -1546,16 +1544,10 @@ class ChatController(MediaStream):
             if self.chatViewController:
                 self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
-    def remove_observers(self):
-        self.notification_center.discard_observer(self, sender=self.sessionController)
-        self.notification_center.discard_observer(self, sender=self.stream)
-
     def _NH_BlinkSessionDidEnd(self, sender, data):
-        self.remove_observers()
+        self.reset()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        self.remove_observers()
-
         reason = data.failure_reason or data.reason
         if reason != 'Session Cancelled':
             if self.last_failure_reason != reason:
@@ -1568,7 +1560,9 @@ class ChatController(MediaStream):
             self.showSystemMessage(message, ISOTimestamp.now(), True)
         else:
             self.showSystemMessage(reason, ISOTimestamp.now(), True)
-        self.changeStatus(STREAM_FAILED)
+
+        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
+        self.reset()
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         self.session_succeeded = True
@@ -1623,9 +1617,6 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
             self.showSystemMessage('Connection closed', ISOTimestamp.now())
-        self.outgoing_message_handler.setDisconnected()
-        self.screensharing_handler.setDisconnected()
-        self.reset()
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.mediastream_failed = True
@@ -1708,8 +1699,8 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_DISCONNECTING)
 
     # lifetime of a chat controler: possible deallocation paths
-    # 1. User click on close tab: closeTab -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
-    # 2. User clicks on close window: closeWindow -> for each tab -> closeTab -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
+    # 1. User click on close tab: closeTab -> endStream -> CloseWindow -> deallocTimer -> dealloc
+    # 2. User clicks on close window: closeWindow -> for each tab -> closeTab -> endStream -> CloseWindow -> deallocTimer -> dealloc
     # 3. Session ends by remote: mediaDidEnd -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
     # 4. User clicks on disconnect button: endStream -> reset
 
@@ -1720,10 +1711,13 @@ class ChatController(MediaStream):
         if self.screensharing_handler:
             self.screensharing_handler.setDisconnected()
         self.closeWindow()
-        self.remove_observers()
+        self.notification_center.discard_observer(self, sender=self.sessionController)
         self.startDeallocTimer()
 
     def reset(self):
+        self.outgoing_message_handler.setDisconnected()
+        self.screensharing_handler.setDisconnected()
+
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = ChatStream()
         self.notification_center.add_observer(self, sender=self.stream)
@@ -1916,7 +1910,7 @@ class OutgoingMessageHandler(NSObject):
                     newmsg = newmsg.decode('utf-8')
                     self.delegate.delegate.setEncryptionState(ctx)
                     fingerprint = ctx.getCurrentKey()
-                    otr_fingerprint_verified = self.otr_account.getTrust(self.delegate.delegate.remoteSIPAddress, str(fingerprint))
+                    otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteSIPAddress, str(fingerprint))
                     if otr_fingerprint_verified:
                         message.encryption = 'verified'
                     else:
@@ -1940,7 +1934,7 @@ class OutgoingMessageHandler(NSObject):
 
         self.messages[id] = message
 
-        return True
+        return id
 
     def send(self, text, recipient=None, private=False):
         timestamp = ISOTimestamp.now()
@@ -1968,12 +1962,12 @@ class OutgoingMessageHandler(NSObject):
 
             if self.connected:
                 try:
-                    self._send(msgid)
+                    id = self._send(msgid)
                 except Exception, e:
                     self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                     self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="failed", recipient=recipient_html)
                 else:
-                    self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
+                    self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption)
             else:
                 self.messages[msgid].pending=True
                 self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
@@ -1989,12 +1983,12 @@ class OutgoingMessageHandler(NSObject):
 
         if self.connected:
             try:
-                self._send(msgid)
+                id = self._send(msgid)
             except Exception, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Message delivery failure", timestamp, True)
             else:
-                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption)
         else:
             self.messages[msgid].pending=True
             self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
@@ -2105,7 +2099,7 @@ class OutgoingMessageHandler(NSObject):
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         private = "1" if message.private else "0"
-        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status, call_id=self.delegate.sessionController.call_id)
+        self.history.add_message(message.msgid, 'chat', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, message.content_type, private, message.status, call_id=self.delegate.sessionController.call_id, encryption=message.encryption)
 
 
 class ConferenceScreenSharingHandler(object):

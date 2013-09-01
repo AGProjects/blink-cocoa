@@ -427,10 +427,14 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue.append(script)
 
-    def showMessage(self, call_id, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=''):
-        lock_icon_path = Resources.get('unlocked-darkgray.png')
-        if encryption:
-            lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
+    def showMessage(self, call_id, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
+        lock_icon_path = ''
+        if encryption is not None:
+            if encryption == '':
+                lock_icon_path = Resources.get('unlocked-darkgray.png')
+            else:
+                lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
+
         if not history_entry and not self.delegate.isOutputFrameVisible():
             self.delegate.showChatViewWhileVideoActive()
 

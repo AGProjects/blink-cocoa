@@ -448,8 +448,7 @@ class HistoryViewer(NSWindowController):
         else:
             is_html = False if message.content_type == 'text' else True
             private = True if message.private == "1" else False
-            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type=message.media_type)
-
+            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type=message.media_type, encryption=message.encryption if message.media_type == 'chat' else None)
 
     @objc.IBAction
     def paginateResults_(self, sender):
