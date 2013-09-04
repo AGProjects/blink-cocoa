@@ -924,7 +924,7 @@ class AudioController(MediaStream):
             #item.setEnabled_(self.stream and self.stream.srtp_active)
 
             item = menu.itemWithTag_(12)
-            item.setHidden_(self.sessionController.account is BonjourAccount() or self.zrtp_active)
+            item.setHidden_(self.sessionController.account is BonjourAccount() or self.zrtp_active or not self.stream.srtp_active)
 
             item = menu.itemWithTag_(14)
             item.setHidden_(self.session and self.session.transport == "tls")
