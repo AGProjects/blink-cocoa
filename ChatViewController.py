@@ -191,6 +191,7 @@ class ChatViewController(NSObject):
     loadingProgressIndicator = objc.IBOutlet()
     searchMessagesBox = objc.IBOutlet()
     showRelatedMessagesButton = objc.IBOutlet()
+    databaseLoggingLabel = objc.IBOutlet()
 
     splitterHeight = None
 

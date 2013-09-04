@@ -240,6 +240,7 @@
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
@@ -310,7 +311,7 @@
 										<string key="NSClassName">NSImage</string>
 										<string key="NSResourceName">NSLockUnlockedTemplate</string>
 									</object>
-									<string key="NSSegmentItemTooltip">zRTP encryption</string>
+									<string key="NSSegmentItemTooltip">Encryption</string>
 									<int key="NSSegmentItemTag">4</int>
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
