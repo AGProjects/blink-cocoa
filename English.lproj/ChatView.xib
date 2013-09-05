@@ -98,7 +98,7 @@
 								<string key="NSFrame">{{319, 404}, {162, 19}}</string>
 								<reference key="NSSuperview" ref="114616325"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="547378293"/>
+								<reference key="NSNextKeyView" ref="910231189"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSSearchFieldCell" key="NSCell" id="227301157">
@@ -124,7 +124,7 @@
 											<bytes key="NSWhite">MQA</bytes>
 										</object>
 									</object>
-									<object class="NSColor" key="NSTextColor" id="587884305">
+									<object class="NSColor" key="NSTextColor">
 										<int key="NSColorSpace">6</int>
 										<string key="NSCatalogName">System</string>
 										<string key="NSColorName">controlTextColor</string>
@@ -200,7 +200,7 @@
 									</object>
 									<string key="NSCellIdentifier">_NS:1535</string>
 									<reference key="NSControlView" ref="131228892"/>
-									<object class="NSColor" key="NSBackgroundColor" id="675598335">
+									<object class="NSColor" key="NSBackgroundColor">
 										<int key="NSColorSpace">6</int>
 										<string key="NSCatalogName">System</string>
 										<string key="NSColorName">controlColor</string>
@@ -257,38 +257,13 @@
 						<string key="NSFrameSize">{501, 426}</string>
 						<reference key="NSSuperview" ref="595707376"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="131228892"/>
+						<reference key="NSNextKeyView" ref="547378293"/>
 						<string key="NSClassName">NSView</string>
 					</object>
 					<object class="NSCustomView" id="894993968">
 						<reference key="NSNextResponder" ref="595707376"/>
 						<int key="NSvFlags">268</int>
 						<array class="NSMutableArray" key="NSSubviews">
-							<object class="NSTextField" id="594459478">
-								<reference key="NSNextResponder" ref="894993968"/>
-								<int key="NSvFlags">290</int>
-								<string key="NSFrame">{{1, 6}, {511, 11}}</string>
-								<reference key="NSSuperview" ref="894993968"/>
-								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView"/>
-								<string key="NSReuseIdentifierKey">_NS:1535</string>
-								<bool key="NSEnabled">YES</bool>
-								<object class="NSTextFieldCell" key="NSCell" id="266049871">
-									<int key="NSCellFlags">68157504</int>
-									<int key="NSCellFlags2">272892928</int>
-									<string key="NSContents">Chat messages are saved in the history database. Use History Privacy menu item for disabling saving to chat history</string>
-									<object class="NSFont" key="NSSupport">
-										<string key="NSName">LucidaGrande</string>
-										<double key="NSSize">9</double>
-										<int key="NSfFlags">3614</int>
-									</object>
-									<string key="NSCellIdentifier">_NS:1535</string>
-									<reference key="NSControlView" ref="594459478"/>
-									<reference key="NSBackgroundColor" ref="675598335"/>
-									<reference key="NSTextColor" ref="587884305"/>
-								</object>
-								<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
-							</object>
 							<object class="NSScrollView" id="451062713">
 								<reference key="NSNextResponder" ref="894993968"/>
 								<int key="NSvFlags">274</int>
@@ -319,7 +294,7 @@
 													<string>WebURLsWithTitlesPboardType</string>
 													<string>public.url</string>
 												</set>
-												<string key="NSFrameSize">{467, 43}</string>
+												<string key="NSFrameSize">{467, 63}</string>
 												<reference key="NSSuperview" ref="990089647"/>
 												<reference key="NSWindow"/>
 												<reference key="NSNextKeyView" ref="846183669"/>
@@ -374,11 +349,11 @@
 												</object>
 												<int key="NSTVFlags">6</int>
 												<string key="NSMaxSize">{1000, 10000000}</string>
-												<string key="NSMinize">{466, 43}</string>
+												<string key="NSMinize">{466, 63}</string>
 												<nil key="NSDelegate"/>
 											</object>
 										</array>
-										<string key="NSFrame">{{1, 1}, {466, 43}}</string>
+										<string key="NSFrame">{{1, 1}, {466, 63}}</string>
 										<reference key="NSSuperview" ref="451062713"/>
 										<reference key="NSWindow"/>
 										<reference key="NSNextKeyView" ref="350187527"/>
@@ -438,7 +413,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 										<double key="NSPercent">0.94565220000000005</double>
 									</object>
 								</array>
-								<string key="NSFrame">{{0, 20}, {468, 45}}</string>
+								<string key="NSFrameSize">{468, 65}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView" ref="993419595"/>
@@ -456,7 +431,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 								<string key="NSFrame">{{466, 37}, {34, 30}}</string>
 								<reference key="NSSuperview" ref="894993968"/>
 								<reference key="NSWindow"/>
-								<reference key="NSNextKeyView" ref="594459478"/>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="237726633">
 									<int key="NSCellFlags">-2076180416</int>
@@ -549,7 +523,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				<string key="NSClassName">ChatViewController</string>
 			</object>
 			<object class="NSCustomView" id="1041754619">
-				<reference key="NSNextResponder"/>
+				<nil key="NSNextResponder"/>
 				<int key="NSvFlags">274</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="QTMovieView" id="314382595">
@@ -563,8 +537,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						</set>
 						<string key="NSFrameSize">{405, 226}</string>
 						<reference key="NSSuperview" ref="1041754619"/>
-						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
 						<reference key="kCoderFillColor" ref="165661294"/>
 						<boolean value="NO" key="kCoderControllerVisible"/>
 						<boolean value="YES" key="kCoderPreservesAspectRatio"/>
@@ -573,9 +545,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 					</object>
 				</array>
 				<string key="NSFrameSize">{405, 226}</string>
-				<reference key="NSSuperview"/>
-				<reference key="NSWindow"/>
-				<reference key="NSNextKeyView" ref="314382595"/>
 				<string key="NSClassName">VideoView</string>
 			</object>
 		</array>
@@ -759,14 +728,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">databaseLoggingLabel</string>
-						<reference key="source" ref="60752277"/>
-						<reference key="destination" ref="594459478"/>
-					</object>
-					<int key="connectionID">236</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBOutletConnection" key="connection">
 						<string key="label">videoView</string>
 						<reference key="source" ref="1041754619"/>
 						<reference key="destination" ref="314382595"/>
@@ -815,7 +776,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						<array class="NSMutableArray" key="children">
 							<reference ref="451062713"/>
 							<reference ref="778528452"/>
-							<reference ref="594459478"/>
 						</array>
 						<reference key="parent" ref="595707376"/>
 					</object>
@@ -964,19 +924,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 						<reference key="object" ref="80059278"/>
 						<reference key="parent" ref="124255720"/>
 					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">234</int>
-						<reference key="object" ref="594459478"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="266049871"/>
-						</array>
-						<reference key="parent" ref="894993968"/>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">235</int>
-						<reference key="object" ref="266049871"/>
-						<reference key="parent" ref="594459478"/>
-					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -1019,8 +966,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 				</object>
 				<string key="230.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="231.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="234.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="235.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="24.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="25.CustomClassName">ChatInputTextView</string>
 				<object class="NSMutableDictionary" key="25.IBAttributePlaceholdersKey">
@@ -1049,7 +994,7 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">236</int>
+			<int key="maxID">233</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1114,133 +1059,6 @@ AAEAAQAAAT0AAwAAAAEAAgAAAVIAAwAAAAEAAQAAAVMAAwAAAAIAAQABAAAAAA</bytes>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/ChatController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ChatInputTextView</string>
-					<string key="superclassName">NSTextView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ChatInputTextView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ChatViewController</string>
-					<string key="superclassName">NSObject</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="searchMessages:">id</string>
-						<string key="showRelatedMessages:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="searchMessages:">
-							<string key="name">searchMessages:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showRelatedMessages:">
-							<string key="name">showRelatedMessages:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="databaseLoggingLabel">id</string>
-						<string key="delegate">id</string>
-						<string key="inputText">id</string>
-						<string key="inputView">id</string>
-						<string key="lastMessagesLabel">id</string>
-						<string key="loadingProgressIndicator">id</string>
-						<string key="outputView">id</string>
-						<string key="searchMessagesBox">id</string>
-						<string key="showRelatedMessagesButton">id</string>
-						<string key="view">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="databaseLoggingLabel">
-							<string key="name">databaseLoggingLabel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="delegate">
-							<string key="name">delegate</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="inputText">
-							<string key="name">inputText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="inputView">
-							<string key="name">inputView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="lastMessagesLabel">
-							<string key="name">lastMessagesLabel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="loadingProgressIndicator">
-							<string key="name">loadingProgressIndicator</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="outputView">
-							<string key="name">outputView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchMessagesBox">
-							<string key="name">searchMessagesBox</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="showRelatedMessagesButton">
-							<string key="name">showRelatedMessagesButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="view">
-							<string key="name">view</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ChatViewController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ChatWebView</string>
-					<string key="superclassName">WebView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ChatWebView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">MediaStream</string>
-					<string key="superclassName">NSObject</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/MediaStream.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">NSObject</string>
-					<string key="superclassName">objc</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/NSObject.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">VideoView</string>
-					<string key="superclassName">NSView</string>
-					<object class="NSMutableDictionary" key="outlets">
-						<string key="NS.key.0">videoView</string>
-						<string key="NS.object.0">id</string>
-					</object>
-					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<string key="NS.key.0">videoView</string>
-						<object class="IBToOneOutletInfo" key="NS.object.0">
-							<string key="name">videoView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</object>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/VideoView.h</string>
 					</object>
 				</object>
 			</array>

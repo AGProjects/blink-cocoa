@@ -930,7 +930,6 @@ class ChatController(MediaStream):
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
         settings = SIPSimpleSettings()
-        self.updatePrivacyLabel()
 
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -1650,17 +1649,11 @@ class ChatController(MediaStream):
 
         self.chatWindowController.revalidateToolbar()
 
-    def updatePrivacyLabel(self):
-        settings = SIPSimpleSettings()
-        self.chatViewController.databaseLoggingLabel.setStringValue_('Chat messages are not saved in the history database' if settings.chat.disable_history else 'Chat messages are saved in the history database. Use History menu to enable privacy for your conversation.')
-
-    @run_in_gui_thread
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
-        if data.modified.has_key("chat.disable_history"):
-            self.updatePrivacyLabel()
-
+        if self.sessionController.remote_focus:
+            return
+        settings = SIPSimpleSettings()
         if data.modified.has_key("chat.enable_encryption"):
-            settings = SIPSimpleSettings()
             if self.status == STREAM_CONNECTED:
                 if self.is_encrypted and not settings.chat.enable_encryption:
                     otr_context_id = self.sessionController.call_id
