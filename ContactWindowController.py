@@ -3124,11 +3124,13 @@ class ContactWindowController(NSWindowController):
     def setStatusBarIcon(self, status=None):
         if status is None:
             return
+        status = status.lower()
 
-        status=status.lower()
         account = AccountManager().default_account
+        if account is not None and account.audio.do_not_disturb:
+            status = 'busy'
 
-        if status == 'busy' or account.audio.do_not_disturb:
+        if status == 'busy':
             icon = NSImage.imageNamed_('blink-status-red')
         elif status == 'away':
             icon = NSImage.imageNamed_('blink-status-yellow')
