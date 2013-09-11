@@ -117,10 +117,11 @@ class JoinConferenceWindowController(NSObject):
             self.room.setStringValue_(target)
 
         account = AccountManager().default_account
-        if account.conference.nickname:
-            self.nickname_textfield.setStringValue_(account.conference.nickname)
-        else:
-            self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
+        if account is not None:
+            if account.conference.nickname:
+                self.nickname_textfield.setStringValue_(account.conference.nickname)
+            else:
+                self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
 
         if participants:
             self._participants = participants
@@ -163,10 +164,11 @@ class JoinConferenceWindowController(NSObject):
         self.room.setStringValue_('')
         self.nickname_textfield.setStringValue_('')
         account = AccountManager().default_account
-        if account.conference.nickname:
-            self.nickname_textfield.setStringValue_(account.conference.nickname)
-        else:
-            self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
+        if account is not None:
+            if account.conference.nickname:
+                self.nickname_textfield.setStringValue_(account.conference.nickname)
+            else:
+                self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
         self.updatePopupButtons()
 
     def loadConfigurations(self):

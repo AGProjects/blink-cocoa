@@ -891,7 +891,7 @@ class ContactWindowController(NSWindowController):
             self.accountPopUp.menu().addItem_(NSMenuItem.separatorItem())
             self.accountPopUp.addItemWithTitle_(u"Add Account...")
 
-        if account_manager.default_account:
+        if account_manager.default_account is not None:
             self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)
         else:
             self.nameText.setStringValue_(u'')
@@ -1530,7 +1530,7 @@ class ContactWindowController(NSWindowController):
                     participants.append(format_identity_to_string(session.target_uri))
 
         account = AccountManager().default_account
-        if not isinstance(account, BonjourAccount):
+        if not isinstance(account, BonjourAccount) and account is not None:
             room = random_room()
             if account.conference.server_address:
                 target = u'%s@%s' % (room, account.conference.server_address)
@@ -1812,6 +1812,8 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def joinConferenceClicked_(self, sender):
         account = self.activeAccount()
+        if account is None:
+            return
         conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
             self.startConferenceIfAppropiate(conference, play_initial_announcement=True)
@@ -1992,7 +1994,7 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def dndClicked_(self, sender):
         account = AccountManager().default_account
-        if account is not BonjourAccount:
+        if account is not BonjourAccount and account is not None:
             account.audio.do_not_disturb = not account.audio.do_not_disturb
             account.save()
 
@@ -3200,12 +3202,14 @@ class ContactWindowController(NSWindowController):
 
     def updateToolsMenu(self):
         account = self.activeAccount()
+        if account is None:
+            return
 
         item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
 
         item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and self.activeAccount().server.settings_url))
+        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
 
     @allocate_autorelease_pool
     def updateCallMenu(self):
@@ -3220,13 +3224,15 @@ class ContactWindowController(NSWindowController):
 
         item = menu.itemWithTag_(302) # dnd
         account = AccountManager().default_account
-        item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
+        item.setState_(NSOnState if account is not None and account.audio.do_not_disturb else NSOffState)
         item.setEnabled_(True)
 
         while menu.numberOfItems() > 7:
             menu.removeItemAtIndex_(7)
 
         account = self.activeAccount()
+        if account is None:
+            return
 
         item = menu.itemWithTag_(44) # Join Conference
         item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('chat'))
@@ -3446,6 +3452,8 @@ class ContactWindowController(NSWindowController):
         media_type = item["streams"] or []
 
         account = self.activeAccount()
+        if account is None:
+            return
         conference = self.showJoinConferenceWindow(target=target, participants=participants, media_type=media_type, default_domain=account.id.domain)
         if conference is not None:
             self.joinConference(conference.target, conference.media_type, conference.participants)
@@ -4774,7 +4782,7 @@ class ContactWindowController(NSWindowController):
 
             item = menu.itemWithTag_(302) # dnd
             account = AccountManager().default_account
-            item.setState_(NSOnState if account.audio.do_not_disturb else NSOffState)
+            item.setState_(NSOnState if account is not None and account.audio.do_not_disturb else NSOffState)
             item.setEnabled_(True)
             self.updateHistoryMenu()
 

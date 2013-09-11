@@ -1137,14 +1137,15 @@ class BlinkPresenceContact(BlinkContact):
                         except StopIteration:
                             account = AccountManager().default_account
 
-                        local_uri = str(account.id)
-                        remote_uri = self.uri
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(ISOTimestamp.now())
-                        id=str(uuid.uuid1())
+                        if account is not None:
+                            local_uri = str(account.id)
+                            remote_uri = self.uri
+                            cpim_from = remote_uri
+                            cpim_to = local_uri
+                            timestamp = str(ISOTimestamp.now())
+                            id=str(uuid.uuid1())
 
-                        NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
+                            NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
 
                     if self.old_presence_status == 'offline' or status == 'offline':
                         ui_notify = False
