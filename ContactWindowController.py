@@ -2264,7 +2264,7 @@ class ContactWindowController(NSWindowController):
             display_name = contact.name
 
         if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts",
+            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active accounts",
                             "OK", None, None)
             return None
 
@@ -2304,7 +2304,7 @@ class ContactWindowController(NSWindowController):
         NSApp.activateIgnoringOtherApps_(True)
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active accounts", u"OK", None, None)
             return
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
@@ -2362,7 +2362,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active accounts", u"OK", None, None)
             return
 
         try:
@@ -2393,7 +2393,7 @@ class ContactWindowController(NSWindowController):
     def sendSMSToSelectedUri_(self, sender):
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active accounts", u"OK", None, None)
             return
 
         try:
@@ -3874,7 +3874,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send File", u"There are currently no active SIP accounts", u"OK", None, None)
+            NSRunAlertPanel(u"Cannot Send File", u"There are currently no active accounts", u"OK", None, None)
             return
         try:
             contact = self.getSelectedContacts()[0]
