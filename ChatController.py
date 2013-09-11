@@ -1615,14 +1615,15 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
-        if self.mediastream_started:
+        if self.mediastream_started and not self.mediastream_failed:
             self.showSystemMessage('Connection closed', ISOTimestamp.now())
+            self.outgoing_message_handler.setDisconnected()
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.mediastream_failed = True
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
-            reason = 'Connection closed'
+            reason = 'Connection closed due to a connectivity problem'
         elif data.failure is not None and data.failure.type is GNUTLSError:
             reason = 'Connection error (TLS)'
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):
@@ -1634,6 +1635,7 @@ class ChatController(MediaStream):
 
         self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
+        self.outgoing_message_handler.setDisconnected()
 
     def _NH_OTRPrivateKeyDidChange(self, sender, data):
         if self.sessionController.remote_focus:
