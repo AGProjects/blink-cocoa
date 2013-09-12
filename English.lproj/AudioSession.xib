@@ -240,6 +240,7 @@
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
@@ -768,7 +769,7 @@
 					<object class="NSMenuItem" id="467583564">
 						<reference key="NSMenu" ref="885894404"/>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">More information about zRTP</string>
+						<string key="NSTitle">About zRTP key exchange</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
@@ -847,7 +848,7 @@
 					<object class="NSMenuItem" id="561131950">
 						<reference key="NSMenu" ref="885894404"/>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">More information about SDES</string>
+						<string key="NSTitle">About SDES key exchange</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
@@ -878,7 +879,7 @@
 					<object class="NSMenuItem" id="834222570">
 						<reference key="NSMenu" ref="885894404"/>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">More information about SRTP</string>
+						<string key="NSTitle">About SRTP encryption</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="295702650"/>
