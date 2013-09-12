@@ -254,6 +254,10 @@
 		1F2FBFFD1462A445008B3D52 /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
 		1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F2FBFFC1462A444008B3D52 /* container-migration.plist */; };
 		1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
+		1F32884A17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
+		1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
+		1F32884C17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
+		1F32884D17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
 		1F35CF7A17894FFF00C6FE38 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
@@ -1733,6 +1737,7 @@
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
 		1F2FBFFC1462A444008B3D52 /* container-migration.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "container-migration.plist"; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
+		1F32884E17DB8192003A7F12 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
 		1F35D0B017894FFF00C6FE38 /* SIP2SIP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SIP2SIP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
@@ -2143,9 +2148,9 @@
 		1F226DE312B54FBE0010A8B2 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				1F2271F112B551B40010A8B2 /* PythonPackages */,
 				1FEDE7CF17AFD4C50038C579 /* C-Libraries */,
 				1F2271F012B551AC0010A8B2 /* CustomFrameworks */,
-				1F2271F112B551B40010A8B2 /* PythonPackages */,
 				29B97323FDCFA39411CA2CEA /* SystemFrameworks */,
 				1FB30809146D5598001430B5 /* mime.types */,
 			);
@@ -2588,6 +2593,7 @@
 			children = (
 				1F71724712BE201200CBA476 /* ChatWindowController.py */,
 				2B6328840FE422AE00446655 /* ChatController.py */,
+				1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */,
 				1FF3736F17C9E656007418EB /* ChatOTR.py */,
 				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
 				2BAF38120FE088C70040117A /* ChatWindow.xib */,
@@ -3123,6 +3129,7 @@
 				1F946C8F17CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9817CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683AC917CD32960090A902 /* locked-red.png in Resources */,
+				1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3377,6 +3384,7 @@
 				1F946C9117CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9A17CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683ACB17CD32960090A902 /* locked-red.png in Resources */,
+				1F32884D17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3627,6 +3635,7 @@
 				1F946C9017CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9917CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683ACA17CD32960090A902 /* locked-red.png in Resources */,
+				1F32884C17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3875,6 +3884,7 @@
 				1F946C8E17CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9717CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683AC817CD32960090A902 /* locked-red.png in Resources */,
+				1F32884A17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3966,6 +3976,14 @@
 				1F274637138868010052C384 /* English */,
 			);
 			name = FullScreenVideoPanel.xib;
+			sourceTree = "<group>";
+		};
+		1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F32884E17DB8192003A7F12 /* en */,
+			);
+			name = ChatOtrSmp.xib;
 			sourceTree = "<group>";
 		};
 		1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */ = {

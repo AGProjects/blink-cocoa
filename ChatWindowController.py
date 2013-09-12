@@ -1037,9 +1037,6 @@ class ChatWindowController(NSWindowController):
             item = menu.itemWithTag_(1)
             item.setHidden_(not settings.chat.enable_encryption)
 
-            item = menu.itemWithTag_(2)
-            item.setHidden_(not settings.chat.enable_encryption)
-
             item = menu.itemWithTag_(3)
             item.setEnabled_(False)
             item.setState_(NSOffState)
@@ -1057,6 +1054,9 @@ class ChatWindowController(NSWindowController):
             item.setHidden_(True)
 
             item = menu.itemWithTag_(7)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(9)
             item.setHidden_(True)
 
             selectedSession = self.selectedSessionController()
@@ -1120,6 +1120,9 @@ class ChatWindowController(NSWindowController):
                             item.setHidden_(False)
                             item.setTitle_("I have verified %s's fingerprint" % display_name)
                             item.setState_(NSOnState if fingerprint_verified else NSOffState)
+
+                            item = menu.itemWithTag_(9)
+                            item.setHidden_(False)
 
         elif menu == self.participantMenu:
             session = self.selectedSessionController()

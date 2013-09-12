@@ -33,7 +33,9 @@ from Foundation import (NSAttributedString,
                         NSTaskDidTerminateNotification,
                         NSTimer,
                         NSUserDefaults,
-                        NSZeroSize)
+                        NSZeroSize,
+                        NSURL,
+                        NSWorkspace)
 from Quartz import (CGDisplayBounds,
                     CGImageGetWidth,
                     CGMainDisplayID,
@@ -73,7 +75,7 @@ from sipsimple.util import ISOTimestamp
 import ChatWindowController
 from BlinkLogger import BlinkLogger
 from ChatViewController import ChatViewController, MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
-from ChatOTR import BlinkOtrAccount
+from ChatOTR import BlinkOtrAccount, ChatOtrSmp
 from ContactListModel import encode_icon, decode_icon
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
@@ -169,6 +171,7 @@ class ChatController(MediaStream):
     nickname_request_map = {} # message id -> nickname
     new_fingerprints = {}
     otr_account = None
+    chatOtrSmpWindow = None
 
     @classmethod
     def createStream(self):
@@ -220,6 +223,7 @@ class ChatController(MediaStream):
 
         self.history = ChatHistory()
         self.backend = SIPManager()
+        self.chatOtrSmpWindow = ChatOtrSmp(self)
         self.init_otr()
 
         return self
@@ -426,6 +430,12 @@ class ChatController(MediaStream):
                     self.otr_account.removeFingerprint(self.sessionController.remoteSIPAddress, str(fingerprint))
                 else:
                     self.otr_account.setTrust(self.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
+
+        elif tag == 9: # SMP window
+            self.chatOtrSmpWindow.show()
+
+        elif tag == 10:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://www.cypherpunks.ca/otr/Protocol-v2-3.1.0.html"))
 
         self.chatWindowController.revalidateToolbar()
 
@@ -1019,7 +1029,7 @@ class ChatController(MediaStream):
                 item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
 
     def notify_changed_fingerprint(self):
-        log_text = '%s changed encryption fingerprint' % self.sessionController.getTitleShort()
+        log_text = '%s changed encryption fingerprint. Please verify it again.' % self.sessionController.getTitleShort()
         self.showSystemMessage(log_text, ISOTimestamp.now(), True)
 
         settings = SIPSimpleSettings()
@@ -1412,6 +1422,9 @@ class ChatController(MediaStream):
                             encryption = 'verified'
                         else:
                             encryption = 'unverified'
+
+                    self.chatOtrSmpWindow.handle_tlv(tlvs)
+
                     if text is None:
                         return
                 except potr.context.NotOTRMessage, e:
@@ -1425,7 +1438,7 @@ class ChatController(MediaStream):
                 except potr.context.NotEncryptedError, e:
                     encryption = 'failed'
                     # we got some encrypted data
-                    log = 'Encrypted message %s is unreadable, as you have disabled encryption' % msgid
+                    log = 'Encrypted message %s is unreadable, as encryption is disabled' % msgid
                     status = 'failed'
                     self.sessionController.log_error(log)
                     self.showSystemMessage(log, ISOTimestamp.now(), True)
@@ -1442,7 +1455,7 @@ class ChatController(MediaStream):
                     status = 'failed'
                     # received a packet we cannot process (probably tampered or
                     # sent to wrong session)
-                    log = 'Encrypted message %s has been tampered with' % msgid
+                    log = 'Invalid encrypted message received' % msgid
                     self.sessionController.log_error(log)
                     self.showSystemMessage(log, ISOTimestamp.now(), True)
                 except RuntimeError, e:
@@ -1778,6 +1791,10 @@ class ChatController(MediaStream):
 
         self.dealloc_timer.invalidate()
         self.dealloc_timer = None
+
+        # release OTR check window
+        self.chatOtrSmpWindow.close()
+        self.chatOtrSmpWindow = None
 
         # release message handler
         self.outgoing_message_handler.close()
