@@ -1558,8 +1558,6 @@ class ChatController(MediaStream):
             else:
                 message = "Session Cancelled"
             self.showSystemMessage(message, ISOTimestamp.now(), True)
-        else:
-            self.showSystemMessage(reason, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.reset()
