@@ -1452,6 +1452,9 @@ class ChatController(MediaStream):
 
             # It was encoded earlier because potr only supports bytes
             text = text.decode('utf-8')
+            if text.startswith('?OTR:'):
+                return
+
             timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
             name = format_identity_to_string(sender, format='compact')
