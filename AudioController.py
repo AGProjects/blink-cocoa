@@ -1295,7 +1295,7 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_AudioStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
-            self.sessionController.log_info(u'Audio stream has timeout, ending audio stream')
+            self.sessionController.log_info(u'Audio stream timeout')
             self.hangup_reason = u"Audio Timeout"
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()

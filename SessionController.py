@@ -1857,7 +1857,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
         if data.action == 'remove' and not sender.streams:
-            self.log_info("There are no streams anymore, ending the session")
+            self.log_info("Ending session without streams")
             self.end()
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 
