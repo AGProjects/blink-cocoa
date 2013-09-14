@@ -953,37 +953,37 @@ class ChatController(MediaStream):
             elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
                     item.setEnabled_(True)
-                    item.setToolTip_('Click to cancel the chat session')
+                    item.setToolTip_('Cancel chat session')
                     item.setLabel_(u'Cancel')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_PROPOSING:
                     if self.sessionController.proposalOriginator == 'remote':
                         item.setEnabled_(False)
                     else:
-                        item.setToolTip_('Click to cancel the chat session')
+                        item.setToolTip_('Cancel chat session')
                         item.setLabel_(u'Cancel')
                         item.setImage_(NSImage.imageNamed_("stop_chat"))
                         item.setEnabled_(True)
                 elif self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
-                    item.setToolTip_('Click to stop the chat session')
+                    item.setToolTip_('End chat session')
                     item.setLabel_(u'Disconnect')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
                     item.setEnabled_(True)
-                    item.setToolTip_('Click to start a chat session')
+                    item.setToolTip_('Start chat session')
                     item.setLabel_(u'Connect')
                     item.setImage_(NSImage.imageNamed_("start_chat"))
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_('Click to hangup the audio call')
+                        item.setToolTip_('Hangup audio call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                        item.setToolTip_('Click to cancel the audio call')
+                        item.setToolTip_('Cancel audio call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
                 else:
-                    item.setToolTip_('Click to add audio to this session')
+                    item.setToolTip_('Add audio to session')
                     item.setImage_(NSImage.imageNamed_("audio"))
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio"):
@@ -1004,13 +1004,13 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
-                        item.setToolTip_('Click to cancel the video call')
+                        item.setToolTip_('Cancel video call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif video_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_('Click to hangup the video call')
+                        item.setToolTip_('Hangup video call')
                         item.setImage_(NSImage.imageNamed_("hangup"))
                 else:
-                    item.setToolTip_('Click to add video to this session')
+                    item.setToolTip_('Add video to session')
                     item.setImage_(NSImage.imageNamed_("video"))
             elif identifier == 'screen':
                 if self.sessionController.remote_focus:
@@ -1152,7 +1152,7 @@ class ChatController(MediaStream):
                     else:
                         self.sessionController.removeAudioFromSession()
 
-                    sender.setToolTip_('Click to add audio to this session')
+                    sender.setToolTip_('Add audio to session')
                     sender.setImage_(NSImage.imageNamed_("audio"))
                     self.chatWindowController.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     self.chatWindowController.audioStatus.setStringValue_(u"Connected")
@@ -1161,7 +1161,7 @@ class ChatController(MediaStream):
                     sender.setEnabled_(False)
                 else:
                     self.sessionController.addAudioToSession()
-                    sender.setToolTip_('Click to cancel the audio call')
+                    sender.setToolTip_('Cancel audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))
                     self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session)
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
@@ -1199,13 +1199,13 @@ class ChatController(MediaStream):
                         else:
                             self.sessionController.removeVideoFromSession()
 
-                        sender.setToolTip_('Click to add video to this session')
+                        sender.setToolTip_('Add video to session')
 
                         # The button will be enabled again after operation is finished
                         sender.setEnabled_(False)
                     else:
                         self.sessionController.addVideoToSession()
-                        sender.setToolTip_('Click to cancel the video call')
+                        sender.setToolTip_('Cancel the video call')
 
             elif identifier == 'maximize':
                 self.enterFullScreen()

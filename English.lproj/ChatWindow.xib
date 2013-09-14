@@ -81,7 +81,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Hold</string>
 							<string key="NSToolbarItemPaletteLabel">Hold</string>
-							<string key="NSToolbarItemToolTip">Hold/Unhold Audio</string>
+							<string key="NSToolbarItemToolTip">Hold/Unhold audio</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -125,13 +125,12 @@
 							</object>
 							<string key="NSToolbarItemLabel">Encryption</string>
 							<string key="NSToolbarItemPaletteLabel">Encryption</string>
-							<nil key="NSToolbarItemToolTip"/>
+							<string key="NSToolbarItemToolTip">Encryption options</string>
 							<object class="NSPopUpButton" key="NSToolbarItemView" id="310919499">
 								<reference key="NSNextResponder"/>
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{5, 14}, {55, 35}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
@@ -287,7 +286,6 @@
 										<bool key="NSNoAutoenable">YES</bool>
 										<reference key="NSMenuFont" ref="547007391"/>
 									</object>
-									<int key="NSSelectedIndex">1</int>
 									<bool key="NSPullDown">YES</bool>
 									<int key="NSPreferredEdge">1</int>
 									<bool key="NSUsesItemFromMenu">YES</bool>
@@ -313,7 +311,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Send File</string>
 							<string key="NSToolbarItemPaletteLabel">Send File</string>
-							<string key="NSToolbarItemToolTip">Send Files</string>
+							<string key="NSToolbarItemToolTip">Send files</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -335,7 +333,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Record</string>
 							<string key="NSToolbarItemPaletteLabel">Record</string>
-							<string key="NSToolbarItemToolTip">Record Audio</string>
+							<string key="NSToolbarItemToolTip">Record audio</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -357,7 +355,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Connect</string>
 							<string key="NSToolbarItemPaletteLabel">Connect</string>
-							<string key="NSToolbarItemToolTip">Connect Chat</string>
+							<string key="NSToolbarItemToolTip">Start chat session</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -379,7 +377,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Participants</string>
 							<string key="NSToolbarItemPaletteLabel">Participants</string>
-							<string key="NSToolbarItemToolTip">Toogle Participants Drawer</string>
+							<string key="NSToolbarItemToolTip">Toogle participants drawer</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -401,13 +399,12 @@
 							</object>
 							<string key="NSToolbarItemLabel">Screen  </string>
 							<string key="NSToolbarItemPaletteLabel">Screen  </string>
-							<nil key="NSToolbarItemToolTip"/>
+							<string key="NSToolbarItemToolTip">Screen sharing</string>
 							<object class="NSPopUpButton" key="NSToolbarItemView" id="878248731">
 								<reference key="NSNextResponder"/>
 								<int key="NSvFlags">292</int>
 								<string key="NSFrame">{{0, 14}, {54, 47}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<int key="NSTag">204</int>
@@ -498,7 +495,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Video</string>
 							<string key="NSToolbarItemPaletteLabel">Video</string>
-							<string key="NSToolbarItemToolTip">Add Video to this session</string>
+							<string key="NSToolbarItemToolTip">Add video to session</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -520,7 +517,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Editor</string>
 							<string key="NSToolbarItemPaletteLabel">Editor</string>
-							<string key="NSToolbarItemToolTip">Toggle Collaborative Editor</string>
+							<string key="NSToolbarItemToolTip">Show collaborative editor</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -542,13 +539,12 @@
 							</object>
 							<string key="NSToolbarItemLabel">Grab</string>
 							<string key="NSToolbarItemPaletteLabel">Grab</string>
-							<nil key="NSToolbarItemToolTip"/>
+							<string key="NSToolbarItemToolTip">Send screenshot</string>
 							<object class="NSPopUpButton" key="NSToolbarItemView" id="350284562">
 								<reference key="NSNextResponder"/>
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {54, 42}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
@@ -663,7 +659,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Fullscreen</string>
 							<string key="NSToolbarItemPaletteLabel">Fullscreen</string>
-							<string key="NSToolbarItemToolTip">Toggle Full Screen Video </string>
+							<string key="NSToolbarItemToolTip">Toggle full screen</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -685,7 +681,7 @@
 							</object>
 							<string key="NSToolbarItemLabel">Audio</string>
 							<string key="NSToolbarItemPaletteLabel">Audio</string>
-							<string key="NSToolbarItemToolTip">Add Audio to this session</string>
+							<string key="NSToolbarItemToolTip">Add audio session</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">
 								<string key="NSClassName">NSImage</string>
@@ -3602,6 +3598,7 @@
 				<string key="673.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="674.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="72.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="72.designableToolbarIdentifier">chat-toolbar</string>
 				<string key="78.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="81.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="81.designableToolbarItemIdentifier">connect_button</string>
