@@ -122,7 +122,7 @@ class BlinkOtrAccount(potr.context.Account):
 class ChatOtrSmp(NSObject):
     # used to verify the remote fingerprint using SMP protocol
     window = objc.IBOutlet()
-    label1 = objc.IBOutlet()
+    labelText = objc.IBOutlet()
     secretText = objc.IBOutlet()
     questionText = objc.IBOutlet()
     progressBar = objc.IBOutlet()
@@ -302,16 +302,16 @@ class ChatOtrSmp(NSObject):
             self.continueButton.setEnabled_(True)
             if self.question is None:
                 self.questionText.setHidden_(True)
-                self.label1.setStringValue_(('%s is trying to verify your identity using a commonly known secret.' % self.chatController.sessionController.remoteSIPAddress))
+                self.labelText.setStringValue_(('%s is trying to verify your identity using a commonly known secret.' % self.chatController.sessionController.remoteSIPAddress))
             else:
                 self.questionText.setHidden_(False)
                 self.secretText.setHidden_(False)
                 self.questionText.setStringValue_(self.question)
-                self.label1.setStringValue_('%s has asked you a question to verify your identity:' % self.chatController.sessionController.remoteSIPAddress)
+                self.labelText.setStringValue_('%s has asked you a question to verify your identity:' % self.chatController.sessionController.remoteSIPAddress)
         else:
             self.statusText.setStringValue_('')
             self.continueButton.setEnabled_(True)
             self.questionText.setHidden_(False)
             self.questionText.setStringValue_('')
-            self.label1.setStringValue_(('You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.' % self.chatController.sessionController.remoteSIPAddress))
+            self.labelText.setStringValue_(('You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.' % self.chatController.sessionController.remoteSIPAddress))
 

@@ -85,7 +85,6 @@
 							<string key="NSFrame">{{477, 13}, {97, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="532995803">
@@ -290,7 +289,7 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
-						<string key="label">label1</string>
+						<string key="label">labelText</string>
 						<reference key="source" ref="1001"/>
 						<reference key="destination" ref="290435475"/>
 					</object>
@@ -568,7 +567,7 @@
 					<dictionary class="NSMutableDictionary" key="outlets">
 						<string key="cancelButton">id</string>
 						<string key="continueButton">id</string>
-						<string key="label1">id</string>
+						<string key="labelText">id</string>
 						<string key="progressBar">id</string>
 						<string key="questionText">id</string>
 						<string key="secretText">id</string>
@@ -584,8 +583,8 @@
 							<string key="name">continueButton</string>
 							<string key="candidateClassName">id</string>
 						</object>
-						<object class="IBToOneOutletInfo" key="label1">
-							<string key="name">label1</string>
+						<object class="IBToOneOutletInfo" key="labelText">
+							<string key="name">labelText</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="progressBar">
