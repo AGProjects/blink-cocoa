@@ -626,7 +626,7 @@ class ChatController(MediaStream):
             splitter_height = 5
             new_input_height = 35
 
-            new_output_height = 300 if self.chatViewController.editorStatus else 0
+            new_output_height = 300 if self.chatViewController.editorVisible else 0
 
             view_height = self.splitView.frame().size.height
             output_frame = self.outputContainer.frame()
@@ -1022,7 +1022,7 @@ class ChatController(MediaStream):
                 item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
                 item.setEnabled_(True)
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
-                item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorStatus and self.chatViewController.editor_has_changed else "editor"))
+                item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorVisible and self.chatViewController.editorIsComposing else "editor"))
             elif identifier == 'screenshot':
                 item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
             elif identifier == 'sendfile':
@@ -1235,9 +1235,9 @@ class ChatController(MediaStream):
                     blink_contact.contact.save()
 
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
-                sender.setImage_(NSImage.imageNamed_("editor"))
-                sender.setToolTip_("Switch to Chat Session" if self.chatViewController.editorStatus else "Enable Collaborative Editor")
                 self.toggleEditor()
+                sender.setImage_(NSImage.imageNamed_("editor"))
+                sender.setToolTip_("Switch back to chat session" if self.chatViewController.editorVisible else "Show collaborative editor")
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
                 contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
@@ -1361,10 +1361,9 @@ class ChatController(MediaStream):
         self.screenshot_task = None
 
     def toggleEditor(self):
-        self.chatViewController.editor_has_changed = False
-        self.chatViewController.editorStatus = not self.chatViewController.editorStatus
+        self.chatViewController.editorIsComposing = False
         self.showChatViewWithEditorWhileVideoActive()
-        self.chatViewController.toggleCollaborationEditor(self.chatViewController.editorStatus)
+        self.chatViewController.toggleCollaborationEditor()
         self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
 
     def remoteBecameIdle_(self, timer):

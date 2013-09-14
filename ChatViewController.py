@@ -203,7 +203,7 @@ class ChatViewController(NSObject):
     show_related_messages = False
 
     expandSmileys = True
-    editorStatus = False
+    editorVisible = False
 
     rendered_messages = set()
     pending_messages = {}
@@ -222,9 +222,8 @@ class ChatViewController(NSObject):
     handle_scrolling = True
     scrolling_zoom_factor = 0
 
-    editor_has_changed = False
+    editorIsComposing = False
     scrolling_back = False
-    collaboration_editor_active = False
 
     @property
     def sessionController(self):
@@ -477,16 +476,18 @@ class ChatViewController(NSObject):
         script = """updateMessageBodyContent('%s', "%s")""" % (msgid, text)
         self.executeJavaScript(script)
 
-    def toggleCollaborationEditor(self, editor_status):
-        if editor_status:
-            self.showCollaborationEditor()
-        else:
+    def toggleCollaborationEditor(self):
+        if self.editorVisible:
             self.hideCollaborationEditor()
+        else:
+            self.showCollaborationEditor()
 
     def showCollaborationEditor(self):
-        self.collaboration_editor_active = True
+        self.editorVisible = True
         self.last_scrolling_label = self.lastMessagesLabel.stringValue()
         self.lastMessagesLabel.setStringValue_('Click on Editor toolbar button to switch back to the chat session')
+        self.searchMessagesBox.setHidden_(True)
+        self.showRelatedMessagesButton.setHidden_(True)
         settings = SIPSimpleSettings()
 
         frame=self.inputView.frame()
@@ -498,8 +499,12 @@ class ChatViewController(NSObject):
         self.executeJavaScript(script)
 
     def hideCollaborationEditor(self):
+        self.editorVisible = False
         self.lastMessagesLabel.setStringValue_(self.last_scrolling_label)
-        self.collaboration_editor_active = False
+        self.searchMessagesBox.setHidden_(False)
+        if self.related_messages:
+            self.showRelatedMessagesButton.setHidden_(False)
+
         if self.splitterHeight is not None:
             frame=self.inputView.frame()
             frame.size.height = self.splitterHeight
@@ -564,7 +569,7 @@ class ChatViewController(NSObject):
         if not self.handle_scrolling:
             return
 
-        if self.collaboration_editor_active:
+        if self.editorVisible:
             return
 
         if scrollTop < 0:
@@ -613,7 +618,7 @@ class ChatViewController(NSObject):
             self.delegate.scroll_back_in_time()
 
     def collaborativeEditorisTyping(self):
-        self.editor_has_changed = True
+        self.editorIsComposing = True
         self.delegate.resetIsComposingTimer(5)
 
         NotificationCenter().post_notification("BlinkCollaborationEditorContentHasChanged", sender=self)

@@ -566,7 +566,7 @@ class ChatWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkCollaborationEditorContentHasChanged(self, sender, data):
-        if not sender.editorStatus:
+        if not sender.editorVisible:
             self.noteSession_isComposing_(sender.delegate.sessionController, True)
         self.revalidateToolbar()
 
