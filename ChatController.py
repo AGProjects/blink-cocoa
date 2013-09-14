@@ -1599,6 +1599,8 @@ class ChatController(MediaStream):
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        if self.stream is None or self.stream.msrp is None: # stream may have ended in the mean time
+            return
         self.changeStatus(STREAM_CONNECTED)
 
         self.init_otr(disable_encryption=self.sessionController.remote_focus)
