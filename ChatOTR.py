@@ -282,6 +282,7 @@ class ChatOtrSmp(NSObject):
 
     def show(self, response=None):
         self.secretText.setEnabled_(True)
+        self.questionText.setEnabled_(True)
         self.cancelButton.setHidden_(False)
         self.continueButton.setTitle_('Continue')
         self.progressBar.setIndeterminate_(True)
