@@ -95,8 +95,7 @@ from application.system import unlink, makedirs
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.addressbook import AddressbookManager, ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
-from sipsimple.audio import WavePlayer
-from sipsimple.conference import AudioConference
+from sipsimple.audio import AudioConference, WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
