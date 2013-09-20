@@ -1,6 +1,8 @@
 # Copyright 2009-2011 AG Projects. See LICENSE for details.
 #
 
+from Foundation import NSLocalizedString
+
 import os
 import Growl
 
@@ -36,37 +38,37 @@ class GrowlNotifications(object):
         handler(notification)
 
     def _NH_GrowlContactRequest(self, notification):
-        title = 'New Contact Request'
-        message = '%s has subscribed to my availability' % notification.data.watcher
+        title = NSLocalizedString("New Contact Request", "System notification title")
+        message = NSLocalizedString("%s has subscribed to my availability" % notification.data.watcher, "System notification body")
         self.growl.notify('New Contact Request', title, message)
 
     def _NH_GrowlGotSMS(self, notification):
-        title = 'SMS Received'
-        message = 'From %s\n\n%s' % (notification.data.sender, notification.data.content)
+        title = NSLocalizedString("SMS Received", "System notification title")
+        message = NSLocalizedString("From %s\n\n" % notification.data.sender, "System notification body") + notification.data.content
         self.growl.notify('SMS Received', title, message)
 
     def _NH_GrowlGotChatMessage(self, notification):
-        title = 'Chat Message Received'
-        message = 'From %s\n\n%s' % (notification.data.sender, notification.data.content)
+        title = NSLocalizedString("Chat Message Received", "System notification title")
+        message = NSLocalizedString("From %s\n\n" % notification.data.sender, "System notification body") + notification.data.content
         self.growl.notify('Chat Message Received', title, message)
 
     def _NH_GrowlMissedCall(self, notification):
-        title = 'Missed Call (' + notification.data.streams  + ')'
+        title = NSLocalizedString("Missed Call", "System notification title") +  "(" + notification.data.streams  + ")"
         message = 'From %s\nat %s' % (notification.data.caller, notification.datetime.strftime("%Y-%m-%d %H:%M"))
         self.growl.notify('Missed Call', title, message, sticky=True)
 
     def _NH_GrowlAudioSessionRecorded(self, notification):
-        title = 'Audio Session Recorded'
-        message = '%s\nat %s' % (notification.data.remote_party, notification.datetime.strftime("%Y-%m-%d %H:%M"))
+        title = NSLocalizedString("Audio Session Recorded", "System notification title")
+        message = NSLocalizedString("%s\nat " % notification.data.remote_party, "System notification body") + notification.datetime.strftime("%Y-%m-%d %H:%M")
         self.growl.notify('Audio Session Recorded', title, message, sticky=True)
 
     def _NH_GrowlGotMWI(self, notification):
         # new_messages will always be > 0 at this point
-        title = 'New Voicemail Message' if notification.data.new_messages == 1 else 'New Voicemail Messages'
+        title = NSLocalizedString("New Voicemail Message", "System notification title") if notification.data.new_messages == 1 else NSLocalizedString("New Voicemail Messages", "System notification title")
         if notification.data.old_messages > 0:
-            message = 'You have %d new and %d old voicemail messages' % (notification.data.new_messages, notification.data.old_messages)
+            message = NSLocalizedString("You have %d new" % notification.data.new_messages , "System notification body") + NSLocalizedString("and %d old voicemail messages" % notification.data.old_messages , "System notification body")
         else:
-            message = 'You have %d new voicemail %s' % (notification.data.new_messages, 'message' if notification.data.new_messages == 1 else 'messages')
+            message = NSLocalizedString("You have %d new voicemail messages" % notification.data.new_messages, "System notification body")
         self.growl.notify('Voicemail Summary', title, message)
 
 
