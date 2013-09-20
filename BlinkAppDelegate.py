@@ -11,7 +11,9 @@ from Foundation import (NSAppleEventManager,
                         NSMakeRect,
                         NSNotificationSuspensionBehaviorDeliverImmediately,
                         NSThread,
-                        NSObject)
+                        NSObject,
+                        NSLocalizedString)
+
 from AppKit import (NSAlertDefaultReturn,
                     NSApp,
                     NSInformationalRequest,
@@ -50,7 +52,6 @@ import PreferencesController
 from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData
 from util import allocate_autorelease_pool, call_in_gui_thread, external_url_pattern
-
 
 def fourcharToInt(fourCharCode):
     return struct.unpack('>l', fourCharCode)[0]
@@ -233,9 +234,9 @@ class BlinkAppDelegate(NSObject):
 
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
-                if NSRunAlertPanel("Error Reading Configurations",
-                    """The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. \n\nThe exception was: '%s'""" % (config_file, exc),
-                    "Replace", "Quit", None) != NSAlertDefaultReturn:
+                if NSRunAlertPanel(NSLocalizedString("Error Reading Configurations", "Alert panel title"),
+                    NSLocalizedString("The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. " % config_file, "Alert panel label"),
+                    NSLocalizedString("Replace", "Alert panel button"), NSLocalizedString("Quit", "Alert panel button"), None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
                 os.rename(config_file, config_file+".corrupted")
@@ -243,8 +244,8 @@ class BlinkAppDelegate(NSObject):
             except BaseException, exc:
                 import traceback
                 print traceback.print_exc()
-                NSRunAlertPanel("Error", "There was an error during startup of core Blink functionality:\n%s" % exc,
-                        "Quit", None, None)
+                NSRunAlertPanel(NSLocalizedString("Error", "Alert panel title"), NSLocalizedString("There was an error during startup of core  functionality:\n%s" % exc, "Alert panel label"),
+                        NSLocalizedString("Quit", "Alert panel button"), None, None)
                 NSApp.terminate_(None)
                 return
 
@@ -334,7 +335,7 @@ class BlinkAppDelegate(NSObject):
                 self.aboutVersion.setStringValue_("Version %s\n%s" % (version, vdate))
 
         if self.applicationName == 'SIP2SIP':
-            self.aboutSlogan.setStringValue_('Special edition of Blink SIP Client for SIP2SIP')
+            self.aboutSlogan.setStringValue_(NSLocalizedString("Special edition of Blink SIP Client for SIP2SIP", "About panel label"))
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
