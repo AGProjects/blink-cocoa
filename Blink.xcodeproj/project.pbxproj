@@ -68,14 +68,10 @@
 		1F2272BA12B554F50010A8B2 /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
 		1F2272BB12B554F50010A8B2 /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
 		1F2272BC12B554F50010A8B2 /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
-		1F2272BD12B554F50010A8B2 /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
-		1F2272BE12B554F50010A8B2 /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		1F2272BF12B554F50010A8B2 /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
 		1F2272C012B554F50010A8B2 /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
 		1F2272C112B554F50010A8B2 /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
 		1F2272C212B554F50010A8B2 /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
-		1F2272C312B554F50010A8B2 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
-		1F2272C412B554F50010A8B2 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		1F2272C512B554F50010A8B2 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
 		1F2272C712B554F50010A8B2 /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		1F2272C812B554F50010A8B2 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
@@ -295,14 +291,10 @@
 		1F35CF9C17894FFF00C6FE38 /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
 		1F35CF9D17894FFF00C6FE38 /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
 		1F35CF9E17894FFF00C6FE38 /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
-		1F35CF9F17894FFF00C6FE38 /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
-		1F35CFA017894FFF00C6FE38 /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		1F35CFA117894FFF00C6FE38 /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
 		1F35CFA217894FFF00C6FE38 /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
 		1F35CFA317894FFF00C6FE38 /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
 		1F35CFA417894FFF00C6FE38 /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
-		1F35CFA517894FFF00C6FE38 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
-		1F35CFA617894FFF00C6FE38 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		1F35CFA717894FFF00C6FE38 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
 		1F35CFA817894FFF00C6FE38 /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		1F35CFA917894FFF00C6FE38 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
@@ -427,7 +419,6 @@
 		1F35D02017894FFF00C6FE38 /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		1F35D02117894FFF00C6FE38 /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1F35D02217894FFF00C6FE38 /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
-		1F35D02317894FFF00C6FE38 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */; };
 		1F35D02417894FFF00C6FE38 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
 		1F35D02517894FFF00C6FE38 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
 		1F35D02617894FFF00C6FE38 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
@@ -589,6 +580,19 @@
 		1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
 		1F5677C11323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
 		1F5677C21323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
+		1F5BC16717E5FE7300D1D8BE /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
+		1F5BC25D17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
+		1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
+		1F5BC25F17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
+		1F5BC26017E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
+		1F5BC26317E6114700D1D8BE /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
+		1F5BC26417E6114700D1D8BE /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
+		1F5BC26517E6114700D1D8BE /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
+		1F5BC26617E6114700D1D8BE /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
+		1F5BC2FD17E66DAC00D1D8BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
+		1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
+		1F5BC2FF17E66DAC00D1D8BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
+		1F5BC30017E66DAC00D1D8BE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
 		1F5C06D814041B9E001DA3EF /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
 		1F5C06D914041B9E001DA3EF /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
 		1F5C06DA14041B9E001DA3EF /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
@@ -694,14 +698,10 @@
 		1F8DC348135084FA0034815C /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
 		1F8DC349135084FA0034815C /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
 		1F8DC34A135084FA0034815C /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
-		1F8DC34B135084FA0034815C /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
-		1F8DC34C135084FA0034815C /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		1F8DC34D135084FA0034815C /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
 		1F8DC34E135084FA0034815C /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
 		1F8DC34F135084FA0034815C /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
 		1F8DC350135084FA0034815C /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
-		1F8DC351135084FA0034815C /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
-		1F8DC352135084FA0034815C /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		1F8DC353135084FA0034815C /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
 		1F8DC355135084FA0034815C /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		1F8DC356135084FA0034815C /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
@@ -963,7 +963,6 @@
 		1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1FBF2B4517915410002E110B /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
-		1FBF2B4E17916768002E110B /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4D17916768002E110B /* Updater.xib */; };
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
@@ -1067,6 +1066,18 @@
 		1FF2F5C713AB419900502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5C813AB41AB00502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
 		1FF2F5C913AB41BF00502BDB /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
+		1FF32B4817EC83F000E63A20 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */; };
+		1FF32B4917EC83F000E63A20 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */; };
+		1FF32B4A17EC83F000E63A20 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */; };
+		1FF32B4B17EC83F000E63A20 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */; };
+		1FF32B5117EC841500E63A20 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */; };
+		1FF32B5217EC841500E63A20 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */; };
+		1FF32B5317EC841500E63A20 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */; };
+		1FF32B5417EC841500E63A20 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */; };
+		1FF32B5A17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
+		1FF32B5B17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
+		1FF32B5C17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
+		1FF32B5D17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
 		1FF3737017C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
 		1FF3737117C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
 		1FF3737217C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
@@ -1110,8 +1121,6 @@
 		2B2400FF1018AB9400079580 /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
 		2B24083A102117F200079580 /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
 		2B2409841022A04700079580 /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
-		2B2409861022A05A00079580 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409851022A05A00079580 /* DebugWindow.xib */; };
-		2B240B731023AB1200079580 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B721023AB1200079580 /* PhotoPicker.xib */; };
 		2B240B771023CFAF00079580 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
 		2B24517A0FCF8A9F0023DBFB /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
 		2B24D071110FD522003A18DE /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
@@ -1224,8 +1233,6 @@
 		2BFB33E4101674BD002D79FB /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
 		2BFB33E5101674BD002D79FB /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
 		2BFB34B310178A99002D79FB /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
-		2BFB34B510178AB7002D79FB /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B410178AB7002D79FB /* AlertPanelView.xib */; };
-		2BFB34B810178B34002D79FB /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B710178B34002D79FB /* AlertPanel.xib */; };
 		2BFB35541017E363002D79FB /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
@@ -1236,9 +1243,6 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		C71785FC13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */; };
-		C71785FD13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */; };
-		C71785FE13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */; };
 		DE3A673013A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673113A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673213A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
@@ -1473,6 +1477,76 @@
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1F5BC11A17E5C09D00D1D8BE /* Copy Spanish translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/es/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Spanish translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F5BC11C17E5C44800D1D8BE /* Copy Spanish translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/es/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Spanish translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F5BC11E17E5C45800D1D8BE /* Copy Spanish translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/es/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Spanish translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F5BC12017E5C48600D1D8BE /* Copy Spanish translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/es/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Spanish translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F5BC2EA17E64C7600D1D8BE /* Copy Romanian translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/ro/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Romanian translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F5BC2F217E64CD800D1D8BE /* Copy Romanian translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/ro/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Romanian translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1F5BC2F417E64CEE00D1D8BE /* Copy Romanian translation */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = translations/po/locale/ro/LC_MESSAGES;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Romanian translation";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1F8DC3CC135084FA0034815C /* Copy Smiley Files (default) */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1694,14 +1768,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		089C165DFE840E0CC02AAC07 /* en */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AB517AF925A003867C4 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
-		1F07D75A138BDF5900C91AD7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
+		1F07D75A138BDF5900C91AD7 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
 		1F07D765138BDFF200C91AD7 /* VideoMirrorWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoMirrorWindowController.py; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
-		1F0D0EC1132D231C00614205 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
+		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0E260C1402F097004AED9C /* blink-crypto.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-crypto.icns"; sourceTree = "<group>"; };
 		1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
@@ -1725,8 +1799,8 @@
 		1F22722812B554000010A8B2 /* libgpg-error.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libgpg-error.0.dylib"; path = "Distribution/Frameworks/libgpg-error.0.dylib"; sourceTree = "<group>"; };
 		1F22722B12B554000010A8B2 /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblzo.1.dylib; path = Distribution/Frameworks/liblzo.1.dylib; sourceTree = "<group>"; };
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
-		1F2489DF13FE781F007CDFD5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AudioSession.xib; sourceTree = "<group>"; };
-		1F274637138868010052C384 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
+		1F2489DF13FE781F007CDFD5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AudioSession.xib; sourceTree = "<group>"; };
+		1F274637138868010052C384 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
 		1F2746781388755F0052C384 /* fullscreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = fullscreen.png; path = icons/fullscreen.png; sourceTree = "<group>"; };
 		1F2747D21388FC5C0052C384 /* restore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = restore.png; path = icons/restore.png; sourceTree = "<group>"; };
 		1F274895138930580052C384 /* VideoView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoView.py; sourceTree = "<group>"; };
@@ -1741,16 +1815,152 @@
 		1F35D0B017894FFF00C6FE38 /* SIP2SIP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SIP2SIP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
-		1F3C358215F521A8005356AE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
+		1F3C358215F521A8005356AE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
 		1F3C358415F522FA005356AE /* PresenceInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresenceInfoController.py; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
-		1F536AAF1591BCE500A0FE51 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Subject.xib; sourceTree = "<group>"; };
+		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F546250158B300A005628D9 /* NicknameController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NicknameController.py; sourceTree = "<group>"; };
-		1F546259158B34D0005628D9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Nickname.xib; sourceTree = "<group>"; };
+		1F546259158B34D0005628D9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Nickname.xib; sourceTree = "<group>"; };
 		1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "test@conference.sip2sip.info.tiff"; path = "icons/test@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F5677C01323DDDD00D087D1 /* transfer.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = transfer.png; path = icons/transfer.png; sourceTree = "<group>"; };
-		1F5C06D214041B98001DA3EF /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC16817E5FE7300D1D8BE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Updater.xib; sourceTree = "<group>"; };
+		1F5BC26117E6114200D1D8BE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AlertPanel.xib; sourceTree = "<group>"; };
+		1F5BC26717E6114700D1D8BE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
+		1F5BC26917E611A900D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Updater.xib; sourceTree = "<group>"; };
+		1F5BC26A17E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		1F5BC26B17E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/About.xib; sourceTree = "<group>"; };
+		1F5BC26C17E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
+		1F5BC26D17E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
+		1F5BC26E17E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
+		1F5BC26F17E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SoundSetting.xib; sourceTree = "<group>"; };
+		1F5BC27017E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/OTRSettings.xib; sourceTree = "<group>"; };
+		1F5BC27117E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
+		1F5BC27217E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
+		1F5BC27317E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AecSlider.xib; sourceTree = "<group>"; };
+		1F5BC27417E611AA00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
+		1F5BC27517E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Contact.xib; sourceTree = "<group>"; };
+		1F5BC27617E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/BlockedContact.xib; sourceTree = "<group>"; };
+		1F5BC27717E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Group.xib; sourceTree = "<group>"; };
+		1F5BC27817E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MergeContacts.xib; sourceTree = "<group>"; };
+		1F5BC27917E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
+		1F5BC27A17E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC27B17E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AlertPanel.xib; sourceTree = "<group>"; };
+		1F5BC27C17E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
+		1F5BC27D17E611AB00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1F5BC27E17E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F5BC27F17E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
+		1F5BC28017E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
+		1F5BC28117E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
+		1F5BC28217E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AudioSession.xib; sourceTree = "<group>"; };
+		1F5BC28317E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
+		1F5BC28417E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
+		1F5BC28517E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ChatWindow.xib; sourceTree = "<group>"; };
+		1F5BC28617E611AC00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ChatView.xib; sourceTree = "<group>"; };
+		1F5BC28717E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1F5BC28817E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
+		1F5BC28917E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Nickname.xib; sourceTree = "<group>"; };
+		1F5BC28A17E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Subject.xib; sourceTree = "<group>"; };
+		1F5BC28B17E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SMSSession.xib; sourceTree = "<group>"; };
+		1F5BC28C17E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SMSView.xib; sourceTree = "<group>"; };
+		1F5BC28D17E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
+		1F5BC28E17E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
+		1F5BC28F17E611AD00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
+		1F5BC29017E611AE00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
+		1F5BC29117E611AE00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC29217E611AE00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AccountSettings.xib; sourceTree = "<group>"; };
+		1F5BC29317E611AE00D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1F5BC29417E611BF00D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Updater.xib; sourceTree = "<group>"; };
+		1F5BC29517E611BF00D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		1F5BC29617E611BF00D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/About.xib; sourceTree = "<group>"; };
+		1F5BC29717E611BF00D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
+		1F5BC29817E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
+		1F5BC29917E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
+		1F5BC29A17E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/SoundSetting.xib; sourceTree = "<group>"; };
+		1F5BC29B17E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/OTRSettings.xib; sourceTree = "<group>"; };
+		1F5BC29C17E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
+		1F5BC29D17E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
+		1F5BC29E17E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AecSlider.xib; sourceTree = "<group>"; };
+		1F5BC29F17E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
+		1F5BC2A017E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Contact.xib; sourceTree = "<group>"; };
+		1F5BC2A117E611C000D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/BlockedContact.xib; sourceTree = "<group>"; };
+		1F5BC2A217E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Group.xib; sourceTree = "<group>"; };
+		1F5BC2A317E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MergeContacts.xib; sourceTree = "<group>"; };
+		1F5BC2A417E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
+		1F5BC2A517E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC2A617E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AlertPanel.xib; sourceTree = "<group>"; };
+		1F5BC2A717E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
+		1F5BC2A817E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1F5BC2A917E611C100D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F5BC2AA17E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
+		1F5BC2AB17E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
+		1F5BC2AC17E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
+		1F5BC2AD17E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AudioSession.xib; sourceTree = "<group>"; };
+		1F5BC2AE17E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
+		1F5BC2AF17E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
+		1F5BC2B017E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ChatWindow.xib; sourceTree = "<group>"; };
+		1F5BC2B117E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ChatView.xib; sourceTree = "<group>"; };
+		1F5BC2B217E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1F5BC2B317E611C200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
+		1F5BC2B417E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Nickname.xib; sourceTree = "<group>"; };
+		1F5BC2B517E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Subject.xib; sourceTree = "<group>"; };
+		1F5BC2B617E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/SMSSession.xib; sourceTree = "<group>"; };
+		1F5BC2B717E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/SMSView.xib; sourceTree = "<group>"; };
+		1F5BC2B817E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
+		1F5BC2B917E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
+		1F5BC2BA17E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
+		1F5BC2BB17E611C300D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
+		1F5BC2BC17E611C400D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC2BD17E611C400D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AccountSettings.xib; sourceTree = "<group>"; };
+		1F5BC2BE17E611C400D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1F5BC2BF17E611CD00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Updater.xib; sourceTree = "<group>"; };
+		1F5BC2C017E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		1F5BC2C117E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/About.xib; sourceTree = "<group>"; };
+		1F5BC2C217E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
+		1F5BC2C317E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
+		1F5BC2C417E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
+		1F5BC2C517E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/SoundSetting.xib; sourceTree = "<group>"; };
+		1F5BC2C617E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/OTRSettings.xib; sourceTree = "<group>"; };
+		1F5BC2C717E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
+		1F5BC2C817E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
+		1F5BC2C917E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AecSlider.xib; sourceTree = "<group>"; };
+		1F5BC2CA17E611CE00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
+		1F5BC2CB17E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Contact.xib; sourceTree = "<group>"; };
+		1F5BC2CC17E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/BlockedContact.xib; sourceTree = "<group>"; };
+		1F5BC2CD17E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Group.xib; sourceTree = "<group>"; };
+		1F5BC2CE17E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MergeContacts.xib; sourceTree = "<group>"; };
+		1F5BC2CF17E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
+		1F5BC2D017E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC2D117E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AlertPanel.xib; sourceTree = "<group>"; };
+		1F5BC2D217E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
+		1F5BC2D317E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1F5BC2D417E611CF00D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F5BC2D517E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
+		1F5BC2D617E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
+		1F5BC2D717E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
+		1F5BC2D817E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AudioSession.xib; sourceTree = "<group>"; };
+		1F5BC2D917E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoMirrowWindow.xib; sourceTree = "<group>"; };
+		1F5BC2DA17E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
+		1F5BC2DB17E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ChatWindow.xib; sourceTree = "<group>"; };
+		1F5BC2DC17E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ChatView.xib; sourceTree = "<group>"; };
+		1F5BC2DD17E611D000D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1F5BC2DE17E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/FullScreenVideoPanel.xib; sourceTree = "<group>"; };
+		1F5BC2DF17E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Nickname.xib; sourceTree = "<group>"; };
+		1F5BC2E017E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Subject.xib; sourceTree = "<group>"; };
+		1F5BC2E117E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/SMSSession.xib; sourceTree = "<group>"; };
+		1F5BC2E217E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/SMSView.xib; sourceTree = "<group>"; };
+		1F5BC2E317E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
+		1F5BC2E417E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
+		1F5BC2E517E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
+		1F5BC2E617E611D100D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
+		1F5BC2E717E611D200D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
+		1F5BC2E817E611D200D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AccountSettings.xib; sourceTree = "<group>"; };
+		1F5BC2E917E611D200D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1F5BC30117E66DAC00D1D8BE /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1F5BC30317E66DB200D1D8BE /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1F5BC30417E66DB200D1D8BE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1F5BC30517E66DB300D1D8BE /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1F5C06D214041B98001DA3EF /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
 		1F5C0760140436E4001DA3EF /* SessionInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoController.py; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
 		1F683AC717CD32960090A902 /* locked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-red.png"; path = "icons/locked-red.png"; sourceTree = "<group>"; };
@@ -1760,17 +1970,17 @@
 		1F6963F617BF771A00985747 /* unlocked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-red.png"; path = "icons/unlocked-red.png"; sourceTree = "<group>"; };
 		1F6963FB17BF777D00985747 /* locked-orange.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-orange.png"; path = "icons/locked-orange.png"; sourceTree = "<group>"; };
 		1F6963FC17BF777D00985747 /* locked-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-yellow.png"; path = "icons/locked-yellow.png"; sourceTree = "<group>"; };
-		1F6EE8F912BF73A2000C47DA /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F6EE8F912BF73A2000C47DA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F72E53916A027F600837311 /* MergeContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MergeContactController.py; sourceTree = "<group>"; };
-		1F72E54216A02B3600837311 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MergeContacts.xib; sourceTree = "<group>"; };
+		1F72E54216A02B3600837311 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
-		1F87B6EE1477D57000BDF25A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
+		1F87B6EE1477D57000BDF25A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
 		1F88639815D6F62B00373743 /* PresencePublisher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePublisher.py; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
@@ -1796,14 +2006,14 @@
 		1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookURL-plugin.py"; path = "PlugIn/AddressBook/AddressBookURL-plugin.py"; sourceTree = "<group>"; };
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
 		1FAA839D16566D8C00C4C212 /* BlockedContact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlockedContact.py; sourceTree = "<group>"; };
-		1FAA83A81656745500C4C212 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/BlockedContact.xib; sourceTree = "<group>"; };
+		1FAA83A81656745500C4C212 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
 		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
 		1FB22A07140306EC0024F921 /* lock-zrtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "lock-zrtp.png"; path = "icons/lock-zrtp.png"; sourceTree = "<group>"; };
 		1FB22A09140308950024F921 /* zrtp-securemode.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-securemode.wav"; path = "sounds/zrtp-securemode.wav"; sourceTree = "<group>"; };
 		1FB22A0A140308950024F921 /* zrtp-security-failed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-security-failed.wav"; path = "sounds/zrtp-security-failed.wav"; sourceTree = "<group>"; };
 		1FB247E015D99AEB00703D24 /* OfflineNoteController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = OfflineNoteController.py; sourceTree = "<group>"; };
-		1FB30807146D540C001430B5 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1FB30807146D540C001430B5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1FB30809146D5598001430B5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
 		1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_0_tone.wav; path = sounds/dtmf_0_tone.wav; sourceTree = "<group>"; };
@@ -1830,8 +2040,7 @@
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FBF2B3D179151D9002E110B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		1FBF2B4417915410002E110B /* Updater.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Updater.py; sourceTree = "<group>"; };
-		1FBF2B4D17916768002E110B /* Updater.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Updater.xib; sourceTree = "<group>"; };
-		1FC66DE7139E17D600D03D71 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
+		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
 		1FCE2BDE166BABBC00090A86 /* time.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = time.png; path = icons/time.png; sourceTree = "<group>"; };
@@ -1845,7 +2054,7 @@
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pending_watcher.tiff; path = icons/pending_watcher.tiff; sourceTree = "<group>"; };
 		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
-		1FD2EF951439CCC300DFBB2A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
+		1FD2EF951439CCC300DFBB2A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-blue.png"; sourceTree = "<group>"; };
 		1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-gray.png"; sourceTree = "<group>"; };
 		1FD3F872164D7B3A008F56E8 /* blink-status-green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-green.png"; sourceTree = "<group>"; };
@@ -1857,7 +2066,7 @@
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
-		1FDFA9B412DF4689005BA20F /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FE50E5A164D1B6200840B18 /* available.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = available.tiff; sourceTree = "<group>"; };
 		1FE50E5B164D1B6200840B18 /* away.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = away.tiff; sourceTree = "<group>"; };
 		1FE50E5D164D1B6200840B18 /* busy.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = busy.tiff; sourceTree = "<group>"; };
@@ -1865,10 +2074,22 @@
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
+		1FF32B4C17EC83F000E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B4E17EC83F900E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file; name = ro; path = ro.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B5E17EC842B00E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1FF32B6317EC86B000E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file; name = ro; path = ro.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1FF32B6417EC86B200E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1FF32B6517EC86B500E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1FF32B6617EC872D00E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file; name = ro; path = ro.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B6717EC872E00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file; name = es; path = es.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B6817EC873000E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B6917EC879D00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file; name = es; path = es.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B6A17EC879F00E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file; name = nl; path = nl.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1FF3736F17C9E656007418EB /* ChatOTR.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatOTR.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
-		1FF6C4021498C06A0019F668 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
+		1FF6C4021498C06A0019F668 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
 		1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = ScreensharingPreviewPanel.py; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		1FFB38691432026D003B29ED /* display_red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red.png; path = icons/display_red.png; sourceTree = "<group>"; };
@@ -1876,14 +2097,14 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		2B0128481093922A009B2112 /* AccountSettings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AccountSettings.py; sourceTree = "<group>"; };
-		2B01284D10939236009B2112 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AccountSettings.xib; sourceTree = "<group>"; };
+		2B01284D10939236009B2112 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AccountSettings.xib; sourceTree = "<group>"; };
 		2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FancyTabSwitcher.py; sourceTree = "<group>"; };
 		2B06A429111CFE74001D41E5 /* SMSViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSViewController.py; sourceTree = "<group>"; };
 		2B0C2369107BB2FA008266C7 /* incoming_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = incoming_file.png; path = icons/incoming_file.png; sourceTree = "<group>"; };
 		2B0C236A107BB2FA008266C7 /* upfile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = upfile.png; path = icons/upfile.png; sourceTree = "<group>"; };
 		2B0CE28E10C2F2BC00325F30 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = /usr/lib/libz.dylib; sourceTree = "<absolute>"; };
-		2B0CE72A10CD824400325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMSSession.xib; sourceTree = "<group>"; };
-		2B0CE73410CDE8CE00325F30 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SMSView.xib; sourceTree = "<group>"; };
+		2B0CE72A10CD824400325F30 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SMSSession.xib; sourceTree = "<group>"; };
+		2B0CE73410CDE8CE00325F30 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SMSView.xib; sourceTree = "<group>"; };
 		2B0CE73610CDEF1700325F30 /* ChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatViewController.py; sourceTree = "<group>"; };
 		2B103E361015721E00002158 /* AudioSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioSession.py; sourceTree = "<group>"; };
 		2B11AA570FF323A1007FC176 /* pause.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pause.png; path = icons/pause.png; sourceTree = "<group>"; };
@@ -1891,23 +2112,21 @@
 		2B11B1210FF6B0B3007FC176 /* mute.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mute.png; path = icons/mute.png; sourceTree = "<group>"; };
 		2B11B1CE0FF735FB007FC176 /* paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused.png; path = icons/paused.png; sourceTree = "<group>"; };
 		2B1FC09C10B104F8004C7355 /* pencil.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pencil.png; path = icons/pencil.png; sourceTree = "<group>"; };
-		2B2392AE1039E69C00D9023B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SoundSetting.xib; sourceTree = "<group>"; };
+		2B2392AE1039E69C00D9023B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SoundSetting.xib; sourceTree = "<group>"; };
 		2B239607103B1C6600D9023B /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
 		2B23991E103C823D00D9023B /* display.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display.png; path = icons/display.png; sourceTree = "<group>"; };
 		2B2400FE1018AB9400079580 /* util.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = util.py; sourceTree = "<group>"; };
 		2B240839102117F200079580 /* SessionRinger.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionRinger.py; sourceTree = "<group>"; };
 		2B2409831022A04700079580 /* DebugWindow.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DebugWindow.py; sourceTree = "<group>"; };
-		2B2409851022A05A00079580 /* DebugWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = DebugWindow.xib; path = English.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		2B240B721023AB1200079580 /* PhotoPicker.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = PhotoPicker.xib; path = English.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		2B240B761023CFAF00079580 /* PhotoPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PhotoPicker.py; sourceTree = "<group>"; };
 		2B2451730FCF8A9F0023DBFB /* reconnect.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = reconnect.png; path = icons/reconnect.png; sourceTree = "<group>"; };
-		2B24D070110FD522003A18DE /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
-		2B29EF3711382F65009DA9B0 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
+		2B24D070110FD522003A18DE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
+		2B29EF3711382F65009DA9B0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
 		2B2DE97B1053431600F267F9 /* bluelock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bluelock.png; path = icons/bluelock.png; sourceTree = "<group>"; };
 		2B2DE97C1053431600F267F9 /* greenlock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = greenlock.png; path = icons/greenlock.png; sourceTree = "<group>"; };
 		2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactOutlineView.py; sourceTree = "<group>"; };
-		2B2DF5DF105CBFCA00F267F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
-		2B2DF5E3105CC03400F267F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
+		2B2DF5DF105CBFCA00F267F9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
+		2B2DF5E3105CC03400F267F9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
 		2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferItemView.py; sourceTree = "<group>"; };
 		2B2DF5EC105D467000F267F9 /* ListView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ListView.py; sourceTree = "<group>"; };
 		2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferWindowController.py; sourceTree = "<group>"; };
@@ -1958,7 +2177,7 @@
 		2B4C40F81047809C00F40437 /* mic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mic.png; path = icons/mic.png; sourceTree = "<group>"; };
 		2B4C40F91047809C00F40437 /* speaker.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = speaker.png; path = icons/speaker.png; sourceTree = "<group>"; };
 		2B4C40FF104783D800F40437 /* bell.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bell.png; path = icons/bell.png; sourceTree = "<group>"; };
-		2B4CA92E10AA5F2F00D5F19E /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Group.xib; sourceTree = "<group>"; };
+		2B4CA92E10AA5F2F00D5F19E /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Group.xib; sourceTree = "<group>"; };
 		2B4CA93110AA5FAE00D5F19E /* GroupController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = GroupController.py; sourceTree = "<group>"; };
 		2B5DE51F0FFC5D0500701821 /* PreferencesController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferencesController.py; sourceTree = "<group>"; };
 		2B5DE6780FFDAE1400701821 /* file_received.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = file_received.wav; path = sounds/file_received.wav; sourceTree = "<group>"; };
@@ -1975,22 +2194,22 @@
 		2B6328840FE422AE00446655 /* ChatController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatController.py; sourceTree = "<group>"; };
 		2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactWindowController.py; sourceTree = "<group>"; };
 		2B7B9C651008D67500BFDAF7 /* TableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = TableView.py; sourceTree = "<group>"; };
-		2B87529F10B5C29B002FD271 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
+		2B87529F10B5C29B002FD271 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
 		2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
 		2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryViewer.py; sourceTree = "<group>"; };
-		2BAF38090FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Contact.xib; sourceTree = "<group>"; };
-		2BAF380B0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
-		2BAF380D0FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainWindow.xib; sourceTree = "<group>"; };
-		2BAF38110FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
-		2BAF38130FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatWindow.xib; sourceTree = "<group>"; };
-		2BAF38170FE088C70040117A /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/ChatView.xib; sourceTree = "<group>"; };
+		2BAF38090FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Contact.xib; sourceTree = "<group>"; };
+		2BAF380B0FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
+		2BAF380D0FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		2BAF38110FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
+		2BAF38130FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatWindow.xib; sourceTree = "<group>"; };
+		2BAF38170FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatView.xib; sourceTree = "<group>"; };
 		2BAF38250FE088E80040117A /* BlinkAppDelegate.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlinkAppDelegate.py; sourceTree = "<group>"; };
 		2BAF38270FE088E80040117A /* SIPManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SIPManager.py; sourceTree = "<group>"; };
 		2BAF387D0FE096A00040117A /* EnrollmentController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EnrollmentController.py; sourceTree = "<group>"; };
 		2BAF39C30FE1B0CF0040117A /* Main.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Main.py; sourceTree = "<group>"; };
-		2BB36D3610FE504600DA4577 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
-		2BB376421103C98300DA4577 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
+		2BB36D3610FE504600DA4577 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
+		2BB376421103C98300DA4577 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
 		2BC08A781063B3570069AB9A /* AnsweringMachine.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AnsweringMachine.py; sourceTree = "<group>"; };
 		2BC08CC2106679940069AB9A /* FileTransferSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferSession.py; sourceTree = "<group>"; };
 		2BC594740FCCDA910017CB1B /* ContactCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactCell.py; sourceTree = "<group>"; };
@@ -2000,7 +2219,7 @@
 		2BD014EC10DB239B00D27A92 /* smiley_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_on.png; path = icons/smiley_on.png; sourceTree = "<group>"; };
 		2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "3333@sip2sip.info.tiff"; path = "icons/3333@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		2BDAE17211113B8200AC1D7A /* audio_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_small.png; path = icons/audio_small.png; sourceTree = "<group>"; };
-		2BE7632A10732DC000A1DF24 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
+		2BE7632A10732DC000A1DF24 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/About.xib; sourceTree = "<group>"; };
 		2BEFC12D0FD0BE4700447EFB /* SessionController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionController.py; sourceTree = "<group>"; };
 		2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HorizontalBoxView.py; sourceTree = "<group>"; };
 		2BF42B53107D7DFF00F04A6C /* hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup.png; path = icons/hangup.png; sourceTree = "<group>"; };
@@ -2011,8 +2230,6 @@
 		2BFB33E2101674BD002D79FB /* muted.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = muted.png; path = icons/muted.png; sourceTree = "<group>"; };
 		2BFB33E3101674BD002D79FB /* srtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = srtp.png; path = icons/srtp.png; sourceTree = "<group>"; };
 		2BFB34B210178A99002D79FB /* AlertPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AlertPanel.py; sourceTree = "<group>"; };
-		2BFB34B410178AB7002D79FB /* AlertPanelView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanelView.xib; path = English.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
-		2BFB34B710178B34002D79FB /* AlertPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AlertPanel.xib; path = English.lproj/AlertPanel.xib; sourceTree = "<group>"; };
 		2BFB35531017E363002D79FB /* blink.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = blink.icns; sourceTree = "<group>"; };
 		8547A6C6114EB6E200AD84BF /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		8547A6C7114EB6E200AD84BF /* itunes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = itunes.py; sourceTree = "<group>"; };
@@ -2022,7 +2239,6 @@
 		85E8550610F643350083D346 /* settings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = settings.py; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = CallTransferWindow.xib; path = English.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
 		DE4E6F0F174F9C0900E1D5F9 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
@@ -2348,7 +2564,7 @@
 			children = (
 				2B11B0B20FF55C52007FC176 /* BlinkLogger.py */,
 				2B2409831022A04700079580 /* DebugWindow.py */,
-				2B2409851022A05A00079580 /* DebugWindow.xib */,
+				1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */,
 			);
 			name = Logging;
 			sourceTree = "<group>";
@@ -2356,7 +2572,7 @@
 		2B240B751023AF8200079580 /* PhotoPicker */ = {
 			isa = PBXGroup;
 			children = (
-				2B240B721023AB1200079580 /* PhotoPicker.xib */,
+				1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */,
 				2B240B761023CFAF00079580 /* PhotoPicker.py */,
 			);
 			name = PhotoPicker;
@@ -2680,10 +2896,11 @@
 		2BEFC1BD0FD1C93F00447EFB /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				1F5BC30217E66DAC00D1D8BE /* Localizable.strings */,
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
-				1FBF2B4D17916768002E110B /* Updater.xib */,
+				1F5BC16917E5FE7300D1D8BE /* Updater.xib */,
 				1FBF2B4417915410002E110B /* Updater.py */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
@@ -2704,7 +2921,7 @@
 				2BF430B01082EEFE00F04A6C /* AudioController.py */,
 				2B103E361015721E00002158 /* AudioSession.py */,
 				2BC08A781063B3570069AB9A /* AnsweringMachine.py */,
-				C71785FB13E00C4E00761FA4 /* CallTransferWindow.xib */,
+				1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */,
 			);
 			name = Audio;
 			sourceTree = "<group>";
@@ -2712,9 +2929,9 @@
 		2BFB34B110178A43002D79FB /* AlertPanel */ = {
 			isa = PBXGroup;
 			children = (
+				1F5BC26217E6114200D1D8BE /* AlertPanel.xib */,
+				1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */,
 				2BFB34B210178A99002D79FB /* AlertPanel.py */,
-				2BFB34B410178AB7002D79FB /* AlertPanelView.xib */,
-				2BFB34B710178B34002D79FB /* AlertPanel.xib */,
 			);
 			name = AlertPanel;
 			sourceTree = "<group>";
@@ -2768,6 +2985,8 @@
 				1F22735D12B554F50010A8B2 /* Copy Interfaces Package */,
 				1F22736D12B555550010A8B2 /* Copy Libraries */,
 				1F22738C12B555C70010A8B2 /* Copy Frameworks */,
+				1F5BC11A17E5C09D00D1D8BE /* Copy Spanish translation */,
+				1F5BC2EA17E64C7600D1D8BE /* Copy Romanian translation */,
 			);
 			buildRules = (
 			);
@@ -2791,6 +3010,8 @@
 				1F35D0A017894FFF00C6FE38 /* Copy Interfaces Package */,
 				1F35D0A317894FFF00C6FE38 /* Copy Libraries */,
 				1F35D0A517894FFF00C6FE38 /* Copy Frameworks */,
+				1F5BC11E17E5C45800D1D8BE /* Copy Spanish translation */,
+				1F5BC2F417E64CEE00D1D8BE /* Copy Romanian translation */,
 			);
 			buildRules = (
 			);
@@ -2814,6 +3035,8 @@
 				1F8DC400135084FA0034815C /* Copy Interfaces Package */,
 				1F8DC403135084FA0034815C /* Copy Libraries */,
 				1F8DC405135084FA0034815C /* Copy Frameworks */,
+				1F5BC11C17E5C44800D1D8BE /* Copy Spanish translation */,
+				1F5BC2F217E64CD800D1D8BE /* Copy Romanian translation */,
 			);
 			buildRules = (
 			);
@@ -2837,6 +3060,7 @@
 				857DA94D114EB82B00C798A3 /* Copy Interfaces Package */,
 				2B0C1E8B10781A62008266C7 /* Copy Libraries */,
 				2B87567D10B6DD51002FD271 /* Copy Frameworks */,
+				1F5BC12017E5C48600D1D8BE /* Copy Spanish translation */,
 			);
 			buildRules = (
 			);
@@ -2858,14 +3082,17 @@
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Blink" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
+				en,
 				Japanese,
 				French,
 				German,
 				en,
+				ro,
+				es,
+				nl,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* MacSip */;
 			projectDirPath = "";
@@ -2921,14 +3148,12 @@
 				1F2272BA12B554F50010A8B2 /* muted.png in Resources */,
 				1F2272BB12B554F50010A8B2 /* srtp.png in Resources */,
 				1F2272BC12B554F50010A8B2 /* AlertPanel.py in Resources */,
-				1F2272BD12B554F50010A8B2 /* AlertPanelView.xib in Resources */,
-				1F2272BE12B554F50010A8B2 /* AlertPanel.xib in Resources */,
 				1F2272BF12B554F50010A8B2 /* blink.icns in Resources */,
 				1F2272C012B554F50010A8B2 /* util.py in Resources */,
 				1F2272C112B554F50010A8B2 /* SessionRinger.py in Resources */,
 				1F2272C212B554F50010A8B2 /* DebugWindow.py in Resources */,
-				1F2272C312B554F50010A8B2 /* DebugWindow.xib in Resources */,
-				1F2272C412B554F50010A8B2 /* PhotoPicker.xib in Resources */,
+				1FF32B4917EC83F000E63A20 /* DebugWindow.xib in Resources */,
+				1FF32B5B17EC842B00E63A20 /* PhotoPicker.xib in Resources */,
 				1F2272C512B554F50010A8B2 /* PhotoPicker.py in Resources */,
 				1F2272C712B554F50010A8B2 /* SoundSetting.xib in Resources */,
 				1F2272C812B554F50010A8B2 /* audio.png in Resources */,
@@ -3053,7 +3278,7 @@
 				DE3A673013A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B413AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3213B246FF0081F90B /* contacts.png in Resources */,
-				C71785FC13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1FF32B5217EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E213FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1FB22A0D140308950024F921 /* zrtp-securemode.wav in Resources */,
 				1FB22A0E140308950024F921 /* zrtp-security-failed.wav in Resources */,
@@ -3130,6 +3355,9 @@
 				1F946C9817CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683AC917CD32960090A902 /* locked-red.png in Resources */,
 				1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
+				1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */,
+				1F5BC26417E6114700D1D8BE /* AlertPanelView.xib in Resources */,
+				1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3174,14 +3402,12 @@
 				1F35CF9C17894FFF00C6FE38 /* muted.png in Resources */,
 				1F35CF9D17894FFF00C6FE38 /* srtp.png in Resources */,
 				1F35CF9E17894FFF00C6FE38 /* AlertPanel.py in Resources */,
-				1F35CF9F17894FFF00C6FE38 /* AlertPanelView.xib in Resources */,
-				1F35CFA017894FFF00C6FE38 /* AlertPanel.xib in Resources */,
 				1F35CFA117894FFF00C6FE38 /* blink.icns in Resources */,
 				1F35CFA217894FFF00C6FE38 /* util.py in Resources */,
 				1F35CFA317894FFF00C6FE38 /* SessionRinger.py in Resources */,
 				1F35CFA417894FFF00C6FE38 /* DebugWindow.py in Resources */,
-				1F35CFA517894FFF00C6FE38 /* DebugWindow.xib in Resources */,
-				1F35CFA617894FFF00C6FE38 /* PhotoPicker.xib in Resources */,
+				1FF32B4B17EC83F000E63A20 /* DebugWindow.xib in Resources */,
+				1FF32B5D17EC842B00E63A20 /* PhotoPicker.xib in Resources */,
 				1F35CFA717894FFF00C6FE38 /* PhotoPicker.py in Resources */,
 				1F35CFA817894FFF00C6FE38 /* SoundSetting.xib in Resources */,
 				1F35CFA917894FFF00C6FE38 /* audio.png in Resources */,
@@ -3306,7 +3532,7 @@
 				1F35D02017894FFF00C6FE38 /* default.crt in Resources */,
 				1F35D02117894FFF00C6FE38 /* contact.py in Resources */,
 				1F35D02217894FFF00C6FE38 /* contacts.png in Resources */,
-				1F35D02317894FFF00C6FE38 /* CallTransferWindow.xib in Resources */,
+				1FF32B5417EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F35D02417894FFF00C6FE38 /* AudioSession.xib in Resources */,
 				1F35D02517894FFF00C6FE38 /* zrtp-securemode.wav in Resources */,
 				1F35D02617894FFF00C6FE38 /* zrtp-security-failed.wav in Resources */,
@@ -3373,7 +3599,7 @@
 				1F35D06317894FFF00C6FE38 /* MergeContactController.py in Resources */,
 				1F35D06417894FFF00C6FE38 /* hangup_16.png in Resources */,
 				1FBF2B4517915410002E110B /* Updater.py in Resources */,
-				1FBF2B4E17916768002E110B /* Updater.xib in Resources */,
+				1F5BC16717E5FE7300D1D8BE /* Updater.xib in Resources */,
 				1F9A27D7179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
 				1F9A27E01795452100672B73 /* AecSlider.xib in Resources */,
 				1F6963F517BF770900985747 /* locked-green.png in Resources */,
@@ -3385,6 +3611,9 @@
 				1F946C9A17CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683ACB17CD32960090A902 /* locked-red.png in Resources */,
 				1F32884D17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
+				1F5BC26017E6114200D1D8BE /* AlertPanel.xib in Resources */,
+				1F5BC26617E6114700D1D8BE /* AlertPanelView.xib in Resources */,
+				1F5BC30017E66DAC00D1D8BE /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3428,14 +3657,12 @@
 				1F8DC348135084FA0034815C /* muted.png in Resources */,
 				1F8DC349135084FA0034815C /* srtp.png in Resources */,
 				1F8DC34A135084FA0034815C /* AlertPanel.py in Resources */,
-				1F8DC34B135084FA0034815C /* AlertPanelView.xib in Resources */,
-				1F8DC34C135084FA0034815C /* AlertPanel.xib in Resources */,
 				1F8DC34D135084FA0034815C /* blink.icns in Resources */,
 				1F8DC34E135084FA0034815C /* util.py in Resources */,
 				1F8DC34F135084FA0034815C /* SessionRinger.py in Resources */,
 				1F8DC350135084FA0034815C /* DebugWindow.py in Resources */,
-				1F8DC351135084FA0034815C /* DebugWindow.xib in Resources */,
-				1F8DC352135084FA0034815C /* PhotoPicker.xib in Resources */,
+				1FF32B4A17EC83F000E63A20 /* DebugWindow.xib in Resources */,
+				1FF32B5C17EC842B00E63A20 /* PhotoPicker.xib in Resources */,
 				1F8DC353135084FA0034815C /* PhotoPicker.py in Resources */,
 				1F8DC355135084FA0034815C /* SoundSetting.xib in Resources */,
 				1F8DC356135084FA0034815C /* audio.png in Resources */,
@@ -3559,7 +3786,7 @@
 				DE3A673213A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B213AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3013B246FF0081F90B /* contacts.png in Resources */,
-				C71785FE13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1FF32B5317EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E013FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1FB22A0F140308950024F921 /* zrtp-securemode.wav in Resources */,
 				1FB22A10140308950024F921 /* zrtp-security-failed.wav in Resources */,
@@ -3636,6 +3863,9 @@
 				1F946C9917CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683ACA17CD32960090A902 /* locked-red.png in Resources */,
 				1F32884C17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
+				1F5BC25F17E6114200D1D8BE /* AlertPanel.xib in Resources */,
+				1F5BC26517E6114700D1D8BE /* AlertPanelView.xib in Resources */,
+				1F5BC2FF17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3679,14 +3909,12 @@
 				2BFB33E4101674BD002D79FB /* muted.png in Resources */,
 				2BFB33E5101674BD002D79FB /* srtp.png in Resources */,
 				2BFB34B310178A99002D79FB /* AlertPanel.py in Resources */,
-				2BFB34B510178AB7002D79FB /* AlertPanelView.xib in Resources */,
-				2BFB34B810178B34002D79FB /* AlertPanel.xib in Resources */,
 				2BFB35541017E363002D79FB /* blink.icns in Resources */,
 				2B2400FF1018AB9400079580 /* util.py in Resources */,
 				2B24083A102117F200079580 /* SessionRinger.py in Resources */,
 				2B2409841022A04700079580 /* DebugWindow.py in Resources */,
-				2B2409861022A05A00079580 /* DebugWindow.xib in Resources */,
-				2B240B731023AB1200079580 /* PhotoPicker.xib in Resources */,
+				1FF32B4817EC83F000E63A20 /* DebugWindow.xib in Resources */,
+				1FF32B5A17EC842B00E63A20 /* PhotoPicker.xib in Resources */,
 				2B240B771023CFAF00079580 /* PhotoPicker.py in Resources */,
 				2B2392AF1039E69C00D9023B /* SoundSetting.xib in Resources */,
 				2B239608103B1C6600D9023B /* audio.png in Resources */,
@@ -3812,7 +4040,7 @@
 				DE3A673113A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B313AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3113B246FF0081F90B /* contacts.png in Resources */,
-				C71785FD13E00C4E00761FA4 /* CallTransferWindow.xib in Resources */,
+				1FF32B5117EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1F5C06D814041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */,
@@ -3885,6 +4113,9 @@
 				1F946C9717CB60D50056ADB4 /* OTRSettings.xib in Resources */,
 				1F683AC817CD32960090A902 /* locked-red.png in Resources */,
 				1F32884A17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
+				1F5BC25D17E6114200D1D8BE /* AlertPanel.xib in Resources */,
+				1F5BC26317E6114700D1D8BE /* AlertPanelView.xib in Resources */,
+				1F5BC2FD17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3933,7 +4164,10 @@
 		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				089C165DFE840E0CC02AAC07 /* English */,
+				089C165DFE840E0CC02AAC07 /* en */,
+				1F5BC29317E611AE00D1D8BE /* ro */,
+				1F5BC2BE17E611C400D1D8BE /* es */,
+				1F5BC2E917E611D200D1D8BE /* nl */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -3941,7 +4175,10 @@
 		1F07D8A2138BF22E00C91AD7 /* VideoMirrowWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F07D75A138BDF5900C91AD7 /* English */,
+				1F07D75A138BDF5900C91AD7 /* en */,
+				1F5BC28317E611AC00D1D8BE /* ro */,
+				1F5BC2AE17E611C200D1D8BE /* es */,
+				1F5BC2D917E611D000D1D8BE /* nl */,
 			);
 			name = VideoMirrowWindow.xib;
 			sourceTree = "<group>";
@@ -3949,7 +4186,10 @@
 		1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F0D0EC1132D231C00614205 /* English */,
+				1F0D0EC1132D231C00614205 /* en */,
+				1F5BC27F17E611AC00D1D8BE /* ro */,
+				1F5BC2AA17E611C200D1D8BE /* es */,
+				1F5BC2D517E611D000D1D8BE /* nl */,
 			);
 			name = ConferenceConfigurationPanel.xib;
 			sourceTree = "<group>";
@@ -3965,7 +4205,10 @@
 		1F2489DE13FE781F007CDFD5 /* AudioSession.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F2489DF13FE781F007CDFD5 /* English */,
+				1F2489DF13FE781F007CDFD5 /* en */,
+				1F5BC28217E611AC00D1D8BE /* ro */,
+				1F5BC2AD17E611C200D1D8BE /* es */,
+				1F5BC2D817E611D000D1D8BE /* nl */,
 			);
 			name = AudioSession.xib;
 			sourceTree = "<group>";
@@ -3973,7 +4216,10 @@
 		1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F274637138868010052C384 /* English */,
+				1F274637138868010052C384 /* en */,
+				1F5BC28817E611AD00D1D8BE /* ro */,
+				1F5BC2B317E611C200D1D8BE /* es */,
+				1F5BC2DE17E611D100D1D8BE /* nl */,
 			);
 			name = FullScreenVideoPanel.xib;
 			sourceTree = "<group>";
@@ -3982,6 +4228,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F32884E17DB8192003A7F12 /* en */,
+				1F5BC28417E611AC00D1D8BE /* ro */,
+				1F5BC2AF17E611C200D1D8BE /* es */,
+				1F5BC2DA17E611D000D1D8BE /* nl */,
 			);
 			name = ChatOtrSmp.xib;
 			sourceTree = "<group>";
@@ -3989,7 +4238,10 @@
 		1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F3C358215F521A8005356AE /* English */,
+				1F3C358215F521A8005356AE /* en */,
+				1F5BC29117E611AE00D1D8BE /* ro */,
+				1F5BC2BC17E611C400D1D8BE /* es */,
+				1F5BC2E717E611D200D1D8BE /* nl */,
 			);
 			name = PresenceInfoPanel.xib;
 			sourceTree = "<group>";
@@ -3997,7 +4249,10 @@
 		1F536AB01591BCE500A0FE51 /* Subject.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F536AAF1591BCE500A0FE51 /* English */,
+				1F536AAF1591BCE500A0FE51 /* en */,
+				1F5BC28A17E611AD00D1D8BE /* ro */,
+				1F5BC2B517E611C300D1D8BE /* es */,
+				1F5BC2E017E611D100D1D8BE /* nl */,
 			);
 			name = Subject.xib;
 			sourceTree = "<group>";
@@ -4005,15 +4260,65 @@
 		1F54625A158B34D0005628D9 /* Nickname.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F546259158B34D0005628D9 /* English */,
+				1F546259158B34D0005628D9 /* en */,
+				1F5BC28917E611AD00D1D8BE /* ro */,
+				1F5BC2B417E611C300D1D8BE /* es */,
+				1F5BC2DF17E611D100D1D8BE /* nl */,
 			);
 			name = Nickname.xib;
 			sourceTree = "<group>";
 		};
+		1F5BC16917E5FE7300D1D8BE /* Updater.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F5BC16817E5FE7300D1D8BE /* en */,
+				1F5BC26917E611A900D1D8BE /* ro */,
+				1F5BC29417E611BF00D1D8BE /* es */,
+				1F5BC2BF17E611CD00D1D8BE /* nl */,
+			);
+			name = Updater.xib;
+			sourceTree = "<group>";
+		};
+		1F5BC26217E6114200D1D8BE /* AlertPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F5BC26117E6114200D1D8BE /* en */,
+				1F5BC27B17E611AB00D1D8BE /* ro */,
+				1F5BC2A617E611C100D1D8BE /* es */,
+				1F5BC2D117E611CF00D1D8BE /* nl */,
+			);
+			name = AlertPanel.xib;
+			sourceTree = "<group>";
+		};
+		1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F5BC26717E6114700D1D8BE /* en */,
+				1F5BC27C17E611AB00D1D8BE /* ro */,
+				1F5BC2A717E611C100D1D8BE /* es */,
+				1F5BC2D217E611CF00D1D8BE /* nl */,
+			);
+			name = AlertPanelView.xib;
+			sourceTree = "<group>";
+		};
+		1F5BC30217E66DAC00D1D8BE /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F5BC30117E66DAC00D1D8BE /* en */,
+				1F5BC30317E66DB200D1D8BE /* ro */,
+				1F5BC30417E66DB200D1D8BE /* es */,
+				1F5BC30517E66DB300D1D8BE /* nl */,
+			);
+			name = Localizable.strings;
+			sourceTree = SOURCE_ROOT;
+		};
 		1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F5C06D214041B98001DA3EF /* English */,
+				1F5C06D214041B98001DA3EF /* en */,
+				1F5BC27A17E611AB00D1D8BE /* ro */,
+				1F5BC2A517E611C100D1D8BE /* es */,
+				1F5BC2D017E611CF00D1D8BE /* nl */,
 			);
 			name = SessionInfoPanel.xib;
 			sourceTree = "<group>";
@@ -4021,7 +4326,10 @@
 		1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F6EE8F912BF73A2000C47DA /* English */,
+				1F6EE8F912BF73A2000C47DA /* en */,
+				1F5BC27E17E611AC00D1D8BE /* ro */,
+				1F5BC2A917E611C100D1D8BE /* es */,
+				1F5BC2D417E611CF00D1D8BE /* nl */,
 			);
 			name = AddParticipantsWindow.xib;
 			sourceTree = "<group>";
@@ -4029,7 +4337,10 @@
 		1F72E54316A02B3600837311 /* MergeContacts.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F72E54216A02B3600837311 /* English */,
+				1F72E54216A02B3600837311 /* en */,
+				1F5BC27817E611AB00D1D8BE /* ro */,
+				1F5BC2A317E611C100D1D8BE /* es */,
+				1F5BC2CE17E611CF00D1D8BE /* nl */,
 			);
 			name = MergeContacts.xib;
 			sourceTree = "<group>";
@@ -4037,7 +4348,10 @@
 		1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F87B6EE1477D57000BDF25A /* English */,
+				1F87B6EE1477D57000BDF25A /* en */,
+				1F5BC27217E611AA00D1D8BE /* ro */,
+				1F5BC29D17E611C000D1D8BE /* es */,
+				1F5BC2C817E611CE00D1D8BE /* nl */,
 			);
 			name = NightVolumeSetting.xib;
 			sourceTree = "<group>";
@@ -4046,6 +4360,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F946C9B17CB60D50056ADB4 /* en */,
+				1F5BC27017E611AA00D1D8BE /* ro */,
+				1F5BC29B17E611C000D1D8BE /* es */,
+				1F5BC2C617E611CE00D1D8BE /* nl */,
 			);
 			name = OTRSettings.xib;
 			sourceTree = "<group>";
@@ -4054,6 +4371,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F9A27E11795452100672B73 /* en */,
+				1F5BC27317E611AA00D1D8BE /* ro */,
+				1F5BC29E17E611C000D1D8BE /* es */,
+				1F5BC2C917E611CE00D1D8BE /* nl */,
 			);
 			name = AecSlider.xib;
 			sourceTree = "<group>";
@@ -4061,7 +4381,10 @@
 		1FAA83A91656745500C4C212 /* BlockedContact.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1FAA83A81656745500C4C212 /* English */,
+				1FAA83A81656745500C4C212 /* en */,
+				1F5BC27617E611AB00D1D8BE /* ro */,
+				1F5BC2A117E611C000D1D8BE /* es */,
+				1F5BC2CC17E611CF00D1D8BE /* nl */,
 			);
 			name = BlockedContact.xib;
 			sourceTree = "<group>";
@@ -4069,7 +4392,10 @@
 		1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1FB30807146D540C001430B5 /* English */,
+				1FB30807146D540C001430B5 /* en */,
+				1F5BC27D17E611AB00D1D8BE /* ro */,
+				1F5BC2A817E611C100D1D8BE /* es */,
+				1F5BC2D317E611CF00D1D8BE /* nl */,
 			);
 			name = JoinConferenceWindow.xib;
 			sourceTree = "<group>";
@@ -4077,7 +4403,10 @@
 		1FC66E0C139E208700D03D71 /* MigrationPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1FC66DE7139E17D600D03D71 /* English */,
+				1FC66DE7139E17D600D03D71 /* en */,
+				1F5BC26C17E611AA00D1D8BE /* ro */,
+				1F5BC29717E611BF00D1D8BE /* es */,
+				1F5BC2C217E611CE00D1D8BE /* nl */,
 			);
 			name = MigrationPanel.xib;
 			sourceTree = "<group>";
@@ -4085,7 +4414,10 @@
 		1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1FD2EF951439CCC300DFBB2A /* English */,
+				1FD2EF951439CCC300DFBB2A /* en */,
+				1F5BC28017E611AC00D1D8BE /* ro */,
+				1F5BC2AB17E611C200D1D8BE /* es */,
+				1F5BC2D617E611D000D1D8BE /* nl */,
 			);
 			name = ConferenceScreenSharing.xib;
 			sourceTree = "<group>";
@@ -4093,15 +4425,55 @@
 		1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1FDFA9B412DF4689005BA20F /* English */,
+				1FDFA9B412DF4689005BA20F /* en */,
+				1F5BC28717E611AD00D1D8BE /* ro */,
+				1F5BC2B217E611C200D1D8BE /* es */,
+				1F5BC2DD17E611D000D1D8BE /* nl */,
 			);
 			name = ChatPrivateMessage.xib;
+			sourceTree = "<group>";
+		};
+		1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FF32B4C17EC83F000E63A20 /* en */,
+				1FF32B4E17EC83F900E63A20 /* ro */,
+				1FF32B6917EC879D00E63A20 /* es */,
+				1FF32B6A17EC879F00E63A20 /* nl */,
+			);
+			name = DebugWindow.xib;
+			sourceTree = "<group>";
+		};
+		1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FF32B5517EC841500E63A20 /* en */,
+				1FF32B6617EC872D00E63A20 /* ro */,
+				1FF32B6717EC872E00E63A20 /* es */,
+				1FF32B6817EC873000E63A20 /* nl */,
+			);
+			name = CallTransferWindow.xib;
+			path = /Users/adigeo/work/blink;
+			sourceTree = "<absolute>";
+		};
+		1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1FF32B5E17EC842B00E63A20 /* en */,
+				1FF32B6317EC86B000E63A20 /* ro */,
+				1FF32B6417EC86B200E63A20 /* es */,
+				1FF32B6517EC86B500E63A20 /* nl */,
+			);
+			name = PhotoPicker.xib;
 			sourceTree = "<group>";
 		};
 		1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1FF6C4021498C06A0019F668 /* English */,
+				1FF6C4021498C06A0019F668 /* en */,
+				1F5BC28117E611AC00D1D8BE /* ro */,
+				1F5BC2AC17E611C200D1D8BE /* es */,
+				1F5BC2D717E611D000D1D8BE /* nl */,
 			);
 			name = ScreensharingPreviewPanel.xib;
 			sourceTree = "<group>";
@@ -4109,7 +4481,10 @@
 		2B01284C10939236009B2112 /* AccountSettings.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B01284D10939236009B2112 /* English */,
+				2B01284D10939236009B2112 /* en */,
+				1F5BC29217E611AE00D1D8BE /* ro */,
+				1F5BC2BD17E611C400D1D8BE /* es */,
+				1F5BC2E817E611D200D1D8BE /* nl */,
 			);
 			name = AccountSettings.xib;
 			sourceTree = "<group>";
@@ -4117,7 +4492,10 @@
 		2B0CE72910CD824400325F30 /* SMSSession.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B0CE72A10CD824400325F30 /* English */,
+				2B0CE72A10CD824400325F30 /* en */,
+				1F5BC28B17E611AD00D1D8BE /* ro */,
+				1F5BC2B617E611C300D1D8BE /* es */,
+				1F5BC2E117E611D100D1D8BE /* nl */,
 			);
 			name = SMSSession.xib;
 			sourceTree = "<group>";
@@ -4125,7 +4503,10 @@
 		2B0CE73310CDE8CE00325F30 /* SMSView.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B0CE73410CDE8CE00325F30 /* English */,
+				2B0CE73410CDE8CE00325F30 /* en */,
+				1F5BC28C17E611AD00D1D8BE /* ro */,
+				1F5BC2B717E611C300D1D8BE /* es */,
+				1F5BC2E217E611D100D1D8BE /* nl */,
 			);
 			name = SMSView.xib;
 			sourceTree = "<group>";
@@ -4133,7 +4514,10 @@
 		2B2392AD1039E69C00D9023B /* SoundSetting.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B2392AE1039E69C00D9023B /* English */,
+				2B2392AE1039E69C00D9023B /* en */,
+				1F5BC26F17E611AA00D1D8BE /* ro */,
+				1F5BC29A17E611C000D1D8BE /* es */,
+				1F5BC2C517E611CE00D1D8BE /* nl */,
 			);
 			name = SoundSetting.xib;
 			sourceTree = "<group>";
@@ -4141,7 +4525,10 @@
 		2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B24D070110FD522003A18DE /* English */,
+				2B24D070110FD522003A18DE /* en */,
+				1F5BC26D17E611AA00D1D8BE /* ro */,
+				1F5BC29817E611C000D1D8BE /* es */,
+				1F5BC2C317E611CE00D1D8BE /* nl */,
 			);
 			name = AnsweringMachineSetting.xib;
 			sourceTree = "<group>";
@@ -4149,7 +4536,10 @@
 		2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B29EF3711382F65009DA9B0 /* English */,
+				2B29EF3711382F65009DA9B0 /* en */,
+				1F5BC29017E611AE00D1D8BE /* ro */,
+				1F5BC2BB17E611C300D1D8BE /* es */,
+				1F5BC2E617E611D100D1D8BE /* nl */,
 			);
 			name = PresenceOfflineWindow.xib;
 			sourceTree = "<group>";
@@ -4157,7 +4547,10 @@
 		2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B2DF5DF105CBFCA00F267F9 /* English */,
+				2B2DF5DF105CBFCA00F267F9 /* en */,
+				1F5BC28E17E611AD00D1D8BE /* ro */,
+				1F5BC2B917E611C300D1D8BE /* es */,
+				1F5BC2E417E611D100D1D8BE /* nl */,
 			);
 			name = FileTransferWindow.xib;
 			sourceTree = "<group>";
@@ -4165,7 +4558,10 @@
 		2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B2DF5E3105CC03400F267F9 /* English */,
+				2B2DF5E3105CC03400F267F9 /* en */,
+				1F5BC28F17E611AD00D1D8BE /* ro */,
+				1F5BC2BA17E611C300D1D8BE /* es */,
+				1F5BC2E517E611D100D1D8BE /* nl */,
 			);
 			name = FileTransferItemView.xib;
 			sourceTree = "<group>";
@@ -4173,7 +4569,10 @@
 		2B4CA92D10AA5F2F00D5F19E /* Group.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B4CA92E10AA5F2F00D5F19E /* English */,
+				2B4CA92E10AA5F2F00D5F19E /* en */,
+				1F5BC27717E611AB00D1D8BE /* ro */,
+				1F5BC2A217E611C100D1D8BE /* es */,
+				1F5BC2CD17E611CF00D1D8BE /* nl */,
 			);
 			name = Group.xib;
 			sourceTree = "<group>";
@@ -4181,7 +4580,10 @@
 		2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2B87529F10B5C29B002FD271 /* English */,
+				2B87529F10B5C29B002FD271 /* en */,
+				1F5BC28D17E611AD00D1D8BE /* ro */,
+				1F5BC2B817E611C300D1D8BE /* es */,
+				1F5BC2E317E611D100D1D8BE /* nl */,
 			);
 			name = ScreenServerWindow.xib;
 			sourceTree = "<group>";
@@ -4189,7 +4591,10 @@
 		2BAF38080FE088C70040117A /* Contact.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BAF38090FE088C70040117A /* English */,
+				2BAF38090FE088C70040117A /* en */,
+				1F5BC27517E611AB00D1D8BE /* ro */,
+				1F5BC2A017E611C000D1D8BE /* es */,
+				1F5BC2CB17E611CF00D1D8BE /* nl */,
 			);
 			name = Contact.xib;
 			sourceTree = "<group>";
@@ -4197,7 +4602,10 @@
 		2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BAF380B0FE088C70040117A /* English */,
+				2BAF380B0FE088C70040117A /* en */,
+				1F5BC27417E611AA00D1D8BE /* ro */,
+				1F5BC29F17E611C000D1D8BE /* es */,
+				1F5BC2CA17E611CE00D1D8BE /* nl */,
 			);
 			name = EnrollmentWindow.xib;
 			sourceTree = "<group>";
@@ -4205,7 +4613,10 @@
 		2BAF380C0FE088C70040117A /* MainWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BAF380D0FE088C70040117A /* English */,
+				2BAF380D0FE088C70040117A /* en */,
+				1F5BC26A17E611AA00D1D8BE /* ro */,
+				1F5BC29517E611BF00D1D8BE /* es */,
+				1F5BC2C017E611CE00D1D8BE /* nl */,
 			);
 			name = MainWindow.xib;
 			sourceTree = "<group>";
@@ -4213,7 +4624,10 @@
 		2BAF38100FE088C70040117A /* PreferencesWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BAF38110FE088C70040117A /* English */,
+				2BAF38110FE088C70040117A /* en */,
+				1F5BC27117E611AA00D1D8BE /* ro */,
+				1F5BC29C17E611C000D1D8BE /* es */,
+				1F5BC2C717E611CE00D1D8BE /* nl */,
 			);
 			name = PreferencesWindow.xib;
 			sourceTree = "<group>";
@@ -4221,7 +4635,10 @@
 		2BAF38120FE088C70040117A /* ChatWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BAF38130FE088C70040117A /* English */,
+				2BAF38130FE088C70040117A /* en */,
+				1F5BC28517E611AC00D1D8BE /* ro */,
+				1F5BC2B017E611C200D1D8BE /* es */,
+				1F5BC2DB17E611D000D1D8BE /* nl */,
 			);
 			name = ChatWindow.xib;
 			sourceTree = "<group>";
@@ -4229,7 +4646,10 @@
 		2BAF38160FE088C70040117A /* ChatView.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BAF38170FE088C70040117A /* English */,
+				2BAF38170FE088C70040117A /* en */,
+				1F5BC28617E611AC00D1D8BE /* ro */,
+				1F5BC2B117E611C200D1D8BE /* es */,
+				1F5BC2DC17E611D000D1D8BE /* nl */,
 			);
 			name = ChatView.xib;
 			sourceTree = "<group>";
@@ -4237,7 +4657,10 @@
 		2BB36D3510FE504600DA4577 /* HistoryViewer.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BB36D3610FE504600DA4577 /* English */,
+				2BB36D3610FE504600DA4577 /* en */,
+				1F5BC27917E611AB00D1D8BE /* ro */,
+				1F5BC2A417E611C100D1D8BE /* es */,
+				1F5BC2CF17E611CF00D1D8BE /* nl */,
 			);
 			name = HistoryViewer.xib;
 			sourceTree = "<group>";
@@ -4245,7 +4668,10 @@
 		2BB376411103C98300DA4577 /* SoundRecorder.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BB376421103C98300DA4577 /* English */,
+				2BB376421103C98300DA4577 /* en */,
+				1F5BC26E17E611AA00D1D8BE /* ro */,
+				1F5BC29917E611C000D1D8BE /* es */,
+				1F5BC2C417E611CE00D1D8BE /* nl */,
 			);
 			name = SoundRecorder.xib;
 			sourceTree = "<group>";
@@ -4253,7 +4679,10 @@
 		2BE7632910732DC000A1DF24 /* About.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				2BE7632A10732DC000A1DF24 /* English */,
+				2BE7632A10732DC000A1DF24 /* en */,
+				1F5BC26B17E611AA00D1D8BE /* ro */,
+				1F5BC29617E611BF00D1D8BE /* es */,
+				1F5BC2C117E611CE00D1D8BE /* nl */,
 			);
 			name = About.xib;
 			sourceTree = "<group>";
