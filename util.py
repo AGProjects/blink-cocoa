@@ -8,7 +8,7 @@ __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 
            'AccountInfo', 'DictDiffer']
 
 from AppKit import NSApp, NSRunAlertPanel
-from Foundation import NSAutoreleasePool, NSBundle, NSThread
+from Foundation import NSAutoreleasePool, NSBundle, NSThread, NSLocalizedString
 
 import platform
 import re
@@ -44,7 +44,7 @@ def strip_addressbook_special_characters(contact):
 
 def show_error_panel(message):
     message = re.sub("%", "%%", message)
-    NSRunAlertPanel("Error", message, "OK", None, None)
+    NSRunAlertPanel(NSLocalizedString("Error", "Alert panel title"), message, NSLocalizedString("OK", "Alert panel button"), None, None)
 
 
 def checkValidPhoneNumber(number):
@@ -83,11 +83,11 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
     try:
         target_uri = str(target_uri)
     except:
-        show_error_panel("SIP address must not contain unicode characters (%s)" % target_uri)
+        show_error_panel(NSLocalizedString("SIP address must not contain unicode characters: %s" % target_uri, "Alert panel label"))
         return None
 
     if '@' not in target_uri and isinstance(account, BonjourAccount):
-        show_error_panel("SIP address must contain host in bonjour mode (%s)" % target_uri)
+        show_error_panel(NSLocalizedString("SIP address must contain host in bonjour mode: %s" % target_uri, "Alert panel label"))
         return None
 
     target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
@@ -95,7 +95,7 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
     try:
         target_uri = SIPURI.parse(target_uri)
     except SIPCoreError:
-        show_error_panel('Illegal SIP URI: %s' % target_uri)
+        show_error_panel(NSLocalizedString("Illegal SIP URI: %s" % target_uri, "Alert panel label"))
         return None
     return target_uri
 
@@ -395,19 +395,20 @@ def beautify_audio_codec(codec):
 
 def format_date(dt):
     if not dt:
-        return "unknown"
+        return NSLocalizedString("unknown", "Unknown date")
     now = datetime.now()
     delta = now - dt
     if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
-        return dt.strftime("at %H:%M")
+        return NSLocalizedString("at ", "Time label") + dt.strftime("%H:%M")
     elif delta.days <= 1:
-        return "Yesterday at %s" % dt.strftime("%H:%M")
+        _time = dt.strftime("%H:%M")
+        return NSLocalizedString("Yesterday at %s" % _time, "Date label")
     elif delta.days < 7:
-        return dt.strftime("on %A")
+        return NSLocalizedString("on ", "Date label") + dt.strftime("%A")
     elif delta.days < 300:
-        return dt.strftime("on %B %d")
+        return NSLocalizedString("on ", "Date label") + dt.strftime("%B %d")
     else:
-        return dt.strftime("on %Y-%m-%d")
+        return NSLocalizedString("on ", "Date label") + dt.strftime("%Y-%m-%d")
 
 
 class AccountInfo(object):
