@@ -16,6 +16,7 @@ from Foundation import (NSArray,
                         NSNotificationCenter,
                         NSScrollView,
                         NSString,
+                        NSLocalizedString,
                         NSTabViewItem,
                         NSURL,
                         NSUserDefaults,
@@ -50,6 +51,7 @@ from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
 from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
+
 
 class PreferencesController(NSWindowController, object):
     implements(IObserver)
@@ -115,7 +117,7 @@ class PreferencesController(NSWindowController, object):
             NSBundle.loadNibNamed_owner_("PreferencesWindow", self)
             self.addButton.setEnabled_(SIPManager().validateAddAccountAction())
             self.buttonClicked_(self.advancedToggle)
-            self.window().setTitle_(u'Accounts')
+            self.window().setTitle_(NSLocalizedString("Accounts", "Window Title"))
 
         self.accountTable.reloadData()
 
@@ -167,7 +169,8 @@ class PreferencesController(NSWindowController, object):
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="AudioDevicesDidChange")
 
-        self.window().setTitle_("%s Preferences" % NSApp.delegate().applicationNamePrint)
+        applicationName = NSApp.delegate().applicationNamePrint
+        self.window().setTitle_(NSLocalizedString("%s Preferences" % applicationName, "Window title"))
 
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
@@ -232,66 +235,67 @@ class PreferencesController(NSWindowController, object):
 
         if section == 'accounts':
             self.mainTabView.selectTabViewItemWithIdentifier_("accounts")
-            self.window().setTitle_(u'Accounts')
+            self.window().setTitle_(NSLocalizedString("Audio", "Window title"))
             self.sectionHelpPlaceholder.setHidden_(True)
         elif section == 'audio':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
-            self.sectionDescription.setStringValue_(u'Audio Settings')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Audio Settings", "Preferences section description"))
             self.sectionHelpPlaceholder.setHidden_(False)
             settings = SIPSimpleSettings()
             settings.audio.echo_canceller.enabled = settings.audio.enable_aec
             settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
-            help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum)
+            rate = settings.audio.sample_rate/1000
+            help_line = NSLocalizedString("Audio sample rate is set to %dkHz" % rate, "Preferences text label") + NSLocalizedString(" covering 0-%dkHz spectrum" % spectrum, "Preferences text label")
             if spectrum >=20:
-                help_line += ".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
+                help_line += NSLocalizedString(".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Preferences text label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
-            self.window().setTitle_(u'Audio')
+            self.window().setTitle_(NSLocalizedString("Audio", "Window title"))
         elif section == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
-            self.sectionDescription.setStringValue_(u'Answering Machine Settings')
-            self.window().setTitle_(u'Answering Machine')
-            self.sectionHelpPlaceholder.setStringValue_(u'When enabled, Answering Machine will auto answer the call after the predefined delay')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Answering Machine Settings", "Preferences section description"))
+            self.window().setTitle_(NSLocalizedString("Answering Machine", "Window title"))
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("When enabled, Answering Machine will auto answer the call after the predefined delay", "Preferences placeholder text"))
         elif section == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
-            self.sectionDescription.setStringValue_(u'Chat Settings')
-            self.window().setTitle_(u'Chat')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Chat Settings", "Preferences section description"))
+            self.window().setTitle_(NSLocalizedString("Chat", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'file-transfer':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("file_transfer")
-            self.sectionDescription.setStringValue_(u'File Transfer Settings')
-            self.window().setTitle_(u'File Transfer')
+            self.sectionDescription.setStringValue_(NSLocalizedString("File Transfer Settings", "Preferences section description"))
+            self.window().setTitle_(NSLocalizedString("File Transfer", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'screen-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("screen_sharing_server")
-            self.sectionDescription.setStringValue_(u'Screen Sharing Settings')
-            self.window().setTitle_(u'Screen Sharing')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Screen Sharing Settings", "Preferences section description"))
+            self.window().setTitle_(NSLocalizedString("Screen Sharing", "Window title"))
             self.sectionHelpPlaceholder.setHidden_(False)
-            self.sectionHelpPlaceholder.setStringValue_(u'Enable Screen Sharing in System Preferences > Sharing section.\nClick on the "Computer Settings..." button and check the option "Anyone may request permission to control screen".')
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Enable Screen Sharing in System Preferences > Sharing section.\nClick on the 'Computer Settings...' button and check the option 'Anyone may request permission to control screen'", "Preferences help label"))
         elif section == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
-            self.sectionDescription.setStringValue_(u'Sound Alerts')
-            self.window().setTitle_(u'Alerts')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Sound Alerts", "Preferences section description"))
+            self.window().setTitle_(NSLocalizedString("Alerts", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'contacts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("contacts")
-            self.sectionDescription.setStringValue_(u'Contacts Settings')
-            self.window().setTitle_(u'Contacts')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Contacts Settings", "Preferences section description"))
+            self.window().setTitle_(NSLocalizedString("Contacts", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
         elif section == 'advanced':
-            self.sectionDescription.setStringValue_(u'Advanced Settings')
+            self.sectionDescription.setStringValue_(NSLocalizedString("Advanced Settings", "Preferences section description"))
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
-            self.window().setTitle_(u'Advanced')
-            self.sectionHelpPlaceholder.setStringValue_('Do not change these settings unless you understand the consequences')
+            self.window().setTitle_(NSLocalizedString("Advanced", "Window title"))
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Do not change these settings unless you understand the consequences", "Preferences placehoder text"))
         elif section == 'help':
-            self.window().setTitle_(u'Help')
+            self.window().setTitle_(NSLocalizedString("Help", "Window title"))
             NSApp.delegate().contactsWindowController.showHelp('#preferences')
 
     def createGeneralOptionsUI(self, type='basic'):
@@ -508,10 +512,10 @@ class PreferencesController(NSWindowController, object):
         account_info = self.selectedAccount()
         if account_info:
             account = account_info.account
-            text = "Permanently remove account %s?" % account_info.name
+            text = NSLocalizedString("Permanently remove account %s?" % account_info.name, "Alert panel label")
             text = re.sub("%", "%%", text)
             # http://stackoverflow.com/questions/4498709/problem-in-displaying-in-nsrunalertpanel
-            if NSRunAlertPanel("Remove Account", text, "Remove", "Cancel", None) != NSAlertDefaultReturn:
+            if NSRunAlertPanel(NSLocalizedString("Remove Account", "Alert panel button"), text, NSLocalizedString("Remove", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None) != NSAlertDefaultReturn:
                 return
 
             if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
@@ -563,21 +567,21 @@ class PreferencesController(NSWindowController, object):
 
             if selected_account:
                 if selected_account.failure_code and selected_account.failure_reason:
-                    self.registration_status.setStringValue_(u'Registration failed: %s (%s)' % (selected_account.failure_reason, selected_account.failure_code))
+                    self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Preferences label") + "%s (%s)" % (selected_account.failure_reason, selected_account.failure_code))
                     self.registration_status.setHidden_(False)
                 elif selected_account.failure_reason:
-                    self.registration_status.setStringValue_(u'Registration failed: %s' % selected_account.failure_reason)
+                    self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Preferences label") + selected_account.failure_reason)
                     self.registration_status.setHidden_(False)
                 else:
                     if selected_account.registration_state and selected_account.registration_state != 'ended':
                         if selected_account.registrar and selected_account.registration_state == 'succeeded':
-                            self.registration_status.setStringValue_('Registration %s at %s' % (selected_account.registration_state.title(), selected_account.registrar))
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s" % selected_account.registration_state.title(), "Preferences label") + NSLocalizedString("at %s" % selected_account.registrar, "Registration status label"))
                             self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
                             if selected_account.registrar.startswith('tls:'):
                                 frame.origin.x = 312
                                 self.registration_status.setFrame_(frame)
                         else:
-                            self.registration_status.setStringValue_('Registration %s' % selected_account.registration_state.title())
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration", "Preferences label") + selected_account.registration_state.title())
                         self.registration_status.setHidden_(False)
 
     @allocate_autorelease_pool
@@ -651,7 +655,7 @@ class PreferencesController(NSWindowController, object):
 
         if notification.data.code > 200:
             self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = 'Connection Failed' if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].failure_reason = NSLocalizedString("Connection Failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
             self.accounts[position].failure_code = None
             self.accounts[position].failure_reason = None
@@ -667,7 +671,7 @@ class PreferencesController(NSWindowController, object):
         self.accounts[position].registration_state = 'failed'
 
         if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
-            self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' else notification.data.error
+            self.accounts[position].failure_reason = NSLocalizedString("Connection Failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error
 
         self.refresh_account_table()
         self.updateRegistrationStatus()
@@ -757,10 +761,11 @@ class PreferencesController(NSWindowController, object):
 
         if 'audio.sample_rate' in notification.data.modified:
             settings = SIPSimpleSettings()
-            spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
-            help_line = "Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum)
+            spectrum = settings.audio.sample_rate/1000/2 if int(settings.audio.sample_rate)/1000/2 < 20 else 20
+            rate = settings.audio.sample_rate/1000
+            help_line = NSLocalizedString("Audio sample rate is set to %dkHz" % rate, "Preferences text label") + NSLocalizedString(" covering 0-%dkHz spectrum" % spectrum, "Preferences text label")
             if spectrum >=20:
-                help_line += ".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. "
+                help_line += ".\n" + NSLocalizedString("For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Preferences label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
 
         if 'audio.enable_aec' in notification.data.modified:
@@ -800,19 +805,19 @@ class PreferencesController(NSWindowController, object):
             account_info = self.getAccountForRow(row)
             if not account_info.account.enabled:
                 cell.setImage_(None)
-                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration disabled'), NSAccessibilityTitleAttribute)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration disabled", "Preferences accesibility text"), NSAccessibilityTitleAttribute)
             elif account_info.registration_state == 'succeeded':
                 cell.setImage_(self.dots["green"])
-                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration succeeded'), NSAccessibilityTitleAttribute)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration succeeded", "Preferences accesibility text"), NSAccessibilityTitleAttribute)
             elif account_info.registration_state == 'started':
                 cell.setImage_(self.dots["yellow"])
-                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration started'), NSAccessibilityTitleAttribute)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration started", "Preferences accesibility text"), NSAccessibilityTitleAttribute)
             elif account_info.registration_state == 'failed':
                 cell.setImage_(self.dots["red"])
-                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration failed'), NSAccessibilityTitleAttribute)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration failed", "Preferences accesibility text"), NSAccessibilityTitleAttribute)
             else:
                 cell.setImage_(None)
-                cell.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Registration disabled'), NSAccessibilityTitleAttribute)
+                cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration disabled", "Preferences accesibility text"), NSAccessibilityTitleAttribute)
 
     def display_outbound_proxy_radio_if_needed(self, account):
         tab = self.advancedTabView.selectedTabViewItem()
@@ -867,7 +872,7 @@ class PreferencesController(NSWindowController, object):
             self.display_outbound_proxy_radio_if_needed(account)
 
         else:
-            self.addressText.setStringValue_("Please select an account")
+            self.addressText.setStringValue_(NSLocalizedString("Please select an account", "Preferences label"))
             self.selected_proxy_radio_button.setHidden_(True)
             self.addressText.setEditable_(False)
             self.addressText.setHidden_(False)

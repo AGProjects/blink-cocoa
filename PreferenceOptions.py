@@ -15,8 +15,10 @@ from AppKit import (NSAccessibilityTitleAttribute,
                     NSRunAlertPanel,
                     NSSmallControlSize,
                     NSSwitchButton,
+                    NSLocalizedString,
                     NSTableViewDropOn,
                     NSTableViewDropAbove)
+
 from Foundation import (NSArray,
                         NSBundle,
                         NSButton,
@@ -146,7 +148,7 @@ class Option(HorizontalBoxView):
         try:
             self._store()
         except Exception, e:
-            NSRunAlertPanel("Error", "Can't set option '%s'.\nError: %s"%(self.option,str(e)), "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Error", "Alert panel title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e)), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
 
     def _store(self):
@@ -318,7 +320,7 @@ class StringTupleOption(StringOption):
         try:
             values = [s.strip() for s in str(self.text.stringValue()).split(",")]
         except:
-            NSRunAlertPanel("Invalid Characters", "Invalid charactes in option value.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Alert panel title"), NSLocalizedString("Invalid charactes in option value.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
             return
 
@@ -376,7 +378,7 @@ class NegativeSIPCodeOption(NonNegativeIntegerOption):
             if current != new:
                 self.set(new)
         else:
-            NSRunAlertPanel("Invalid Code", "Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for Busy Here or 603 code for Busy Everywhere", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Code", "Alert panel title"), NSLocalizedString("Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for Busy Here or 603 code for Busy Everywhere", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
             return
 
@@ -388,7 +390,7 @@ class DigitsOption(StringOption):
         match_number = re.match('^\d{0,7}$', nvalue)
 
         if current != nvalue and match_number is None:
-            NSRunAlertPanel("Invalid Characters", "Only digits are allowed.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Alert panel title"), NSLocalizedString("Only digits are allowed.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
             return
 
@@ -401,7 +403,7 @@ class DTMFDelimiterOption(StringOption):
         match_dtmf = re.match('^[#*]?$', nvalue)
 
         if current != nvalue and match_dtmf is None:
-            NSRunAlertPanel("Invalid DTMF delimiter", "Only * or # are allowed.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid DTMF delimiter", "Alert panel title"), NSLocalizedString("Only * or # are allowed.", "Alert panel button"), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
             return
 
@@ -418,7 +420,7 @@ class TCPPortOption(PortOption):
         new_value = self.text.integerValue()
         settings = SIPSimpleSettings()
         if new_value == settings.sip.tls_port != 0:
-            raise ValueError("Invalid SIP port value: TCP and TLS ports cannot be the same")
+            raise ValueError(NSLocalizedString("Invalid SIP port value: TCP and TLS ports cannot be the same", "Error label"))
         PortOption._store(self)
 
 
@@ -427,7 +429,7 @@ class TLSPortOption(PortOption):
         new_value = self.text.integerValue()
         settings = SIPSimpleSettings()
         if new_value == settings.sip.tcp_port != 0:
-            raise ValueError("Invalid SIP port value: TCP and TLS ports cannot be the same")
+            raise ValueError(NSLocalizedString("Invalid SIP port value: TCP and TLS ports cannot be the same", "Error label"))
         PortOption._store(self)
 
 
@@ -583,14 +585,14 @@ class AudioCodecListOption(MultipleSelectionOption):
         self.moveUp = NSButton.alloc().initWithFrame_(NSMakeRect(0, 24, 90, 24))
         self.sideView.addSubview_(self.moveUp)
         self.moveUp.setBezelStyle_(NSRoundedBezelStyle)
-        self.moveUp.setTitle_("Move Up")
+        self.moveUp.setTitle_(NSLocalizedString("Move Up", "Button title"))
         self.moveUp.setTarget_(self)
         self.moveUp.setAction_("moveItem:")
         self.moveUp.cell().setControlSize_(NSSmallControlSize)
         self.moveUp.cell().setFont_(NSFont.systemFontOfSize_(10))
         self.moveDown = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 90, 24))
         self.sideView.addSubview_(self.moveDown)
-        self.moveDown.setTitle_("Move Down")
+        self.moveDown.setTitle_(NSLocalizedString("Move Down", "Button title"))
         self.moveDown.setTarget_(self)
         self.moveDown.setAction_("moveItem:")
         self.moveDown.cell().setFont_(NSFont.systemFontOfSize_(10))
@@ -663,8 +665,8 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         AudioCodecListOption.__init__(self, object, name, option, description)
 
         self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 100, 20))
-        self.check.setTitle_("Customize")
-        self.check.setToolTip_("Check if you want to customize the codec list for this account instead of using the global settings")
+        self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
+        self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
         self.check.setButtonType_(NSSwitchButton)
         self.check.setTarget_(self)
         self.check.setAction_("customizeCodecs:")
@@ -811,7 +813,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_("None")
         self.popup.lastItem().setRepresentedObject_("None")
-        self.popup.addItemWithTitle_("System Default")
+        self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
         for item in Engine().input_devices:
             self.popup.addItemWithTitle_(item)
@@ -832,7 +834,7 @@ class AudioOutputDeviceOption(PopUpMenuOption):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_("None")
         self.popup.lastItem().setRepresentedObject_("None")
-        self.popup.addItemWithTitle_("System Default")
+        self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
         for item in Engine().output_devices:
             self.popup.addItemWithTitle_(item)
@@ -947,7 +949,7 @@ class MessageRecorder(NSObject):
                 print "Recording to %s" % self.path
 
             self.recording = True
-            self.label.setStringValue_("Recording...")
+            self.label.setStringValue_(NSLocalizedString("Recording...", "Audio recording text label"))
             self.timeLabel.setHidden_(False)
             self.timeLabel.setStringValue_("%02i:%02i"%(abs(self.counter)/60, abs(self.counter)%60))
             self.stopButton.setEnabled_(True)
@@ -956,13 +958,13 @@ class MessageRecorder(NSObject):
                     self.file.stop()
                     self.file = None
                     self.bridge = None
-                self.label.setStringValue_("Maximum message length reached")
-                self.stopButton.setTitle_("Close")
+                self.label.setStringValue_(NSLocalizedString("Maximum message length reached", "Audio recording text label"))
+                self.stopButton.setTitle_(NSLocalizedString("Close", "Button title"))
                 self.recording = False
             else:
                 self.recording_time_left -= 1
         elif self.counter > 0:
-            self.label.setStringValue_("Recording will start in %is..." % self.counter)
+            self.label.setStringValue_(NSLocalizedString("Recording will start in %is..." % self.counter, "Audio recording text label"))
 
     def windowWillClose_(self, notif):
         NSApp.stopModalWithCode_(0)
@@ -970,7 +972,7 @@ class MessageRecorder(NSObject):
     def run(self):
         self.counter = 5
         self.recording_time_left = 60
-        self.label.setStringValue_("Recording will start in %is..." % self.counter)
+        self.label.setStringValue_(NSLocalizedString("Recording will start in %is..." % self.counter), "Audio recording text label")
         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "timerTick:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
@@ -1015,13 +1017,14 @@ class SoundFileOption(Option):
             self.popup.lastItem().setRepresentedObject_(os.path.join(path, filename))
 
         self.popup.menu().addItem_(NSMenuItem.separatorItem())
-        self.popup.addItemWithTitle_(u"Browse...")
+        self.popup.addItemWithTitle_(NSLocalizedString("Browse...", "Button title"))
 
         self.addSubview_(self.view)
 
     @objc.IBAction
     def changeVolume_(self, sender):
-        self.volumeText.setStringValue_("Volume: %i%%" % (sender.integerValue()*10))
+        value = sender.integerValue() * 10
+        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Text label"))
         self.store()
 
     @objc.IBAction
@@ -1056,7 +1059,7 @@ class SoundFileOption(Option):
     def chooseFile_(self, sender):
         if sender.indexOfSelectedItem() == sender.numberOfItems() - 1:
             panel = NSOpenPanel.openPanel()
-            panel.setTitle_(u"Select Sound File")
+            panel.setTitle_(NSLocalizedString("Select Sound File", "Alert panel title"))
             panel.setCanChooseFiles_(True)
             panel.setCanChooseDirectories_(False)
 
@@ -1095,7 +1098,7 @@ class SoundFileOption(Option):
         if value:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.volume/10)
-            self.volumeText.setStringValue_("Volume: %i%%"%value.volume)
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Text label"))
             value = unicode(value.path)
             self.play.setEnabled_(True)
         else:
@@ -1146,7 +1149,8 @@ class NightVolumeOption(Option):
 
     @objc.IBAction
     def changeVolume_(self, sender):
-        self.volumeText.setStringValue_("Volume: %i%%" % (sender.integerValue()*10))
+        value = sender.integerValue() * 10
+        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Text label"))
         self.store()
 
     @objc.IBAction
@@ -1182,12 +1186,12 @@ class NightVolumeOption(Option):
             start_hour = int(self.start_hour.stringValue())
             end_hour = int(self.end_hour.stringValue())
         except:
-            NSRunAlertPanel("Invalid Hour", "Must be between 0 and 23.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Alert panel title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
             return
 
         if start_hour < 0 or start_hour > 23 or end_hour < 0 or end_hour > 23:
-            NSRunAlertPanel("Invalid Hour", "Must be between 0 and 23.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Alert panel title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Alert panel title"), None, None)
             self.restore()
             return
 
@@ -1202,9 +1206,10 @@ class NightVolumeOption(Option):
             self.slider.setIntegerValue_(value.volume/10)
             self.start_hour.setStringValue_(value.start_hour)
             self.end_hour.setStringValue_(value.end_hour)
-            self.volumeText.setStringValue_("Volume: %i%%"%value.volume)
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Text label"))
         else:
             self.slider.setEnabled_(False)
+
 
 class OTRSettings(Option):
     view = objc.IBOutlet()
@@ -1229,7 +1234,7 @@ class OTRSettings(Option):
         self.addSubview_(self.view)
 
     def updateFingerprint(self):
-        self.labelText.setStringValue_(str(self.key) if self.key else 'Please generate the private key')
+        self.labelText.setStringValue_(str(self.key) if self.key else NSLocalizedString("Please generate the private key", "Text label"))
 
     def _store(self):
         self.set(bool(self.enabled.state()))
@@ -1414,7 +1419,7 @@ class AccountSoundFileOption(SoundFileOption):
         else:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
-            self.volumeText.setStringValue_("Volume: %i%%" % value.sound_file.volume)
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.sound_file.volume), "Text label")
             path = unicode(value.sound_file.path)
             for i in range(self.popup.numberOfItems()):
                 if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
@@ -1513,7 +1518,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option, description=None):
         ObjectTupleOption.__init__(self, object, name, option, [("Hostname or IP Address", 172), ("Port",50)], description)
 
-        self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add")
+        self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_(NSLocalizedString("Click to add", "Text placeholder"))
 
         f = self.swin.frame()
         f.size.height = 55
@@ -1546,7 +1551,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
                 address = STUNServerAddress(self.values[row][0], int(object))
                 self.values[row] = (address.host, address.port)
         except Exception, e:
-            NSRunAlertPanel("Enter STUN server", "Invalid server address: %s" % e, "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Enter STUN server", "Alert panel title"), NSLocalizedString("Invalid server address: %s" % e, "alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return
         self.store()
         table.reloadData()
@@ -1712,62 +1717,62 @@ DisabledPreferenceSections = ['service_provider', 'server']
 StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
-                      'audio.auto_accept': 'Automatic Answer',
-                      'audio.auto_transfer': 'Automatic Transfer',
-                      'audio.auto_recording': 'Automatic Recording',
-                      'audio.reject_anonymous': 'Reject Anonymous Callers',
-                      'audio.directory': 'Recordings Directory',
-                      'audio.silent': 'Silence Audible Alerts',
-                      'audio.pause_music': 'Pause iTunes during Calls',
-                      'audio.automatic_device_switch': 'Switch to New Devices when Plugged-in',
-                      'audio.enable_aec': 'Enable Acoustic Echo Cancellation',
-                      'answering_machine.max_recording_duration': 'Maximum Duration',
-                      'chat.auto_accept': 'Automatically Accept Chat Requests from Known Contacts',
-                      'chat.disable_collaboration_editor': 'Disable Collaboration Editor',
-                      'chat.enable_encryption': 'OTR Encryption',
-                      'contacts.enable_address_book': 'Show Address Book',
-                      'contacts.enable_incoming_calls_group': 'Show Incoming Calls',
-                      'contacts.enable_missed_calls_group': 'Show Missed Calls',
-                      'contacts.enable_outgoing_calls_group': 'Show Outgoing Calls',
-                      'contacts.enable_blocked_group': 'Show Blocked Contacts',
-                      'screen_sharing_server.disabled': 'Deny Requests for Sharing My Screen',
-                      'file_transfer.auto_accept': 'Automatically Accept Files from Known Contacts',
-                      'gui.sync_with_icloud': 'Sync With iCloud',
-                      'ldap.hostname': 'Server Address',
-                      'ldap.dn': 'Search Base',
-                      'logs.trace_msrp': 'Trace MSRP Media',
-                      'logs.trace_sip': 'Trace SIP Signaling',
-                      'logs.trace_xcap': 'Trace XCAP (used for storage of contacts and presence policy)',
-                      'logs.trace_pjsip': 'Trace Core Engine',
-                      'logs.pjsip_level': 'Core Level',
-                      'message_summary.voicemail_uri': 'Mailbox URI',
-                      'nat_traversal.stun_server_list': 'STUN Servers',
-                      'presence.use_rls': 'Use Resource List Server',
-                      'presence.enabled': 'Enabled',
-                      'presence.disable_timezone': 'Hide My Timezone',
-                      'presence.disable_location': 'Hide My Location',
-                      'pstn.idd_prefix': 'Replace Starting +',
-                      'pstn.prefix': 'External Line Prefix',
-                      'pstn.dtmf_delimiter': 'DTMF Delimiter',
-                      'rtp.inband_dtmf': 'Send Inband DTMF',
-                      'rtp.audio_codec_list': 'Audio Codecs',
-                      'rtp.port_range': 'UDP Port Range',
-                      'rtp.srtp_encryption': 'sRTP Encryption',
-                      'sip.invite_timeout': 'Session Timeout',
-                      'sip.outbound_proxy': 'Primary Proxy',
-                      'sip.alternative_proxy': 'Alternate Proxy',
-                      'sip.register': 'Receive Incoming Calls',
-                      'sip.transport_list': 'Protocols',
-                      'sounds.audio_inbound': 'Inbound Ringtone',
-                      'sounds.audio_inbound': 'Inbound Ringtone',
-                      'sounds.night_volume': ' ',
-                      'sounds.enable_speech_synthesizer': 'Say Incoming Caller Name',
-                      'web_alert.alert_url': 'Alert Web Page',
-                      'server.settings_url': 'Account Web Page',
-                      'server.web_password': 'Password',
-                      'tls.certificate': 'X.509 Certificate File',
-                      'tls.ca_list': 'Certificate Authority File',
-                      'xcap.xcap_root' : 'Root URI'
+                      'audio.auto_accept': NSLocalizedString("Automatic Answer", "Setting decription label"),
+                      'audio.auto_transfer': NSLocalizedString("Automatic Transfer", "Setting decription label"),
+                      'audio.auto_recording': NSLocalizedString("Automatic Recording", "Setting decription label"),
+                      'audio.reject_anonymous': NSLocalizedString("Reject Anonymous Callers", "Setting decription label"),
+                      'audio.directory': NSLocalizedString("Recordings Directory", "Setting decription label"),
+                      'audio.silent': NSLocalizedString("Silence Audible Alerts", "Setting decription label"),
+                      'audio.pause_music': NSLocalizedString("Pause iTunes during Calls", "Setting decription label"),
+                      'audio.automatic_device_switch': NSLocalizedString("Switch to New Devices when Plugged-in", "Setting decription label"),
+                      'audio.enable_aec': NSLocalizedString("Enable Acoustic Echo Cancellation", "Setting decription label"),
+                      'answering_machine.max_recording_duration': NSLocalizedString("Maximum Duration", "Setting decription label"),
+                      'chat.auto_accept': NSLocalizedString("Automatically Accept Chat Requests from Known Contacts", "Setting decription label"),
+                      'chat.disable_collaboration_editor': NSLocalizedString("Disable Collaboration Editor", "Setting decription label"),
+                      'chat.enable_encryption': NSLocalizedString("OTR Encryption", "Setting decription label"),
+                      'contacts.enable_address_book': NSLocalizedString("Show Address Book", "Setting decription label"),
+                      'contacts.enable_incoming_calls_group': NSLocalizedString("Show Incoming Calls", "Setting decription label"),
+                      'contacts.enable_missed_calls_group': NSLocalizedString("Show Missed Calls", "Setting decription label"),
+                      'contacts.enable_outgoing_calls_group': NSLocalizedString("Show Outgoing Calls", "Setting decription label"),
+                      'contacts.enable_blocked_group': NSLocalizedString("Show Blocked Contacts", "Setting decription label"),
+                      'screen_sharing_server.disabled': NSLocalizedString("Deny Requests for Sharing My Screen", "Setting decription label"),
+                      'file_transfer.auto_accept': NSLocalizedString("Automatically Accept Files from Known Contacts", "Setting decription label"),
+                      'gui.sync_with_icloud': NSLocalizedString("Sync With iCloud", "Setting decription label"),
+                      'ldap.hostname': NSLocalizedString("Server Address", "Setting decription label"),
+                      'ldap.dn': NSLocalizedString("Search Base", "Setting decription label"),
+                      'logs.trace_msrp': NSLocalizedString("Trace MSRP Media", "Setting decription label"),
+                      'logs.trace_sip': NSLocalizedString("Trace SIP Signaling", "Setting decription label"),
+                      'logs.trace_xcap': NSLocalizedString("Trace XCAP (used for storage of contacts and presence policy)", "Setting decription label"),
+                      'logs.trace_pjsip': NSLocalizedString("Trace Core Engine", "Setting decription label"),
+                      'logs.pjsip_level': NSLocalizedString("Core Level", "Setting decription label"),
+                      'message_summary.voicemail_uri': NSLocalizedString("Mailbox URI", "Setting decription label"),
+                      'nat_traversal.stun_server_list': NSLocalizedString("STUN Servers", "Setting decription label"),
+                      'presence.use_rls': NSLocalizedString("Use Resource List Server", "Setting decription label"),
+                      'presence.enabled': NSLocalizedString("Enabled", "Setting decription label"),
+                      'presence.disable_timezone': NSLocalizedString("Hide My Timezone", "Setting decription label"),
+                      'presence.disable_location': NSLocalizedString("Hide My Location", "Setting decription label"),
+                      'pstn.idd_prefix': NSLocalizedString("Replace Starting +", "Setting decription label"),
+                      'pstn.prefix': NSLocalizedString("External Line Prefix", "Setting decription label"),
+                      'pstn.dtmf_delimiter': NSLocalizedString("DTMF Delimiter", "Setting decription label"),
+                      'rtp.inband_dtmf': NSLocalizedString("Send Inband DTMF", "Setting decription label"),
+                      'rtp.audio_codec_list': NSLocalizedString("Audio Codecs", "Setting decription label"),
+                      'rtp.port_range': NSLocalizedString("UDP Port Range", "Setting decription label"),
+                      'rtp.srtp_encryption': NSLocalizedString("sRTP Encryption", "Setting decription label"),
+                      'sip.invite_timeout': NSLocalizedString("Session Timeout", "Setting decription label"),
+                      'sip.outbound_proxy': NSLocalizedString("Primary Proxy", "Setting decription label"),
+                      'sip.alternative_proxy': NSLocalizedString("Alternate Proxy", "Setting decription label"),
+                      'sip.register': NSLocalizedString("Receive Incoming Calls", "Setting decription label"),
+                      'sip.transport_list': NSLocalizedString("Protocols", "Setting decription label"),
+                      'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Setting decription label"),
+                      'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Setting decription label"),
+                      'sounds.night_volume': NSLocalizedString(" ", "Setting decription label"),
+                      'sounds.enable_speech_synthesizer': NSLocalizedString("Say Incoming Caller Name", "Setting decription label"),
+                      'web_alert.alert_url': NSLocalizedString("Alert Web Page", "Setting decription label"),
+                      'server.settings_url': NSLocalizedString("Account Web Page", "Setting decription label"),
+                      'server.web_password': NSLocalizedString("Password", "Setting decription label"),
+                      'tls.certificate': NSLocalizedString("X.509 Certificate File", "Setting decription label"),
+                      'tls.ca_list': NSLocalizedString("Certificate Authority File", "Setting decription label"),
+                      'xcap.xcap_root' : NSLocalizedString("Root URI", "Setting decription label")
                       }
 
 Placeholders = {
@@ -1784,25 +1789,25 @@ Placeholders = {
                   }
 
 SectionNames = {
-                       'audio': 'Audio Calls',
-                       'auth': 'Authentication',
-                       'chat': 'Chat Sessions',
-                       'sms': 'Short Messages',
-                       'conference': 'Conference Server',
-                       'gui': 'GUI Settings',
-                       'logs': 'File Logging',
-                       'message_summary': 'Voicemail',
-                       'msrp': 'MSRP Media',
-                       'nat_traversal': 'NAT Traversal',
-                       'pstn': 'Phone Numbers',
-                       'rtp': 'RTP Media',
-                       'presence': 'Presence Status',
-                       'sip': 'SIP Signaling',
-                       'sounds': 'Sound Alerts',
-                       'server': 'Server Website',
-                       'tls': 'TLS Settings',
-                       'xcap': 'XCAP Storage',
-                       'ldap': 'LDAP Directory'
+                       'audio': NSLocalizedString("Audio Calls", "Setting decription label"),
+                       'auth': NSLocalizedString("Authentication", "Setting decription label"),
+                       'chat': NSLocalizedString("Chat Sessions", "Setting decription label"),
+                       'sms': NSLocalizedString("Short Messages", "Setting decription label"),
+                       'conference': NSLocalizedString("Conference Server", "Setting decription label"),
+                       'gui': NSLocalizedString("GUI Settings", "Setting decription label"),
+                       'logs': NSLocalizedString("File Logging", "Setting decription label"),
+                       'message_summary': NSLocalizedString("Voicemail", "Setting decription label"),
+                       'msrp': NSLocalizedString("MSRP Media", "Setting decription label"),
+                       'nat_traversal': NSLocalizedString("NAT Traversal", "Setting decription label"),
+                       'pstn': NSLocalizedString("Phone Numbers", "Setting decription label"),
+                       'rtp': NSLocalizedString("RTP Media", "Setting decription label"),
+                       'presence': NSLocalizedString("Presence Status", "Setting decription label"),
+                       'sip': NSLocalizedString("SIP Signaling", "Setting decription label"),
+                       'sounds': NSLocalizedString("Sound Alerts", "Setting decription label"),
+                       'server': NSLocalizedString("Server Website", "Setting decription label"),
+                       'tls': NSLocalizedString("TLS Settings", "Setting decription label"),
+                       'xcap': NSLocalizedString("XCAP Storage", "Setting decription label"),
+                       'ldap': NSLocalizedString("LDAP Directory", "Setting decription label")
                        }
 
 GeneralSettingsOrder = {
@@ -1832,44 +1837,44 @@ AccountSettingsOrder = {
                        }
 
 UnitOptions = {
-               'answer_delay': 'seconds',
-               'invite_timeout': 'seconds',
-               'timeout': 'seconds',
-               'max_recording_duration': 'seconds',
-               'publish_interval': 'seconds',
-               'register_interval': 'seconds',
-               'subscribe_interval': 'seconds',
-               'idle_threshold': 'seconds',
-               'udp_port': 'set port to 0 for automatic allocation'
+               'answer_delay': NSLocalizedString("seconds", "Setting decription label"),
+               'invite_timeout': NSLocalizedString("seconds", "Setting decription label"),
+               'timeout': NSLocalizedString("seconds", "Setting decription label"),
+               'max_recording_duration': NSLocalizedString("seconds", "Setting decription label"),
+               'publish_interval': NSLocalizedString("seconds", "Setting decription label"),
+               'register_interval': NSLocalizedString("seconds", "Setting decription label"),
+               'subscribe_interval': NSLocalizedString("seconds", "Setting decription label"),
+               'idle_threshold': NSLocalizedString("seconds", "Setting decription label"),
+               'udp_port': NSLocalizedString("set port to 0 for automatic allocation", "Setting decription label")
                }
 
 ToolTips = {
-             'audio.auto_transfer' : 'Automatically accept transfer requests from remote party',
-             'audio.call_waiting' : 'If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress',
-             'audio.echo_canceller.enabled': 'If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.',
-             'auth.username': 'Enter authentication username if different than the SIP Address username',
-             'chat.replication_password': 'Enter a password to encrypt the content of your messages on the replication server',
-             'gui.account_label': 'Label displayed in account popup up menu instead of the sip address',
-             'gui.idle_threshold': 'Interval After Which My Availability Is Set To Away',
-             'message_summary.voicemail_uri': 'SIP Address where Blink will send the Subscribe for the message waiting indicator',
-             'nat_traversal.msrp_relay': 'If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain',
-             'nat_traversal.use_ice': 'Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays',
-             'nat_traversal.use_msrp_relay_for_outbound': 'Normally, the MSRP relay is used only for incoming sessions, this setting also forces the outbound sessions through the MSRP relay',
-             'pstn.idd_prefix': 'You may replace the starting + from telephone numbers with 00 or other numeric prefix required by your SIP service provider',
-             'pstn.prefix': 'Always add a numeric prefix when dialing telephone numbers, typically required by a PBX to obtain an outside line',
-             'pstn.dial_plan': 'List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)',
-             'pstn.dtmf_delimiter': 'Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *',
-             'web_alert.alert_url': 'Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username',
-             'conference.server_address': 'Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default',
-             'rtp.timeout': 'If RTP is not received in this interval, audio calls will be hangup when Hangup on Timeout option in the RTP advanced section of the account is enabled',
-             'server.settings_url': 'Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below',
-             'server.web_password': 'Password for authentication requested by web server, if not set the SIP account password will be used',
-             'sip.invite_timeout': 'Cancel outgoing sessions if not answered within this interval',
-             'sip.primary_proxy': 'Overwrite the address of the SIP Outbound Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061',
-             'sip.alternative_proxy': 'When set, it can be manually selected as SIP Outbound Proxy in the Call menu',
-             'sip.register': 'When enabled, the account will register to the SIP server and is able to receive incoming calls',
-             'tls.certificate': 'X.509 certificate and unencrypted private key concatenated in the same file',
-             'tls.verify_server': 'Verify the validity of TLS certificates presented by remote parties',
-             'tls.ca_list': 'File that contains a list of Certificate Autorities (CA) additional to the ones provided by MacOSX. Each CA must be in PEM format, multiple CA can be concantenated.',
-             'xcap.xcap_root': 'If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain'
+             'audio.auto_transfer' : NSLocalizedString("Automatically accept transfer requests from remote party", "Setting decription label"),
+             'audio.call_waiting' : NSLocalizedString("If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress", "Setting decription label"),
+             'audio.echo_canceller.enabled': NSLocalizedString("If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.", "Setting decription label"),
+             'auth.username': NSLocalizedString("Enter authentication username if different than the SIP Address username", "Setting decription label"),
+             'chat.replication_password': NSLocalizedString("Enter a password to encrypt the content of your messages on the replication server", "Setting decription label"),
+             'gui.account_label': NSLocalizedString("Label displayed in account popup up menu instead of the sip address", "Setting decription label"),
+             'gui.idle_threshold': NSLocalizedString("Interval After Which My Availability Is Set To Away", "Setting decription label"),
+             'message_summary.voicemail_uri': NSLocalizedString("SIP Address where Blink will send the Subscribe for the message waiting indicator", "Setting decription label"),
+             'nat_traversal.msrp_relay': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain", "Setting decription label"),
+             'nat_traversal.use_ice': NSLocalizedString("Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays", "Setting decription label"),
+             'nat_traversal.use_msrp_relay_for_outbound': NSLocalizedString("Normally, the MSRP relay is used only for incoming sessions, this setting also forces the outbound sessions through the MSRP relay", "Setting decription label"),
+             'pstn.idd_prefix': NSLocalizedString("You may replace the starting + from telephone numbers with 00 or other numeric prefix required by your SIP service provider", "Setting decription label"),
+             'pstn.prefix': NSLocalizedString("Always add a numeric prefix when dialing telephone numbers, typically required by a PBX to obtain an outside line", "Setting decription label"),
+             'pstn.dial_plan': NSLocalizedString("List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)", "Setting decription label"),
+             'pstn.dtmf_delimiter': NSLocalizedString("Characters after the first occurence of this delimiter will be sent as DTMF codes, can be # or *", "Setting decription label"),
+             'web_alert.alert_url': NSLocalizedString("Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username", "Setting decription label"),
+             'conference.server_address': NSLocalizedString("Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default", "Setting decription label"),
+             'rtp.timeout': NSLocalizedString("If RTP is not received in this interval, audio calls will be hangup when Hangup on Timeout option in the RTP advanced section of the account is enabled", "Setting decription label"),
+             'server.settings_url': NSLocalizedString("Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below", "Setting decription label"),
+             'server.web_password': NSLocalizedString("Password for authentication requested by web server, if not set the SIP account password will be used", "Setting decription label"),
+             'sip.invite_timeout': NSLocalizedString("Cancel outgoing sessions if not answered within this interval", "Setting decription label"),
+             'sip.primary_proxy': NSLocalizedString("Overwrite the address of the SIP Outbound Proxy obtained normally from the DNS. Example: proxy.example.com:5061;transport=tls will force the use of the proxy at proxy.example.com over TLS protocol on port 5061", "Setting decription label"),
+             'sip.alternative_proxy': NSLocalizedString("When set, it can be manually selected as SIP Outbound Proxy in the Call menu", "Setting decription label"),
+             'sip.register': NSLocalizedString("When enabled, the account will register to the SIP server and is able to receive incoming calls", "Setting decription label"),
+             'tls.certificate': NSLocalizedString("X.509 certificate and unencrypted private key concatenated in the same file", "Setting decription label"),
+             'tls.verify_server': NSLocalizedString("Verify the validity of TLS certificates presented by remote parties", "Setting decription label"),
+             'tls.ca_list': NSLocalizedString("File that contains a list of Certificate Autorities (CA) additional to the ones provided by MacOSX. Each CA must be in PEM format, multiple CA can be concantenated.", "Setting decription label"),
+             'xcap.xcap_root': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain", "Setting decription label")
            }
