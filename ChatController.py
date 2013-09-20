@@ -1636,7 +1636,7 @@ class ChatController(MediaStream):
         self.mediastream_failed = True
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
-            reason = 'Connection closed due to a connectivity problem'
+            reason = 'Connection lost'
         elif data.failure is not None and data.failure.type is GNUTLSError:
             reason = 'Connection error (TLS)'
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):
