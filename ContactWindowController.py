@@ -1,5 +1,4 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
-#
 
 from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSAccessibilityDescriptionAttribute,
@@ -64,6 +63,7 @@ from Foundation import (NSArray,
                         NSSpeechSynthesizer,
                         NSStatusBar,
                         NSString,
+                        NSLocalizedString,
                         NSTimer,
                         NSURL,
                         NSUserDefaults,
@@ -883,12 +883,12 @@ class ContactWindowController(NSWindowController):
                 self.accountPopUp.selectItem_(item)
 
         if self.accountPopUp.numberOfItems() == 0:
-            self.accountPopUp.addItemWithTitle_(u"No Accounts")
+            self.accountPopUp.addItemWithTitle_(NSLocalizedString("No Accounts", "Account popup menu item"))
             self.accountPopUp.lastItem().setEnabled_(False)
 
         if self.backend.validateAddAccountAction():
             self.accountPopUp.menu().addItem_(NSMenuItem.separatorItem())
-            self.accountPopUp.addItemWithTitle_(u"Add Account...")
+            self.accountPopUp.addItemWithTitle_(NSLocalizedString("Add Account...", "Account popup menu item"))
 
         if account_manager.default_account is not None:
             self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)
@@ -1003,7 +1003,7 @@ class ContactWindowController(NSWindowController):
                 self.speech_synthesizer.setVolume_(volume)
 
                 self.speech_synthesizer_active = True
-                speak_text = '%s is now available' % contact.name
+                speak_text = NSLocalizedString("%s is now available" % contact.name, "Spoken text by syntheziser")
                 self.speech_synthesizer.startSpeakingString_(speak_text)
 
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
@@ -1277,9 +1277,9 @@ class ContactWindowController(NSWindowController):
                         account.save()
                     else:
                         NSApp.activateIgnoringOtherApps_(True)
-                        panel = NSGetInformationalAlertPanel("New Account Added",
-                                                             "To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.",
-                                                             'OK', None, None)
+                        panel = NSGetInformationalAlertPanel(NSLocalizedString("New Account Added", "Alert panel title"),
+                                                             NSLocalizedString("To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.", "Alert panel label"),
+                                                             NSLocalizedString("OK", "Alert panel button"), None, None)
                         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(20, self, "newAccountHasBeenAddedNotice:", panel, False)
                         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
                         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
@@ -1400,9 +1400,9 @@ class ContactWindowController(NSWindowController):
             call_in_thread('device-io', switch_device, device)
         else:
             NSApp.activateIgnoringOtherApps_(True)
-            panel = NSGetInformationalAlertPanel("New Audio Device",
-                                                 "A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(),
-                                                 "Switch", "Ignore", None)
+            panel = NSGetInformationalAlertPanel(NSLocalizedString("New Audio Device", "Alert panel title"),
+                                                 NSLocalizedString("A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(), "Alert panel label"),
+                                                 NSLocalizedString("Switch", "Alert panel button"), NSLocalizedString("Ignore", "Alert panel button"), None)
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(7, self, "newAudioDeviceTimeout:", panel, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
@@ -1754,12 +1754,12 @@ class ContactWindowController(NSWindowController):
                         volume = settings.sounds.night_volume.volume/100.0
                 self.speech_synthesizer.setVolume_(volume)
 
-                speak_text = u"%s are now available. Start conference now?" % label
+                speak_text = NSLocalizedString("%s are now available. Start conference now?" % label, "Spoken text by syntheziser")
                 self.speech_synthesizer_active = True
                 self.speech_synthesizer.startSpeakingString_(speak_text)
 
             NSApp.activateIgnoringOtherApps_(True)
-            ret = NSRunAlertPanel(u'Start Scheduled Conference', message, u"Start Now", u"Cancel", None)
+            ret = NSRunAlertPanel(NSLocalizedString("Start Scheduled Conference", "Alert panel title"), message, NSLocalizedString("Start Now", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
 
             if ret == NSAlertDefaultReturn:
                 self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
@@ -2064,7 +2064,7 @@ class ContactWindowController(NSWindowController):
                 try:
                     text = str(text)
                 except:
-                    NSRunAlertPanel(u"Invalid Address", u"The address you typed is invalid, only ASCII characters are allowed.", u"OK", None, None)
+                    NSRunAlertPanel(NSLocalizedString("Invalid Address", "Alert panel"), NSLocalizedString("The address you typed is invalid, only ASCII characters are allowed.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
                     return
                 else:
                     _split = text.split(';')
@@ -2263,8 +2263,8 @@ class ContactWindowController(NSWindowController):
             display_name = contact.name
 
         if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active accounts",
-                            "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Alert panel title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"),
+                            NSLocalizedString("OK", "Alert panel button"), None, None)
             return None
 
         target_uri = normalize_sip_uri_for_outgoing_session(target, account)
@@ -2303,7 +2303,7 @@ class ContactWindowController(NSWindowController):
         NSApp.activateIgnoringOtherApps_(True)
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Initiate Session", u"There are currently no active accounts", u"OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Alert panel title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
@@ -2322,7 +2322,7 @@ class ContactWindowController(NSWindowController):
                     contact = BlinkConferenceContact(uri, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                 else:
                     contact = BlinkConferenceContact(uri=uri, name=uri)
-                contact.detail = 'Invitation sent...'
+                contact.detail = NSLocalizedString("Invitation sent...", "Contact detail")
                 session_controller.invited_participants.append(contact)
                 session_controller.participants_log.add(uri)
 
@@ -2361,7 +2361,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active accounts", u"OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Alert panel title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return
 
         try:
@@ -2392,7 +2392,7 @@ class ContactWindowController(NSWindowController):
     def sendSMSToSelectedUri_(self, sender):
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send Message", u"There are currently no active accounts", u"OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Alert panel title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return
 
         try:
@@ -2532,7 +2532,7 @@ class ContactWindowController(NSWindowController):
             # if conference already started:
             #    return
 
-            if NSRunAlertPanel("Audio Conference", "Would you like to start a conference with the %i active sessions? Once started you may use drag and drop to add and remove contacts to and from the conference. "%count, "OK", "Cancel", "") != NSAlertDefaultReturn:
+            if NSRunAlertPanel(NSLocalizedString("Audio Conference", "Alert panel title"), NSLocalizedString("Would you like to start a conference with the %i active sessions? Once started you may use drag and drop to add and remove contacts to and from the conference. " % count, "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), "") != NSAlertDefaultReturn:
                 self.conferenceButton.setState_(NSOffState)
                 return
 
@@ -3011,7 +3011,7 @@ class ContactWindowController(NSWindowController):
 
             if i:
                 self.presenceWatchersMenu.addItem_(NSMenuItem.separatorItem())
-            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'Account %s' % key, "", "")
+            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(NSLocalizedString("Account %s" % key, "Watchers menu item"), "", "")
             lastItem.setEnabled_(False)
             self.presenceWatchersMenu.addItem_(lastItem)
             i += 1
@@ -3052,7 +3052,7 @@ class ContactWindowController(NSWindowController):
                 self.presenceWatchersMenu.addItem_(lastItem)
 
         if not i:
-            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(u'Nobody', "", "")
+            lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(NSLocalizedString("Nobody", "Watchers menu item"), "", "")
             lastItem.setEnabled_(False)
             self.presenceWatchersMenu.addItem_(lastItem)
 
@@ -3087,7 +3087,7 @@ class ContactWindowController(NSWindowController):
         if self.presence_notes_history:
             menu.addItem_(NSMenuItem.separatorItem())
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "", "")
-            title = NSAttributedString.alloc().initWithString_attributes_('My Recent Availability', attributes)
+            title = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("My Recent Availability", "Activity menu item"), attributes)
             lastItem.setAttributedTitle_(title)
             lastItem.setEnabled_(False)
             menu.addItem_(lastItem)
@@ -3159,9 +3159,8 @@ class ContactWindowController(NSWindowController):
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
 
-        self.blinkMenu.itemWithTag_(1).setTitle_('About %s' % NSApp.delegate().applicationNamePrint)
-        self.blinkMenu.itemWithTag_(10).setTitle_('Hide %s' % NSApp.delegate().applicationNamePrint)
-        self.blinkMenu.itemWithTag_(11).setTitle_('Quit %s' % NSApp.delegate().applicationNamePrint)
+        self.blinkMenu.itemWithTag_(1).setTitle_(NSLocalizedString("About %s" % NSApp.delegate().applicationNamePrint, "Main menu item"))
+        self.blinkMenu.itemWithTag_(10).setTitle_(NSLocalizedString("Hide", "Main menu item"))
         find_sylkserver = LSFindApplicationForInfo(kLSUnknownCreator, 'com.agprojects.SylkServer', None, None, None)
         sylkserver_exists = find_sylkserver[2] is not None
         sylkserver_exists = True
@@ -3187,11 +3186,11 @@ class ContactWindowController(NSWindowController):
             if settings.service_provider.about_url or settings.service_provider.help_url:
                 self.blinkMenu.itemWithTag_(4).setHidden_(False)
             if settings.service_provider.about_url:
-                title = 'About %s...' % settings.service_provider.name
+                title = NSLocalizedString("About %s..." % settings.service_provider.name, "Main menu item")
                 self.blinkMenu.itemWithTag_(5).setTitle_(title)
                 self.blinkMenu.itemWithTag_(5).setHidden_(False)
             if settings.service_provider.help_url:
-                title = '%s Support Page...' % settings.service_provider.name
+                title = NSLocalizedString("%s Support Page..." % settings.service_provider.name, "Main menu item")
                 self.blinkMenu.itemWithTag_(6).setTitle_(title)
                 self.blinkMenu.itemWithTag_(6).setHidden_(False)
         else:
@@ -3239,7 +3238,7 @@ class ContactWindowController(NSWindowController):
         # outbound proxy
         if not isinstance(account, BonjourAccount) and (account.sip.primary_proxy or account.sip.alternative_proxy):
             menu.addItem_(NSMenuItem.separatorItem())
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outbound Proxy", "", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Outbound Proxy", "Call menu item"), "", "")
             lastItem.setEnabled_(False)
 
             lastItem = menu.addItemWithTitle_action_keyEquivalent_('None', "selectOutboundProxyClicked:", "")
@@ -3249,7 +3248,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setTarget_(self)
             lastItem.setRepresentedObject_(account)
 
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_(unicode(account.sip.primary_proxy) if account.sip.primary_proxy is not None else 'Discovered using DNS Lookup', "selectOutboundProxyClicked:", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(unicode(account.sip.primary_proxy) if account.sip.primary_proxy is not None else NSLocalizedString("Discovered using DNS Lookup", "Call menu item"), "selectOutboundProxyClicked:", "")
             lastItem.setIndentationLevel_(2)
             lastItem.setState_(NSOnState if not account.sip.selected_proxy and account.sip.always_use_my_proxy else NSOffState)
             lastItem.setTag_(701)
@@ -3279,7 +3278,7 @@ class ContactWindowController(NSWindowController):
             return a
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Voicemail", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Voicemail", "Call menu item"), "", "")
         lastItem.setEnabled_(False)
 
         if any(account.message_summary.enabled for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled)):
@@ -3312,7 +3311,7 @@ class ContactWindowController(NSWindowController):
 
         recordings = self.backend.get_audio_recordings()[-10:]
         if not recordings:
-            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No recordings available", "", "", 0)
+            item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("No recordings available", None), "", "", 0)
             item.setEnabled_(False)
 
         for dt, name, f in recordings:
@@ -3329,7 +3328,7 @@ class ContactWindowController(NSWindowController):
 
         contact_backups = self.backend.get_contact_backups()[-10:]
         if not contact_backups:
-            item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_("No backups available", "", "", 0)
+            item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("No backups available", None), "", "", 0)
             item.setEnabled_(False)
 
         for timestamp, file in contact_backups:
@@ -3354,7 +3353,7 @@ class ContactWindowController(NSWindowController):
         else:
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "startChatToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Chat menu item"), "startChatToSelected:", "")
             if isinstance(contact, BonjourBlinkContact):
                 item.setEnabled_(True)
             elif isinstance(contact, BlinkPresenceContact):
@@ -3363,18 +3362,18 @@ class ContactWindowController(NSWindowController):
             else:
                 item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "sendSMSToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Chat menu item"), "sendSMSToSelected:", "")
             item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
 
     def updateGroupMenu(self):
         while self.groupMenu.numberOfItems() > 0:
             self.groupMenu.removeItemAtIndex_(0)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Add Contact...', "addContact:", "")
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Add Group...', "addGroup:", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add Contact...", "Contact menu item"), "addContact:", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add Group...", "Contact menu item"), "addGroup:", "")
         self.groupMenu.addItem_(NSMenuItem.separatorItem())
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Scroll to:', "", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Scroll to:", "Contact menu item"), "", "")
         item.setEnabled_(False)
 
         row = self.contactOutline.selectedRow()
@@ -3390,7 +3389,7 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if group == selected_group else NSOffState)
 
         self.groupMenu.addItem_(NSMenuItem.separatorItem())
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(u'Special Groups', "", "")
+        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Special Groups", "Contact menu item"), "", "")
         item.setEnabled_(False)
 
         settings = SIPSimpleSettings()
@@ -3681,7 +3680,7 @@ class ContactWindowController(NSWindowController):
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
 
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Missed Calls", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Missed Calls", "History menu item"), "", "")
         lastItem.setEnabled_(False)
         for item in entries['missed']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
@@ -3697,7 +3696,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Incoming Calls", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Incoming Calls", "History menu item"), "", "")
         lastItem.setEnabled_(False)
         for item in entries['incoming']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
@@ -3713,7 +3712,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Outgoing Calls", "", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Outgoing Calls", "History menu item"), "", "")
         lastItem.setEnabled_(False)
         for item in entries['outgoing']:
             lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s"%item, "historyClicked:", "")
@@ -3729,7 +3728,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_("Clear History", "historyClicked:", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Clear History", "History menu item"), "historyClicked:", "")
         lastItem.setEnabled_(True if entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
@@ -3873,7 +3872,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(u"Cannot Send File", u"There are currently no active accounts", u"OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Send File", "Alert panel title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return
         try:
             contact = self.getSelectedContacts()[0]
@@ -3936,8 +3935,8 @@ class ContactWindowController(NSWindowController):
             if not isinstance(self.window().firstResponder(), AudioSession):
                 self.focusSearchTextField()
 
-            self.searchBox.cell().setPlaceholderString_("Enter Phone Number")
-            self.searchBox.setToolTip_(u'You may type digits or letters, letters will automatically be translated into digits. Press enter or click # on the dialpad to start the call')
+            self.searchBox.cell().setPlaceholderString_(NSLocalizedString("Enter Phone Number", "Search box placeholder"))
+            self.searchBox.setToolTip_(NSLocalizedString("You may type digits or letters, letters will automatically be translated into digits. Press enter or click # on the dialpad to start the call", "Search box tooltip"))
 
             if not isinstance(self.window().firstResponder(), AudioSession):
                 self.focusSearchTextField()
@@ -3962,8 +3961,8 @@ class ContactWindowController(NSWindowController):
 
         else:
             self.addContactButtonDialPad.setHidden_(False)
-            self.searchBox.cell().setPlaceholderString_("Search Contacts or Enter Address")
-            self.searchBox.setToolTip_(u'You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number')
+            self.searchBox.cell().setPlaceholderString_(NSLocalizedString("Search Contacts or Enter Address", "Search box placeholder"))
+            self.searchBox.setToolTip_(NSLocalizedString("You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number", "Search box tooltip"))
 
             frame.size.height = 132
             self.window().setContentMinSize_(frame.size)
@@ -4075,24 +4074,24 @@ class ContactWindowController(NSWindowController):
             self.contactContextMenu.removeItemAtIndex_(0)
 
         if isinstance(item, BlinkPendingWatcher):
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("%s Subscribed To My Availability"%item.uri, "", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s Subscribed To My Availability" % item.uri, "Contact menu item"), "", "")
             lastItem.setEnabled_(False)
             if not self.hasContactMatchingURI(item.uri, exact_match=True):
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request and Create Contact...", "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Accept Request and Create Contact...", "Contact menu item"), "addContactWithUri:", "")
                 lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(item)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Drag Request To An Existing Contact To Accept It", "", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Drag Request To An Existing Contact To Accept It", "Contact menu item"), "", "")
                 lastItem.setIndentationLevel_(1)
                 lastItem.setEnabled_(False)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block Request", "blockPresenceForURI:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block Request", "Contact menu item"), "blockPresenceForURI:", "")
                 lastItem.setRepresentedObject_(item)
                 lastItem.setIndentationLevel_(1)
             else:
                 all_contacts_with_uri = self.model.getBlinkContactsForURI(item.uri, exact_match=True)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Accept Request", "allowPresenceForContacts:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Accept Request", "Contact menu item"), "allowPresenceForContacts:", "")
                 lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block Request", "blockPresenceForContacts:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block Request", "Contact menu item"), "blockPresenceForContacts:", "")
                 lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
 
@@ -4103,7 +4102,7 @@ class ContactWindowController(NSWindowController):
                     name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
                     name_item.setRepresentedObject_((item, blink_contact))    # (source, destination)
                 if name_submenu.itemArray():
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add %s to" % item.uri, "Contact menu item") , "", "")
                     self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
 
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -4149,7 +4148,7 @@ class ContactWindowController(NSWindowController):
 
                 if gruu_devices:
                     audio_submenu.addItem_(NSMenuItem.separatorItem())
-                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
+                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Contact menu item"), "", "")
                     audio_item.setEnabled_(False)
 
                     for device in gruu_devices:
@@ -4171,7 +4170,7 @@ class ContactWindowController(NSWindowController):
                         if device['caps'] is not None and 'audio' not in device['caps']:
                             audio_item.setEnabled_(False)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Contact menu item"), "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
                 sms_submenu = NSMenu.alloc().init()
@@ -4189,7 +4188,7 @@ class ContactWindowController(NSWindowController):
                         icon.setScalesWhenResized_(True)
                         icon.setSize_(NSMakeSize(15,15))
                         sms_item.setImage_(icon)
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Contact menu item"), "", "")
                 self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
@@ -4216,7 +4215,7 @@ class ContactWindowController(NSWindowController):
 
                     if gruu_devices:
                         chat_submenu.addItem_(NSMenuItem.separatorItem())
-                        chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
+                        chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Contact menu item"), "", "")
                         chat_item.setEnabled_(False)
 
                         for device in gruu_devices:
@@ -4239,7 +4238,7 @@ class ContactWindowController(NSWindowController):
                                 chat_item.setEnabled_(False)
 
                     if chat_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Contact menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
@@ -4266,7 +4265,7 @@ class ContactWindowController(NSWindowController):
                         if gruu_devices:
                             ft_submenu.addItem_(NSMenuItem.separatorItem())
                             ft_submenu.setAutoenablesItems_(False)
-                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
+                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Contact menu item"), "", "")
                             ft_item.setEnabled_(False)
 
                             for device in gruu_devices:
@@ -4289,7 +4288,7 @@ class ContactWindowController(NSWindowController):
                                     ft_item.setEnabled_(False)
 
                         if ft_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Files...", "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Contact menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
 
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
@@ -4313,7 +4312,7 @@ class ContactWindowController(NSWindowController):
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Contact menu item"), "", "")
                             ds_item.setEnabled_(False)
 
                             for device in gruu_devices:
@@ -4336,7 +4335,7 @@ class ContactWindowController(NSWindowController):
                                     ds_item.setEnabled_(False)
 
                         if ds_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen Sharing", "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Contact menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
@@ -4360,7 +4359,7 @@ class ContactWindowController(NSWindowController):
 
                         if gruu_devices:
                             ds_submenu.addItem_(NSMenuItem.separatorItem())
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_("Online Devices", "", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Contact menu item"), "", "")
                             ds_item.setEnabled_(False)
 
                             for device in gruu_devices:
@@ -4384,7 +4383,7 @@ class ContactWindowController(NSWindowController):
                                     ds_item.setEnabled_(False)
 
                         if ds_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen", "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Contact menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
 
                 urls = list(uri.uri for uri in item.uris if uri.type is not None and uri.type.lower() == 'url')
@@ -4398,50 +4397,50 @@ class ContactWindowController(NSWindowController):
                     for url in urls:
                         url_item = urls_submenu.addItemWithTitle_action_keyEquivalent_(url, "openURL:", "")
                         url_item.setRepresentedObject_(url)
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Open URL", "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Open URL", "Contact menu item"), "", "")
                     self.contactContextMenu.setSubmenu_forItem_(urls_submenu, mitem)
 
             else:
                 # Contact has a single URI
 
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
-                    self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "startAudioToSelected:", "")
+                    self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Contact menu item"), "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if item not in self.model.bonjour_group.contacts:
-                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Instant Message...", "sendSMSToSelected:", "")
+                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Contact menu item"), "sendSMSToSelected:", "")
                             sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
                     if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                         if has_fully_qualified_sip_uri:
-                            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Invite to Chat...", "startChatToSelected:", "")
+                            chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Contact menu item"), "startChatToSelected:", "")
                             #aor_supports_chat = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
                             chat_item.setEnabled_(True)
 
                         if self.sessionControllersManager.isMediaTypeSupported('video'):
-                            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Start Video Call", "startVideoToSelected:", "")
+                            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Contact menu item"), "startVideoToSelected:", "")
 
                         if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                             if has_fully_qualified_sip_uri:
-                                ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Send Files...", "sendFile:", "")
+                                ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Contact menu item"), "sendFile:", "")
                                 #aor_supports_ft = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
                                 ft_item.setEnabled_(True)
 
                         if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
                             contact = item.name
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Request Screen Sharing", "startScreenSharing:", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Contact menu item"), "startScreenSharing:", "")
                             mitem.setTag_(1)
                             mitem.setEnabled_(has_fully_qualified_sip_uri)
                             mitem.setRepresentedObject_(item.uri)
                             #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
                             mitem.setEnabled_(True)
                         if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Share My Screen", "startScreenSharing:", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Contact menu item"), "startScreenSharing:", "")
                             mitem.setTag_(2)
                             mitem.setRepresentedObject_(item.uri)
                             #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
                             mitem.setEnabled_(True)
 
             if isinstance(item, BlinkPresenceContact):
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Automatically Answer Calls", "setAutoAnswer:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Automatically Answer Calls", "Contact menu item"), "setAutoAnswer:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.auto_answer else NSOffState)
@@ -4452,7 +4451,7 @@ class ContactWindowController(NSWindowController):
                     all_uris = []
                     for uri in item.uris:
                         all_uris.append(unicode(uri.uri))
-                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(u'Show in History Viewer...', "viewHistory:", "")
+                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Contact menu item"), "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)
                     history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
@@ -4465,7 +4464,7 @@ class ContactWindowController(NSWindowController):
                             r_item.setTarget_(self)
                             r_item.setRepresentedObject_(f)
 
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Audio Recordings", "Contact menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
                         if history_contact and history_contact.answering_machine_filenames:
@@ -4477,24 +4476,24 @@ class ContactWindowController(NSWindowController):
                                 r_item.setTarget_(self)
                                 r_item.setRepresentedObject_(f)
 
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('Voice Messages', "", "")
+                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Voice Messages", "Contact menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(voice_messages_submenu, mitem)
 
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Calls", "Contact menu item"), "", "")
                     self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
                     self.get_last_calls_entries_for_contact(item)
 
                 if history_contact is not None:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Copy To Search Bar", "Contact menu item"), "copyToSearchBar:", "")
                     mitem.setRepresentedObject_(unicode(history_contact.uri))
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntries:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entry", "Contact menu item"), "hideHistoryEntries:", "")
                     mitem.setRepresentedObject_(history_contact.session_ids)
 
             elif history_contact is not None and not is_anonymous(history_contact.uris[0].uri):
                 if NSApp.delegate().applicationName != 'Blink Lite':
                     if history_contact not in self.model.bonjour_group.contacts:
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in History Viewer...", "viewHistoryForContact:", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Contact menu item"), "viewHistoryForContact:", "")
                         group = self.contactOutline.parentForItem_(history_contact)
                         settings = SIPSimpleSettings()
                         if isinstance(group, MissedCallsBlinkGroup):
@@ -4508,18 +4507,18 @@ class ContactWindowController(NSWindowController):
 
                         mitem.setRepresentedObject_({'uris': (unicode(item.uri),), 'days': days})
 
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Last Calls", "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Calls", "Contact menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
                         self.get_last_calls_entries_for_contact(history_contact)
 
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Copy To Search Bar", "copyToSearchBar:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Copy To Search Bar", "Contact menu item"), "copyToSearchBar:", "")
                     mitem.setRepresentedObject_(unicode(history_contact.uri))
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entry", "hideHistoryEntries:", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entry", "Contact menu item"), "hideHistoryEntries:", "")
                     mitem.setRepresentedObject_(history_contact.session_ids)
 
                 if not self.hasContactMatchingURI(history_contact.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "addContactWithUri:", "")
                     lastItem.setRepresentedObject_(history_contact)
 
                 recordings = self.backend.get_audio_recordings([history_contact.uris[0].uri])[-10:]
@@ -4530,7 +4529,7 @@ class ContactWindowController(NSWindowController):
                         aitem.setTarget_(self)
                         aitem.setRepresentedObject_(f)
 
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Audio Recordings", "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Audio Recordings", "Contact menu item"), "", "")
                     self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
 
                     if history_contact.answering_machine_filenames:
@@ -4542,26 +4541,26 @@ class ContactWindowController(NSWindowController):
                             r_item.setTarget_(self)
                             r_item.setRepresentedObject_(f)
 
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('Voice Messages', "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Voice Messages", "Contact menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(voice_messages_submenu, mitem)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit", "editContact:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit", "Contact menu item"), "editContact:", "")
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, BlinkBlockedPresenceContact):
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deletePolicyItem:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Contact menu item"), "deletePolicyItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, SystemAddressBookBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Edit in AddressBook...", "editContact:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit in AddressBook...", "Contact menu item"), "editContact:", "")
                 lastItem.setRepresentedObject_(item)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, LdapSearchResultContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add to Contacts List...", "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "addContactWithUri:", "")
                 lastItem.setRepresentedObject_(item)
                 blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
                 if blink_contacts_with_same_name:
@@ -4570,100 +4569,100 @@ class ContactWindowController(NSWindowController):
                         name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
                         name_item.setRepresentedObject_((item, blink_contact))    # (source, destination)
                     if name_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add %s to" % item.uri, "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add %s to" % item.uri, "Contact menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
 
             group = self.contactOutline.parentForItem_(item)
             if group and group.delete_contact_allowed:
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete", "deleteItem:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Contact menu item"), "deleteItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
             if group and group.remove_contact_allowed:
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Remove From Group", "removeContactFromGroup:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove From Group", "Contact menu item"), "removeContactFromGroup:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_((item, group))
 
             if isinstance(item, BlinkPresenceContact):
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show in Favorites", "showInFavoritesGroup:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in Favorites", "Contact menu item"), "showInFavoritesGroup:", "")
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
                 mitem.setState_(NSOnState if item.favorite else NSOffState)
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Tell me when %s becomes available" % item.name, "tellMeWhenContactBecomesAvailable:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Tell me when %s becomes available" % item.name, "Contact menu item"), "tellMeWhenContactBecomesAvailable:", "")
                 mitem.setEnabled_(item.contact.presence.subscribe and presence_status_for_contact(item) != 'available')
                 mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
                 mitem.setRepresentedObject_(item.contact)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Availability Information...", "showPresenceInfo:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show Availability Information...", "Contact menu item"), "showPresenceInfo:", "")
                 mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
                 mitem.setRepresentedObject_(item)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Subscribe to %s's Availability" % item.name, "setSubscribeToPresence:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Subscribe to %s's Availability" % item.name, "Contact menu item"),  "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Block %s" % item.name , "setPresencePolicy:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block %s" % item.name, "Contact menu item") , "setPresencePolicy:", "")
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
         elif isinstance(item, BlinkGroup):
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_('%s Group' % item.name, "", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s Group", "Contact menu item") % item.name, "", "")
             lastItem.setEnabled_(False)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
             if item.add_contact_allowed:
-                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Add Contact...", "addContact:", "")
-            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Rename...", "renameGroup:", "")
+                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add Contact...", "Contact menu item"), "addContact:", "")
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Rename...", "Contact menu item"), "renameGroup:", "")
             lastItem.setRepresentedObject_(item)
             if isinstance(item, HistoryBlinkGroup) or isinstance(item, OnlineGroup):
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide", "hideGroup:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide", "Contact menu item"), "hideGroup:", "")
                 lastItem.setRepresentedObject_(item)
             else:
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Delete...", "deleteItem:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete...", "Contact menu item"), "deleteItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
 
             grp_submenu = NSMenu.alloc().init()
             grp_submenu.setAutoenablesItems_(False)
-            grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(u'To First Position', "moveGroupToIndex:", "")
+            grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("To First Position", "Contact menu item"), "moveGroupToIndex:", "")
             grp_item.setRepresentedObject_({'group': item, 'index': 0})
             for group in self.model.groupsList:
                 if group == item:
                     continue
-                grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(u'After %s' % group.name, "moveGroupToIndex:", "")
+                grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("After %s" % group.name, "Contact menu item"), "moveGroupToIndex:", "")
                 index = self.model.groupsList.index(group)
                 grp_item.setRepresentedObject_({'group': item, 'index': index+1})
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Move Group", "", "")
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Move Group", "Contact menu item"), "", "")
             self.contactContextMenu.setSubmenu_forItem_(grp_submenu, mitem)
 
             if isinstance(item, HistoryBlinkGroup):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Show Hidden Entries", "showHiddenEntries:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show Hidden Entries", "Contact menu item"), "showHiddenEntries:", "")
                 lastItem.setEnabled_(item)
                 lastItem.setRepresentedObject_(item)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Hide Entries", "hideHistoryEntries:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entries", "Contact menu item"), "hideHistoryEntries:", "")
                 session_ids = list(chain(*(history_contact.session_ids for history_contact in item.contacts)))
                 lastItem.setEnabled_(bool(session_ids))
                 lastItem.setRepresentedObject_(session_ids)
 
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_("Select Period", "", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Period", "Contact menu item"), "", "")
                 period_submenu = NSMenu.alloc().init()
                 self.contactContextMenu.setSubmenu_forItem_(period_submenu, lastItem)
 
-                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_('Last Day', "setHistoryPeriod:", "")
+                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Day", "Contact menu item"), "setHistoryPeriod:", "")
                 p_item.setRepresentedObject_({'group': item, 'days': 2})
                 p_item.setState_(NSOnState if item.days == 2 else NSOffState)
 
-                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_('Last Week', "setHistoryPeriod:", "")
+                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Week", "Contact menu item"), "setHistoryPeriod:", "")
                 p_item.setRepresentedObject_({'group': item, 'days': 7})
                 p_item.setState_(NSOnState if item.days == 7 else NSOffState)
 
-                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_('Last Month', "setHistoryPeriod:", "")
+                p_item = period_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Month", "Contact menu item"), "setHistoryPeriod:", "")
                 p_item.setState_(NSOnState if item.days == 30 else NSOffState)
                 p_item.setRepresentedObject_({'group': item, 'days': 30})
 
@@ -4733,7 +4732,7 @@ class ContactWindowController(NSWindowController):
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), selector, "", index)
                     if settings.audio.input_device == dev and settings.audio.output_device == dev:
                         state = NSOnState
-                    elif dev == u'Built-in Microphone and Output' and (settings.audio.input_device is not None and settings.audio.input_device.startswith('Built-in Mic')) and settings.audio.output_device == u'Built-in Output':
+                    elif dev == 'Built-in Microphone and Output' and (settings.audio.input_device is not None and settings.audio.input_device.startswith('Built-in Mic')) and settings.audio.output_device == 'Built-in Output':
                         state = NSOnState
                     else:
                         state = NSOffState
@@ -4747,8 +4746,8 @@ class ContactWindowController(NSWindowController):
 
         if menu == self.devicesMenu:
             in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
-            if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and u'Built-in Output' in self.backend._app.engine.output_devices:
-                in_out_devices.append(u'Built-in Microphone and Output')
+            if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and 'Built-in Output' in self.backend._app.engine.output_devices:
+                in_out_devices.append('Built-in Microphone and Output')
             setupAudioInputOutputDeviceMenu(menu, 404, in_out_devices, "selectInputOutputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices, "input_device", "selectInputDevice:")
@@ -4788,9 +4787,9 @@ class ContactWindowController(NSWindowController):
             item = menu.itemWithTag_(25) # redial
             if self.sessionControllersManager.redial_uri is not None:
                 item.setEnabled_(True)
-                item.setTitle_('Redial %s' % self.sessionControllersManager.redial_uri)
+                item.setTitle_(NSLocalizedString("Redial %s" % self.sessionControllersManager.redial_uri, "Status bar menu item"))
             else:
-                item.setTitle_('Redial')
+                item.setTitle_(NSLocalizedString("Redial", "Status bar menu item"))
                 item.setEnabled_(False)
 
 
@@ -4821,11 +4820,11 @@ class ContactWindowController(NSWindowController):
                     aor_supports_screen_sharing_server = True
 
                 item = self.screenShareMenu.itemWithTag_(1)
-                item.setTitle_("Request Screen Sharing from %s" % contact.name)
+                item.setTitle_(NSLocalizedString("Request Screen Sharing from %s" % contact.name, "Screen sharing menu item"))
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
                 item = self.screenShareMenu.itemWithTag_(2)
-                item.setTitle_("Share My Screen with %s" % contact.name)
+                item.setTitle_(NSLocalizedString("Share My Screen with %s" % contact.name, "Screen sharing menu item"))
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
         elif menu == self.contactsMenu:
@@ -4865,13 +4864,13 @@ class ContactWindowController(NSWindowController):
             item = self.contactsMenu.itemWithTag_(36) # Expand Group
             item.setEnabled_(selected_group)
             if selected_group:
-                item.setTitle_('Expand Group' if not selected_group.group.expanded else 'Collapse Group')
+                item.setTitle_(NSLocalizedString("Expand Group", "Contacts menu item") if not selected_group.group.expanded else NSLocalizedString("Collapse Group", "Contacts menu item"))
             else:
-                item.setTitle_('Toggle Group Expansion')
+                item.setTitle_(NSLocalizedString("Toggle Group Expansion", "Contacts menu item"))
 
             item = self.contactsMenu.itemWithTag_(42) # Dialpad
             item.setEnabled_(True)
-            item.setTitle_(u'Show Dialpad' if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else u'Hide Dialpad')
+            item.setTitle_(NSLocalizedString("Show Dialpad", "Contacts menu item") if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else NSLocalizedString("Hide Dialpad", "Contacts menu item"))
 
 
     def selectInputDevice_(self, sender):
@@ -4893,7 +4892,7 @@ class ContactWindowController(NSWindowController):
     def selectInputOutputDevice_(self, sender):
         settings = SIPSimpleSettings()
         dev = sender.representedObject()
-        if dev == u'Built-in Microphone and Output':
+        if dev == 'Built-in Microphone and Output':
             try:
                 input_device = (input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))).next()
             except StopIteration:
@@ -5165,7 +5164,7 @@ class ContactWindowController(NSWindowController):
 
                 # detail will be reset on receival of next conference-info update
                 if uri in session.pending_removal_participants:
-                    contact.detail = 'Removal requested...'
+                    contact.detail = NSLocalizedString("Removal requested...", "Participants contextual menu item")
 
                 if own_uri and own_icon and contact.uri == own_uri:
                     contact.avatar = Avatar(own_icon)
@@ -5217,9 +5216,9 @@ class ContactWindowController(NSWindowController):
                     display_name = unicode(conf_desc.display_text)
                 self.addContact(remote_uri, display_name)
             elif tag == PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
-                message= u"You will request the conference server to remove %s from the room. Are your sure?" % display_name
+                message= NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?" % display_name, "Participants menu item")
                 message = re.sub("%", "%%", message)
-                ret = NSRunAlertPanel(u"Remove from conference", message, u"Remove", u"Cancel", None)
+                ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Alert panel title"), message, NSLocalizedString("Remove", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
             elif tag == PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
@@ -5331,7 +5330,7 @@ class ContactWindowController(NSWindowController):
                             contact = BlinkConferenceContact(uri, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                         else:
                             contact = BlinkConferenceContact(uri=uri, name=uri)
-                        contact.detail = 'Invitation sent...'
+                        contact.detail = NSLocalizedString("Invitation sent...", "Contact detail")
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
                         session.log_info(u"Invite %s to conference" % uri)
