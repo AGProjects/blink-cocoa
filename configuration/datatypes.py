@@ -7,6 +7,8 @@ Definitions of datatypes for use in settings extensions.
 
 __all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserIcon', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername', 'NightVolume']
 
+from Foundation import NSLocalizedString
+
 import ldap
 import os
 import hashlib
@@ -41,7 +43,7 @@ class SoundFile(object):
         self.path = path
         self.volume = int(volume)
         if self.volume < 0 or self.volume > 100:
-            raise ValueError("illegal volume level: %d" % self.volume)
+            raise ValueError(NSLocalizedString("illegal volume level: %d" % self.volume, "Preference option error"))
 
     def __getstate__(self):
         return u'%s,%s' % (self.__dict__['path'], self.volume)
@@ -75,13 +77,13 @@ class NightVolume(object):
         self.volume = int(volume)
 
         if self.volume < 0 or self.volume > 100:
-            raise ValueError("illegal volume level: %d" % self.volume)
+            raise ValueError(NSLocalizedString("illegal volume level: %d" % self.volume, "Preference option error"))
 
         if self.start_hour < 0 or self.start_hour > 23:
-            raise ValueError("illegal start hour value: %d" % self.start_hour)
+            raise ValueError(NSLocalizedString("illegal start hour value: %d" % self.start_hour, "Preference option error"))
 
         if self.end_hour < 0 or self.end_hour > 23:
-            raise ValueError("illegal end hour value: %d" % self.end_hour)
+            raise ValueError(NSLocalizedString("illegal end hour value: %d" % self.end_hour, "Preference option error"))
 
     def __getstate__(self):
         return u'%s,%s,%s' % (self.start_hour, self.end_hour, self.volume)
@@ -265,12 +267,12 @@ class HTTPURL(object):
     def __init__(self, value):
         url = urlparse.urlparse(value)
         if url.scheme not in (u'http', u'https'):
-            raise ValueError("illegal HTTP URL scheme (http and https only): %s" % url.scheme)
+            raise ValueError(NSLocalizedString("illegal HTTP URL scheme (http and https only): %s" % url.scheme, "Preference option error"))
         # check port and hostname
         Hostname(url.hostname)
         if url.port is not None:
             if not (0 < url.port < 65536):
-                raise ValueError("illegal port value: %d" % url.port)
+                raise ValueError(NSLocalizedString("illegal port value: %d" % url.port, "Preference option error"))
         self.url = url
 
     def __getstate__(self):
@@ -299,7 +301,7 @@ class LDAPdn(str):
         try:
             ldap.dn.str2dn(value)
         except ldap.DECODING_ERROR:
-            raise ValueError("illegal LDAP DN format: %s" % value)
+            raise ValueError(NSLocalizedString("illegal LDAP DN format: %s" % value, "Preference option error"))
 
         return value
 
@@ -312,7 +314,7 @@ class LDAPusername(str):
             try:
                 ldap.dn.str2dn(value)
             except ldap.DECODING_ERROR:
-                raise ValueError("illegal LDAP DN format for username: %s" % value)
+                raise ValueError(NSLocalizedString("illegal LDAP DN format for username: %s" % value, "Preference option error"))
 
         return value
 
@@ -324,7 +326,7 @@ class UserIcon(object):
             try:
                 data = open(self.path, 'r').read()
             except OSError:
-                raise ValueError('invalid path specified: %r' % path)
+                raise ValueError(NSLocalizedString("invalid path specified: %r" % path, "Preference option error"))
             else:
                 hash = hashlib.sha512(data).hexdigest()
         self.hash = hash
