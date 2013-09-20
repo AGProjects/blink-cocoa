@@ -226,8 +226,6 @@
 		1F274898138930580052C384 /* VideoView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F274895138930580052C384 /* VideoView.py */; };
 		1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
-		1F27973515D24EAB00FB33D9 /* EMKeychainItem.h in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F414868A82006F2FD8 /* EMKeychainItem.h */; };
-		1F27973615D24EAB00FB33D9 /* EMKeychainItem.m in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F27973815D24F6200FB33D9 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
@@ -396,7 +394,6 @@
 		1F35D00917894FFF00C6FE38 /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F35D00A17894FFF00C6FE38 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F35D00B17894FFF00C6FE38 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
-		1F35D00C17894FFF00C6FE38 /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F35D00D17894FFF00C6FE38 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		1F35D00E17894FFF00C6FE38 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F35D00F17894FFF00C6FE38 /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
@@ -861,8 +858,6 @@
 		1F8DC409135084FA0034815C /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; };
 		1F8DC40C135084FA0034815C /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; };
 		1F8DC40D135084FA0034815C /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; };
-		1F8DC9121351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
-		1F8DC9131351D7460034815C /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
@@ -1078,6 +1073,23 @@
 		1FF32B5B17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
 		1FF32B5C17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
 		1FF32B5D17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
+		1FF32B6C17ED021400E63A20 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF32B6B17ED021400E63A20 /* ScriptingBridge.framework */; };
+		1FF32B6D17ED0C9100E63A20 /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
+		1FF32B6E17ED0C9B00E63A20 /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
+		1FF32B6F17ED0D8600E63A20 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
+		1FF32B7017ED0D8900E63A20 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
+		1FF32B7117ED0D8D00E63A20 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
+		1FF32B7217ED0DA400E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
+		1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
+		1FF32B7417ED0DA600E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
+		1FF32B7517ED0DA600E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
+		1FF32B7617ED0DAD00E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
+		1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
+		1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
+		1FF32B7917ED0DB300E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
+		1FF32B7A17ED0DD700E63A20 /* Info-pro.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF160812B5639F00F71BE5 /* Info-pro.plist */; };
+		1FF32B7B17ED0DDC00E63A20 /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
+		1FF32B7C17ED0DE200E63A20 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D1107310486CEB800E47090 /* Info.plist */; };
 		1FF3737017C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
 		1FF3737117C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
 		1FF3737217C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
@@ -1477,76 +1489,6 @@
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1F5BC11A17E5C09D00D1D8BE /* Copy Spanish translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/es/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Spanish translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F5BC11C17E5C44800D1D8BE /* Copy Spanish translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/es/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Spanish translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F5BC11E17E5C45800D1D8BE /* Copy Spanish translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/es/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Spanish translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F5BC12017E5C48600D1D8BE /* Copy Spanish translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/es/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Spanish translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F5BC2EA17E64C7600D1D8BE /* Copy Romanian translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/ro/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Romanian translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F5BC2F217E64CD800D1D8BE /* Copy Romanian translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/ro/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Romanian translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1F5BC2F417E64CEE00D1D8BE /* Copy Romanian translation */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = translations/po/locale/ro/LC_MESSAGES;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			name = "Copy Romanian translation";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1F8DC3CC135084FA0034815C /* Copy Smiley Files (default) */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1742,8 +1684,6 @@
 			dstPath = interfaces;
 			dstSubfolderSpec = 7;
 			files = (
-				1F27973515D24EAB00FB33D9 /* EMKeychainItem.h in Copy Interfaces Package */,
-				1F27973615D24EAB00FB33D9 /* EMKeychainItem.m in Copy Interfaces Package */,
 				8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */,
 				8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */,
 			);
@@ -2074,18 +2014,19 @@
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
-		1FF32B4C17EC83F000E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		1FF32B4E17EC83F900E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file; name = ro; path = ro.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1FF32B5E17EC842B00E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file; name = en; path = en.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
-		1FF32B6317EC86B000E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file; name = ro; path = ro.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1FF32B4C17EC83F000E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B4E17EC83F900E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B5E17EC842B00E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1FF32B6317EC86B000E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		1FF32B6417EC86B200E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		1FF32B6517EC86B500E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
-		1FF32B6617EC872D00E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file; name = ro; path = ro.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1FF32B6717EC872E00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file; name = es; path = es.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1FF32B6817EC873000E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1FF32B6917EC879D00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file; name = es; path = es.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		1FF32B6A17EC879F00E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file; name = nl; path = nl.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B6617EC872D00E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B6717EC872E00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B6817EC873000E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1FF32B6917EC879D00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B6A17EC879F00E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1FF32B6B17ED021400E63A20 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
 		1FF3736F17C9E656007418EB /* ChatOTR.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatOTR.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
@@ -2292,6 +2233,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FF32B6C17ED021400E63A20 /* ScriptingBridge.framework in Frameworks */,
 				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
 				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
@@ -2497,6 +2439,7 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				1FF32B6B17ED021400E63A20 /* ScriptingBridge.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -2581,6 +2524,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FE50E59164D1B6200840B18 /* presence */,
 				1F683AC717CD32960090A902 /* locked-red.png */,
 				1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */,
 				1F6963FB17BF777D00985747 /* locked-orange.png */,
@@ -2591,7 +2535,6 @@
 				1F94DEA8168B758D00168FBA /* blink-gold.icns */,
 				1FCE2BDE166BABBC00090A86 /* time.png */,
 				1F9BE2E1167B7AC8006DFF3F /* lupa.png */,
-				1FE50E59164D1B6200840B18 /* presence */,
 				1FE59BB8161621BB00CD7B21 /* location.png */,
 				1FD7AB8915D2F18B00ECBAF5 /* blocked.png */,
 				1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */,
@@ -2985,8 +2928,6 @@
 				1F22735D12B554F50010A8B2 /* Copy Interfaces Package */,
 				1F22736D12B555550010A8B2 /* Copy Libraries */,
 				1F22738C12B555C70010A8B2 /* Copy Frameworks */,
-				1F5BC11A17E5C09D00D1D8BE /* Copy Spanish translation */,
-				1F5BC2EA17E64C7600D1D8BE /* Copy Romanian translation */,
 			);
 			buildRules = (
 			);
@@ -3010,8 +2951,6 @@
 				1F35D0A017894FFF00C6FE38 /* Copy Interfaces Package */,
 				1F35D0A317894FFF00C6FE38 /* Copy Libraries */,
 				1F35D0A517894FFF00C6FE38 /* Copy Frameworks */,
-				1F5BC11E17E5C45800D1D8BE /* Copy Spanish translation */,
-				1F5BC2F417E64CEE00D1D8BE /* Copy Romanian translation */,
 			);
 			buildRules = (
 			);
@@ -3035,8 +2974,6 @@
 				1F8DC400135084FA0034815C /* Copy Interfaces Package */,
 				1F8DC403135084FA0034815C /* Copy Libraries */,
 				1F8DC405135084FA0034815C /* Copy Frameworks */,
-				1F5BC11C17E5C44800D1D8BE /* Copy Spanish translation */,
-				1F5BC2F217E64CD800D1D8BE /* Copy Romanian translation */,
 			);
 			buildRules = (
 			);
@@ -3060,7 +2997,6 @@
 				857DA94D114EB82B00C798A3 /* Copy Interfaces Package */,
 				2B0C1E8B10781A62008266C7 /* Copy Libraries */,
 				2B87567D10B6DD51002FD271 /* Copy Frameworks */,
-				1F5BC12017E5C48600D1D8BE /* Copy Spanish translation */,
 			);
 			buildRules = (
 			);
@@ -3255,7 +3191,6 @@
 				1F2A32351328CEE00078F01D /* paused_16.png in Resources */,
 				1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
-				1F8DC9131351D7460034815C /* Info-lite.plist in Resources */,
 				DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */,
 				1F17C25F137335D700DF4724 /* silence.wav in Resources */,
 				DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
@@ -3358,6 +3293,9 @@
 				1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26417E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */,
+				1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */,
+				1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */,
+				1FF32B7A17ED0DD700E63A20 /* Info-pro.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3509,7 +3447,6 @@
 				1F35D00917894FFF00C6FE38 /* paused_16.png in Resources */,
 				1F35D00A17894FFF00C6FE38 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F35D00B17894FFF00C6FE38 /* ConferenceConfigurationPanel.py in Resources */,
-				1F35D00C17894FFF00C6FE38 /* Info-lite.plist in Resources */,
 				1F35D00D17894FFF00C6FE38 /* resources.py in Resources */,
 				1F35D00E17894FFF00C6FE38 /* silence.wav in Resources */,
 				1F35D00F17894FFF00C6FE38 /* ConferenceFileCell.py in Resources */,
@@ -3614,6 +3551,8 @@
 				1F5BC26017E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26617E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC30017E66DAC00D1D8BE /* Localizable.strings in Resources */,
+				1FF32B7517ED0DA600E63A20 /* blink-gold.icns in Resources */,
+				1FF32B7917ED0DB300E63A20 /* blink-crypto.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3866,6 +3805,10 @@
 				1F5BC25F17E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26517E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC2FF17E66DAC00D1D8BE /* Localizable.strings in Resources */,
+				1FF32B7117ED0D8D00E63A20 /* silence.wav in Resources */,
+				1FF32B7417ED0DA600E63A20 /* blink-gold.icns in Resources */,
+				1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */,
+				1FF32B7B17ED0DDC00E63A20 /* Info-lite.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4017,7 +3960,6 @@
 				1F2A32361328CEE00078F01D /* paused_16.png in Resources */,
 				1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
 				1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
-				1F8DC9121351D7460034815C /* Info-lite.plist in Resources */,
 				DEFD8CA2135DF34400456E86 /* resources.py in Resources */,
 				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
@@ -4116,6 +4058,13 @@
 				1F5BC25D17E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26317E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC2FD17E66DAC00D1D8BE /* Localizable.strings in Resources */,
+				1FF32B6D17ED0C9100E63A20 /* Updater.xib in Resources */,
+				1FF32B6E17ED0C9B00E63A20 /* Updater.py in Resources */,
+				1FF32B6F17ED0D8600E63A20 /* zrtp-securemode.wav in Resources */,
+				1FF32B7017ED0D8900E63A20 /* zrtp-security-failed.wav in Resources */,
+				1FF32B7217ED0DA400E63A20 /* blink-gold.icns in Resources */,
+				1FF32B7617ED0DAD00E63A20 /* blink-crypto.icns in Resources */,
+				1FF32B7C17ED0DE200E63A20 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4920,7 +4869,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4943,8 +4892,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
+				PROVISIONING_PROFILE = "235BCC69-D063-43EC-B0EF-704523DE19D4";
+				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -4955,6 +4907,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4975,8 +4928,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
+				PROVISIONING_PROFILE = "235BCC69-D063-43EC-B0EF-704523DE19D4";
+				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 			};
