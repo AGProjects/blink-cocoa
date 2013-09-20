@@ -3,7 +3,7 @@
 
 from __future__ import with_statement
 
-from Foundation import NSBundle
+from Foundation import NSBundle, NSLocalizedString
 from AppKit import NSApp, NSRunAlertPanel
 
 import cjson
@@ -486,8 +486,8 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPEngineDidFail(self, sender, data):
-        NSRunAlertPanel("Fatal Error Encountered", "There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.",
-                        "Shut Down", None, None)
+        NSRunAlertPanel(NSLocalizedString("Fatal Error Encountered", "Alert panel title"), NSLocalizedString("There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.", "Alert panel label"),
+                        NSLocalizedString("Shut Down", "Alert panel button"), None, None)
         import signal
         BlinkLogger().log_info(u"A fatal error occurred, forcing termination of Blink")
         os.kill(os.getpid(), signal.SIGTERM)
@@ -546,12 +546,12 @@ class SIPManager(object):
         if summary.messages_waiting and growl_data.new_messages > 0:
             self.notification_center.post_notification("GrowlGotMWI", sender=self, data=growl_data)
 
-            nc_title = 'New Voicemail Message' if new_messages == 1 else 'New Voicemail Messages'
-            nc_subtitle = 'On Voicemail Server'
+            nc_title = NSLocalizedString("New Voicemail Message", "System notification title") if new_messages == 1 else NSLocalizedString("New Voicemail Messages", "System notification title")
+            nc_subtitle = NSLocalizedString("On Voicemail Server", "System notification subtitle")
             if old_messages > 0:
-                nc_body = 'You have %d new and %d old voicemail messages' % (new_messages, old_messages)
+                nc_body = NSLocalizedString("You have %d new and %d old voicemail messages" % (new_messages, old_messages), "System notification body")
             else:
-                nc_body = 'You have %d new voicemail %s' % (new_messages, 'message' if new_messages == 1 else 'messages')
+                nc_body = NSLocalizedString("You have %d new voicemail %s" % new_messages, "System notification body")
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
