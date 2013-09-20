@@ -1134,7 +1134,8 @@ class SessionController(NSObject):
                             self.end()
                     return True
                 else:
-                    self.log_info("Media Stream proposal is already in progress")
+                    self.log_info("Another proposal is already in progress")
+                    self.end()
                     return False
 
             elif not self.streamHandlers and streamHandler.stream is None: # 3
