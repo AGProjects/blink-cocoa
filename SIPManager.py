@@ -551,7 +551,7 @@ class SIPManager(object):
             if old_messages > 0:
                 nc_body = NSLocalizedString("You have %d new and %d old voicemail messages" % (new_messages, old_messages), "System notification body")
             else:
-                nc_body = NSLocalizedString("You have %d new voicemail %s" % new_messages, "System notification body")
+                nc_body = NSLocalizedString("You have %d new voicemail messages" % new_messages, "System notification body")
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
