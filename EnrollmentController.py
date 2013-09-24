@@ -5,12 +5,14 @@ from Foundation import (NSObject,
                         NSBundle,
                         NSUserDefaults,
                         NSFullUserName)
+
 from AppKit import (NSApp,
                     NSCancelButton,
                     NSOKButton,
                     NSOnState,
                     NSOffState,
                     NSRunAlertPanel,
+                    NSLocalizedString,
                     NSURL,
                     NSWorkspace)
 import objc
@@ -142,19 +144,20 @@ class EnrollmentController(NSObject):
             password = unicode(self.passwordText.stringValue())
 
             if not address or "@" not in address:
-                NSRunAlertPanel("Sign In to SIP Account", "Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com",
-                                "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Alert panel title"), NSLocalizedString("Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com", "Alert panel label"),
+                                NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
 
             if self.allowed_domains:
                 domain = address.split("@")[1]
                 if domain not in self.allowed_domains:
-                    NSRunAlertPanel("Sign In to SIP Account", "Invalid domain name chosen. Valid domain names are: %s" % ",".join(self.allowed_domains), "OK", None, None)
+                    _domains = ",".join(self.allowed_domains)
+                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Alert panel title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s" % _domains), NSLocalizedString("OK", "Alert panel button"), None, None)
                     return False
 
             if not password:
-                NSRunAlertPanel("Sign In to SIP Account", "Please enter your account password.",
-                                "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Alert panel title"), NSLocalizedString("Please enter your account password.", "Alert panel label"),
+                                NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
             return True
         else:
@@ -166,31 +169,31 @@ class EnrollmentController(NSObject):
             email = unicode(self.newEmailText.stringValue())
 
             if not display_name:
-                NSRunAlertPanel("Sign Up For a SIP Account", "Please enter your Display Name.",
-                    "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Alert panel title"), NSLocalizedString("Please enter your Display Name.", "Alert panel label"),
+                    NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
 
             if not username.strip():
-                NSRunAlertPanel("Sign Up For a SIP Account", "Please choose a Username for your account.",
-                    "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Alert panel title"), NSLocalizedString("Please choose a Username for your account.", "Alert panel label"),
+                    NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
 
             if not re.match("^[1-9a-z][0-9a-z_.-]{2,65}[0-9a-z]$", username):
-                NSRunAlertPanel("Sign Up For a SIP Account", "The Username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter",
-                    "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Alert panel title"), NSLocalizedString("The Username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter", "Alert panel label"),
+                    NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
 
             def validate_email(email):
                 return "@" in email
 
             if not password:
-                NSRunAlertPanel("Sign Up For a SIP Account", "Please enter a Password for your new SIP Account.", "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Alert panel title"), NSLocalizedString("Please enter a Password for your new SIP Account.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
             if password != password2:
-                NSRunAlertPanel("Sign Up For a SIP Account", "Entered Password confirmation doesn't match.", "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Alert panel title"), NSLocalizedString("Entered Password confirmation doesn't match.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
             if not email or not validate_email(email):
-                NSRunAlertPanel("Sign Up For a SIP Account", "Please enter a valid Email Address.", "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Alert panel title"), NSLocalizedString("Please enter a valid Email Address.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
                 return False
 
             return True
@@ -215,7 +218,7 @@ class EnrollmentController(NSObject):
 
             account.save()
         except ValueError, e:
-            NSRunAlertPanel("Sign In to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Alert panel title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return False
 
         AccountManager().default_account = account
@@ -233,16 +236,16 @@ class EnrollmentController(NSObject):
         welcome.setStringValue_("Add New Account")
 
         descr = self.window.contentView().viewWithTag_(101)
-        descr.setStringValue_("Select whether you want to add a SIP Account you already\nhave or create a new one.")
+        descr.setStringValue_(NSLocalizedString("Select whether you want to add a SIP Account you already\nhave or create a new one.", "Enrollment panel label"))
 
         matrix = self.window.contentView().viewWithTag_(102)
-        matrix.cellWithTag_(1).setTitle_("Add an Existing SIP Account")
+        matrix.cellWithTag_(1).setTitle_(NSLocalizedString("Add an Existing SIP Account", "Enrollment panel label"))
 
         cancel = self.window.contentView().viewWithTag_(110)
-        cancel.setTitle_("Cancel")
+        cancel.setTitle_(NSLocalizedString("Cancel", "Alert panel button"))
 
         cancel = self.window.contentView().viewWithTag_(111)
-        cancel.setTitle_("Add")
+        cancel.setTitle_(NSLocalizedString("Add", "Alert panel button"))
 
     def createNewAccount(self):
         display_name = unicode(self.newDisplayNameText.stringValue())
@@ -362,7 +365,7 @@ class EnrollmentController(NSObject):
                     sip_address = None
         else:
             sip_address = None
-            error_message = "No response received from Enrollment Server"
+            error_message = NSLocalizedString("No response received from Enrollment Server", "Enrollment panel label")
 
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
@@ -370,14 +373,14 @@ class EnrollmentController(NSObject):
         self.domainButton.setHidden_(False)
 
         if sip_address is None:
-            NSRunAlertPanel("Sign Up to SIP Account",
-                            "Error creating SIP account: %s" % error_message, "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Alert panel title"),
+                            NSLocalizedString("Error creating SIP account: %s" % error_message, "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return False
 
         try:
             account = Account(str(sip_address))
         except ValueError, e:
-            NSRunAlertPanel("Sign Up to SIP Account", "Cannot add SIP Account: %s"%str(e), "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Alert panel title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             return False
         else:
             NSApp.delegate().contactsWindowController.created_accounts.add(account.id)
@@ -423,7 +426,7 @@ class EnrollmentController(NSObject):
 
         account.save()
 
-        NSRunAlertPanel("SIP Account Created", "Your new SIP Address is:\n\n%s"%sip_address, "Continue", None, None)
+        NSRunAlertPanel(NSLocalizedString("SIP Account Created", "Alert panel title"), NSLocalizedString("Your new SIP Address is:\n\n%s" % sip_address, "Alert panel label"), NSLocalizedString("Continue", "Alert panel button"), None, None)
 
         # enable account only after Continue pressed to give server time to update
         account.enabled = True
