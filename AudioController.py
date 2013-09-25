@@ -25,6 +25,7 @@ from Foundation import (NSBundle,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSString,
+                        NSLocalizedString,
                         NSThread,
                         NSTimer,
                         NSZeroPoint,
@@ -160,37 +161,38 @@ class AudioController(MediaStream):
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)
-        item.setTitle_("Add %s to Contacts" % format_identity_to_string(self.sessionController.remotePartyObject))
+        item.setTitle_(NSLocalizedString("Add %s to Contacts" % format_identity_to_string(self.sessionController.remotePartyObject), "Audio contextual menu"))
 
-        self.view.accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Session to %s' % format_identity_to_string(self.sessionController.remotePartyObject)), NSAccessibilityTitleAttribute)
+        _label = format_identity_to_string(self.sessionController.remotePartyObject)
+        self.view.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Session to %s" % _label, "Accesibility outlet description"), NSAccessibilityTitleAttribute)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.transferSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
-        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Transfer Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Transfer Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hold Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Record Audio", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hangup Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.conferenceSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
-        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Mute Participant'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Mute Participant", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hold Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Record Audio", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hangup Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.audioSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
-        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hold Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Record Audio'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Hangup Call'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hold Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Record Audio", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hangup Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
 
         self.elapsed.setStringValue_("")
         self.info.setStringValue_("")
@@ -249,17 +251,17 @@ class AudioController(MediaStream):
             self.sessionController.log_info("Sending session to answering machine")
             self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.audioSegmented.setEnabled_forSegment_(False, 1)
-            self.audioSegmented.cell().setToolTip_forSegment_("Take over the call", 0)
+            self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio session tooltip"), 0)
 
             self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.transferSegmented.setEnabled_forSegment_(False, 1)
             self.transferSegmented.setEnabled_forSegment_(False, 2)
-            self.transferSegmented.cell().setToolTip_forSegment_("Take over the call", 0)
+            self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio session tooltip"), 0)
 
             self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 1)
             self.encryptionSegmented.setEnabled_forSegment_(False, 2)
             self.encryptionSegmented.setEnabled_forSegment_(False, 3)
-            self.encryptionSegmented.cell().setToolTip_forSegment_("Take over the call", 1)
+            self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio session tooltip"), 1)
 
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
@@ -285,7 +287,7 @@ class AudioController(MediaStream):
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
             if detail.startswith("DNS Lookup"):
-                self.changeStatus(STREAM_FAILED, 'DNS Lookup failure')
+                self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failure", "Audio session label"))
             else:
                 self.changeStatus(STREAM_FAILED, detail)
         elif state == STATE_FINISHED:
@@ -333,21 +335,21 @@ class AudioController(MediaStream):
     def answerCall(self):
         self.sessionController.log_info("Taking over call on answering machine...")
 
-        self.audioSegmented.cell().setToolTip_forSegment_("Put the call on hold", 0)
+        self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio session tooltip"), 0)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
         self.audioSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 1)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
 
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 0)
-        self.transferSegmented.cell().setToolTip_forSegment_("Call transfer", 1)
-        self.transferSegmented.cell().setToolTip_forSegment_("Put the call on hold", 1)
+        self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio session tooltip"), 1)
+        self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio session tooltip"), 1)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
         self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
 
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 1)
-        self.encryptionSegmented.cell().setToolTip_forSegment_("Call transfer", 2)
-        self.encryptionSegmented.cell().setToolTip_forSegment_("Put the call on hold", 2)
+        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio session tooltip"), 2)
+        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio session tooltip"), 2)
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 2)
         self.encryptionSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 3)
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 3)
@@ -553,7 +555,7 @@ class AudioController(MediaStream):
         if self.stream and self.stream.codec and self.stream.sample_rate:
             if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.session.remote_identity.uri.user.isdigit():
                 self.audioStatus.setTextColor_(NSColor.orangeColor())
-                self.audioStatus.setStringValue_(u"Enter DTMF using keyboard")
+                self.audioStatus.setStringValue_(NSLocalizedString("Enter DTMF using keyboard", "Audio status label"))
                 self.audioStatus.sizeToFit()
             else:
                 if not self.hangup_reason:
@@ -581,13 +583,13 @@ class AudioController(MediaStream):
             return
         if self.holdByLocal and not self.answeringMachine:
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-            self.audioStatus.setStringValue_(u"On Hold")
+            self.audioStatus.setStringValue_(NSLocalizedString("On Hold", "Audio status label"))
         elif self.holdByRemote and not self.answeringMachine:
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-            self.audioStatus.setStringValue_(u"Hold by Remote")
+            self.audioStatus.setStringValue_(NSLocalizedString("Hold by Remote", "Audio status label"))
         else:
             if self.answeringMachine:
-                self.audioStatus.setStringValue_(u"Answering machine active")
+                self.audioStatus.setStringValue_(NSLocalizedString("Answering machine active", "Audio status label"))
             elif self.stream.sample_rate and self.stream.codec:
                 sample_rate = self.stream.sample_rate/1000
                 codec = beautify_audio_codec(self.stream.codec)
@@ -652,15 +654,15 @@ class AudioController(MediaStream):
         status = self.status
 
         if status == STREAM_WAITING_DNS_LOOKUP:
-            self.updateAudioStatusWithSessionState(u"Finding Destination...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Finding Destination...", "Audio status label"))
         elif status == STREAM_RINGING:
-            self.updateAudioStatusWithSessionState(u"Ringing...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Ringing...", "Audio status label"))
         elif status == STREAM_CONNECTING:
             self.updateTLSIcon()
-            self.updateAudioStatusWithSessionState(u"Connecting...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Connecting...", "Audio status label"))
         elif status == STREAM_PROPOSING:
             self.updateTLSIcon()
-            self.updateAudioStatusWithSessionState(u"Adding Audio...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Adding Audio...", "Audio status label"))
         elif status == STREAM_CONNECTED:
             if not self.answeringMachine:
                 if self.holdByLocal:
@@ -698,24 +700,24 @@ class AudioController(MediaStream):
             NSApp.delegate().contactsWindowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
             if self.sessionController.hasStreamOfType("chat"):
-                self.updateAudioStatusWithSessionState(u"Audio Removed")
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Audio Removed", "Audio status label"))
             elif oldstatus == STREAM_WAITING_DNS_LOOKUP:
-                self.updateAudioStatusWithSessionState(u"Session Cancelled")
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             else:
-                self.updateAudioStatusWithSessionState(u"Audio Ended")
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Audio Ended", "Audio status label"))
         elif status == STREAM_CANCELLING:
-            self.updateAudioStatusWithSessionState(u"Cancelling Request...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Cancelling Request...", "Audio status label"))
         elif status == STREAM_INCOMING:
             self.updateTLSIcon()
-            self.updateAudioStatusWithSessionState(u"Accepting Session...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Accepting Session...", "Audio status label"))
         elif status == STREAM_IDLE:
             if self.hangedUp and oldstatus in (STREAM_INCOMING, STREAM_CONNECTING, STREAM_PROPOSING):
-                self.updateAudioStatusWithSessionState(u"Session Cancelled")
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             elif not self.transferred:
                 if fail_reason == "remote":
-                    self.updateAudioStatusWithSessionState(u"Session Ended by Remote")
+                    self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended by Remote", "Audio status label"))
                 elif fail_reason == "local":
-                    status = self.hangup_reason if self.hangup_reason else u"Session Ended"
+                    status = self.hangup_reason if self.hangup_reason else NSLocalizedString("Session Ended", "Audio status label")
                     self.updateAudioStatusWithSessionState(status)
                 else:
                     self.updateAudioStatusWithSessionState(fail_reason)
@@ -723,11 +725,11 @@ class AudioController(MediaStream):
         elif status == STREAM_FAILED:
             self.audioEndTime = time.time()
             if self.hangedUp and oldstatus in (STREAM_CONNECTING, STREAM_PROPOSING):
-                self.updateAudioStatusWithSessionState(u"Session Cancelled")
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             elif oldstatus == STREAM_CANCELLING:
-                self.updateAudioStatusWithSessionState(u"Request Cancelled", True)
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Request Cancelled", "Audio status label"), True)
             elif oldstatus != STREAM_FAILED:
-                self.updateAudioStatusWithSessionState(fail_reason[0:32].title() if fail_reason else "Error", True)
+                self.updateAudioStatusWithSessionState(fail_reason[0:32].title() if fail_reason else NSLocalizedString("Error", "Audio status label"), True)
 
         if status == STREAM_CONNECTED:
             self.audioSegmented.setEnabled_forSegment_(True, 0)
@@ -931,16 +933,17 @@ class AudioController(MediaStream):
 
             item = menu.itemWithTag_(21)
             item.setState_(NSOnState if self.zrtp_active else NSOffState)
-            title = '%s using Diffie-Hellman key exchange (zRTP)' % ('Encrypted' if self.zrtp_active else 'Encrypt')
+            _label = NSLocalizedString("Encrypted", "Menu item title") if self.zrtp_active else NSLocalizedString("Encrypt", "Menu item title")
+            title = NSLocalizedString("%s using Diffie-Hellman key exchange (zRTP)" % _label, "Menu item title")
             item.setTitle_(title)
 
             item = menu.itemWithTag_(22)
             item.setState_(NSOnState if self.zrtp_verified else NSOffState)
             item.setEnabled_(self.zrtp_active and self.zrtp_show_verify_phrase)
-            item.setTitle_('Identity Confirmed' if self.zrtp_verified else 'Confirm Identity by verbally comparing the phrase')
+            item.setTitle_(NSLocalizedString("Identity Confirmed", "Menu item title") if self.zrtp_verified else NSLocalizedString("Confirm Identity by verbally comparing the phrase", "Menu item title"))
 
             item = menu.itemWithTag_(23)
-            item.setTitle_('Show Confirm Identity Phrase' if not self.zrtp_show_verify_phrase else 'Hide Confirm Identity Phrase')
+            item.setTitle_(NSLocalizedString("Show Confirm Identity Phrase", "Menu item title") if not self.zrtp_show_verify_phrase else NSLocalizedString("Hide Confirm Identity Phrase", "Menu item title" ))
             item.setEnabled_(self.zrtp_active)
 
             item = menu.itemWithTag_(24)
@@ -959,7 +962,7 @@ class AudioController(MediaStream):
                 item.setTarget_(self)
                 item.setRepresentedObject_(session_controller)
 
-            item = menu.addItemWithTitle_action_keyEquivalent_(u'A contact by dragging this audio call over it', "", "")
+            item = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("A contact by dragging this audio call over it", "Menu item title"), "", "")
             item.setIndentationLevel_(1)
             item.setEnabled_(False)
 
@@ -987,9 +990,9 @@ class AudioController(MediaStream):
             else:
                 chatStream = self.sessionController.streamHandlerOfType("chat")
                 if chatStream:
-                    item.setTitle_('Remove Chat' if chatStream.status == STREAM_CONNECTED else 'Add Chat')
+                    item.setTitle_(NSLocalizedString("Remove Chat", "Menu item title") if chatStream.status == STREAM_CONNECTED else NSLocalizedString("Add Chat", "Menu item title"))
                 else:
-                    item.setTitle_('Add Chat')
+                    item.setTitle_(NSLocalizedString("Add Chat", "Menu item title"))
 
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
@@ -998,11 +1001,11 @@ class AudioController(MediaStream):
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
-            item.setTitle_("Request Screen from %s" % title)
+            item.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item title"))
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
             item = menu.itemWithTag_(12) # share local screen
-            item.setTitle_("Share My Screen with %s" % title)
+            item.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item title"))
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
             item = menu.itemWithTag_(13) # cancel
@@ -1011,17 +1014,17 @@ class AudioController(MediaStream):
                 screen_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
                 if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
                     item.setEnabled_(True)
-                    item.setTitle_("Cancel Screen Sharing Proposal")
+                    item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item title"))
                 elif screen_sharing_stream.status == STREAM_CONNECTED:
                     item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
-                    item.setTitle_("Stop Screen Sharing")
+                    item.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item title"))
             else:
-                item.setTitle_("Cancel Screen Sharing Proposal")
+                item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item title"))
             item = menu.itemWithTag_(20) # add to contacts
             item.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
             item = menu.itemWithTag_(30)
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
-            item.setTitle_('Hide Session Information' if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else 'Show Session Information')
+            item.setTitle_(NSLocalizedString("Hide Session Information", "Menu item title") if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else NSLocalizedString("Show Session Information", "Menu item title"))
 
             can_move_conference_to_server = self.isConferencing and AccountManager().default_account is not BonjourAccount()
             item = menu.itemWithTag_(40) # move conference to server
@@ -1132,8 +1135,8 @@ class AudioController(MediaStream):
             self.zrtp_show_verify_phrase = False
             self.zrtp_verified = False
             self.end()
-            self.hangup_reason = u"zRTP Verify Failed"
-            self.updateAudioStatusWithSessionState('Session Ended', True)
+            self.hangup_reason = NSLocalizedString("zRTP Verify Failed", "Audio session label")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio session label"), True)
 
         self.updateDuration()
         self.update_encryption_icon()
@@ -1283,7 +1286,7 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'ICE negotiation failed: %s' % data.reason)
-        self.updateAudioStatusWithSessionState(u"ICE Negotiation Failed", True)
+        self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio session label"), True)
         self.ice_negotiation_status = data.reason
         # TODO: remove stream if the reason is that all candidates failed probing
         #self.end()
@@ -1296,7 +1299,7 @@ class AudioController(MediaStream):
     def _NH_AudioStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
             self.sessionController.log_info(u'Audio stream timeout')
-            self.hangup_reason = u"Audio Timeout"
+            self.hangup_reason = NSLocalizedString("Audio Timeout", "Audio session label")
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()
 
@@ -1344,9 +1347,9 @@ class AudioController(MediaStream):
         growl_data.timestamp = ISOTimestamp.now()
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
-        nc_title = 'Audio Session Recorded'
+        nc_title = NSLocalizedString("Audio Session Recorded", "System notification title")
         nc_subtitle = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='full')
-        nc_body = 'This audio session has been recorded'
+        nc_body = NSLocalizedString("This audio session has been recorded", "System notification body")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     @run_in_gui_thread
@@ -1448,24 +1451,24 @@ class AudioController(MediaStream):
                 # stream was negotiated away
                 self.audioEndTime = time.time()
                 if self.sessionController.hasStreamOfType("chat"):
-                    self.changeStatus(STREAM_IDLE, "Audio Removed")
+                    self.changeStatus(STREAM_IDLE, NSLocalizedString("Audio Removed", "Audio status label"))
                 else:
-                    self.changeStatus(STREAM_IDLE, "Session Ended")
+                    self.changeStatus(STREAM_IDLE, NSLocalizedString("Session Ended", "Audio status label"))
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
         if data.state == 'GATHERING':
-            self.updateAudioStatusWithSessionState("Gathering ICE Candidates...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
         elif data.state == 'NEGOTIATION_START':
-            self.updateAudioStatusWithSessionState("Connecting...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Connecting...", "Audio status label"))
         elif data.state == 'NEGOTIATING':
-            self.updateAudioStatusWithSessionState("Negotiating ICE...")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Negotiating ICE...", "Audio status label"))
         elif data.state == 'GATHERING_COMPLETE':
-            self.updateAudioStatusWithSessionState("Gathering Complete")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Gathering Complete", "Audio status label"))
         elif data.state == 'RUNNING':
-            self.updateAudioStatusWithSessionState("ICE Negotiation Succeeded")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Succeeded", "Audio status label"))
         elif data.state == 'FAILED':
-            self.updateAudioStatusWithSessionState("ICE Negotiation Failed", True)
+            self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
@@ -1481,21 +1484,22 @@ class AudioController(MediaStream):
     _NH_BlinkSessionTransferNewOutgoing = _NH_BlinkSessionTransferNewIncoming
 
     def _NH_BlinkSessionTransferDidStart(self, sender, data):
-        self.updateTransferProgress("Transferring...")
+        self.updateTransferProgress(NSLocalizedString("Transferring...", "Audio status label"))
 
     def _NH_BlinkSessionTransferDidEnd(self, sender, data):
-        self.updateTransferProgress("Transfer Succeeded")
+        self.updateTransferProgress(NSLocalizedString("Transfer Succeeded", "Audio status label"))
         self.transferred = True
         self.transfer_in_progress = False
 
     def _NH_BlinkSessionTransferDidFail(self, sender, data):
-        self.updateTransferProgress("Transfer Rejected (%s)" % data.code if data.code in (486, 603) else "Transfer Failed (%s)" % data.code)
+        self.updateTransferProgress(NSLocalizedString("Transfer Rejected (%s)" % data.code, "Audio status label") if data.code in (486, 603) else NSLocalizedString("Transfer Failed (%s)" % data.code, "Audio status label"))
         self.transfer_in_progress = False
         self.transfer_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "transferFailed:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSEventTrackingRunLoopMode)
 
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
-        self.updateTransferProgress("Transfer: %s" % data.reason.capitalize())
+        reason = data.reason.capitalize()
+        self.updateTransferProgress(NSLocalizedString("Transfer: %s" % reason, "Audio status label"))
 
 

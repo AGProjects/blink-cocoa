@@ -26,6 +26,7 @@ from Foundation import (NSArray,
                         NSMenu,
                         NSPasteboard,
                         NSString,
+                        NSLocalizedString,
                         NSView,
                         NSWidth,
                         NSZeroPoint)
@@ -135,14 +136,14 @@ class AudioSession(NSView):
               NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(12), NSFontAttributeName))
         point = NSMakePoint(8, 6)
         if self.conferencing:
-            NSString.stringWithString_("Drop outside to remove from conference").drawAtPoint_withAttributes_(point,
+            NSString.stringWithString_(NSLocalizedString("Drop outside to remove from conference", "Audio session label")).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         else:
             audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers]
             if self.delegate.transferEnabled:
-                text = "Drop this over a session or contact" if len(audio_sessions) > 1 else "Drop this over a contact to transfer"
+                text = NSLocalizedString("Drop this over a session or contact", "Audio session label") if len(audio_sessions) > 1 else NSLocalizedString("Drop this over a contact to transfer", "Audio session label")
             else:
-                text = "Drop this over a session to conference"
+                text = NSLocalizedString("Drop this over a session to conference", "Audio session label")
             NSString.stringWithString_(text).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
 
