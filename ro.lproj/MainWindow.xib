@@ -83,7 +83,7 @@
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="238522557">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Despre Blink</string>
+									<string key="NSTitle">About Blink</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -92,7 +92,7 @@
 								</object>
 								<object class="NSMenuItem" id="134419964">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Verfică dacă este o versiune mai nouă...</string>
+									<string key="NSTitle">Check for Updates...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -101,7 +101,7 @@
 								</object>
 								<object class="NSMenuItem" id="785462561">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Donează dacă îți place programul</string>
+									<string key="NSTitle">Donate if you like the Software</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -123,7 +123,7 @@
 								</object>
 								<object class="NSMenuItem" id="867091754">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Obține Blink Pro...</string>
+									<string key="NSTitle">Get Blink Pro...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -132,7 +132,7 @@
 								</object>
 								<object class="NSMenuItem" id="149301072">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Obțtine SylkServer...</string>
+									<string key="NSTitle">Get SylkServer...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -155,7 +155,7 @@
 								<object class="NSMenuItem" id="442885301">
 									<reference key="NSMenu" ref="110575045"/>
 									<bool key="NSIsHidden">YES</bool>
-									<string key="NSTitle">Despre furnizorul de servicii...</string>
+									<string key="NSTitle">About Service Provider...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -165,7 +165,7 @@
 								<object class="NSMenuItem" id="284688065">
 									<reference key="NSMenu" ref="110575045"/>
 									<bool key="NSIsHidden">YES</bool>
-									<string key="NSTitle">Pagina de suport a furnizorul de servicii...</string>
+									<string key="NSTitle">Service Provider Support page...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -185,7 +185,7 @@
 								</object>
 								<object class="NSMenuItem" id="609285721">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Preferințe…</string>
+									<string key="NSTitle">Preferences…</string>
 									<string key="NSKeyEquiv">,</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -205,7 +205,7 @@
 								</object>
 								<object class="NSMenuItem" id="1046388886">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Servicii</string>
+									<string key="NSTitle">Services</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -213,7 +213,7 @@
 									<reference key="NSMixedImage" ref="600792618"/>
 									<string key="NSAction">submenuAction:</string>
 									<object class="NSMenu" key="NSSubmenu" id="752062318">
-										<string key="NSTitle">Servicii</string>
+										<string key="NSTitle">Services</string>
 										<array class="NSMutableArray" key="NSMenuItems"/>
 										<string key="NSName">_NSServicesMenu</string>
 									</object>
@@ -231,7 +231,7 @@
 								</object>
 								<object class="NSMenuItem" id="755159360">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Ascunde Blink</string>
+									<string key="NSTitle">Hide Blink</string>
 									<string key="NSKeyEquiv">h</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -241,7 +241,7 @@
 								</object>
 								<object class="NSMenuItem" id="342932134">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Ascunde alte fereste</string>
+									<string key="NSTitle">Hide Others</string>
 									<string key="NSKeyEquiv">h</string>
 									<int key="NSKeyEquivModMask">1572864</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -250,7 +250,7 @@
 								</object>
 								<object class="NSMenuItem" id="908899353">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Arată toate ferestrele</string>
+									<string key="NSTitle">Show All</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -270,7 +270,7 @@
 								</object>
 								<object class="NSMenuItem" id="632727374">
 									<reference key="NSMenu" ref="110575045"/>
-									<string key="NSTitle">Oprire</string>
+									<string key="NSTitle">Quit</string>
 									<string key="NSKeyEquiv">q</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -285,7 +285,7 @@
 					</object>
 					<object class="NSMenuItem" id="952259628">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Editează</string>
+						<string key="NSTitle">Edit</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -293,11 +293,11 @@
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="789758025">
-							<string key="NSTitle">Editează</string>
+							<string key="NSTitle">Edit</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="860595796">
 									<reference key="NSMenu" ref="789758025"/>
-									<string key="NSTitle">Copiază</string>
+									<string key="NSTitle">Copy</string>
 									<string key="NSKeyEquiv">c</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -306,7 +306,7 @@
 								</object>
 								<object class="NSMenuItem" id="279816284">
 									<reference key="NSMenu" ref="789758025"/>
-									<string key="NSTitle">Taie</string>
+									<string key="NSTitle">Cut</string>
 									<string key="NSKeyEquiv">x</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -315,7 +315,7 @@
 								</object>
 								<object class="NSMenuItem" id="29853731">
 									<reference key="NSMenu" ref="789758025"/>
-									<string key="NSTitle">Lipește</string>
+									<string key="NSTitle">Paste</string>
 									<string key="NSKeyEquiv">v</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -324,7 +324,7 @@
 								</object>
 								<object class="NSMenuItem" id="437104165">
 									<reference key="NSMenu" ref="789758025"/>
-									<string key="NSTitle">Șterge</string>
+									<string key="NSTitle">Delete</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -333,7 +333,7 @@
 								</object>
 								<object class="NSMenuItem" id="583158037">
 									<reference key="NSMenu" ref="789758025"/>
-									<string key="NSTitle">Selectează tot</string>
+									<string key="NSTitle">Select All</string>
 									<string key="NSKeyEquiv">a</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -345,18 +345,18 @@
 					</object>
 					<object class="NSMenuItem" id="556337794">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Contacte</string>
+						<string key="NSTitle">Contacts</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="728662662">
-							<string key="NSTitle">Contacte</string>
+							<string key="NSTitle">Contacts</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="960581010">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Adauga contact...</string>
+									<string key="NSTitle">Add Contact...</string>
 									<string key="NSKeyEquiv">n</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -366,7 +366,7 @@
 								</object>
 								<object class="NSMenuItem" id="273435786">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Adaugă contact blocat...</string>
+									<string key="NSTitle">Add Blocked Contact...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -374,7 +374,7 @@
 								</object>
 								<object class="NSMenuItem" id="726866533">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Găsește ontact</string>
+									<string key="NSTitle">Find Contact</string>
 									<string key="NSKeyEquiv">f</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -384,7 +384,7 @@
 								<object class="NSMenuItem" id="67186759">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Modifică contact</string>
+									<string key="NSTitle">Edit Contact</string>
 									<string key="NSKeyEquiv">e</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -395,7 +395,7 @@
 								<object class="NSMenuItem" id="212412478">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Șterge contact</string>
+									<string key="NSTitle">Delete Contact</string>
 									<string type="base64-UTF8" key="NSKeyEquiv">CA</string>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -404,7 +404,7 @@
 								</object>
 								<object class="NSMenuItem" id="16377066">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Arată disponibiliatea contactului</string>
+									<string key="NSTitle">Show Contact Availability</string>
 									<string key="NSKeyEquiv">i</string>
 									<int key="NSKeyEquivModMask">1572864</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -433,7 +433,7 @@
 								</object>
 								<object class="NSMenuItem" id="762259095">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Adaugă grup...</string>
+									<string key="NSTitle">Add Group...</string>
 									<string key="NSKeyEquiv">g</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -444,7 +444,7 @@
 								<object class="NSMenuItem" id="774495447">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Modifică grup...</string>
+									<string key="NSTitle">Rename Group...</string>
 									<string key="NSKeyEquiv">e</string>
 									<int key="NSKeyEquivModMask">1572864</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -455,7 +455,7 @@
 								<object class="NSMenuItem" id="910767059">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Șterge grup</string>
+									<string key="NSTitle">Delete Group</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -465,7 +465,7 @@
 								<object class="NSMenuItem" id="896498523">
 									<reference key="NSMenu" ref="728662662"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Expandează/colapsează grup</string>
+									<string key="NSTitle">Expand/Collapse Group</string>
 									<string key="NSKeyEquiv">l</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -485,7 +485,7 @@
 								</object>
 								<object class="NSMenuItem" id="341430315">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Arată tastatura telefonică</string>
+									<string key="NSTitle">Show Dialpad</string>
 									<string key="NSKeyEquiv">d</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -505,7 +505,7 @@
 								</object>
 								<object class="NSMenuItem" id="209324156">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Salvează contactele si grupurile</string>
+									<string key="NSTitle">Backup Contacts and Groups</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -514,7 +514,7 @@
 								</object>
 								<object class="NSMenuItem" id="450393502">
 									<reference key="NSMenu" ref="728662662"/>
-									<string key="NSTitle">Restaurează</string>
+									<string key="NSTitle">Restore</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -522,7 +522,7 @@
 									<string key="NSAction">submenuAction:</string>
 									<int key="NSTag">61</int>
 									<object class="NSMenu" key="NSSubmenu" id="1014145011">
-										<string key="NSTitle">Restaurează</string>
+										<string key="NSTitle">Restore</string>
 										<array class="NSMutableArray" key="NSMenuItems">
 											<object class="NSMenuItem" id="378466624">
 												<reference key="NSMenu" ref="1014145011"/>
@@ -536,7 +536,7 @@
 											</object>
 											<object class="NSMenuItem" id="378512869">
 												<reference key="NSMenu" ref="1014145011"/>
-												<string key="NSTitle">Deschide directoul cu salvări</string>
+												<string key="NSTitle">Open Backup Folder</string>
 												<string key="NSKeyEquiv"/>
 												<int key="NSMnemonicLoc">2147483647</int>
 												<reference key="NSOnImage" ref="660791971"/>
@@ -552,18 +552,18 @@
 					</object>
 					<object class="NSMenuItem" id="214498531">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Sună</string>
+						<string key="NSTitle">Call</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="1038306992">
-							<string key="NSTitle">Sună</string>
+							<string key="NSTitle">Call</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="437430946">
 									<reference key="NSMenu" ref="1038306992"/>
-									<string key="NSTitle">Sună din nou</string>
+									<string key="NSTitle">Redial</string>
 									<string key="NSKeyEquiv">r</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -584,7 +584,7 @@
 								</object>
 								<object class="NSMenuItem" id="868644252">
 									<reference key="NSMenu" ref="1038306992"/>
-									<string key="NSTitle">Intră in conferință...</string>
+									<string key="NSTitle">Join Conference...</string>
 									<string key="NSKeyEquiv">j</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -604,7 +604,7 @@
 								</object>
 								<object class="NSMenuItem" id="752207383">
 									<reference key="NSMenu" ref="1038306992"/>
-									<string key="NSTitle">Opreste microfonul</string>
+									<string key="NSTitle">Mute</string>
 									<string key="NSKeyEquiv">m</string>
 									<int key="NSKeyEquivModMask">1572864</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -614,7 +614,7 @@
 								</object>
 								<object class="NSMenuItem" id="827960199">
 									<reference key="NSMenu" ref="1038306992"/>
-									<string key="NSTitle">Nu fă galagie</string>
+									<string key="NSTitle">Silence Alerts</string>
 									<string key="NSKeyEquiv">s</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -624,7 +624,7 @@
 								</object>
 								<object class="NSMenuItem" id="784709548">
 									<reference key="NSMenu" ref="1038306992"/>
-									<string key="NSTitle">Nu mă deranja</string>
+									<string key="NSTitle">Do Not Disturb</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -637,19 +637,19 @@
 					</object>
 					<object class="NSMenuItem" id="284985795">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Dispozitive</string>
+						<string key="NSTitle">Devices</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="365086973">
-							<string key="NSTitle">Dispozitive</string>
+							<string key="NSTitle">Devices</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="277838630">
 									<reference key="NSMenu" ref="365086973"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Schimbă repede dispozitivele audio</string>
+									<string key="NSTitle">Quick Audio Input and Output Device Switch</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -670,7 +670,7 @@
 								<object class="NSMenuItem" id="858730582">
 									<reference key="NSMenu" ref="365086973"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Dispozitiv ieșire audio</string>
+									<string key="NSTitle">Audio Output Device</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<object class="NSCustomResource" key="NSImage">
@@ -694,7 +694,7 @@
 								<object class="NSMenuItem" id="707452240">
 									<reference key="NSMenu" ref="365086973"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Dispozitiv intrare audio</string>
+									<string key="NSTitle">Audio Input Device</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<object class="NSCustomResource" key="NSImage">
@@ -718,7 +718,7 @@
 								<object class="NSMenuItem" id="197319504">
 									<reference key="NSMenu" ref="365086973"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Dispozitiv de alertare audio</string>
+									<string key="NSTitle">Audio Alert Device</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<object class="NSCustomResource" key="NSImage">
@@ -735,19 +735,19 @@
 					</object>
 					<object class="NSMenuItem" id="800862302">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Istorie</string>
+						<string key="NSTitle">History</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="447821357">
-							<string key="NSTitle">Istorie</string>
+							<string key="NSTitle">History</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="114516490">
 									<reference key="NSMenu" ref="447821357"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Intimitate</string>
+									<string key="NSTitle">Privacy</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -756,7 +756,7 @@
 								<object class="NSMenuItem" id="31572174">
 									<reference key="NSMenu" ref="447821357"/>
 									<int key="NSIndent">1</int>
-									<string key="NSTitle">No salva istoria sesiunilor de text</string>
+									<string key="NSTitle">Don't Log Chat Messages</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -775,7 +775,7 @@
 								</object>
 								<object class="NSMenuItem" id="1048520813">
 									<reference key="NSMenu" ref="447821357"/>
-									<string key="NSTitle">Organizator</string>
+									<string key="NSTitle">Viewer</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -784,7 +784,7 @@
 								</object>
 								<object class="NSMenuItem" id="206777781">
 									<reference key="NSMenu" ref="447821357"/>
-									<string key="NSTitle">Transfere de fișiere</string>
+									<string key="NSTitle">File Transfers</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -797,19 +797,19 @@
 					</object>
 					<object class="NSMenuItem" id="492702972">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Unelte</string>
+						<string key="NSTitle">Tools</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="427015895">
-							<string key="NSTitle">Unelte</string>
+							<string key="NSTitle">Tools</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="394083750">
 									<reference key="NSMenu" ref="427015895"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Functionalitatea serverului</string>
+									<string key="NSTitle">Server Features</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -818,7 +818,7 @@
 								<object class="NSMenuItem" id="548750920">
 									<reference key="NSMenu" ref="427015895"/>
 									<int key="NSIndent">1</int>
-									<string key="NSTitle">Setările contului...</string>
+									<string key="NSTitle">SIP Account Settings...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -828,7 +828,7 @@
 								<object class="NSMenuItem" id="624394804">
 									<reference key="NSMenu" ref="427015895"/>
 									<int key="NSIndent">1</int>
-									<string key="NSTitle">Sună la numere de telefon...</string>
+									<string key="NSTitle">Call to Phone Numbers...</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -849,7 +849,7 @@
 								<object class="NSMenuItem" id="335371061">
 									<reference key="NSMenu" ref="427015895"/>
 									<bool key="NSIsDisabled">YES</bool>
-									<string key="NSTitle">Ajutor vocal</string>
+									<string key="NSTitle">Voice Assistance</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -858,7 +858,7 @@
 								<object class="NSMenuItem" id="22133682">
 									<reference key="NSMenu" ref="427015895"/>
 									<int key="NSIndent">2</int>
-									<string key="NSTitle">Folosește vocea pentru a accepta sau refuza sesiunile</string>
+									<string key="NSTitle">Use Speech to Accept or Reject Calls </string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -868,7 +868,7 @@
 								<object class="NSMenuItem" id="457661255">
 									<reference key="NSMenu" ref="427015895"/>
 									<int key="NSIndent">2</int>
-									<string key="NSTitle">Rostește numele celui care sună</string>
+									<string key="NSTitle">Say Incoming Caller Name</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -881,7 +881,7 @@
 					</object>
 					<object class="NSMenuItem" id="713487014">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Fereastre</string>
+						<string key="NSTitle">Window</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -890,11 +890,11 @@
 						<string key="NSAction">submenuAction:</string>
 						<int key="NSTag">300</int>
 						<object class="NSMenu" key="NSSubmenu" id="835318025">
-							<string key="NSTitle">Fereastre</string>
+							<string key="NSTitle">Window</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="1011231497">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Minimizează</string>
+									<string key="NSTitle">Minimize</string>
 									<string key="NSKeyEquiv">m</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -903,7 +903,7 @@
 								</object>
 								<object class="NSMenuItem" id="575023229">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Zoomează</string>
+									<string key="NSTitle">Zoom</string>
 									<string key="NSKeyEquiv">z</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -922,7 +922,7 @@
 								</object>
 								<object class="NSMenuItem" id="684397367">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Închide</string>
+									<string key="NSTitle">Close</string>
 									<string key="NSKeyEquiv">w</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -941,7 +941,7 @@
 								</object>
 								<object class="NSMenuItem" id="386904539">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Ține fereastra la suprafață</string>
+									<string key="NSTitle">Always On Top</string>
 									<string key="NSKeyEquiv">t</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -960,7 +960,7 @@
 								</object>
 								<object class="NSMenuItem" id="688909935">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Contacte</string>
+									<string key="NSTitle">Contacts</string>
 									<string key="NSKeyEquiv">1</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -970,7 +970,7 @@
 								</object>
 								<object class="NSMenuItem" id="1026207943">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Convorbiri audio</string>
+									<string key="NSTitle">Audio Calls</string>
 									<string key="NSKeyEquiv">2</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -980,7 +980,7 @@
 								</object>
 								<object class="NSMenuItem" id="752258809">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Sesiuni text</string>
+									<string key="NSTitle">Chat Sessions</string>
 									<string key="NSKeyEquiv">3</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -990,7 +990,7 @@
 								</object>
 								<object class="NSMenuItem" id="796498937">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Transfere de fișiere</string>
+									<string key="NSTitle">File Transfers</string>
 									<string key="NSKeyEquiv">4</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1000,7 +1000,7 @@
 								</object>
 								<object class="NSMenuItem" id="257090110">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Organizator pentru istoria sesiunilor</string>
+									<string key="NSTitle">History Viewer</string>
 									<string key="NSKeyEquiv">5</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1010,7 +1010,7 @@
 								</object>
 								<object class="NSMenuItem" id="988421837">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Loguri</string>
+									<string key="NSTitle">Logs</string>
 									<string key="NSKeyEquiv">0</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1030,7 +1030,7 @@
 								</object>
 								<object class="NSMenuItem" id="625202149">
 									<reference key="NSMenu" ref="835318025"/>
-									<string key="NSTitle">Adu toate ferestrele în față</string>
+									<string key="NSTitle">Bring All to Front</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1044,7 +1044,7 @@
 					</object>
 					<object class="NSMenuItem" id="391199113">
 						<reference key="NSMenu" ref="649796088"/>
-						<string key="NSTitle">Ajutor</string>
+						<string key="NSTitle">Help</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -1052,11 +1052,11 @@
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="374024848">
-							<string key="NSTitle">Ajutor</string>
+							<string key="NSTitle">Help</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="396070695">
 									<reference key="NSMenu" ref="374024848"/>
-									<string key="NSTitle">Lista de schimbări</string>
+									<string key="NSTitle">Changelog</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="660791971"/>
@@ -1065,7 +1065,7 @@
 								</object>
 								<object class="NSMenuItem" id="238773614">
 									<reference key="NSMenu" ref="374024848"/>
-									<string key="NSTitle">Ajutor online</string>
+									<string key="NSTitle">Online Help</string>
 									<string key="NSKeyEquiv">?</string>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1089,7 +1089,7 @@
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<string key="NSWindowContentMinSize">{274, 132}</string>
 				<object class="NSView" key="NSWindowView" id="439893737">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">274</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSPopUpButton" id="485186698">
@@ -1116,7 +1116,7 @@
 								<int key="NSPeriodicInterval">75</int>
 								<object class="NSMenuItem" key="NSMenuItem" id="724364001">
 									<reference key="NSMenu" ref="328315793"/>
-									<string key="NSTitle">Cont activ</string>
+									<string key="NSTitle">Active Account</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1145,7 +1145,7 @@
 										</object>
 										<object class="NSMenuItem" id="567076510">
 											<reference key="NSMenu" ref="328315793"/>
-											<string key="NSTitle">Adaugă un cont...</string>
+											<string key="NSTitle">Add Account...</string>
 											<string key="NSKeyEquiv"/>
 											<int key="NSKeyEquivModMask">1048576</int>
 											<int key="NSMnemonicLoc">2147483647</int>
@@ -1179,7 +1179,7 @@
 									<double key="NSSize">12</double>
 									<int key="NSfFlags">16</int>
 								</object>
-								<string key="NSPlaceholderString">Caută contacte sau introduce o adresă</string>
+								<string key="NSPlaceholderString">Search Contacts or Enter Address</string>
 								<reference key="NSControlView" ref="945249183"/>
 								<bool key="NSDrawsBackground">YES</bool>
 								<int key="NSTextBezelStyle">1</int>
@@ -1284,7 +1284,7 @@
 									<double key="NSSize">11</double>
 									<int key="NSfFlags">16</int>
 								</object>
-								<string key="NSPlaceholderString">Nume afișat</string>
+								<string key="NSPlaceholderString">Display Name</string>
 								<reference key="NSControlView" ref="614789485"/>
 								<reference key="NSBackgroundColor" ref="424897992"/>
 								<object class="NSColor" key="NSTextColor">
@@ -1318,7 +1318,7 @@
 								<int key="NSPeriodicInterval">75</int>
 								<object class="NSMenuItem" key="NSMenuItem" id="842501717">
 									<reference key="NSMenu" ref="842422554"/>
-									<string key="NSTitle">Disponibilitate</string>
+									<string key="NSTitle">Availability</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSKeyEquivModMask">1048576</int>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1358,6 +1358,7 @@
 									</array>
 									<bool key="NSNoAutoenable">YES</bool>
 								</object>
+								<int key="NSSelectedIndex">-1</int>
 								<int key="NSPreferredEdge">1</int>
 								<bool key="NSUsesItemFromMenu">YES</bool>
 								<bool key="NSAltersState">YES</bool>
@@ -1377,7 +1378,7 @@
 								<int key="NSCellFlags2">272926784</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="432183556"/>
-								<string key="NSPlaceholderString">Publică o notă pentru contactele mele</string>
+								<string key="NSPlaceholderString">Publish a note to my contacts</string>
 								<reference key="NSControlView" ref="1049294170"/>
 								<object class="NSColor" key="NSBackgroundColor" id="1036855206">
 									<int key="NSColorSpace">1</int>
@@ -1392,12 +1393,11 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 32}, {274, 350}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
-							<reference key="NSNextKeyView" ref="384228997"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="954578565">
 									<string key="NSIdentifier">contacts</string>
 									<object class="NSView" key="NSView" id="384228997">
-										<reference key="NSNextResponder" ref="1053838733"/>
+										<nil key="NSNextResponder"/>
 										<int key="NSvFlags">274</int>
 										<array class="NSMutableArray" key="NSSubviews">
 											<object class="NSScrollView" id="787736654">
@@ -1520,14 +1520,14 @@
 													<object class="NSScroller" id="771442678">
 														<reference key="NSNextResponder" ref="787736654"/>
 														<int key="NSvFlags">-2147483392</int>
-														<string key="NSFrame">{{1, 331}, {272, 16}}</string>
+														<string key="NSFrame">{{1, 282}, {229, 15}}</string>
 														<reference key="NSSuperview" ref="787736654"/>
 														<reference key="NSNextKeyView" ref="147249893"/>
 														<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 														<int key="NSsFlags">1</int>
 														<reference key="NSTarget" ref="787736654"/>
 														<string key="NSAction">_doScroller:</string>
-														<double key="NSPercent">0.72533333333333339</double>
+														<double key="NSPercent">0.99591839999999998</double>
 													</object>
 												</array>
 												<string key="NSFrameSize">{274, 348}</string>
@@ -1547,15 +1547,13 @@
 												<int key="NSvFlags">-2147483382</int>
 												<string key="NSFrame">{{0, 288}, {274, 60}}</string>
 												<reference key="NSSuperview" ref="384228997"/>
-												<reference key="NSNextKeyView" ref="1053838733"/>
 												<string key="NSClassName">NSView</string>
 											</object>
 										</array>
 										<string key="NSFrameSize">{274, 350}</string>
-										<reference key="NSSuperview" ref="1053838733"/>
 										<reference key="NSNextKeyView" ref="787736654"/>
 									</object>
-									<string key="NSLabel">Contacte</string>
+									<string key="NSLabel">Contacts</string>
 									<object class="NSColor" key="NSColor" id="247086700">
 										<int key="NSColorSpace">6</int>
 										<string key="NSCatalogName">System</string>
@@ -1579,9 +1577,8 @@
 												<object class="NSTextFieldCell" key="NSCell" id="837733874">
 													<int key="NSCellFlags">67108928</int>
 													<int key="NSCellFlags2">138414592</int>
-													<string type="base64-UTF8" key="NSContents">TnUgcy1hIGfEg3NpdCBuaWNpIHVuIGNvbnRhY3QuCkFwYXPEgyBFbnRlciBwZW50cnUgYSBzdW5hIHNh
-dSAKZm9sb3NlyJl0ZSBidXRvYW5lbGUgZGUgbWFpIGpvcwpwZW50cnUgbyBwb3JuaSBvIHNlc2l1bmUg
-bm91xIMuA</string>
+													<string type="base64-UTF8" key="NSContents">Tm8gbWF0Y2hpbmcgY29udGFjdHMgZm91bmQuClByZXNzIFJldHVybiBhbmQgcGxhY2UgYSBjYWxsIG9y
+IAp1c2UgdGhlIGJ1dHRvbnMgYmVsb3cKdG8gc3RhcnQgYSBzZXNzaW9uLg</string>
 													<object class="NSFont" key="NSSupport" id="357332417">
 														<string key="NSName">LucidaGrande</string>
 														<double key="NSSize">13</double>
@@ -1603,7 +1600,7 @@ bm91xIMuA</string>
 												<object class="NSButtonCell" key="NSCell" id="671385533">
 													<int key="NSCellFlags">-2080374784</int>
 													<int key="NSCellFlags2">134348800</int>
-													<string key="NSContents">Adaugă contact</string>
+													<string key="NSContents">Add Contact</string>
 													<reference key="NSSupport" ref="26"/>
 													<reference key="NSControlView" ref="895788342"/>
 													<int key="NSButtonFlags">-2038153216</int>
@@ -1625,7 +1622,7 @@ bm91xIMuA</string>
 												<object class="NSButtonCell" key="NSCell" id="733896023">
 													<int key="NSCellFlags">-2080374784</int>
 													<int key="NSCellFlags2">134348800</int>
-													<string key="NSContents">Înapoi la contacte</string>
+													<string key="NSContents">Return to Contacts</string>
 													<reference key="NSSupport" ref="26"/>
 													<reference key="NSControlView" ref="167015669"/>
 													<int key="NSButtonFlags">-2035007488</int>
@@ -1757,14 +1754,14 @@ bm91xIMuA</string>
 										<string key="NSFrameSize">{274, 350}</string>
 										<reference key="NSNextKeyView" ref="167015669"/>
 									</object>
-									<string key="NSLabel">Caută</string>
+									<string key="NSLabel">Search</string>
 									<reference key="NSColor" ref="247086700"/>
 									<reference key="NSTabView" ref="1053838733"/>
 								</object>
 								<object class="NSTabViewItem" id="857008963">
 									<string key="NSIdentifier">dialpad</string>
 									<object class="NSView" key="NSView" id="977201501">
-										<nil key="NSNextResponder"/>
+										<reference key="NSNextResponder" ref="1053838733"/>
 										<int key="NSvFlags">274</int>
 										<array class="NSMutableArray" key="NSSubviews">
 											<object class="NSCustomView" id="1069066581">
@@ -1815,7 +1812,7 @@ bm91xIMuA</string>
 														<object class="NSButtonCell" key="NSCell" id="103606157">
 															<int key="NSCellFlags">-1543503872</int>
 															<int key="NSCellFlags2">134348800</int>
-															<string key="NSContents">Adaugă în conferință</string>
+															<string key="NSContents">Add to Conference</string>
 															<reference key="NSSupport" ref="26"/>
 															<reference key="NSControlView" ref="1806211"/>
 															<int key="NSButtonFlags">-2038153216</int>
@@ -1837,7 +1834,7 @@ bm91xIMuA</string>
 														<object class="NSButtonCell" key="NSCell" id="975357060">
 															<int key="NSCellFlags">-1543503872</int>
 															<int key="NSCellFlags2">134348800</int>
-															<string key="NSContents">Adaugă contact</string>
+															<string key="NSContents">Add Contact</string>
 															<reference key="NSSupport" ref="26"/>
 															<reference key="NSControlView" ref="357997132"/>
 															<int key="NSButtonFlags">-2038153216</int>
@@ -2132,20 +2129,21 @@ bm91xIMuA</string>
 											</object>
 										</array>
 										<string key="NSFrameSize">{274, 350}</string>
+										<reference key="NSSuperview" ref="1053838733"/>
 										<reference key="NSNextKeyView" ref="1069066581"/>
 									</object>
-									<string key="NSLabel">Tastatura telefonică</string>
+									<string key="NSLabel">Dialpad</string>
 									<reference key="NSColor" ref="247086700"/>
 									<reference key="NSTabView" ref="1053838733"/>
 								</object>
 							</array>
-							<reference key="NSSelectedTabViewItem" ref="954578565"/>
+							<reference key="NSSelectedTabViewItem" ref="857008963"/>
 							<reference key="NSFont" ref="357332417"/>
 							<int key="NSTvFlags">6</int>
 							<bool key="NSAllowTruncatedLabels">YES</bool>
 							<bool key="NSDrawsBackground">YES</bool>
 							<array class="NSMutableArray" key="NSSubviews">
-								<reference ref="384228997"/>
+								<reference ref="977201501"/>
 							</array>
 						</object>
 						<object class="NSButton" id="954251869">
@@ -2167,7 +2165,7 @@ bm91xIMuA</string>
 									<string key="NSClassName">NSImage</string>
 									<string key="NSResourceName">NSAddTemplate</string>
 								</object>
-								<string key="NSAlternateContents">Adaugă un contact nou</string>
+								<string key="NSAlternateContents">Add Contact</string>
 								<string key="NSKeyEquivalent"/>
 								<int key="NSPeriodicDelay">400</int>
 								<int key="NSPeriodicInterval">75</int>
@@ -2190,7 +2188,7 @@ bm91xIMuA</string>
 								<int key="NSButtonFlags">-2033434624</int>
 								<int key="NSButtonFlags2">163</int>
 								<reference key="NSNormalImage" ref="102353947"/>
-								<string key="NSAlternateContents">Apasă pentru a te duce rapid la un grup sau a aduga un contact</string>
+								<string key="NSAlternateContents">Click to scroll to a group or add a contact</string>
 								<string key="NSKeyEquivalent"/>
 								<int key="NSPeriodicDelay">400</int>
 								<int key="NSPeriodicInterval">75</int>
@@ -2220,7 +2218,7 @@ bm91xIMuA</string>
 											<string key="NSClassName">NSImage</string>
 											<string key="NSResourceName">audio</string>
 										</object>
-										<string key="NSSegmentItemTooltip">Pornește o convorbire audio</string>
+										<string key="NSSegmentItemTooltip">Start Audio Call</string>
 										<int key="NSSegmentItemImageScaling">0</int>
 									</object>
 									<object class="NSSegmentItem">
@@ -2229,7 +2227,7 @@ bm91xIMuA</string>
 											<string key="NSClassName">NSImage</string>
 											<string key="NSResourceName">pencil</string>
 										</object>
-										<string key="NSSegmentItemTooltip">Invită la sesiune text sau trimite mesaj instant</string>
+										<string key="NSSegmentItemTooltip">Invite to Chat or send  Instant Messages</string>
 										<int key="NSSegmentItemTag">1</int>
 										<int key="NSSegmentItemImageScaling">0</int>
 									</object>
@@ -2239,7 +2237,7 @@ bm91xIMuA</string>
 											<string key="NSClassName">NSImage</string>
 											<string key="NSResourceName">display</string>
 										</object>
-										<string key="NSSegmentItemTooltip">Pornește impărțirea ecranului</string>
+										<string key="NSSegmentItemTooltip">Start Screen Sharing</string>
 										<int key="NSSegmentItemImageScaling">0</int>
 									</object>
 								</array>
@@ -2270,7 +2268,7 @@ bm91xIMuA</string>
 									<string key="NSClassName">NSImage</string>
 									<string key="NSResourceName">belloff</string>
 								</object>
-								<string key="NSAlternateContents">Nu deranja</string>
+								<string key="NSAlternateContents">Silent Mode</string>
 								<string key="NSKeyEquivalent"/>
 								<int key="NSPeriodicDelay">400</int>
 								<int key="NSPeriodicInterval">75</int>
@@ -2279,6 +2277,7 @@ bm91xIMuA</string>
 						</object>
 					</array>
 					<string key="NSFrameSize">{274, 480}</string>
+					<reference key="NSSuperview"/>
 					<reference key="NSNextKeyView" ref="485186698"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
@@ -2288,7 +2287,7 @@ bm91xIMuA</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
 			<object class="NSCustomView" id="396422209">
-				<nil key="NSNextResponder"/>
+				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">258</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="NSTextField" id="838722735">
@@ -2304,7 +2303,7 @@ bm91xIMuA</string>
 							<int key="NSCellFlags2">138545152</int>
 							<string key="NSContents"/>
 							<reference key="NSSupport" ref="26"/>
-							<string key="NSPlaceholderString">Dispozitivul audio selectat</string>
+							<string key="NSPlaceholderString">Selected Audio Device</string>
 							<string key="NSCellIdentifier">_NS:1505</string>
 							<reference key="NSControlView" ref="838722735"/>
 							<reference key="NSBackgroundColor" ref="247086700"/>
@@ -2330,7 +2329,7 @@ bm91xIMuA</string>
 								<string key="NSClassName">NSImage</string>
 								<string key="NSResourceName">mute</string>
 							</object>
-							<string key="NSAlternateContents">Oprește microfonul</string>
+							<string key="NSAlternateContents">Mute Microphone</string>
 							<string key="NSKeyEquivalent"/>
 							<int key="NSPeriodicDelay">400</int>
 							<int key="NSPeriodicInterval">75</int>
@@ -2344,7 +2343,7 @@ bm91xIMuA</string>
 							<object class="NSLevelIndicator" id="198031951">
 								<reference key="NSNextResponder" ref="629575245"/>
 								<int key="NSvFlags">289</int>
-								<string key="NSFrame">{{214, 8}, {28, 12}}</string>
+								<string key="NSFrame">{{214, 8}, {27.5, 12}}</string>
 								<reference key="NSSuperview" ref="629575245"/>
 								<reference key="NSNextKeyView" ref="128081379"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
@@ -2368,7 +2367,7 @@ bm91xIMuA</string>
 							<object class="NSButton" id="208635261">
 								<reference key="NSNextResponder" ref="629575245"/>
 								<int key="NSvFlags">295</int>
-								<string key="NSFrame">{{107.5, 0}, {95, 25}}</string>
+								<string key="NSFrame">{{107.5, 0}, {94.5, 25}}</string>
 								<reference key="NSSuperview" ref="629575245"/>
 								<reference key="NSNextKeyView" ref="198031951"/>
 								<int key="NSTag">11</int>
@@ -2376,7 +2375,7 @@ bm91xIMuA</string>
 								<object class="NSButtonCell" key="NSCell" id="410108506">
 									<int key="NSCellFlags">67108864</int>
 									<int key="NSCellFlags2">134348800</int>
-									<string key="NSContents">Conferință</string>
+									<string key="NSContents">Conference</string>
 									<reference key="NSSupport" ref="26"/>
 									<reference key="NSControlView" ref="208635261"/>
 									<int key="NSButtonFlags">-1232846848</int>
@@ -2391,7 +2390,7 @@ bm91xIMuA</string>
 							<object class="NSButton" id="8410529">
 								<reference key="NSNextResponder" ref="629575245"/>
 								<int key="NSvFlags">295</int>
-								<string key="NSFrame">{{9, 0}, {91, 25}}</string>
+								<string key="NSFrame">{{9, 0}, {90.5, 25}}</string>
 								<reference key="NSSuperview" ref="629575245"/>
 								<reference key="NSNextKeyView" ref="208635261"/>
 								<int key="NSTag">10</int>
@@ -2399,7 +2398,7 @@ bm91xIMuA</string>
 								<object class="NSButtonCell" key="NSCell" id="321008842">
 									<int key="NSCellFlags">-2080374784</int>
 									<int key="NSCellFlags2">134348800</int>
-									<string key="NSContents">Inchide</string>
+									<string key="NSContents">Hangup All</string>
 									<reference key="NSSupport" ref="26"/>
 									<reference key="NSControlView" ref="8410529"/>
 									<int key="NSButtonFlags">-2038153216</int>
@@ -2521,7 +2520,7 @@ bm91xIMuA</string>
 														<object class="NSTableHeaderCell" key="NSHeaderCell">
 															<int key="NSCellFlags">75497536</int>
 															<int key="NSCellFlags2">2048</int>
-															<string key="NSContents">Participanții de la distantă</string>
+															<string key="NSContents">Remote Conference Participants</string>
 															<reference key="NSSupport" ref="26"/>
 															<object class="NSColor" key="NSBackgroundColor">
 																<int key="NSColorSpace">3</int>
@@ -2633,7 +2632,7 @@ bm91xIMuA</string>
 						<object class="NSTextFieldCell" key="NSCell" id="583478344">
 							<int key="NSCellFlags">68157504</int>
 							<int key="NSCellFlags2">138544128</int>
-							<string key="NSContents">Convorbiri audio</string>
+							<string key="NSContents">Audio Sessions</string>
 							<reference key="NSSupport" ref="522228406"/>
 							<reference key="NSControlView" ref="460764113"/>
 							<bool key="NSDrawsBackground">YES</bool>
@@ -2891,6 +2890,7 @@ bm91xIMuA</string>
 					</object>
 				</array>
 				<string key="NSFrameSize">{280, 395}</string>
+				<reference key="NSSuperview"/>
 				<reference key="NSNextKeyView" ref="460764113"/>
 				<string key="NSClassName">NSView</string>
 			</object>
@@ -2899,7 +2899,7 @@ bm91xIMuA</string>
 				<array class="NSMutableArray" key="NSMenuItems">
 					<object class="NSMenuItem" id="137211407">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Disponibiliatea mea</string>
+						<string key="NSTitle">My Availability</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -2907,7 +2907,7 @@ bm91xIMuA</string>
 						<string key="NSAction">submenuAction:</string>
 						<int key="NSTag">1</int>
 						<object class="NSMenu" key="NSSubmenu" id="1007078853">
-							<string key="NSTitle">Cei care imi vad disponibiliatea</string>
+							<string key="NSTitle">People Watching My Availability</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="857519086">
 									<reference key="NSMenu" ref="1007078853"/>
@@ -2923,14 +2923,14 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="641440816">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Cei interesați in disponibiliatea mea</string>
+						<string key="NSTitle">Subscribers For My Availability</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
 						<reference key="NSMixedImage" ref="600792618"/>
 						<string key="NSAction">submenuAction:</string>
 						<object class="NSMenu" key="NSSubmenu" id="163881544">
-							<string key="NSTitle">Cei interesați in disponibiliatea mea</string>
+							<string key="NSTitle">Subscribers For My Availability</string>
 							<array class="NSMutableArray" key="NSMenuItems">
 								<object class="NSMenuItem" id="506381245">
 									<reference key="NSMenu" ref="163881544"/>
@@ -2956,7 +2956,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="194681861">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Sună din nou</string>
+						<string key="NSTitle">Redial</string>
 						<string key="NSKeyEquiv">r</string>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -2977,7 +2977,7 @@ bm91xIMuA</string>
 					<object class="NSMenuItem" id="1005946465">
 						<reference key="NSMenu" ref="806384761"/>
 						<bool key="NSIsDisabled">YES</bool>
-						<string key="NSTitle">Convorbiri pierdute</string>
+						<string key="NSTitle">Missed Calls</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -2996,7 +2996,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="622403343">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Oprește microfonul</string>
+						<string key="NSTitle">Mute</string>
 						<string key="NSKeyEquiv">m</string>
 						<int key="NSKeyEquivModMask">1572864</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -3006,7 +3006,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="1046400178">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Nu suna</string>
+						<string key="NSTitle">Silence Alerts</string>
 						<string key="NSKeyEquiv">s</string>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -3016,7 +3016,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="934792246">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Nu mă deranja</string>
+						<string key="NSTitle">Do Not Disturb</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3025,7 +3025,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="397529527">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Activează robotul de mesaje audio</string>
+						<string key="NSTitle">Enable Answering Machine</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3044,7 +3044,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="695726850">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Preferințe</string>
+						<string key="NSTitle">Preferences</string>
 						<string key="NSKeyEquiv">,</string>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -3053,7 +3053,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="864556179">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Arată lista de contacte</string>
+						<string key="NSTitle">Show Contacts List</string>
 						<string key="NSKeyEquiv">1</string>
 						<int key="NSKeyEquivModMask">1048576</int>
 						<int key="NSMnemonicLoc">2147483647</int>
@@ -3072,7 +3072,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="977458231">
 						<reference key="NSMenu" ref="806384761"/>
-						<string key="NSTitle">Oprește Blink</string>
+						<string key="NSTitle">Quit Blink</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3114,7 +3114,7 @@ bm91xIMuA</string>
 				<array class="NSMutableArray" key="NSMenuItems">
 					<object class="NSMenuItem" id="840161826">
 						<reference key="NSMenu" ref="1276"/>
-						<string key="NSTitle">Cere împartirea ecranului</string>
+						<string key="NSTitle">Ask to Share Remote Screen</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3123,7 +3123,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="753192124">
 						<reference key="NSMenu" ref="1276"/>
-						<string key="NSTitle">Împarte ecranul meu</string>
+						<string key="NSTitle">Share My Screen</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3138,7 +3138,7 @@ bm91xIMuA</string>
 				<array class="NSMutableArray" key="NSMenuItems">
 					<object class="NSMenuItem" id="506322555">
 						<reference key="NSMenu" ref="348634638"/>
-						<string key="NSTitle">Pornește o sesiune text</string>
+						<string key="NSTitle">Start Chat Session</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3146,7 +3146,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="768233508">
 						<reference key="NSMenu" ref="348634638"/>
-						<string key="NSTitle">Trimite un mesaj scurt</string>
+						<string key="NSTitle">Send SMS</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3159,7 +3159,7 @@ bm91xIMuA</string>
 				<array class="NSMutableArray" key="NSMenuItems">
 					<object class="NSMenuItem" id="40308132">
 						<reference key="NSMenu" ref="535573335"/>
-						<string key="NSTitle">Editează</string>
+						<string key="NSTitle">Edit</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3167,7 +3167,7 @@ bm91xIMuA</string>
 					</object>
 					<object class="NSMenuItem" id="557408341">
 						<reference key="NSMenu" ref="535573335"/>
-						<string key="NSTitle">Șterge</string>
+						<string key="NSTitle">Delete</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3212,7 +3212,7 @@ bm91xIMuA</string>
 					<object class="NSMenuItem" id="602574822">
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
-						<string key="NSTitle">Camera de conferință</string>
+						<string key="NSTitle">Conference Room</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3221,7 +3221,7 @@ bm91xIMuA</string>
 					<object class="NSMenuItem" id="589805646">
 						<reference key="NSMenu" ref="713410130"/>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Invită un participant...</string>
+						<string key="NSTitle">Invite Participants...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3232,7 +3232,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Du-te la site-ul web...</string>
+						<string key="NSTitle">Go to Website...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3243,7 +3243,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Adauga la lista de contacte...</string>
+						<string key="NSTitle">Add to Contacts...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3273,7 +3273,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Scoate din conferință...</string>
+						<string key="NSTitle">Remove from Conference...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3284,7 +3284,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Opresște microfonul...</string>
+						<string key="NSTitle">Mute...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3295,7 +3295,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Adaugă un contact...</string>
+						<string key="NSTitle">Add to Contacts...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3306,7 +3306,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Pornește o convorbire audio</string>
+						<string key="NSTitle">Start Audio Session</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3317,7 +3317,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Pornește o sesiune text</string>
+						<string key="NSTitle">Start Chat Session</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3328,7 +3328,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Pornește o sesiune video</string>
+						<string key="NSTitle">Start Video Session</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3339,7 +3339,7 @@ bm91xIMuA</string>
 						<reference key="NSMenu" ref="713410130"/>
 						<bool key="NSIsDisabled">YES</bool>
 						<int key="NSIndent">1</int>
-						<string key="NSTitle">Trimite fișir(e)...</string>
+						<string key="NSTitle">Send File(s)...</string>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
 						<reference key="NSOnImage" ref="660791971"/>
@@ -3350,14 +3350,14 @@ bm91xIMuA</string>
 				<bool key="NSNoAutoenable">YES</bool>
 			</object>
 			<object class="NSMenuItem" id="974258292">
-				<string key="NSTitle">Înregistrari audio</string>
+				<string key="NSTitle">Audio Recordings</string>
 				<string key="NSKeyEquiv"/>
 				<int key="NSMnemonicLoc">2147483647</int>
 				<reference key="NSOnImage" ref="660791971"/>
 				<reference key="NSMixedImage" ref="600792618"/>
 				<string key="NSAction">submenuAction:</string>
 				<object class="NSMenu" key="NSSubmenu" id="454267465">
-					<string key="NSTitle">Înregistrari audio</string>
+					<string key="NSTitle">Recordings</string>
 					<array class="NSMutableArray" key="NSMenuItems">
 						<object class="NSMenuItem" id="917205071">
 							<reference key="NSMenu" ref="454267465"/>
@@ -3371,7 +3371,7 @@ bm91xIMuA</string>
 						</object>
 						<object class="NSMenuItem" id="507673100">
 							<reference key="NSMenu" ref="454267465"/>
-							<string key="NSTitle">Deschide directorul cu înregistrări audio</string>
+							<string key="NSTitle">Open Recordings Folder</string>
 							<string key="NSKeyEquiv"/>
 							<int key="NSMnemonicLoc">2147483647</int>
 							<reference key="NSOnImage" ref="660791971"/>
@@ -3389,14 +3389,14 @@ bm91xIMuA</string>
 				<reference key="NSMixedImage" ref="600792618"/>
 			</object>
 			<object class="NSMenuItem" id="81652671">
-				<string key="NSTitle">Meniu</string>
+				<string key="NSTitle">Menu</string>
 				<string key="NSKeyEquiv"/>
 				<int key="NSMnemonicLoc">2147483647</int>
 				<reference key="NSOnImage" ref="660791971"/>
 				<reference key="NSMixedImage" ref="600792618"/>
 				<string key="NSAction">submenuAction:</string>
 				<object class="NSMenu" key="NSSubmenu" id="349870478">
-					<string key="NSTitle">Meniu</string>
+					<string key="NSTitle">Menu</string>
 					<array class="NSMutableArray" key="NSMenuItems">
 						<object class="NSMenuItem" id="384295253">
 							<reference key="NSMenu" ref="349870478"/>
@@ -7161,7 +7161,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="912902537"/>
-						<string key="accessibilityValue">Sesiunea de convorbiri</string>
+						<string key="accessibilityValue">Audio Sessions List</string>
 					</object>
 				</object>
 				<string key="1524.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7174,7 +7174,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="787233811"/>
-						<string key="accessibilityValue">Participanții</string>
+						<string key="accessibilityValue">Current Participants</string>
 					</object>
 				</object>
 				<string key="1537.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7212,12 +7212,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="345991132"/>
-						<string key="accessibilityValue">Adauga contact si grup</string>
+						<string key="accessibilityValue">Add contact and group navigation</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="345991132"/>
-						<string key="toolTip">Apasă pentru a te duce rapid la un grup sau a aduga un contact</string>
+						<string key="toolTip">Click to scroll to a group or add a contact</string>
 					</object>
 				</dictionary>
 				<string key="1689.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7260,12 +7260,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="198031951"/>
-						<string key="accessibilityValue">Semnalul de intrare al microfonului</string>
+						<string key="accessibilityValue">Microphone Input Signal</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="198031951"/>
-						<string key="toolTip">Semnalul de intrare al microfonului</string>
+						<string key="toolTip">Microphone Input Signal</string>
 					</object>
 				</dictionary>
 				<string key="1820.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7303,12 +7303,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="485186698"/>
-						<string key="accessibilityValue">Cont utilizat pentru sesiuni noi</string>
+						<string key="accessibilityValue">Account used for outgoing sessions</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="485186698"/>
-						<string key="toolTip">Selectează contul pentru a porni o nouă sesiune</string>
+						<string key="toolTip">Select The Account Used For Outgoing Sessions</string>
 					</object>
 				</dictionary>
 				<string key="446.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7322,7 +7322,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="114099132"/>
-						<string key="accessibilityValue">Butoane de pornire a sessiunii</string>
+						<string key="accessibilityValue">Start Session Buttons</string>
 					</object>
 				</object>
 				<string key="457.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7331,7 +7331,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="439898397"/>
-						<string key="accessibilityValue">Pornește sesiuni</string>
+						<string key="accessibilityValue">Start Sessions</string>
 					</object>
 				</object>
 				<integer value="0" key="458.IBNSSegmentedControlInspectorSelectedSegmentMetadataKey"/>
@@ -7341,12 +7341,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="954251869"/>
-						<string key="accessibilityValue">Adaugă un contact nou</string>
+						<string key="accessibilityValue">Add New Contact</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="954251869"/>
-						<string key="toolTip">Adaugă un contact nou</string>
+						<string key="toolTip">Add a new Contact</string>
 					</object>
 				</dictionary>
 				<string key="459.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7356,7 +7356,7 @@ bm91xIMuA</string>
 					<object class="IBToolTipAttribute" key="NS.object.0">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="945249183"/>
-						<string key="toolTip">Aici poți introduce text pentru a căuta contacte și apasă Enter pentru a porni o sesiune nouă.</string>
+						<string key="toolTip">You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number.</string>
 					</object>
 				</object>
 				<string key="463.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7377,7 +7377,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="954578565"/>
-						<string key="accessibilityValue">Lista de contacte</string>
+						<string key="accessibilityValue">Contacts List</string>
 					</object>
 				</object>
 				<string key="499.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7387,7 +7387,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="1016005450"/>
-						<string key="accessibilityValue">Rezultatele cautării contactelor</string>
+						<string key="accessibilityValue">Search Contacts Results</string>
 					</object>
 				</object>
 				<string key="500.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7396,7 +7396,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="411259017"/>
-						<string key="accessibilityValue">Rezultatele cautării contactelor</string>
+						<string key="accessibilityValue">Search Contacts Results</string>
 					</object>
 				</object>
 				<string key="501.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7405,7 +7405,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="384228997"/>
-						<string key="accessibilityValue">Lista de contacte</string>
+						<string key="accessibilityValue">Contacts List</string>
 					</object>
 				</object>
 				<string key="502.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7414,7 +7414,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="787736654"/>
-						<string key="accessibilityValue">Lista de contacte</string>
+						<string key="accessibilityValue">Contacts List</string>
 					</object>
 				</object>
 				<string key="503.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7424,7 +7424,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="788885680"/>
-						<string key="accessibilityValue">Lista de contacte</string>
+						<string key="accessibilityValue">Contacts List</string>
 					</object>
 				</object>
 				<string key="504.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7437,12 +7437,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="8410529"/>
-						<string key="accessibilityValue">Inchide toate convorbirile</string>
+						<string key="accessibilityValue">Hangup All Calls</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="8410529"/>
-						<string key="toolTip">Inchide toate convorbirile</string>
+						<string key="toolTip">Hang Up All Audio Sessions</string>
 					</object>
 				</dictionary>
 				<string key="512.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7452,7 +7452,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="777147927"/>
-						<string key="accessibilityValue">Lista de convorbiri audio</string>
+						<string key="accessibilityValue">Audio Sessions List</string>
 					</object>
 				</object>
 				<string key="544.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7463,7 +7463,7 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="NS.object.0">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="989716831"/>
-						<string key="accessibilityValue">Lista de convorbiri audio</string>
+						<string key="accessibilityValue">Audio Sessions List</string>
 					</object>
 				</object>
 				<string key="547.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7471,12 +7471,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="954942554"/>
-						<string key="accessibilityValue">Disponibilitatea mea</string>
+						<string key="accessibilityValue">My availability</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="954942554"/>
-						<string key="toolTip">Setează disponibiliatea</string>
+						<string key="toolTip">Set My Availability</string>
 					</object>
 				</dictionary>
 				<string key="551.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7495,12 +7495,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="208635261"/>
-						<string key="accessibilityValue">Conferințe</string>
+						<string key="accessibilityValue">Conference</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="208635261"/>
-						<string key="toolTip">Pornește și oprește o conferință. Odată pornită, poti tîrî cu sopricelul contacte înăuntrul și înafara conferinței.</string>
+						<string key="toolTip">Start and stop a multi-party conference. Once started, you may use drag and drop to add or remove contacts to and from the conference.</string>
 					</object>
 				</dictionary>
 				<string key="587.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7509,12 +7509,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="355170089"/>
-						<string key="accessibilityValue">Nu deranja</string>
+						<string key="accessibilityValue">Silent Mode</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="355170089"/>
-						<string key="toolTip">Nu suna (Nu deranja)</string>
+						<string key="toolTip">Disable Ringtones (Silent mode)</string>
 					</object>
 				</dictionary>
 				<string key="589.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7540,12 +7540,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="264699322"/>
-						<string key="accessibilityValue">Folosește icoana</string>
+						<string key="accessibilityValue">User Avatar</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="264699322"/>
-						<string key="toolTip">Apasă aici pentru a schimba icoana vizibilă celor care se subscriu la disponibilitatea mea.</string>
+						<string key="toolTip">Click to change my avatar visible to people who subscribed for my availability</string>
 					</object>
 				</dictionary>
 				<string key="656.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7555,12 +7555,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="1049294170"/>
-						<string key="accessibilityValue">Notă pentru disponibilitate</string>
+						<string key="accessibilityValue">Availability Note</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="1049294170"/>
-						<string key="toolTip">Publică o notă vizibilă celor care se subscriu la disponibilitatea mea</string>
+						<string key="toolTip">Publish A Note To Contacts That Subscribed To My Availability</string>
 					</object>
 				</dictionary>
 				<string key="691.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7569,17 +7569,17 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="614789485"/>
-						<string key="accessibilityValue">Nume afișat</string>
+						<string key="accessibilityValue">Display Name</string>
 					</object>
 					<object class="IBAccessibilityAttribute" key="AccessibilityHelp">
 						<string key="name">AccessibilityHelp</string>
 						<reference key="object" ref="614789485"/>
-						<string key="accessibilityValue">Numele meu afișat</string>
+						<string key="accessibilityValue">My Display Name</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="614789485"/>
-						<string key="toolTip">Numele meu afișat</string>
+						<string key="toolTip">My Display Name</string>
 					</object>
 				</dictionary>
 				<string key="731.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7602,12 +7602,12 @@ bm91xIMuA</string>
 					<object class="IBAccessibilityAttribute" key="AccessibilityDescription">
 						<string key="name">AccessibilityDescription</string>
 						<reference key="object" ref="128081379"/>
-						<string key="accessibilityValue">Oprește microfonul</string>
+						<string key="accessibilityValue">Mute Microphone</string>
 					</object>
 					<object class="IBToolTipAttribute" key="ToolTip">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="128081379"/>
-						<string key="toolTip">Oprește microfonul</string>
+						<string key="toolTip">Mute Microphone</string>
 					</object>
 				</dictionary>
 				<string key="878.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -7641,1093 +7641,7 @@ bm91xIMuA</string>
 			<nil key="sourceID"/>
 			<int key="maxID">1868</int>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes">
-			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
-				<object class="IBPartialClassDescription">
-					<string key="className">BlinkAppDelegate</string>
-					<string key="superclassName">NSObject</string>
-					<object class="NSMutableDictionary" key="actions">
-						<string key="NS.key.0">orderFrontAboutPanel:</string>
-						<string key="NS.object.0">id</string>
-					</object>
-					<object class="NSMutableDictionary" key="actionInfosByName">
-						<string key="NS.key.0">orderFrontAboutPanel:</string>
-						<object class="IBActionInfo" key="NS.object.0">
-							<string key="name">orderFrontAboutPanel:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</object>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="aboutBundle">id</string>
-						<string key="aboutCopyright">id</string>
-						<string key="aboutPanel">id</string>
-						<string key="aboutSlogan">id</string>
-						<string key="aboutVersion">id</string>
-						<string key="aboutzRTPIcon">id</string>
-						<string key="blinkMenu">id</string>
-						<string key="contactsWindowController">id</string>
-						<string key="migrationPanel">id</string>
-						<string key="migrationProgressWheel">id</string>
-						<string key="migrationText">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="aboutBundle">
-							<string key="name">aboutBundle</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="aboutCopyright">
-							<string key="name">aboutCopyright</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="aboutPanel">
-							<string key="name">aboutPanel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="aboutSlogan">
-							<string key="name">aboutSlogan</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="aboutVersion">
-							<string key="name">aboutVersion</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="aboutzRTPIcon">
-							<string key="name">aboutzRTPIcon</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="blinkMenu">
-							<string key="name">blinkMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactsWindowController">
-							<string key="name">contactsWindowController</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="migrationPanel">
-							<string key="name">migrationPanel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="migrationProgressWheel">
-							<string key="name">migrationProgressWheel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="migrationText">
-							<string key="name">migrationText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/BlinkAppDelegate.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ContactCell</string>
-					<string key="superclassName">NSTextFieldCell</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactCell.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ContactListModel</string>
-					<string key="superclassName">CustomListModel</string>
-					<object class="NSMutableDictionary" key="outlets">
-						<string key="NS.key.0">contactOutline</string>
-						<string key="NS.object.0">id</string>
-					</object>
-					<object class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<string key="NS.key.0">contactOutline</string>
-						<object class="IBToOneOutletInfo" key="NS.object.0">
-							<string key="name">contactOutline</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</object>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactListModel.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ContactOutlineView</string>
-					<string key="superclassName">NSOutlineView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactOutlineView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ContactWindowController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="accountSelectionChanged:">id</string>
-						<string key="actionButtonClicked:">id</string>
-						<string key="addContact:">id</string>
-						<string key="addContactToConference:">id</string>
-						<string key="addContactWithUri:">id</string>
-						<string key="addGroup:">id</string>
-						<string key="backToContacts:">id</string>
-						<string key="backupContacts:">id</string>
-						<string key="blockContact:">id</string>
-						<string key="checkForUpdates:">id</string>
-						<string key="clearSearchField:">id</string>
-						<string key="close:">id</string>
-						<string key="conferenceClicked:">id</string>
-						<string key="deleteItem:">id</string>
-						<string key="deletePolicyItem:">id</string>
-						<string key="deletePresenceHistory:">id</string>
-						<string key="dialPadButtonClicked:">id</string>
-						<string key="displayNameChanged:">id</string>
-						<string key="dndClicked:">id</string>
-						<string key="editContact:">id</string>
-						<string key="focusSearchTextField:">id</string>
-						<string key="goToBackupContactsFolderClicked:">id</string>
-						<string key="groupButtonClicked:">id</string>
-						<string key="hangupAllClicked:">id</string>
-						<string key="hideGroup:">id</string>
-						<string key="joinConferenceClicked:">id</string>
-						<string key="mergeContacts:">id</string>
-						<string key="moveGroupToIndex:">id</string>
-						<string key="muteClicked:">id</string>
-						<string key="openURL:">id</string>
-						<string key="presenceActivityChanged:">id</string>
-						<string key="presenceNoteChanged:">id</string>
-						<string key="recordingClicked:">id</string>
-						<string key="redialLast:">id</string>
-						<string key="removeContactFromGroup:">id</string>
-						<string key="renameGroup:">id</string>
-						<string key="restoreContactsClicked:">id</string>
-						<string key="searchContacts:">id</string>
-						<string key="selectOutboundProxyClicked:">id</string>
-						<string key="sendFile:">id</string>
-						<string key="sendSMSToSelected:">id</string>
-						<string key="sendSMSToSelectedUri:">id</string>
-						<string key="sessionButtonClicked:">id</string>
-						<string key="setAlwaysOnTop:">id</string>
-						<string key="setAutoAnswer:">id</string>
-						<string key="setDialogPolicy:">id</string>
-						<string key="setPresenceActivityFromHistory:">id</string>
-						<string key="setPresenceOfflineNote:">id</string>
-						<string key="setPresencePolicy:">id</string>
-						<string key="setSpeechSyntezis:">id</string>
-						<string key="setSubscribeToPresence:">id</string>
-						<string key="setUseSpeechRecognition:">id</string>
-						<string key="showAccountSettings:">id</string>
-						<string key="showBlinkPro:">id</string>
-						<string key="showChangelog:">id</string>
-						<string key="showChatWindow:">id</string>
-						<string key="showChatWindowForAccountWithTargetUri:">id</string>
-						<string key="showDebugWindow:">id</string>
-						<string key="showDonate:">id</string>
-						<string key="showHelp:">id</string>
-						<string key="showHistoryViewer:">id</string>
-						<string key="showInFavoritesGroup:">id</string>
-						<string key="showPSTNAccess:">id</string>
-						<string key="showPendingRequests:">id</string>
-						<string key="showPresenceInfo:">id</string>
-						<string key="showServiceProvider:">id</string>
-						<string key="showSylkServer:">id</string>
-						<string key="silentClicked:">id</string>
-						<string key="startAudioSessionWithSIPURI:">id</string>
-						<string key="startAudioToSelected:">id</string>
-						<string key="startChatSessionWithSIPURI:">id</string>
-						<string key="startChatToSelected:">id</string>
-						<string key="startScreenSharing:">id</string>
-						<string key="startVideoToSelected:">id</string>
-						<string key="tellMeWhenContactBecomesAvailable:">id</string>
-						<string key="toggleAnsweringMachine:">id</string>
-						<string key="toggleAudioSessionsDrawer:">id</string>
-						<string key="toggleAutoAccept:">id</string>
-						<string key="toggleChatPrivacy:">id</string>
-						<string key="toggleDialPadClicked:">id</string>
-						<string key="toggleHistoryGroup:">id</string>
-						<string key="toggleMirrorWindow:">id</string>
-						<string key="toogleExpand:">id</string>
-						<string key="userClickedParticipantMenu:">id</string>
-						<string key="viewHistory:">id</string>
-						<string key="viewHistoryForContact:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="accountSelectionChanged:">
-							<string key="name">accountSelectionChanged:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="actionButtonClicked:">
-							<string key="name">actionButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addContact:">
-							<string key="name">addContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addContactToConference:">
-							<string key="name">addContactToConference:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addContactWithUri:">
-							<string key="name">addContactWithUri:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="addGroup:">
-							<string key="name">addGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="backToContacts:">
-							<string key="name">backToContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="backupContacts:">
-							<string key="name">backupContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="blockContact:">
-							<string key="name">blockContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="checkForUpdates:">
-							<string key="name">checkForUpdates:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="clearSearchField:">
-							<string key="name">clearSearchField:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="close:">
-							<string key="name">close:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="conferenceClicked:">
-							<string key="name">conferenceClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="deleteItem:">
-							<string key="name">deleteItem:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="deletePolicyItem:">
-							<string key="name">deletePolicyItem:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="deletePresenceHistory:">
-							<string key="name">deletePresenceHistory:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="dialPadButtonClicked:">
-							<string key="name">dialPadButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="displayNameChanged:">
-							<string key="name">displayNameChanged:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="dndClicked:">
-							<string key="name">dndClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="editContact:">
-							<string key="name">editContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="focusSearchTextField:">
-							<string key="name">focusSearchTextField:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="goToBackupContactsFolderClicked:">
-							<string key="name">goToBackupContactsFolderClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="groupButtonClicked:">
-							<string key="name">groupButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="hangupAllClicked:">
-							<string key="name">hangupAllClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="hideGroup:">
-							<string key="name">hideGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="joinConferenceClicked:">
-							<string key="name">joinConferenceClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="mergeContacts:">
-							<string key="name">mergeContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="moveGroupToIndex:">
-							<string key="name">moveGroupToIndex:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="muteClicked:">
-							<string key="name">muteClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="openURL:">
-							<string key="name">openURL:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="presenceActivityChanged:">
-							<string key="name">presenceActivityChanged:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="presenceNoteChanged:">
-							<string key="name">presenceNoteChanged:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="recordingClicked:">
-							<string key="name">recordingClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="redialLast:">
-							<string key="name">redialLast:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="removeContactFromGroup:">
-							<string key="name">removeContactFromGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="renameGroup:">
-							<string key="name">renameGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="restoreContactsClicked:">
-							<string key="name">restoreContactsClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="searchContacts:">
-							<string key="name">searchContacts:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="selectOutboundProxyClicked:">
-							<string key="name">selectOutboundProxyClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sendFile:">
-							<string key="name">sendFile:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sendSMSToSelected:">
-							<string key="name">sendSMSToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sendSMSToSelectedUri:">
-							<string key="name">sendSMSToSelectedUri:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="sessionButtonClicked:">
-							<string key="name">sessionButtonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setAlwaysOnTop:">
-							<string key="name">setAlwaysOnTop:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setAutoAnswer:">
-							<string key="name">setAutoAnswer:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setDialogPolicy:">
-							<string key="name">setDialogPolicy:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setPresenceActivityFromHistory:">
-							<string key="name">setPresenceActivityFromHistory:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setPresenceOfflineNote:">
-							<string key="name">setPresenceOfflineNote:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setPresencePolicy:">
-							<string key="name">setPresencePolicy:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setSpeechSyntezis:">
-							<string key="name">setSpeechSyntezis:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setSubscribeToPresence:">
-							<string key="name">setSubscribeToPresence:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="setUseSpeechRecognition:">
-							<string key="name">setUseSpeechRecognition:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showAccountSettings:">
-							<string key="name">showAccountSettings:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showBlinkPro:">
-							<string key="name">showBlinkPro:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showChangelog:">
-							<string key="name">showChangelog:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showChatWindow:">
-							<string key="name">showChatWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showChatWindowForAccountWithTargetUri:">
-							<string key="name">showChatWindowForAccountWithTargetUri:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showDebugWindow:">
-							<string key="name">showDebugWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showDonate:">
-							<string key="name">showDonate:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showHelp:">
-							<string key="name">showHelp:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showHistoryViewer:">
-							<string key="name">showHistoryViewer:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showInFavoritesGroup:">
-							<string key="name">showInFavoritesGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showPSTNAccess:">
-							<string key="name">showPSTNAccess:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showPendingRequests:">
-							<string key="name">showPendingRequests:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showPresenceInfo:">
-							<string key="name">showPresenceInfo:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showServiceProvider:">
-							<string key="name">showServiceProvider:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showSylkServer:">
-							<string key="name">showSylkServer:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="silentClicked:">
-							<string key="name">silentClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startAudioSessionWithSIPURI:">
-							<string key="name">startAudioSessionWithSIPURI:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startAudioToSelected:">
-							<string key="name">startAudioToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startChatSessionWithSIPURI:">
-							<string key="name">startChatSessionWithSIPURI:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startChatToSelected:">
-							<string key="name">startChatToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startScreenSharing:">
-							<string key="name">startScreenSharing:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="startVideoToSelected:">
-							<string key="name">startVideoToSelected:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="tellMeWhenContactBecomesAvailable:">
-							<string key="name">tellMeWhenContactBecomesAvailable:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleAnsweringMachine:">
-							<string key="name">toggleAnsweringMachine:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleAudioSessionsDrawer:">
-							<string key="name">toggleAudioSessionsDrawer:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleAutoAccept:">
-							<string key="name">toggleAutoAccept:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleChatPrivacy:">
-							<string key="name">toggleChatPrivacy:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleDialPadClicked:">
-							<string key="name">toggleDialPadClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleHistoryGroup:">
-							<string key="name">toggleHistoryGroup:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toggleMirrorWindow:">
-							<string key="name">toggleMirrorWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="toogleExpand:">
-							<string key="name">toogleExpand:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedParticipantMenu:">
-							<string key="name">userClickedParticipantMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="viewHistory:">
-							<string key="name">viewHistory:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="viewHistoryForContact:">
-							<string key="name">viewHistoryForContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="accountPopUp">id</string>
-						<string key="actionButtons">id</string>
-						<string key="addContactButton">id</string>
-						<string key="addContactButtonDialPad">id</string>
-						<string key="addContactButtonSearch">id</string>
-						<string key="addContactToConferenceDialPad">id</string>
-						<string key="alwaysOnTopMenuItem">id</string>
-						<string key="audioSessionsListView">id</string>
-						<string key="blinkMenu">id</string>
-						<string key="callMenu">id</string>
-						<string key="chatMenu">id</string>
-						<string key="conferenceButton">id</string>
-						<string key="contactContextMenu">id</string>
-						<string key="contactOutline">id</string>
-						<string key="contactsMenu">id</string>
-						<string key="contactsScrollView">id</string>
-						<string key="devicesMenu">id</string>
-						<string key="dialPadView">id</string>
-						<string key="drawer">id</string>
-						<string key="drawerSplitView">id</string>
-						<string key="fileTransfersWindow">id</string>
-						<string key="groupButton">id</string>
-						<string key="groupMenu">id</string>
-						<string key="historyMenu">id</string>
-						<string key="mainTabView">id</string>
-						<string key="micLevelIndicator">id</string>
-						<string key="model">id</string>
-						<string key="muteButton">id</string>
-						<string key="nameText">id</string>
-						<string key="notFoundText">id</string>
-						<string key="participantMenu">id</string>
-						<string key="participantsTableView">id</string>
-						<string key="participantsView">id</string>
-						<string key="photoImage">id</string>
-						<string key="presenceActivityPopUp">id</string>
-						<string key="presenceMenu">id</string>
-						<string key="presenceNoteText">id</string>
-						<string key="presencePopUpMenu">id</string>
-						<string key="presenceWatchersMenu">id</string>
-						<string key="recordingsMenu">id</string>
-						<string key="recordingsSubMenu">id</string>
-						<string key="restoreContactsMenu">id</string>
-						<string key="screenShareMenu">id</string>
-						<string key="searchBox">id</string>
-						<string key="searchOutline">id</string>
-						<string key="searchResultsModel">id</string>
-						<string key="selectedAudioDeviceLabel">id</string>
-						<string key="sessionsView">id</string>
-						<string key="silentButton">id</string>
-						<string key="statusBarMenu">id</string>
-						<string key="toolTipView">id</string>
-						<string key="toolsMenu">id</string>
-						<string key="useSpeechRecognitionMenuItem">id</string>
-						<string key="useSpeechSynthesisMenuItem">id</string>
-						<string key="windowMenu">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="accountPopUp">
-							<string key="name">accountPopUp</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="actionButtons">
-							<string key="name">actionButtons</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactButton">
-							<string key="name">addContactButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactButtonDialPad">
-							<string key="name">addContactButtonDialPad</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactButtonSearch">
-							<string key="name">addContactButtonSearch</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addContactToConferenceDialPad">
-							<string key="name">addContactToConferenceDialPad</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="alwaysOnTopMenuItem">
-							<string key="name">alwaysOnTopMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="audioSessionsListView">
-							<string key="name">audioSessionsListView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="blinkMenu">
-							<string key="name">blinkMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="callMenu">
-							<string key="name">callMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="chatMenu">
-							<string key="name">chatMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceButton">
-							<string key="name">conferenceButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactContextMenu">
-							<string key="name">contactContextMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactOutline">
-							<string key="name">contactOutline</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactsMenu">
-							<string key="name">contactsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="contactsScrollView">
-							<string key="name">contactsScrollView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="devicesMenu">
-							<string key="name">devicesMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="dialPadView">
-							<string key="name">dialPadView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawer">
-							<string key="name">drawer</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawerSplitView">
-							<string key="name">drawerSplitView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="fileTransfersWindow">
-							<string key="name">fileTransfersWindow</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="groupButton">
-							<string key="name">groupButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="groupMenu">
-							<string key="name">groupMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="historyMenu">
-							<string key="name">historyMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="mainTabView">
-							<string key="name">mainTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="micLevelIndicator">
-							<string key="name">micLevelIndicator</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="model">
-							<string key="name">model</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="muteButton">
-							<string key="name">muteButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="nameText">
-							<string key="name">nameText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="notFoundText">
-							<string key="name">notFoundText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantMenu">
-							<string key="name">participantMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsTableView">
-							<string key="name">participantsTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsView">
-							<string key="name">participantsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="photoImage">
-							<string key="name">photoImage</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presenceActivityPopUp">
-							<string key="name">presenceActivityPopUp</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presenceMenu">
-							<string key="name">presenceMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presenceNoteText">
-							<string key="name">presenceNoteText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presencePopUpMenu">
-							<string key="name">presencePopUpMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="presenceWatchersMenu">
-							<string key="name">presenceWatchersMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="recordingsMenu">
-							<string key="name">recordingsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="recordingsSubMenu">
-							<string key="name">recordingsSubMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="restoreContactsMenu">
-							<string key="name">restoreContactsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="screenShareMenu">
-							<string key="name">screenShareMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchBox">
-							<string key="name">searchBox</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchOutline">
-							<string key="name">searchOutline</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="searchResultsModel">
-							<string key="name">searchResultsModel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="selectedAudioDeviceLabel">
-							<string key="name">selectedAudioDeviceLabel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sessionsView">
-							<string key="name">sessionsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="silentButton">
-							<string key="name">silentButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="statusBarMenu">
-							<string key="name">statusBarMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolTipView">
-							<string key="name">toolTipView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolsMenu">
-							<string key="name">toolsMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="useSpeechRecognitionMenuItem">
-							<string key="name">useSpeechRecognitionMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="useSpeechSynthesisMenuItem">
-							<string key="name">useSpeechSynthesisMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="windowMenu">
-							<string key="name">windowMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ContactWindowController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">CustomListModel</string>
-					<string key="superclassName">NSObject</string>
-					<object class="NSMutableDictionary" key="actions">
-						<string key="NS.key.0">userDropedFileOnContact:</string>
-						<string key="NS.object.0">id</string>
-					</object>
-					<object class="NSMutableDictionary" key="actionInfosByName">
-						<string key="NS.key.0">userDropedFileOnContact:</string>
-						<object class="IBActionInfo" key="NS.object.0">
-							<string key="name">userDropedFileOnContact:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</object>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/CustomListModel.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">FileTransferWindowController</string>
-					<string key="superclassName">NSObject</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="clearList:">id</string>
-						<string key="close:">id</string>
-						<string key="showWindow:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="clearList:">
-							<string key="name">clearList:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="close:">
-							<string key="name">close:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="showWindow:">
-							<string key="name">showWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="bottomLabel">id</string>
-						<string key="listView">id</string>
-						<string key="transferSpeed">id</string>
-						<string key="window">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="bottomLabel">
-							<string key="name">bottomLabel</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="listView">
-							<string key="name">listView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="transferSpeed">
-							<string key="name">transferSpeed</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="window">
-							<string key="name">window</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/FileTransferWindowController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ListView</string>
-					<string key="superclassName">VerticalBoxView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ListView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">NSObject</string>
-					<string key="superclassName">objc</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/NSObject.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">ParticipantsTableView</string>
-					<string key="superclassName">NSTableView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ParticipantsTableView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">PhotoView</string>
-					<string key="superclassName">NSImageView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PhotoView.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">PreferencesController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="buttonClicked:">id</string>
-						<string key="openSite:">id</string>
-						<string key="syncWithiCloudClicked:">id</string>
-						<string key="userClickedSelectedProxyRadioButton:">id</string>
-						<string key="userClickedToolbarButton:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="buttonClicked:">
-							<string key="name">buttonClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="openSite:">
-							<string key="name">openSite:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="syncWithiCloudClicked:">
-							<string key="name">syncWithiCloudClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedSelectedProxyRadioButton:">
-							<string key="name">userClickedSelectedProxyRadioButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedToolbarButton:">
-							<string key="name">userClickedToolbarButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="accountTable">id</string>
-						<string key="addButton">id</string>
-						<string key="addressText">id</string>
-						<string key="advancedPop">id</string>
-						<string key="advancedTabView">id</string>
-						<string key="advancedToggle">id</string>
-						<string key="displayNameText">id</string>
-						<string key="generalTabView">id</string>
-						<string key="mainTabView">id</string>
-						<string key="passwordText">id</string>
-						<string key="registration_status">id</string>
-						<string key="registration_tls_icon">id</string>
-						<string key="removeButton">id</string>
-						<string key="sectionDescription">id</string>
-						<string key="sectionHelpPlaceholder">id</string>
-						<string key="selected_proxy_radio_button">id</string>
-						<string key="sync_with_icloud_checkbox">id</string>
-						<string key="toolbar">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="accountTable">
-							<string key="name">accountTable</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addButton">
-							<string key="name">addButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="addressText">
-							<string key="name">addressText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedPop">
-							<string key="name">advancedPop</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedTabView">
-							<string key="name">advancedTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="advancedToggle">
-							<string key="name">advancedToggle</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="displayNameText">
-							<string key="name">displayNameText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="generalTabView">
-							<string key="name">generalTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="mainTabView">
-							<string key="name">mainTabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="passwordText">
-							<string key="name">passwordText</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="registration_status">
-							<string key="name">registration_status</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="registration_tls_icon">
-							<string key="name">registration_tls_icon</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="removeButton">
-							<string key="name">removeButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sectionDescription">
-							<string key="name">sectionDescription</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sectionHelpPlaceholder">
-							<string key="name">sectionHelpPlaceholder</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="selected_proxy_radio_button">
-							<string key="name">selected_proxy_radio_button</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sync_with_icloud_checkbox">
-							<string key="name">sync_with_icloud_checkbox</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolbar">
-							<string key="name">toolbar</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/PreferencesController.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">SearchContactListModel</string>
-					<string key="superclassName">CustomListModel</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/SearchContactListModel.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">VerticalBoxView</string>
-					<string key="superclassName">NSView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/VerticalBoxView.h</string>
-					</object>
-				</object>
-			</array>
-		</object>
+		<object class="IBClassDescriber" key="IBDocument.Classes"/>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>

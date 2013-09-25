@@ -170,7 +170,7 @@
 				</object>
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<object class="NSView" key="NSWindowView" id="1006">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSCustomView" id="229285116">
@@ -178,6 +178,8 @@
 							<int key="NSvFlags">290</int>
 							<string key="NSFrameSize">{353, 22}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<string key="NSClassName">FancyTabSwitcher</string>
 						</object>
 						<object class="NSTabView" id="31287118">
@@ -185,6 +187,7 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{0, 22}, {353, 375}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<array class="NSMutableArray" key="NSTabViewItems"/>
 							<object class="NSFont" key="NSFont">
 								<string key="NSName">LucidaGrande</string>
@@ -197,6 +200,8 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{353, 397}</string>
+					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="31287118"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>

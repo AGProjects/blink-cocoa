@@ -42,7 +42,7 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSCustomView" id="1005">
-				<nil key="NSNextResponder"/>
+				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">268</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="NSSegmentedControl" id="338462680">
@@ -50,6 +50,7 @@
 						<int key="NSvFlags">-2147483380</int>
 						<string key="NSFrame">{{152, 2}, {111, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="507355065"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="NSEnabled">YES</bool>
@@ -88,6 +89,7 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{245, 37}, {16, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="182486928"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="44578391">
@@ -118,6 +120,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 37}, {244, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="414512458"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="481585753">
@@ -156,6 +159,7 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{4, 21}, {73, 16}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="820836428"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="420729772">
@@ -186,6 +190,7 @@
 						</set>
 						<string key="NSFrame">{{7, 37}, {14, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="2310863"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="1067246760">
@@ -208,6 +213,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{72, 21}, {191, 15}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="163338663"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="451413128">
@@ -233,6 +239,8 @@
 						<int key="NSvFlags">265</int>
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
@@ -250,6 +258,7 @@
 										<string key="NSClassName">NSImage</string>
 										<string key="NSResourceName">pause</string>
 									</object>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Put the session on hold</string>
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
@@ -259,6 +268,7 @@
 										<string key="NSClassName">NSImage</string>
 										<string key="NSResourceName">record</string>
 									</object>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Record the Audio Session to file</string>
 									<int key="NSSegmentItemTag">1</int>
 									<int key="NSSegmentItemImageScaling">0</int>
@@ -269,6 +279,7 @@
 										<string key="NSClassName">NSImage</string>
 										<string key="NSResourceName">hangup_small</string>
 									</object>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Hangup</string>
 									<int key="NSSegmentItemTag">2</int>
 									<int key="NSSegmentItemImageScaling">0</int>
@@ -285,6 +296,7 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{153, 2}, {110, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="88869251"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="177104667">
@@ -347,6 +359,7 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{173, 2}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="452112932"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="383047219">
@@ -393,6 +406,7 @@
 						<int key="NSvFlags">-2147483383</int>
 						<string key="NSFrame">{{173, 2}, {89, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="491586822"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="710252372">
@@ -407,6 +421,7 @@
 										<string key="NSClassName">NSImage</string>
 										<string key="NSResourceName">mute</string>
 									</object>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Mute this participant</string>
 									<int key="NSSegmentItemTag">3</int>
 									<int key="NSSegmentItemImageScaling">0</int>
@@ -414,12 +429,14 @@
 								<object class="NSSegmentItem">
 									<double key="NSSegmentItemWidth">20</double>
 									<reference key="NSSegmentItemImage" ref="261713981"/>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Put this participant on hold</string>
 									<int key="NSSegmentItemImageScaling">0</int>
 								</object>
 								<object class="NSSegmentItem">
 									<double key="NSSegmentItemWidth">20</double>
 									<reference key="NSSegmentItemImage" ref="14735505"/>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Record the Audio Session to file</string>
 									<int key="NSSegmentItemTag">1</int>
 									<int key="NSSegmentItemImageScaling">0</int>
@@ -427,6 +444,7 @@
 								<object class="NSSegmentItem">
 									<double key="NSSegmentItemWidth">20</double>
 									<reference key="NSSegmentItemImage" ref="362001423"/>
+									<string key="NSSegmentItemLabel"/>
 									<string key="NSSegmentItemTooltip">Hangup</string>
 									<int key="NSSegmentItemTag">2</int>
 									<int key="NSSegmentItemImageScaling">0</int>
@@ -442,6 +460,7 @@
 						<int key="NSvFlags">266</int>
 						<string key="NSFrame">{{4, 6}, {171, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="347238004"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="1026873649">
@@ -468,6 +487,7 @@
 						</set>
 						<string key="NSFrame">{{5, 5}, {17, 14}}</string>
 						<reference key="NSSuperview" ref="1005"/>
+						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="338462680"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="71900893">
@@ -487,6 +507,8 @@
 					</object>
 				</array>
 				<string key="NSFrameSize">{265, 57}</string>
+				<reference key="NSSuperview"/>
+				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="327816639"/>
 				<string key="NSClassName">AudioSession</string>
 			</object>
@@ -1868,7 +1890,6 @@
 				<string key="326.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="33.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="34.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<integer value="0" key="35.IBNSSegmentedControlInspectorSelectedSegmentMetadataKey"/>
 				<string key="35.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<integer value="2" key="35.IBSegmentedControlInspectorSelectedSegmentMetadataKey"/>
 				<string key="53.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>

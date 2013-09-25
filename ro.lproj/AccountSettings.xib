@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1080</int>
-		<string key="IBDocument.SystemVersion">12E55</string>
-		<string key="IBDocument.InterfaceBuilderVersion">3084</string>
-		<string key="IBDocument.AppKitVersion">1187.39</string>
-		<string key="IBDocument.HIToolboxVersion">626.00</string>
+		<int key="IBDocument.SystemTarget">1070</int>
+		<string key="IBDocument.SystemVersion">11E53</string>
+		<string key="IBDocument.InterfaceBuilderVersion">2182</string>
+		<string key="IBDocument.AppKitVersion">1138.47</string>
+		<string key="IBDocument.HIToolboxVersion">569.00</string>
 		<dictionary class="NSMutableDictionary" key="IBDocument.PluginVersions">
-			<string key="com.apple.InterfaceBuilder.CocoaPlugin">3084</string>
-			<string key="com.apple.WebKitIBPlugin">2053</string>
+			<string key="com.apple.InterfaceBuilder.CocoaPlugin">2182</string>
+			<string key="com.apple.WebKitIBPlugin">1117</string>
 		</dictionary>
 		<array key="IBDocument.IntegratedClassDependencies">
-			<string>NSCustomObject</string>
-			<string>NSProgressIndicator</string>
 			<string>NSTextField</string>
-			<string>NSTextFieldCell</string>
 			<string>NSView</string>
 			<string>NSWindowTemplate</string>
+			<string>NSCustomObject</string>
+			<string>NSProgressIndicator</string>
 			<string>WebView</string>
+			<string>NSTextFieldCell</string>
 		</array>
 		<array key="IBDocument.PluginDependencies">
 			<string>com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -48,7 +48,7 @@
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<string key="NSWindowContentMinSize">{800, 300}</string>
 				<object class="NSView" key="NSWindowView" id="438071196">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">258</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="WebView" id="497458157">
@@ -73,6 +73,7 @@
 							</set>
 							<string key="NSFrameSize">{800, 678}</string>
 							<reference key="NSSuperview" ref="438071196"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView"/>
 							<string key="FrameName"/>
 							<string key="GroupName"/>
@@ -92,10 +93,11 @@
 							<int key="NSvFlags">301</int>
 							<string key="NSFrame">{{323, 374}, {151, 17}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="290421302"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="264005088">
-								<int key="NSCellFlags">68157504</int>
+								<int key="NSCellFlags">68288064</int>
 								<int key="NSCellFlags2">272630784</int>
 								<string key="NSContents">Loading Server page...</string>
 								<object class="NSFont" key="NSSupport" id="48136291">
@@ -123,17 +125,17 @@
 									</object>
 								</object>
 							</object>
-							<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 						</object>
 						<object class="NSTextField" id="687151261">
 							<reference key="NSNextResponder" ref="438071196"/>
 							<int key="NSvFlags">319</int>
 							<string key="NSFrame">{{177, 388}, {444, 75}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="271801333"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="977882214">
-								<int key="NSCellFlags">67108864</int>
+								<int key="NSCellFlags">67239424</int>
 								<int key="NSCellFlags2">138412032</int>
 								<string key="NSContents">Error</string>
 								<reference key="NSSupport" ref="48136291"/>
@@ -144,13 +146,15 @@
 									<bytes key="NSRGB">MSAwIDAAA</bytes>
 								</object>
 							</object>
-							<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 						</object>
 						<object class="NSProgressIndicator" id="290421302">
 							<reference key="NSNextResponder" ref="438071196"/>
 							<int key="NSvFlags">1325</int>
+							<object class="NSPSMatrix" key="NSDrawMatrix"/>
 							<string key="NSFrame">{{382, 323}, {32, 32}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<int key="NSpiFlags">28682</int>
 							<double key="NSMinValue">16</double>
 							<double key="NSMaxValue">100</double>
@@ -158,8 +162,10 @@
 						<object class="NSProgressIndicator" id="1010469740">
 							<reference key="NSNextResponder" ref="438071196"/>
 							<int key="NSvFlags">1292</int>
+							<object class="NSPSMatrix" key="NSDrawMatrix"/>
 							<string key="NSFrame">{{5, 656}, {16, 16}}</string>
 							<reference key="NSSuperview" ref="438071196"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="687151261"/>
 							<int key="NSpiFlags">28938</int>
 							<double key="NSMinValue">16</double>
@@ -167,6 +173,8 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{800, 678}</string>
+					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="497458157"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
