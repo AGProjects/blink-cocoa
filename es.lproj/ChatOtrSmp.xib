@@ -47,7 +47,7 @@
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<object class="NSView" key="NSWindowView" id="1006">
-					<nil key="NSNextResponder"/>
+					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSButton" id="1592473">
@@ -55,6 +55,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{395, 13}, {82, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="568169469"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
@@ -83,6 +84,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{477, 13}, {97, 32}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="532995803">
@@ -106,13 +108,14 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{17, 169}, {554, 35}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSNextKeyView" ref="1041529560"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="823664123"/>
 							<string key="NSReuseIdentifierKey">_NS:1535</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="144947794">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">272629760</int>
-								<string key="NSContents">You want to authenticate remote party using a commonly known secret. Optionally you can ask a question as a hint.</string>
+								<string key="NSContents">You want to authenticate remote party using a commonly known secret. This secret will not be sent over the network. Optionally you can ask a question as a hint.</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
@@ -144,9 +147,10 @@
 						<object class="NSTextField" id="1041529560">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{20, 139}, {548, 22}}</string>
+							<string key="NSFrame">{{20, 89}, {548, 22}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSNextKeyView" ref="823664123"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="140411000"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="790470095">
@@ -154,7 +158,7 @@
 								<int key="NSCellFlags2">272630784</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="288620513"/>
-								<string key="NSPlaceholderString">Enter here a secret that both of you know. The secret is case sensitive.</string>
+								<string key="NSPlaceholderString">Enter here a secret answer that both of you know. The text is case sensitive.</string>
 								<string key="NSCellIdentifier">_NS:9</string>
 								<reference key="NSControlView" ref="1041529560"/>
 								<bool key="NSDrawsBackground">YES</bool>
@@ -179,9 +183,10 @@
 						<object class="NSTextField" id="823664123">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{20, 87}, {548, 45}}</string>
+							<string key="NSFrame">{{20, 116}, {548, 45}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSNextKeyView" ref="140411000"/>
+							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="1041529560"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="656745351">
@@ -189,7 +194,7 @@
 								<int key="NSCellFlags2">272629760</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="288620513"/>
-								<string key="NSPlaceholderString">Optionally, type a question for which only the two of you know the answer</string>
+								<string key="NSPlaceholderString">Type a question for which only the two of you know the secret answer. The question will show up on the remote party's computer.</string>
 								<string key="NSCellIdentifier">_NS:9</string>
 								<reference key="NSControlView" ref="823664123"/>
 								<bool key="NSDrawsBackground">YES</bool>
@@ -203,6 +208,7 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{20, 60}, {548, 20}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="92961847"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<string key="NSHuggingPriority">{250, 250}</string>
@@ -212,8 +218,9 @@
 						<object class="NSTextField" id="92961847">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{17, 30}, {379, 14}}</string>
+							<string key="NSFrame">{{17, 33}, {379, 14}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="559438599"/>
 							<string key="NSReuseIdentifierKey">_NS:1535</string>
 							<bool key="NSEnabled">YES</bool>
@@ -236,15 +243,16 @@
 						<object class="NSTextField" id="559438599">
 							<reference key="NSNextResponder" ref="1006"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{17, 20}, {317, 11}}</string>
+							<string key="NSFrame">{{17, 14}, {317, 11}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1592473"/>
 							<string key="NSReuseIdentifierKey">_NS:1535</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="1033217051">
-								<int key="NSCellFlags">68157504</int>
-								<int key="NSCellFlags2">272892928</int>
-								<string key="NSContents">Identity Verification is performed using OTR SMP protocol</string>
+								<int key="NSCellFlags">67108864</int>
+								<int key="NSCellFlags2">272891904</int>
+								<string key="NSContents">Verification is performed using OTR SMP protocol</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">9</double>
@@ -259,9 +267,11 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{588, 219}</string>
+					<reference key="NSSuperview"/>
+					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="290435475"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName"/>
 				<bool key="NSWindowIsRestorable">YES</bool>
@@ -397,13 +407,13 @@
 						<reference key="object" ref="1006"/>
 						<array class="NSMutableArray" key="children">
 							<reference ref="290435475"/>
-							<reference ref="1041529560"/>
-							<reference ref="823664123"/>
 							<reference ref="140411000"/>
 							<reference ref="1592473"/>
 							<reference ref="568169469"/>
-							<reference ref="92961847"/>
+							<reference ref="1041529560"/>
+							<reference ref="823664123"/>
 							<reference ref="559438599"/>
+							<reference ref="92961847"/>
 						</array>
 						<reference key="parent" ref="1005"/>
 					</object>
