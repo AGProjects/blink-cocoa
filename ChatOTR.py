@@ -3,7 +3,8 @@
 
 
 from AppKit import NSApp, NSOKButton, NSCancelButton, NSOnState
-from Foundation import NSObject, NSBundle
+from Foundation import NSObject, NSBundle, NSColor, NSTimer, NSRunLoop, NSRunLoopCommonModes
+
 import objc
 
 import potr
@@ -134,6 +135,7 @@ class ChatOtrSmp(NSObject):
     finished = False
     response = None
     question = None
+    timer = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -147,6 +149,10 @@ class ChatOtrSmp(NSObject):
 
     def close(self):
         self.chatController = None
+        if self.timer is not None:
+            if self.timer.isValid():
+                self.timer.invalidate()
+            self.timer = None
         self.release()
 
     def dealloc(self):
@@ -159,6 +165,7 @@ class ChatOtrSmp(NSObject):
 
     @objc.IBAction
     def okClicked_(self, sender):
+        self.statusText.setTextColor_(NSColor.blackColor())
         if self.finished:
             self.window.orderOut_(self)
             return
@@ -213,12 +220,14 @@ class ChatOtrSmp(NSObject):
         return None
 
     def handle_tlv(self, tlvs):
+        self.statusText.setTextColor_(NSColor.blackColor())
         if tlvs:
             fingerprint = self.ctx.getCurrentKey()
             is1qtlv = self.get_tlv(tlvs, potr.proto.SMP1QTLV)
             # check for TLV_SMP_ABORT or state = CHEATED
             if self.smp_running and not self.ctx.smpIsValid():
-                self.statusText.setStringValue_('Verification failed')
+                self.statusText.setTextColor_(NSColor.redColor())
+                self.statusText.setStringValue_('Verification failed. You may try again later.')
                 self._finish()
 
             # check for TLV_SMP1
@@ -247,6 +256,7 @@ class ChatOtrSmp(NSObject):
             # check for TLV_SMP3
             elif self.get_tlv(tlvs, potr.proto.SMP3TLV):
                 if self.ctx.smpIsSuccess():
+                    self.statusText.setTextColor_(NSColor.greenColor())
                     self.statusText.setStringValue_('Verification succeeded')
                     if fingerprint:
                         self.chatController.otr_account.setTrust(self.chatController.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
@@ -254,12 +264,14 @@ class ChatOtrSmp(NSObject):
                         self.chatController.updateEncryptionWidgets()
                     self._finish()
                 else:
-                    self.statusText.setStringValue_('Verification failed')
+                    self.statusText.setTextColor_(NSColor.redColor())
+                    self.statusText.setStringValue_('Verification failed. You may try again later.')
                     self._finish()
 
             # check for TLV_SMP4
             elif self.get_tlv(tlvs, potr.proto.SMP4TLV):
                 if self.ctx.smpIsSuccess():
+                    self.statusText.setTextColor_(NSColor.greenColor())
                     self.statusText.setStringValue_('Verification succeeded')
                     if fingerprint:
                         self.chatController.otr_account.setTrust(self.chatController.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
@@ -267,7 +279,8 @@ class ChatOtrSmp(NSObject):
                         self.chatController.updateEncryptionWidgets()
                     self._finish()
                 else:
-                    self.statusText.setStringValue_('Verification failed')
+                    self.statusText.setTextColor_(NSColor.redColor())
+                    self.statusText.setStringValue_('Verification failed. You may try again later.')
                     self._finish()
 
     def _finish(self):
@@ -279,6 +292,11 @@ class ChatOtrSmp(NSObject):
         self.continueButton.setEnabled_(True)
         self.continueButton.setTitle_('Finish')
         self.cancelButton.setHidden_(True)
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "verificationFinished:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
+
+    def verificationFinished_(self, timer):
+        self.okClicked_(None)
 
     def show(self, response=None):
         self.secretText.setEnabled_(True)
@@ -308,11 +326,13 @@ class ChatOtrSmp(NSObject):
                 self.questionText.setHidden_(False)
                 self.secretText.setHidden_(False)
                 self.questionText.setStringValue_(self.question)
+                self.questionText.setEnabled_(False)
                 self.labelText.setStringValue_('%s has asked you a question to verify your identity:' % self.chatController.sessionController.remoteSIPAddress)
         else:
             self.statusText.setStringValue_('')
             self.continueButton.setEnabled_(True)
             self.questionText.setHidden_(False)
             self.questionText.setStringValue_('')
+            self.questionText.setEnabled_(True)
             self.labelText.setStringValue_(('You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.' % self.chatController.sessionController.remoteSIPAddress))
 

@@ -115,7 +115,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="144947794">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">272629760</int>
-								<string key="NSContents">You want to authenticate remote party using a commonly known secret. This secret will not be sent over the network. Optionally you can ask a question as a hint.</string>
+								<string key="NSContents">You want to authenticate remote party using a commonly known secret. This secret will not be sent over the network.</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
@@ -158,7 +158,7 @@
 								<int key="NSCellFlags2">272630784</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="288620513"/>
-								<string key="NSPlaceholderString">Enter here a secret answer that both of you know. The text is case sensitive.</string>
+								<string key="NSPlaceholderString">Enter here the secret answer both of you know. Text is case sensitive.</string>
 								<string key="NSCellIdentifier">_NS:9</string>
 								<reference key="NSControlView" ref="1041529560"/>
 								<bool key="NSDrawsBackground">YES</bool>
@@ -191,10 +191,10 @@
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="656745351">
 								<int key="NSCellFlags">-1805647871</int>
-								<int key="NSCellFlags2">272629760</int>
+								<int key="NSCellFlags2">306184192</int>
 								<string key="NSContents"/>
 								<reference key="NSSupport" ref="288620513"/>
-								<string key="NSPlaceholderString">Type a question for which only the two of you know the secret answer. The question will show up on the remote party's computer.</string>
+								<string key="NSPlaceholderString">Ask a question for which only the two of you know the secret answer.</string>
 								<string key="NSCellIdentifier">_NS:9</string>
 								<reference key="NSControlView" ref="823664123"/>
 								<bool key="NSDrawsBackground">YES</bool>
