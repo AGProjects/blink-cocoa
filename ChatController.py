@@ -2017,7 +2017,7 @@ class OutgoingMessageHandler(NSObject):
         self.stream = stream
         self.no_report_received_messages = {}
         self.connected = True
-        if self.delegate.delegate.require_encryption and not self.delegate.delegate.sessionController.remote_focus:
+        if self.delegate.delegate.require_encryption and not self.delegate.delegate.sessionController.remote_focus and self.delegate.delegate.sessionController.session.direction == 'outgoing':
             self.propose_otr()
 
         NotificationCenter().add_observer(self, sender=stream)
