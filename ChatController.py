@@ -493,9 +493,13 @@ class ChatController(MediaStream):
     def chatView_becameIdle_(self, chatView, time):
         if self.stream:
             self.stream.send_composing_indication("idle", 60, last_active=time)
+
     def chatView_becameActive_(self, chatView, time):
         if self.stream:
             self.stream.send_composing_indication("active", 60, last_active=time)
+            if self.outgoing_message_handler.must_propose_otr:
+                self.outgoing_message_handler.propose_otr()
+
 
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
@@ -1864,6 +1868,7 @@ class OutgoingMessageHandler(NSObject):
     no_report_received_messages = None
     remote_uri = None
     local_uri = None
+    must_propose_otr = False
 
     def initWithView_(self, chatView):
         self = super(OutgoingMessageHandler, self).init()
@@ -1893,6 +1898,8 @@ class OutgoingMessageHandler(NSObject):
 
         if self.delegate.delegate.sessionController.remote_focus:
             return
+
+        self.must_propose_otr = False
 
         otr_context_id = self.delegate.sessionController.call_id
         ctx = self.delegate.delegate.otr_account.getContext(otr_context_id)
@@ -2017,8 +2024,12 @@ class OutgoingMessageHandler(NSObject):
         self.stream = stream
         self.no_report_received_messages = {}
         self.connected = True
-        if self.delegate.delegate.require_encryption and not self.delegate.delegate.sessionController.remote_focus and self.delegate.delegate.sessionController.session.direction == 'outgoing':
-            self.propose_otr()
+        if self.delegate.delegate.require_encryption and not self.delegate.delegate.sessionController.remote_focus:
+            if self.delegate.delegate.sessionController.session.direction == 'outgoing':
+                self.propose_otr()
+            else:
+                # To avoid state race conditions where both clients propose OTR at the same time we postpone proposal for later when we type something
+                self.must_propose_otr = True
 
         NotificationCenter().add_observer(self, sender=stream)
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
