@@ -1899,6 +1899,7 @@ class OutgoingMessageHandler(NSObject):
         newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, '?OTRv2?', appdata={'stream':self.delegate.delegate.stream})
         self.delegate.delegate.setEncryptionState(ctx)
         try:
+            self.delegate.sessionController.log_info(u"Proposing OTR...")
             self.stream.send_message(newmsg, timestamp=ISOTimestamp.now())
         except ChatStreamError:
             pass
