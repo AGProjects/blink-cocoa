@@ -1073,7 +1073,6 @@
 		1FF32B5B17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
 		1FF32B5C17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
 		1FF32B5D17EC842B00E63A20 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
-		1FF32B6C17ED021400E63A20 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF32B6B17ED021400E63A20 /* ScriptingBridge.framework */; };
 		1FF32B6D17ED0C9100E63A20 /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
 		1FF32B6E17ED0C9B00E63A20 /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
 		1FF32B6F17ED0D8600E63A20 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
@@ -2026,7 +2025,6 @@
 		1FF32B6817EC873000E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FF32B6917EC879D00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1FF32B6A17EC879F00E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		1FF32B6B17ED021400E63A20 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
 		1FF3736F17C9E656007418EB /* ChatOTR.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatOTR.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
@@ -2233,7 +2231,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FF32B6C17ED021400E63A20 /* ScriptingBridge.framework in Frameworks */,
 				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
 				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
@@ -2439,7 +2436,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				1FF32B6B17ED021400E63A20 /* ScriptingBridge.framework */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
