@@ -624,6 +624,9 @@
 		1F69640217BF777D00985747 /* locked-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FC17BF777D00985747 /* locked-yellow.png */; };
 		1F69640317BF777D00985747 /* locked-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FC17BF777D00985747 /* locked-yellow.png */; };
 		1F69640417BF777D00985747 /* locked-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FC17BF777D00985747 /* locked-yellow.png */; };
+		1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
+		1F69E8EC17F5614600B98B1E /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F065AB517AF925A003867C4 /* ScriptingBridge.framework */; };
+		1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
@@ -1666,6 +1669,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F27973A15D24F8800FB33D9 /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -1909,6 +1913,14 @@
 		1F6963F617BF771A00985747 /* unlocked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-red.png"; path = "icons/unlocked-red.png"; sourceTree = "<group>"; };
 		1F6963FB17BF777D00985747 /* locked-orange.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-orange.png"; path = "icons/locked-orange.png"; sourceTree = "<group>"; };
 		1F6963FC17BF777D00985747 /* locked-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-yellow.png"; path = "icons/locked-yellow.png"; sourceTree = "<group>"; };
+		1F69E8E317F5611800B98B1E /* libgcrypt.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libgcrypt.11.dylib; sourceTree = "<group>"; };
+		1F69E8E417F5611800B98B1E /* libgnutls-extra.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libgnutls-extra.26.dylib"; sourceTree = "<group>"; };
+		1F69E8E517F5611800B98B1E /* libgnutls.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libgnutls.26.dylib; sourceTree = "<group>"; };
+		1F69E8E617F5611800B98B1E /* libgpg-error.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libgpg-error.0.dylib"; sourceTree = "<group>"; };
+		1F69E8E717F5611800B98B1E /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = liblzo.1.dylib; sourceTree = "<group>"; };
+		1F69E8E817F5611800B98B1E /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libtasn1.3.dylib; sourceTree = "<group>"; };
+		1F69E8E917F5611800B98B1E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Python.framework; sourceTree = "<group>"; };
+		1F69E8EA17F5611800B98B1E /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
@@ -2231,6 +2243,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F69E8EC17F5614600B98B1E /* ScriptingBridge.framework in Frameworks */,
+				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
 				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
 				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
@@ -2354,6 +2368,22 @@
 			name = Keychain;
 			sourceTree = "<group>";
 		};
+		1F69E8E217F5611800B98B1E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1F69E8E317F5611800B98B1E /* libgcrypt.11.dylib */,
+				1F69E8E417F5611800B98B1E /* libgnutls-extra.26.dylib */,
+				1F69E8E517F5611800B98B1E /* libgnutls.26.dylib */,
+				1F69E8E617F5611800B98B1E /* libgpg-error.0.dylib */,
+				1F69E8E717F5611800B98B1E /* liblzo.1.dylib */,
+				1F69E8E817F5611800B98B1E /* libtasn1.3.dylib */,
+				1F69E8E917F5611800B98B1E /* Python.framework */,
+				1F69E8EA17F5611800B98B1E /* Sparkle.framework */,
+			);
+			name = Frameworks;
+			path = Distribution/Frameworks;
+			sourceTree = "<group>";
+		};
 		1F89844212FCC78900490C6C /* History */ = {
 			isa = PBXGroup;
 			children = (
@@ -2436,6 +2466,7 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				1F69E8E217F5611800B98B1E /* Frameworks */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -4874,6 +4905,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -4888,10 +4920,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
-				PROVISIONING_PROFILE = "235BCC69-D063-43EC-B0EF-704523DE19D4";
+				PROVISIONING_PROFILE = "6F8C9F49-F54A-496E-816A-5D956A923B6A";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4912,6 +4945,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks\"",
 				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -4924,10 +4958,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
-				PROVISIONING_PROFILE = "235BCC69-D063-43EC-B0EF-704523DE19D4";
+				PROVISIONING_PROFILE = "6F8C9F49-F54A-496E-816A-5D956A923B6A";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
