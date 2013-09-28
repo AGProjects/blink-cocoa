@@ -230,10 +230,10 @@ class EnrollmentController(NSObject):
         self.selectRadio_(self.radioMatrix)
 
     def setupForAdditionalAccounts(self):
-        self.window.setTitle_("Add Account")
+        self.window.setTitle_(NSLocalizedString("Add Account", "Enrollment window title"))
 
         welcome = self.window.contentView().viewWithTag_(100)
-        welcome.setStringValue_("Add New Account")
+        welcome.setStringValue_(NSLocalizedString("Add New Account", "Enrollment window title"))
 
         descr = self.window.contentView().viewWithTag_(101)
         descr.setStringValue_(NSLocalizedString("Select whether you want to add a SIP Account you already\nhave or create a new one.", "Enrollment panel label"))
@@ -283,7 +283,7 @@ class EnrollmentController(NSObject):
         try:
             response = cjson.decode(json_data.replace('\\/', '/'))
         except TypeError:
-            error_message = 'Cannot decode json data from enrollment server'
+            error_message = NSLocalizedString("Cannot decode json data from enrollment server", "Enrollment panel label")
 
         if response:
             if not response["success"]:

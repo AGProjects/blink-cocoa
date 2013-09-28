@@ -549,7 +549,7 @@ class SIPManager(object):
             nc_title = NSLocalizedString("New Voicemail Message", "System notification title") if new_messages == 1 else NSLocalizedString("New Voicemail Messages", "System notification title")
             nc_subtitle = NSLocalizedString("On Voicemail Server", "System notification subtitle")
             if old_messages > 0:
-                nc_body = NSLocalizedString("You have %d new and %d old voicemail messages" % (new_messages, old_messages), "System notification body")
+                nc_body = NSLocalizedString("You have %d new and " % new_messages, "System notification body") + NSLocalizedString("%d old voicemail messages" %  old_messages, "System notification body")
             else:
                 nc_body = NSLocalizedString("You have %d new voicemail messages" % new_messages, "System notification body")
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)

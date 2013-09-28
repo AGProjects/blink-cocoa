@@ -972,7 +972,7 @@ class MessageRecorder(NSObject):
     def run(self):
         self.counter = 5
         self.recording_time_left = 60
-        self.label.setStringValue_(NSLocalizedString("Recording will start in %is..." % self.counter), "Audio recording text label")
+        self.label.setStringValue_(NSLocalizedString("Recording will start in %is..." % self.counter, "Audio recording text label"))
         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "timerTick:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
@@ -1191,7 +1191,7 @@ class NightVolumeOption(Option):
             return
 
         if start_hour < 0 or start_hour > 23 or end_hour < 0 or end_hour > 23:
-            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Alert panel title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Alert panel title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Alert panel title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             self.restore()
             return
 
@@ -1419,7 +1419,7 @@ class AccountSoundFileOption(SoundFileOption):
         else:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.sound_file.volume), "Text label")
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.sound_file.volume, "Text label"))
             path = unicode(value.sound_file.path)
             for i in range(self.popup.numberOfItems()):
                 if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
