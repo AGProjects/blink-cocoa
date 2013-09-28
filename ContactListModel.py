@@ -2585,12 +2585,12 @@ class ContactListModel(CustomListModel):
                 cPickle.dump(backup_data, open(storage_path, "w+"))
                 if not silent:
                     l = len(backup_contacts)
-                    NSRunAlertPanel(NSLocalizedString("Contacts Backup",  "Alert panel title"), NSLocalizedString("%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % l, "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Contacts Backup",  "Window title"), NSLocalizedString("%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % l, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             except (IOError, cPickle.PicklingError):
                 pass
         else:
             if not silent:
-                NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Alert panel title"), NSLocalizedString("There are no contacts available for backup.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Window title"), NSLocalizedString("There are no contacts available for backup.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
 
     def restore_contacts(self, backup):
         restored_contacts = 0
@@ -2619,7 +2619,7 @@ class ContactListModel(CustomListModel):
             l = len(data['contacts'])
             label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Alert panel label")+ backup[1] + NSLocalizedString("Newer contacts will be preserved.", "Alert panel label")
                                                                                                                                                                        
-            ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Alert panel title"), NSLocalizedString("Restore", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
+            ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), NSLocalizedString("Restore", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret != NSAlertDefaultReturn:
                 return
             seen_uri = {}
@@ -2742,7 +2742,7 @@ class ContactListModel(CustomListModel):
         else:
             panel_text += NSLocalizedString("%d groups have been restored. " % restored_groups, "Alert panel label")
 
-        NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Alert panel title"), panel_text , NSLocalizedString("OK", "Alert panel button"), None, None)
+        NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), panel_text , NSLocalizedString("OK", "Button title"), None, None)
 
     def _migrateContacts(self):
         """Used in version 1.2.0 when switched over to new contacts model in sip simple sdk 0.18.3"""
@@ -3854,7 +3854,7 @@ class ContactListModel(CustomListModel):
         message = NSLocalizedString("Delete '%s' from the Contacts list?" % name, "Alert panel label")
         message = re.sub("%", "%%", message)
 
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Alert panel title"), message, NSLocalizedString("Delete", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
         if ret == NSAlertDefaultReturn:
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
@@ -3865,7 +3865,7 @@ class ContactListModel(CustomListModel):
     def deleteGroup(self, blink_group):
         message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. " %blink_group.name, "Alert panel label")
         message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Group", "Alert panel title"), message, NSLocalizedString("Delete", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Group", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
         if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
             if blink_group.deletable:
                 blink_group.group.delete()

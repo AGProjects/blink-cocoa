@@ -515,7 +515,7 @@ class PreferencesController(NSWindowController, object):
             text = NSLocalizedString("Permanently remove account %s?" % account_info.name, "Alert panel label")
             text = re.sub("%", "%%", text)
             # http://stackoverflow.com/questions/4498709/problem-in-displaying-in-nsrunalertpanel
-            if NSRunAlertPanel(NSLocalizedString("Remove Account", "Alert panel button"), text, NSLocalizedString("Remove", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None) != NSAlertDefaultReturn:
+            if NSRunAlertPanel(NSLocalizedString("Remove Account", "Button title"), text, NSLocalizedString("Remove", "Button title"), NSLocalizedString("Cancel", "Button title"), None) != NSAlertDefaultReturn:
                 return
 
             if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':

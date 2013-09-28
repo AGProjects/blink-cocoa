@@ -148,7 +148,7 @@ class Option(HorizontalBoxView):
         try:
             self._store()
         except Exception, e:
-            NSRunAlertPanel(NSLocalizedString("Error", "Alert panel title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e)), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e)), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
 
     def _store(self):
@@ -320,7 +320,7 @@ class StringTupleOption(StringOption):
         try:
             values = [s.strip() for s in str(self.text.stringValue()).split(",")]
         except:
-            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Alert panel title"), NSLocalizedString("Invalid charactes in option value.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Window title"), NSLocalizedString("Invalid charactes in option value.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
@@ -378,7 +378,7 @@ class NegativeSIPCodeOption(NonNegativeIntegerOption):
             if current != new:
                 self.set(new)
         else:
-            NSRunAlertPanel(NSLocalizedString("Invalid Code", "Alert panel title"), NSLocalizedString("Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for Busy Here or 603 code for Busy Everywhere", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Code", "Window title"), NSLocalizedString("Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for Busy Here or 603 code for Busy Everywhere", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
@@ -390,7 +390,7 @@ class DigitsOption(StringOption):
         match_number = re.match('^\d{0,7}$', nvalue)
 
         if current != nvalue and match_number is None:
-            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Alert panel title"), NSLocalizedString("Only digits are allowed.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Window title"), NSLocalizedString("Only digits are allowed.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
@@ -403,7 +403,7 @@ class DTMFDelimiterOption(StringOption):
         match_dtmf = re.match('^[#*]?$', nvalue)
 
         if current != nvalue and match_dtmf is None:
-            NSRunAlertPanel(NSLocalizedString("Invalid DTMF delimiter", "Alert panel title"), NSLocalizedString("Only * or # are allowed.", "Alert panel button"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid DTMF delimiter", "Window title"), NSLocalizedString("Only * or # are allowed.", "Button title"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
@@ -1059,7 +1059,7 @@ class SoundFileOption(Option):
     def chooseFile_(self, sender):
         if sender.indexOfSelectedItem() == sender.numberOfItems() - 1:
             panel = NSOpenPanel.openPanel()
-            panel.setTitle_(NSLocalizedString("Select Sound File", "Alert panel title"))
+            panel.setTitle_(NSLocalizedString("Select Sound File", "Window title"))
             panel.setCanChooseFiles_(True)
             panel.setCanChooseDirectories_(False)
 
@@ -1186,12 +1186,12 @@ class NightVolumeOption(Option):
             start_hour = int(self.start_hour.stringValue())
             end_hour = int(self.end_hour.stringValue())
         except:
-            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Alert panel title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Window title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
         if start_hour < 0 or start_hour > 23 or end_hour < 0 or end_hour > 23:
-            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Alert panel title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Hour", "Window title"), NSLocalizedString("Must be between 0 and 23.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
@@ -1551,7 +1551,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
                 address = STUNServerAddress(self.values[row][0], int(object))
                 self.values[row] = (address.host, address.port)
         except Exception, e:
-            NSRunAlertPanel(NSLocalizedString("Enter STUN server", "Alert panel title"), NSLocalizedString("Invalid server address: %s" % e, "alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Enter STUN server", "Window title"), NSLocalizedString("Invalid server address: %s" % e, "alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             return
         self.store()
         table.reloadData()

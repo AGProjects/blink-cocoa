@@ -44,7 +44,7 @@ def strip_addressbook_special_characters(contact):
 
 def show_error_panel(message):
     message = re.sub("%", "%%", message)
-    NSRunAlertPanel(NSLocalizedString("Error", "Alert panel title"), message, NSLocalizedString("OK", "Alert panel button"), None, None)
+    NSRunAlertPanel(NSLocalizedString("Error", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
 
 
 def checkValidPhoneNumber(number):

@@ -299,7 +299,7 @@ class AddContactController(NSObject):
     def buttonClicked_(self, sender):
         if sender.tag() == 20: # ch icon
             panel = NSOpenPanel.openPanel()
-            panel.setTitle_(NSLocalizedString("Select Contact Icon", "Alert panel title"))
+            panel.setTitle_(NSLocalizedString("Select Contact Icon", "Window title"))
             if panel.runModalForTypes_(NSArray.arrayWithObjects_("tiff", "png", "jpeg", "jpg")) == NSFileHandlingPanelOKButton:
                 path = panel.filename()
                 image = NSImage.alloc().initWithContentsOfFile_(path)
@@ -387,8 +387,8 @@ class AddContactController(NSObject):
             if column == 0:
                 uri = str(object).lower().replace(" ", "")
                 if not self.checkURI(uri):
-                    NSRunAlertPanel(NSLocalizedString("Invalid address", "Alert panel title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Alert panel label"),
-                                    NSLocalizedString("OK", "Alert panel button"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Invalid address", "Window title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Alert panel label"),
+                                    NSLocalizedString("OK", "Button title"), None, None)
                     return
                 contact_uri.uri = uri
                 if uri.startswith(('https:', 'http:')):
@@ -445,7 +445,7 @@ class EditContactController(AddContactController):
     def __init__(self, blink_contact):
         NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_(NSLocalizedString("Edit Contact", "Window title"))
-        self.addButton.setTitle_(NSLocalizedString("OK", "Alert panel button"))
+        self.addButton.setTitle_(NSLocalizedString("OK", "Button title"))
         self.dealloc_timer = None
 
         self.blink_contact = blink_contact
