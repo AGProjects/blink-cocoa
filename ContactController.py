@@ -23,6 +23,7 @@ from Foundation import (NSArray,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSString,
+                        NSLocalizedString,
                         NSTimer)
 import objc
 
@@ -69,7 +70,7 @@ class AddContactController(NSObject):
 
     def __init__(self, uri=None, name=None, group=None, type=None):
         NSBundle.loadNibNamed_owner_("Contact", self)
-        self.window.setTitle_("Add Contact")
+        self.window.setTitle_(NSLocalizedString("Add Contact", "Window title"))
         self.dealloc_timer = None
 
         self.default_uri = None
@@ -121,7 +122,7 @@ class AddContactController(NSObject):
 
     def awakeFromNib(self):
         NotificationCenter().add_observer(self, name="BlinkGroupsHaveChanged")
-        self.addressTable.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_("Click to add a new address")
+        self.addressTable.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_(NSLocalizedString("Click to add a new address", "Text placeholder"))
         self.addressTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
         self.addressTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
 
@@ -190,11 +191,11 @@ class AddContactController(NSObject):
         self.groupPopUp.removeAllItems()
         nr_groups = len(self.belonging_groups)
         if nr_groups == 0:
-            title = "No Selected Groups"
+            title = NSLocalizedString("No Selected Groups", "Popup button item")
         elif nr_groups == 1:
-            title = "One Selected Group"
+            title = NSLocalizedString("One Selected Group", "Popup button item")
         else:
-            title = "%d Selected Groups" % nr_groups
+            title = NSLocalizedString("%d Selected Groups" % nr_groups, "Popup button item")
         self.groupPopUp.addItemWithTitle_(title)
         menu_item = self.groupPopUp.lastItem()
         menu_item.setState_(NSOffState)
@@ -210,9 +211,9 @@ class AddContactController(NSObject):
                 menu_item.setState_(NSOffState)
 
         self.groupPopUp.menu().addItem_(NSMenuItem.separatorItem())
-        self.groupPopUp.addItemWithTitle_(u"Select All")
-        self.groupPopUp.addItemWithTitle_(u"Deselect All")
-        self.groupPopUp.addItemWithTitle_(u"Add Group...")
+        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Select All", "Popup button item"))
+        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Deselect All", "Popup button item"))
+        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Add Group...", "Popup button item"))
 
     @objc.IBAction
     def subscribePopUpClicked_(self, sender):
@@ -298,7 +299,7 @@ class AddContactController(NSObject):
     def buttonClicked_(self, sender):
         if sender.tag() == 20: # ch icon
             panel = NSOpenPanel.openPanel()
-            panel.setTitle_("Select Contact Icon")
+            panel.setTitle_(NSLocalizedString("Select Contact Icon", "Alert panel title"))
             if panel.runModalForTypes_(NSArray.arrayWithObjects_("tiff", "png", "jpeg", "jpg")) == NSFileHandlingPanelOKButton:
                 path = panel.filename()
                 image = NSImage.alloc().initWithContentsOfFile_(path)
@@ -386,8 +387,8 @@ class AddContactController(NSObject):
             if column == 0:
                 uri = str(object).lower().replace(" ", "")
                 if not self.checkURI(uri):
-                    NSRunAlertPanel("Invalid address", "Please enter an address containing alpha numeric characters",
-                                    "OK", None, None)
+                    NSRunAlertPanel(NSLocalizedString("Invalid address", "Alert panel title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Alert panel label"),
+                                    NSLocalizedString("OK", "Alert panel button"), None, None)
                     return
                 contact_uri.uri = uri
                 if uri.startswith(('https:', 'http:')):
@@ -443,8 +444,8 @@ class AddContactController(NSObject):
 class EditContactController(AddContactController):
     def __init__(self, blink_contact):
         NSBundle.loadNibNamed_owner_("Contact", self)
-        self.window.setTitle_("Edit Contact")
-        self.addButton.setTitle_("OK")
+        self.window.setTitle_(NSLocalizedString("Edit Contact", "Window title"))
+        self.addButton.setTitle_(NSLocalizedString("OK", "Alert panel button"))
         self.dealloc_timer = None
 
         self.blink_contact = blink_contact

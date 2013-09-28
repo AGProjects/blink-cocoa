@@ -61,6 +61,7 @@ from Foundation import (NSArray,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSString,
+                        NSLocalizedString,
                         NSTimer,
                         NSURL,
                         NSWorkspace)
@@ -1157,8 +1158,8 @@ class BlinkPresenceContact(BlinkContact):
                             ui_notify = True
 
                         if ui_notify and self.name:
-                            nc_title = "%s's Availability" % self.name
-                            nc_body = '%s is now %s' % (self.name, status)
+                            nc_title = NSLocalizedString("%s's Availability" % self.name, "System notification title")
+                            nc_body = NSLocalizedString("%s is now " % self.name, "System notification body") + status
                             NSApp.delegate().gui_notify(nc_title, nc_body)
 
                     if log and status == 'available':
@@ -1394,7 +1395,7 @@ class BlinkPresenceContact(BlinkContact):
             #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
             detail_uri = '%s (%s)' % (self.uri, self.uri_type)
             detail = detail_uri
-            detail_pending = 'Pending authorization'
+            detail_pending = NSLocalizedString("Pending authorization", "Contact detail")
             if self.presence_state['pending_authorizations']:
                 if self.detail == detail_uri:
                     detail = detail_pending
@@ -1643,7 +1644,7 @@ class BonjourBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Bonjour Neighbours', expanded=True):
+    def __init__(self, name=NSLocalizedString("Bonjour Neighbours", "Group name label"), expanded=True):
         super(BonjourBlinkGroup, self).__init__(name, expanded)
         self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
         self.original_position = None
@@ -1658,7 +1659,7 @@ class NoBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = True
 
-    def __init__(self, name=u'No Group', expanded=False):
+    def __init__(self, name=NSLocalizedString("No Group", "Group name label"), expanded=False):
         super(NoBlinkGroup, self).__init__(name, expanded)
 
 
@@ -1671,7 +1672,7 @@ class PendingWatchersGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'New Contact Requests', expanded=False):
+    def __init__(self, name=NSLocalizedString("New Contact Requests", "Group name label"), expanded=False):
         super(PendingWatchersGroup, self).__init__(name, expanded)
 
 
@@ -1684,7 +1685,7 @@ class BlockedGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Blocked Contacts', expanded=False):
+    def __init__(self, name=NSLocalizedString("Blocked Contacts", "Group name label"), expanded=False):
         super(BlockedGroup, self).__init__(name, expanded)
 
 
@@ -1697,7 +1698,7 @@ class OnlineGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Online Contacts', expanded=True):
+    def __init__(self, name=NSLocalizedString("Online Contacts", "Group name label"), expanded=True):
         super(OnlineGroup, self).__init__(name, expanded)
 
 
@@ -1711,7 +1712,7 @@ class AllContactsBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = True
 
-    def __init__(self, name=u'All Contacts', expanded=False):
+    def __init__(self, name=NSLocalizedString("All Contacts", "Group name label"), expanded=False):
         super(AllContactsBlinkGroup, self).__init__(name, expanded)
 
 
@@ -1837,7 +1838,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                     icon = contact.avatar.icon
                 else:
                     icon = None
-                name = 'Anonymous' if is_anonymous(target_uri) else name
+                name = NSLocalizedString("Anonymous", "Contact detail") if is_anonymous(target_uri) else name
                 blink_contact = HistoryBlinkContact(result.remote_uri, icon=icon, name=name)
                 blink_contact.answering_machine_filenames = set()
                 if len(result.am_filename):
@@ -1861,7 +1862,9 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 pass
 
             if len(blink_contact.answering_machine_filenames):
-                new_detail = blink_contact.detail + u' (%d Voice Message%s)' % (len(blink_contact.answering_machine_filenames), ('s' if len(blink_contact.answering_machine_filenames) > 1 else ''))
+                v1 = NSLocalizedString("Voice Message", "Contact detail")
+                v2 = NSLocalizedString("Voice Messages", "Contact detail")
+                new_detail = blink_contact.detail + u' (%d %s)' % (len(blink_contact.answering_machine_filenames), (v2 if len(blink_contact.answering_machine_filenames) > 1 else v1))
                 blink_contact.detail = new_detail
 
             self.contacts.append(blink_contact)
@@ -1872,7 +1875,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
 class MissedCallsBlinkGroup(HistoryBlinkGroup):
     type = 'missed'
 
-    def __init__(self, name=u'Missed Calls'):
+    def __init__(self, name=NSLocalizedString("Missed Calls", "Group name label")):
         super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
@@ -1882,7 +1885,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'outgoing'
 
-    def __init__(self, name=u'Outgoing Calls'):
+    def __init__(self, name=NSLocalizedString("Outgoing Calls", "Group name label")):
         super(OutgoingCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
@@ -1892,7 +1895,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
 class IncomingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'incoming'
 
-    def __init__(self, name=u'Incoming Calls'):
+    def __init__(self, name=NSLocalizedString("Incoming Calls", "Group name label")):
         super(IncomingCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
@@ -1909,7 +1912,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=u'Address Book'):
+    def __init__(self, name=NSLocalizedString("Address Book", "Group name label")):
         super(AddressBookBlinkGroup, self).__init__(name, expanded=False)
 
     @run_in_thread('addressbook')
@@ -2203,7 +2206,7 @@ class CustomListModel(NSObject):
                                                                                                                                           NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                                                                           table.window().graphicsContext(), 0, 1, 0)
                 send_file_menu = NSMenu.alloc().init()
-                titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(u'Send File To Address', "", "")
+                titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send File To Address", "Contact menu item"), "", "")
                 titem.setEnabled_(False)
 
                 for uri in item.uris:
@@ -2237,7 +2240,7 @@ class CustomListModel(NSObject):
                                                                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                 table.window().graphicsContext(), 0, 1, 0)
                 transfer_menu = NSMenu.alloc().init()
-                titem = transfer_menu.addItemWithTitle_action_keyEquivalent_(u'Transfer Call To', "", "")
+                titem = transfer_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Transfer Call To", "Contact menu item"), "", "")
                 titem.setEnabled_(False)
                 for uri in item.uris:
                     titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedBlindTransferMenuItem:", "")
@@ -2314,9 +2317,9 @@ class CustomListModel(NSObject):
                     targetContact = targetGroup.contacts[self.drop_on_contact_index]
 
                     if (sourceContact.name == targetContact.name):
-                        message = u"Would you like to consolidate the two contacts into %s (%s)?" % (targetContact.name, targetContact.uri)
+                        message = NSLocalizedString("Would you like to consolidate the two contacts into %s" % targetContact.name, "Alert panel label") + ' (%s)?' % targetContact.uri
                     else:
-                        message = u"Would you like to merge %s and %s contacts into %s (%s)?" % (sourceContact.name, targetContact.name, targetContact.name, targetContact.uri)
+                        message = NSLocalizedString("Would you like to merge %s " % sourceContact.name, "Alert panel label") + NSLocalizedString("and", "Alert panel label") + targetContact.name + NSLocalizedString(" contacts into %s" % targetContact.name, "Alert panel label") + "(%s)?" % targetContact.uri
 
                     merge_controller = MergeContactController(message)
                     ret = merge_controller.runModal_(message)
@@ -2581,12 +2584,13 @@ class ContactListModel(CustomListModel):
             try:
                 cPickle.dump(backup_data, open(storage_path, "w+"))
                 if not silent:
-                    NSRunAlertPanel("Contacts Backup Successful", "%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % len(backup_contacts), "OK", None, None)
+                    l = len(backup_contacts)
+                    NSRunAlertPanel(NSLocalizedString("Contacts Backup",  "Alert panel title"), NSLocalizedString("%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % l, "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
             except (IOError, cPickle.PicklingError):
                 pass
         else:
             if not silent:
-                NSRunAlertPanel("Contacts Backup Unnecessary", "There are no contacts available for backup.", "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Alert panel title"), NSLocalizedString("There are no contacts available for backup.", "Alert panel label"), NSLocalizedString("OK", "Alert panel button"), None, None)
 
     def restore_contacts(self, backup):
         restored_contacts = 0
@@ -2612,7 +2616,10 @@ class ContactListModel(CustomListModel):
             return
 
         if contacts:
-            ret = NSRunAlertPanel(u"Restore Contacts", u"This operation will restore %d contacts present in the backup taken at %s. Newer contacts will be preserved. "%(len(data['contacts']), backup[1]), u"Restore", u"Cancel", None)
+            l = len(data['contacts'])
+            label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Alert panel label")+ backup[1] + NSLocalizedString("Newer contacts will be preserved.", "Alert panel label")
+                                                                                                                                                                       
+            ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Alert panel title"), NSLocalizedString("Restore", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
             if ret != NSAlertDefaultReturn:
                 return
             seen_uri = {}
@@ -2722,20 +2729,20 @@ class ContactListModel(CustomListModel):
 
         panel_text = ''
         if not restored_contacts:
-            panel_text += u"All contacts from the backup were already present and none has been restored. "
+            panel_text += NSLocalizedString("All contacts from the backup were already present and none has been restored. ", "Alert pabel label")
         elif restored_contacts == 1:
-            panel_text += u"One contact has been restored. "
+            panel_text += NSLocalizedString("One contact has been restored. ", "Alert panel label")
         else:
-            panel_text += u"%d contacts have been restored. " % restored_contacts
+            panel_text += NSLocalizedString("%d contacts have been restored. " % restored_contacts, "Alert panel label")
 
         if not restored_groups:
-            panel_text += u"All groups from the backup were already present and none has been restored. "
+            panel_text += NSLocalizedString("All groups from the backup were already present and none has been restored. ", "Alert panel label")
         elif restored_groups == 1:
-            panel_text += u"One group has been restored. "
+            panel_text += NSLocalizedString("One group has been restored. ", "Alert panel label")
         else:
-            panel_text += u"%d groups have been restored. " % restored_groups
+            panel_text += NSLocalizedString("%d groups have been restored. " % restored_groups, "Alert panel label")
 
-        NSRunAlertPanel(u"Restore Completed", panel_text , u"OK", None, None)
+        NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Alert panel title"), panel_text , NSLocalizedString("OK", "Alert panel button"), None, None)
 
     def _migrateContacts(self):
         """Used in version 1.2.0 when switched over to new contacts model in sip simple sdk 0.18.3"""
@@ -2908,9 +2915,9 @@ class ContactListModel(CustomListModel):
                         self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
                         growl_sent = True
 
-                        nc_title = 'New Contact Request'
-                        nc_subtitle = u'From %s' % gui_watcher.name
-                        nc_body = 'This contact wishes to see your availability'
+                        nc_title = NSLocalizedString("New Contact Request", "System notification title")
+                        nc_subtitle = NSLocalizedString("From %s" % gui_watcher.name, "System notification subtitle")
+                        nc_body = NSLocalizedString("This contact wishes to see your availability", "System notification body")
                         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
             for watcher in tmp_active_watchers.iterkeys():
@@ -2938,9 +2945,9 @@ class ContactListModel(CustomListModel):
                             self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
                             growl_sent = True
 
-                            nc_title = 'New Contact Request'
-                            nc_subtitle = u'From %s' % gui_watcher.name
-                            nc_body = 'This contact wishes to see your availability'
+                            nc_title = NSLocalizedString("New Contact Request", "System notification title")
+                            nc_subtitle = NSLocalizedString("From %s" % gui_watcher.name, "System notification subtitle")
+                            nc_body = NSLocalizedString("This contact wishes to see your availability", "System notification body")
                             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
                 else:
@@ -3844,10 +3851,10 @@ class ContactListModel(CustomListModel):
             return
 
         name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
-        message = u"Delete '%s' from the Contacts list?"%name
+        message = NSLocalizedString("Delete '%s' from the Contacts list?" % name, "Alert panel label")
         message = re.sub("%", "%%", message)
 
-        ret = NSRunAlertPanel(u"Delete Contact", message, u"Delete", u"Cancel", None)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Alert panel title"), message, NSLocalizedString("Delete", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
         if ret == NSAlertDefaultReturn:
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
@@ -3856,9 +3863,9 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def deleteGroup(self, blink_group):
-        message = u"Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. "%blink_group.name
+        message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. " %blink_group.name, "Alert panel label")
         message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(u"Delete Contact Group", message, u"Delete", u"Cancel", None)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Group", "Alert panel title"), message, NSLocalizedString("Delete", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
         if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
             if blink_group.deletable:
                 blink_group.group.delete()

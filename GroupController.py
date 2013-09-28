@@ -2,7 +2,7 @@
 #
 
 from AppKit import NSApp, NSCancelButton, NSOKButton
-from Foundation import NSBundle, NSObject
+from Foundation import NSBundle, NSObject, NSLocalizedString
 import objc
 
 
@@ -28,8 +28,8 @@ class AddGroupController(NSObject):
 
     def runModalForRename_(self, name):
         self.nameText.setStringValue_(name)
-        self.window.setTitle_("Rename Group")
-        self.caption.setStringValue_("Enter a new name for the group:")
+        self.window.setTitle_(NSLocalizedString("Rename Group", "Window title"))
+        self.caption.setStringValue_(NSLocalizedString("Enter a new name for the group:", "Alert panel label"))
         self.window.makeKeyAndOrderFront_(None)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
