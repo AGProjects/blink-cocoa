@@ -138,6 +138,7 @@ class ChatController(MediaStream):
     inputContainer = objc.IBOutlet()
     outputContainer = objc.IBOutlet()
     databaseLoggingButton = objc.IBOutlet()
+    privateLabel = objc.IBOutlet()
 
     fullScreenVideoPanel = objc.IBOutlet()
     fullScreenVideoPanelToobar = objc.IBOutlet()
@@ -245,12 +246,15 @@ class ChatController(MediaStream):
         remote = format_identity_to_string(self.sessionController.remotePartyObject, format='full')
 
         if self.remote_party_history and not self.disable_chat_history:
+            self.privateLabel.setHidden_(True)
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-on"))
             self.databaseLoggingButton.setToolTip_("Text conversation is saved to history database")
         elif not self.remote_party_history and not self.disable_chat_history:
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-remote-off"))
+            self.privateLabel.setHidden_(False)
             self.databaseLoggingButton.setToolTip_(NSLocalizedString("%s wishes that text conversation is not saved in history database" % remote, "Tooltip text"))
         else:
+            self.privateLabel.setHidden_(False)
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-local-off"))
             self.databaseLoggingButton.setToolTip_("Text conversation is not saved to history database")
 
