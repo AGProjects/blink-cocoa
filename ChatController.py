@@ -29,6 +29,7 @@ from Foundation import (NSAttributedString,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSScreen,
+                        NSLocalizedString,
                         NSTask,
                         NSTaskDidTerminateNotification,
                         NSTimer,
@@ -174,6 +175,7 @@ class ChatController(MediaStream):
     otr_account = None
     chatOtrSmpWindow = None
     disable_chat_history = False
+    remote_party_history = True
 
     @classmethod
     def createStream(self):
@@ -240,8 +242,17 @@ class ChatController(MediaStream):
 
     def updateDatabaseRecordingButton(self):
         settings = SIPSimpleSettings()
-        self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-on" if not self.disable_chat_history else "database-off"))
-        self.databaseLoggingButton.setToolTip_("Text conversation is saved to history database" if not self.disable_chat_history else "Text conversation is not saved to history database")
+        remote = format_identity_to_string(self.sessionController.remotePartyObject, format='full')
+
+        if self.remote_party_history and not self.disable_chat_history:
+            self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-on"))
+            self.databaseLoggingButton.setToolTip_("Text conversation is saved to history database")
+        elif not self.remote_party_history and not self.disable_chat_history:
+            self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-remote-off"))
+            self.databaseLoggingButton.setToolTip_(NSLocalizedString("%s wishes that text conversation is not saved in history database" % remote, "Tooltip text"))
+        else:
+            self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-local-off"))
+            self.databaseLoggingButton.setToolTip_("Text conversation is not saved to history database")
 
     def init_otr(self, disable_encryption=False):
         from ChatOTR import DEFAULT_OTR_FLAGS
@@ -407,6 +418,11 @@ class ChatController(MediaStream):
             base64icon = encode_icon(self.chatWindowController.own_icon)
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=ISOTimestamp.now())
 
+    def sendLoggingState(self):
+        if self.status == STREAM_CONNECTED:
+            text = 'enabled' if not self.disable_chat_history else 'disabled'
+            self.stream.send_message(text, content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
+
     def setNickname(self, nickname):
         if self.stream and self.stream.nickname_allowed:
             try:
@@ -426,6 +442,7 @@ class ChatController(MediaStream):
             self.sessionController.contact.contact.disable_chat_history = self.disable_chat_history
             self.sessionController.contact.contact.save()
         self.updateDatabaseRecordingButton()
+        self.sendLoggingState()
 
     def userClickedEncryptionMenu_(self, sender):
         tag = sender.tag()
@@ -1407,7 +1424,26 @@ class ChatController(MediaStream):
 
     def _NH_ChatStreamGotMessage(self, stream, data):
         message = data.message
-        if message.content_type == 'application/blink-icon':
+        if message.content_type == 'application/blink-logging-status':
+            if message.body.lower() == "disabled":
+                self.remote_party_history = False
+                if not self.disable_chat_history:
+                    log = NSLocalizedString("Remote logging disabled", "Chat system message")
+                    nc_title = NSLocalizedString("Chat History Logging", "System notification title")
+                    nc_subtitle = self.sessionController.getTitleShort()
+                    NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
+            else:
+                self.remote_party_history = True
+                if not self.disable_chat_history:
+                    log = NSLocalizedString("Remote logging enabled", "Chat system message")
+                    nc_title = NSLocalizedString("Chat History Logging", "System notification title")
+                    nc_subtitle = self.sessionController.getTitleShort()
+                    NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
+
+            self.sessionController.log_info(log)
+            self.updateDatabaseRecordingButton()
+        
+        elif message.content_type == 'application/blink-icon':
             if not self.session.remote_focus:
                 try:
                     self.remoteIcon = decode_icon(message.body)
@@ -1650,6 +1686,9 @@ class ChatController(MediaStream):
 
         if self.sessionController.account is BonjourAccount():
             self.sendOwnIcon()
+
+        self.sendLoggingState()
+
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
@@ -2150,6 +2189,9 @@ class OutgoingMessageHandler(NSObject):
     @run_in_green_thread
     def add_to_history(self, message):
         if self.delegate.delegate.disable_chat_history:
+            return
+
+        if not self.delegate.delegate.remote_party_history:
             return
 
         # writes the record to the sql database
