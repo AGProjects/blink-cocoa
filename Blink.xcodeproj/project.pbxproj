@@ -954,6 +954,14 @@
 		1FB9B12B1095BFF500284E18 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
 		1FB9B12C1095BFF500284E18 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1FB9B12D1095BFF500284E18 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
+		1FB9BB3D17F8117500D7FFA8 /* database-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3B17F8117500D7FFA8 /* database-off.png */; };
+		1FB9BB3E17F8117500D7FFA8 /* database-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3B17F8117500D7FFA8 /* database-off.png */; };
+		1FB9BB3F17F8117500D7FFA8 /* database-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3B17F8117500D7FFA8 /* database-off.png */; };
+		1FB9BB4017F8117500D7FFA8 /* database-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3B17F8117500D7FFA8 /* database-off.png */; };
+		1FB9BB4117F8117500D7FFA8 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
+		1FB9BB4217F8117500D7FFA8 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
+		1FB9BB4317F8117500D7FFA8 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
+		1FB9BB4417F8117500D7FFA8 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
 		1FBBF2E712E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1FBBF2E812E9B3500077E766 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
 		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
@@ -1987,6 +1995,8 @@
 		1FB9B1161095BFF500284E18 /* hold_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = hold_tone.wav; path = sounds/hold_tone.wav; sourceTree = "<group>"; };
 		1FB9B1171095BFF500284E18 /* ring_outbound2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_outbound2.wav; path = sounds/ring_outbound2.wav; sourceTree = "<group>"; };
 		1FB9B1181095BFF500284E18 /* ring_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = ring_tone.wav; path = sounds/ring_tone.wav; sourceTree = "<group>"; };
+		1FB9BB3B17F8117500D7FFA8 /* database-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-off.png"; path = "icons/database-off.png"; sourceTree = SOURCE_ROOT; };
+		1FB9BB3C17F8117500D7FFA8 /* database-on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-on.png"; path = "icons/database-on.png"; sourceTree = SOURCE_ROOT; };
 		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FBF2B3D179151D9002E110B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
@@ -2433,6 +2443,8 @@
 		1FE50E59164D1B6200840B18 /* presence */ = {
 			isa = PBXGroup;
 			children = (
+				1FB9BB3B17F8117500D7FFA8 /* database-off.png */,
+				1FB9BB3C17F8117500D7FFA8 /* database-on.png */,
 				1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */,
 				1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */,
 				1FD3F872164D7B3A008F56E8 /* blink-status-green.png */,
@@ -3323,6 +3335,8 @@
 				1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7A17ED0DD700E63A20 /* Info-pro.plist in Resources */,
+				1FB9BB3E17F8117500D7FFA8 /* database-off.png in Resources */,
+				1FB9BB4217F8117500D7FFA8 /* database-on.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3580,6 +3594,8 @@
 				1F5BC30017E66DAC00D1D8BE /* Localizable.strings in Resources */,
 				1FF32B7517ED0DA600E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7917ED0DB300E63A20 /* blink-crypto.icns in Resources */,
+				1FB9BB4017F8117500D7FFA8 /* database-off.png in Resources */,
+				1FB9BB4417F8117500D7FFA8 /* database-on.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3836,6 +3852,8 @@
 				1FF32B7417ED0DA600E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7B17ED0DDC00E63A20 /* Info-lite.plist in Resources */,
+				1FB9BB3F17F8117500D7FFA8 /* database-off.png in Resources */,
+				1FB9BB4317F8117500D7FFA8 /* database-on.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4092,6 +4110,8 @@
 				1FF32B7217ED0DA400E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7617ED0DAD00E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7C17ED0DE200E63A20 /* Info.plist in Resources */,
+				1FB9BB3D17F8117500D7FFA8 /* database-off.png in Resources */,
+				1FB9BB4117F8117500D7FFA8 /* database-on.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

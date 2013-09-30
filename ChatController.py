@@ -136,6 +136,7 @@ class ChatController(MediaStream):
     videoContainer = objc.IBOutlet()
     inputContainer = objc.IBOutlet()
     outputContainer = objc.IBOutlet()
+    databaseLoggingButton = objc.IBOutlet()
 
     fullScreenVideoPanel = objc.IBOutlet()
     fullScreenVideoPanelToobar = objc.IBOutlet()
@@ -172,6 +173,7 @@ class ChatController(MediaStream):
     new_fingerprints = {}
     otr_account = None
     chatOtrSmpWindow = None
+    disable_chat_history = False
 
     @classmethod
     def createStream(self):
@@ -226,7 +228,20 @@ class ChatController(MediaStream):
         self.chatOtrSmpWindow = ChatOtrSmp(self)
         self.init_otr()
 
+        if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_chat_history is not None:
+            self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
+        else:
+            settings = SIPSimpleSettings()
+            self.disable_chat_history = settings.chat.disable_history
+
+        self.updateDatabaseRecordingButton()
+
         return self
+
+    def updateDatabaseRecordingButton(self):
+        settings = SIPSimpleSettings()
+        self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-on" if not self.disable_chat_history else "database-off"))
+        self.databaseLoggingButton.setToolTip_("Text conversation is saved to history database" if not self.disable_chat_history else "Text conversation is not saved to history database")
 
     def init_otr(self, disable_encryption=False):
         from ChatOTR import DEFAULT_OTR_FLAGS
@@ -403,6 +418,14 @@ class ChatController(MediaStream):
 
     def validateToolbarItem_(self, item):
         return True
+
+    @objc.IBAction
+    def userClickedDatabaseLoggingButton_(self, sender):
+        self.disable_chat_history = not self.disable_chat_history
+        if self.sessionController.contact is not None:
+            self.sessionController.contact.contact.disable_chat_history = self.disable_chat_history
+            self.sessionController.contact.contact.save()
+        self.updateDatabaseRecordingButton()
 
     def userClickedEncryptionMenu_(self, sender):
         tag = sender.tag()
@@ -1669,10 +1692,14 @@ class ChatController(MediaStream):
         self.chatWindowController.revalidateToolbar()
 
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
-        if self.sessionController.remote_focus:
-            return
         settings = SIPSimpleSettings()
-        if data.modified.has_key("chat.enable_encryption"):
+        if data.modified.has_key("chat.disable_history"):
+            if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_chat_history is not None:
+                self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
+            else:
+                self.disable_chat_history = settings.chat.disable_history
+            self.updateDatabaseRecordingButton()
+        elif data.modified.has_key("chat.enable_encryption"):
             if self.status == STREAM_CONNECTED:
                 if self.is_encrypted and not settings.chat.enable_encryption:
                     otr_context_id = self.sessionController.call_id
@@ -2111,7 +2138,8 @@ class OutgoingMessageHandler(NSObject):
                     del self.no_report_received_messages[message.msgid]
                 except KeyError:
                     pass
-                message.status='failed'
+
+                message.status = 'failed'
                 self.delegate.sessionController.log_error(u"Chat message %s to %s was not delivered" % message.msgid)
                 self.markMessage(message, MSG_STATE_FAILED)
                 self.add_to_history(message)
@@ -2121,8 +2149,7 @@ class OutgoingMessageHandler(NSObject):
     @allocate_autorelease_pool
     @run_in_green_thread
     def add_to_history(self, message):
-        settings = SIPSimpleSettings()
-        if settings.chat.disable_history:
+        if self.delegate.delegate.disable_chat_history:
             return
 
         # writes the record to the sql database

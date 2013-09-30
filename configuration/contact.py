@@ -27,7 +27,7 @@ class BlinkContactExtension(ContactExtension):
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)
     require_encryption = SharedSetting(type=Boolean, default=False, nillable=True)
-
+    disable_chat_history = Setting(type=Boolean, nillable=True)
     icon_info = IconSettings
 
 

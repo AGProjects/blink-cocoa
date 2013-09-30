@@ -1737,6 +1737,10 @@ class ChatWindowController(NSWindowController):
             self.revalidateToolbar()
             self.updateTitle()
             session = self.sessions[item.identifier()]
+            chat_stream = session.streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.updateDatabaseRecordingButton()
+
             self.refreshDrawer()
             if session.mustShowDrawer:
                 self.drawer.open()
