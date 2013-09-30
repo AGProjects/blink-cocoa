@@ -174,8 +174,7 @@ class EnrollmentController(NSObject):
                 return False
 
             if not username.strip():
-                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please choose a Username for your account.", "Alert pa
-                                                                                                                    nel label"),
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please choose a Username for your account.", "Alert panel label"),
                     NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
