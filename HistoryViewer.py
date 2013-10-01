@@ -27,6 +27,7 @@ from Foundation import (NSBundle,
                         NSPrintInfo,
                         NSRunLoop,
                         NSSortDescriptor,
+                        NSLocalizedString,
                         NSTableView,
                         NSTimer,
                         NSWindowController,
@@ -125,13 +126,14 @@ class HistoryViewer(NSWindowController):
 
     def format_media_type(self, media_type):
         if media_type == 'sms':
-            return 'Instant Messages'
+            return NSLocalizedString("Instant Messages", "Column title")
         elif media_type == 'chat':
-            return 'Chat Sessions'
+            return NSLocalizedString("Chat Sessions", "Column title")
         elif media_type == 'audio':
+            return NSLocalizedString("Audio Calls", "Column title")
             return 'Audio Calls'
         elif media_type == 'file-transfer':
-            return 'File Transfers'
+            return NSLocalizedString("File Transfers", "Column title")
         else:
             return media_type.title()
 
@@ -155,7 +157,7 @@ class HistoryViewer(NSWindowController):
             self.notification_center.add_observer(self, name='BlinkShouldTerminate')
 
             self.searchText.cell().setSendsSearchStringImmediately_(True)
-            self.searchText.cell().setPlaceholderString_("Type text and press Enter")
+            self.searchText.cell().setPlaceholderString_(NSLocalizedString("Type text and press Enter", "Placeholder text"))
 
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setHandleScrolling_(False)
@@ -424,11 +426,12 @@ class HistoryViewer(NSWindowController):
         text = u'No entry found'
         if len(self.messages):
             if len(self.messages) == 1:
-                text = u'Displaying 1 entry'
+                text = NSLocalizedString("Displaying 1 entry", "Text label")
             elif MAX_MESSAGES_PER_PAGE > len(self.messages):
-                text = u'Displaying %d entries' % end
+                text = NSLocalizedString("Displaying %d entries" % end, "Text label")
             else:
-                text = u'Displaying %d to %d out of %d entries' % (start_from+1, end, len(self.messages))
+                l = len(self.messages)
+                text = NSLocalizedString("Displaying %d to "% start_from + 1, "Text label") + end + NSLocalizedString("out of %d entries" % l, "Text label")
 
         self.foundMessagesLabel.setStringValue_(text)
 
@@ -522,11 +525,11 @@ class HistoryViewer(NSWindowController):
     def updateContactsColumnHeader(self):
         found_contacts = len(self.contacts)-2
         if found_contacts == 1:
-            title = u"1 Contact Found"
+            title = NSLocalizedString("1 Contact Found", "Column title")
         elif found_contacts > 1:
-            title =  u'%d Contacts Found'%found_contacts
+            title =  NSLocalizedString("%d Contacts Found" % found_contacts, "Column title")
         else:
-            title = 'Contacts'
+            title = NSLocalizedString("Contacts", "Column title")
 
         self.contactTable.tableColumnWithIdentifier_('contacts').headerCell().setStringValue_(title)
 
@@ -698,7 +701,8 @@ class HistoryViewer(NSWindowController):
                     date = self.dayly_entries[row].objectForKey_("date")
                     media_type = self.dayly_entries[row].objectForKey_("type")
 
-                    ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s on %s. This operation cannot be undone."%(media_type, remote_uri, date), u"Confirm", u"Cancel", None)
+                    label = NSLocalizedString("Please confirm the deletion of %s history entries" % media_type, "Text label") + NSLocalizedString(" from %s" % remote_uri, "SIP Address label") + NSLocalizedString(" on %s. " % date, "Date label") + NSLocalizedString("This operation cannot be undone. ", "Text label")
+                    ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
                     if ret == NSAlertDefaultReturn:
                         self.delete_messages(local_uri=local_uri, remote_uri=remote_uri_sql, media_type=media_type, date=date)
                 except IndexError:
@@ -708,15 +712,17 @@ class HistoryViewer(NSWindowController):
         media_print = self.search_media or 'All'
         tag = self.period.selectedItem().tag()
 
-        period = '%s %s' % (' newer than' if tag < 4 else ' older than', self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
+        period = '%s %s' % (NSLocalizedString(" newer than", "Date label") if tag < 4 else NSLocalizedString(" older than", "Date label"), self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
 
         if row == 0:
-            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries%s. This operation cannot be undone."%(media_print, period), u"Confirm", u"Cancel", None)
+            label = NSLocalizedString("Please confirm the deletion of %s history entries" % media_print, "Text label") + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Text label")
+            ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         elif row == 1:
             remote_uri=self.contacts[row].uri
-            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s Bonjour history entries%s. This operation cannot be undone."%(media_print, period), u"Confirm", u"Cancel", None)
+            label = NSLocalizedString("Please confirm the deletion of %s Bonjour history entries" % media_print, "Text label") + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Text label")
+            ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(local_uri='bonjour', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         else:
@@ -725,7 +731,8 @@ class HistoryViewer(NSWindowController):
                 remote_uri = list(unicode(contact.uri) for contact in contact.presence_contact.uris)
             else:
                 remote_uri = contact.uri
-            ret = NSRunAlertPanel(u"Purge History Entries", u"Please confirm the deletion of %s history entries from %s%s. This operation cannot be undone."%(media_print, contact.name, period), u"Confirm", u"Cancel", None)
+            label = NSLocalizedString("Please confirm the deletion of %s history entries" % media_print, "Text label") + NSLocalizedString("from", "Text label") + " " + contact.name + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Text label")
+            ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(remote_uri=remote_uri, media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
 
