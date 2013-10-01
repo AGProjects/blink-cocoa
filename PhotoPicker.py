@@ -31,6 +31,7 @@ from Foundation import (CIImage,
                         NSMutableArray,
                         NSObject,
                         NSOpenPanel,
+                        NSLocalizedString,
                         NSWidth,
                         NSZeroRect)
 import objc
@@ -189,13 +190,13 @@ class PhotoPicker(NSObject):
         # Find a video device
         device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
         if not device:
-            NSRunAlertPanel("Camera Capture Error", "Camera device cannot be started", "OK", "", "")
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("Camera device cannot be started", "Alert panel label"), NSLocalizedString("OK", "Button title"), "", "")
             self.captureSession = None
             return
 
         success, error = device.open_(None)
         if not success:
-            NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), error, NSLocalizedString("OK", "Button title"), "", "")
             self.captureSession = None
             return
 
@@ -205,7 +206,7 @@ class PhotoPicker(NSObject):
             success, error = self.captureSession.addInput_error_(self.captureDeviceInput, None)
 
             if not success:
-                NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
+                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), error, NSLocalizedString("OK", "Button title"), "", "")
                 self.captureSession = None
                 self.captureDeviceInput = None
                 return
@@ -216,7 +217,7 @@ class PhotoPicker(NSObject):
             self.captureDecompressedVideoOutput.setDelegate_(self)
             success, error = self.captureSession.addOutput_error_(self.captureDecompressedVideoOutput, None)
             if not success:
-                NSRunAlertPanel("Camera Capture Error", error, "OK", "", "")
+                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), error, NSLocalizedString("OK", "Button title"), "", "")
                 self.captureSession = None
                 self.captureDeviceInput = None
                 self.captureDecompressedVideoOutput = None
@@ -384,7 +385,7 @@ class PhotoPicker(NSObject):
         try:
             image = NSImage.alloc().initWithContentsOfFile_(path)
         except:
-            NSRunAlertPanel("Invalid Image", u"%s is not a valid image."%path, "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         rect = NSZeroRect.copy()
@@ -420,7 +421,7 @@ class PhotoPicker(NSObject):
             try:
                 image = NSImage.alloc().initWithContentsOfFile_(path)
             except:
-                NSRunAlertPanel("Invalid Image", u"%s is not a valid image."%path, "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
                 return
 
             size = image.size()
