@@ -1322,7 +1322,7 @@ class SessionController(NSObject):
                             add_streams.append(streamController.stream)
                         streamController.startOutgoing(not new_session, **kwargs)
 
-        if new_session:
+        if new_session or self.state == STATE_IDLE:
             if not self.open_chat_window_only:
                 # starts outgoing session
                 if self.routes and self.try_next_hop:
@@ -1459,6 +1459,7 @@ class SessionController(NSObject):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
+        self.log_debug("setRoutesResolved: %s" % routes)
         self.routes = routes
         if not self.waitingForITunes:
             self.connectSession()

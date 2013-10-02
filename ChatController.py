@@ -81,7 +81,8 @@ from ContactListModel import encode_icon, decode_icon
 from VideoView import VideoView
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
-from MediaStream import MediaStream, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_INCOMING, STREAM_CONNECTING, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING
+from MediaStream import MediaStream, STATE_IDLE, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_INCOMING, STREAM_CONNECTING, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING
+from MediaStream import STATE_IDLE
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from ScreensharingPreviewPanel import ScreensharingPreviewPanel
@@ -1001,37 +1002,40 @@ class ChatController(MediaStream):
             elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
                     item.setEnabled_(True)
-                    item.setToolTip_('Cancel chat session')
+                    item.setToolTip_('Cancel chat')
                     item.setLabel_(u'Cancel')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_PROPOSING:
                     if self.sessionController.proposalOriginator == 'remote':
                         item.setEnabled_(False)
                     else:
-                        item.setToolTip_('Cancel chat session')
+                        item.setToolTip_('Cancel chat')
                         item.setLabel_(u'Cancel')
                         item.setImage_(NSImage.imageNamed_("stop_chat"))
                         item.setEnabled_(True)
                 elif self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
-                    item.setToolTip_('End chat session')
+                    item.setToolTip_('End chat')
                     item.setLabel_(u'Disconnect')
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
-                    item.setEnabled_(True)
-                    item.setToolTip_('Start chat session')
+                    item.setEnabled_(not self.sessionController.inProposal)
+                    item.setToolTip_('Start chat')
                     item.setLabel_(u'Connect')
                     item.setImage_(NSImage.imageNamed_("start_chat"))
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_('Hangup audio call')
+                        item.setToolTip_('Remove audio')
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                        item.setToolTip_('Cancel audio call')
+                        item.setToolTip_('Cancel audio')
                         item.setImage_(NSImage.imageNamed_("hangup"))
                 else:
-                    item.setToolTip_('Add audio to session')
+                    if self.sessionController.state == STATE_IDLE:
+                        item.setToolTip_('Start audio')
+                    else:
+                        item.setToolTip_('Add audio')
                     item.setImage_(NSImage.imageNamed_("audio"))
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio"):
@@ -1126,7 +1130,7 @@ class ChatController(MediaStream):
                     return True if self.sessionController.canCancelProposal() else False
                 else:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-            elif identifier == 'audio' and self.status == STREAM_CONNECTED:
+            elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
                         return True if self.sessionController.canProposeMediaStreamChanges() else False
@@ -1136,7 +1140,7 @@ class ChatController(MediaStream):
                         return True if self.sessionController.canProposeMediaStreamChanges() else False
                 else:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
-            elif identifier == 'hold' and self.status == STREAM_CONNECTED:
+            elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
                     return True
             elif identifier == 'record':
@@ -1193,25 +1197,45 @@ class ChatController(MediaStream):
             if self.sessionController.hasStreamOfType("video"):
                 video_stream = self.sessionController.streamHandlerOfType("video")
 
-            if identifier == 'audio' and self.status == STREAM_CONNECTED:
+            if identifier == 'connect_button':
+                if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                    self.endStream()
+                else:
+                    if self.sessionController.canProposeMediaStreamChanges():
+                        if len(self.sessionController.streamHandlers) > 1:
+                            self.sessionController.addChatToSession()
+                        elif self.status in (STREAM_IDLE, STREAM_FAILED):
+                            self.sessionController.startChatSession()
+                    else:
+                        self.sessionController.log_info(u"Session has a pending proposal")
+            
+            elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
-                    if audio_stream.status == STREAM_PROPOSING or audio_stream.status == STREAM_RINGING:
+                    if audio_stream.status == STREAM_PROPOSING:
                         self.sessionController.cancelProposal(audio_stream)
                     else:
-                        self.sessionController.removeAudioFromSession()
+                        if self.status == STREAM_CONNECTED:
+                            self.sessionController.removeAudioFromSession()
+                            sender.setToolTip_('Add audio to session')
+                        else:
+                            self.sessionController.endStream(audio_stream)
+                            sender.setToolTip_('Start audio session')
 
-                    sender.setToolTip_('Add audio to session')
                     sender.setImage_(NSImage.imageNamed_("audio"))
-                    self.chatWindowController.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.chatWindowController.audioStatus.setStringValue_(u"Connected")
 
                     # The button will be enabled again after operation is finished
                     sender.setEnabled_(False)
                 else:
-                    self.sessionController.addAudioToSession()
+                    if self.sessionController.state == STATE_IDLE:
+                        self.notification_center.add_observer(self, sender=self.sessionController)
+                        self.sessionController.startCompositeSessionWithStreamsOfTypes(("audio", "chat"))
+                    else:
+                        self.sessionController.addAudioToSession()
+                        self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session)
+
                     sender.setToolTip_('Cancel audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))
-                    self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session)
+
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
                 if audio_stream.stream.recording_active:
                     audio_stream.stream.stop_recording()
@@ -1225,7 +1249,7 @@ class ChatController(MediaStream):
                     audio_stream.stream.start_recording(os.path.join(path, filename))
                     sender.setImage_(NSImage.imageNamed_("recording1"))
 
-            elif identifier == 'hold' and self.status == STREAM_CONNECTED and self.sessionController.hasStreamOfType("audio") and not self.sessionController.inProposal:
+            elif identifier == 'hold' and self.sessionController.hasStreamOfType("audio") and not self.sessionController.inProposal:
                 # TODO: put video on hold -adi
                 if audio_stream.holdByLocal:
                     audio_stream.unhold()
@@ -1260,18 +1284,6 @@ class ChatController(MediaStream):
 
             elif identifier == 'sendfile':
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
-
-            elif identifier == 'connect_button':
-                if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                    self.endStream()
-                else:
-                    if self.sessionController.canProposeMediaStreamChanges():
-                        if len(self.sessionController.streamHandlers) > 1:
-                            self.sessionController.addChatToSession()
-                        elif self.status in (STREAM_IDLE, STREAM_FAILED):
-                            self.sessionController.startChatSession()
-                    else:
-                        self.sessionController.log_info(u"Session has a pending proposal")
 
             elif identifier == 'smileys':
                 self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
