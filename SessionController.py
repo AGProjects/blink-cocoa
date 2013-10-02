@@ -1336,6 +1336,10 @@ class SessionController(NSObject):
                         if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
                             self.waitingForITunes = True
                             MusicApplications().pause()
+                            # start a timer in case something goes wrong with the music interface if stop notification never arives
+                            music_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "musicTimer:", None, False)
+                            NSRunLoop.currentRunLoop().addTimer_forMode_(music_timer, NSRunLoopCommonModes)
+                            NSRunLoop.currentRunLoop().addTimer_forMode_(music_timer, NSEventTrackingRunLoopMode)
                         else:
                             self.waitingForITunes = False
 
@@ -1549,6 +1553,14 @@ class SessionController(NSObject):
     def _NH_MusicPauseDidExecute(self, sender, data):
         if not self.waitingForITunes:
             return
+        self.waitingForITunes = False
+        if self.routes:
+            self.connectSession()
+
+    def musicTimer_(self, timer):
+        if not self.waitingForITunes:
+            return
+
         self.waitingForITunes = False
         if self.routes:
             self.connectSession()
