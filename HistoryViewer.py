@@ -131,7 +131,6 @@ class HistoryViewer(NSWindowController):
             return NSLocalizedString("Chat Sessions", "Column title")
         elif media_type == 'audio':
             return NSLocalizedString("Audio Calls", "Column title")
-            return 'Audio Calls'
         elif media_type == 'file-transfer':
             return NSLocalizedString("File Transfers", "Column title")
         else:
@@ -709,7 +708,7 @@ class HistoryViewer(NSWindowController):
                     pass
 
     def showDeleteConfirmationDialog(self, row):
-        media_print = self.search_media or 'All'
+        media_print = self.search_media or NSLocalizedString("all", "Text label")
         tag = self.period.selectedItem().tag()
 
         period = '%s %s' % (NSLocalizedString(" newer than", "Date label") if tag < 4 else NSLocalizedString(" older than", "Date label"), self.period_array[tag].strftime("%Y-%m-%d")) if tag else ''
@@ -731,7 +730,7 @@ class HistoryViewer(NSWindowController):
                 remote_uri = list(unicode(contact.uri) for contact in contact.presence_contact.uris)
             else:
                 remote_uri = contact.uri
-            label = NSLocalizedString("Please confirm the deletion of %s history entries" % media_print, "Text label") + NSLocalizedString("from", "Text label") + " " + contact.name + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Text label")
+            label = NSLocalizedString("Please confirm the deletion of %s history entries" % media_print, "Text label") + NSLocalizedString(" from", "Text label") + " " + contact.name + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Text label")
             ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(remote_uri=remote_uri, media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
