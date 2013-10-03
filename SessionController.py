@@ -1402,8 +1402,6 @@ class SessionController(NSObject):
     def addChatToSession(self):
         if not self.hasStreamOfType("chat"):
             self.startSessionWithStreamOfType("chat")
-        else:
-            self.startSessionWithStreamOfType("chat")
 
     def removeChatFromSession(self):
         if self.hasStreamOfType("chat"):
