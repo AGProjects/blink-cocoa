@@ -1208,7 +1208,7 @@ class ChatController(MediaStream):
                             self.sessionController.startChatSession()
                     else:
                         self.sessionController.log_info(u"Session has a pending proposal")
-            
+
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_PROPOSING:
@@ -1458,7 +1458,7 @@ class ChatController(MediaStream):
 
             self.sessionController.log_info(log)
             self.updateDatabaseRecordingButton()
-        
+
         elif message.content_type == 'application/blink-icon':
             if not self.session.remote_focus:
                 try:

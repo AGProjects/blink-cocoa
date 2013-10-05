@@ -2618,7 +2618,7 @@ class ContactListModel(CustomListModel):
         if contacts:
             l = len(data['contacts'])
             label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Alert panel label")+ backup[1] + NSLocalizedString("Newer contacts will be preserved.", "Alert panel label")
-                                                                                                                                                                       
+
             ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), NSLocalizedString("Restore", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret != NSAlertDefaultReturn:
                 return
