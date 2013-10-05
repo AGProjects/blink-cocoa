@@ -62,6 +62,7 @@ class BlinkLogger(object):
 
 
 class FileLogger(object):
+    __metaclass__ = Singleton
     implements(IObserver)
 
     # public methods
@@ -88,8 +89,9 @@ class FileLogger(object):
         self._notifications_file = None
         self._notifications_error = False
 
-        self._event_queue = EventQueue(handler=self._process_notification, name='Log handling')
         self._log_directory_error = False
+
+        self._event_queue = None
 
     def start(self):
         # try to create the log directory
@@ -103,6 +105,7 @@ class FileLogger(object):
         notification_center.add_observer(self)
 
         # start the thread processing the notifications
+        self._event_queue = EventQueue(handler=self._process_notification, name='Log handling')
         self._event_queue.start()
 
     def stop(self):
@@ -148,7 +151,7 @@ class FileLogger(object):
         if handler is not None:
             handler(notification)
 
-        if notification.name not in ('SIPEngineLog', 'SIPEngineSIPTrace') and settings.logs.trace_notifications:
+        if notification.name not in ('SIPEngineLog', 'SIPEngineSIPTrace') and settings.logs.trace_notifications and settings.logs.trace_notifications_to_file:
             try:
                 self._init_log_file('notifications')
             except Exception:
@@ -188,7 +191,7 @@ class FileLogger(object):
 
     def _LH_SIPEngineSIPTrace(self, notification):
         settings = SIPSimpleSettings()
-        if not settings.logs.trace_sip:
+        if not settings.logs.trace_sip or not settings.logs.trace_sip_to_file:
             return
         if self._siptrace_start_time is None:
             self._siptrace_start_time = notification.datetime
@@ -212,7 +215,7 @@ class FileLogger(object):
 
     def _LH_SIPEngineLog(self, notification):
         settings = SIPSimpleSettings()
-        if not settings.logs.trace_pjsip:
+        if not settings.logs.trace_pjsip or not settings.logs.trace_pjsip_to_file:
             return
         message = "(%(level)d) %(message)s" % notification.data.__dict__
         try:
@@ -225,7 +228,7 @@ class FileLogger(object):
 
     def _LH_DNSLookupTrace(self, notification):
         settings = SIPSimpleSettings()
-        if not settings.logs.trace_sip:
+        if not settings.logs.trace_sip or not settings.logs.trace_sip_to_file:
             return
         message = 'DNS lookup %(query_type)s %(query_name)s' % notification.data.__dict__
         if notification.data.error is None:
@@ -253,7 +256,7 @@ class FileLogger(object):
 
     def _LH_MSRPTransportTrace(self, notification):
         settings = SIPSimpleSettings()
-        if not settings.logs.trace_msrp:
+        if not settings.logs.trace_msrp or not settings.logs.trace_msrp_to_file:
             return
         arrow = {'incoming': '<--', 'outgoing': '-->'}[notification.data.direction]
         local_address = notification.sender.getHost()
@@ -271,7 +274,7 @@ class FileLogger(object):
 
     def _LH_MSRPLibraryLog(self, notification):
         settings = SIPSimpleSettings()
-        if not settings.logs.trace_msrp:
+        if not settings.logs.trace_msrp or not settings.logs.trace_msrp_to_file:
             return
         if notification.data.level < self.msrp_level:
             return

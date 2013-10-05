@@ -5,6 +5,20 @@ import re
 import os
 import platform
 
+from AppKit import (NSAccessibilityTitleAttribute,
+                    NSAlertDefaultReturn,
+                    NSApp,
+                    NSEventTrackingRunLoopMode,
+                    NSDragOperationGeneric,
+                    NSNoTabsBezelBorder,
+                    NSOnState,
+                    NSOffState,
+                    NSRunAlertPanel,
+                    NSTableViewDropAbove,
+                    NSTableViewDropOn,
+                    NSTopTabsBezelBorder,
+                    NSViewHeightSizable,
+                    NSViewWidthSizable)
 from Foundation import (NSArray,
                         NSBezierPath,
                         NSBundle,
@@ -21,20 +35,10 @@ from Foundation import (NSArray,
                         NSURL,
                         NSUserDefaults,
                         NSWindowController,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer,
                         NSWorkspace)
-from AppKit import (NSAccessibilityTitleAttribute,
-                    NSAlertDefaultReturn,
-                    NSApp,
-                    NSDragOperationGeneric,
-                    NSNoTabsBezelBorder,
-                    NSOnState,
-                    NSOffState,
-                    NSRunAlertPanel,
-                    NSTableViewDropAbove,
-                    NSTableViewDropOn,
-                    NSTopTabsBezelBorder,
-                    NSViewHeightSizable,
-                    NSViewWidthSizable)
 import objc
 
 from application.notification import NotificationCenter, IObserver
@@ -43,8 +47,10 @@ from application.system import unlink
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading import run_in_thread
 from zope.interface import implements
 
+from BlinkLogger import FileLogger
 from EnrollmentController import EnrollmentController
 from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSliderOption, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SampleRateOption, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
@@ -69,6 +75,8 @@ class PreferencesController(NSWindowController, object):
     sync_with_icloud_checkbox = objc.IBOutlet()
     selected_proxy_radio_button = objc.IBOutlet()
     sectionHelpPlaceholder = objc.IBOutlet()
+    purgeLogsButton = objc.IBOutlet()
+    openLogsFolderButton = objc.IBOutlet()
 
     addButton = objc.IBOutlet()
     removeButton = objc.IBOutlet()
@@ -86,6 +94,7 @@ class PreferencesController(NSWindowController, object):
 
     updating = False
     saving = False
+    logsize_timer = None
 
 
     def init(self):
@@ -223,12 +232,34 @@ class PreferencesController(NSWindowController, object):
                 account.save()
 
     @objc.IBAction
+    @run_in_thread('file-io')
+    def userClickedPurgeLogsButton_(self, sender):
+        log_manager = FileLogger()
+        log_manager.stop()
+
+        for path, dirs, files in os.walk(os.path.join(ApplicationData.directory, 'logs'), topdown=False):
+            for name in files:
+                try:
+                    os.remove(os.path.join(path, name))
+                except (OSError, IOError):
+                    pass
+            for name in dirs:
+                try:
+                    os.rmdir(os.path.join(path, name))
+                except (OSError, IOError):
+                    pass
+
+        log_manager.start()
+        self._update_logs_size_label()
+
+    @objc.IBAction
     def userClickedToolbarButton_(self, sender):
         section = sender.itemIdentifier()
 
         if section == 'advanced':
             self.generalTabView.setTabViewType_(NSTopTabsBezelBorder)
             self.createGeneralOptionsUI('advanced')
+            self.sectionHelpPlaceholder.setHidden_(False)
         else:
             self.createGeneralOptionsUI('basic')
             self.generalTabView.setTabViewType_(NSNoTabsBezelBorder)
@@ -293,7 +324,7 @@ class PreferencesController(NSWindowController, object):
             self.sectionDescription.setStringValue_(NSLocalizedString("Advanced Settings", "Preferences section description"))
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.window().setTitle_(NSLocalizedString("Advanced", "Window title"))
-            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Do not change these settings unless you understand the consequences", "Preferences placehoder text"))
+
         elif section == 'help':
             self.window().setTitle_(NSLocalizedString("Help", "Window title"))
             NSApp.delegate().contactsWindowController.showHelp('#preferences')
@@ -319,6 +350,7 @@ class PreferencesController(NSWindowController, object):
                     label = formatName(section)
 
                 tabItem.setLabel_(label)
+                tabItem.setIdentifier_(section)
                 tabItem.setView_(view)
                 if section not in StaticPreferenceSections:
                     self.generalTabView.addTabViewItem_(tabItem)
@@ -706,6 +738,16 @@ class PreferencesController(NSWindowController, object):
             if 'display_name' in notification.data.modified:
                 self.displayNameText.setStringValue_(sender.display_name or u'')
 
+        if 'logs.trace_pjsip_to_file' in notification.data.modified:
+            if settings.logs.trace_pjsip_to_file:
+                if not settings.logs.trace_pjsip:
+                    settings.logs.trace_pjsip = True
+                    settings.save()
+            else:
+                if settings.logs.trace_pjsip != settings.logs.trace_pjsip_in_gui:
+                    settings.logs.trace_pjsip = settings.logs.trace_pjsip_in_gui
+                    settings.save()
+
         if 'audio.silent' in notification.data.modified:
             try:
                 self.settingViews['audio.silent'].restore()
@@ -842,6 +884,62 @@ class PreferencesController(NSWindowController, object):
                     self.display_outbound_proxy_radio_if_needed(account)
             else:
                 userdef.setInteger_forKey_(section, "SelectedAdvancedBonjourSection")
+
+        if item.identifier() == 'logs':
+            self._update_logs_size_label()
+            if self.logsize_timer is None:
+                self.logsize_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "updateLogSize:", None, True)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.logsize_timer, NSRunLoopCommonModes)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.logsize_timer, NSEventTrackingRunLoopMode)
+        else:
+            if self.logsize_timer is not None:
+                if self.logsize_timer.isValid():
+                    self.logsize_timer.invalidate()
+                self.logsize_timer = None
+            self.purgeLogsButton.setHidden_(True)
+            self.openLogsFolderButton.setHidden_(True)
+            self.sectionHelpPlaceholder.setStringValue_('')
+
+    @objc.IBAction
+    def goToLogsFolderClicked_(self, sender):
+        NSWorkspace.sharedWorkspace().openFile_(ApplicationData.get('logs'))
+
+    def updateLogSize_(self, timer):
+        self._update_logs_size_label()
+
+    @run_in_gui_thread
+    def _update_logs_size_label(self):
+        def _normalize_binary_size(size):
+            """Return a human friendly string representation of size as a power of 2"""
+            infinite = float('infinity')
+            boundaries = [(             1024, '%d bytes',               1),
+                          (          10*1024, '%.2f KB',           1024.0),  (     1024*1024, '%.1f KB',           1024.0),
+                          (     10*1024*1024, '%.2f MB',      1024*1024.0),  (1024*1024*1024, '%.1f MB',      1024*1024.0),
+                          (10*1024*1024*1024, '%.2f GB', 1024*1024*1024.0),  (      infinite, '%.1f GB', 1024*1024*1024.0)]
+            for boundary, format, divisor in boundaries:
+                if size < boundary:
+                    return format % (size/divisor,)
+            else:
+                return "%d bytes" % size
+
+        logs_size = 0
+        for path, dirs, files in os.walk(os.path.join(ApplicationData.directory, 'logs')):
+            for name in dirs:
+                try:
+                    logs_size += os.stat(os.path.join(path, name)).st_size
+                except (OSError, IOError):
+                    pass
+            for name in files:
+                try:
+                    logs_size += os.stat(os.path.join(path, name)).st_size
+                except (OSError, IOError):
+                    pass
+
+        size = _normalize_binary_size(logs_size)
+        self.purgeLogsButton.setHidden_(not bool(logs_size))
+        self.openLogsFolderButton.setHidden_(not bool(logs_size))
+        self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("There are currently %s of log files" % size, "Preferences section description"))
+        self.sectionHelpPlaceholder.setHidden_(not bool(logs_size))
 
     def tableViewSelectionDidChange_(self, notification):
         sv = self.passwordText.superview()

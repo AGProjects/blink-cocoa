@@ -14,8 +14,8 @@ from Foundation import (NSAttributedString,
                         NSMutableAttributedString,
                         NSNotificationCenter,
                         NSObject,
-                        NSString,
-                        NSUserDefaults)
+                        NSString
+                        )
 import objc
 
 from datetime import datetime
@@ -25,6 +25,7 @@ from application.python import Null
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
+from sipsimple.configuration.settings import SIPSimpleSettings
 from util import allocate_autorelease_pool, run_in_gui_thread, format_size
 from SessionInfoController import ice_candidates
 
@@ -105,9 +106,6 @@ class DebugWindow(NSObject):
     notifications = []
     notifications_unfiltered = []
 
-    sipTraceType = None
-    msrpTraceType = None
-    xcapTraceType = None
     lastSIPMessageWasDNS = False
 
     _siptrace_start_time = None
@@ -149,21 +147,29 @@ class DebugWindow(NSObject):
 
         BlinkLogger().set_gui_logger(self.renderActivity)
 
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
+        settings = SIPSimpleSettings()
+
         notification_center = NotificationCenter()
+        notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="SIPSessionDidStart")
+        notification_center.add_observer(self, name="SIPEngineSIPTrace")
+        notification_center.add_observer(self, name="MSRPLibraryLog")
+        notification_center.add_observer(self, name="MSRPTransportTrace")
+        notification_center.add_observer(self, name="SIPEngineLog")
+
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
         notification_center.add_observer(self, name="AudioStreamICENegotiationDidSucceed")
         notification_center.add_observer(self, name="AudioStreamICENegotiationDidFail")
 
-        userdef = NSUserDefaults.standardUserDefaults()
-        self.sipRadio.selectCellWithTag_(userdef.integerForKey_("SIPTrace") or Disabled)
-        self.msrpRadio.selectCellWithTag_(userdef.integerForKey_("MSRPTrace") or Disabled)
-        self.xcapRadio.selectCellWithTag_(userdef.integerForKey_("XCAPTrace") or Disabled)
-        self.pjsipCheckBox.setState_(NSOnState if userdef.boolForKey_("EnablePJSIPTrace") else NSOffState)
+        if settings.logs.trace_notifications_in_gui:
+            notification_center.add_observer(self)
 
-        self.userDefaultsDidChange_(None)
+        self.sipRadio.selectCellWithTag_(settings.logs.trace_sip_in_gui or Disabled)
+        self.msrpRadio.selectCellWithTag_(settings.logs.trace_msrp_in_gui or Disabled)
+        self.xcapRadio.selectCellWithTag_(settings.logs.trace_xcap_in_gui or Disabled)
+        self.pjsipCheckBox.setState_(NSOnState if settings.logs.trace_pjsip_in_gui  else NSOffState)
+        self.notificationsCheckBox.setState_(NSOnState if settings.logs.trace_notifications_in_gui  else NSOffState)
 
         return self
 
@@ -172,65 +178,6 @@ class DebugWindow(NSObject):
 
     def close_(self, sender):
         self.window.close()
-
-    def userDefaultsDidChange_(self, notification):
-        userdef = NSUserDefaults.standardUserDefaults()
-        notification_center = NotificationCenter()
-        trace = userdef.integerForKey_("SIPTrace")
-        if trace == Disabled:
-            notification_center.discard_observer(self, name="SIPEngineSIPTrace")
-            notification_center.discard_observer(self, name="DNSLookupTrace")
-            self.sipTraceType = None
-        elif trace == Simplified:
-            notification_center.add_observer(self, name="SIPEngineSIPTrace")
-            notification_center.add_observer(self, name="DNSLookupTrace")
-            self.sipTraceType = "simple"
-        elif trace == Full:
-            notification_center.add_observer(self, name="SIPEngineSIPTrace")
-            notification_center.add_observer(self, name="DNSLookupTrace")
-            self.sipTraceType = "full"
-
-        trace = userdef.integerForKey_("MSRPTrace")
-        if trace == Disabled:
-            notification_center.discard_observer(self, name="MSRPLibraryLog")
-            notification_center.discard_observer(self, name="MSRPTransportTrace")
-            self.msrpTraceType = None
-        elif trace == Simplified:
-            notification_center.add_observer(self, name="MSRPLibraryLog")
-            notification_center.add_observer(self, name="MSRPTransportTrace")
-            self.msrpTraceType = "simple"
-        elif trace == Full:
-            notification_center.add_observer(self, name="MSRPLibraryLog")
-            notification_center.add_observer(self, name="MSRPTransportTrace")
-            self.msrpTraceType = "full"
-
-        trace = userdef.integerForKey_("XCAPTrace")
-        if trace == Disabled:
-            notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
-            notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
-            self.xcapTraceType = None
-        elif trace == Simplified:
-            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            notification_center.add_observer(self, name="XCAPManagerDidChangeState")
-            self.xcapTraceType = "simple"
-        elif trace == Full:
-            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            notification_center.add_observer(self, name="XCAPManagerDidChangeState")
-            notification_center.add_observer(self, name="XCAPSubscriptionGotNotify")
-            self.xcapTraceType = "full"
-
-        trace = userdef.boolForKey_("EnablePJSIPTrace")
-        if trace:
-            notification_center.add_observer(self, name="SIPEngineLog")
-        else:
-            notification_center.discard_observer(self, name="SIPEngineLog")
-
-        trace = userdef.boolForKey_("EnableNotificationsTrace")
-        if trace:
-            notification_center.add_observer(self)
-        else:
-            notification_center.discard_observer(self)
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         pass
@@ -242,13 +189,86 @@ class DebugWindow(NSObject):
         return self.notifications[row][int(column.identifier())]
 
     @objc.IBAction
+    def notificationsCheckboxClicked_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.logs.trace_notifications_in_gui = bool(sender.state())
+        settings.logs.trace_notifications = settings.logs.trace_notifications_in_gui or settings.logs.trace_notifications_to_file
+        settings.save()
+
+        notification_center = NotificationCenter()
+
+        if settings.logs.trace_notifications_in_gui:
+            notification_center.add_observer(self)
+        else:
+            notification_center.discard_observer(self)
+
+    @objc.IBAction
+    def engineCheckboxClicked_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.logs.trace_pjsip_in_gui = bool(sender.state())
+        settings.logs.trace_pjsip = settings.logs.trace_pjsip_in_gui or settings.logs.trace_pjsip_to_file
+        settings.save()
+
+    @objc.IBAction
     def radioClicked_(self, sender):
-        if sender == self.sipRadio:
-            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "SIPTrace")
-        elif sender == self.msrpRadio:
-            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "MSRPTrace")
-        elif sender == self.xcapRadio:
-            NSUserDefaults.standardUserDefaults().setInteger_forKey_(sender.selectedCell().tag(), "XCAPTrace")
+        pass
+
+    @objc.IBAction
+    def sipRadioClicked_(self, sender):
+        notification_center = NotificationCenter()
+        trace = sender.selectedCell().tag()
+        settings = SIPSimpleSettings()
+        print trace
+        settings.logs.trace_sip_in_gui = trace
+        if trace == Disabled:
+            notification_center.discard_observer(self, name="DNSLookupTrace")
+            settings.logs.trace_sip = settings.logs.trace_sip_to_file
+        elif trace == Simplified:
+            notification_center.add_observer(self, name="DNSLookupTrace")
+            settings.logs.trace_sip = True
+        elif trace == Full:
+            notification_center.add_observer(self, name="DNSLookupTrace")
+            settings.logs.trace_sip = True
+
+        settings.save()
+
+    @objc.IBAction
+    def msrpRadioClicked_(self, sender):
+        trace = sender.selectedCell().tag()
+        settings = SIPSimpleSettings()
+        settings.logs.trace_msrp_in_gui = trace
+        if trace == Disabled:
+            settings.logs.trace_msrp = settings.logs.trace_msrp_to_file
+        elif trace == Simplified:
+            settings.logs.trace_msrp = True
+        elif trace == Full:
+            settings.logs.trace_msrp = True
+
+        settings.save()
+
+    @objc.IBAction
+    def xcapRadioClicked_(self, sender):
+        notification_center = NotificationCenter()
+        trace = sender.selectedCell().tag()
+        settings = SIPSimpleSettings()
+        settings.logs.trace_xcap_in_gui = trace
+        if trace == Disabled:
+            notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
+            notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
+            settings.logs.trace_xcap = settings.logs.trace_xcap_to_file
+        elif trace == Simplified:
+            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.add_observer(self, name="XCAPManagerDidChangeState")
+            settings.logs.trace_xcap = True
+        elif trace == Full:
+            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.add_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.add_observer(self, name="XCAPSubscriptionGotNotify")
+            settings.logs.trace_xcap = True
+
+        settings.save()
+
 
     @objc.IBAction
     def filterSipApplicationClicked_(self, sender):
@@ -387,11 +407,12 @@ class DebugWindow(NSObject):
 
     @allocate_autorelease_pool
     def renderSIP(self, notification):
-        event_data = notification.data
-        self.sipBytes += len(event_data.data)
-        if self.sipTraceType is None:
+        settings = SIPSimpleSettings()
+        if settings.logs.trace_sip_in_gui == Disabled:
             return
 
+        event_data = notification.data
+        self.sipBytes += len(event_data.data)
         if self._siptrace_start_time is None:
             self._siptrace_start_time = notification.datetime
         self._siptrace_packet_count += 1
@@ -446,7 +467,7 @@ class DebugWindow(NSObject):
                             pass
                         continue
 
-                if self.sipTraceType == "full":
+                if settings.logs.trace_sip_in_gui == Full:
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
                 else:
@@ -472,7 +493,7 @@ class DebugWindow(NSObject):
                         pass
                     continue
 
-            if self.sipTraceType == "full":
+            if settings.logs.trace_sip_in_gui == Full:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
             else:
@@ -490,9 +511,12 @@ class DebugWindow(NSObject):
         self.sipTextView.scrollRangeToVisible_(NSMakeRange(self.sipTextView.textStorage().length()-1, 1))
 
     def renderDNS(self, text):
-        if self.sipTraceType is not None:
-            self.lastSIPMessageWasDNS = True
-            self.append_line(self.sipTextView, text)
+        settings = SIPSimpleSettings()
+        if settings.logs.trace_sip_in_gui == Disabled:
+            return
+
+        self.lastSIPMessageWasDNS = True
+        self.append_line(self.sipTextView, text)
 
     def renderPJSIP(self, text):
         if self.pjsipCheckBox.state() == NSOnState:
@@ -507,7 +531,8 @@ class DebugWindow(NSObject):
             self.pjsipInfoLabel.setStringValue_("%d lines, %sytes" % (self.pjsipCount, format_size(self.pjsipBytes)))
 
     def renderXCAP(self, text):
-        if self.xcapTraceType is not None:
+        settings = SIPSimpleSettings()
+        if settings.logs.trace_xcap_in_gui != Disabled:
             self.append_line(self.xcapTextView, text)
 
     @allocate_autorelease_pool
@@ -543,6 +568,10 @@ class DebugWindow(NSObject):
                                             NSString.stringWithString_(str(ts))))
             self.renderNotifications()
 
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        sender = notification.sender
+        settings = SIPSimpleSettings()
+
     def _NH_SIPSessionDidStart(self, notification):
         self.renderRTP(notification.sender)
 
@@ -557,7 +586,8 @@ class DebugWindow(NSObject):
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_MSRPTransportTrace(self, notification):
-        if self.msrpTraceType is None:
+        settings = SIPSimpleSettings()
+        if settings.logs.trace_msrp_in_gui == Disabled:
             return
 
         arrow = {'incoming': '<--', 'outgoing': '-->'}[notification.data.direction]
@@ -574,7 +604,7 @@ class DebugWindow(NSObject):
 
         message = '\n%s: %s %s %s' % (notification.datetime, local_address, arrow, remote_address)
         header = []
-        if self.msrpTraceType == "full":
+        if settings.logs.trace_msrp_in_gui == Full:
             header = notification.data.data.split("\n")
         else:
             if notification.data.data.startswith("MSRP "):
@@ -603,13 +633,14 @@ class DebugWindow(NSObject):
 
             self.append_line(self.msrpTextView, "\n".join(header[1:]))
 
-        if not self.msrpTraceType == "full":
+        if settings.logs.trace_msrp_in_gui != Full:
             self.append_line(self.msrpTextView, self.newline)
 
         self.msrpInfoLabel.setStringValue_("%d MSRP messages sent, %d MRSP messages received, %sytes" % (self.msrpOutCount, self.msrpInCount, format_size(self.msrpBytes)))
 
     def _NH_MSRPLibraryLog(self, notification):
-        if self.msrpTraceType is None:
+        settings = SIPSimpleSettings()
+        if settings.logs.trace_msrp_in_gui == Disabled:
             return
 
         message = '%s %s%s\n\n' % (notification.datetime, notification.data.level.prefix, notification.data.message)
@@ -712,8 +743,9 @@ class DebugWindow(NSObject):
         self.renderXCAP(message)
 
     def _NH_XCAPSubscriptionGotNotify(self, notification):
+        settings = SIPSimpleSettings()
         message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body))
-        if notification.data.body is not None and self.xcapTraceType == 'full':
+        if notification.data.body is not None and settings.logs.trace_xcap_in_gui == Full:
             self.renderXCAP(message)
 
     def _NH_XCAPManagerDidChangeState(self, notification):

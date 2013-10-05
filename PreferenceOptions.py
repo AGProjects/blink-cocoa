@@ -1686,6 +1686,15 @@ PreferenceOptionTypes = {
 "ldap.username": NullableStringOption,
 "logs.directory": HiddenOption,
 "logs.trace_xcap": HiddenOption,
+"logs.trace_xcap_in_gui": HiddenOption,
+"logs.trace_notifications": HiddenOption,
+"logs.trace_notifications_in_gui": HiddenOption,
+"logs.trace_pjsip": HiddenOption,
+"logs.trace_pjsip_in_gui": HiddenOption,
+"logs.trace_msrp": HiddenOption,
+"logs.trace_msrp_in_gui": HiddenOption,
+"logs.trace_sip": HiddenOption,
+"logs.trace_sip_in_gui": HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : STUNServerAddressListOption,
 "pstn.dtmf_delimiter": DTMFDelimiterOption,
@@ -1740,10 +1749,11 @@ SettingDescription = {
                       'gui.sync_with_icloud': NSLocalizedString("Sync With iCloud", "Setting decription label"),
                       'ldap.hostname': NSLocalizedString("Server Address", "Setting decription label"),
                       'ldap.dn': NSLocalizedString("Search Base", "Setting decription label"),
-                      'logs.trace_msrp': NSLocalizedString("Trace MSRP Media", "Setting decription label"),
-                      'logs.trace_sip': NSLocalizedString("Trace SIP Signaling", "Setting decription label"),
-                      'logs.trace_xcap': NSLocalizedString("Trace XCAP (used for storage of contacts and presence policy)", "Setting decription label"),
-                      'logs.trace_pjsip': NSLocalizedString("Trace Core Engine", "Setting decription label"),
+                      'logs.trace_msrp_to_file': NSLocalizedString("Trace MSRP Media", "Setting decription label"),
+                      'logs.trace_sip_to_file': NSLocalizedString("Trace SIP Signaling", "Setting decription label"),
+                      'logs.trace_xcap_to_file': NSLocalizedString("Trace XCAP Storage", "Setting decription label"),
+                      'logs.trace_pjsip_to_file': NSLocalizedString("Trace Core Engine", "Setting decription label"),
+                      'logs.trace_notifications_to_file': NSLocalizedString("Trace Notifications", "Setting decription label"),
                       'logs.pjsip_level': NSLocalizedString("Core Level", "Setting decription label"),
                       'message_summary.voicemail_uri': NSLocalizedString("Mailbox URI", "Setting decription label"),
                       'nat_traversal.stun_server_list': NSLocalizedString("STUN Servers", "Setting decription label"),
@@ -1818,7 +1828,7 @@ GeneralSettingsOrder = {
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
                        'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'enable_speech_synthesizer', 'night_volume'],
                        'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'idle_threshold'],
-                       'logs': ['trace_sip', 'trace_msrp', 'trace_xcap', 'trace_notifications', 'trace_pjsip', 'pjsip_level']
+                       'logs': ['trace_sip_to_file', 'trace_msrp_to_file', 'trace_xcap_to_file', 'trace_notifications_to_file', 'trace_pjsip_to_file', 'pjsip_level']
                        }
 
 AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal', 'presence', 'xcap', 'server', 'ldap', 'gui')

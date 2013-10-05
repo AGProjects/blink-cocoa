@@ -31,7 +31,7 @@ class KeychainPasswordSetting(Setting):
                     if self.label is None:
                         label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
                     else:
-                        label = '%s %s (%s)' % (NSApp.delegate().applicationName, self.label, account.id)  
+                        label = '%s %s (%s)' % (NSApp.delegate().applicationName, self.label, account.id)
                     k = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
                     value = unicode(k.password()) if k is not None else u''
                 value = self.type(value)
@@ -52,7 +52,7 @@ class KeychainPasswordSetting(Setting):
                         label = '%s %s (%s)' % (NSApp.delegate().applicationName, self.label, account.id)
                     k = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
                     if k is None and new_password:
-                        EMGenericKeychainItem.addGenericKeychainItemForService_withUsername_password_(label, account.id, new_password)                    
+                        EMGenericKeychainItem.addGenericKeychainItemForService_withUsername_password_(label, account.id, new_password)
                     elif k is not None:
                         if new_password:
                             k.setPassword_(new_password)

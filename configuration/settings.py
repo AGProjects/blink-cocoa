@@ -63,12 +63,26 @@ class FileTransferSettingsExtension(FileTransferSettings):
 
 class LogsSettingsExtension(LogsSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('logs'))
-    trace_sip = Setting(type=bool, default=False)
-    trace_pjsip = Setting(type=bool, default=False)
-    trace_msrp = Setting(type=bool, default=False)
-    trace_xcap = Setting(type=bool, default=False)
-    trace_notifications = Setting(type=bool, default=False)
 
+    #trace_sip is defined in middleware
+    trace_sip_in_gui = Setting(type=NonNegativeInteger, default=1)
+    trace_sip_to_file = Setting(type=bool, default=False)
+
+    #trace_pjsip is defined in middleware
+    trace_pjsip_in_gui = Setting(type=bool, default=False)
+    trace_pjsip_to_file = Setting(type=bool, default=False)
+
+    #trace_msrp is defined in middleware
+    trace_msrp_in_gui = Setting(type=NonNegativeInteger, default=1)
+    trace_msrp_to_file = Setting(type=bool, default=False)
+
+    trace_xcap = Setting(type=bool, default=False)
+    trace_xcap_in_gui = Setting(type=NonNegativeInteger, default=1)
+    trace_xcap_to_file = Setting(type=bool, default=False)
+
+    trace_notifications = Setting(type=bool, default=False)
+    trace_notifications_in_gui = Setting(type=bool, default=False)
+    trace_notifications_to_file = Setting(type=bool, default=False)
 
 class ServerSettings(SettingsGroup):
     enrollment_url = Setting(type=HTTPURL, default="https://blink.sipthor.net/enrollment.phtml")
@@ -85,7 +99,7 @@ class GUISettings(SettingsGroup):
 class RTPSettingsExtension(RTPSettings):
     audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'speex', 'G722', 'PCMU', 'PCMA')))
 
-            
+
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
     about_url = Setting(type=HTTPURL, default=None, nillable=True)
