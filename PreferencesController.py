@@ -607,7 +607,7 @@ class PreferencesController(NSWindowController, object):
                 else:
                     if selected_account.registration_state and selected_account.registration_state != 'ended':
                         if selected_account.registrar and selected_account.registration_state == 'succeeded':
-                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s" % selected_account.registration_state.title(), "Preferences label") + NSLocalizedString("at %s" % selected_account.registrar, "Registration status label"))
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s" % selected_account.registration_state.title(), "Preferences label") + NSLocalizedString(" at %s" % selected_account.registrar, "Registration status label"))
                             self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
                             if selected_account.registrar.startswith('tls:'):
                                 frame.origin.x = 312
@@ -886,7 +886,6 @@ class PreferencesController(NSWindowController, object):
                 userdef.setInteger_forKey_(section, "SelectedAdvancedBonjourSection")
 
         if item.identifier() == 'logs':
-            self._update_logs_size_label()
             if self.logsize_timer is None:
                 self.logsize_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "updateLogSize:", None, True)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.logsize_timer, NSRunLoopCommonModes)
@@ -896,6 +895,14 @@ class PreferencesController(NSWindowController, object):
                 if self.logsize_timer.isValid():
                     self.logsize_timer.invalidate()
                 self.logsize_timer = None
+
+        if item.identifier() == 'logs':
+            self._update_logs_size_label()
+        elif item.identifier() == 'sip':
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Set port to 0 for automatic allocation", "Setting decription label"))
+        elif item.identifier() == 'tls':
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("These settings apply only for SIP signalling", "Setting decription label"))
+        else:
             self.purgeLogsButton.setHidden_(True)
             self.openLogsFolderButton.setHidden_(True)
             self.sectionHelpPlaceholder.setStringValue_('')

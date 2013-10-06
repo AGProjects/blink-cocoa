@@ -1749,12 +1749,12 @@ SettingDescription = {
                       'gui.sync_with_icloud': NSLocalizedString("Sync With iCloud", "Setting decription label"),
                       'ldap.hostname': NSLocalizedString("Server Address", "Setting decription label"),
                       'ldap.dn': NSLocalizedString("Search Base", "Setting decription label"),
-                      'logs.trace_msrp_to_file': NSLocalizedString("Trace MSRP Media", "Setting decription label"),
-                      'logs.trace_sip_to_file': NSLocalizedString("Trace SIP Signaling", "Setting decription label"),
-                      'logs.trace_xcap_to_file': NSLocalizedString("Trace XCAP Storage", "Setting decription label"),
-                      'logs.trace_pjsip_to_file': NSLocalizedString("Trace Core Engine", "Setting decription label"),
-                      'logs.trace_notifications_to_file': NSLocalizedString("Trace Notifications", "Setting decription label"),
-                      'logs.pjsip_level': NSLocalizedString("Core Level", "Setting decription label"),
+                      'logs.trace_msrp_to_file': NSLocalizedString("Log MSRP Media", "Setting decription label"),
+                      'logs.trace_sip_to_file': NSLocalizedString("Log SIP Signaling", "Setting decription label"),
+                      'logs.trace_xcap_to_file': NSLocalizedString("Log XCAP Storage", "Setting decription label"),
+                      'logs.trace_pjsip_to_file': NSLocalizedString("Log Core Engine", "Setting decription label"),
+                      'logs.trace_notifications_to_file': NSLocalizedString("Log Notifications", "Setting decription label"),
+                      'logs.pjsip_level': NSLocalizedString("Core Engine Level", "Setting decription label"),
                       'message_summary.voicemail_uri': NSLocalizedString("Mailbox URI", "Setting decription label"),
                       'nat_traversal.stun_server_list': NSLocalizedString("STUN Servers", "Setting decription label"),
                       'presence.use_rls': NSLocalizedString("Use Resource List Server", "Setting decription label"),
@@ -1768,7 +1768,7 @@ SettingDescription = {
                       'rtp.audio_codec_list': NSLocalizedString("Audio Codecs", "Setting decription label"),
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Setting decription label"),
                       'rtp.srtp_encryption': NSLocalizedString("sRTP Encryption", "Setting decription label"),
-                      'sip.invite_timeout': NSLocalizedString("Session Timeout", "Setting decription label"),
+                      'sip.invite_timeout': NSLocalizedString("INVITE Timeout", "Setting decription label"),
                       'sip.outbound_proxy': NSLocalizedString("Primary Proxy", "Setting decription label"),
                       'sip.alternative_proxy': NSLocalizedString("Alternate Proxy", "Setting decription label"),
                       'sip.register': NSLocalizedString("Receive Incoming Calls", "Setting decription label"),
@@ -1854,8 +1854,7 @@ UnitOptions = {
                'publish_interval': NSLocalizedString("seconds", "Setting decription label"),
                'register_interval': NSLocalizedString("seconds", "Setting decription label"),
                'subscribe_interval': NSLocalizedString("seconds", "Setting decription label"),
-               'idle_threshold': NSLocalizedString("seconds", "Setting decription label"),
-               'udp_port': NSLocalizedString("set port to 0 for automatic allocation", "Setting decription label")
+               'idle_threshold': NSLocalizedString("seconds", "Setting decription label")
                }
 
 ToolTips = {
@@ -1865,8 +1864,8 @@ ToolTips = {
              'auth.username': NSLocalizedString("Enter authentication username if different than the SIP Address username", "Setting decription label"),
              'chat.replication_password': NSLocalizedString("Enter a password to encrypt the content of your messages on the replication server", "Setting decription label"),
              'gui.account_label': NSLocalizedString("Label displayed in account popup up menu instead of the sip address", "Setting decription label"),
-             'gui.idle_threshold': NSLocalizedString("Interval After Which My Availability Is Set To Away", "Setting decription label"),
-             'message_summary.voicemail_uri': NSLocalizedString("SIP Address where Blink will send the Subscribe for the message waiting indicator", "Setting decription label"),
+             'gui.idle_threshold': NSLocalizedString("Interval after which my availability is set to away", "Setting decription label"),
+             'message_summary.voicemail_uri': NSLocalizedString("SIP Address to subscribe for receiving message waiting indicator notifications", "Setting decription label"),
              'nat_traversal.msrp_relay': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain", "Setting decription label"),
              'nat_traversal.use_ice': NSLocalizedString("Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays", "Setting decription label"),
              'nat_traversal.use_msrp_relay_for_outbound': NSLocalizedString("Normally, the MSRP relay is used only for incoming sessions, this setting also forces the outbound sessions through the MSRP relay", "Setting decription label"),
@@ -1884,7 +1883,7 @@ ToolTips = {
              'sip.alternative_proxy': NSLocalizedString("When set, it can be manually selected as SIP Outbound Proxy in the Call menu", "Setting decription label"),
              'sip.register': NSLocalizedString("When enabled, the account will register to the SIP server and is able to receive incoming calls", "Setting decription label"),
              'tls.certificate': NSLocalizedString("X.509 certificate and unencrypted private key concatenated in the same file", "Setting decription label"),
-             'tls.verify_server': NSLocalizedString("Verify the validity of TLS certificates presented by remote parties", "Setting decription label"),
+             'tls.verify_server': NSLocalizedString("Verify the validity of TLS certificate presented by remote server. The certificate must be signed by a Certificate Authority installed in the system.", "Setting decription label"),
              'tls.ca_list': NSLocalizedString("File that contains a list of Certificate Autorities (CA) additional to the ones provided by MacOSX. Each CA must be in PEM format, multiple CA can be concantenated.", "Setting decription label"),
              'xcap.xcap_root': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain", "Setting decription label")
            }
