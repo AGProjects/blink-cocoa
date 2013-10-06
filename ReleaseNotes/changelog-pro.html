@@ -8,12 +8,33 @@
 
 <h2>Version 3.3.0</h2>
 
-<p>August 27th, 2013
+<p>October 6th, 2013
 
 <ul>
-<li>Added end-to-end Chat encryption (OTR protocol)
+<li>Added OTR protocol for end-to-end private Chat conversations
+<li>Added SMP protocol for verifying remote fingerprints for private Chat conversations
+<li>Added per Contact/Session storage option for private Chat conversations
+<li>Added a safety timer for Music application muting when they fail
+<li>Mark pending outgoing Chat messages as failed if the DNS lookup fails
+<li>Mark privacy for each Chat messages using a coloured lock
+<li>Added option to purge Logs saved to files in Preferences
+<li>Allow starting Audio call from Chat window
+<li>Honor remote preference for not logging Chat to local history database
+<li>End Session when reinvite fails for last stream
+<li>Refactored toggling visibility of Collaborative editor
+<li>Don'r render system message when cancelling Chat session
+<li>Show loading indicator in chat view when connecting session
+<li>Don't duplicate system Chat message when a chat stream fails
+<li>Fixed marking failed Chat messages
+<li>Fixed startup if default Account is None
+<li>Fixed reusing Audio tile after one SIP route fails
+<li>Use white font for failed Chat messages
+<li>Fixed display of packet loss in Audio tile
+<li>Fixed DNS lookup blockiness
+<li>Fixed crash when in-dialog request fails to be sent within a subscription
+<li>Fixed memory leak by initializing the handler after the stream initialized
+<li>Properly handle mutex creation failures
 </ul>
-
 
 
 <h2>Version 3.2.0</h2>
