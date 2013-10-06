@@ -115,6 +115,7 @@ class SoundsSettings(SettingsGroup):
     message_sent = Setting(type=SoundFile, default=SoundFile("message_sent.wav", volume=10), nillable=True)
     night_volume = Setting(type=NightVolume, default=NightVolume(start_hour=22, end_hour=8, volume=10), nillable=True)
     enable_speech_synthesizer = Setting(type=bool, default=True)
+    use_speech_recognition = Setting(type=bool, default=False)
 
 
 class TLSSettingsExtension(TLSSettings):

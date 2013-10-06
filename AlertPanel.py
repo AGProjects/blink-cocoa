@@ -19,7 +19,6 @@ from Foundation import (NSBezierPath,
                         NSMaxX,
                         NSMutableArray,
                         NSMutableDictionary,
-                        NSNotificationCenter,
                         NSNumber,
                         NSObject,
                         NSRunLoop,
@@ -28,7 +27,6 @@ from Foundation import (NSBezierPath,
                         NSSpeechRecognizer,
                         NSSpeechSynthesizer,
                         NSTimer,
-                        NSUserDefaults,
                         NSWidth)
 import objc
 
@@ -93,22 +91,15 @@ class AlertPanel(NSObject, object):
             self.extraHeight = self.panel.contentRectForFrameRect_(self.panel.frame()).size.height - self.sessionsListView.frame().size.height
             self.sessionsListView.setSpacing_(2)
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
-            ns_nc = NSNotificationCenter.defaultCenter()
-            ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
 
             self.init_speech_recognition()
             self.init_speech_synthesis()
 
         return self
 
-    def userDefaultsDidChange_(self, notification):
-        self.use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
-        if self.speech_recognizer is not None and not self.use_speech_recognition:
-            self.speech_recognizer.stopListening()
-
     def init_speech_recognition(self):
-        self.use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
-        if self.use_speech_recognition:
+        settings = SIPSimpleSettings()
+        if settings.sounds.use_speech_recognition:
             self.speech_recognizer = NSSpeechRecognizer.alloc().init()
             self.speech_recognizer.setDelegate_(self)
             self.speech_recognizer.setListensInForegroundOnly_(False)
@@ -678,8 +669,13 @@ class AlertPanel(NSObject, object):
         self.cancelSession(notification.sender, notification.data.end_reason)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
+        settings = SIPSimpleSettings()
+        if notification.data.modified.has_key("sounds.use_speech_recognition"):
+            if self.speech_recognizer is not None and not settings.sounds.use_speech_recognition:
+                self.speech_recognizer.stopListening()
+
         if notification.data.modified.has_key("answering_machine.enabled"):
-            if SIPSimpleSettings().answering_machine.enabled:
+            if settings.answering_machine.enabled:
                 for session, view in self.sessions.items():
                     if session.account is not BonjourAccount():
                         self.enableAnsweringMachine(view, session, True)

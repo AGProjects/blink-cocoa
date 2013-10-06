@@ -450,7 +450,6 @@ class ContactWindowController(NSWindowController):
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
         self.setAlwaysOnTop()
-        self.setSpeechRecognition()
 
         path = ApplicationData.get('presence')
         makedirs(path)
@@ -653,11 +652,6 @@ class ContactWindowController(NSWindowController):
 
     def userDefaultsDidChange_(self, notification):
         self.setAlwaysOnTop()
-        self.setSpeechRecognition()
-
-    def setSpeechRecognition(self):
-        use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
-        self.useSpeechRecognitionMenuItem.setState_(NSOnState if use_speech_recognition else NSOffState)
 
     def setSpeechSynthesis(self):
         settings = SIPSimpleSettings()
@@ -2652,8 +2646,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def setUseSpeechRecognition_(self, sender):
-        use_speech_recognition = NSUserDefaults.standardUserDefaults().boolForKey_("UseSpeechRecognition")
-        NSUserDefaults.standardUserDefaults().setBool_forKey_(True if not use_speech_recognition else False, "UseSpeechRecognition")
+        settings = SIPSimpleSettings()
+        settings.sounds.use_speech_recognition = not settings.sounds.use_speech_recognition
+        settings.save()
 
     @objc.IBAction
     def toggleMirrorWindow_(self, sender):
@@ -3208,6 +3203,9 @@ class ContactWindowController(NSWindowController):
 
         item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
         item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
+
+        settings = SIPSimpleSettings()
+        self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
 
     @allocate_autorelease_pool
     def updateCallMenu(self):
