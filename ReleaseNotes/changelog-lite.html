@@ -6,6 +6,49 @@
 
 <body>
 
+<h2>Version 3.1.0</h2>
+
+<p>October 6th, 2013
+
+<ul>
+<li>Added OTR protocol for end-to-end private Chat conversations
+<li>Added SMP protocol for verifying remote fingerprints for private Chat conversations
+<li>Added per Contact/Session storage option for private Chat conversations
+<li>Added a safety timer for Music application muting when they fail
+<li>Mark pending outgoing Chat messages as failed if the DNS lookup fails
+<li>Mark privacy for each Chat messages using a coloured lock
+<li>Added option to purge Logs saved to files in Preferences
+<li>Allow starting Audio call from Chat window
+<li>Honor remote preference for not logging Chat to local history database
+<li>End Session when reinvite fails for last stream
+<li>Refactored toggling visibility of Collaborative editor
+<li>Don'r render system message when cancelling Chat session
+<li>Show loading indicator in chat view when connecting session
+<li>Don't duplicate system Chat message when a chat stream fails
+<li>Fixed marking failed Chat messages
+<li>Fixed startup if default Account is None
+<li>Fixed reusing Audio tile after one SIP route fails
+<li>Use white font for failed Chat messages
+<li>Fixed display of packet loss in Audio tile
+<li>Fixed DNS lookup blockiness
+<li>Fixed crash when in-dialog request fails to be sent within a subscription
+<li>Fixed memory leak by initializing the handler after the stream initialized
+<li>Properly handle mutex creation failures
+<li>Fixed reusing Chat sessions in same window
+<li>Fixed position of Call transfer contextual menu
+<li>Fixed detecting when Music has been paused
+<li>Fixed handling errors in remove_stream
+<li>Improved Chat connection messages
+<li>Improved performance of LDAP queries
+<li>Improved performace of loading System Address Book
+<li>Handle System Address Book changes incrementally
+<li>Don't set a default DTMF delimiter to #
+<li>Use single global c line when creating SDP
+<li>Relax Opus codec matching when doing SDP negotiation
+<li>Always put useinbandfec in SDP for Opus codec
+</ul>
+
+
 <h2>Version 3.0.0</h2>
 
 <p>August 9th, 2013
