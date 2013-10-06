@@ -12,6 +12,7 @@ from Foundation import (NSAppleEventManager,
                         NSNotificationSuspensionBehaviorDeliverImmediately,
                         NSThread,
                         NSObject,
+                        NSUserDefaults,
                         NSLocalizedString)
 
 from AppKit import (NSAlertDefaultReturn,
@@ -113,6 +114,14 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
+
+            # remove obsolete settings
+            userdef = NSUserDefaults.standardUserDefaults()
+            userdef.removeObjectForKey_('SIPTrace')
+            userdef.removeObjectForKey_('MSRPTrace')
+            userdef.removeObjectForKey_('XCAPTrace')
+            userdef.removeObjectForKey_('EnablePJSIPTrace')
+            userdef.removeObjectForKey_('EnableNotificationsTrace')
 
             def purge_screenshots():
                 screenshots_folder = ApplicationData.get('.tmp_screenshots')
