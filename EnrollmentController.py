@@ -282,7 +282,7 @@ class EnrollmentController(NSObject):
 
         try:
             response = cjson.decode(json_data.replace('\\/', '/'))
-        except TypeError:
+        except (TypeError, cjson.DecodeError):
             error_message = NSLocalizedString("Cannot decode json data from enrollment server", "Enrollment panel label")
 
         if response:
