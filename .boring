@@ -51,4 +51,6 @@
 (^|/)dist($|/)
 (^|/)\.komodotools($|/)
 ^Blink.xcodeproj/.*\.(pbxuser|perspectivev3|mode1v3)$
+^Blink.xcodeproj/(project.xcworkspace|xcuserdata)$
 ^MANIFEST$
+^Distribution$
