@@ -24,7 +24,6 @@
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F17C25E137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F17C25F137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
-		1F17D30B17F97E0D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30A17F97E0D00CB74EC /* database-remote-off.png */; };
 		1F17D30C17F97E0D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30A17F97E0D00CB74EC /* database-remote-off.png */; };
 		1F17D30D17F97E0D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30A17F97E0D00CB74EC /* database-remote-off.png */; };
 		1F17D30E17F97E0D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30A17F97E0D00CB74EC /* database-remote-off.png */; };
@@ -4128,7 +4127,6 @@
 				1FF32B7617ED0DAD00E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7C17ED0DE200E63A20 /* Info.plist in Resources */,
 				1FB9BB4117F8117500D7FFA8 /* database-on.png in Resources */,
-				1F17D30B17F97E0D00CB74EC /* database-remote-off.png in Resources */,
 				1F17D31117F9825D00CB74EC /* database-local-off.png in Resources */,
 				1F17D31517F9825D00CB74EC /* database-remote-off.png in Resources */,
 			);
