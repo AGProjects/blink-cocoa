@@ -210,15 +210,10 @@ class DebugWindow(NSObject):
         settings.save()
 
     @objc.IBAction
-    def radioClicked_(self, sender):
-        pass
-
-    @objc.IBAction
     def sipRadioClicked_(self, sender):
         notification_center = NotificationCenter()
         trace = sender.selectedCell().tag()
         settings = SIPSimpleSettings()
-        print trace
         settings.logs.trace_sip_in_gui = trace
         if trace == Disabled:
             notification_center.discard_observer(self, name="DNSLookupTrace")

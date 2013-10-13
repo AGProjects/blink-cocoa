@@ -1942,6 +1942,9 @@
 		1F6EE8F912BF73A2000C47DA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
+		1F718C5E180AC3A4007C86AF /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1F718C5F180AC3AA007C86AF /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1F718C60180AC3AD007C86AF /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1F72E53916A027F600837311 /* MergeContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MergeContactController.py; sourceTree = "<group>"; };
 		1F72E54216A02B3600837311 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
@@ -2045,7 +2048,6 @@
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF32B4C17EC83F000E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		1FF32B4E17EC83F900E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FF32B5E17EC842B00E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		1FF32B6317EC86B000E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
@@ -2054,8 +2056,6 @@
 		1FF32B6617EC872D00E63A20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FF32B6717EC872E00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FF32B6817EC873000E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1FF32B6917EC879D00E63A20 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/DebugWindow.xib; sourceTree = "<group>"; };
-		1FF32B6A17EC879F00E63A20 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1FF3736F17C9E656007418EB /* ChatOTR.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatOTR.py; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
@@ -4450,9 +4450,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1FF32B4C17EC83F000E63A20 /* en */,
-				1FF32B4E17EC83F900E63A20 /* ro */,
-				1FF32B6917EC879D00E63A20 /* es */,
-				1FF32B6A17EC879F00E63A20 /* nl */,
+				1F718C5E180AC3A4007C86AF /* ro */,
+				1F718C5F180AC3AA007C86AF /* es */,
+				1F718C60180AC3AD007C86AF /* nl */,
 			);
 			name = DebugWindow.xib;
 			sourceTree = "<group>";
