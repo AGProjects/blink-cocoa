@@ -4468,8 +4468,7 @@
 				1FF32B6817EC873000E63A20 /* nl */,
 			);
 			name = CallTransferWindow.xib;
-			path = /Users/adigeo/work/blink;
-			sourceTree = "<absolute>";
+			sourceTree = "<group>";
 		};
 		1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */ = {
 			isa = PBXVariantGroup;
