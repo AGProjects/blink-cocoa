@@ -1533,7 +1533,7 @@ class ChatController(MediaStream):
                     status = 'failed'
                     # received a packet we cannot process (probably tampered or
                     # sent to wrong session)
-                    log = 'Invalid encrypted message received' % msgid
+                    log = 'Invalid encrypted message %s received' % msgid
                     self.sessionController.log_error(log)
                     self.showSystemMessage(log, ISOTimestamp.now(), True)
                 except RuntimeError, e:
