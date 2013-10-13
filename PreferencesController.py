@@ -896,15 +896,18 @@ class PreferencesController(NSWindowController, object):
                     self.logsize_timer.invalidate()
                 self.logsize_timer = None
 
+        self.purgeLogsButton.setHidden_(True)
+        self.openLogsFolderButton.setHidden_(True)
+
         if item.identifier() == 'logs':
             self._update_logs_size_label()
+            self.purgeLogsButton.setHidden_(False)
+            self.openLogsFolderButton.setHidden_(False)
         elif item.identifier() == 'sip':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Set port to 0 for automatic allocation", "Setting decription label"))
         elif item.identifier() == 'tls':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("These settings apply only for SIP signalling", "Setting decription label"))
         else:
-            self.purgeLogsButton.setHidden_(True)
-            self.openLogsFolderButton.setHidden_(True)
             self.sectionHelpPlaceholder.setStringValue_('')
 
     @objc.IBAction
@@ -943,8 +946,9 @@ class PreferencesController(NSWindowController, object):
                     pass
 
         size = _normalize_binary_size(logs_size)
-        self.purgeLogsButton.setHidden_(not bool(logs_size))
-        self.openLogsFolderButton.setHidden_(not bool(logs_size))
+        self.purgeLogsButton.setEnabled_(bool(logs_size))
+        self.purgeLogsButton.setHidden_(False)
+        self.openLogsFolderButton.setHidden_(False)
         self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("There are currently %s of log files" % size, "Preferences section description"))
         self.sectionHelpPlaceholder.setHidden_(not bool(logs_size))
 
