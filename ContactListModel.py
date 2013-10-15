@@ -2904,6 +2904,9 @@ class ContactListModel(CustomListModel):
             for watcher in all_pending_watchers.itervalues():
                 if not self.presencePolicyExistsForURI_(watcher.sipuri):
                     uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                    if uri == notification.sender.id:
+                        continue
+
                     BlinkLogger().log_debug(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
                     gui_watcher = BlinkPendingWatcher(watcher)
                     self.pending_watchers_group.contacts.append(gui_watcher)
@@ -2933,6 +2936,9 @@ class ContactListModel(CustomListModel):
                     gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
                 except StopIteration:
                     uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                    if uri == notification.sender.id:
+                        continue
+
                     if not self.presencePolicyExistsForURI_(watcher.sipuri):
                         BlinkLogger().log_debug(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
                         gui_watcher = BlinkPendingWatcher(watcher)
