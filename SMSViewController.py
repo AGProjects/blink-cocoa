@@ -354,6 +354,7 @@ class SMSViewController(NSObject):
                 pass
             else:
                 if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
+                    self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                     message.status='failed'
                     self.add_to_history(message)
 
