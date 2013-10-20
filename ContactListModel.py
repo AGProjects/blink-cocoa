@@ -2730,7 +2730,7 @@ class ContactListModel(CustomListModel):
 
         panel_text = ''
         if not restored_contacts:
-            panel_text += NSLocalizedString("All contacts from the backup were already present. ", "Alert pabel label")
+            panel_text += NSLocalizedString("All contacts from the backup were already present. ", "Alert panel label")
         elif restored_contacts == 1:
             panel_text += NSLocalizedString("One contact has been restored. ", "Alert panel label")
         else:
