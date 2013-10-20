@@ -2617,11 +2617,12 @@ class ContactListModel(CustomListModel):
 
         if contacts:
             l = len(data['contacts'])
-            label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Alert panel label")+ backup[1] + NSLocalizedString("Newer contacts will be preserved.", "Alert panel label")
+            label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Alert panel label")+ backup[1] + ". " + NSLocalizedString("Newer contacts will be preserved.", "Alert panel label")
+            ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), label, NSLocalizedString("Restore", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
 
-            ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), NSLocalizedString("Restore", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret != NSAlertDefaultReturn:
                 return
+
             seen_uri = {}
             addressbook_manager = AddressbookManager()
             with addressbook_manager.transaction():
@@ -2729,14 +2730,14 @@ class ContactListModel(CustomListModel):
 
         panel_text = ''
         if not restored_contacts:
-            panel_text += NSLocalizedString("All contacts from the backup were already present and none has been restored. ", "Alert pabel label")
+            panel_text += NSLocalizedString("All contacts from the backup were already present. ", "Alert pabel label")
         elif restored_contacts == 1:
             panel_text += NSLocalizedString("One contact has been restored. ", "Alert panel label")
         else:
             panel_text += NSLocalizedString("%d contacts have been restored. " % restored_contacts, "Alert panel label")
 
         if not restored_groups:
-            panel_text += NSLocalizedString("All groups from the backup were already present and none has been restored. ", "Alert panel label")
+            panel_text += NSLocalizedString("All groups from the backup were already present. ", "Alert panel label")
         elif restored_groups == 1:
             panel_text += NSLocalizedString("One group has been restored. ", "Alert panel label")
         else:
