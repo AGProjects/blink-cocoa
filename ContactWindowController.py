@@ -385,6 +385,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="ChatReplicationJournalEntryReceived")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="LDAPDirectorySearchFoundContact")
+        nc.add_observer(self, name="HistoryEntriesVisibilityChanged")
         nc.add_observer(self, name="MediaStreamDidInitialize")
         nc.add_observer(self, name="SIPApplicationWillStart")
         nc.add_observer(self, name="SIPApplicationWillEnd")
@@ -406,6 +407,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="VirtualGroupWasDeleted")
         nc.add_observer(self, name="VirtualGroupDidChange")
         nc.add_observer(self, name="SIPSessionLoggedToHistory")
+
         nc.add_observer(self, sender=AccountManager())
 
         ns_nc = NSNotificationCenter.defaultCenter()
@@ -725,11 +727,13 @@ class ContactWindowController(NSWindowController):
     def copyToSearchBar_(self, sender):
         self.searchBox.setStringValue_(sender.representedObject())
 
+    def _NH_HistoryEntriesVisibilityChanged(self, notification):
+        self.model.reload_history_groups(force_reload=True)
+
     @run_in_green_thread
     def hideHistoryEntries_(self, sender):
         session_ids = sender.representedObject()
         SessionHistory().hide_entries(session_ids)
-        self.model.reload_history_groups(force_reload=True)
 
     @run_in_green_thread
     def showHiddenEntries_(self, sender):
@@ -740,7 +744,6 @@ class ContactWindowController(NSWindowController):
             SessionHistory().unhide_incoming_entries()
         elif isinstance(group, OutgoingCallsBlinkGroup):
             SessionHistory().unhide_outgoing_entries()
-        self.model.reload_history_groups(force_reload=True)
 
     @objc.IBAction
     def hideGroup_(self, sender):
