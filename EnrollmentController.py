@@ -219,6 +219,7 @@ class EnrollmentController(NSObject):
                 account.ldap.hostname = "ldap.sipthor.net"
                 account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
                 account.ldap.enabled = True
+                account.nat_traversal.use_ice = True
 
             account.save()
         except ValueError, e:
