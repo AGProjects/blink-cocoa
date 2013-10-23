@@ -57,6 +57,7 @@ class EnrollmentController(NSObject):
     addressText = objc.IBOutlet()
     passwordText = objc.IBOutlet()
     domainButton = objc.IBOutlet()
+    syncContactsCheckBox = objc.IBOutlet()
 
     newDisplayNameText = objc.IBOutlet()
     newUsernameText = objc.IBOutlet()
@@ -208,12 +209,14 @@ class EnrollmentController(NSObject):
             address = unicode(self.addressText.stringValue())
             password = unicode(self.passwordText.stringValue())
             sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
-
+    
             account = Account(str(address))
             account.display_name = display_name
             account.auth.password = password
             account.enabled = True
             account.gui.sync_with_icloud = sync_with_icloud
+            account.xcap.enabled = True if self.syncContactsCheckBox.state() == NSOnState else False
+
             if account.id.domain == 'sip2sip.info':
                 account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
                 account.ldap.hostname = "ldap.sipthor.net"
