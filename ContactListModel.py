@@ -1696,7 +1696,7 @@ class OnlineGroup(VirtualBlinkGroup):
 
     add_contact_allowed = False
     remove_contact_allowed = False
-    delete_contact_allowed = False
+    delete_contact_allowed = True
 
     def __init__(self, name=NSLocalizedString("Online Contacts", "Group name label"), expanded=True):
         super(OnlineGroup, self).__init__(name, expanded)
