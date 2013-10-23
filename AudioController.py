@@ -852,7 +852,11 @@ class AudioController(MediaStream):
             text = u"%02i:%02i:%02i"%(h,m,s)
             self.elapsed.setStringValue_(text)
         else:
-            self.elapsed.setStringValue_(u"")
+            if self.status == STREAM_CONNECTING:
+                route = self.sessionController.routes[0]
+                self.elapsed.setStringValue_("Next Hop: %s" % route)
+            else:
+                self.elapsed.setStringValue_(u"")
 
 
     def updateTileStatistics(self):
