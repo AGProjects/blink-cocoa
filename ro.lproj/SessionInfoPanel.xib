@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1080</int>
-		<string key="IBDocument.SystemVersion">12E55</string>
+		<string key="IBDocument.SystemVersion">12F45</string>
 		<string key="IBDocument.InterfaceBuilderVersion">3084</string>
-		<string key="IBDocument.AppKitVersion">1187.39</string>
+		<string key="IBDocument.AppKitVersion">1187.40</string>
 		<string key="IBDocument.HIToolboxVersion">626.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -235,8 +235,8 @@
 										</object>
 										<object class="NSTextField" id="519211136">
 											<reference key="NSNextResponder" ref="607675128"/>
-											<int key="NSvFlags">268</int>
-											<string key="NSFrame">{{118, 74}, {162, 14}}</string>
+											<int key="NSvFlags">270</int>
+											<string key="NSFrame">{{118, 74}, {184, 14}}</string>
 											<reference key="NSSuperview" ref="607675128"/>
 											<reference key="NSWindow"/>
 											<reference key="NSNextKeyView" ref="80161503"/>
@@ -1001,7 +1001,6 @@
 											<string key="NSFrame">{{118, 14}, {171, 14}}</string>
 											<reference key="NSSuperview" ref="310435195"/>
 											<reference key="NSWindow"/>
-											<reference key="NSNextKeyView"/>
 											<bool key="NSEnabled">YES</bool>
 											<object class="NSTextFieldCell" key="NSCell" id="900406132">
 												<int key="NSCellFlags">68157504</int>
