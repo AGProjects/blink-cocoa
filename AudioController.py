@@ -852,9 +852,8 @@ class AudioController(MediaStream):
             text = u"%02i:%02i:%02i"%(h,m,s)
             self.elapsed.setStringValue_(text)
         else:
-            if self.status == STREAM_CONNECTING:
-                route = self.sessionController.routes[0]
-                self.elapsed.setStringValue_("Next Hop: %s" % route)
+            if self.status in (STREAM_CONNECTING, STREAM_RINGING):
+                self.elapsed.setStringValue_("Peer: %s" % self.sessionController.routes[0])
             else:
                 self.elapsed.setStringValue_(u"")
 
