@@ -171,6 +171,9 @@ class SessionHistory(object):
                     BlinkLogger().log_debug(u"Created sessions table %s" % SessionHistoryEntry.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
+                else:
+                    TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
+
         except Exception, e:
             BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
 
@@ -192,43 +195,44 @@ class SessionHistory(object):
                         self.db.queryAll(query)
                     except Exception, e:
                         BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
-        elif previous_version.version < 3:
-            query = "ALTER TABLE sessions add column 'hidden' INTEGER DEFAULT 0"
-            try:
-                self.db.queryAll(query)
-                BlinkLogger().log_debug(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+        else:
+            if previous_version.version < 3:
+                query = "ALTER TABLE sessions add column 'hidden' INTEGER DEFAULT 0"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
-        if previous_version.version < 4:
-            query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON sessions (sip_callid)"
-            try:
-                self.db.queryAll(query)
-                BlinkLogger().log_debug(u"Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+            if previous_version.version < 4:
+                query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON sessions (sip_callid)"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
-            query = "CREATE INDEX IF NOT EXISTS sip_fromtag_index ON sessions (sip_fromtag)"
-            try:
-                self.db.queryAll(query)
-                BlinkLogger().log_debug(u"Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error adding index sip_fromtag_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                query = "CREATE INDEX IF NOT EXISTS sip_fromtag_index ON sessions (sip_fromtag)"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error adding index sip_fromtag_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
-            query = "CREATE INDEX IF NOT EXISTS start_time_index ON sessions (start_time)"
-            try:
-                self.db.queryAll(query)
-                BlinkLogger().log_debug(u"Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                query = "CREATE INDEX IF NOT EXISTS start_time_index ON sessions (start_time)"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
-        if previous_version.version < 5:
-            query = "ALTER TABLE sessions add column 'am_filename' LONGTEXT DEFAULT ''"
-            try:
-                self.db.queryAll(query)
-                BlinkLogger().log_debug(u"Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+            if previous_version.version < 5:
+                query = "ALTER TABLE sessions add column 'am_filename' LONGTEXT DEFAULT ''"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
@@ -431,6 +435,7 @@ class ChatMessage(SQLObject):
     journal_id        = StringCol()
     encryption        = StringCol(default='')
 
+
 class ChatHistory(object):
     __metaclass__ = Singleton
     __version__ = 5
@@ -458,6 +463,9 @@ class ChatHistory(object):
                     BlinkLogger().log_debug(u"Created history table %s" % ChatMessage.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
+                else:
+                    TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
+
         except Exception, e:
             BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
