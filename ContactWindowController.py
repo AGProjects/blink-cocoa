@@ -30,6 +30,7 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSReleaseAlertPanel,
                     NSRunAlertPanel,
                     NSRunContinuesResponse,
+                    NSStringPboardType,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSTableViewSelectionDidChangeNotification,
                     NSTableViewDropAbove,
@@ -59,6 +60,7 @@ from Foundation import (NSArray,
                         NSNotFound,
                         NSNotificationCenter,
                         NSParagraphStyle,
+                        NSPasteboard,
                         NSRunLoop,
                         NSSpeechSynthesizer,
                         NSStatusBar,
@@ -972,6 +974,16 @@ class ContactWindowController(NSWindowController):
             if ev.keyCode() == 53: # don't close on Escape key
                 return False
         return True
+
+    def copyURI_(self, sender):
+        pboard = NSPasteboard.generalPasteboard()
+        pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
+        pboard.setString_forType_(sender.representedObject().uri, "x-blink-sip-uri")
+
+    def pasteURI_(self, sender):
+        blink_contact = sender.representedObject()['contact']
+        blink_contact.contact.uris.add(ContactURI(uri=sender.representedObject()['uri']))
+        blink_contact.contact.save()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -4096,6 +4108,10 @@ class ContactWindowController(NSWindowController):
                 lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(all_contacts_with_uri)
 
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Copy", "Contact menu item"), "copyURI:", "")
+            lastItem.setRepresentedObject_(item)
+            lastItem.setIndentationLevel_(1)
+
             blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
             if blink_contacts_with_same_name:
                 name_submenu = NSMenu.alloc().init()
@@ -4549,6 +4565,12 @@ class ContactWindowController(NSWindowController):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit", "Contact menu item"), "editContact:", "")
                 lastItem.setRepresentedObject_(item)
+                pboard = NSPasteboard.generalPasteboard()
+                if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
+                    uri = str(pboard.stringForType_("x-blink-sip-uri"))
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Paste" % uri, "Contact menu item"), "pasteURI:", "")
+                    lastItem.setRepresentedObject_({'uri': uri, 'contact': item})
+
             elif isinstance(item, BlinkBlockedPresenceContact):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Contact menu item"), "deletePolicyItem:", "")
                 lastItem.setEnabled_(item.deletable)
