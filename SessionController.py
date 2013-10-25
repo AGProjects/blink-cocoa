@@ -58,7 +58,7 @@ from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
 from interfaces.itunes import MusicApplications
-from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread
+from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber
 
 
 SessionIdentifierSerial = 0
@@ -831,7 +831,6 @@ class SessionController(NSObject):
     remote_conference_has_audio = False
     transfer_window = None
     outbound_audio_calls = 0
-    valid_dtmf = re.compile(r"^[0-9*#,]+$")
     pending_chat_messages = {}
     info_panel = None
     call_id = None
@@ -1463,7 +1462,6 @@ class SessionController(NSObject):
             self.connectSession()
 
     def connectSession(self):
-        self.log_info('Starting outgoing session to %s' % format_identity_to_string(self.target_uri, format='compact'))
         if self.dealloc_timer is not None and self.dealloc_timer.isValid():
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None
@@ -1473,12 +1471,19 @@ class SessionController(NSObject):
 
         streams = [s.stream for s in self.streamHandlers]
         target_uri = SIPURI.new(self.target_uri)
-        if self.account is not BonjourAccount() and self.account.pstn.dtmf_delimiter and self.account.pstn.dtmf_delimiter in target_uri.user:
-            hash_parts = target_uri.user.partition(self.account.pstn.dtmf_delimiter)
-            if self.valid_dtmf.match(hash_parts[2]):
-                target_uri.user = hash_parts[0]
-                self.postdial_string = hash_parts[2]
+        if self.account is not BonjourAccount() and checkValidPhoneNumber(target_uri.user):
+            try:
+                idx = target_uri.user.index(",")
+            except ValueError:
+                pass
+            else:
+                _dtmf_match_regexp = re.compile("^,[0-9,#\*]*[0-9]+$")
+                if _dtmf_match_regexp.match(target_uri.user[idx:]):
+                    self.postdial_string = target_uri.user[idx:]
+                    target_uri.user = target_uri.user[0:idx]
+                    self.log_info("Post dial string  set to %s" % self.postdial_string)
 
+        self.log_info('Starting outgoing session to %s' % format_identity_to_string(target_uri, format='compact'))
         self.notification_center.add_observer(self, sender=self.session)
         self.session.connect(ToHeader(target_uri), self.routes, streams)
         self.changeSessionState(STATE_CONNECTING)

@@ -31,7 +31,7 @@ external_url_pattern         = re.compile("^(tel:|//|mailto:|xmpp:|callto://|cal
 
 _pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
 _pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
-_pstn_match_regexp = re.compile("^\+?([0-9]|%s)+$" % _pstn_addressbook_chars)
+_pstn_match_regexp = re.compile("^\+?([0-9,\#\*]|%s)+$" % _pstn_addressbook_chars)
 _pstn_plus_regexp = re.compile("^\+")
 
 

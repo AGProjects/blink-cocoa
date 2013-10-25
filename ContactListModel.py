@@ -1530,7 +1530,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
                 if address.startswith("sip:"):
                     address = address[4:]
                 contact_uri = "+" if address[0] == "+" else ""
-                contact_uri += "".join(c for c in address if c in "0123456789#*")
+                contact_uri += "".join(c for c in address if c in "0123456789#*,")
             else:
                 contact_uri = address
             uris.append(ContactURI(uri=contact_uri, type=address_type))
