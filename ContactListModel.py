@@ -1514,8 +1514,15 @@ class SystemAddressBookBlinkContact(BlinkContact):
             for n in range(value.count()):
                 label = value.labelAtIndex_(n)
                 uri = unicode(value.valueAtIndex_(n))
-                if label == 'sip' or uri.startswith(("sip:", "sips:")):
-                    addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
+                addresses.append(('sip', sip_prefix_pattern.sub("", uri)))
+
+        # get XMPP addresses from the Jabber section
+        value = ab_contact.valueForProperty_(AddressBook.kABJabberInstantProperty)
+        if value:
+            for n in range(value.count()):
+                label = value.labelAtIndex_(n)
+                uri = unicode(value.valueAtIndex_(n))
+                addresses.append(('xmpp', sip_prefix_pattern.sub("", uri)))
 
         # get SIP addresses from the URLs section
         value = ab_contact.valueForProperty_(AddressBook.kABURLsProperty)
