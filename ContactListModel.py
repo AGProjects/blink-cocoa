@@ -482,6 +482,14 @@ class BlinkContact(NSObject):
             if self.organization is not None and unicode(uri).lower() in self.organization.lower():
                 return True
 
+        if hasattr(self, 'job_title'):
+            if self.job_title is not None and unicode(uri).lower() in self.job_title.lower():
+                return True
+
+        if hasattr(self, 'note'):
+            if self.note is not None and unicode(uri).lower() in self.note.lower():
+                return True
+
         return any(match(self.split_uri(item.uri), candidate, exact_match) for item in self.uris if item.uri)
 
 
@@ -1473,6 +1481,8 @@ class SystemAddressBookBlinkContact(BlinkContact):
 
         self.name = self.__class__.format_person_name(ab_contact)
         self.organization = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
+        self.job_title = ab_contact.valueForProperty_(AddressBook.kABJobTitleProperty)
+        self.note = ab_contact.valueForProperty_(AddressBook.kABNoteProperty)
 
         if not self.name and self.organization:
             self.name = unicode(self.organization)
