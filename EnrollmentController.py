@@ -209,7 +209,7 @@ class EnrollmentController(NSObject):
             address = unicode(self.addressText.stringValue())
             password = unicode(self.passwordText.stringValue())
             sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
-    
+
             account = Account(str(address))
             account.display_name = display_name
             account.auth.password = password
