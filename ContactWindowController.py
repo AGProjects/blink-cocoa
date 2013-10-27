@@ -4132,7 +4132,17 @@ class ContactWindowController(NSWindowController):
                 item = item.contact
 
         if isinstance(item, BlinkContact):
-            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(unicode(item.name), "", "")
+            if isinstance(item, SystemAddressBookBlinkContact):
+                if item.job_title and item.organization:
+                    _name = NSLocalizedString(" %s, %s at %s" % (unicode(item.name), unicode(item.job_title), unicode(item.organization)), "Contact menu item")
+                elif item.organization:
+                    _name = NSLocalizedString(" %s at %s" % (unicode(item.name), unicode(item.organization)), "Contact menu item")
+                else:
+                    _name = unicode(item.name)
+            else:
+                _name = unicode(item.name)
+
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(_name, "", "")
             mitem.setEnabled_(False)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
