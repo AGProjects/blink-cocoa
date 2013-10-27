@@ -4585,7 +4585,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, SystemAddressBookBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit in AddressBook...", "Contact menu item"), "editContact:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit in Address Book...", "Contact menu item"), "editContact:", "")
                 lastItem.setRepresentedObject_(item)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "createPresenceContactFromOtherContact:", "")
                 lastItem.setRepresentedObject_(item)
