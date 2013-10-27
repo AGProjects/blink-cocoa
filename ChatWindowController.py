@@ -1316,14 +1316,14 @@ class ChatWindowController(NSWindowController):
             screensharing_url = object.screensharing_url
 
             if tag == CONFERENCE_ROOM_MENU_ADD_CONTACT:
-                NSApp.delegate().contactsWindowController.addContact(uri, display_name)
+                NSApp.delegate().contactsWindowController.addContact(uris=[(uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT:
                 remote_uri = format_identity_to_string(session.remotePartyObject)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
                     display_name = unicode(conf_desc.display_text)
-                NSApp.delegate().contactsWindowController.addContact(remote_uri, display_name)
+                NSApp.delegate().contactsWindowController.addContact(uris=[(remote_uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE:
                 ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?" % uri, u"Remove", u"Cancel", None)
                 if ret == NSAlertDefaultReturn:

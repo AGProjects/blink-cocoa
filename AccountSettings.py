@@ -239,7 +239,7 @@ class AccountSettings(NSObject):
     def addContact_withDisplayName_(self, uri, display_name):
         BlinkLogger().log_info(u"Adding contact %s <%s>" % (display_name, uri))
 
-        contact = self.owner.model.addContact(address=uri, display_name=display_name)
+        contact = self.owner.model.addContact(uri=[(uri, 'sip')], name=display_name)
         self.owner.contactOutline.reloadData()
         row = self.owner.contactOutline.rowForItem_(contact)
         if row != NSNotFound:

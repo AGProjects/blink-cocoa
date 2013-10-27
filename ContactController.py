@@ -68,14 +68,17 @@ class AddContactController(NSObject):
         cls.defaultPhotoImage = DefaultUserAvatar().icon
         return cls.alloc().init()
 
-    def __init__(self, uri=None, name=None, group=None, type=None):
+    def __init__(self, uris=[], name=None, group=None):
         NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_(NSLocalizedString("Add Contact", "Window title"))
         self.dealloc_timer = None
 
         self.default_uri = None
         self.preferred_media = 'audio'
-        self.uris = [ContactURI(uri=uri, type=format_uri_type(type))] if uri else []
+        self.uris = []
+        for (uri, type) in uris:
+            self.uris.append(ContactURI(uri=uri, type=format_uri_type(type)))
+
         self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
         self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]

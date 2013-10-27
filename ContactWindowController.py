@@ -1636,8 +1636,8 @@ class ContactWindowController(NSWindowController):
         else:
             return DefaultUserAvatar().path
 
-    def addContact(self, uri, display_name=None):
-        self.model.addContact(uri, name=display_name)
+    def addContact(self, uris=[], name=None):
+        self.model.addContact(uris=uris, name=name)
         self.contactOutline.reloadData()
 
     @objc.IBAction
@@ -1858,13 +1858,10 @@ class ContactWindowController(NSWindowController):
         policy_contact.save()
 
     @objc.IBAction
-    def addContactWithUri_(self, sender):
-        item = sender.representedObject()
-        try:
-            type = (uri.type for uri in item.uris if uri.uri == item.uri).next()
-        except StopIteration:
-            type = None
-        self.model.addContact(item.uri, name=item.name, type=type)
+    def createPresenceContactFromOtherContact_(self, sender):
+        contact = sender.representedObject()
+        uris = ((uri.uri, uri.type) for uri in contact.uris)
+        self.model.addContact(uris=uris, name=contact.name)
 
     @objc.IBAction
     def addContact_(self, sender):
@@ -1872,9 +1869,9 @@ class ContactWindowController(NSWindowController):
             row = self.searchOutline.selectedRow()
             if row != NSNotFound and row != -1:
                 item = self.searchOutline.itemAtRow_(row)
-                contact = self.model.addContact(item.uri, name=item.name)
+                contact = self.model.addContact(uris=[(item.uri, 'sip')], name=item.name)
             else:
-                contact = self.model.addContact(self.searchBox.stringValue())
+                contact = self.model.addContact(uris=[(self.searchBox.stringValue(), 'sip')])
 
             if contact:
                 self.resetWidgets()
@@ -1893,6 +1890,7 @@ class ContactWindowController(NSWindowController):
             else:
                 group = item
             contact = self.model.addContact(group=group if group and group.add_contact_allowed else None)
+            # TODO  what is this? -adi
             if contact:
                 self.refreshContactsList()
                 self.searchContacts()
@@ -4090,7 +4088,7 @@ class ContactWindowController(NSWindowController):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s Subscribed To My Availability" % item.uri, "Contact menu item"), "", "")
             lastItem.setEnabled_(False)
             if not self.hasContactMatchingURI(item.uri, exact_match=True):
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Accept Request and Create Contact...", "Contact menu item"), "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Accept Request and Create Contact...", "Contact menu item"), "createPresenceContactFromOtherContact:", "")
                 lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(item)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Drag Request To An Existing Contact To Accept It", "Contact menu item"), "", "")
@@ -4545,7 +4543,7 @@ class ContactWindowController(NSWindowController):
 
                 if not self.hasContactMatchingURI(history_contact.uri):
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "addContactWithUri:", "")
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "createPresenceContactFromOtherContact:", "")
                     lastItem.setRepresentedObject_(history_contact)
 
                 recordings = self.backend.get_audio_recordings([history_contact.uris[0].uri])[-10:]
@@ -4589,11 +4587,11 @@ class ContactWindowController(NSWindowController):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit in AddressBook...", "Contact menu item"), "editContact:", "")
                 lastItem.setRepresentedObject_(item)
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "createPresenceContactFromOtherContact:", "")
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, LdapSearchResultContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "addContactWithUri:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "createPresenceContactFromOtherContact:", "")
                 lastItem.setRepresentedObject_(item)
                 blink_contacts_with_same_name = self.model.getBlinkContactsForName(item.name)
                 if blink_contacts_with_same_name:
@@ -5240,14 +5238,14 @@ class ContactWindowController(NSWindowController):
             display_name = object.name
 
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:
-                self.addContact(uri, display_name)
+                self.addContact(uris=[(uri, 'sip')], name=display_name)
             elif tag == PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
                 remote_uri = format_identity_to_string(session.remotePartyObject)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
                     display_name = unicode(conf_desc.display_text)
-                self.addContact(remote_uri, display_name)
+                self.addContact(uris=[(remote_uri, 'sip')], name=display_name)
             elif tag == PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE:
                 message= NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?" % display_name, "Participants menu item")
                 message = re.sub("%", "%%", message)

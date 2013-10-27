@@ -856,7 +856,7 @@ class HistoryViewer(NSWindowController):
             NSApp.delegate().contactsWindowController.window().deminiaturize_(sender)
             NSApp.delegate().contactsWindowController.window().makeKeyWindow()
         elif tag == 3:
-            NSApp.delegate().contactsWindowController.addContact(contact.uri, contact.name)
+            NSApp.delegate().contactsWindowController.addContact(uris=[(contact.uri, 'sip')], name=contact.name)
         elif tag == 4 and contact.presence_contact is not None:
             NSApp.delegate().contactsWindowController.model.editContact(contact.presence_contact)
 

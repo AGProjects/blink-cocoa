@@ -1077,7 +1077,7 @@ class AudioController(MediaStream):
                 display_name = self.sessionController.remotePartyObject.display_name
             else:
                 display_name = None
-            NSApp.delegate().contactsWindowController.addContact(self.sessionController.target_uri, display_name)
+            NSApp.delegate().contactsWindowController.addContact(uris=[(self.sessionController.target_uri, 'sip')], name=display_name)
             sender.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
         elif tag == 30: #
             if self.sessionController.info_panel is not None:

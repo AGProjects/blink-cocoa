@@ -2304,7 +2304,7 @@ class CustomListModel(NSObject):
                             uri_type = (uri.type for uri in sourceContact.uris if uri.uri == sourceContact.uri).next()
                         except StopIteration:
                             uri_type = None
-                        self.addContact(sourceContact.uri, name=sourceContact.name, group=targetGroup, type=uri_type)
+                        self.addContact(uris=[(sourceContact.uri, uri_type)], name=sourceContact.name, group=targetGroup)
                         return False
 
                     with addressbook_manager.transaction():
@@ -3783,11 +3783,8 @@ class ContactListModel(CustomListModel):
                 blink_group.group.contacts.add(contact)
                 blink_group.group.save()
 
-    def addContact(self, address="", group=None, name=None, type=None):
-        if isinstance(address, SIPURI):
-            address = address.user + "@" + address.host
-
-        controller = AddContactController(uri=address, name=name, group=group, type=type)
+    def addContact(self, uris=[], group=None, name=None):
+        controller = AddContactController(uris, name=name, group=group)
         new_contact = controller.runModal()
 
         if not new_contact:

@@ -175,7 +175,7 @@ class SMSViewController(NSObject):
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
         if sender.tag() == 1:
-            NSApp.delegate().contactsWindowController.addContact(self.target_uri)
+            NSApp.delegate().contactsWindowController.addContact(uris=[(self.target_uri, 'sip')])
 
         self.addContactView.removeFromSuperview()
         frame = self.chatViewController.outputView.frame()

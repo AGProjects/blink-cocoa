@@ -52,7 +52,7 @@ def checkValidPhoneNumber(number):
 
 
 def format_uri_type(type):
-    if type and type.lower() in ('sip', 'xmpp'):
+    if type and type.lower() in ('sip', 'xmpp', 'url'):
         return type.upper()
     elif type:
         return type.title()
