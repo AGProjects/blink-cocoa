@@ -84,6 +84,7 @@ import re
 import random
 import shutil
 import string
+import sys
 import ldap
 import uuid
 
@@ -4157,7 +4158,7 @@ class ContactWindowController(NSWindowController):
                 audio_submenu = NSMenu.alloc().init()
                 audio_submenu.setAutoenablesItems_(False)
 
-                for uri in item.uris:
+                for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                     if uri.type is not None and uri.type.lower() == 'url':
                         continue
 
@@ -4200,7 +4201,7 @@ class ContactWindowController(NSWindowController):
 
                 sms_submenu = NSMenu.alloc().init()
                 sms_submenu.setAutoenablesItems_(False)
-                for uri in item.uris:
+                for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                     if uri.type is not None and uri.type.lower() == 'url':
                         continue
 
@@ -4220,7 +4221,7 @@ class ContactWindowController(NSWindowController):
                     chat_submenu = NSMenu.alloc().init()
                     chat_submenu.setAutoenablesItems_(False)
 
-                    for uri in item.uris:
+                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                         if uri.type is not None and uri.type.lower() == 'url':
                             continue
 
@@ -4271,7 +4272,7 @@ class ContactWindowController(NSWindowController):
                     if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                         ft_submenu = NSMenu.alloc().init()
                         ft_submenu.setAutoenablesItems_(False)
-                        for uri in item.uris:
+                        for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
                             ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
@@ -4319,7 +4320,7 @@ class ContactWindowController(NSWindowController):
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
-                        for uri in item.uris:
+                        for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
@@ -4366,7 +4367,7 @@ class ContactWindowController(NSWindowController):
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
-                        for uri in item.uris:
+                        for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
@@ -4474,7 +4475,7 @@ class ContactWindowController(NSWindowController):
                 if item not in self.model.bonjour_group.contacts:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     all_uris = []
-                    for uri in item.uris:
+                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                         all_uris.append(unicode(uri.uri))
                     history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Contact menu item"), "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)

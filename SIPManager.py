@@ -29,7 +29,7 @@ from sipsimple import __version__ as sdk_version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.account.bonjour import _bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
-from sipsimple.addressbook import Contact, Group
+from sipsimple.addressbook import Contact, Group, ContactURI
 from sipsimple.configuration import DefaultValue
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -42,7 +42,7 @@ from sipsimple.threading.green import run_in_green_thread, Command
 from BlinkLogger import BlinkLogger, FileLogger
 
 from configuration.account import AccountExtension, BonjourAccountExtension
-from configuration.contact import BlinkContactExtension, BlinkGroupExtension
+from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, beautify_audio_codec, format_identity_to_string, run_in_gui_thread
@@ -128,6 +128,7 @@ class SIPManager(object):
         BonjourAccount.register_extension(BonjourAccountExtension)
         Contact.register_extension(BlinkContactExtension)
         Group.register_extension(BlinkGroupExtension)
+        ContactURI.register_extension(BlinkContactURIExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         self._app.start(FileStorage(ApplicationData.directory))
