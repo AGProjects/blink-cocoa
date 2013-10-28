@@ -70,7 +70,6 @@ class PSTNSettings(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
     dial_plan = Setting(type=str, default='', nillable=True)
-    dtmf_delimiter = Setting(type=str, nillable=True)
 
 
 class RTPSettingsExtension(RTPSettings):
