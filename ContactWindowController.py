@@ -4133,9 +4133,9 @@ class ContactWindowController(NSWindowController):
         if isinstance(item, BlinkContact):
             if isinstance(item, SystemAddressBookBlinkContact):
                 if item.job_title and item.organization:
-                    _name = NSLocalizedString(" %s, %s at %s" % (unicode(item.name), unicode(item.job_title), unicode(item.organization)), "Contact menu item")
+                    _name = "%s, %s" % (unicode(item.name), unicode(item.job_title)) + NSLocalizedString(" at %s" % unicode(item.organization), "Contact menu item")
                 elif item.organization:
-                    _name = NSLocalizedString(" %s at %s" % (unicode(item.name), unicode(item.organization)), "Contact menu item")
+                    _name = unicode(item.name) + NSLocalizedString(" at %s" % unicode(item.organization), "Contact menu item")
                 else:
                     _name = unicode(item.name)
             else:
