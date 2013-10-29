@@ -1041,6 +1041,9 @@ class AudioController(MediaStream):
                 item.setHidden_(True)
                 delimiter_item.setHidden_(True)
 
+            item = menu.itemWithTag_(41) # dnd until end
+            item.setState_(NSOnState if self.sessionController.do_not_disturb_until_end else NSOffState)
+
 
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):
@@ -1084,6 +1087,8 @@ class AudioController(MediaStream):
                 self.sessionController.info_panel.toggle()
         elif tag == 40: #
             NSApp.delegate().contactsWindowController.moveConferenceToServer()
+        elif tag == 41: #
+            self.sessionController.do_not_disturb_until_end = not self.sessionController.do_not_disturb_until_end
 
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):

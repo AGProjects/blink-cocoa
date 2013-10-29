@@ -236,6 +236,7 @@
 						<string key="NSFrame">{{194, 2}, {68, 20}}</string>
 						<reference key="NSSuperview" ref="1005"/>
 						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSSegmentedCell" key="NSCell" id="20176183">
 							<int key="NSCellFlags">-2080374784</int>
@@ -624,6 +625,15 @@
 						<reference key="NSOnImage" ref="295702650"/>
 						<reference key="NSMixedImage" ref="631877669"/>
 						<int key="NSTag">30</int>
+					</object>
+					<object class="NSMenuItem" id="689039477">
+						<reference key="NSMenu" ref="590086273"/>
+						<string key="NSTitle">Do Not Disturb During This Call</string>
+						<string key="NSKeyEquiv"/>
+						<int key="NSMnemonicLoc">2147483647</int>
+						<reference key="NSOnImage" ref="295702650"/>
+						<reference key="NSMixedImage" ref="631877669"/>
+						<int key="NSTag">41</int>
 					</object>
 					<object class="NSMenuItem" id="326434177">
 						<reference key="NSMenu" ref="590086273"/>
@@ -1256,6 +1266,14 @@
 					<int key="connectionID">328</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedSessionMenuItem:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="689039477"/>
+					</object>
+					<int key="connectionID">332</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
 						<string key="label">menu</string>
 						<reference key="source" ref="1005"/>
@@ -1406,6 +1424,7 @@
 							<reference ref="370796143"/>
 							<reference ref="21422450"/>
 							<reference ref="326434177"/>
+							<reference ref="689039477"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -1774,6 +1793,12 @@
 						<reference key="object" ref="16574656"/>
 						<reference key="parent" ref="338462680"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">331</int>
+						<reference key="object" ref="689039477"/>
+						<reference key="parent" ref="590086273"/>
+						<string key="objectName">Menu Item - Do Not Disturb During This Call</string>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -1884,6 +1909,7 @@
 				<integer value="1" key="326.IBNSSegmentedControlInspectorSelectedSegmentMetadataKey"/>
 				<string key="326.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="33.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="331.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="34.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="35.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<integer value="2" key="35.IBSegmentedControlInspectorSelectedSegmentMetadataKey"/>
@@ -1934,7 +1960,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">330</int>
+			<int key="maxID">332</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">

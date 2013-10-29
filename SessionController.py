@@ -125,6 +125,10 @@ class SessionControllersManager(object):
         return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("audio"))
 
     @property
+    def dndSessions(self):
+        return any(sess.session for sess in self.sessionControllers if sess.do_not_disturb_until_end)
+
+    @property
     def chatSessions(self):
         return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("chat"))
 
@@ -243,6 +247,17 @@ class SessionControllersManager(object):
             nc_title = 'Blocked Contact Rejected'
             nc_body = 'Call from %s refused' % caller_name
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+            return
+
+        if self.dndSessions:
+            nc_title = 'Call Rejected'
+            nc_body = 'Do not disturb until done with other calls'
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+            BlinkLogger().log_info(u"Rejecting call until we finish existing calls")
+            try:
+                session.reject(603, 'Busy here')
+            except IllegalStateError, e:
+                print e
             return
 
         # if call waiting is disabled and we have audio calls reject with busy
@@ -838,6 +853,7 @@ class SessionController(NSObject):
     to_tag = None
     dealloc_timer = None
     answering_machine_filename = ''
+    do_not_disturb_until_end = False
 
     @property
     def sessionControllersManager(self):
