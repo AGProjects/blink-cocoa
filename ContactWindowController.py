@@ -1623,7 +1623,7 @@ class ContactWindowController(NSWindowController):
     def iconPathForURI(self, uri, is_focus=False):
         if AccountManager().has_account(uri):
             return self.iconPathForSelf()
-        contact = self.getFirstContactMatchingURI(uri)
+        contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
         if contact:
             path = contact.avatar.path
             if path is not None and os.path.isfile(path):
