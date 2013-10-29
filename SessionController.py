@@ -231,7 +231,7 @@ class SessionControllersManager(object):
             BlinkLogger().log_info(u"Rejecting session for unsupported media type")
             nc_title = 'Incompatible Media'
             nc_body = 'Call from %s refused' % match_contact.name
-            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             try:
                 session.reject(488, 'Incompatible media')
             except IllegalStateError, e:
@@ -246,7 +246,7 @@ class SessionControllersManager(object):
                 print e
             nc_title = 'Blocked Contact Rejected'
             nc_body = 'Call from %s refused' % caller_name
-            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             return
 
         if self.dndSessions:
@@ -274,7 +274,7 @@ class SessionControllersManager(object):
             if session.account.audio.do_not_disturb:
                 nc_title = 'Do Not Disturb'
                 nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
-                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+                NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                 BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % caller_name)
                 try:
                     session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
@@ -286,7 +286,7 @@ class SessionControllersManager(object):
                 if session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
                     nc_title = 'Anonymous Call Rejected'
                     nc_body = 'Call refused'
-                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=None)
+                    NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=None)
                     BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
                     try:
                         session.reject(603, 'Anonymous Not Acceptable')
@@ -299,7 +299,7 @@ class SessionControllersManager(object):
                     if match_contact.contact.presence.policy != 'allow':
                         nc_title = 'Unauthorized Caller Rejected'
                         nc_body = 'Call from %s refused' % caller_name
-                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+                        NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                         BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
                         try:
                             session.reject(603, 'Not Acceptable Here')
@@ -310,7 +310,7 @@ class SessionControllersManager(object):
                     BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
                     nc_title = 'Unauthorized Caller Rejected'
                     nc_body = 'Call refused from blocked contact'
-                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle=caller_name)
+                    NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                     try:
                         session.reject(603, 'Not Acceptable Here')
                     except IllegalStateError, e:
