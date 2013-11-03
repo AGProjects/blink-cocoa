@@ -78,6 +78,7 @@ import cPickle
 import unicodedata
 import urllib
 import uuid
+import sys
 import time
 
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -2230,7 +2231,7 @@ class CustomListModel(NSObject):
                 titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send File To Address", "Contact menu item"), "", "")
                 titem.setEnabled_(False)
 
-                for uri in item.uris:
+                for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                     aor_supports_ft = False
                     aor_supports_ft = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'file-transfer' in device['caps'])
                     titem = send_file_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
