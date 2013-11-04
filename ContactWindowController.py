@@ -4577,7 +4577,7 @@ class ContactWindowController(NSWindowController):
                 pboard = NSPasteboard.generalPasteboard()
                 if pboard.availableTypeFromArray_(["x-blink-sip-uri"]):
                     uri = str(pboard.stringForType_("x-blink-sip-uri"))
-                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Paste" % uri, "Contact menu item"), "pasteURI:", "")
+                    lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Paste %s" % uri, "Contact menu item"), "pasteURI:", "")
                     lastItem.setRepresentedObject_({'uri': uri, 'contact': item})
 
             elif isinstance(item, BlinkBlockedPresenceContact):
