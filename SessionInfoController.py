@@ -155,18 +155,17 @@ class SessionInfoController(NSObject):
         self.remove_audio_stream()
 
     def _NH_BlinkDidRenegotiateStreams(self, notification):
-        if notification.data.action == 'remove':
-            for stream in notification.data.streams:
-                if stream.type == 'audio':
-                    self.remove_audio_stream()
-                elif stream.type == 'chat':
-                    self.remove_chat_stream()
-        elif notification.data.action == 'add':
-            for stream in notification.data.streams:
-                if stream.type == 'audio':
-                    self.add_audio_stream()
-                elif stream.type == 'chat':
-                    self.add_chat_stream()
+        for stream in notification.data.removed_streams:
+            if stream.type == 'audio':
+                self.remove_audio_stream()
+            elif stream.type == 'chat':
+                self.remove_chat_stream()
+
+        for stream in notification.data.added_streams:
+            if stream.type == 'audio':
+                self.add_audio_stream()
+            elif stream.type == 'chat':
+                self.add_chat_stream()
 
         self.updatePanelValues()
 

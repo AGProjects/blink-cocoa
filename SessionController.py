@@ -94,8 +94,8 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='SIPSessionDidStart')
         self.notification_center.add_observer(self, name='SIPSessionDidFail')
         self.notification_center.add_observer(self, name='SIPSessionDidEnd')
-        self.notification_center.add_observer(self, name='SIPSessionGotProposal')
-        self.notification_center.add_observer(self, name='SIPSessionGotRejectProposal')
+        self.notification_center.add_observer(self, name='SIPSessionNewProposal')
+        self.notification_center.add_observer(self, name='SIPSessionProposalRejected')
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         self.notification_center.add_observer(self, name='MediaStreamDidInitialize')
@@ -182,14 +182,14 @@ class SessionControllersManager(object):
             if not self.activeAudioStreams and not self.incomingSessions:
                 MusicApplications().resume()
 
-    def _NH_SIPSessionGotProposal(self, session, data):
+    def _NH_SIPSessionNewProposal(self, session, data):
         if self.pause_music:
             if any(stream.type == 'audio' for stream in data.streams):
                 MusicApplications().resume()
 
-    def _NH_SIPSessionGotRejectProposal(self, session, data):
+    def _NH_SIPSessionProposalRejected(self, session, data):
         if self.pause_music:
-            if any(stream.type == 'audio' for stream in data.streams):
+            if any(stream.type == 'audio' for stream in data.proposed_streams):
                 if not self.activeAudioStreams and not self.incomingSessions:
                     MusicApplications().resume()
 
@@ -1744,7 +1744,7 @@ class SessionController(NSObject):
             log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 
-    def _NH_SIPSessionGotProposal(self, session, data):
+    def _NH_SIPSessionNewProposal(self, session, data):
         self.inProposal = True
         self.proposalOriginator = 'remote'
 
@@ -1812,7 +1812,7 @@ class SessionController(NSObject):
             # needed to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self)
 
-    def _NH_SIPSessionGotRejectProposal(self, sender, data):
+    def _NH_SIPSessionProposalRejected(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
         self.log_info("Proposal cancelled" if data.code == 487 else "Proposal was rejected: %s (%s)"%(data.reason, data.code))
@@ -1820,47 +1820,45 @@ class SessionController(NSObject):
         log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
         self.notification_center.post_notification("BlinkProposalGotRejected", sender=self, data=log_data)
 
-        if data.streams:
-            for stream in data.streams:
-                if stream == self.cancelledStream:
-                    self.cancelledStream = None
-                if stream.type == "chat":
-                    self.log_info("Removing chat stream")
-                    handler = self.streamHandlerForStream(stream)
-                    if handler:
-                        handler.changeStatus(STREAM_FAILED, data.reason)
-                elif stream.type == "audio":
-                    self.log_info("Removing audio stream")
-                    handler = self.streamHandlerForStream(stream)
-                    if handler:
-                        handler.changeStatus(STREAM_FAILED, data.reason)
-                elif stream.type == "screen-sharing":
-                    self.log_info("Removing screen sharing stream")
-                    handler = self.streamHandlerForStream(stream)
-                    if handler:
-                        handler.changeStatus(STREAM_FAILED, data.reason)
-                else:
-                    self.log_info("Got reject proposal for unhandled stream type: %r" % stream)
+        for stream in data.proposed_streams:
+            if stream == self.cancelledStream:
+                self.cancelledStream = None
+            if stream.type == "chat":
+                self.log_info("Removing chat stream")
+                handler = self.streamHandlerForStream(stream)
+                if handler:
+                    handler.changeStatus(STREAM_FAILED, data.reason)
+            elif stream.type == "audio":
+                self.log_info("Removing audio stream")
+                handler = self.streamHandlerForStream(stream)
+                if handler:
+                    handler.changeStatus(STREAM_FAILED, data.reason)
+            elif stream.type == "screen-sharing":
+                self.log_info("Removing screen sharing stream")
+                handler = self.streamHandlerForStream(stream)
+                if handler:
+                    handler.changeStatus(STREAM_FAILED, data.reason)
+            else:
+                self.log_info("Got reject proposal for unhandled stream type: %r" % stream)
 
-            # notify Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+        # notify Chat Window controller to update the toolbar buttons
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-    def _NH_SIPSessionGotAcceptProposal(self, sender, data):
+    def _NH_SIPSessionProposalAccepted(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
         self.log_info("Proposal accepted")
-        if data.streams:
-            for stream in data.streams:
-                handler = self.streamHandlerForStream(stream)
-                if not handler and self.cancelledStream == stream:
-                    self.log_info("Cancelled proposal for %s was accepted by remote, removing stream" % stream)
-                    try:
-                        self.session.remove_stream(stream)
-                        self.cancelledStream = None
-                    except IllegalStateError, e:
-                        self.log_info("IllegalStateError: %s" % e)
-            # notify by Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+        for stream in data.accepted_streams:
+            handler = self.streamHandlerForStream(stream)
+            if not handler and self.cancelledStream == stream:
+                self.log_info("Cancelled proposal for %s was accepted by remote, removing stream" % stream)
+                try:
+                    self.session.remove_stream(stream)
+                    self.cancelledStream = None
+                except IllegalStateError, e:
+                    self.log_info("IllegalStateError: %s" % e)
+        # notify by Chat Window controller to update the toolbar buttons
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
@@ -1889,7 +1887,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=data)
 
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
-        if data.action == 'remove' and not sender.streams:
+        if not data.removed_streams and not data.added_streams:
             self.log_info("Ending session without streams")
             self.end()
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)

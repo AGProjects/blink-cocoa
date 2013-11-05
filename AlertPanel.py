@@ -662,7 +662,7 @@ class AlertPanel(NSObject, object):
     def _NH_SIPSessionDidFail(self, notification):
         self.cancelSession(notification.sender, notification.data.reason)
 
-    def _NH_SIPSessionGotRejectProposal(self, notification):
+    def _NH_SIPSessionProposalRejected(self, notification):
         self.cancelSession(notification.sender, notification.data.reason)
 
     def _NH_SIPSessionDidEnd(self, notification):

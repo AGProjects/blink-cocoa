@@ -356,11 +356,11 @@ class Ringer(object):
         self.active_sessions.add(session)
         self.stop_ringing(session)
 
-    def _NH_SIPSessionGotAcceptProposal(self, notification):
+    def _NH_SIPSessionProposalAccepted(self, notification):
         session = notification.sender
         self.stop_ringing(session)
 
-    def _NH_SIPSessionGotRejectProposal(self, notification):
+    def _NH_SIPSessionProposalRejected(self, notification):
         session = notification.sender
         self.stop_ringing(session)
 
@@ -401,7 +401,7 @@ class Ringer(object):
         if self.secondary_hold_tone and len(self.on_hold_audio_sessions) == 0:
             self.secondary_hold_tone.stop()
 
-    def _NH_SIPSessionGotProposal(self, notification):
+    def _NH_SIPSessionNewProposal(self, notification):
         session = notification.sender
         data = notification.data
         stream_types = [stream.type for stream in data.streams]
@@ -420,9 +420,8 @@ class Ringer(object):
 
     def _NH_SIPSessionDidRenegotiateStreams(self, notification):
         data = notification.data
-        if data.action == "remove":
-            for stream in (s for s in data.streams if s.type=='audio'):
-                self.play_hangup()
+        for stream in (s for s in data.removed_streams if s.type=='audio'):
+            self.play_hangup()
 
     def _NH_SIPSessionGotRingIndication(self, notification):
         session = notification.sender

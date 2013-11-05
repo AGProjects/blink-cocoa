@@ -571,7 +571,7 @@ class DebugWindow(NSObject):
         self.renderRTP(notification.sender)
 
     def _NH_SIPSessionDidRenegotiateStreams(self, notification):
-        if notification.data.action == 'add':
+        if notification.data.added_streams:
             self.renderRTP(notification.sender)
 
     def _NH_AudioSessionHasQualityIssues(self, notification):
