@@ -404,18 +404,18 @@ class Ringer(object):
     def _NH_SIPSessionNewProposal(self, notification):
         session = notification.sender
         data = notification.data
-        stream_types = [stream.type for stream in data.streams]
+        stream_types = [stream.type for stream in data.proposed_streams]
         if 'audio' in stream_types:
             if data.originator == "local":
                 self.ringing_sessions.add(session)
             else:
-                self.incoming_audio_sessions[session] = data.streams
+                self.incoming_audio_sessions[session] = data.proposed_streams
         elif 'chat' in stream_types:
-            self.chat_sessions[session] = data.streams
+            self.chat_sessions[session] = data.proposed_streams
         elif 'screen-sharing' in stream_types:
-            self.ds_sessions[session] = data.streams
+            self.ds_sessions[session] = data.proposed_streams
         elif 'file-transfer' in stream_types:
-            self.filerecv_sessions[session] = data.streams
+            self.filerecv_sessions[session] = data.proposed_streams
         self.update_playing_ringtones(session.account)
 
     def _NH_SIPSessionDidRenegotiateStreams(self, notification):

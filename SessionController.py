@@ -184,7 +184,7 @@ class SessionControllersManager(object):
 
     def _NH_SIPSessionNewProposal(self, session, data):
         if self.pause_music:
-            if any(stream.type == 'audio' for stream in data.streams):
+            if any(stream.type == 'audio' for stream in data.proposed_streams):
                 MusicApplications().resume()
 
     def _NH_SIPSessionProposalRejected(self, session, data):
@@ -1749,9 +1749,9 @@ class SessionController(NSObject):
         self.proposalOriginator = 'remote'
 
         if data.originator != "local":
-            stream_names = ', '.join(stream.type for stream in data.streams)
+            stream_names = ', '.join(stream.type for stream in data.proposed_streams)
             self.log_info(u"Received %s proposal" % stream_names)
-            streams = data.streams
+            streams = data.proposed_streams
 
             settings = SIPSimpleSettings()
             stream_type_list = list(set(stream.type for stream in streams))
@@ -1868,17 +1868,16 @@ class SessionController(NSObject):
         log_data = NotificationData(timestamp=datetime.now(), failure_reason=data.failure_reason)
         self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
 
-        if data.streams:
-            for stream in data.streams:
-                if stream == self.cancelledStream:
-                    self.cancelledStream = None
-                self.log_info("Removing %s stream" % stream.type)
-                handler = self.streamHandlerForStream(stream)
-                if handler:
-                    handler.changeStatus(STREAM_FAILED, data.failure_reason)
+        for stream in data.proposed_streams:
+            if stream == self.cancelledStream:
+                self.cancelledStream = None
+            self.log_info("Removing %s stream" % stream.type)
+            handler = self.streamHandlerForStream(stream)
+            if handler:
+                handler.changeStatus(STREAM_FAILED, data.failure_reason)
 
-            # notify Chat Window controller to update the toolbar buttons
-            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+        # notify Chat Window controller to update the toolbar buttons
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPInvitationChangedState(self, sender, data):
         self.notification_center.post_notification("BlinkInvitationChangedState", sender=self, data=data)
