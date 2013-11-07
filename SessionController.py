@@ -1654,7 +1654,7 @@ class SessionController(NSObject):
             self.from_tag = ''
 
         if data.failure_reason == 'Unknown error 61':
-            status = u"Connection refused"
+            status = NSLocalizedString("Connection refused", "Label")
             self.failureReason = data.failure_reason
         elif data.failure_reason != 'user request':
             status = u"%s" % data.failure_reason.decode('utf-8')
@@ -1663,7 +1663,7 @@ class SessionController(NSObject):
             status = u"%s" % data.reason
             self.failureReason = data.reason
         else:
-            status = u"Session Failed"
+            status = NSLocalizedString("Session Failed", "Label")
             self.failureReason = "failed"
 
         self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
@@ -1688,9 +1688,10 @@ class SessionController(NSObject):
         # redirect
         if data.code in (301, 302) and data.redirect_identities:
             redirect_to = data.redirect_identities[0].uri
-            ret = NSRunAlertPanel("Redirect Call",
-                  "The remote party has redirected his calls to %s@%s.\nWould you like to call this address?" % (redirect_to.user, redirect_to.host),
-                  "Call", "Cancel", None)
+            addr = "%s@%s" % (redirect_to.user, redirect_to.host)
+            ret = NSRunAlertPanel(NSLocalizedString("Redirect Call", "Alert panel title"),
+                  NSLocalizedString("The remote party has redirected his calls to %s.\nWould you like to call this address?" % addr, "Alert panel label"),
+                  NSLocalizedString("Call", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
 
             if ret == NSAlertDefaultReturn:
                 target_uri = SIPURI.new(redirect_to)
@@ -1960,16 +1961,16 @@ class SessionController(NSObject):
             self.log_info(u"Adding %s to failed list" % uri)
             if data.code >= 400 or data.code == 0:
                 if data.code == 487:
-                    contact.detail = 'Nobody answered'
+                    contact.detail = NSLocalizedString("Nobody answered", "Contact detail")
                 elif data.code == 408:
-                    contact.detail = 'Unreachable'
+                    contact.detail = NSLocalizedString("Unreachable", "Contact detail")
                 elif data.code == 486:
-                    contact.detail = 'Busy'
+                    contact.detail = NSLocalizedString("Busy", "Contact detail")
                 elif data.code == 603:
-                    contact.detail = 'Busy Everywhere'
+                    contact.detail = NSLocalizedString("Busy Everywhere", "Contact detail")
                 else:
                     reason = '%s (%s)' % (data.reason, data.code) if data.code else data.reason
-                    contact.detail = 'Invite Failed: %s' % reason
+                    contact.detail = NSLocalizedString("Invite Failed: %s" % reason, "Contact detail")
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
@@ -1980,11 +1981,11 @@ class SessionController(NSObject):
             pass
         else:
             if data.code == 100:
-                contact.detail = 'Connecting...'
+                contact.detail = NSLocalizedString("Connecting...", "Contact detail")
             elif data.code in (180, 183):
-                contact.detail = 'Ringing...'
+                contact.detail = NSLocalizedString("Ringing...", "Contact detail")
             elif data.code == 200:
-                contact.detail = 'Invitation accepted'
+                contact.detail = NSLocalizedString("Invitation accepted", "Contact detail")
             elif data.code < 400:
                 contact.detail = '%s (%s)' % (data.reason, data.code)
 
@@ -2043,7 +2044,7 @@ class CallTransferWindowController(NSObject):
     def __init__(self, session_controller, target):
         NSBundle.loadNibNamed_owner_("CallTransferWindow", self)
         self.session_controller = session_controller
-        self.label.setStringValue_("Remote party would like to transfer you to %s\nWould you like to proceed and call this address?" % target)
+        self.label.setStringValue_(NSLocalizedString("Remote party would like to transfer you to %s\nWould you like to proceed and call this address?" % target, "Label"))
 
     @objc.IBAction
     def callButtonClicked_(self, sender):

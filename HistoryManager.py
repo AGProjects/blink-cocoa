@@ -16,6 +16,8 @@ from AppKit import (NSApp,
                     NSURLRequest,
                     NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 
+from Foundation import NSLocalizedString
+
 import cjson
 import cPickle
 import os
