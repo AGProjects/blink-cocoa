@@ -10,11 +10,14 @@ from Foundation import (NSAttributedString,
                         NSGradient,
                         NSGraphicsContext,
                         NSInsetRect,
+                        NSLocalizedString,
                         NSObject,
                         NSRect,
                         NSRunLoop,
                         NSTimer,
                         NSView)
+
+
 import objc
 
 import datetime
@@ -95,13 +98,13 @@ class SessionInfoController(NSObject):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
         NSBundle.loadNibNamed_owner_("SessionInfoPanel", self)
 
-        sessionBoxTitle = NSAttributedString.alloc().initWithString_attributes_("SIP Session", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+        sessionBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("SIP Session", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.sessionBox.setTitle_(sessionBoxTitle)
 
-        audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Audio Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+        audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("Audio Stream", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.audioBox.setTitle_(audioBoxTitle)
 
-        chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_("Chat Stream", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+        chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("Chat Stream", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.chatBox.setTitle_(chatBoxTitle)
 
         self.audio_rtt_graph.setLineWidth_(1.0)
@@ -213,7 +216,11 @@ class SessionInfoController(NSObject):
             self.updateSessionStatus()
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
             self.account.setStringValue_(str(self.sessionController.account.id))
-            self.conference.setStringValue_('%d Participants' % len(self.sessionController.conference_info.users) if self.sessionController.conference_info is not None and self.sessionController.remote_focus else '')
+            if self.sessionController.conference_info is not None and self.sessionController.remote_focus:
+                l = len(self.sessionController.conference_info.users)
+                self.conference.setStringValue_(NSLocalizedString("%d Participants" % l, "Label"))
+            else:
+                self.conference.setStringValue_('')
 
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:
                 self.remote_ua.setStringValue_(self.sessionController.session.remote_user_agent)
@@ -285,7 +292,7 @@ class SessionInfoController(NSObject):
                 elif self.audio_stream.stream.srtp_active:
                     label = 'SDES'
                 else:
-                    label = 'Disabled'
+                    label = NSLocalizedString("Disabled", "Label")
 
                 self.audio_srtp_active.setStringValue_(label)
                 self.audio_srtp_lock.setHidden_(False if self.audio_stream.stream.srtp_active else True)
@@ -323,9 +330,9 @@ class SessionInfoController(NSObject):
                 if self.audio_stream.stream.ice_active:
                     if self.audio_stream.stream.local_rtp_candidate and self.audio_stream.stream.remote_rtp_candidate:
                         if self.audio_stream.stream.local_rtp_candidate.type.lower() != 'relay' and self.audio_stream.stream.remote_rtp_candidate.type.lower() != 'relay':
-                            ice_status += ' (Peer to Peer)'
+                            ice_status += ' ('+ NSLocalizedString("Peer to Peer", "Label")+')'
                         else:
-                            ice_status += ' (Server Relayed)'
+                            ice_status += ' ('+ NSLocalizedString("Server Relayed", "Label") + ')'
 
             else:
                 self.audio_ice_local_candidate.setStringValue_('')
@@ -375,16 +382,16 @@ class SessionInfoController(NSObject):
             self.audio_status.setStringValue_("")
         else:
             if self.audio_stream.holdByLocal:
-                self.audio_status.setStringValue_(u"On Hold")
+                self.audio_status.setStringValue_(NSLocalizedString("On Hold", "Label"))
             elif self.audio_stream.holdByRemote:
-                self.audio_status.setStringValue_(u"Hold by Remote")
+                self.audio_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.audio_stream.status == STREAM_CONNECTED:
-                self.audio_status.setStringValue_(u"Active")
+                self.audio_status.setStringValue_(NSLocalizedString("Active", "Label"))
             else:
                 self.audio_status.setStringValue_("")
 
     def _NH_BlinkSessionGotRingIndication(self, notification):
-        self.updateSessionStatus(sub_state='Ringing')
+        self.updateSessionStatus(sub_state=NSLocalizedString("Ringing", "Label"))
 
     def _NH_BlinkSessionGotProvisionalResponse(self, notification):
         self.updateSessionStatus(sub_state=notification.data.reason)
@@ -420,7 +427,8 @@ class SessionInfoController(NSObject):
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
         if self.sessionController is not None and self.sessionController.session is not None and hasattr(notification.data, 'conference_info'):
-            self.conference.setStringValue_('%d Participants' % len(notification.data.conference_info.users))
+            l = len(notification.data.conference_info.users)
+            self.conference.setStringValue_(NSLocalizedString("%d Participants" % l, "Label"))
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
