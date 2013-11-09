@@ -157,12 +157,11 @@ class EnrollmentController(NSObject):
                 domain = address.split("@")[1]
                 if domain not in self.allowed_domains:
                     _domains = ",".join(self.allowed_domains)
-                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s" % _domains), NSLocalizedString("OK", "Button title"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s" % _domains, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
                     return False
 
             if not password:
-                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your account password.", "Alert panel label"),
-                                NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your account password.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
             return True
         else:

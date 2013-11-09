@@ -6,6 +6,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSEventTrackingRunLoopMode,
                     NSRunAlertPanel)
 from Foundation import (NSBundle,
+                        NSLocalizedString,
                         NSObject,
                         NSRunLoop,
                         NSRunLoopCommonModes,

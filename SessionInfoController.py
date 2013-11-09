@@ -2,6 +2,7 @@
 #
 
 from AppKit import NSDefaultRunLoopMode, NSForegroundColorAttributeName, NSModalPanelRunLoopMode
+
 from Foundation import (NSAttributedString,
                         NSBezierPath,
                         NSBundle,
