@@ -8,12 +8,14 @@ from AppKit import (NSApp,
                     NSNibTopLevelObjects,
                     NSRectFill,
                     NSStatusWindowLevel)
+
 from Foundation import (NSBezierPath,
                         NSBox,
                         NSBundle,
                         NSColor,
                         NSHeight,
                         NSImage,
+                        NSLocalizedString,
                         NSMakeRect,
                         NSMakeSize,
                         NSMaxX,
@@ -231,15 +233,15 @@ class AlertPanel(NSObject, object):
 
         if len(self.sessions) == 1:
             if "screen-sharing" in stream_type_list:
-                base_text = u"Screen Sharing from %s"
+                base_text = NSLocalizedString("Screen Sharing from %s", "Alert panel label")
             elif "audio" in stream_type_list:
-                base_text = u"Audio call from %s"
+                base_text = NSLocalizedString("Audio call from %s", "Alert panel label")
             elif stream_type_list == ["file-transfer"]:
-                base_text = u"File transfer from %s"
+                base_text = NSLocalizedString("File transfer from %s", "Alert panel label")
             elif stream_type_list == ["chat"]:
-                base_text = u"Chat from %s"
+                base_text = NSLocalizedString("Chat from %s", "Alert panel label")
             else:
-                base_text = u"Call from %s"
+                base_text = NSLocalizedString("Call from %s", "Alert panel label")
 
             title = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
             self.panel.setTitle_(title)
@@ -248,7 +250,7 @@ class AlertPanel(NSObject, object):
                 self.speak_text = title
                 self.startSpeechSynthesizerTimer()
         else:
-            self.panel.setTitle_(u"Incoming Calls")
+            self.panel.setTitle_(NSLocalizedString("Multiple Incoming Calls", "Alert panel label"))
 
         NotificationCenter().add_observer(self, sender=session)
 
@@ -398,11 +400,11 @@ class AlertPanel(NSObject, object):
 
             if outdev != indev:
                 if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
-                    self.deviceLabel.setStringValue_(u"Using Built-in Microphone and Output")
+                    self.deviceLabel.setStringValue_(NSLocalizedString("Using Built-in Microphone and Output", "Alert panel label"))
                 else:
                     self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev.strip(), indev.strip()))
             else:
-                self.deviceLabel.setStringValue_(u"Using audio device %s" % outdev.strip())
+                self.deviceLabel.setStringValue_(NSLocalizedString("Using audio device ", "Alert panel label") + outdev.strip())
 
             BlinkLogger().log_info(u"Using input/output audio devices: %s/%s" % (indev.strip(), outdev.strip()))
 
@@ -419,9 +421,10 @@ class AlertPanel(NSObject, object):
         else:
             destT.setHidden_(False)
             if isinstance(session.account, BonjourAccount):
-                destT.setStringValue_(u"To Bonjour account")
+                destT.setStringValue_(NSLocalizedString("To Bonjour account", "Alert panel label"))
             else:
-                destT.setStringValue_(u"To %s" % format_identity_to_string(session.account))
+                to = format_identity_to_string(session.account)
+                destT.setStringValue_(NSLocalizedString("To %s" % to, "Alert panel label"))
             destT.sizeToFit()
 
         if len(self.sessions) == 1:
@@ -429,7 +432,7 @@ class AlertPanel(NSObject, object):
             panelAcceptB.setHidden_(False)
             panelOtherB.setTitle_(other or "")
             panelOtherB.setHidden_(not other)
-            panelRejectB.setTitle_("Reject")
+            panelRejectB.setTitle_(NSLocalizedString("Reject", "Button title"))
 
             panelAcceptB.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
             panelRejectB.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
@@ -445,10 +448,10 @@ class AlertPanel(NSObject, object):
 
         else:
             panelAcceptB.setHidden_(False)
-            panelAcceptB.setTitle_("Accept All")
+            panelAcceptB.setTitle_(NSLocalizedString("Accept All", "Button title"))
             panelOtherB.setHidden_(True)
             panelBusyB.setHidden_(is_update_proposal or is_file_transfer)
-            panelRejectB.setTitle_("Reject All")
+            panelRejectB.setTitle_(NSLocalizedString("Reject All", "Button title"))
 
             for v in self.sessions.values():
                 for i in (5, 6, 7, 8):
@@ -475,44 +478,44 @@ class AlertPanel(NSObject, object):
                 if ds:
                     type_names.remove("Screen sharing")
                     if ds[0].handler.type == "active":
-                        type_names.append("Remote Screen offered by")
+                        type_names.append(NSLocalizedString("Remote Screen offered by", "Label"))
                     else:
-                        type_names.append("My Screen requested by")
-                subject = u"Addition of %s" % " and ".join(type_names)
+                        type_names.append(NSLocalizedString("My Screen requested by", "Label"))
+                subject = NSLocalizedString("Addition of %s" % " and ".join(type_names), "Label")
             else:
-                subject = u"Addition of %s to existing session requested by" % " and ".join(type_names)
+                subject = NSLocalizedString("Addition of %s to existing session requested by" % " and ".join(type_names), "Label")
 
-            alt_action = u"Chat Only"
+            alt_action = NSLocalizedString("Chat Only", "Label")
         elif type(streams[0]) is AudioStream:
-            subject = u"Addition of Audio to existing session requested by"
+            subject = NSLocalizedString("Addition of Audio to existing session requested by", "Label")
             alt_action = None
         elif type(streams[0]) is ChatStream:
-            subject = u"Addition of Chat to existing session requested by"
+            subject = NSLocalizedString("Addition of Chat to existing session requested by", "Label")
             alt_action = None
         elif type(streams[0]) is FileTransferStream:
-            subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024))
+            subject = NSLocalizedString("Transfer of File", "Label") + "'%s' (%s)" % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
             alt_action = None
         elif type(streams[0]) is ScreenSharingStream:
             if streams[0].handler.type == "active":
-                subject = u"Remote Screen offered by"
+                subject = NSLocalizedString("Remote Screen offered by", "Label")
             else:
-                subject = u"My Screen requested by"
+                subject = NSLocalizedString("My Screen requested by", "Label")
             alt_action = None
         else:
-            subject = u"Addition of unknown Stream to existing Session requested by"
+            subject = NSLocalizedString("Addition of unknown Stream to existing Session requested by", "Label")
             alt_action = None
         return subject, default_action, alt_action
 
     def format_subject_for_incoming_invite(self, session, streams):
-        default_action = u"Accept"
+        default_action = NSLocalizedString("Accept", "Button title")
         alt_action = None
 
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
             if "Chat" in type_names:
-                alt_action = u"Chat Only"
+                alt_action = NSLocalizedString("Chat Only", "Button title")
             elif "Audio" in type_names and len(type_names) > 1:
-                alt_action = u"Audio Only"
+                alt_action = NSLocalizedString("Audio Only", "Button title")
 
         if session.subject:
             subject = session.subject
@@ -523,22 +526,22 @@ class AlertPanel(NSObject, object):
                     if ds:
                         type_names.remove("Screen sharing")
                         if ds[0].handler.type == "active":
-                            type_names.append("Remote Screen offered by")
+                            type_names.append(NSLocalizedString("Remote Screen offered by", "Label"))
                         else:
-                            type_names.append("My Screen requested by")
-                    subject = u"%s" % " and ".join(type_names)
+                            type_names.append(NSLocalizedString("My Screen requested by", "Label"))
+                    subject = NSLocalizedString("%s" % " and ".join(type_names), "Label")
                 else:
-                    subject = u"%s session requested by" % " and ".join(type_names)
+                    subject = NSLocalizedString("%s session requested by" % " and ".join(type_names), "Label")
             elif type(streams[0]) is AudioStream:
-                subject = u"Audio Session requested by"
+                subject = NSLocalizedString("Audio Session requested by", "Label")
             elif type(streams[0]) is ChatStream:
-                subject = u"Chat Session requested by"
+                subject = NSLocalizedString("Chat Session requested by", "Label")
             elif type(streams[0]) is ScreenSharingStream:
-                subject = u"Remote Screen offered by" if streams[0].handler.type == "active" else u"My Screen requested by"
+                subject = NSLocalizedString("Remote Screen offered by", "Label") if streams[0].handler.type == "active" else NSLocalizedString("My Screen requested by", "Label")
             elif type(streams[0]) is FileTransferStream:
-                subject = u"Transfer of File '%s' (%s) offered by" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024))
+                subject = NSLocalizedString("Transfer of File", "Label") + "'%s' (%s)" % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
             else:
-                subject = u"Incoming Session request from"
+                subject = NSLocalizedString("Incoming Session request from", "Label")
                 BlinkLogger().log_info(u"Unknown Session content %s" % streams)
 
         return subject, default_action, alt_action
@@ -642,7 +645,7 @@ class AlertPanel(NSObject, object):
             self.acceptAudioStreamAnsweringMachine(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Answering Machine starts in %is" % remaining
+        text = NSLocalizedString("Answering Machine starts in %is" % remaining, "Label")
         info["label"].setStringValue_(text)
 
     def timerTickAutoAnswer_(self, timer):
@@ -651,7 +654,7 @@ class AlertPanel(NSObject, object):
             self.acceptStreams(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = "Automaticaly accepting in %i s" % remaining
+        text = NSLocalizedString("Automaticaly accepting in %i s" % remaining, "Label")
         info["label"].setStringValue_(text)
 
     @run_in_gui_thread
