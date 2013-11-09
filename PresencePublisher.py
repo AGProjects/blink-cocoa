@@ -244,7 +244,6 @@ class PresencePublisher(object):
 
     @run_in_twisted_thread
     def _cleanup_icons(self, account):
-        self._cleanedup_accounts.add(account.id)
         try:
             address_book = account.xcap_manager.resource_lists.content['sipsimple_addressbook']
         except (AttributeError, KeyError):
@@ -253,6 +252,7 @@ class PresencePublisher(object):
             for contact in address_book[Contact, IterateItems]:
                 if contact.attributes and contact.attributes.get('icon') is not None:
                     contact.attributes['icon'] = None
+        self._cleanedup_accounts.add(account.id)
 
     def updateIdleTimer_(self, timer):
         must_publish = False
