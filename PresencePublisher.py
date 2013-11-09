@@ -245,8 +245,11 @@ class PresencePublisher(object):
     @run_in_twisted_thread
     def _cleanup_icons(self, account):
         self._cleanedup_accounts.add(account.id)
-        with account.xcap_manager.transaction():
+        try:
             address_book = account.xcap_manager.resource_lists.content['sipsimple_addressbook']
+        except (AttributeError, KeyError):
+            return
+        with account.xcap_manager.transaction():
             for contact in address_book[Contact, IterateItems]:
                 if contact.attributes and contact.attributes.get('icon') is not None:
                     contact.attributes['icon'] = None
