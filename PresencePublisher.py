@@ -25,7 +25,7 @@ from sipsimple.payloads import pidf, rpid, cipid, caps, IterateItems
 from sipsimple.payloads.addressbook import Contact
 from sipsimple.util import ISOTimestamp
 from sipsimple.threading import run_in_twisted_thread
-from sipsimple.threading.green import run_in_green_thread, Command
+from sipsimple.threading.green import run_in_green_thread
 from twisted.internet import reactor
 from zope.interface import implements
 
@@ -250,7 +250,6 @@ class PresencePublisher(object):
             for contact in address_book[Contact, IterateItems]:
                 if contact.attributes and contact.attributes.get('icon') is not None:
                     contact.attributes['icon'] = None
-        account.xcap_manager.command_channel.send(Command('update'))
 
     def updateIdleTimer_(self, timer):
         must_publish = False
