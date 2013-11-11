@@ -155,15 +155,17 @@ class SMSWindowController(NSWindowController):
 
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):
-        if sender.itemIdentifier() == 'smileys':
+        session = self.selectedSessionController()
+        contactWindow = self._owner._owner
+        if sender.itemIdentifier() == 'audio':
+            contactWindow.startSessionWithTarget(format_identity_to_string(session.target_uri))
+        elif sender.itemIdentifier() == 'smileys':
             chatViewController = self.selectedSessionController().chatViewController
             chatViewController.expandSmileys = not chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
         elif sender.itemIdentifier() == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
-            contactWindow = self._owner._owner
             contactWindow.showHistoryViewer_(None)
-            session = self.selectedSessionController()
             contactWindow.historyViewer.filterByURIs((format_identity_to_string(session.target_uri),))
 
     @objc.IBAction
