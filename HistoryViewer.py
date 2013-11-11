@@ -422,7 +422,7 @@ class HistoryViewer(NSWindowController):
         self.paginationButton.setEnabled_forSegment_(True if start_from+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 2)
         self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and len(self.messages) - start_from > 2*MAX_MESSAGES_PER_PAGE else False, 3)
 
-        text = u'No entry found'
+        text = NSLocalizedString("No entry found", "Text label")
         if len(self.messages):
             if len(self.messages) == 1:
                 text = NSLocalizedString("Displaying 1 entry", "Text label")
