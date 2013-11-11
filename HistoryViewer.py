@@ -430,7 +430,8 @@ class HistoryViewer(NSWindowController):
                 text = NSLocalizedString("Displaying %d entries" % end, "Text label")
             else:
                 l = len(self.messages)
-                text = NSLocalizedString("Displaying %d to "% start_from + 1, "Text label") + end + NSLocalizedString("out of %d entries" % l, "Text label")
+                e = start_from + 1
+                text = NSLocalizedString("Displaying %d to "% e, "Text label") + str(end) + NSLocalizedString(" out of %d entries" % l, "Text label")
 
         self.foundMessagesLabel.setStringValue_(text)
 
