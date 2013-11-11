@@ -1024,7 +1024,7 @@ class SoundFileOption(Option):
     @objc.IBAction
     def changeVolume_(self, sender):
         value = sender.integerValue() * 10
-        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Text label"))
+        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Label"))
         self.store()
 
     @objc.IBAction
@@ -1098,7 +1098,7 @@ class SoundFileOption(Option):
         if value:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.volume/10)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Text label"))
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Label"))
             value = unicode(value.path)
             self.play.setEnabled_(True)
         else:
@@ -1150,7 +1150,7 @@ class NightVolumeOption(Option):
     @objc.IBAction
     def changeVolume_(self, sender):
         value = sender.integerValue() * 10
-        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Text label"))
+        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Label"))
         self.store()
 
     @objc.IBAction
@@ -1206,7 +1206,7 @@ class NightVolumeOption(Option):
             self.slider.setIntegerValue_(value.volume/10)
             self.start_hour.setStringValue_(value.start_hour)
             self.end_hour.setStringValue_(value.end_hour)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Text label"))
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Label"))
         else:
             self.slider.setEnabled_(False)
 
@@ -1234,7 +1234,7 @@ class OTRSettings(Option):
         self.addSubview_(self.view)
 
     def updateFingerprint(self):
-        self.labelText.setStringValue_(str(self.key) if self.key else NSLocalizedString("Please generate the private key", "Text label"))
+        self.labelText.setStringValue_(str(self.key) if self.key else NSLocalizedString("Please generate the private key", "Label"))
 
     def _store(self):
         self.set(bool(self.enabled.state()))
@@ -1419,7 +1419,7 @@ class AccountSoundFileOption(SoundFileOption):
         else:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.sound_file.volume, "Text label"))
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.sound_file.volume, "Label"))
             path = unicode(value.sound_file.path)
             for i in range(self.popup.numberOfItems()):
                 if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
