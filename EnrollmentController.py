@@ -215,6 +215,7 @@ class EnrollmentController(NSObject):
             account.enabled = True
             account.gui.sync_with_icloud = sync_with_icloud
             account.xcap.enabled = True if self.syncContactsCheckBox.state() == NSOnState else False
+            account.presence.enabled = True if self.syncContactsCheckBox.state() == NSOnState else False
 
             if account.id.domain == 'sip2sip.info':
                 account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
