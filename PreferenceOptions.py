@@ -97,6 +97,7 @@ def formatName(name):
     "msrp": "MSRP",
     "srtp": "SRTP",
     "xcap": "XCAP",
+    "rtt": "RTT",
     "rls": "RLS",
     "stun": "STUN",
     "sms": "SMS",
@@ -1825,7 +1826,7 @@ GeneralSettingsOrder = {
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
                        'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'enable_speech_synthesizer', 'night_volume'],
-                       'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'idle_threshold'],
+                       'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'idle_threshold', 'rtt_threshold'],
                        'logs': ['trace_sip_to_file', 'trace_msrp_to_file', 'trace_xcap_to_file', 'trace_notifications_to_file', 'trace_pjsip_to_file', 'pjsip_level']
                        }
 
@@ -1852,7 +1853,8 @@ UnitOptions = {
                'publish_interval': NSLocalizedString("seconds", "Setting decription label"),
                'register_interval': NSLocalizedString("seconds", "Setting decription label"),
                'subscribe_interval': NSLocalizedString("seconds", "Setting decription label"),
-               'idle_threshold': NSLocalizedString("seconds", "Setting decription label")
+               'idle_threshold': NSLocalizedString("seconds", "Setting decription label"),
+               'rtt_threshold': NSLocalizedString("miliseconds", "Setting decription label")
                }
 
 ToolTips = {
@@ -1863,6 +1865,7 @@ ToolTips = {
              'chat.replication_password': NSLocalizedString("Enter a password to encrypt the content of your messages on the replication server", "Setting decription label"),
              'gui.account_label': NSLocalizedString("Label displayed in account popup up menu instead of the sip address", "Setting decription label"),
              'gui.idle_threshold': NSLocalizedString("Interval after which my availability is set to away", "Setting decription label"),
+             'gui.rtt_threshold': NSLocalizedString("Value above which the RTT graphic is displayed with red color", "Setting decription label"),
              'message_summary.voicemail_uri': NSLocalizedString("SIP Address to subscribe for receiving message waiting indicator notifications", "Setting decription label"),
              'nat_traversal.msrp_relay': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain", "Setting decription label"),
              'nat_traversal.use_ice': NSLocalizedString("Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays", "Setting decription label"),

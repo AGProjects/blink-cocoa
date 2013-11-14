@@ -865,6 +865,8 @@ class AudioController(MediaStream):
         self.updateDuration()
 
         if self.stream:
+            settings = SIPSimpleSettings()
+
             jitter = self.statistics['jitter']
             rtt = self.statistics['rtt']
             loss = self.statistics['loss']
@@ -881,15 +883,16 @@ class AudioController(MediaStream):
             qos_data.latency = '0ms'
             qos_data.packet_loss = '0%'
             send_qos_notify = False
-            if rtt > 1000:
-                latency = '%.1f' % (float(rtt)/1000.0)
-                text += 'Latency %ss' % latency
-                send_qos_notify = True
-                qos_data.latency = '%ss' % latency
-            elif rtt > 200:
-                text += 'Latency %dms' % rtt
-                send_qos_notify = True
-                qos_data.latency = '%sms' % rtt
+            if rtt > settings.gui.rtt_threshold:
+                if rtt > 1000:
+                    latency = '%.1f' % (float(rtt)/1000.0)
+                    text += 'Latency %ss' % latency
+                    send_qos_notify = True
+                    qos_data.latency = '%ss' % latency
+                else:
+                    text += 'Latency %dms' % rtt
+                    send_qos_notify = True
+                    qos_data.latency = '%sms' % rtt
 
             if loss > 3:
                 text += ' Packet Loss %d%%' % loss

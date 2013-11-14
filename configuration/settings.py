@@ -15,7 +15,6 @@ from sipsimple.util import ISOTimestamp
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
 
 
-
 class AnsweringMachineSettings(SettingsGroup):
     enabled = Setting(type=bool, default=False)
     show_in_alert_panel = Setting(type=bool, default=True)
@@ -94,6 +93,7 @@ class GUISettings(SettingsGroup):
     use_default_web_browser_for_alerts = Setting(type=bool, default=False)
     idle_threshold = Setting(type=NonNegativeInteger, default=600)
     extended_debug = Setting(type=bool, default=False)
+    rtt_threshold = Setting(type=NonNegativeInteger, default=250)
 
 
 class RTPSettingsExtension(RTPSettings):

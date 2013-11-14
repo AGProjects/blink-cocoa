@@ -85,6 +85,7 @@ class SessionInfoController(NSObject):
     def __init__(self, sessionController):
 
         self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
 
         self.sessionController = None
         self.audio_stream = None
@@ -108,10 +109,12 @@ class SessionInfoController(NSObject):
         chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("Chat Stream", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.chatBox.setTitle_(chatBoxTitle)
 
+        settings = SIPSimpleSettings()
+
         self.audio_rtt_graph.setLineWidth_(1.0)
         self.audio_rtt_graph.setLineSpacing_(1.0)
-        self.audio_rtt_graph.setAboveLimit_(200) # if higher than 200 ms show red color
-        self.audio_rtt_graph.setMinimumHeigth_(200)
+        self.audio_rtt_graph.setAboveLimit_(settings.gui.rtt_threshold) # if higher show red color
+        self.audio_rtt_graph.setMinimumHeigth_(settings.gui.rtt_threshold)
 
         self.audio_packet_loss_graph.setLineWidth_(1.0)
         self.audio_packet_loss_graph.setLineSpacing_(1.0)
@@ -130,6 +133,7 @@ class SessionInfoController(NSObject):
     def remove_session(self):
         if self.sessionController is not None:
             self.notification_center.remove_observer(self, sender=self.sessionController)
+            self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
             self.sessionController = None
         self.remove_audio_stream()
         self.remove_chat_stream()
@@ -172,6 +176,12 @@ class SessionInfoController(NSObject):
                 self.add_chat_stream()
 
         self.updatePanelValues()
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        settings = SIPSimpleSettings()
+        if notification.data.modified.has_key("gui.rtt_threshold"):
+            self.audio_rtt_graph.setAboveLimit_(settings.gui.rtt_threshold)
+            self.audio_rtt_graph.setMinimumHeigth_(settings.gui.rtt_threshold)
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
