@@ -2,7 +2,7 @@
 #
 
 from AppKit import NSApp, NSCancelButton, NSOKButton
-from Foundation import NSBundle, NSObject
+from Foundation import NSBundle, NSObject, NSLocalizedString
 import objc
 
 
@@ -28,7 +28,7 @@ class ConferenceConfigurationPanel(NSObject):
 
     def runModalForRename_(self, name):
         self.nameText.setStringValue_(name)
-        self.window.setTitle_(u"Rename Conference Configuration")
+        self.window.setTitle_(NSLocalizedString("Rename Conference Configuration", "Window title"))
         self.window.makeKeyAndOrderFront_(None)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)

@@ -2,8 +2,10 @@
 #
 
 from AppKit import NSOnState, NSOffState
+
 from Foundation import (NSBundle,
                         NSImage,
+                        NSLocalizedString,
                         NSObject,
                         NSURL,
                         NSURLRequest,
@@ -79,7 +81,8 @@ class ConferenceScreenSharing(NSObject):
             self.startLoading()
 
     def setTitle(self):
-        self.window.setTitle_("Shared Screen of %s <%s> %s"%(self.display_name, self.screensharing_uri, "(stopped)" if not self.loading else ""))
+        name = "%s <%s> %s" % (self.display_name, self.screensharing_uri, "(" + NSLocalizedString("stopped", "Label") + ")" if not self.loading else "")
+        self.window.setTitle_(NSLocalizedString("Shared Screen of %s" % name, "Window title"))
 
     def close_(self, sender):
         self.window.close()

@@ -10,10 +10,12 @@ from AppKit import (NSApp,
                     NSOKButton,
                     NSOnState,
                     NSRunAlertPanel)
+
 from Foundation import (NSArray,
                         NSBundle,
                         NSDate,
                         NSEvent,
+                        NSLocalizedString,
                         NSMenu,
                         NSMenuItem,
                         NSObject)
@@ -208,7 +210,7 @@ class JoinConferenceWindowController(NSObject):
 
     @objc.IBAction
     def configurationsButtonClicked_(self, sender):
-        if sender.selectedItem() == sender.itemWithTitle_(u"Save configuration..."):
+        if sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Save configuration...", "Menu item title")):
             if self.validateConference(allow_random_room=False):
                 if self.selected_configuration:
                     configuration_name = self.selected_configuration
@@ -239,7 +241,7 @@ class JoinConferenceWindowController(NSObject):
             else:
                 self.selected_configuration = None
 
-        elif sender.selectedItem() == sender.itemWithTitle_(u"Rename configuration..."):
+        elif sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Rename configuration...", "Menu item title")):
             configurationPanel = ConferenceConfigurationPanel.alloc().init()
             configuration_name = configurationPanel.runModalForRename_(self.selected_configuration)
             if configuration_name and configuration_name != self.selected_configuration:
@@ -250,7 +252,7 @@ class JoinConferenceWindowController(NSObject):
                 self.selected_configuration = configuration_name
                 cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
 
-        elif sender.selectedItem() == sender.itemWithTitle_(u"Delete configuration") and self.selected_configuration:
+        elif sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Delete configuration", "Menu item title")) and self.selected_configuration:
            del self.conference_configurations[self.selected_configuration]
            cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
            self.setDefaults()
@@ -283,7 +285,7 @@ class JoinConferenceWindowController(NSObject):
     def updateConfigurationsPopupButton(self):
         self.configurationsButton.removeAllItems()
         if self.conference_configurations:
-            self.configurationsButton.addItemWithTitle_(u"Select configuration")
+            self.configurationsButton.addItemWithTitle_(NSLocalizedString("Select configuration", "Menu item title"))
             self.configurationsButton.lastItem().setEnabled_(False)
             self.configurationsButton.selectItem_(self.configurationsButton.lastItem())
             self.configurationsButton.addItemWithTitle_(u"None")
@@ -295,15 +297,15 @@ class JoinConferenceWindowController(NSObject):
                 if self.selected_configuration and self.selected_configuration == key:
                     self.configurationsButton.selectItem_(item)
         else:
-            self.configurationsButton.addItemWithTitle_(u"No configurations saved")
+            self.configurationsButton.addItemWithTitle_(NSLocalizedString("No configurations saved", "Menu item title"))
             self.configurationsButton.lastItem().setEnabled_(False)
 
         self.configurationsButton.menu().addItem_(NSMenuItem.separatorItem())
-        self.configurationsButton.addItemWithTitle_(u"Save configuration...")
+        self.configurationsButton.addItemWithTitle_(NSLocalizedString("Save configuration...", "Menu item title"))
         self.configurationsButton.lastItem().setEnabled_(True)
-        self.configurationsButton.addItemWithTitle_(u"Rename configuration...")
+        self.configurationsButton.addItemWithTitle_(NSLocalizedString("Rename configuration...", "Menu item title"))
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
-        self.configurationsButton.addItemWithTitle_(u"Delete configuration")
+        self.configurationsButton.addItemWithTitle_(NSLocalizedString("Delete configuration", "Menu item title"))
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
 
     def updateBonjourServersPopupButton(self):
@@ -331,7 +333,7 @@ class JoinConferenceWindowController(NSObject):
                     item.setRepresentedObject_(server)
                     self.ok_button.setEnabled_(True)
             else:
-                self.bonjour_server_combolist.addItemWithTitle_(u"No SylkServer in this Neighbourhood")
+                self.bonjour_server_combolist.addItemWithTitle_(NSLocalizedString("No conference server in this neighbourhood", "Menu item title"))
                 self.bonjour_server_combolist.lastItem().setEnabled_(False)
                 self.ok_button.setEnabled_(False)
         else:
@@ -493,7 +495,7 @@ class JoinConferenceWindowController(NSObject):
             participant = participant + '@' + self.default_domain
 
         if not participant or not validateParticipant(participant):
-            NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP address.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Add New Participant", "Alert panel title"), NSLocalizedString("Participant must be a valid SIP address. ", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         if participant not in self._participants:
@@ -534,8 +536,8 @@ class JoinConferenceWindowController(NSObject):
             room=self.room.stringValue().lower().strip()
 
         if not re.match("^[+1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", room):
-            NSRunAlertPanel("Conference Room", "Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a +, a positive digit or letter",
-                "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), NSLocalizedString("Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a +, a positive digit or letter", "Alert panel label"),
+                NSLocalizedString("OK", "Button title"), None, None)
             return False
         else:
             return room
@@ -547,8 +549,8 @@ class JoinConferenceWindowController(NSObject):
             return False
 
         if self.chat.state() == NSOffState and self.audio.state() == NSOffState:
-            NSRunAlertPanel("Start a new Conference", "Please select at least one media type.",
-                "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), NSLocalizedString("Please select at least one media type. ", "Alert panel label"),
+                NSLocalizedString("OK", ""), None, None)
             return False
 
         if "@" in room:
@@ -558,14 +560,14 @@ class JoinConferenceWindowController(NSObject):
             if isinstance(account, BonjourAccount):
                 item = self.bonjour_server_combolist.selectedItem()
                 if item is None:
-                    NSRunAlertPanel('Start a new Conference', 'No SylkServer in the Neighbourhood', "OK", None, None)
+                    NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), NSLocalizedString("No conference server in this neighbourhood", "Alert panel label"), NSLocalizedString("OK", "Button label"), None, None)
                     return False
 
                 object = item.representedObject()
                 if hasattr(object, 'host'):
                     self.target = u'%s@%s:%s;transport=%s' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
                 else:
-                    NSRunAlertPanel('Start a new Conference', 'No SylkServer in the Neighbourhood', "OK", None, None)
+                    NSRunAlertPanel(NSLocalizedString("Start a new Conference", "Alert panel title"), NSLocalizedString("No conference server in this neighbourhood", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
                     return False
             else:
                 if account.conference.server_address:
@@ -575,7 +577,7 @@ class JoinConferenceWindowController(NSObject):
 
         if not validateParticipant(self.target):
             text = 'Invalid conference SIP URI: %s' % self.target
-            NSRunAlertPanel("Start a new Conference", text,"OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), text, NSLocalizedString("OK", "Button title"), None, None)
             return False
 
         return True
@@ -630,7 +632,7 @@ class AddParticipantsWindowController(NSObject):
                                                                                                                                               NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                                                                               table.window().graphicsContext(), 0, 1, 0)
                     invite_menu = NSMenu.alloc().init()
-                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item title"), "", "")
                     titem.setEnabled_(False)
                     for uri in sourceContact.uris:
                         titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "addContactUriToInvitationList:", "")
@@ -715,7 +717,7 @@ class AddParticipantsWindowController(NSObject):
                 participant = sip_prefix_pattern.sub("", str(participant))
 
             if not participant or not validateParticipant(participant):
-                NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
+                NSRunAlertPanel(NSLocalizedString("Add New Participant", "Alert panel title"), NSLocalizedString("Participant must be a valid SIP addresses. ", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
                 return
 
             if participant not in self._participants:
@@ -740,7 +742,7 @@ class AddParticipantsWindowController(NSObject):
             participant = participant + '@' + self.default_domain
 
         if not participant or not validateParticipant(participant):
-            NSRunAlertPanel("Add New Participant", "Participant must be a valid SIP addresses.", "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Add New Participant", "Alert panel title"), NSLocalizedString("Participant must be a valid SIP addresses. ", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         if participant not in self._participants:
@@ -753,8 +755,8 @@ class AddParticipantsWindowController(NSObject):
     @objc.IBAction
     def okClicked_(self, sender):
         if not len(self._participants):
-            NSRunAlertPanel("Add Participants to the Conference", "Please add at least one participant.",
-                "OK", None, None)
+            NSRunAlertPanel(NSLocalizedString("Add Participants to the Conference", "Alert panel title"), NSLocalizedString("Please add at least one participant. ", "Alert panel label"),
+                NSLocalizedString("OK", "Button title"), None, None)
         else:
             NSApp.stopModalWithCode_(NSOKButton)
 
