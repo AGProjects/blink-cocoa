@@ -484,7 +484,7 @@ class _HTMLToText(HTMLParser):
         return re.sub(r' +', ' ', ''.join(self._buf))
 
 
-def html2txt1(html):
+def html2txt(html):
     """
         Given a piece of HTML, return the plain text it contains.
         This handles entities and char refs, but not javascript and stylesheets.
@@ -497,7 +497,7 @@ def html2txt1(html):
         pass
     return parser.get_text()
 
-def html2txt(s):
+def html2txt_old(s):
     """Convert the html to raw txt
         - suppress all return
         - <p>, <tr> to return
@@ -520,5 +520,4 @@ def html2txt(s):
     s = tags.sub('', s) # remove all remaining tags
     s = re.sub(' +', ' ', s) # remove running spaces this remove the \n and \t
     return s
-
 
