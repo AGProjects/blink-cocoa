@@ -1541,8 +1541,6 @@ class ChatController(MediaStream):
                     status = 'failed'
                     self.sessionController.log_error('Encrypted message has runtime error: %s' % e)
 
-            # It was encoded earlier because potr only supports bytes
-            text = text.decode('utf-8')
             if text.startswith('?OTR:'):
                 return
 
