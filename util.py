@@ -16,6 +16,8 @@ import shlex
 import unicodedata
 
 from datetime import datetime
+from htmlentitydefs import name2codepoint
+from HTMLParser import HTMLParser, HTMLParseError
 
 from application.python.decorator import decorator, preserve_signature
 
@@ -321,31 +323,6 @@ def compare_identity_addresses(id1, id2):
     return format_identity_to_string(id1) == format_identity_to_string(id2)
 
 
-def html2txt(s):
-    """Convert the html to raw txt
-    - suppress all return
-    - <p>, <tr> to return
-    - <td> to tab
-    Need the following regex:
-    p = re.compile('(<p.*?>)|(<tr.*?>)', re.I)
-    t = re.compile('<td.*?>', re.I)
-    comm = re.compile('<!--.*?-->', re.M)
-    tags = re.compile('<.*?>', re.M)
-    """
-    p = re.compile('(<p.*?>)|(<tr.*?>)', re.I)
-    t = re.compile('<td.*?>', re.I)
-    comm = re.compile('<!--.*?-->', re.M)
-    tags = re.compile('<.*?>', re.M)
-
-    s = s.replace('\n', '') # remove returns time this compare to split filter join
-    s = p.sub('\n', s) # replace p and tr by \n
-    s = t.sub('\t', s) # replace td by \t
-    s = comm.sub('', s) # remove comments
-    s = tags.sub('', s) # remove all remaining tags
-    s = re.sub(' +', ' ', s) # remove running spaces this remove the \n and \t
-    return s
-
-
 def call_in_gui_thread(func, *args, **kwargs):
     if NSThread.isMainThread():
         func(*args, **kwargs)
@@ -463,4 +440,85 @@ class DictDiffer(object):
 
 def memory_stick_mode():
     return unicodedata.normalize('NFC', NSBundle.mainBundle().bundlePath()).lower().startswith('/volumes/blink stick')
+
+
+class _HTMLToText(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self._buf = []
+        self.hide_output = False
+    
+    def handle_starttag(self, tag, attrs):
+        if tag in ('p', 'br') and not self.hide_output:
+            self._buf.append('\n')
+        elif tag in ('script', 'style'):
+            self.hide_output = True
+    
+    def handle_startendtag(self, tag, attrs):
+        if tag == 'br':
+            self._buf.append('\n')
+    
+    def handle_endtag(self, tag):
+        if tag in ('p', 'tr'):
+            self._buf.append('\n')
+        elif tag in ('td'):
+            self._buf.append('\t')
+        elif tag in ('script', 'style'):
+            self.hide_output = False
+    
+    def handle_data(self, text):
+        if text and not self.hide_output:
+            self._buf.append(re.sub(r'\s+', ' ', text))
+    
+    def handle_entityref(self, name):
+        if name in name2codepoint and not self.hide_output:
+            c = unichr(name2codepoint[name])
+            self._buf.append(c)
+    
+    def handle_charref(self, name):
+        if not self.hide_output:
+            n = int(name[1:], 16) if name.startswith('x') else int(name)
+            self._buf.append(unichr(n))
+    
+    def get_text(self):
+        return re.sub(r' +', ' ', ''.join(self._buf))
+
+
+def html2txt1(html):
+    """
+        Given a piece of HTML, return the plain text it contains.
+        This handles entities and char refs, but not javascript and stylesheets.
+        """
+    parser = _HTMLToText()
+    try:
+        parser.feed(html)
+        parser.close()
+    except HTMLParseError:
+        pass
+    return parser.get_text()
+
+def html2txt(s):
+    """Convert the html to raw txt
+        - suppress all return
+        - <p>, <tr> to return
+        - <td> to tab
+        Need the following regex:
+        p = re.compile('(<p.*?>)|(<tr.*?>)', re.I)
+        t = re.compile('<td.*?>', re.I)
+        comm = re.compile('<!--.*?-->', re.M)
+        tags = re.compile('<.*?>', re.M)
+        """
+    p = re.compile('(<p.*?>)|(<tr.*?>)', re.I)
+    t = re.compile('<td.*?>', re.I)
+    comm = re.compile('<!--.*?-->', re.M)
+    tags = re.compile('<.*?>', re.M)
+    
+    s = s.replace('\n', '') # remove returns time this compare to split filter join
+    s = p.sub('\n', s) # replace p and tr by \n
+    s = t.sub('\t', s) # replace td by \t
+    s = comm.sub('', s) # remove comments
+    s = tags.sub('', s) # remove all remaining tags
+    s = re.sub(' +', ' ', s) # remove running spaces this remove the \n and \t
+    return s
+
 
