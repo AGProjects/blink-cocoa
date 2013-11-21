@@ -1137,7 +1137,7 @@ class ChatController(MediaStream):
                     elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
                         return True if self.sessionController.canCancelProposal() else False
                     else:
-                        return True if self.sessionController.canProposeMediaStreamChanges() else False
+                        return True if self.sessionController.canProposeMediaStreamChanges() and self.status in (STATE_IDLE, STREAM_CONNECTED) else False
                 else:
                     return True if self.sessionController.canProposeMediaStreamChanges() else False
             elif identifier == 'hold':
