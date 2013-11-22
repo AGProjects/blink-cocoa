@@ -525,7 +525,6 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 															<reference key="NSTextColor" ref="437856882"/>
 														</object>
 														<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
-														<bool key="NSControlAutosetMaxLayoutWidth">YES</bool>
 													</object>
 													<object class="NSButton" id="530626657">
 														<reference key="NSNextResponder" ref="148832488"/>
@@ -557,7 +556,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 													<object class="NSTextField" id="356662065">
 														<reference key="NSNextResponder" ref="148832488"/>
 														<int key="NSvFlags">268</int>
-														<string key="NSFrame">{{80, 146}, {67, 17}}</string>
+														<string key="NSFrame">{{77, 146}, {70, 17}}</string>
 														<reference key="NSSuperview" ref="148832488"/>
 														<reference key="NSWindow"/>
 														<reference key="NSNextKeyView" ref="667363005"/>

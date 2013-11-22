@@ -1101,7 +1101,6 @@
 		1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
 		1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
 		1FF32B7917ED0DB300E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
-		1FF32B7A17ED0DD700E63A20 /* Info-pro.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF160812B5639F00F71BE5 /* Info-pro.plist */; };
 		1FF32B7B17ED0DDC00E63A20 /* Info-lite.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F8DC9111351D7460034815C /* Info-lite.plist */; };
 		1FF32B7C17ED0DE200E63A20 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D1107310486CEB800E47090 /* Info.plist */; };
 		1FF3737017C9E656007418EB /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
@@ -3207,7 +3206,6 @@
 				1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 				1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */,
-				1FF32B7A17ED0DD700E63A20 /* Info-pro.plist in Resources */,
 				1FB9BB4217F8117500D7FFA8 /* database-on.png in Resources */,
 				1F17D31217F9825D00CB74EC /* database-local-off.png in Resources */,
 				1F17D31617F9825D00CB74EC /* database-remote-off.png in Resources */,

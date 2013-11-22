@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1080</int>
-		<string key="IBDocument.SystemVersion">12E55</string>
+		<string key="IBDocument.SystemVersion">12F45</string>
 		<string key="IBDocument.InterfaceBuilderVersion">3084</string>
-		<string key="IBDocument.AppKitVersion">1187.39</string>
+		<string key="IBDocument.AppKitVersion">1187.40</string>
 		<string key="IBDocument.HIToolboxVersion">626.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -240,18 +240,19 @@
 					<array key="NSToolbarIBSelectableItems" id="0"/>
 				</object>
 				<nil key="NSUserInterfaceItemIdentifier"/>
-				<string key="NSWindowContentMaxSize">{302, 1}</string>
-				<string key="NSWindowContentMinSize">{302, 1}</string>
+				<string key="NSWindowContentMaxSize">{355, 1}</string>
+				<string key="NSWindowContentMinSize">{355, 1}</string>
 				<object class="NSView" key="NSWindowView" id="1006">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<string key="NSFrameSize">{355, 1}</string>
 					<reference key="NSSuperview"/>
 					<reference key="NSWindow"/>
+					<reference key="NSNextKeyView"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
-				<string key="NSMinSize">{302, 76}</string>
-				<string key="NSMaxSize">{302, 76}</string>
+				<string key="NSMinSize">{355, 76}</string>
+				<string key="NSMaxSize">{355, 76}</string>
 				<string key="NSFrameAutosaveName">close_fullscreen_panel</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
 			</object>
@@ -463,23 +464,28 @@
 				<object class="IBPartialClassDescription">
 					<string key="className">ChatController</string>
 					<string key="superclassName">MediaStream</string>
-					<object class="NSMutableDictionary" key="actions">
-						<string key="NS.key.0">userClickedFullScreenToolbarButton:</string>
-						<string key="NS.object.0">id</string>
-					</object>
-					<object class="NSMutableDictionary" key="actionInfosByName">
-						<string key="NS.key.0">userClickedFullScreenToolbarButton:</string>
-						<object class="IBActionInfo" key="NS.object.0">
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="userClickedDatabaseLoggingButton:">id</string>
+						<string key="userClickedFullScreenToolbarButton:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="userClickedDatabaseLoggingButton:">
+							<string key="name">userClickedDatabaseLoggingButton:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="userClickedFullScreenToolbarButton:">
 							<string key="name">userClickedFullScreenToolbarButton:</string>
 							<string key="candidateClassName">id</string>
 						</object>
-					</object>
+					</dictionary>
 					<dictionary class="NSMutableDictionary" key="outlets">
 						<string key="chatViewController">id</string>
+						<string key="databaseLoggingButton">id</string>
 						<string key="fullScreenVideoPanel">id</string>
 						<string key="fullScreenVideoPanelToobar">id</string>
 						<string key="inputContainer">id</string>
 						<string key="outputContainer">id</string>
+						<string key="privateLabel">id</string>
 						<string key="smileyButton">id</string>
 						<string key="splitView">id</string>
 						<string key="videoContainer">id</string>
@@ -487,6 +493,10 @@
 					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
 						<object class="IBToOneOutletInfo" key="chatViewController">
 							<string key="name">chatViewController</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="databaseLoggingButton">
+							<string key="name">databaseLoggingButton</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="fullScreenVideoPanel">
@@ -503,6 +513,10 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="outputContainer">
 							<string key="name">outputContainer</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="privateLabel">
+							<string key="name">privateLabel</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="smileyButton">
