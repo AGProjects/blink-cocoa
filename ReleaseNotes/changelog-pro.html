@@ -7,16 +7,36 @@
 <body>
 
 
-<h2>Version 3.3.1</h2>
+<h2>Version 3.4.0</h2>
 
-<p>October 21st, 2013
+<p>November 22nd, 2013
 
 <ul>
-<li>Fixed broken logging
-<li>Use ICE nat traversal for new sip2sip accounts
-<li>Fixed restoring contacts from backup
-<li>Don't notify in UI for presence subscriptions to myself
-<li>Mark SMS messages as failed if DNS lookup fails
+<li>Added settings for RTT treshhold
+<li>Added toolbar button to start audio call from SMS window
+<li>Added manual sorting for Contact URIs belonging to a Contact
+<li>Added Jabber and all Email addresses to AB contacts
+<li>Added copy/paste from Watcher list to Contact list
+<li>Added option to skip contacts sync with server when adding existing account
+<li>Added DND until call is ended
+<li>Added job title and organization for Address Book contacts
+<li>Added search in Address Book note and job title
+<li>Unmute microphone before starrting an audio call
+<li>Improved handling of Chat messsages with html payload
+<li>Enable audio button only if session is not in progress
+<li>Disable Presence if contacts sync is disabled during enrollment
+<li>Only mark the account as cleaned after the operation is performed
+<li>Ignore the absence or resource_lists or sipsimple_addressbook
+<li>Do not mess with the XCAPManager internal state machine
+<li>Fixed sorting SIP addresses when droping file over contact
+<li>Lookup icons in blink presence contacts only
+<li>Handle multiple URIS when create presence contact from another contact
+<li>Use first SIP URI as name if missing for Address Book contacts
+<li>Fixed stopping music apps
+<li>Automatically process , in phone numbers as DTMF delimiter
+<li>Fixed migrating version for session history table
+<li>Print SIP next hop in audio tile
+<li>Allow deletion of contacts in Online Group 
 </ul>
 
 
