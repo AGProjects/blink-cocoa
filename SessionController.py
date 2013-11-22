@@ -1324,6 +1324,10 @@ class SessionController(NSObject):
                     # there is already a session, add audio stream to it
                     add_streams.append(streamController.stream)
 
+                if stype == 'audio':
+                    #un-mute mic
+                    SIPManager().mute(False)
+
             else:
                 self.log_debug("%s controller already exists: %s"% (stype, self.streamHandlers))
                 streamController = self.streamHandlerOfType(stype)

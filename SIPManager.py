@@ -403,6 +403,7 @@ class SIPManager(object):
 
     def mute(self, flag):
         self._app.voice_audio_mixer.muted = flag
+        self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
 
     def is_silent(self):
         return SIPSimpleSettings().audio.silent

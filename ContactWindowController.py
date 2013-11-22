@@ -2027,8 +2027,6 @@ class ContactWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-        NotificationCenter().post_notification("BlinkMuteChangedState", sender=self)
-
     @objc.IBAction
     def toggleAnsweringMachine_(self, sender):
         settings = SIPSimpleSettings()

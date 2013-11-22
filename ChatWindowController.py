@@ -1438,8 +1438,6 @@ class ChatWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
-        self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
-
     def revalidateToolbar(self, got_proposal=False):
         # update the toolbar buttons depending on session and stream state
         if self.tabView.selectedTabViewItem():

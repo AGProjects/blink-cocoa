@@ -492,7 +492,6 @@ class ChatController(MediaStream):
             self.toggleVideoMirror()
         elif sender.itemIdentifier() == 'mute':
             self.backend.mute(False if self.backend.is_muted() else True)
-            self.notification_center.post_notification("BlinkMuteChangedState", sender=self)
         elif sender.itemIdentifier() == 'hold':
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
