@@ -222,7 +222,7 @@ class Ringer(object):
 
         change_tone("initial_hold_tone", WavePlayer(app.voice_audio_mixer, Resources.get('hold_tone.wav'), volume=10))
         app.voice_audio_bridge.add(self.initial_hold_tone)
-        change_tone("secondary_hold_tone", WavePlayer(app.voice_audio_mixer, Resources.get('hold_tone.wav'), loop_count=0, pause_time=45, volume=10, initial_play=False))
+        change_tone("secondary_hold_tone", WavePlayer(app.voice_audio_mixer, Resources.get('hold_tone.wav'), loop_count=0, pause_time=45, volume=10, initial_delay=45))
         app.voice_audio_bridge.add(self.secondary_hold_tone)
 
         if account:
