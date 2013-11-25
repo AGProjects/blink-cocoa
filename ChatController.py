@@ -514,6 +514,10 @@ class ChatController(MediaStream):
             text = unicode(original)
             textView.setString_("")
             if text:
+                if text.endswith('\r\n'):
+                    text = text[:-2]
+                elif text.endswith('\n'):
+                    text = text[:-1]
                 recipient = '%s <sip:%s>' % (self.sessionController.contactDisplayName, format_identity_to_string(self.sessionController.remotePartyObject))
                 try:
                     identity = CPIMIdentity.parse(recipient)
