@@ -109,7 +109,7 @@ from HistoryManager import SessionHistory
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, BLINK_URL_TOKEN
+from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread
 
 
 ICON_SIZE = 128
@@ -1199,9 +1199,10 @@ class BlinkPresenceContact(BlinkContact):
             contact.updating_remote_icon = False
             return
 
-        if BLINK_URL_TOKEN in icon_url:
+        url, token, icon_hash = icon_url.partition('blink-icon')
+        if token:
             # Fast path
-            if contact.icon_info.url == icon_url:
+            if contact.icon_info and contact.icon_info.etag == icon_hash:
                 contact.updating_remote_icon = False
                 return
         # Need to download

@@ -9,12 +9,13 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
 
 from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
-from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension
+from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption, SIPProxyAddress
 
 from configuration import KeychainPasswordSetting
-from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername
-from util import osx_version, memory_stick_mode
+from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername, UserIcon
+from util import memory_stick_mode
+
 
 class AuthSettingsExtension(AuthSettings):
     username = Setting(type=str, default=None, nillable=True)
@@ -129,6 +130,7 @@ class TLSSettingsExtension(TLSSettings):
 
 class XCAPSettingsExtension(XCAPSettings):
     enabled = Setting(type=bool, default=True)
+    icon = RuntimeSetting(type=UserIcon, nillable=True, default=None)
 
 
 class LDAPSettingsExtension(SettingsGroup):

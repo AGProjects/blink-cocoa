@@ -320,40 +320,30 @@ class LDAPusername(str):
 
 
 class UserIcon(object):
-    def __init__(self, path, hash=None):
+    def __init__(self, path, etag=None):
         self.path = path
-        if hash is None:
-            try:
-                data = open(self.path, 'r').read()
-            except OSError:
-                raise ValueError(NSLocalizedString("invalid path specified: %r" % path, "Preference option error"))
-            else:
-                hash = hashlib.sha512(data).hexdigest()
-        self.hash = hash
+        self.etag = etag
 
     def __getstate__(self):
-        return u'%s,%s' % (self.__dict__['path'], self.hash)
+        return u'%s,%s' % (self.path, self.etag)
 
     def __setstate__(self, state):
         try:
-            path, hash = state.rsplit(u',', 1)
+            path, etag = state.rsplit(u',', 1)
         except ValueError:
             self.__init__(state)
         else:
-            self.__init__(path, hash)
+            self.__init__(path, etag)
+
+    def __eq__(self, other):
+        if isinstance(other, UserIcon):
+            return self.path==other.path and self.etag==other.etag
+        return NotImplemented
+
+    def __ne__(self, other):
+        equal = self.__eq__(other)
+        return NotImplemented if equal is NotImplemented else not equal
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.path, self.hash)
+        return '%s(%r, %r)' % (self.__class__.__name__, self.path, self.etag)
 
-    def _get_path(self):
-        return ApplicationData.get(self.__dict__['path'])
-    def _set_path(self, path):
-        path = os.path.normpath(path)
-        if path.startswith(ApplicationData.directory+os.path.sep):
-            path = path[len(ApplicationData.directory+os.path.sep):]
-        self.__dict__['path'] = path
-    path = property(_get_path, _set_path)
-    del _get_path, _set_path
-
-    def __unicode__(self):
-        return unicode(self.path)

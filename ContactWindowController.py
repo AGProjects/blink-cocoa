@@ -134,6 +134,7 @@ from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
 from VideoMirrorWindowController import VideoMirrorWindowController
+from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import (allocate_autorelease_pool,
                   format_date,
@@ -1214,12 +1215,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
-        settings = SIPSimpleSettings()
-        if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
-            path = settings.presence_state.icon.path
-        else:
-            path = DefaultUserAvatar().path
-        self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
+        self.loadUserIcon()
         self.loadPresenceStateAtStart()
         self.setSpeechSynthesis()
 
@@ -4946,6 +4942,12 @@ class ContactWindowController(NSWindowController):
         path, image = picker.runModal()
         if image and path:
             self.photoImage.setImage_(image)
+            if path.endswith("default_user_icon.tiff"):
+                # Skip all icon processing, just set the setting to None
+                settings = SIPSimpleSettings()
+                settings.presence_state.icon = None
+                settings.save()
+                return
             # Scale it down if needed
             size = image.size()
             image_rep = image.representations()[0]
@@ -4963,7 +4965,9 @@ class ContactWindowController(NSWindowController):
                 tiff_data = image.TIFFRepresentation()
             bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
             png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-            self.saveUserIcon(png_data.bytes().tobytes(), old_path=path)
+            data = png_data.bytes().tobytes()
+            data_hash = hashlib.sha512(data).hexdigest()
+            self.saveUserIcon(data, data_hash)
 
     def loadUserIcon(self):
         # Call this in the GUI thread
@@ -4973,28 +4977,20 @@ class ContactWindowController(NSWindowController):
         else:
             path = DefaultUserAvatar().path
         self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     @run_in_thread('file-io')
-    def saveUserIcon(self, data, old_path=None):
+    def saveUserIcon(self, data, data_hash):
         settings = SIPSimpleSettings()
-        data_h = hashlib.sha512(data).hexdigest()
-        if settings.presence_state.icon and settings.presence_state.icon.hash == data_h:
+        if settings.presence_state.icon and settings.presence_state.icon.etag == data_hash:
             return
-
-        if old_path is not None and old_path.endswith("default_user_icon.tiff"):
-            settings.presence_state.icon = None
-        else:
-            filename = '%s.png' % unique_id(prefix='user_icon')
-            path = ApplicationData.get(os.path.join('photos', filename))
-            with open(path, 'w') as f:
-                f.write(data)
-            settings.presence_state.icon = path
-
+        if settings.presence_state.icon:
+           unlink(settings.presence_state.icon.path)
+        filename = '%s.png' % unique_id(prefix='user_icon')
+        path = ApplicationData.get(os.path.join('photos', filename))
+        with open(path, 'w') as f:
+            f.write(data)
+        settings.presence_state.icon = UserIcon(path, data_hash)
         settings.save()
-
-        if old_path is not None and not old_path.endswith("default_user_icon.tiff"):
-            unlink(old_path)
 
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()
