@@ -50,7 +50,7 @@ from zope.interface import implements
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 
-from util import format_identity_to_string, format_size, run_in_gui_thread
+from util import format_identity_to_string, format_size, run_in_gui_thread, is_anonymous
 
 
 ACCEPT = 0
@@ -287,7 +287,7 @@ class AlertPanel(NSObject, object):
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
                         self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
-                elif settings.answering_machine.enabled:
+                elif settings.answering_machine.enabled or (is_anonymous(session.remote_identity.uri) and session.account.pstn.anonymous_to_answering_machine):
                     self.enableAnsweringMachine(view, session)
 
         if 'chat' in stream_types:

@@ -1763,6 +1763,7 @@ SettingDescription = {
                       'presence.disable_location': NSLocalizedString("Hide My Location", "Setting decription label"),
                       'pstn.idd_prefix': NSLocalizedString("Replace Starting +", "Setting decription label"),
                       'pstn.prefix': NSLocalizedString("External Line Prefix", "Setting decription label"),
+                      'pstn.anonymous_to_answering_machine': NSLocalizedString("Anonymous To Answering Machine", "Setting decription label"),
                       'rtp.inband_dtmf': NSLocalizedString("Send Inband DTMF", "Setting decription label"),
                       'rtp.audio_codec_list': NSLocalizedString("Audio Codecs", "Setting decription label"),
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Setting decription label"),

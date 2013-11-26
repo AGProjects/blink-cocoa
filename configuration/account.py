@@ -71,6 +71,7 @@ class PSTNSettings(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
     dial_plan = Setting(type=str, default='', nillable=True)
+    anonymous_to_answering_machine = Setting(type=bool, default=False)
 
 
 class RTPSettingsExtension(RTPSettings):
