@@ -365,7 +365,7 @@ class ChatViewController(NSObject):
     def textDidChange_(self, notification):
         self.lastTypedTime = datetime.datetime.now()
         if self.inputText.textStorage().length() == 0:
-            self.resetTyping()
+            self.becameIdle_(None)
         else:
             if not self.lastTypeNotifyTime or time.time() - self.lastTypeNotifyTime > TYPING_NOTIFY_INTERVAL:
                 self.lastTypeNotifyTime = time.time()
@@ -377,16 +377,17 @@ class ChatViewController(NSObject):
                 self.typingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(TYPING_IDLE_TIMEOUT, self, "becameIdle:", None, False)
 
     def resetTyping(self):
-        self.becameIdle_(None)
-
-    def becameIdle_(self, timer):
         if self.typingTimer:
             self.typingTimer.invalidate()
+        self.typingTimer = None
+        self.lastTypeNotifyTime = None
+
+    def becameIdle_(self, timer):
         # if we got here, it means there was no typing activity in the last TYPING_IDLE_TIMEOUT seconds
         # so change state back to idle
-        self.typingTimer = None
-        self.delegate.chatView_becameIdle_(self, self.lastTypedTime)
-        self.lastTypeNotifyTime = None
+        lastTypedTime = self.lastTypedTime
+        self.resetTyping()
+        self.delegate.chatView_becameIdle_(self, lastTypedTime)
 
     def markMessage(self, msgid, state, private=False): # delegate
         if state == MSG_STATE_DELIVERED:

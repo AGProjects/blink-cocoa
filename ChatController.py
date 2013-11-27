@@ -1575,6 +1575,12 @@ class ChatController(MediaStream):
 
             NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
+            # disable composing indicator
+            if self.remoteTypingTimer:
+                self.remoteTypingTimer.invalidate()
+                self.remoteTypingTimer = None
+            self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
+
             # save to history
             if 'Welcome to SylkServer!' not in text:
                 message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text', encryption=encryption)
