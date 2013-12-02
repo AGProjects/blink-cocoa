@@ -160,7 +160,7 @@ class iCloudManager(NSObject):
                 elif account.id in self.storage_keys:
                     BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
                     self.cloud_storage.removeObjectForKey_(account.id)
-            else:
+            elif account.gui.sync_with_icloud:
                 must_update = any(key for key in data.modified.keys() if key not in self.skip_settings) and self.hasDifference(account, local_json, remote_json)
                 if must_update:
                     BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
