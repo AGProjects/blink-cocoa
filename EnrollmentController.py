@@ -256,6 +256,7 @@ class EnrollmentController(NSObject):
         cancel.setTitle_(NSLocalizedString("Add", "Button title"))
 
     def createNewAccount(self):
+        sip_address = None
         display_name = unicode(self.newDisplayNameText.stringValue())
         username = unicode(self.newUsernameText.stringValue())
         password = unicode(self.newPasswordText.stringValue())
@@ -284,96 +285,98 @@ class EnrollmentController(NSObject):
 
         data = urllib.urlencode(values)
         req = urllib2.Request(url, data)
-        raw_response = urllib2.urlopen(req)
-        json_data = raw_response.read()
-        sip_address = None
-
         try:
-            response = cjson.decode(json_data.replace('\\/', '/'))
-        except (TypeError, cjson.DecodeError):
-            error_message = NSLocalizedString("Cannot decode json data from enrollment server", "Enrollment panel label")
-
-        if response:
-            if not response["success"]:
-                BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)
-                error_message = response["error_message"]
-            else:
-                BlinkLogger().log_info(u"Enrollment Server successfully created SIP account %(sip_address)s" % response)
-                data = defaultdict(lambda: None, response)
-                tls_path = None if data['passport'] is None else SIPManager().save_certificates(data)
-
-                try:
-                    sip_address = data['sip_address']
-                    try:
-                        outbound_proxy = data['outbound_proxy']
-                    except KeyError:
-                        outbound_proxy = None
-
-                    try:
-                        xcap_root = data['xcap_root']
-                    except KeyError:
-                        xcap_root = None
-
-                    try:
-                        msrp_relay = data['msrp_relay']
-                    except KeyError:
-                        msrp_relay = None
-
-                    try:
-                        settings_url = data['settings_url']
-                    except KeyError:
-                        settings_url = None
-
-                    try:
-                        web_alert_url = data['web_alert_url']
-                    except KeyError:
-                        web_alert_url = None
-
-                    try:
-                        web_password = data['web_password']
-                    except KeyError:
-                        web_password = None
-
-                    try:
-                        conference_server = data['conference_server']
-                    except KeyError:
-                        conference_server = None
-
-                    try:
-                        ldap_hostname = data['ldap_hostname']
-                    except KeyError:
-                        ldap_hostname = None
-
-                    try:
-                        ldap_transport = data['ldap_transport']
-                    except KeyError:
-                        ldap_transport = None
-
-                    try:
-                        ldap_port = data['ldap_port']
-                    except KeyError:
-                        ldap_port = None
-
-                    try:
-                        ldap_username = data['ldap_username']
-                    except KeyError:
-                        ldap_username = None
-
-                    try:
-                        ldap_password = data['ldap_password']
-                    except KeyError:
-                        ldap_password = None
-
-                    try:
-                        ldap_dn = data['ldap_dn']
-                    except KeyError:
-                        ldap_dn = None
-
-                except KeyError:
-                    sip_address = None
+            raw_response = urllib2.urlopen(req)
+        except urllib2.URLError, e:
+            error_message = NSLocalizedString("Cannot connect to enrollment server: %s" % e, "Enrollment panel label")
+        except urllib2.HTTPError, e:
+            error_message = NSLocalizedString("Error from enrollment server: %s" % e, "Enrollment panel label")
         else:
-            sip_address = None
-            error_message = NSLocalizedString("No response received from Enrollment Server", "Enrollment panel label")
+            response = None
+            json_data = raw_response.read()
+
+            try:
+                response = cjson.decode(json_data.replace('\\/', '/'))
+            except (TypeError, cjson.DecodeError):
+                error_message = NSLocalizedString("Cannot decode json data from enrollment server", "Enrollment panel label")
+            else:
+                if not response["success"]:
+                    BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)
+                    error_message = response["error_message"]
+                else:
+                    BlinkLogger().log_info(u"Enrollment Server successfully created SIP account %(sip_address)s" % response)
+                    data = defaultdict(lambda: None, response)
+                    tls_path = None if data['passport'] is None else SIPManager().save_certificates(data)
+
+                    try:
+                        sip_address = data['sip_address']
+                        try:
+                            outbound_proxy = data['outbound_proxy']
+                        except KeyError:
+                            outbound_proxy = None
+
+                        try:
+                            xcap_root = data['xcap_root']
+                        except KeyError:
+                            xcap_root = None
+
+                        try:
+                            msrp_relay = data['msrp_relay']
+                        except KeyError:
+                            msrp_relay = None
+
+                        try:
+                            settings_url = data['settings_url']
+                        except KeyError:
+                            settings_url = None
+
+                        try:
+                            web_alert_url = data['web_alert_url']
+                        except KeyError:
+                            web_alert_url = None
+
+                        try:
+                            web_password = data['web_password']
+                        except KeyError:
+                            web_password = None
+
+                        try:
+                            conference_server = data['conference_server']
+                        except KeyError:
+                            conference_server = None
+
+                        try:
+                            ldap_hostname = data['ldap_hostname']
+                        except KeyError:
+                            ldap_hostname = None
+
+                        try:
+                            ldap_transport = data['ldap_transport']
+                        except KeyError:
+                            ldap_transport = None
+
+                        try:
+                            ldap_port = data['ldap_port']
+                        except KeyError:
+                            ldap_port = None
+
+                        try:
+                            ldap_username = data['ldap_username']
+                        except KeyError:
+                            ldap_username = None
+
+                        try:
+                            ldap_password = data['ldap_password']
+                        except KeyError:
+                            ldap_password = None
+
+                        try:
+                            ldap_dn = data['ldap_dn']
+                        except KeyError:
+                            ldap_dn = None
+
+                    except KeyError:
+                        sip_address = None
 
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
@@ -381,6 +384,7 @@ class EnrollmentController(NSObject):
         self.domainButton.setHidden_(False)
 
         if sip_address is None:
+            BlinkLogger().log_info(error_message)
             NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"),
                             NSLocalizedString("Error creating SIP account: %s" % error_message, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
             return False
@@ -429,7 +433,7 @@ class EnrollmentController(NSObject):
             if ldap_port:
                 account.ldap.port = ldap_port
 
-        sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
+        sync_with_icloud = bool(self.syncWithiCloudCheckbox.state())
         account.gui.sync_with_icloud = sync_with_icloud
 
         account.save()
