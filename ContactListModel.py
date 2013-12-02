@@ -1561,7 +1561,10 @@ class SystemAddressBookBlinkContact(BlinkContact):
             detail = u''
 
         if not self.name:
-            self.name = self.uris[0].uri
+            try:
+                self.name = self.uris[0].uri
+            except IndexError:
+                self.name = u''
 
         self.detail = detail
         image_data = ab_contact.imageData()
