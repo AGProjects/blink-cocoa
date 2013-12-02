@@ -2026,11 +2026,12 @@ class OutgoingMessageHandler(NSObject):
                     newmsg = newmsg.decode('utf-8')
                     self.delegate.delegate.setEncryptionState(ctx)
                     fingerprint = ctx.getCurrentKey()
-                    otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteSIPAddress, str(fingerprint))
-                    if otr_fingerprint_verified:
-                        message.encryption = 'verified'
-                    else:
-                        message.encryption = 'unverified'
+                    if fingerprint:
+                        otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteSIPAddress, str(fingerprint))
+                        if otr_fingerprint_verified:
+                            message.encryption = 'verified'
+                        else:
+                            message.encryption = 'unverified'
 
                 id = self.stream.send_message(newmsg, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
