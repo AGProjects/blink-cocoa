@@ -465,7 +465,9 @@ class ChatController(MediaStream):
         elif tag == 4: # active
             if self.status == STREAM_CONNECTED and self.is_encrypted:
                 ctx.disconnect()
+                self.init_otr(disable_encryption=True)
             elif not self.sessionController.remote_focus:
+                self.init_otr()
                 self.outgoing_message_handler.propose_otr()
         elif tag == 5: # verified
             fingerprint = ctx.getCurrentKey()
@@ -960,11 +962,11 @@ class ChatController(MediaStream):
 
     def updateEncryptionWidgets(self):
         if self.status == STREAM_CONNECTED:
-            ctx = self.otr_account.getContext(self.sessionController.call_id)
-            fingerprint = ctx.getCurrentKey()
-            otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
             if self.is_encrypted:
-                if otr_fingerprint_verified:
+                ctx = self.otr_account.getContext(self.sessionController.call_id)
+                fingerprint = ctx.getCurrentKey()
+                otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                if otr_fingerprint_verified or self.sessionController.account is BonjourAccount():
                     self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
                 else:
                     if self.otr_account.getTrusts(self.sessionController.remoteSIPAddress):
@@ -977,14 +979,7 @@ class ChatController(MediaStream):
                     else:
                         self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-orange"))
             else:
-                settings = SIPSimpleSettings()
-                if not settings.chat.enable_encryption:
-                    self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
-                else:
-                    if self.sessionController.remote_focus:
-                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
-                    else:
-                        self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green" if self.is_encrypted else "unlocked-red"))
+                self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
         else:
             self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
 
@@ -1498,11 +1493,15 @@ class ChatController(MediaStream):
                     self.setEncryptionState(ctx)
                     fingerprint = ctx.getCurrentKey()
                     if fingerprint:
-                        otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
-                        if otr_fingerprint_verified:
-                            encryption = 'verified'
+                        if self.sessionController.account is BonjourAccount():
+                            if self.is_encrypted:
+                                encryption = 'verified'
                         else:
-                            encryption = 'unverified'
+                            otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                            if otr_fingerprint_verified:
+                                encryption = 'verified'
+                            else:
+                                encryption = 'unverified'
 
                     self.chatOtrSmpWindow.handle_tlv(tlvs)
 
@@ -2010,14 +2009,12 @@ class OutgoingMessageHandler(NSObject):
             except ChatStreamError, e:
                 self.delegate.sessionController.log_error(u"Error sending private chat message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
-                message.status='failed'
+                message.status = 'failed'
                 self.add_to_history(message)
                 return False
         else:
             try:
-                if self.delegate.delegate.sessionController.account is BonjourAccount():
-                    newmsg = message.text
-                elif self.delegate.delegate.sessionController.remote_focus:
+                if self.delegate.delegate.sessionController.remote_focus:
                     newmsg = message.text
                 else:
                     otr_context_id = self.delegate.sessionController.call_id
@@ -2027,17 +2024,21 @@ class OutgoingMessageHandler(NSObject):
                     self.delegate.delegate.setEncryptionState(ctx)
                     fingerprint = ctx.getCurrentKey()
                     if fingerprint:
-                        otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteSIPAddress, str(fingerprint))
-                        if otr_fingerprint_verified:
-                            message.encryption = 'verified'
+                        if self.delegate.sessionController.account is BonjourAccount():
+                            if self.delegate.delegate.is_encrypted:
+                                message.encryption = 'verified'
                         else:
-                            message.encryption = 'unverified'
+                            otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteSIPAddress, str(fingerprint))
+                            if otr_fingerprint_verified:
+                                message.encryption = 'verified'
+                            else:
+                                message.encryption = 'unverified'
 
                 id = self.stream.send_message(newmsg, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
                 if 'has requested end-to-end encryption but this software does not support this feature' in newmsg:
                     self.delegate.sessionController.log_error(u"Error sending chat message %s: OTR not started remotely" % msgid)
-                    message.status='failed'
+                    message.status = 'failed'
                     self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Remote party has not started OTR protocol", ISOTimestamp.now(), True)
             except potr.context.NotEncryptedError, e:
                 self.delegate.sessionController.log_error('Chat message was not send. Either end your private OTR conversation, or restart it')
@@ -2045,7 +2046,7 @@ class OutgoingMessageHandler(NSObject):
             except ChatStreamError, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.markMessage(msgid, MSG_STATE_FAILED, message.private)
-                message.status='failed'
+                message.status = 'failed'
                 self.add_to_history(message)
                 return False
 

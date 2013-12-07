@@ -1064,9 +1064,13 @@ class ChatWindowController(NSWindowController):
                 chat_stream = selectedSession.streamHandlerOfType("chat")
                 if chat_stream:
                     display_name = selectedSession.getTitleShort()
-                    item = menu.itemWithTag_(1)
-                    my_fingerprint = chat_stream.otr_account.getPrivkey()
-                    item.setTitle_('My fingerprint is %s' % str(my_fingerprint))
+                    if selectedSession.session.remote_focus:
+                        item.setHidden_(True)
+                    else:
+                        item.setHidden_(False)
+                        item = menu.itemWithTag_(1)
+                        my_fingerprint = chat_stream.otr_account.getPrivkey()
+                        item.setTitle_('My fingerprint is %s' % str(my_fingerprint))
 
                     item = menu.itemWithTag_(3)
                     item.setTitle_('Always require OTR encryption with %s' % display_name)
@@ -1083,14 +1087,18 @@ class ChatWindowController(NSWindowController):
                     item = menu.itemWithTag_(4)
                     if settings.chat.enable_encryption:
                         if chat_stream.status == STREAM_CONNECTED:
+                            item.setHidden_(False)
                             if selectedSession.session.remote_focus:
                                 item.setEnabled_(False)
                                 item.setTitle_('OTR encryption is not possible within a multi-party conference')
                             else:
-                                if chat_stream.require_encryption and chat_stream.is_encrypted:
-                                    item.setEnabled_(False)
-                                else:
+                                if selectedSession.account is BonjourAccount():
                                     item.setEnabled_(True)
+                                else:
+                                    if chat_stream.require_encryption and chat_stream.is_encrypted:
+                                        item.setEnabled_(False)
+                                    else:
+                                        item.setEnabled_(True)
                                 item.setTitle_('Activate OTR encryption for this session' if not chat_stream.is_encrypted else 'Deactivate OTR encryption for this session')
                         else:
                             item.setEnabled_(False)
@@ -1115,14 +1123,23 @@ class ChatWindowController(NSWindowController):
                             item.setEnabled_(False)
                             item.setTitle_("%s's fingerprint is %s" % (display_name, fingerprint) if fingerprint is not None else 'No Fingerprint Discovered')
 
-                            item = menu.itemWithTag_(5)
-                            item.setEnabled_(True if fingerprint else False)
-                            item.setHidden_(False)
-                            item.setTitle_("I have verified %s's fingerprint" % display_name)
-                            item.setState_(NSOnState if fingerprint_verified else NSOffState)
+                            if selectedSession.account is BonjourAccount():
+                                item = menu.itemWithTag_(5)
+                                item.setHidden_(True)
+                                item = menu.itemWithTag_(9)
+                                item.setHidden_(True)
+                            else:
+                                item = menu.itemWithTag_(5)
+                                item.setEnabled_(True if fingerprint else False)
+                                item.setHidden_(False)
+                                item.setTitle_("I have verified %s's fingerprint" % display_name)
+                                item.setState_(NSOnState if fingerprint_verified else NSOffState)
 
+                                item = menu.itemWithTag_(9)
+                                item.setHidden_(False)
+                        else:
                             item = menu.itemWithTag_(9)
-                            item.setHidden_(False)
+                            item.setHidden_(True)
 
         elif menu == self.participantMenu:
             session = self.selectedSessionController()
