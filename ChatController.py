@@ -1450,15 +1450,15 @@ class ChatController(MediaStream):
             if message.body.lower() == "disabled":
                 self.remote_party_history = False
                 if not self.disable_chat_history:
-                    log = NSLocalizedString("Remote logging disabled", "Chat system message")
-                    nc_title = NSLocalizedString("Chat History Logging", "System notification title")
+                    log = NSLocalizedString("Remote chat history disabled", "Chat system message")
+                    nc_title = NSLocalizedString("Chat History", "System notification title")
                     nc_subtitle = self.sessionController.getTitleShort()
                     NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
             else:
                 self.remote_party_history = True
                 if not self.disable_chat_history:
-                    log = NSLocalizedString("Remote logging enabled", "Chat system message")
-                    nc_title = NSLocalizedString("Chat History Logging", "System notification title")
+                    log = NSLocalizedString("Remote chat history enabled", "Chat system message")
+                    nc_title = NSLocalizedString("Chat History", "System notification title")
                     nc_subtitle = self.sessionController.getTitleShort()
                     NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
 
