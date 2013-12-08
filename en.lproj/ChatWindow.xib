@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
 		<int key="IBDocument.SystemTarget">1080</int>
-		<string key="IBDocument.SystemVersion">12F37</string>
+		<string key="IBDocument.SystemVersion">12F45</string>
 		<string key="IBDocument.InterfaceBuilderVersion">3084</string>
-		<string key="IBDocument.AppKitVersion">1187.39</string>
+		<string key="IBDocument.AppKitVersion">1187.40</string>
 		<string key="IBDocument.HIToolboxVersion">626.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -72,7 +72,7 @@
 					<bool key="NSToolbarShowsBaselineSeparator">YES</bool>
 					<bool key="NSToolbarAllowsUserCustomization">YES</bool>
 					<bool key="NSToolbarAutosavesConfiguration">YES</bool>
-					<int key="NSToolbarDisplayMode">1</int>
+					<int key="NSToolbarDisplayMode">2</int>
 					<int key="NSToolbarSizeMode">2</int>
 					<dictionary class="NSMutableDictionary" key="NSToolbarIBIdentifiedItems">
 						<object class="NSToolbarItem" key="001857D0-D904-4370-B636-2FB046D35BD1" id="283573762">
@@ -131,7 +131,6 @@
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{5, 14}, {55, 35}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="578479465">
@@ -146,10 +145,6 @@
 									<reference key="NSControlView" ref="310919499"/>
 									<int key="NSButtonFlags">-2046803968</int>
 									<int key="NSButtonFlags2">160</int>
-									<object class="NSCustomResource" key="NSNormalImage" id="401812373">
-										<string key="NSClassName">NSImage</string>
-										<string key="NSResourceName">unlocked-darkgray</string>
-									</object>
 									<string key="NSAlternateContents"/>
 									<string key="NSKeyEquivalent"/>
 									<int key="NSPeriodicDelay">400</int>
@@ -162,7 +157,10 @@
 										<int key="NSKeyEquivModMask">1048576</int>
 										<int key="NSMnemonicLoc">2147483647</int>
 										<int key="NSState">1</int>
-										<reference key="NSImage" ref="401812373"/>
+										<object class="NSCustomResource" key="NSImage" id="1012297261">
+											<string key="NSClassName">NSImage</string>
+											<string key="NSResourceName">unlocked-darkgray</string>
+										</object>
 										<object class="NSCustomResource" key="NSOnImage" id="998595037">
 											<string key="NSClassName">NSImage</string>
 											<string key="NSResourceName">NSMenuCheckmark</string>
@@ -286,6 +284,7 @@
 										<bool key="NSNoAutoenable">YES</bool>
 										<reference key="NSMenuFont" ref="547007391"/>
 									</object>
+									<int key="NSSelectedIndex">7</int>
 									<bool key="NSPullDown">YES</bool>
 									<int key="NSPreferredEdge">1</int>
 									<bool key="NSUsesItemFromMenu">YES</bool>
@@ -294,7 +293,7 @@
 								</object>
 								<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 							</object>
-							<reference key="NSToolbarItemImage" ref="401812373"/>
+							<reference key="NSToolbarItemImage" ref="1012297261"/>
 							<nil key="NSToolbarItemTarget"/>
 							<nil key="NSToolbarItemAction"/>
 							<string key="NSToolbarItemMinSize">{55, 25}</string>
@@ -405,7 +404,6 @@
 								<int key="NSvFlags">292</int>
 								<string key="NSFrame">{{0, 14}, {54, 47}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<int key="NSTag">204</int>
 								<bool key="NSEnabled">YES</bool>
@@ -417,10 +415,6 @@
 									<reference key="NSControlView" ref="878248731"/>
 									<int key="NSButtonFlags">-2046803968</int>
 									<int key="NSButtonFlags2">160</int>
-									<object class="NSCustomResource" key="NSNormalImage" id="829662349">
-										<string key="NSClassName">NSImage</string>
-										<string key="NSResourceName">display</string>
-									</object>
 									<string key="NSAlternateContents"/>
 									<string key="NSKeyEquivalent"/>
 									<int key="NSPeriodicDelay">400</int>
@@ -433,7 +427,10 @@
 										<int key="NSKeyEquivModMask">1048576</int>
 										<int key="NSMnemonicLoc">2147483647</int>
 										<int key="NSState">1</int>
-										<reference key="NSImage" ref="829662349"/>
+										<object class="NSCustomResource" key="NSImage" id="1009629227">
+											<string key="NSClassName">NSImage</string>
+											<string key="NSResourceName">display</string>
+										</object>
 										<reference key="NSOnImage" ref="998595037"/>
 										<reference key="NSMixedImage" ref="489388770"/>
 										<string key="NSAction">_popUpItemAction:</string>
@@ -470,6 +467,7 @@
 										<bool key="NSNoAutoenable">YES</bool>
 										<reference key="NSMenuFont" ref="547007391"/>
 									</object>
+									<int key="NSSelectedIndex">2</int>
 									<bool key="NSPullDown">YES</bool>
 									<int key="NSPreferredEdge">1</int>
 									<bool key="NSUsesItemFromMenu">YES</bool>
@@ -478,7 +476,7 @@
 								</object>
 								<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 							</object>
-							<reference key="NSToolbarItemImage" ref="829662349"/>
+							<reference key="NSToolbarItemImage" ref="1009629227"/>
 							<nil key="NSToolbarItemTarget"/>
 							<nil key="NSToolbarItemAction"/>
 							<string key="NSToolbarItemMinSize">{32, 32}</string>
@@ -545,7 +543,6 @@
 								<int key="NSvFlags">268</int>
 								<string key="NSFrame">{{0, 14}, {54, 42}}</string>
 								<reference key="NSSuperview"/>
-								<reference key="NSWindow"/>
 								<string key="NSReuseIdentifierKey">_NS:9</string>
 								<bool key="NSEnabled">YES</bool>
 								<object class="NSPopUpButtonCell" key="NSCell" id="405219591">
@@ -607,6 +604,18 @@
 												<int key="NSTag">302</int>
 												<reference key="NSTarget" ref="405219591"/>
 											</object>
+											<object class="NSMenuItem" id="7212019">
+												<reference key="NSMenu" ref="381520402"/>
+												<string key="NSTitle">Send Snapshot from Camera...</string>
+												<string key="NSKeyEquiv"/>
+												<int key="NSKeyEquivModMask">1048576</int>
+												<int key="NSMnemonicLoc">2147483647</int>
+												<reference key="NSOnImage" ref="998595037"/>
+												<reference key="NSMixedImage" ref="489388770"/>
+												<string key="NSAction">_popUpItemAction:</string>
+												<int key="NSTag">303</int>
+												<reference key="NSTarget" ref="405219591"/>
+											</object>
 											<object class="NSMenuItem" id="984447958">
 												<reference key="NSMenu" ref="381520402"/>
 												<bool key="NSIsDisabled">YES</bool>
@@ -634,6 +643,7 @@
 										<bool key="NSNoAutoenable">YES</bool>
 										<reference key="NSMenuFont" ref="547007391"/>
 									</object>
+									<int key="NSSelectedIndex">-1</int>
 									<bool key="NSPullDown">YES</bool>
 									<int key="NSPreferredEdge">1</int>
 									<bool key="NSUsesItemFromMenu">YES</bool>
@@ -868,7 +878,7 @@
 					<reference key="NSNextKeyView" ref="31287118"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
-				<string key="NSMinSize">{650, 599}</string>
+				<string key="NSMinSize">{650, 584}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<string key="NSFrameAutosaveName">chat_window</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
@@ -1584,7 +1594,7 @@
 						<string key="NSTitle"/>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSImage" ref="829662349"/>
+						<reference key="NSImage" ref="1009629227"/>
 						<reference key="NSOnImage" ref="998595037"/>
 						<reference key="NSMixedImage" ref="489388770"/>
 					</object>
@@ -1637,7 +1647,7 @@
 						<string key="NSTitle"/>
 						<string key="NSKeyEquiv"/>
 						<int key="NSMnemonicLoc">2147483647</int>
-						<reference key="NSImage" ref="829662349"/>
+						<reference key="NSImage" ref="1009629227"/>
 						<reference key="NSOnImage" ref="998595037"/>
 						<reference key="NSMixedImage" ref="489388770"/>
 					</object>
@@ -2400,6 +2410,14 @@
 						<reference key="destination" ref="494184035"/>
 					</object>
 					<int key="connectionID">675</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBActionConnection" key="connection">
+						<string key="label">userClickedSnapshotMenu:</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="7212019"/>
+					</object>
+					<int key="connectionID">678</int>
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBOutletConnection" key="connection">
@@ -3183,6 +3201,7 @@
 							<reference ref="347702582"/>
 							<reference ref="984447958"/>
 							<reference ref="254296728"/>
+							<reference ref="7212019"/>
 						</array>
 						<reference key="parent" ref="405219591"/>
 					</object>
@@ -3367,6 +3386,11 @@
 						<int key="objectID">674</int>
 						<reference key="object" ref="494184035"/>
 						<reference key="parent" ref="1053684805"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">676</int>
+						<reference key="object" ref="7212019"/>
+						<reference key="parent" ref="381520402"/>
 					</object>
 				</array>
 			</object>
@@ -3574,6 +3598,7 @@
 				<string key="670.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="673.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="674.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="676.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="72.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="72.designableToolbarIdentifier">chat-toolbar</string>
 				<string key="78.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -3587,216 +3612,10 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">675</int>
+			<int key="maxID">678</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
-				<object class="IBPartialClassDescription">
-					<string key="className">ChatWindowController</string>
-					<string key="superclassName">NSWindowController</string>
-					<dictionary class="NSMutableDictionary" key="actions">
-						<string key="doubleClickReceived:">id</string>
-						<string key="muteClicked:">id</string>
-						<string key="printDocument:">id</string>
-						<string key="selectConferenceScreenSharingWindow:">id</string>
-						<string key="stopConferenceScreenSharing:">id</string>
-						<string key="useClickedRemoveFromConference:">id</string>
-						<string key="userClickedActionsButton:">id</string>
-						<string key="userClickedConferenceScreenSharingQualityMenu:">id</string>
-						<string key="userClickedEncryptionMenu:">id</string>
-						<string key="userClickedInviteToConference:">id</string>
-						<string key="userClickedParticipantMenu:">id</string>
-						<string key="userClickedScreenSharingMenu:">id</string>
-						<string key="userClickedScreenshotMenu:">id</string>
-						<string key="userClickedSharedFileMenu:">id</string>
-						<string key="userClickedToolbarButton:">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="actionInfosByName">
-						<object class="IBActionInfo" key="doubleClickReceived:">
-							<string key="name">doubleClickReceived:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="muteClicked:">
-							<string key="name">muteClicked:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="printDocument:">
-							<string key="name">printDocument:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="selectConferenceScreenSharingWindow:">
-							<string key="name">selectConferenceScreenSharingWindow:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="stopConferenceScreenSharing:">
-							<string key="name">stopConferenceScreenSharing:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="useClickedRemoveFromConference:">
-							<string key="name">useClickedRemoveFromConference:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedActionsButton:">
-							<string key="name">userClickedActionsButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedConferenceScreenSharingQualityMenu:">
-							<string key="name">userClickedConferenceScreenSharingQualityMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedEncryptionMenu:">
-							<string key="name">userClickedEncryptionMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedInviteToConference:">
-							<string key="name">userClickedInviteToConference:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedParticipantMenu:">
-							<string key="name">userClickedParticipantMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedScreenSharingMenu:">
-							<string key="name">userClickedScreenSharingMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedScreenshotMenu:">
-							<string key="name">userClickedScreenshotMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedSharedFileMenu:">
-							<string key="name">userClickedSharedFileMenu:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBActionInfo" key="userClickedToolbarButton:">
-							<string key="name">userClickedToolbarButton:</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="outlets">
-						<string key="actionsButton">id</string>
-						<string key="audioStatus">id</string>
-						<string key="conferenceFilesTableView">id</string>
-						<string key="conferenceFilesView">id</string>
-						<string key="conferenceScreenSharingMenu">id</string>
-						<string key="drawer">id</string>
-						<string key="drawerScrollView">id</string>
-						<string key="drawerSplitView">id</string>
-						<string key="editorButton">id</string>
-						<string key="encryptionIconMenuItem">id</string>
-						<string key="encryptionMenu">id</string>
-						<string key="micLevelIndicator">id</string>
-						<string key="muteButton">id</string>
-						<string key="participantMenu">id</string>
-						<string key="participantsTableView">id</string>
-						<string key="participantsView">id</string>
-						<string key="recordButton">id</string>
-						<string key="screenShareMenu">id</string>
-						<string key="screenSharingPopUpButton">id</string>
-						<string key="sharedFileMenu">id</string>
-						<string key="tabSwitcher">id</string>
-						<string key="tabView">id</string>
-						<string key="toolbar">id</string>
-					</dictionary>
-					<dictionary class="NSMutableDictionary" key="toOneOutletInfosByName">
-						<object class="IBToOneOutletInfo" key="actionsButton">
-							<string key="name">actionsButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="audioStatus">
-							<string key="name">audioStatus</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceFilesTableView">
-							<string key="name">conferenceFilesTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceFilesView">
-							<string key="name">conferenceFilesView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="conferenceScreenSharingMenu">
-							<string key="name">conferenceScreenSharingMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawer">
-							<string key="name">drawer</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawerScrollView">
-							<string key="name">drawerScrollView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="drawerSplitView">
-							<string key="name">drawerSplitView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="editorButton">
-							<string key="name">editorButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="encryptionIconMenuItem">
-							<string key="name">encryptionIconMenuItem</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="encryptionMenu">
-							<string key="name">encryptionMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="micLevelIndicator">
-							<string key="name">micLevelIndicator</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="muteButton">
-							<string key="name">muteButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantMenu">
-							<string key="name">participantMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsTableView">
-							<string key="name">participantsTableView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="participantsView">
-							<string key="name">participantsView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="recordButton">
-							<string key="name">recordButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="screenShareMenu">
-							<string key="name">screenShareMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="screenSharingPopUpButton">
-							<string key="name">screenSharingPopUpButton</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="sharedFileMenu">
-							<string key="name">sharedFileMenu</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="tabSwitcher">
-							<string key="name">tabSwitcher</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="tabView">
-							<string key="name">tabView</string>
-							<string key="candidateClassName">id</string>
-						</object>
-						<object class="IBToOneOutletInfo" key="toolbar">
-							<string key="name">toolbar</string>
-							<string key="candidateClassName">id</string>
-						</object>
-					</dictionary>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/ChatWindowController.h</string>
-					</object>
-				</object>
 				<object class="IBPartialClassDescription">
 					<string key="className">ConferenceFileCell</string>
 					<string key="superclassName">NSTextFieldCell</string>

@@ -6,10 +6,14 @@ from AppKit import (NSApp,
                     NSCompositeCopy,
                     NSEvenOddWindingRule,
                     NSFrameRect,
+                    NSPNGFileType,
                     NSRunAlertPanel,
-                    NSOKButton)
+                    NSOKButton,
+                    NSOnState)
+
 from Foundation import (CIImage,
                         NSArray,
+                        NSBitmapImageRep,
                         NSBezierPath,
                         NSBox,
                         NSBundle,
@@ -73,8 +77,20 @@ class MyCollectionView(NSCollectionView):
 
 
 class EditImageView(NSImageView):
-    cropRectangle = NSMakeRect(0, 0, 128, 128)
+    cropRectangle = NSMakeRect(0, 0, 220, 220)
     dragPos = None
+
+    def setCropSize_(self, size=None):
+        if size is None:
+            self.cropRectangle = self.frame()
+        elif size == 'default':
+            self.cropRectangle = NSMakeRect(0, 0, 220, 220)
+        else:
+            self.cropRectangle = NSMakeRect(0, 0, size, size)
+
+        self.cropRectangle.origin.x = 0
+        self.cropRectangle.origin.y = 0
+        self.setNeedsDisplay_(True)
 
     def getCropped(self):
         image = self.image()
@@ -148,9 +164,11 @@ class PhotoPicker(NSObject):
     photoView = objc.IBOutlet()
     previewButton = objc.IBOutlet()
     captureButton = objc.IBOutlet()
-    cancelButton = objc.IBOutlet()
+    cropButton = objc.IBOutlet()
     captureView = objc.IBOutlet()
-    setButton = objc.IBOutlet()
+    useButton = objc.IBOutlet()
+    cameraTabView = objc.IBOutlet()
+    historyTabView = objc.IBOutlet()
 
     browseView = objc.IBOutlet()
     cropWindow = objc.IBOutlet()
@@ -169,16 +187,25 @@ class PhotoPicker(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def init(self):
-        self = super(PhotoPicker, self).init()
-        if self:
-            NSBundle.loadNibNamed_owner_("PhotoPicker", self)
-            self.lock = NSLock.alloc().init()
-            self.captureButton.setHidden_(True)
-            self.previewButton.setHidden_(False)
-            self.cancelButton.setHidden_(True)
+    def __init__(self, storage_folder=ApplicationData.get('photos'), high_res=False, history=True):
+        self.history = history
+        NSBundle.loadNibNamed_owner_("PhotoPicker", self)
+        self.lock = NSLock.alloc().init()
+        self.captureButton.setHidden_(True)
+        self.previewButton.setHidden_(False)
+        self.storage_folder = storage_folder
+        self.high_res = high_res
+        if self.high_res:
+            self.photoView.setCropSize_()
 
-        return self
+        if not self.history:
+            self.tabView.selectTabViewItem_(self.cameraTabView)
+            self.previewButton.setHidden_(True)
+            self.captureButton.setHidden_(False)
+
+    def awakeFromNib(self):
+        if not self.history:
+            self.tabView.removeTabViewItem_(self.historyTabView)
 
     def initAquisition(self):
         if self.capture_session_initialized:
@@ -228,6 +255,9 @@ class PhotoPicker(NSObject):
         self.capture_session_initialized = True
 
     def refreshLibrary(self):
+        if not self.history:
+            return
+
         settings = SIPSimpleSettings()
         own_icon_path = settings.presence_state.icon
         selected_icon = None
@@ -238,10 +268,8 @@ class PhotoPicker(NSObject):
                     md5.update(chunk)
             return md5.hexdigest()
 
-        path = ApplicationData.get('photos')
-
-        if os.path.exists(path):
-          files = os.listdir(path)
+        if os.path.exists(self.storage_folder):
+          files = os.listdir(self.storage_folder)
         else:
           files = []
         array = NSMutableArray.array()
@@ -254,9 +282,9 @@ class PhotoPicker(NSObject):
         for f in files:
             if not f.startswith('user_icon') and not f.startswith('photo') and f != 'default_user_icon.tiff':
                 continue
-            p = os.path.normpath(path+"/"+f)
+            p = os.path.normpath(self.storage_folder + "/" + f)
             if p not in knownFiles:
-                photos_folder = unicodedata.normalize('NFC', path)
+                photos_folder = unicodedata.normalize('NFC', self.storage_folder)
                 filename = os.path.join(photos_folder, f)
                 checksum = md5sum(filename)
                 try:
@@ -279,7 +307,6 @@ class PhotoPicker(NSObject):
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if item.identifier() == "recent":
-            self.cameraButtonClicked_(self.cancelButton)
             if self.captureSession is not None:
                 self.captureSession.stopRunning()
         else:
@@ -291,42 +318,31 @@ class PhotoPicker(NSObject):
             self.captureView.setHidden_(False)
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(False)
-            self.cancelButton.setHidden_(True)
-            self.setButton.setEnabled_(False)
+            self.useButton.setEnabled_(False)
 
     def captureOutput_didOutputVideoFrame_withSampleBuffer_fromConnection_(self, captureOutput, videoFrame, sampleBuffer, connection):
         self.latestImageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(videoFrame))
 
     @objc.IBAction
-    def cameraButtonClicked_(self, sender):
-        if sender.tag() == 5: # Preview
-            self.photoView.setHidden_(True)
-            self.captureView.setHidden_(False)
-            if self.captureSession is not None:
-                self.captureSession.startRunning()
-            self.previewButton.setHidden_(True)
-            self.captureButton.setHidden_(False)
-            self.cancelButton.setHidden_(True)
-            self.setButton.setEnabled_(False)
-        elif sender.tag() == 6: # Cancel
-            self.photoView.setHidden_(False)
-            self.captureView.setHidden_(True)
-            if self.captureSession is not None:
-                self.captureSession.stopRunning()
-            self.previewButton.setHidden_(False)
-            self.captureButton.setHidden_(True)
-            self.cancelButton.setHidden_(True)
-            self.setButton.setEnabled_(True)
-        elif sender.tag() == 7: # Capture
-            self.photoView.setHidden_(False)
-            self.captureView.setHidden_(True)
-            self.previewButton.setHidden_(False)
-            self.captureButton.setHidden_(True)
-            self.cancelButton.setHidden_(True)
-            self.setButton.setEnabled_(True)
-            if self.captureSession is not None:
-                self.captureImage()
-                self.captureSession.stopRunning()
+    def previewButtonClicked_(self, sender):
+        self.photoView.setHidden_(True)
+        self.captureView.setHidden_(False)
+        if self.captureSession is not None:
+            self.captureSession.startRunning()
+        self.previewButton.setHidden_(True)
+        self.captureButton.setHidden_(False)
+        self.useButton.setEnabled_(False)
+
+    @objc.IBAction
+    def captureButtonClicked_(self, sender):
+        self.photoView.setHidden_(False)
+        self.captureView.setHidden_(True)
+        self.previewButton.setHidden_(False)
+        self.captureButton.setHidden_(True)
+        self.useButton.setEnabled_(True)
+        if self.captureSession is not None:
+            self.captureImage()
+            self.captureSession.stopRunning()
 
     @objc.IBAction
     def cropWindowButtonClicked_(self, sender):
@@ -354,30 +370,34 @@ class PhotoPicker(NSObject):
             imageRep = self.latestImageRep
             image = NSImage.alloc().initWithSize_(imageRep.size())
             image.addRepresentation_(imageRep)
-
             image.setScalesWhenResized_(True)
-            h = 160
+            h = self.photoView.frame().size.height
             w = h * imageRep.size().width/imageRep.size().height
             image.setSize_(NSMakeSize(w, h))
-
             self.photoView.setImage_(image)
-            parent = self.photoView.superview().frame()
-            x = (NSWidth(parent)-w) / 2
-            y = NSHeight(parent) - h - 12
-            self.photoView.setFrame_(NSMakeRect(x, y, w, h))
 
     def storeCaptured(self):
-        path = ApplicationData.get('photos')
-        makedirs(path)
-
+        makedirs(self.storage_folder)
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
         if not self.photoView.image():
             self.captureImage()
 
-        image = self.photoView.getCropped()
-        path = path+"/photo%s.tiff"%dt
-        image.TIFFRepresentation().writeToFile_atomically_(path, False)
+        if self.high_res:
+            imageRep = self.latestImageRep
+            image = NSImage.alloc().initWithSize_(imageRep.size())
+            image.addRepresentation_(imageRep)
+        else:
+            image = self.photoView.getCropped()
+
+        tiff_data = image.TIFFRepresentation()
+        path = self.storage_folder + "/photo%s.png" % dt
+        bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+        png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+        data = png_data.bytes().tobytes()
+        with open(path, 'w') as f:
+            f.write(data)
+
         self.refreshLibrary()
         return path, image
 
@@ -397,15 +417,22 @@ class PhotoPicker(NSObject):
         self.cropWindowImage.setImage_(image)
 
         if NSApp.runModalForWindow_(self.cropWindow) == NSOKButton:
-            path = ApplicationData.get('photos')
             dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
             image = self.cropWindowImage.getCropped()
-            path = path+"/photo%s.tiff"%dt
-            image.TIFFRepresentation().writeToFile_atomically_(path, False)
+
+            tiff_data = image.TIFFRepresentation()
+
+            #path = self.storage_folder + "/photo%s.tiff" % dt
+            #tiff_data.writeToFile_atomically_(path, False)
+
+            path = self.storage_folder + "/photo%s.png" % dt
+            bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
+            png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
+            data = png_data.bytes().tobytes()
+            with open(path, 'w') as f:
+                f.write(data)
 
             self.cropWindow.orderOut_(None)
-
             self.refreshLibrary()
         else:
             self.cropWindow.orderOut_(None)
@@ -413,10 +440,9 @@ class PhotoPicker(NSObject):
         #self.addImageFile(path)
 
     def addImageFile(self, path):
-        photodir = ApplicationData.get('photos')
         path = os.path.normpath(path)
 
-        if os.path.dirname(path) != photodir:
+        if os.path.dirname(path) != self.storage_folder:
             # scale and copy the image to our photo dir
             try:
                 image = NSImage.alloc().initWithContentsOfFile_(path)
@@ -429,7 +455,7 @@ class PhotoPicker(NSObject):
                 image.setScalesWhenResized_(True)
                 image.setSize_(NSMakeSize(128, 128 * size.height/size.width))
 
-            finalpath = photodir+"/"+os.path.basename(path)
+            finalpath = self.storage_folder + "/" + os.path.basename(path)
             prefix, ext = os.path.splitext(finalpath)
             i= 0
             while os.path.exists(finalpath):
@@ -443,18 +469,19 @@ class PhotoPicker(NSObject):
         panel = NSOpenPanel.openPanel()
         panel.setTitle_(u"Select a Picture")
 
-        if panel.runModalForTypes_(NSArray.arrayWithObjects_("png","tiff","jpeg","jpg","tif")) == NSOKButton:
+        if panel.runModalForTypes_(NSArray.arrayWithObjects_("png", "tiff", "jpeg", "jpg", "tif")) == NSOKButton:
             path = unicode(panel.filename())
             self.cropAndAddImage(path)
 
     @objc.IBAction
-    def userButtonClicked_(self, sender):
+    def UseButtonClicked_(self, sender):
         self.window.close()
+        NSApp.stopModalWithCode_(1)
 
-        if sender.tag() == 1:
-            NSApp.stopModalWithCode_(1)
-        else:
-            NSApp.stopModalWithCode_(0)
+    @objc.IBAction
+    def CancelButtonClicked_(self, sender):
+        self.window.close()
+        NSApp.stopModalWithCode_(0)
 
     def windowWillClose_(self, notification):
         if self.captureDecompressedVideoOutput != None:

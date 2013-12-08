@@ -131,6 +131,13 @@ class BlinkAppDelegate(NSObject):
                     except EnvironmentError:
                         pass
 
+                snapshots_folder = ApplicationData.get('.tmp_snapshots')
+                if os.path.exists(snapshots_folder):
+                    try:
+                        shutil.rmtree(snapshots_folder)
+                    except EnvironmentError:
+                        pass
+
             try:
                 from Updater import Updater
             except ImportError:

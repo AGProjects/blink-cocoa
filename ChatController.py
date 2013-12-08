@@ -8,6 +8,7 @@ from AppKit import (NSApp,
                     NSImageCompressionFactor,
                     NSInformationalRequest,
                     NSJPEGFileType,
+                    NSPNGFileType,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSSplitViewDividerStyleThick,
                     NSSplitViewDividerStyleThin,
@@ -83,6 +84,7 @@ from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
 from MediaStream import MediaStream, STATE_IDLE, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_INCOMING, STREAM_CONNECTING, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING
 from MediaStream import STATE_IDLE
+from PhotoPicker import PhotoPicker
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from ScreensharingPreviewPanel import ScreensharingPreviewPanel
@@ -1320,6 +1322,12 @@ class ChatController(MediaStream):
                     elif self.chatViewController.scrolling_zoom_factor == 7:
                         days = 3650
                 contactWindow.historyViewer.setPeriod(days)
+
+    def userClickedSnapshotMenu_(self, sender):
+        picker = PhotoPicker(ApplicationData.get('.tmp_snapshots'), high_res=True, history=False)
+        path, image = picker.runModal()
+        if image and path:
+            self.sendFiles([unicode(path)])
 
     def userClickedScreenshotMenu_(self, sender):
         screenshots_folder = ApplicationData.get('.tmp_screenshots')

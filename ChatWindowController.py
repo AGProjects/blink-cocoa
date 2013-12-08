@@ -1003,6 +1003,15 @@ class ChatWindowController(NSWindowController):
                 chatStream.userClickedEncryptionMenu_(sender)
 
     @objc.IBAction
+    def userClickedSnapshotMenu_(self, sender):
+        # dispatch the click to the active session
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            chatStream = selectedSession.streamHandlerOfType("chat")
+            if chatStream:
+                chatStream.userClickedSnapshotMenu_(sender)
+
+    @objc.IBAction
     def userClickedScreenshotMenu_(self, sender):
         # dispatch the click to the active session
         selectedSession = self.selectedSessionController()
