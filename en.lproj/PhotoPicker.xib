@@ -55,7 +55,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{515, 309}, {516, 399}}</string>
 				<int key="NSWTFlags">1610612736</int>
-				<string key="NSWindowTitle">Picture Library</string>
+				<string key="NSWindowTitle">Picture Selection Panel</string>
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
@@ -84,7 +84,7 @@
 												<string key="NSFrame">{{134, 0}, {203, 32}}</string>
 												<reference key="NSSuperview" ref="928645203"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="765683548"/>
+												<reference key="NSNextKeyView"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="978923102">
 													<int key="NSCellFlags">67108864</int>
@@ -223,7 +223,6 @@
 												<int key="NSvFlags">293</int>
 												<string key="NSFrame">{{187, 0}, {95, 32}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSNextKeyView" ref="765683548"/>
 												<int key="NSTag">5</int>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="862792296">
@@ -462,7 +461,7 @@
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<object class="NSView" key="NSWindowView" id="387810213">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSButton" id="1052464766">
@@ -470,7 +469,6 @@
 							<int key="NSvFlags">289</int>
 							<string key="NSFrame">{{291, 12}, {96, 32}}</string>
 							<reference key="NSSuperview" ref="387810213"/>
-							<reference key="NSNextKeyView"/>
 							<int key="NSTag">2</int>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="730687394">
@@ -638,7 +636,6 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{401, 344}</string>
-					<reference key="NSSuperview"/>
 					<reference key="NSNextKeyView" ref="1066164572"/>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1680, 1028}}</string>
