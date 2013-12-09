@@ -1257,7 +1257,7 @@ class BlinkPresenceContact(BlinkContact):
                 model.online_contacts_group.sortContacts()
                 return model.online_contacts_group
         else:
-            if status in (None, "offline"):
+            if status in (None, "offline") or not self.contact.presence.subscribe:
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
                 return model.online_contacts_group
@@ -3442,6 +3442,15 @@ class ContactListModel(CustomListModel):
 
             [g.sortContacts() for g in groups]
 
+        if not contact.presence.subscribe:
+            try:
+                blink_contact = next(blink_contact for blink_contact in self.online_contacts_group.contacts if blink_contact.contact == contact)
+            except StopIteration:
+                pass
+            else:
+                online_group_changed = blink_contact.addToOrRemoveFromOnlineGroup()
+                if online_group_changed:
+                    self.contactOutline.reloadItem_reloadChildren_(online_group_changed, True)
 
         if contact.presence.policy != 'default':
             for address in contact.uris:
@@ -3454,6 +3463,7 @@ class ContactListModel(CustomListModel):
                     self.renderPendingWatchersGroupIfNecessary()
 
         self.addPendingWatchers()
+
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
