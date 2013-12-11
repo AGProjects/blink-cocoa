@@ -699,12 +699,14 @@ class AudioController(MediaStream):
 
             NSApp.delegate().contactsWindowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
-            if self.sessionController.hasStreamOfType("chat"):
+            if len(self.sessionController.streamHandlers) > 1:
+                self.hangup_reason = NSLocalizedString("Audio Removed", "Audio session label")
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Audio Removed", "Audio status label"))
             elif oldstatus == STREAM_WAITING_DNS_LOOKUP:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             else:
-                self.updateAudioStatusWithSessionState(NSLocalizedString("Audio Ended", "Audio status label"))
+                self.hangup_reason = NSLocalizedString("Session Ended", "Audio session label")
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio status label"))
         elif status == STREAM_CANCELLING:
             self.updateAudioStatusWithSessionState(NSLocalizedString("Cancelling Request...", "Audio status label"))
         elif status == STREAM_INCOMING:
