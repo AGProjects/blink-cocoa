@@ -123,21 +123,6 @@ class BlinkAppDelegate(NSObject):
             userdef.removeObjectForKey_('EnablePJSIPTrace')
             userdef.removeObjectForKey_('EnableNotificationsTrace')
 
-            def purge_screenshots():
-                screenshots_folder = ApplicationData.get('.tmp_screenshots')
-                if os.path.exists(screenshots_folder):
-                    try:
-                        shutil.rmtree(screenshots_folder)
-                    except EnvironmentError:
-                        pass
-
-                snapshots_folder = ApplicationData.get('.tmp_snapshots')
-                if os.path.exists(snapshots_folder):
-                    try:
-                        shutil.rmtree(snapshots_folder)
-                    except EnvironmentError:
-                        pass
-
             try:
                 from Updater import Updater
             except ImportError:
@@ -145,9 +130,24 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.updater = Updater()
 
-            call_in_thread('file-io', purge_screenshots)
+            call_in_thread('file-io', self.purge_screenshots)
 
         return self
+
+    def purge_screenshots(self):
+        screenshots_folder = ApplicationData.get('.tmp_screenshots')
+        if os.path.exists(screenshots_folder):
+            try:
+                shutil.rmtree(screenshots_folder)
+            except EnvironmentError:
+                pass
+
+        snapshots_folder = ApplicationData.get('.tmp_snapshots')
+        if os.path.exists(snapshots_folder):
+            try:
+                shutil.rmtree(snapshots_folder)
+            except EnvironmentError:
+                pass
 
     def gui_notify(self, title, body, subtitle=None):
         if self.application_will_end:
@@ -298,6 +298,7 @@ class BlinkAppDelegate(NSObject):
         handler(notification)
 
     def _NH_SIPApplicationWillEnd(self, notification):
+        call_in_thread('file-io', self.purge_screenshots)
         self.application_will_end = True
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
