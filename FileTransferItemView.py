@@ -19,9 +19,10 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from zope.interface import implements
 
+from sipsimple.account import AccountManager
 from resources import ApplicationData
 from FileTransferSession import OutgoingPushFileTransferHandler
-from util import allocate_autorelease_pool, format_size, run_in_gui_thread
+from util import allocate_autorelease_pool, format_size, format_date, run_in_gui_thread, normalize_sip_uri_for_outgoing_session
 
 
 class FileTransferItemView(NSView):
@@ -63,16 +64,17 @@ class FileTransferItemView(NSView):
             self.nameText.setStringValue_(os.path.basename(filename))
             self.fromText.setStringValue_('To %s' % transferInfo.remote_uri if transferInfo.direction=='outgoing' else 'From %s' % transferInfo.remote_uri)
 
+            time_print = format_date(transferInfo.time)
             if transferInfo.status == "completed":
-                status = "%s %s Completed"%(format_size(transferInfo.file_size, 1024), unichr(0x2014))
+                status = "%s %s Completed %s"%(format_size(transferInfo.file_size, 1024), unichr(0x2014), time_print)
             else:
-                error = transferInfo.status
-
                 if transferInfo.direction == "outgoing":
-                    status = error
+                    status = '%s %s' % (transferInfo.status.title(), time_print)
+                    self.retryButton.setHidden_(False)
                 else:
-                    status = "%s of %s"%(format_size(transferInfo.bytes_transfered, 1024), format_size(transferInfo.file_size, 1024))
-                    status = "%s %s %s"%(status, unichr(0x2014), error)
+                    #status = "%s of %s"%(format_size(transferInfo.bytes_transfered, 1024), format_size(transferInfo.file_size, 1024))
+                    status = "%s %s %s %s"%(status.title(), unichr(0x2014), transferInfo.status, time_print)
+
             self.sizeText.setStringValue_(status)
             frame.size = self.view.frame().size
             self.setFrame_(frame)
@@ -207,22 +209,31 @@ class FileTransferItemView(NSView):
 
     @objc.IBAction
     def retryTransfer_(self, sender):
-        self.failed = False
-        self.done = False
+        if self.oldTransferInfo:
+            try:
+                account = (account for account in AccountManager().iter_accounts() if account.id == self.oldTransferInfo.local_uri).next()
+            except StopIteration:
+                account = AccountManager().default_account
+            from FileTransferWindowController import openFileTransferSelectionDialog
+            target_uri = normalize_sip_uri_for_outgoing_session(self.oldTransferInfo.remote_uri, AccountManager().default_account)
+            openFileTransferSelectionDialog(account, target_uri, self.oldTransferInfo.file_path)
+        else:
+            self.failed = False
+            self.done = False
 
-        self.updateProgressInfo()
-        self.progressBar.setIndeterminate_(True)
-        self.progressBar.startAnimation_(None)
-        self.progressBar.setHidden_(True)
+            self.updateProgressInfo()
+            self.progressBar.setIndeterminate_(True)
+            self.progressBar.startAnimation_(None)
+            self.progressBar.setHidden_(True)
 
-        self.updateChecksumProgressInfo(0)
-        self.checksumProgressBar.setIndeterminate_(False)
-        self.checksumProgressBar.startAnimation_(None)
-        self.checksumProgressBar.setHidden_(False)
+            self.updateChecksumProgressInfo(0)
+            self.checksumProgressBar.setIndeterminate_(False)
+            self.checksumProgressBar.startAnimation_(None)
+            self.checksumProgressBar.setHidden_(False)
 
-        self.sizeText.setTextColor_(NSColor.grayColor())
-        self.relayoutForRetry()
-        self.transfer.retry()
+            self.sizeText.setTextColor_(NSColor.grayColor())
+            self.relayoutForRetry()
+            self.transfer.retry()
 
     @objc.IBAction
     def revealFile_(self, sender):
