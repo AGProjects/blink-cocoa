@@ -1,0 +1,280 @@
+<html>
+<head>
+<title>SIP2SIP Changelog</title>
+<link rel='stylesheet' type='text/css' href='style.css'>
+</head>
+
+<body>
+
+
+<h2>Version 1.4.0</h2>
+
+<p>November 21st, 2013
+
+<ul>
+<li>Added DND until call is ended
+<li>Added copy/paste from Watcher list to Contact list
+<li>Added Jabber and all Email addresses to AB contacts
+<li>Added option to skip contacts sync with server when adding existing account
+<li>Improve Chat handling of HTML payloads
+<li>Added manual sorting for ContactURIs belonging to a Contact
+<li>Enable audio button only if session is not in progress
+<li>Disable presence if contact sync is disabled during enrollment
+<li>Adjusted to latest middleware changes related to stream addition/removal
+<li>Fixed sorting SIP addresses when droping file over contact
+<li>Lookup icons in blink presence contacts only
+<li>Handle multiple URIS when create presence contact from another contact
+<li>Print job title and organization for AB contacts
+<li>Use first SIP URI as name if missing for AB contacts
+<li>Search AB note and job title
+<li>Automatically process , in phone numbers as DTMF delimiter
+<li>Fixed migrating version for session history table
+<li>Fixed outlet alignment
+<li>Print next hop in audio tile
+<li>Allow deletion of contacts in OnlineGroup 
+<li>Use ICE by default
+<li>Fixed reloading history enties after database query has executed
+<li>Fixed restoring contacts from backup
+<li>Don't notify subscriptions to myself
+<li>Mark SMS messages as failed if DNS lookup fails
+<li>Always show logs button
+<li>Fixed debug window inconsistencies
+<li>Fixed log line
+<li>Fixed debug window outlets
+</ul>
+
+
+<h2>Version 1.3.3</h2>
+
+<p>October 13th, 2013
+
+<ul>
+<li>Fixed debug window inconsistencies
+<li>Fixed path for call transfer xib
+<li>Fixed exception during enrollment
+</ul>
+
+
+<h2>Version 1.3.2</h2>
+
+<p>October 7th, 2013
+
+<ul>
+<li>Added chat privacy label
+<li>Added per session/contact chat history storage option
+<li>Added a safety timer for music application muting
+<li>Save use_speech_recognition in blink settings
+<li>Improve settings descriptions
+<li>Refactored logging to work with latest middleware changes
+<li>Allow starting audio call from Chat window
+<li>Honor remote preference for not logging to history database
+<li>Fixed DNS lookup blockiness
+<li>Fixed crash when in-dialog request fails to be sent within a subscription
+<li>Fixed memory leak by initializing the handler after the stream initialized
+<li>Properly handle mutex creation failures
+</ul>
+
+  
+<h2>Version 1.3.1</h2>
+
+<p>September 27th, 2013
+
+<ul>
+<li>Refactored toggling visibility of collaborative editor
+<li>Update chat window tooltips
+<li>End session when re-Invite fails for last stream
+<li>Improve Chat SMP OTR window behaviour
+</ul>
+
+  
+<h2>Version 1.3.0</h2>
+
+<p>September 13th, 2013
+
+<ul>
+<li>Added SMP fingerprint verification for OTR chat sessions
+<li>Several OPUS codec related fixes
+<li>Use single global c line when creating SDP
+<li>Don'r render system message when cancelling Chat sessions
+<li>Show loading indicator in Chat view when connecting session
+<li>Don't render OTR raw Chat messages
+<li>Renamed audio encryption menu items for clarity
+<li>Don't duplicate system chat message when stream fails
+<li>Fixed starting when no account is selected
+<li>Fixed marking failed Chat messages
+<li>Display logging to database status for chat messages
+<li>Fixed updating status of OTR encryption lock
+</ul>
+
+
+<h2>Version 1.2.1</h2>
+
+<p>September 2nd, 2013
+
+<ul>
+<li>Mark pending outgoing chat messages as failed if the DNS lookup fails
+<li>Fixed reusing audio tile after one sip route fails
+<li>Render encryption lock for each chat message
+<li>Use white font for failed messages
+<li>Fixed processing related messages
+<li>Fixed display of packet loss in audio tile
+<li>Don't atempt using OTR with a remote focus
+<li>Used a closed red lock when chat is encrypted but fingerprint has changed
+</ul>
+
+
+<h2>Version 1.2.0</h2>
+
+<p>August 27th, 2013
+
+<ul>
+<li>Added Chat OTR support
+<li>Fixed toggling visibility of all special groups
+<li>Start ringer cleanup timer after application has started
+<li>Improved wording of SRTP menu items
+<li>Update SRTP in info panel
+<li>Refactored audio encryption user interface
+<li>Fixed detecting when music must be paused
+<li>Make Chat drawer audio status consistent with audio tile status
+<li>Fixed position of call transfer contextual menu
+<li>Fixed detecting when music has been paused
+<li>Added pause music setting
+<li>Change chat connection messages
+<li>Print more concise errors in chat window
+<li>Simply LDAP queries
+<li>Handle changes in System Address Book incrementally
+<li>Don't set default DTMF delimiter
+<li>Load AddressBook entries in a dedicated thread
+<li>Fixed resetting chat controller when re-using it
+<li>Print nicely TLS related errors
+<li>Fixed updating audio tile info
+  
+</ul>
+
+
+<h2>Version 1.1.1</h2>
+
+<p>August 8th, 2013
+
+<ul>
+<li>Reload model after deleting policy entry
+<li>Fixed calling logging function
+<li>Skip connecting to chat replication server if chat replication password not set
+<li>Don't add chat to replication journal if chat replication password not set
+<li>Handle hanging ringing sessions with a clean up timer
+<li>Auto select authorized account for session to XMPP contacts
+<li>Increase GUI responsivness when session ends
+<li>Don't try publish after application ended
+<li>Fetch last 10 entries in history menu
+<li>Don't refresh history menu after every call
+<li>Hide end chat delimiter when replaying Chat history
+<li>Don't print chat session delimiters when replaying SMS history
+<li>Disable history scolling for Bonjour accounts
+<li>Update history menu section titles
+</ul>
+
+
+<h2>Version 1.1.0</h2>
+
+<p>August 5th, 2013
+
+<ul>
+<li>Added elastic scrollback in time for Chat sessions
+<li>Added elastic scrollback in time for SMS sessions
+<li>Added search text capability within Chat and SMS sessions
+<li>Added setting to enable the Answering Machine in alert panel
+<li>Load history messages from all uris belonging to a contact
+<li>Don't log duplicate database entries error
+<li>Change background colors of failed chat messages
+<li>Log chat errors through its associated session controller
+<li>Fixed sending pending messages after connecting chat stream
+<li>Send own icon only for Bonjour chat
+<li>Improved navigation of history entries by date
+<li>Fixed removing outgoing ringtone when using failure route
+<li>Fixed removing on_hold ringtones for failed sessions
+<li>Fixed initialisation of collaboration editor and display
+<li>Fixed selecting missed calls entries
+<li>Render voice messages recorded by answering machine in contact contextual menu
+<li>Renamed Voicemail to Answering Machine
+<li>Reload only the last ten file transfers by default
+<li>Reworked mute music applications using official Scripting Bridge API
+<li>Use night volume settings for speech synthesizer
+<li>Don't auto open chat window at startup for replicated messages
+<li>Fixed crash on SMS window dealloc
+</ul>
+
+
+<h2>Version 1.0.2</h2>
+
+<p>July 31st, 2013
+
+<ul>
+<li>Don't render replicated chat messages older than 2 hours
+<li>Reload last 10 file transfers by default
+<li>Added scrollback in time for chat sessions
+<li>Added scrollback in time for sms sessions
+<li>Rename Voicemail to Answering Machine
+<li>Render voice messages in history contact
+<li>Render voice messages recorded by answering machine in contact contextual menu
+</ul>
+
+
+<h2>Version 1.0.1</h2>
+
+<p>July 24th, 2013
+
+<ul>
+<li>Fixed reset of Acoustic Echo Canceller
+<li>Added add/remove Chat to audio session tile
+<li>Close chat stream when closing tab without ending the session
+<li>Finish session when click on disconnect chat button
+<li>Remove jitter buffer from session info panel
+<li>Replace preferred media with pop up button
+<li>Fixed printing duplicate sip code
+</ul>
+
+
+<h2>Version 1.0.0</h2>
+
+<p>July 22nd, 2013
+
+<h3>Client Features</h3>
+
+<ul>
+<li>SIP2SIP account and Bonjour Discovery
+<li>Acoustic Echo Cancellation 
+<li>Ultra-wideband audio (OPUS codec)
+<li>Wideband audio (G.722 and Speex codecs)  
+<li>PSTN audio (G711, GSM and iLBC codecs) 
+<li>Play/pause iTunes, VLC and Spotify
+<li>Multiparty Conferencing for all supported media
+<li>Keychain password storage
+<li>Voiceover accessibility support
+<li>Address Book contacts integration
+<li>Answering Machine and Auto-Answer
+<li>Dialpad, DTMF, Hold, Transfer and Recording
+<li>Many Call Automation Features
+<li>Presence (RLS and XCAP)
+<li>Instant Messaging (MSRP protocol) 
+<li>File Transfers (MSRP protocol)
+<li>Contacts Management (XCAP protocol)
+<li>Directory Services (LDAP protocol)
+<li>Screen Sharing (VNC over MSRP)
+<li>Interoperability with XMPP domains
+<li>History Viewer for all media types
+</ul>
+
+<h3>Service Features</h3>
+
+<ul>
+<li>Multiparty Conferencing for all supported media
+<li>Contacts sync between multiple devices
+<li>Presence sync across multiple devices
+<li>SMS sync across multiple devices
+<li>MSRP chat sessions sync across multiple devices
+<li>Access to SIP server account settings web page
+<li>PSTN termination (paid option)
+</ul>      
+
+</body>
+</html>
