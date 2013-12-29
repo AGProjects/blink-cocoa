@@ -8,7 +8,8 @@ from Foundation import (NSBundle,
                         NSHeight,
                         NSMakeRect,
                         NSObject,
-                        NSOpenPanel)
+                        NSOpenPanel,
+                        NSURL)
 import objc
 
 import unicodedata
@@ -26,12 +27,14 @@ from FileTransferSession import IncomingFileTransferHandler, OutgoingPushFileTra
 from util import allocate_autorelease_pool, run_in_gui_thread, format_size
 
 
-def openFileTransferSelectionDialog(account, dest_uri):
+def openFileTransferSelectionDialog(account, dest_uri, filename=None):
     if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
         return
 
     panel = NSOpenPanel.openPanel()
-    panel.setTitle_(u"Send File")
+    panel.setTitle_(u"Send File %s" % filename if filename else "Send File")
+    panel.setDirectoryURL_(NSURL.URLWithString_(filename))
+
     panel.setAllowsMultipleSelection_(True)
     if panel.runModal() != NSOKButton:
         return
