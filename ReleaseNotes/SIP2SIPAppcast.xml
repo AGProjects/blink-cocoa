@@ -6,6 +6,18 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 1.5.0</title>
+            <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-sip2sip.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sun Dec 29 10:28:31 CET 2013</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-sip2sip.phtml?update"
+                       sparkle:version="1.5.0" 
+                       type="application/octet-stream" 
+                       />
+         </item>
+         <item>
             <title>Version 1.4.0</title>
             <sparkle:minimumSystemVersion>10.6.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
