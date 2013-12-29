@@ -29,7 +29,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import FileTransferHistory, ChatHistory
-from util import allocate_autorelease_pool, format_size, format_identity_to_string
+from util import allocate_autorelease_pool, format_size, format_date, format_identity_to_string
 
 
 def format_duration(t):
@@ -107,7 +107,7 @@ class FileTransfer(object):
             return ''
         if self.transfer_rate is not None:
             if self.transfer_rate == 0:
-                status = "%s of %s (stalled)" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+                status = "Transferred %s of %s (stalled)" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
             else:
                 eta = (self.file_size - self.file_pos) / self.transfer_rate
                 if eta < 60:
@@ -116,9 +116,9 @@ class FileTransfer(object):
                     time_left = "About %i minutes" % (eta/60)
                 else:
                     time_left = "%s left" % format_duration(datetime.timedelta(seconds=eta))
-                status = "%s of %s - %s/s - %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024), format_size(self.transfer_rate, bits=True), time_left)
+                status = "Transferred %s of %s - %s/s - %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024), format_size(self.transfer_rate, bits=True), time_left)
         else:
-            status = "%s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+            status = "Transferred %s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
         return status
 
     def update_transfer_rate(self):
@@ -207,7 +207,7 @@ class IncomingFileTransferHandler(FileTransfer):
     @property
     def progress_text(self):
         if self.fail_reason:
-            return u"%s of %s %s %s" % (format_size(self.file_pos), format_size(self.file_size), unichr(0x2014), self.fail_reason)
+            return u"Transferred %s of %s %s %s" % (format_size(self.file_pos), format_size(self.file_size), unichr(0x2014), self.fail_reason)
         else:
             return self.status
 
@@ -347,7 +347,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.end_time = datetime.datetime.now()
 
         if self.finished_transfer and not self.error:
-            self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
+            self.status = "Completed transfer of %s in %s %s" % (format_size(self.file_size), format_duration(self.end_time-self.start_time), format_date(self.end_time))
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_size
             notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
@@ -402,7 +402,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        return "To "+self.remote_identity
+        return "To %s from account %s" % (self.remote_identity, self.account.id)
 
     @property
     def progress_text(self):
@@ -507,7 +507,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.log_info("Outgoing Push File Transfer started")
-        self.status = "%s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+        self.status = "Transferred %s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
         self.ft_info.status = "transferring"
         self.started = True
         self.start_time = datetime.datetime.now()
@@ -542,12 +542,12 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             self.fail_reason = "Interrupted"
             self.ft_info.status = "failed"
             self.ft_info.bytes_transfered = self.file_pos
-            self.status = "%s %s %s" % (str(format_size(self.file_pos, 1024)), unichr(0x2014), self.fail_reason)
+            self.status = "%s %s %s %s" % (str(format_size(self.file_pos, 1024)), unichr(0x2014), self.fail_reason, format_date(self.end_time))
             notification_center.post_notification("BlinkFileTransferDidFail", sender=self)
         else:
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered=self.file_size
-            self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
+            self.status = "Completed transfer of %s in %s %s" % (format_size(self.file_size), format_duration(self.end_time-self.start_time), format_date(self.end_time))
             notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
 
         self.file_selector.fd.close()
@@ -640,12 +640,12 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        return "From %s" % self.target_uri
+        return "From %s to account %s" % (self.target_uri, self.account.id)
 
     @property
     def progress_text(self):
         if self.fail_reason:
-            return u"%s of %s %s %s" % (format_size(self.file_pos), format_size(self.file_size), unichr(0x2014), self.fail_reason)
+            return u"Transferred %s of %s %s %s" % (format_size(self.file_pos), format_size(self.file_size), unichr(0x2014), self.fail_reason)
         else:
             return self.status
 
@@ -827,7 +827,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.end_time = datetime.datetime.now()
 
         if self.finished_transfer and not self.error:
-            self.status = "Completed in %s %s %s" % (format_duration(self.end_time-self.start_time), unichr(0x2014), format_size(self.file_size))
+            self.status = "Completed transfer of %s in %s %s" % (format_size(self.file_size), format_duration(self.end_time-self.start_time), format_date(self.end_time))
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_size
             notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))

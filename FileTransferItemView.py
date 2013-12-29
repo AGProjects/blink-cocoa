@@ -62,18 +62,18 @@ class FileTransferItemView(NSView):
             self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(filename))
 
             self.nameText.setStringValue_(os.path.basename(filename))
-            self.fromText.setStringValue_('To %s' % transferInfo.remote_uri if transferInfo.direction=='outgoing' else 'From %s' % transferInfo.remote_uri)
+            self.fromText.setStringValue_('To %s from account %s' % (transferInfo.remote_uri, transferInfo.local_uri) if transferInfo.direction=='outgoing' else 'From %s to account %s' % (transferInfo.remote_uri, transferInfo.local_uri))
 
             time_print = format_date(transferInfo.time)
             if transferInfo.status == "completed":
-                status = "%s %s Completed %s"%(format_size(transferInfo.file_size, 1024), unichr(0x2014), time_print)
+                status = "Completed transfer of %s %s" % (format_size(transferInfo.file_size, 1024), time_print)
             else:
                 if transferInfo.direction == "outgoing":
                     status = '%s %s' % (transferInfo.status.title(), time_print)
                     self.retryButton.setHidden_(False)
                 else:
                     #status = "%s of %s"%(format_size(transferInfo.bytes_transfered, 1024), format_size(transferInfo.file_size, 1024))
-                    status = "%s %s %s %s"%(status.title(), unichr(0x2014), transferInfo.status, time_print)
+                    status = "%s %s" % (transferInfo.status.title(), time_print)
 
             self.sizeText.setStringValue_(status)
             frame.size = self.view.frame().size
@@ -240,6 +240,7 @@ class FileTransferItemView(NSView):
         if self.transfer and self.transfer.file_path:
             path = self.transfer.file_path
         elif self.oldTransferInfo:
+            # TODO: this does not open after restart because of sandboxing, better open Doanloads folder instead for incoming transfers
             path = self.oldTransferInfo.file_path
         else:
             return
