@@ -457,8 +457,6 @@ class SessionControllersManager(object):
         target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, AccountManager().default_account)
 
         for file in filenames:
-            print file
-            print type(file)
             try:
                 xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
                 xfer.start()
