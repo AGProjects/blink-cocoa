@@ -300,12 +300,17 @@ class ChatController(MediaStream):
 
     @property
     def screensharing_allowed(self):
-        return 'com.ag-projects.screen-sharing' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+        try:
+            return 'com.ag-projects.screen-sharing' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+        except AttributeError:
+            return False
 
     @property
     def control_allowed(self):
-        return 'com.ag-projects.sylkserver-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
-
+        try:
+            return 'com.ag-projects.sylkserver-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+        except AttributeError:
+            return False
 
     @property
     def chatWindowController(self):
