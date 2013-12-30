@@ -368,6 +368,10 @@ class Ringer(object):
         session = notification.sender
         self.stop_ringing(session)
 
+    def _NH_BlinkProposalDidFail(self, notification):
+        session = notification.sender.session
+        self.stop_ringing(session)
+
     def _NH_BlinkWillCancelProposal(self, notification):
         session = notification.sender
         self.stop_ringing(session)
