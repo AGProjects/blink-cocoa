@@ -280,6 +280,15 @@ class ChatController(MediaStream):
         self.otr_account.loadTrusts()
 
     def setEncryptionState(self, ctx):
+        if self.outgoing_message_handler.otr_negotiation_in_progress:
+            if ctx.state > 0 or ctx.tagOffer == 2:
+                if ctx.tagOffer == 2:
+                    self.sessionController.log_info('OTR negotiation failed')
+                elif ctx.state == 1:
+                    self.sessionController.log_info('OTR negotiation succeeded')
+                self.outgoing_message_handler.otr_negotiation_in_progress = False
+                self.outgoing_message_handler.sendPendingMessages()
+
         if self.previous_is_encrypted != self.is_encrypted:
             self.previous_is_encrypted = self.is_encrypted
             fingerprint = str(ctx.getCurrentKey())
@@ -1658,7 +1667,11 @@ class ChatController(MediaStream):
                 self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
+        self.outgoing_message_handler.setDisconnected()
+        self.screensharing_handler.setDisconnected()
+
         self.reset()
+
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         reason = data.failure_reason or data.reason
@@ -1671,6 +1684,9 @@ class ChatController(MediaStream):
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
+
+        self.outgoing_message_handler.setDisconnected()
+        self.screensharing_handler.setDisconnected()
         self.reset()
 
     def _NH_BlinkSessionDidStart(self, sender, data):
@@ -1835,9 +1851,6 @@ class ChatController(MediaStream):
         self.startDeallocTimer()
 
     def reset(self):
-        self.outgoing_message_handler.setDisconnected()
-        self.screensharing_handler.setDisconnected()
-
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = ChatStream()
         self.notification_center.add_observer(self, sender=self.stream)
@@ -1970,6 +1983,7 @@ class OutgoingMessageHandler(NSObject):
     remote_uri = None
     local_uri = None
     must_propose_otr = False
+    otr_negotiation_in_progress = False
 
     def initWithView_(self, chatView):
         self = super(OutgoingMessageHandler, self).init()
@@ -2005,9 +2019,10 @@ class OutgoingMessageHandler(NSObject):
         otr_context_id = self.delegate.sessionController.call_id
         ctx = self.delegate.delegate.otr_account.getContext(otr_context_id)
         newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, '?OTRv2?', appdata={'stream':self.delegate.delegate.stream})
+        self.otr_negotiation_in_progress = True
         self.delegate.delegate.setEncryptionState(ctx)
         try:
-            self.delegate.sessionController.log_info(u"Proposing OTR...")
+            self.delegate.sessionController.log_info(u"OTR negotiation started")
             self.stream.send_message(newmsg, timestamp=ISOTimestamp.now())
         except ChatStreamError:
             pass
@@ -2128,14 +2143,23 @@ class OutgoingMessageHandler(NSObject):
         self.stream = stream
         self.no_report_received_messages = {}
         self.connected = True
-        if self.delegate.delegate.require_encryption and not self.delegate.delegate.sessionController.remote_focus:
-            if self.delegate.delegate.sessionController.session.direction == 'outgoing':
-                self.propose_otr()
-            else:
-                # To avoid state race conditions where both clients propose OTR at the same time we postpone proposal for later when we type something
-                self.must_propose_otr = True
+        if self.delegate.delegate.require_encryption:
+            if not self.delegate.delegate.sessionController.remote_focus:
+                if self.delegate.delegate.sessionController.session.direction == 'outgoing':
+                    self.propose_otr()
+                    # pending messages will be sent after negotiation has finished
+                else:
+                    # To avoid state race conditions where both clients propose OTR at the same time we postpone proposal for later when we type something
+                    self.must_propose_otr = True
+        else:
+            self.sendPendingMessages()
 
         NotificationCenter().add_observer(self, sender=stream)
+
+    def sendPendingMessages(self):
+        if self.otr_negotiation_in_progress:
+            return
+
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
         for msgid in pending:
             try:
@@ -2151,6 +2175,7 @@ class OutgoingMessageHandler(NSObject):
 
     def setDisconnected(self):
         self.connected = False
+        self.otr_negotiation_in_progress = False
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
         for msgid in pending:
             try:
