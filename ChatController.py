@@ -1245,7 +1245,6 @@ class ChatController(MediaStream):
                         self.sessionController.startCompositeSessionWithStreamsOfTypes(("audio", "chat"))
                     else:
                         self.sessionController.addAudioToSession()
-                        self.notification_center.post_notification("SIPSessionGotRingIndication", sender=self.sessionController.session)
 
                     sender.setToolTip_('Cancel audio call')
                     sender.setImage_(NSImage.imageNamed_("hangup"))

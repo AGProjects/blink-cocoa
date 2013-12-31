@@ -1752,7 +1752,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionNewProposal(self, session, data):
         self.inProposal = True
-        self.proposalOriginator = 'remote'
+        self.proposalOriginator = data.originator
 
         if data.originator != "local":
             stream_names = ', '.join(stream.type for stream in data.proposed_streams)
@@ -1892,6 +1892,8 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=data)
 
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
+        self.inProposal = False
+        self.proposalOriginator = None
         if not sender.streams:
             self.log_info("Ending session without streams")
             self.end()
