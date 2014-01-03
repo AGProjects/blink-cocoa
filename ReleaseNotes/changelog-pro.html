@@ -8,22 +8,30 @@
 
 <h2>Version 3.5.0</h2>
 
-<p>December 13th, 2013
+<p>January 3rd, 2014
 
 <ul>
-<li>Added Send Snapshot From Camera to Chat sessions (click on Grab toolbar menu)
-<li>Added advanced option to automatically send anonymous calls to answering machine
-<li>Avoid flipping audio status after stream ended 
-<li>Remove contact from online group when subscribe for presence is disabled
+<li>Added Opus codec 1.1
+<li>Added send snapshot from camera to Chat sessions (click on Grab toolbar menu)
+<li>Added advanced option to automatically send anonymous calls to Answering Machine
+<li>Fixed flipping audio status after the Audio stream has ended
+<li>Fixed setting encryption lock for sent messages without encryption
+<li>Fixed initializing AddressBook contacts if no uris are available
 <li>Fixed OTR chat negotiating bugs
+<li>Fixed cancelling adding Audio from the Chat window
+<li>Fixed stoping ringing if re-Invite failed due to illegal session status
+<li>Fixed sending pending outgoing Chat messages after session has started
+<li>Fixed Chat iscomposing indication in some situations
+<li>Remove contact from online group when subscribe for Presence is disabled
+<li>Improved display of File Transfers status
 <li>Don't update iCloud settings for accounts that have this feature disabled
 <li>Properly capture exceptions when creating a new SIP account
-<li>Fixed setting encryption lock for sent messages without encryption
-<li>Refactored publishing icon URLs
-<li>Fixed Chat iscomposing indication in some situations
-<li>Trim last spurious newline for chat messages
-<li>Adapt to API change in WavePlayer
-<li>Updated Opus codec to version 1.1
+<li>Refactored publishing icon URLs for presence
+<li>Trim last spurious newline for Chat messages
+<li>Allow retry File Transfer for failed transfers after program restart
+<li>Purge temporary snapshot files on exit
+<li>Avoid exceptions if NOTIFY cannot be sent when terminating subscriptions
+<li>Use 101 as the telephone-event SDP payload type
 </ul>
 
 
