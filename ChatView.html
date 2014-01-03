@@ -411,6 +411,20 @@ function markFound(msgid)
         msg.style.color = "red";
 }
 
+function updateLock(msgid, lockiconpath)
+    {
+        var img = document.getElementById('l'+msgid)
+        
+        if (img != null)
+            if (lockiconpath == "") {
+                lock_class = "hidden"
+            } else {
+                lock_class = "lock"
+            }
+            img.className=lock_class;
+            img.src='file:'+lockiconpath;
+    }
+
 function unmarkFound(msgid)
 {
     var msg = document.getElementById('b'+msgid)

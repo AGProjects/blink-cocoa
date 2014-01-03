@@ -389,6 +389,17 @@ class ChatViewController(NSObject):
         self.resetTyping()
         self.delegate.chatView_becameIdle_(self, lastTypedTime)
 
+    def updateLock(self, msgid, encryption=None):
+        if encryption is None:
+            return
+
+        if encryption == '':
+            lock_icon_path = Resources.get('unlocked-darkgray.png')
+        else:
+            lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
+        script = "updateLock('%s','%s')" % (msgid, lock_icon_path)
+        self.executeJavaScript(script)
+
     def markMessage(self, msgid, state, private=False): # delegate
         if state == MSG_STATE_DELIVERED:
             is_private = 1 if private else "null"

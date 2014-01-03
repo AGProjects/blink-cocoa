@@ -2163,6 +2163,7 @@ class OutgoingMessageHandler(NSObject):
         for msgid in pending:
             try:
                 private = self.messages[msgid].private
+                encryption = self.messages[msgid].encryption
             except KeyError:
                 continue
             else:
@@ -2171,6 +2172,7 @@ class OutgoingMessageHandler(NSObject):
                     self.delegate.sessionController.log_error(u"Error sending queued message: %s" % msgid)
                 else:
                     self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
+                    self.delegate.updateLock(msgid, encryption)
 
     def setDisconnected(self):
         self.connected = False
