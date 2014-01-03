@@ -1312,19 +1312,12 @@ class BlinkPresenceContact(BlinkContact):
     del _get_preferred_media, _set_preferred_media
 
     def _get_default_uri(self):
-        if self.contact is not None and self.contact.default_uri is not None:
-            try:
-                return self.contact.uris[self.contact.default_uri]
-            except KeyError:
-                pass
-        return None
+        return self.contact.uris.default if self.contact is not None else None
+
     def _set_default_uri(self, value):
-        if value:
-            if value.id not in self.contact.uris:
-                self.contact.uris.add(value)
-            value = value.id
-        self.contact.default_uri = value
+        self.contact.uris.default = value
         self.contact.save()
+
     default_uri = property(_get_default_uri, _set_default_uri)
     del _get_default_uri, _set_default_uri
 
@@ -2576,7 +2569,7 @@ class ContactListModel(CustomListModel):
             backup_contact={
                 'id'              : contact.id,
                 'name'            : contact.name,
-                'default_uri'     : contact.default_uri,
+                'default_uri'     : contact.uris.default.uri,
                 'uris'            : list((uri.uri, uri.type) for uri in iter(contact.uris)),
                 'preferred_media' : contact.preferred_media,
                 'presence'        : {'policy': contact.presence.policy, 'subscribe': contact.presence.subscribe},
@@ -2687,9 +2680,11 @@ class ContactListModel(CustomListModel):
                         try:
                             contact = Contact(id=backup_contact['id'])
                             contact.name = backup_contact['name']
-                            contact.default_uri = backup_contact['default_uri']
                             for uri in backup_contact['uris']:
-                                contact.uris.add(ContactURI(uri=uri[0], type=uri[1]))
+                                contact_uri = ContactURI(uri=uri[0], type=uri[1])
+                                contact.uris.add(contact_uri)
+                                if backup_contact['default_uri'] == uri[0]:
+                                    contact.uris.default = contact_uri
                             contact.preferred_media = backup_contact['preferred_media']
                             presence = backup_contact['presence']
                             dialog = backup_contact['dialog']
@@ -3410,7 +3405,7 @@ class ContactListModel(CustomListModel):
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
 
-        uri_attributes = set(['default_uri', 'uris'])
+        uri_attributes = set(['uris.default', 'uris', 'name'])
         icon_attributes = set(['icon_info.url', 'icon_info.etag', 'icon_info.local'])
 
         if set(uri_attributes | icon_attributes).intersection(notification.data.modified):
@@ -3703,7 +3698,7 @@ class ContactListModel(CustomListModel):
             contact = Contact(id=data['id'])
             contact_uri = ContactURI(uri=uri, type='SIP')
             contact.uris.add(contact_uri)
-            contact.default_uri = contact_uri.id
+            contact.uris.default = contact_uri
             contact.name = data['name']
             contact.preferred_media = data['preferred_media']
             contact.save()
@@ -3806,8 +3801,7 @@ class ContactListModel(CustomListModel):
             contact = Contact()
             contact.name = new_contact['name']
             contact.uris = new_contact['uris']
-            default_uri = new_contact['default_uri']
-            contact.default_uri = default_uri.id if default_uri is not None else None
+            contact.uris.default = new_contact['default_uri']
             contact.preferred_media = new_contact['preferred_media']
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
@@ -3852,8 +3846,7 @@ class ContactListModel(CustomListModel):
             contact = item.contact
             contact.name = new_contact['name']
             contact.uris = new_contact['uris']
-            default_uri = new_contact['default_uri']
-            contact.default_uri = default_uri.id if default_uri is not None else None
+            contact.uris.default = new_contact['default_uri']
             contact.preferred_media = new_contact['preferred_media']
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']

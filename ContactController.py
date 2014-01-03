@@ -180,10 +180,7 @@ class AddContactController(NSObject):
 
     def update_default_uri(self):
         if self.default_uri:
-            if self.default_uri not in self.uris:
-                self.addressText.setStringValue_('')
-            else:
-                self.addressText.setStringValue_(self.default_uri.uri)
+            self.addressText.setStringValue_(self.default_uri.uri)
         else:
             if self.uris:
                 self.addressText.setStringValue_(self.uris[0].uri)
@@ -472,7 +469,7 @@ class EditContactController(AddContactController):
                 self.addressTypesPopUpButton.addItemWithTitle_(type)
 
         self.addButton.setEnabled_(True if blink_contact.contact.uris else False)
-        self.default_uri = blink_contact.default_uri
+        self.default_uri = self.blink_contact.contact.uris.default
         self.uris = sorted(blink_contact.contact.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint)
         # TODO: how to handle xmmp: uris?
         #for uri in self.uris:
