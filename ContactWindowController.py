@@ -3364,7 +3364,7 @@ class ContactWindowController(NSWindowController):
                 item.setEnabled_(True)
             elif isinstance(contact, BlinkPresenceContact):
                 aor_supports_chat = any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'chat' in device['caps'])
-                item.setEnabled_(aor_supports_chat)
+                item.setEnabled_(True) # don't require presence to initiate chat
             else:
                 item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
