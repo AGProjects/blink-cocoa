@@ -183,8 +183,10 @@ class iCloudManager(NSObject):
                 if account.id not in self.storage_keys:
                     if self.first_sync_completed:
                         if isinstance(account, Account):
-                            BlinkLogger().log_info(u"Removing %s because was removed from iCloud" % account.id)
-                            account.delete()
+                            # don't delete account because iCloud is unreliable
+                            pass
+                            # BlinkLogger().log_info(u"Removing %s because was removed from iCloud" % account.id)
+                            # account.delete()
                     else:
                         json_data = self.getJsonAccountData(account)
                         BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
@@ -281,7 +283,9 @@ class iCloudManager(NSObject):
                 try:
                     account = am.get_account(key)
                     if isinstance(account, Account):
-                        account.delete()
+                        # don't delete account because iCloud is unreliable
+                        # account.delete()
+                        pass
                 except KeyError:
                     pass
 
@@ -314,7 +318,9 @@ class iCloudManager(NSObject):
             try:
                 account = am.get_account(key)
                 if isinstance(account, Account):
-                    account.delete()
+                    pass
+                    # don't delete account because iCloud is unreliable
+                    # account.delete()
             except KeyError:
                 pass
 
