@@ -4845,6 +4845,8 @@ class ContactWindowController(NSWindowController):
             except IndexError:
                 pass
             else:
+                aor_supports_screen_sharing_client = False
+                aor_supports_screen_sharing_server = False
                 if isinstance(contact, BlinkPresenceContact):
                     settings = SIPSimpleSettings()
                     aor_supports_screen_sharing_server = any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
