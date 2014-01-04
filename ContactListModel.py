@@ -1420,7 +1420,7 @@ class HistoryBlinkContact(BlinkContact):
     """Contact representation for history drawer"""
     editable = False
     deletable = False
-    session_ids = None
+    session_ids = {}
     answering_machine_filenames = set()
 
 
