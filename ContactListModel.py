@@ -3201,9 +3201,9 @@ class ContactListModel(CustomListModel):
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
             same_neighbours = any(n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host)
             if same_neighbours:
-                tls_neighbours = (n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
-                tcp_neighbours = (n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tcp')
-                udp_neighbours = (n for n in self.bonjour_group.contacts if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'udp')
+                tls_neighbours = (n for n in list(self.bonjour_group.contacts) if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
+                tcp_neighbours = (n for n in list(self.bonjour_group.contacts) if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tcp')
+                udp_neighbours = (n for n in list(self.bonjour_group.contacts) if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'udp')
                 if uri.transport == 'tls':
                     BlinkLogger().log_debug(u"Discovered new Bonjour neighbour: %s %s" % (display_name, uri))
                     blink_contact = BonjourBlinkContact(uri, neighbour, name='%s (%s)' % (display_name or 'Unknown', host))
@@ -3282,7 +3282,7 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.not_filtered_contacts.remove(all_blink_contact)
 
         try:
-            blink_contact = (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==notification.data.neighbour).next()
+            blink_contact = (blink_contact for blink_contact in list(self.bonjour_group.contacts) if blink_contact.bonjour_neighbour==notification.data.neighbour).next()
         except StopIteration:
             pass
         else:
