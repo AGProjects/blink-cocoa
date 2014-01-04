@@ -1781,7 +1781,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
     @allocate_autorelease_pool
     @run_in_green_thread
     def refresh_contacts(self, results):
-        for blink_contact in self.contacts:
+        for blink_contact in list(self.contacts):
             self.contacts.remove(blink_contact)
             blink_contact.destroy()
         seen = {}
@@ -1790,7 +1790,6 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         skip_target = set()
         session_ids = {}
         last_missed_call_start_time = {}
-
         for result in results:
             target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
