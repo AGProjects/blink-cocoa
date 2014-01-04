@@ -1833,15 +1833,15 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 if target_uri in skip_target:
                     continue
 
-                try:
-                    current_session_ids = session_ids[k]
-                except KeyError:
-                    session_ids[k]=[result.id]
-                else:
-                    current_session_ids.append(result.id)
-
                 if result.status != 'missed':
                     continue
+
+            try:
+                current_session_ids = session_ids[k]
+            except KeyError:
+                session_ids[k]=[result.id]
+            else:
+                current_session_ids.append(result.id)
 
             if seen.has_key(k):
                 seen[k] += 1
