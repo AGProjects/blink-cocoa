@@ -4678,7 +4678,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setEnabled_(item)
                 lastItem.setRepresentedObject_(item)
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entries", "Contact menu item"), "hideHistoryEntries:", "")
-                session_ids = list(chain(*(history_contact.session_ids for history_contact in item.contacts)))
+                session_ids = list(chain(*(_history_contact.session_ids for _history_contact in item.contacts)))
                 lastItem.setEnabled_(bool(session_ids))
                 lastItem.setRepresentedObject_(session_ids)
 
