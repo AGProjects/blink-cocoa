@@ -4515,34 +4515,36 @@ class ContactWindowController(NSWindowController):
                     mitem.setRepresentedObject_(history_contact.session_ids)
 
             elif history_contact is not None:
-                if not is_anonymous(history_contact.uris[0].uri):
-                    if NSApp.delegate().applicationName != 'Blink Lite':
-                        if history_contact not in self.model.bonjour_group.contacts:
+                if NSApp.delegate().applicationName != 'Blink Lite':
+                    if history_contact not in self.model.bonjour_group.contacts:
+                        if not is_anonymous(history_contact.uris[0].uri):
                             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Contact menu item"), "viewHistoryForContact:", "")
-                            group = self.contactOutline.parentForItem_(history_contact)
-                            settings = SIPSimpleSettings()
-                            if isinstance(group, MissedCallsBlinkGroup):
-                                days = settings.contacts.missed_calls_period
-                            elif isinstance(group, IncomingCallsBlinkGroup):
-                                days = settings.contacts.incoming_calls_period
-                            elif isinstance(group, OutgoingCallsBlinkGroup):
-                                days = settings.contacts.outgoing_calls_period
-                            else:
-                                days = 2
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Contact menu item"), "viewHistoryForContact:", "")
+                        group = self.contactOutline.parentForItem_(history_contact)
+                        settings = SIPSimpleSettings()
+                        if isinstance(group, MissedCallsBlinkGroup):
+                            days = settings.contacts.missed_calls_period
+                        elif isinstance(group, IncomingCallsBlinkGroup):
+                            days = settings.contacts.incoming_calls_period
+                        elif isinstance(group, OutgoingCallsBlinkGroup):
+                            days = settings.contacts.outgoing_calls_period
+                        else:
+                            days = 2
 
-                            mitem.setRepresentedObject_({'uris': (unicode(item.uri),), 'days': days})
+                        o = {'uris': (unicode(item.uri.lower()),), 'days': days}
+                        mitem.setRepresentedObject_(o)
 
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Calls", "Contact menu item"), "", "")
-                            self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
-                            self.get_last_calls_entries_for_contact(history_contact)
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Calls", "Contact menu item"), "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
+                        self.get_last_calls_entries_for_contact(history_contact)
 
+                    if not is_anonymous(history_contact.uris[0].uri):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Copy To Search Bar", "Contact menu item"), "copyToSearchBar:", "")
                         mitem.setRepresentedObject_(unicode(history_contact.uri))
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entry", "Contact menu item"), "hideHistoryEntries:", "")
-                        mitem.setRepresentedObject_(history_contact.session_ids)
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entry", "Contact menu item"), "hideHistoryEntries:", "")
+                    mitem.setRepresentedObject_(history_contact.session_ids)
 
-                    if not self.hasContactMatchingURI(history_contact.uri):
+                    if not is_anonymous(history_contact.uris[0].uri) and not self.hasContactMatchingURI(history_contact.uri):
                         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Contact menu item"), "createPresenceContactFromOtherContact:", "")
                         lastItem.setRepresentedObject_(history_contact)
