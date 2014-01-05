@@ -1157,16 +1157,16 @@ class BlinkPresenceContact(BlinkContact):
 
                             NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
 
-                    if self.old_presence_status == 'offline' or status == 'offline':
-                        ui_notify = False
+                    if status == 'available' and self.name:
+                        notify = False
                         if NSApp.delegate().wake_up_timestamp is not None:
                             now = int(time.time())
-                            if now - NSApp.delegate().wake_up_timestamp > 30:
-                                ui_notify = True
+                            if now - NSApp.delegate().wake_up_timestamp > 60:
+                                notify = True
                         else:
-                            ui_notify = True
-
-                        if ui_notify and self.name:
+                            notify = True
+                        
+                        if notify:
                             nc_title = NSLocalizedString("%s's Availability" % self.name, "System notification title")
                             nc_body = NSLocalizedString("%s is now " % self.name, "System notification body") + status
                             NSApp.delegate().gui_notify(nc_title, nc_body)
