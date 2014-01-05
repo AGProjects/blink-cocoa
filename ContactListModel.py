@@ -2568,7 +2568,7 @@ class ContactListModel(CustomListModel):
             backup_contact={
                 'id'              : contact.id,
                 'name'            : contact.name,
-                'default_uri'     : contact.uris.default.uri,
+                'default_uri'     : contact.uris.default.uri if contact.uris.default is not None else None,
                 'uris'            : list((uri.uri, uri.type) for uri in iter(contact.uris)),
                 'preferred_media' : contact.preferred_media,
                 'presence'        : {'policy': contact.presence.policy, 'subscribe': contact.presence.subscribe},
