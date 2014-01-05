@@ -1597,7 +1597,7 @@ class SessionController(NSObject):
 
     def _NH_SIPSessionWillStart(self, sender, data):
         self.call_id = sender._invitation.call_id
-        self.log_info("Session will start")
+        self.log_info("Session id %s will start" % self.call_id)
 
     def _NH_SIPSessionDidStart(self, sender, data):
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
