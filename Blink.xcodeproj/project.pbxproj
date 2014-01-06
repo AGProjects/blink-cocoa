@@ -2654,22 +2654,22 @@
 			isa = PBXGroup;
 			children = (
 				1F71724712BE201200CBA476 /* ChatWindowController.py */,
-				2B6328840FE422AE00446655 /* ChatController.py */,
-				1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */,
-				1FF3736F17C9E656007418EB /* ChatOTR.py */,
-				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
 				2BAF38120FE088C70040117A /* ChatWindow.xib */,
+				2B6328840FE422AE00446655 /* ChatController.py */,
+				2B0CE73610CDEF1700325F30 /* ChatViewController.py */,
 				2BAF38160FE088C70040117A /* ChatView.xib */,
 				2BD011E110D8198400D27A92 /* ChatView.html */,
+				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
+				1FF3736F17C9E656007418EB /* ChatOTR.py */,
+				1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */,
 				1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */,
 				1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */,
-				2B2DF6A9105DC69900F267F9 /* SmileyManager.py */,
 				1F2747C41388F93B0052C384 /* FullScreenVideoPanel.xib */,
-				2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */,
 				1F546250158B300A005628D9 /* NicknameController.py */,
 				1F54625A158B34D0005628D9 /* Nickname.xib */,
 				1F536AA41591BBDC00A0FE51 /* SubjectController.py */,
 				1F536AB01591BCE500A0FE51 /* Subject.xib */,
+				2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */,
 			);
 			name = Chat;
 			sourceTree = "<group>";
@@ -4450,7 +4450,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "AE2629C4-558C-411D-9B8E-4973856E7576";
+				PROVISIONING_PROFILE = "178F47F8-ED3B-4BA0-A58F-C7751B57BBEF";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
