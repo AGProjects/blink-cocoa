@@ -2061,6 +2061,8 @@ class OutgoingMessageHandler(NSObject):
                             else:
                                 message.encryption = 'unverified'
 
+                        self.delegate.updateEncryptionLock(msgid, message.encryption)
+
                 id = self.stream.send_message(newmsg, timestamp=message.timestamp)
                 self.no_report_received_messages[msgid] = message
                 if 'has requested end-to-end encryption but this software does not support this feature' in newmsg:
@@ -2172,7 +2174,6 @@ class OutgoingMessageHandler(NSObject):
                     self.delegate.sessionController.log_error(u"Error sending queued message: %s" % msgid)
                 else:
                     self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
-                    self.delegate.updateLock(msgid, encryption)
 
     def setDisconnected(self):
         self.connected = False
