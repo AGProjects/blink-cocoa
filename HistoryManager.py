@@ -1827,7 +1827,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_outgoing_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_error("Failed to parse chat journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
+                    BlinkLogger().log_debug("Failed to parse chat journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
                 else:
                     self.updateLocalHistoryWithRemoteJournalId(data, key)
 
@@ -1862,7 +1862,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_error("Failed to parse chat journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
+                    BlinkLogger().log_debug("Failed to parse chat journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
@@ -1885,7 +1885,7 @@ class ChatHistoryReplicator(object):
                 try:
                     data = cjson.decode(self.connections_for_delete_replication[key]['responseData'])
                 except (TypeError, cjson.DecodeError), e:
-                    BlinkLogger().log_error("Failed to parse chat journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
+                    BlinkLogger().log_debug("Failed to parse chat journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
                 else:
                     try:
                         result = data['success']
