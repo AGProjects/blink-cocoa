@@ -30,6 +30,7 @@ from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         NSEvent,
                         NSImage,
                         NSIndexSet,
+                        NSLocalizedString,
                         NSMakeSize,
                         NSMenu,
                         NSMenuItem,
@@ -654,9 +655,9 @@ class ChatWindowController(NSWindowController):
     def windowShouldClose_(self, sender):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
         if active > 1:
-            ret = NSRunAlertPanel(u"Close Chat Window",
-                                  u"There are %i Chat sessions, click Close to terminate them all." % active,
-                                  u"Close", u"Cancel", None)
+            ret = NSRunAlertPanel(NSLocalizedString("Close Chat Window", "Window Title"),
+                                  NSLocalizedString("There are %i Chat sessions, click Close to terminate them all." % active, "Label"),
+                                  NSLocalizedString("Close", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret != NSAlertDefaultReturn:
                 return False
 
@@ -925,7 +926,7 @@ class ChatWindowController(NSWindowController):
                         else:
                             contact = BlinkConferenceContact(uri, name=uri)
 
-                        contact.detail = 'Invitation sent...'
+                        contact.detail = NSLocalizedString("Invitation sent...", "Contact detail")
                         session.log_info('Adding %s to list of invited partipants' % uri)
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
@@ -1079,10 +1080,11 @@ class ChatWindowController(NSWindowController):
                         item.setHidden_(False)
                         item = menu.itemWithTag_(1)
                         my_fingerprint = chat_stream.otr_account.getPrivkey()
-                        item.setTitle_('My fingerprint is %s' % str(my_fingerprint))
+                        _f = str(my_fingerprint)
+                        item.setTitle_(NSLocalizedString("My fingerprint is %s" % _f, "Menu item"))
 
                     item = menu.itemWithTag_(3)
-                    item.setTitle_('Always require OTR encryption with %s' % display_name)
+                    item.setTitle_(NSLocalizedString("Always require OTR encryption with %s" % display_name, "Menu item"))
 
                     if selectedSession.contact is not None:
                         item.setEnabled_(True)
@@ -1099,7 +1101,7 @@ class ChatWindowController(NSWindowController):
                             item.setHidden_(False)
                             if selectedSession.session.remote_focus:
                                 item.setEnabled_(False)
-                                item.setTitle_('OTR encryption is not possible within a multi-party conference')
+                                item.setTitle_(NSLocalizedString("OTR encryption is not possible within a multi-party conference", "Menu item"))
                             else:
                                 if selectedSession.account is BonjourAccount():
                                     item.setEnabled_(True)
@@ -1108,14 +1110,14 @@ class ChatWindowController(NSWindowController):
                                         item.setEnabled_(False)
                                     else:
                                         item.setEnabled_(True)
-                                item.setTitle_('Activate OTR encryption for this session' if not chat_stream.is_encrypted else 'Deactivate OTR encryption for this session')
+                                item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
                         else:
                             item.setEnabled_(False)
-                            item.setTitle_('OTR encryption is possible after connection is established')
+                            item.setTitle_(NSLocalizedString("OTR encryption is possible after connection is established", "Menu item"))
 
                     else:
                         item.setEnabled_(False)
-                        item.setTitle_('OTR encryption is disabled in Chat preferences')
+                        item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
 
                     if settings.chat.enable_encryption:
                         ctx = chat_stream.otr_account.getContext(selectedSession.call_id)
@@ -1130,7 +1132,8 @@ class ChatWindowController(NSWindowController):
 
                             fingerprint_verified = chat_stream.otr_account.getTrust(selectedSession.remoteSIPAddress, str(fingerprint))
                             item.setEnabled_(False)
-                            item.setTitle_("%s's fingerprint is %s" % (display_name, fingerprint) if fingerprint is not None else 'No Fingerprint Discovered')
+                            _t = NSLocalizedString("%s's fingerprint is " % display_name, "Menu item")
+                            item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
 
                             if selectedSession.account is BonjourAccount():
                                 item = menu.itemWithTag_(5)
@@ -1141,7 +1144,7 @@ class ChatWindowController(NSWindowController):
                                 item = menu.itemWithTag_(5)
                                 item.setEnabled_(True if fingerprint else False)
                                 item.setHidden_(False)
-                                item.setTitle_("I have verified %s's fingerprint" % display_name)
+                                item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
                                 item.setState_(NSOnState if fingerprint_verified else NSOffState)
 
                                 item = menu.itemWithTag_(9)
@@ -1154,6 +1157,7 @@ class ChatWindowController(NSWindowController):
             session = self.selectedSessionController()
             if session:
                 item = self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL)
+                # TODO: take all uris from conference info payload
                 object = {
                     'subject' : 'Invitation to Conference',
                     'body'    : 'Hello,\n\n' +
@@ -1163,10 +1167,10 @@ class ChatWindowController(NSWindowController):
                     }
                 item.setRepresentedObject_(object)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session is not None and session.session.state is not None else False)
-                self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_('Hide Session Information' if session.info_panel is not None and session.info_panel.window.isVisible() else 'Show Session Information')
+                self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_(NSLocalizedString("Hide Session Information", "Menu item") if session.info_panel is not None and session.info_panel.window.isVisible() else NSLocalizedString("Show Session Information", "Menu item"))
             else:
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(False)
-                self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_('Show Session Information')
+                self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_(NSLocalizedString("Show Session Information", "Menu item"))
 
 
 
@@ -1192,16 +1196,16 @@ class ChatWindowController(NSWindowController):
                     mitem.setEnabled_(True)
 
                     if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                        mitem.setTitle_("Cancel Screen Sharing Request")
+                        mitem.setTitle_(NSLocalizedString("Cancel Screen Sharing Request", "Menu item"))
                     elif screen_sharing_stream.status == STREAM_CONNECTED:
-                        mitem.setTitle_("Stop Screen Sharing")
+                        mitem.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item"))
 
                     if screen_sharing_stream.direction == 'active':
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                         if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_("Requesting Screen from %s..." % title)
+                            mitem.setTitle_(NSLocalizedString("Requesting Screen from %s..." % title, "Menu item"))
                         else:
-                            mitem.setTitle_("%s is Sharing Her Screen" % title)
+                            mitem.setTitle_(NSLocalizedString("%s is Sharing Her Screen" % title, "Menu item"))
 
                         mitem.setEnabled_(False)
                         mitem.setHidden_(False)
@@ -1216,9 +1220,9 @@ class ChatWindowController(NSWindowController):
 
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                         if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_("Sharing My Screen with %s..." % title)
+                            mitem.setTitle_(NSLocalizedString("Sharing My Screen with %s..." % title, "Menu item"))
                         else:
-                            mitem.setTitle_("My Screen is Shared with %s" % title)
+                            mitem.setTitle_(NSLocalizedString("My Screen is Shared with %s" % title, "Menu item"))
                         mitem.setEnabled_(False)
                         mitem.setHidden_(False)
 
@@ -1226,31 +1230,31 @@ class ChatWindowController(NSWindowController):
                     menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                    mitem.setTitle_("Request Screen from %s" % title)
+                    mitem.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item"))
                     mitem.setEnabled_(True)
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_("Share My Screen with %s" % title)
+                    mitem.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item"))
                     mitem.setEnabled_(True)
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setTitle_("Cancel Screen Sharing Request")
+                    mitem.setTitle_(NSLocalizedString("Cancel Screen Sharing Request", "Menu item"))
                     mitem.setEnabled_(False)
             else:
                 menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
 
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                mitem.setTitle_("Request Screen from %s" % title)
+                mitem.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item"))
                 mitem.setEnabled_(False)
 
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                mitem.setTitle_("Share My Screen with %s" % title)
+                mitem.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item"))
                 mitem.setEnabled_(False)
 
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                mitem.setTitle_("Cancel Screen Sharing Request")
+                mitem.setTitle_(NSLocalizedString("Cancel Screen Sharing Request", "Menu item"))
                 mitem.setEnabled_(False)
 
         elif menu == self.conferenceScreenSharingMenu:
@@ -1268,8 +1272,8 @@ class ChatWindowController(NSWindowController):
                 if chat_stream and chat_stream.screensharing_handler:
                         selected_window = chat_stream.screensharing_handler.window_id
 
-            item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_('Entire Screen', "selectConferenceScreenSharingWindow:", "")
-            obj = {'application': 'entire screen', 'id': 0, 'name': 'Entire Screen'}
+            item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Entire Screen", "Menu item"), "selectConferenceScreenSharingWindow:", "")
+            obj = {'application': 'entire screen', 'id': 0, 'name': NSLocalizedString("Entire Screen", "Menu item")}
             item.setRepresentedObject_(obj)
             item.setIndentationLevel_(2)
             item.setState_(NSOnState if selected_window == 0 else NSOffState)
@@ -1300,7 +1304,7 @@ class ChatWindowController(NSWindowController):
             if i:
                 i += 2
                 self.conferenceScreenSharingMenu.addItem_(NSMenuItem.separatorItem())
-                item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_('Stop Screen Sharing', "stopConferenceScreenSharing:", "")
+                item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Stop Screen Sharing", "Menu item"), "stopConferenceScreenSharing:", "")
                 obj = {'id': None, 'name': None, 'application': None}
                 item.setRepresentedObject_(obj)
                 item.setIndentationLevel_(1)
@@ -1351,7 +1355,7 @@ class ChatWindowController(NSWindowController):
                     display_name = unicode(conf_desc.display_text)
                 NSApp.delegate().contactsWindowController.addContact(uris=[(remote_uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE:
-                ret = NSRunAlertPanel(u"Remove from conference", u"You will request the conference server to remove %s from the room. Are your sure?" % uri, u"Remove", u"Cancel", None)
+                ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Window title"), NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?" % uri, "Label"), NSLocalizedString("Remove", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
             elif tag == CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE:
@@ -1503,11 +1507,11 @@ class ChatWindowController(NSWindowController):
             if state == STATE_CONNECTING:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(False)
-                self.audioStatus.setStringValue_(u"Connecting...")
+                self.audioStatus.setStringValue_(NSLocalizedString("Connecting...", "Audio status label"))
             elif state == STATE_CONNECTED:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(False)
-                self.audioStatus.setStringValue_(u"Connected")
+                self.audioStatus.setStringValue_(NSLocalizedString("Connected", "Audio status label"))
             else:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(True)
@@ -1598,9 +1602,9 @@ class ChatWindowController(NSWindowController):
                     contact = BlinkConferenceContact(uri, name=display_name, icon=icon)
 
                 if session.state == STATE_DNS_LOOKUP:
-                    contact.detail = "Finding Destination..."
+                    contact.detail = NSLocalizedString("Finding Destination...", "Contact detail")
                 elif session.state == STATE_CONNECTING:
-                    contact.detail = "Connecting..."
+                    contact.detail = NSLocalizedString("Connecting...", "Contact detail")
                 else:
                     try:
                         sip_uri = SIPURI.parse(str(contact.uri))
@@ -1671,11 +1675,11 @@ class ChatWindowController(NSWindowController):
             if session.hasStreamOfType("audio"):
                 if audio_stream.holdByLocal:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.audioStatus.setStringValue_(u"On Hold")
+                    self.audioStatus.setStringValue_(NSLocalizedString("On Hold", "Audio status label"))
                     self.audioStatus.setHidden_(False)
                 elif audio_stream.holdByRemote:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.audioStatus.setStringValue_(u"Hold by Remote")
+                    self.audioStatus.setStringValue_(NSLocalizedString("Hold by Remote", "Audio status label"))
                     self.audioStatus.setHidden_(False)
                 elif audio_stream.status ==  STREAM_CONNECTED:
                     if audio_stream.stream.sample_rate >= 32000:
@@ -1690,8 +1694,8 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setHidden_(False)
 
             elif session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
-                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                self.audioStatus.setStringValue_(u"Connected")
+                self.audioStatus.setTextColor_(NSolor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setStringValue_(NSLocalizedString("Connected", "Audio status label"))
                 self.audioStatus.setHidden_(False)
 
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_NICKNAME).setEnabled_(self.canSetNickname())
@@ -1706,9 +1710,10 @@ class ChatWindowController(NSWindowController):
             remote_uri = format_identity_to_string(session.remotePartyObject)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
-            column_header_title = u'Participants'
+            column_header_title = NSLocalizedString("Participants", "Table title")
             if session.conference_info is not None:
-                column_header_title = u'%d Participants' % len(self.participants) if len(self.participants) > 1 else u'Participants'
+                _l = len(self.participants)
+                column_header_title = NSLocalizedString("%d Participants" % _l, "Column title") if len(self.participants) > 1 else NSLocalizedString("Participants")
 
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 
@@ -1721,7 +1726,8 @@ class ChatWindowController(NSWindowController):
             self.conferenceFilesTableView.reloadData()
 
             if session.conference_shared_files:
-                column_header_title = u'%d Remote Conference Files' % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else u'Remote Conference Files'
+                _l = len(self.conference_shared_files)
+                column_header_title = NSLocalizedString("%d Remote Conference Files" % _l) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Column title")
                 if chat_stream and chat_stream.drawerSplitterPosition is None:
                     top_frame = self.conferenceFilesView.frame()
                     top_frame.size.height = 130
@@ -1729,7 +1735,7 @@ class ChatWindowController(NSWindowController):
                     bottom_frame.size.height = bottom_frame.size.height - 130
                     chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
             else:
-                column_header_title = u'Remote Conference Files'
+                column_header_title = NSLocalizedString("Remote Conference Files", "Column title")
                 if chat_stream:
                     chat_stream.drawerSplitterPosition = None
 
@@ -1882,7 +1888,7 @@ class ChatWindowController(NSWindowController):
                                                                                                                                               NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                                                                               table.window().graphicsContext(), 0, 1, 0)
                     invite_menu = NSMenu.alloc().init()
-                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                    titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item"), "", "")
                     titem.setEnabled_(False)
                     for uri in sourceContact.uris:
                         titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedInviteToConference:", "")
@@ -1954,7 +1960,7 @@ class ChatWindowController(NSWindowController):
 
 
             new_contact = BlinkConferenceContact(uri, name=contact.name if contact else None, icon=contact.icon if contact else None, presence_contact=presence_contact)
-            new_contact.detail = 'Invitation sent...'
+            new_contact.detail = NSLocalizedString("Invitation sent...", "Contact detail")
             session.invited_participants.append(new_contact)
             session.participants_log.add(uri)
             self.refreshDrawer()
@@ -1978,7 +1984,7 @@ class ConferenceFile(NSObject):
 
     @property
     def name(self):
-        return NSString.stringWithString_('%s (%s)'% (self.file.name, format_size_rounded(self.file.size) if self.file.status == 'OK' else 'failed'))
+        return NSString.stringWithString_('%s (%s)'% (self.file.name, format_size_rounded(self.file.size) if self.file.status == 'OK' else NSLocalizedString("Failed", "Label")))
 
     @property
     def sender(self):
