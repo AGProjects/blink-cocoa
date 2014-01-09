@@ -1694,7 +1694,7 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setHidden_(False)
 
             elif session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
-                self.audioStatus.setTextColor_(NSolor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+                self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setStringValue_(NSLocalizedString("Connected", "Audio status label"))
                 self.audioStatus.setHidden_(False)
 
