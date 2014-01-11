@@ -6,6 +6,7 @@ from AppKit import (NSApp,
                     NSOKButton)
 from Foundation import (NSBundle,
                         NSHeight,
+                        NSLocalizedString,
                         NSMakeRect,
                         NSObject,
                         NSOpenPanel,
@@ -32,7 +33,7 @@ def openFileTransferSelectionDialog(account, dest_uri, filename=None):
         return
 
     panel = NSOpenPanel.openPanel()
-    panel.setTitle_(u"Send File %s" % filename if filename else "Send File")
+    panel.setTitle_(NSLocalizedString("Select Files or Folders and Click Open to Send", "Window title"))
     panel.setDirectoryURL_(NSURL.URLWithString_(filename))
 
     panel.setAllowsMultipleSelection_(True)
@@ -92,9 +93,9 @@ class FileTransferWindowController(NSObject, object):
 
         count = len(self.listView.subviews())
         if count == 1:
-            self.bottomLabel.setStringValue_(u"1 item")
+            self.bottomLabel.setStringValue_(NSLocalizedString("1 item", "Label"))
         else:
-            self.bottomLabel.setStringValue_(u"%i items"%count if count else u"")
+            self.bottomLabel.setStringValue_(NSLocalizedString("%i items" % count, "Label") if count else u"")
 
         self.loaded = True
 
@@ -127,11 +128,15 @@ class FileTransferWindowController(NSObject, object):
 
         if incoming_transfer_rate or outgoing_transfer_rate:
             if incoming_transfer_rate and outgoing_transfer_rate:
-                text = 'Incoming %s/s, Outgoing %s/s' % (format_size(incoming_transfer_rate, bits=True), format_size(outgoing_transfer_rate, bits=True))
+                f1 = format_size(incoming_transfer_rate, bits=True)
+                f2 = format_size(outgoing_transfer_rate, bits=True)
+                text = NSLocalizedString("Incoming %s/s" % f1, "Label") + ", " + NSLocalizedString("Outgoing %s/s" % f2, "Label")
             elif incoming_transfer_rate:
-                text = 'Incoming %s/s' % format_size(incoming_transfer_rate, bits=True)
+                f = format_size(incoming_transfer_rate, bits=True)
+                text = NSLocalizedString("Incoming %s/s" % f, "Label")
             elif outgoing_transfer_rate:
-                text = 'Outgoing %s/s' % format_size(outgoing_transfer_rate, bits=True)
+                f = format_size(outgoing_transfer_rate, bits=True)
+                text = NSLocalizedString("Outgoing %s/s" % f, "Label")
             self.transferSpeed.setStringValue_(text)
         else:
             self.transferSpeed.setStringValue_('')
@@ -183,9 +188,9 @@ class FileTransferWindowController(NSObject, object):
 
         count = len(self.listView.subviews())
         if count == 1:
-            self.bottomLabel.setStringValue_(u"1 item")
+            self.bottomLabel.setStringValue_(NSLocalizedString("1 item", "Label"))
         else:
-            self.bottomLabel.setStringValue_(u"%i items"%count)
+            self.bottomLabel.setStringValue_(NSLocalizedString("%i items" % count, "Label"))
 
     def _NH_BlinkFileTransferDidFail(self, sender, data):
         self.listView.relayout()
