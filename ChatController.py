@@ -1549,7 +1549,7 @@ class ChatController(MediaStream):
                     # got a protocol error
                     log = 'Encrypted message %s protocol error: %s' % (msgid, e.args[0].error)
                     self.sessionController.log_error(log)
-                    self.showSystemMessage(log, ISOTimestamp.now(), True)
+                    #self.showSystemMessage(log, ISOTimestamp.now(), True)
                     return
                 except potr.crypt.InvalidParameterError, e:
                     encryption = 'failed'
@@ -1558,7 +1558,7 @@ class ChatController(MediaStream):
                     # sent to wrong session)
                     log = 'Invalid encrypted message %s received' % msgid
                     self.sessionController.log_error(log)
-                    self.showSystemMessage(log, ISOTimestamp.now(), True)
+                    #self.showSystemMessage(log, ISOTimestamp.now(), True)
                 except RuntimeError, e:
                     encryption = 'failed'
                     status = 'failed'
