@@ -36,6 +36,8 @@ def openFileTransferSelectionDialog(account, dest_uri, filename=None):
     panel.setDirectoryURL_(NSURL.URLWithString_(filename))
 
     panel.setAllowsMultipleSelection_(True)
+    panel.setCanChooseDirectories_(True)
+
     if panel.runModal() != NSOKButton:
         return
     filenames = [unicodedata.normalize('NFC', file) for file in panel.filenames()]
