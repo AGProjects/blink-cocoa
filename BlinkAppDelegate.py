@@ -130,24 +130,18 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.updater = Updater()
 
-            call_in_thread('file-io', self.purge_screenshots)
+            call_in_thread('file-io', self.purge_temporary_files)
 
         return self
 
-    def purge_screenshots(self):
-        screenshots_folder = ApplicationData.get('.tmp_screenshots')
-        if os.path.exists(screenshots_folder):
-            try:
-                shutil.rmtree(screenshots_folder)
-            except EnvironmentError:
-                pass
-
-        snapshots_folder = ApplicationData.get('.tmp_snapshots')
-        if os.path.exists(snapshots_folder):
-            try:
-                shutil.rmtree(snapshots_folder)
-            except EnvironmentError:
-                pass
+    def purge_temporary_files(self):
+        for dir in ('.tmp_screenshots', '.tmp_snapshots', '.tmp_file_transfers'):
+            folder = ApplicationData.get(dir)
+            if os.path.exists(folder):
+                try:
+                    shutil.rmtree(folder)
+                except EnvironmentError:
+                    pass
 
     def gui_notify(self, title, body, subtitle=None):
         if self.application_will_end:
@@ -298,8 +292,7 @@ class BlinkAppDelegate(NSObject):
         handler(notification)
 
     def _NH_SIPApplicationWillEnd(self, notification):
-        call_in_thread('file-io', self.purge_screenshots)
-        self.application_will_end = True
+        call_in_thread('file-io', self.purge_temporary_files)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if 'gui.extended_debug' in notification.data.modified:
@@ -311,6 +304,7 @@ class BlinkAppDelegate(NSObject):
         self.debug = settings.gui.extended_debug
         settings.audio.enable_aec = settings.audio.echo_canceller.enabled
         settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
+        call_in_thread('file-io', self.purge_temporary_files)
 
     def _NH_SIPApplicationDidEnd(self, notification):
         call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
