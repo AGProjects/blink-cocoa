@@ -2102,7 +2102,7 @@ class CustomListModel(NSObject):
             if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, (BlinkPresenceContact, BonjourBlinkContact, SearchResultContact)):
                 return NSDragOperationNone
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
-            if not all(os.path.isfile(f) for f in fnames):
+            if not all(os.path.isfile(f) or os.path.isdir(f) for f in fnames):
                 return NSDragOperationNone
             return NSDragOperationCopy
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):

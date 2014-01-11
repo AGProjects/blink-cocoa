@@ -16,11 +16,14 @@ from Foundation import (NSBundle,
 import objc
 
 import hashlib
+import os
 import re
-import time
 import socket
+import time
 import urllib
 import uuid
+import zipfile
+import zlib
 
 from itertools import chain
 from datetime import datetime
@@ -30,6 +33,7 @@ from application.python import Null
 from application.python.types import Singleton
 from zope.interface import implements
 
+from resources import ApplicationData
 from resources import Resources
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
@@ -457,6 +461,30 @@ class SessionControllersManager(object):
         target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, AccountManager().default_account)
 
         for file in filenames:
+            if os.path.isdir(file):
+                dir = file
+                base_name = os.path.basename(dir)
+                dir_name = os.path.dirname(dir)
+                zip_folder = ApplicationData.get('.tmp_file_transfers')
+                if not os.path.exists(zip_folder):
+                    os.mkdir(zip_folder, 0700)
+                zip_file = '%s/%s.zip' % (zip_folder, base_name)
+                zf = zipfile.ZipFile(zip_file, mode='w')
+                try:
+                    BlinkLogger().log_error(u"Compressing folder %s to %s" % (dir, zip_file))
+                    for root, dirs, files in os.walk(file):
+                        for name in files:
+                            _file = os.path.join(root, name)
+                            arcname = _file[len(dir_name)+1:]
+                            zf.write(_file, compress_type=zipfile.ZIP_DEFLATED, arcname=arcname)
+                except Exception, exc:
+                    BlinkLogger().log_error(u"Error compressing %s to %s: %s" % (dir, zip_file, exc))
+                    continue
+                finally:
+                    zf.close()
+
+                file = zip_file
+
             try:
                 xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
                 xfer.start()
