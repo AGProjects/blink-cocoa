@@ -469,6 +469,14 @@ class SessionControllersManager(object):
                 if not os.path.exists(zip_folder):
                     os.mkdir(zip_folder, 0700)
                 zip_file = '%s/%s.zip' % (zip_folder, base_name)
+                if os.path.isfile(zip_file):
+                    i = 1
+                    while True:
+                        zip_file = '%s/%s_%d.zip' % (zip_folder, base_name, i)
+                        if not os.path.isfile(zip_file):
+                            break
+                        i += 1
+
                 zf = zipfile.ZipFile(zip_file, mode='w')
                 try:
                     BlinkLogger().log_error(u"Compressing folder %s to %s" % (dir, zip_file))
