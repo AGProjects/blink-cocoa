@@ -78,6 +78,7 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
+        self.registered_addresses = {}
 
     def set_delegate(self, delegate):
         self._delegate = delegate
@@ -508,11 +509,21 @@ class SIPManager(object):
             self.bonjour_conference_services.stop()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = u'Account %s registered contact "%s" at %s:%d;transport=%s for %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+        message = u'Account %s registered contact "%s" at SIP Registrar %s:%d;transport=%s and will refresh every %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
-        BlinkLogger().log_debug(message)
+        _address = "%s:%s;transport=%s" % (data.registrar.address, data.registrar.port, data.registrar.transport)
+        try:
+            old_address = self.registered_addresses[account.id]
+        except KeyError:
+            BlinkLogger().log_info(message)
+        else:
+            if old_address != _address:
+                BlinkLogger().log_info(message)
+
+        self.registered_addresses[account.id] = _address
+
         if account.contact.public_gruu is not None:
             message = u'Account %s public GRUU %s' % (account.id, account.contact.public_gruu)
             BlinkLogger().log_debug(message)
@@ -522,6 +533,10 @@ class SIPManager(object):
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info(u"Account %s was unregistered" % account.id)
+        try:
+            del self.registered_addresses[account.id]
+        except KeyError:
+            pass
 
     def _NH_SIPAccountRegistrationGotAnswer(self, account, data):
         if data.code > 200:
