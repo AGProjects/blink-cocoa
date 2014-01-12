@@ -929,11 +929,11 @@ class ChatController(MediaStream):
             private = bool(int(message.private))
 
             if self.chatViewController:
-                if call_id is not None and call_id != message.sip_callid and  message.media_type == 'chat':
-                    self.chatViewController.showSystemMessage(message.sip_callid, 'Connection established', timestamp, False)
+                #if call_id is not None and call_id != message.sip_callid and  message.media_type == 'chat':
+                    #self.chatViewController.showSystemMessage(message.sip_callid, 'Connection established', timestamp, False)
 
-                if message.media_type == 'sms' and last_media_type == 'chat':
-                    self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
+                #if message.media_type == 'sms' and last_media_type == 'chat':
+                    #self.chatViewController.showSystemMessage(message.sip_callid, 'Instant messages', timestamp, False)
 
                 self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
