@@ -410,6 +410,7 @@ class HistoryViewer(NSWindowController):
     def renderMessages(self, start=None):
         self.chatViewController.clear()
         self.chatViewController.resetRenderedMessages()
+        self.chatViewController.last_sender = None
 
         start_from = start or self.start
 

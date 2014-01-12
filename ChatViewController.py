@@ -225,6 +225,9 @@ class ChatViewController(NSObject):
 
     editorIsComposing = False
     scrolling_back = False
+    
+    last_sender = None
+    previous_msgid = ""
 
     @property
     def sessionController(self):
@@ -447,6 +450,13 @@ class ChatViewController(NSObject):
             else:
                 lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
 
+        if self.last_sender == sender:
+            icon_path = "null"
+        else:
+            icon_path = "'%s'" % icon_path
+        
+        self.last_sender = sender
+
         if not history_entry and not self.delegate.isOutputFrameVisible():
             self.delegate.showChatViewWhileVideoActive()
 
@@ -470,7 +480,7 @@ class ChatViewController(NSObject):
             else:
                 label = cgi.escape(self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
 
-        script = """renderMessage('%s', '%s', '%s', '%s', "%s", '%s', '%s', %s, '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private, lock_icon_path)
+        script = """renderMessage('%s', '%s', '%s', %s, '%s', '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
 
         if self.finishedLoading:
             self.executeJavaScript(script)
@@ -479,6 +489,8 @@ class ChatViewController(NSObject):
 
         if hasattr(self.delegate, "chatViewDidGetNewMessage_"):
             self.delegate.chatViewDidGetNewMessage_(self)
+
+        self.previous_msgid = msgid
 
     def toggleSmileys(self, expandSmileys):
         for entry in self.rendered_messages:

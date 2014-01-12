@@ -14,7 +14,7 @@ body
   border-width: 1px;
   border-color: #ACA892;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   -webkit-border-radius: 5px;
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
   color: white
@@ -27,7 +27,7 @@ body
   border-width: 1px;
   border-color: #ACA892;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   -webkit-border-radius: 5px;
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
 }
@@ -46,7 +46,7 @@ body
   border-width: 1px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -60,7 +60,7 @@ body
   border-width: 1px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -74,7 +74,7 @@ body
   border-width: 1px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -88,7 +88,7 @@ body
   border-width: 1px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -102,7 +102,7 @@ body
   border-width: 1px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-bottom: 10px;
+  margin-top: 10px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -157,9 +157,12 @@ body
   font-size: 11px;
   float: right; /*width: 150px;*/
   text-align: right;
+  margin-top: 8px;
+  margin-left: 10px;
 }
 
 .lock {
+    margin-top: -1px;
     width: 14px;
     float: right ;
 }
@@ -171,6 +174,8 @@ body
   float: right; /*width: 150px;*/
   text-align: right;
   display: none;
+  margin-top: 8px;
+  margin-left: 10px;
 }
 
 .hidden {
@@ -187,6 +192,7 @@ body
   font-size: 11px;
   float: right; /*width: 150px;*/
   text-align: right;
+  margin-top: 8px;
 }
 
 .systimestamp {
@@ -241,7 +247,7 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath)
+function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid)
 {
   var chat_session;
   var content;
@@ -266,6 +272,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
   } else {
       lock_class = "lock"
   }
+
   if (state == "deferred") {
       box_class = "msgbox_deferred";
       status = "Deferred for later ";
@@ -283,16 +290,29 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       status = timestamp;
   }
 
+    if (iconpath == null) {
+        icon_class = "hidden";
+        recipient_class = "hidden";
+    } else {
+        icon_class = "photobox";
+        if (show_sending_state == 'yes') {
+            recipient_class = "recipient_self";
+        } else {
+            recipient_class = "recipient";
+        }
+    }
+
+
   if (content != null)
       content.id = "";
 
   if (show_sending_state == 'yes') {
     chat_session.innerHTML +=
     "<div id='c"+msgid+"'>"+
-    "<img class='photobox' src='file:"+iconpath+"'/>"+
+    "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
     "<div class='"+box_class+"' id='"+msgid+"'>"+
          "<div class='header'>"+
-             "<div class='recipient_self' id='r"+msgid+"'>"+sender+"</div>"+
+             "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
              "<div class='timestamp_hidden' id='t"+msgid+"'><img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+"</div>"+
              "<div class='state' id='s"+msgid+"'>Sending...</div>"+
          "</div>"+
@@ -305,10 +325,10 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     chat_session.innerHTML +=
     "<div id='c"+msgid+"'>"+
     "<div>"+
-    "<img class='photobox' src='file:"+iconpath+"'/>"+
-    "<div class='"+box_class+"'>"+
+    "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
+    "<div class='"+box_class+"' id='"+msgid+"'>"+
          "<div class='header'>"+
-             "<div class='recipient'>"+sender+"</div>"+
+             "<div class='"+recipient_class+"'>"+sender+"</div>"+
              "<div class='timestamp'><img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+"</div>"+
          "</div>"+
          "<div class='message' id='b"+msgid+"'>"+
@@ -317,6 +337,18 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "</div>"+
     "</div>";
   }
+
+    if (iconpath == null) {
+        box = document.getElementById(msgid);
+        box.style.marginTop = "0px";
+        box.style.borderTopStyle = "hidden";
+
+        previous_box = document.getElementById(previous_msgid);
+        previous_box.style.borderBottomColor = "#EDEDED";
+        previous_box.borderBottomRightRadius = "0px";
+        previous_box.borderBottomLeftRadius = "0px";
+
+    }
 
   lastSender = sender;
   lastTimestamp = timestamp;
