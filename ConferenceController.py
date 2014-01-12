@@ -495,7 +495,10 @@ class JoinConferenceWindowController(NSObject):
             participant = participant + '@' + self.default_domain
 
         if not participant or not validateParticipant(participant):
-            NSRunAlertPanel(NSLocalizedString("Add New Participant", "Alert panel title"), NSLocalizedString("Participant must be a valid SIP address. ", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Add New Participant", "Window title"),
+                            NSLocalizedString("Participant must be a valid SIP address. ", "Label"),
+                            NSLocalizedString("OK", "Button title"),
+                            None, None)
             return
 
         if participant not in self._participants:
@@ -536,8 +539,10 @@ class JoinConferenceWindowController(NSObject):
             room=self.room.stringValue().lower().strip()
 
         if not re.match("^[+1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", room):
-            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), NSLocalizedString("Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a +, a positive digit or letter", "Alert panel label"),
-                NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
+                            NSLocalizedString("Please enter a valid conference room of at least 2 alpha-numeric . _ or - characters, it must start and end with a +, a positive digit or letter", "Label"),
+                            NSLocalizedString("OK", "Button title"),
+                            None, None)
             return False
         else:
             return room
@@ -549,8 +554,10 @@ class JoinConferenceWindowController(NSObject):
             return False
 
         if self.chat.state() == NSOffState and self.audio.state() == NSOffState:
-            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), NSLocalizedString("Please select at least one media type. ", "Alert panel label"),
-                NSLocalizedString("OK", ""), None, None)
+            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
+                            NSLocalizedString("Please select at least one media type. ", "Label"),
+                            NSLocalizedString("OK", "Button title"),
+                            None, None)
             return False
 
         if "@" in room:
@@ -560,14 +567,20 @@ class JoinConferenceWindowController(NSObject):
             if isinstance(account, BonjourAccount):
                 item = self.bonjour_server_combolist.selectedItem()
                 if item is None:
-                    NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), NSLocalizedString("No conference server in this neighbourhood", "Alert panel label"), NSLocalizedString("OK", "Button label"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
+                                    NSLocalizedString("No conference server in this neighbourhood", "Label"),
+                                    NSLocalizedString("OK", "Button label"),
+                                    None, None)
                     return False
 
                 object = item.representedObject()
                 if hasattr(object, 'host'):
                     self.target = u'%s@%s:%s;transport=%s' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
                 else:
-                    NSRunAlertPanel(NSLocalizedString("Start a new Conference", "Alert panel title"), NSLocalizedString("No conference server in this neighbourhood", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Start a new Conference", "Window title"),
+                                    NSLocalizedString("No conference server in this neighbourhood", "Label"),
+                                    NSLocalizedString("OK", "Button title"),
+                                    None, None)
                     return False
             else:
                 if account.conference.server_address:
@@ -576,8 +589,10 @@ class JoinConferenceWindowController(NSObject):
                     self.target = u'%s@%s' % (room, default_conference_server)
 
         if not validateParticipant(self.target):
-            text = 'Invalid conference SIP URI: %s' % self.target
-            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Alert panel title"), text, NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
+                            NSLocalizedString("Invalid conference SIP address: %s" % self.target, "Label"),
+                            NSLocalizedString("OK", "Button title"),
+                            None, None)
             return False
 
         return True
@@ -717,7 +732,10 @@ class AddParticipantsWindowController(NSObject):
                 participant = sip_prefix_pattern.sub("", str(participant))
 
             if not participant or not validateParticipant(participant):
-                NSRunAlertPanel(NSLocalizedString("Add New Participant", "Alert panel title"), NSLocalizedString("Participant must be a valid SIP addresses. ", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Add New Participant", "Window title"),
+                                NSLocalizedString("Participant must be a valid SIP addresses. ", "Label"),
+                                NSLocalizedString("OK", "Button title"),
+                                None, None)
                 return
 
             if participant not in self._participants:
@@ -742,7 +760,10 @@ class AddParticipantsWindowController(NSObject):
             participant = participant + '@' + self.default_domain
 
         if not participant or not validateParticipant(participant):
-            NSRunAlertPanel(NSLocalizedString("Add New Participant", "Alert panel title"), NSLocalizedString("Participant must be a valid SIP addresses. ", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Add New Participant", "Window title"),
+                            NSLocalizedString("Participant must be a valid SIP addresses. ", "Label"),
+                            NSLocalizedString("OK", "Button title"),
+                            None, None)
             return
 
         if participant not in self._participants:
@@ -755,7 +776,7 @@ class AddParticipantsWindowController(NSObject):
     @objc.IBAction
     def okClicked_(self, sender):
         if not len(self._participants):
-            NSRunAlertPanel(NSLocalizedString("Add Participants to the Conference", "Alert panel title"), NSLocalizedString("Please add at least one participant. ", "Alert panel label"),
+            NSRunAlertPanel(NSLocalizedString("Add Participants to the Conference", "Window title"), NSLocalizedString("Please add at least one participant. ", "Label"),
                 NSLocalizedString("OK", "Button title"), None, None)
         else:
             NSApp.stopModalWithCode_(NSOKButton)

@@ -657,7 +657,9 @@ class ChatWindowController(NSWindowController):
         if active > 1:
             ret = NSRunAlertPanel(NSLocalizedString("Close Chat Window", "Window Title"),
                                   NSLocalizedString("There are %i Chat sessions, click Close to terminate them all." % active, "Label"),
-                                  NSLocalizedString("Close", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+                                  NSLocalizedString("Close", "Button title"),
+                                  NSLocalizedString("Cancel", "Button title"),
+                                  None)
             if ret != NSAlertDefaultReturn:
                 return False
 
@@ -1355,7 +1357,11 @@ class ChatWindowController(NSWindowController):
                     display_name = unicode(conf_desc.display_text)
                 NSApp.delegate().contactsWindowController.addContact(uris=[(remote_uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE:
-                ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Window title"), NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?" % uri, "Label"), NSLocalizedString("Remove", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+                ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Window title"),
+                                      NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?" % uri, "Label"),
+                                      NSLocalizedString("Remove", "Button title"),
+                                      NSLocalizedString("Cancel", "Button title"),
+                                      None)
                 if ret == NSAlertDefaultReturn:
                     self.removeParticipant(uri)
             elif tag == CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE:
@@ -1713,7 +1719,7 @@ class ChatWindowController(NSWindowController):
             column_header_title = NSLocalizedString("Participants", "Table title")
             if session.conference_info is not None:
                 _l = len(self.participants)
-                column_header_title = NSLocalizedString("%d Participants" % _l, "Column title") if len(self.participants) > 1 else NSLocalizedString("Participants")
+                column_header_title = NSLocalizedString("%d Participants" % _l, "Column title") if len(self.participants) > 1 else NSLocalizedString("Participants", "Column title")
 
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 

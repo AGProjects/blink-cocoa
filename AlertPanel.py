@@ -233,15 +233,15 @@ class AlertPanel(NSObject, object):
 
         if len(self.sessions) == 1:
             if "screen-sharing" in stream_type_list:
-                base_text = NSLocalizedString("Screen Sharing from %s", "Alert panel label")
+                base_text = NSLocalizedString("Screen Sharing from %s", "Label")
             elif "audio" in stream_type_list:
-                base_text = NSLocalizedString("Audio call from %s", "Alert panel label")
+                base_text = NSLocalizedString("Audio call from %s", "Label")
             elif stream_type_list == ["file-transfer"]:
-                base_text = NSLocalizedString("File transfer from %s", "Alert panel label")
+                base_text = NSLocalizedString("File transfer from %s", "Label")
             elif stream_type_list == ["chat"]:
-                base_text = NSLocalizedString("Chat from %s", "Alert panel label")
+                base_text = NSLocalizedString("Chat from %s", "Label")
             else:
-                base_text = NSLocalizedString("Call from %s", "Alert panel label")
+                base_text = NSLocalizedString("Call from %s", "Label")
 
             title = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
             self.panel.setTitle_(title)
@@ -250,7 +250,7 @@ class AlertPanel(NSObject, object):
                 self.speak_text = title
                 self.startSpeechSynthesizerTimer()
         else:
-            self.panel.setTitle_(NSLocalizedString("Multiple Incoming Calls", "Alert panel label"))
+            self.panel.setTitle_(NSLocalizedString("Multiple Incoming Calls", "Label"))
 
         NotificationCenter().add_observer(self, sender=session)
 
@@ -400,11 +400,11 @@ class AlertPanel(NSObject, object):
 
             if outdev != indev:
                 if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
-                    self.deviceLabel.setStringValue_(NSLocalizedString("Using Built-in Microphone and Output", "Alert panel label"))
+                    self.deviceLabel.setStringValue_(NSLocalizedString("Using Built-in Microphone and Output", "Label"))
                 else:
                     self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev.strip(), indev.strip()))
             else:
-                self.deviceLabel.setStringValue_(NSLocalizedString("Using audio device ", "Alert panel label") + outdev.strip())
+                self.deviceLabel.setStringValue_(NSLocalizedString("Using audio device ", "Label") + outdev.strip())
 
             BlinkLogger().log_info(u"Using input/output audio devices: %s/%s" % (indev.strip(), outdev.strip()))
 
@@ -421,10 +421,10 @@ class AlertPanel(NSObject, object):
         else:
             destT.setHidden_(False)
             if isinstance(session.account, BonjourAccount):
-                destT.setStringValue_(NSLocalizedString("To Bonjour account", "Alert panel label"))
+                destT.setStringValue_(NSLocalizedString("To Bonjour account", "Label"))
             else:
                 to = format_identity_to_string(session.account)
-                destT.setStringValue_(NSLocalizedString("To %s" % to, "Alert panel label"))
+                destT.setStringValue_(NSLocalizedString("To %s" % to, "Label"))
             destT.sizeToFit()
 
         if len(self.sessions) == 1:

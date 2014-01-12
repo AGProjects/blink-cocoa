@@ -217,7 +217,7 @@ class PhotoPicker(NSObject):
         # Find a video device
         device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
         if not device:
-            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("Camera device cannot be started", "Alert panel label"), NSLocalizedString("OK", "Button title"), "", "")
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("Camera device cannot be started", "Label"), NSLocalizedString("OK", "Button title"), "", "")
             self.captureSession = None
             return
 
@@ -405,7 +405,7 @@ class PhotoPicker(NSObject):
         try:
             image = NSImage.alloc().initWithContentsOfFile_(path)
         except:
-            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         rect = NSZeroRect.copy()
@@ -447,7 +447,7 @@ class PhotoPicker(NSObject):
             try:
                 image = NSImage.alloc().initWithContentsOfFile_(path)
             except:
-                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return
 
             size = image.size()

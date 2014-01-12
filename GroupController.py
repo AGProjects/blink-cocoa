@@ -29,7 +29,7 @@ class AddGroupController(NSObject):
     def runModalForRename_(self, name):
         self.nameText.setStringValue_(name)
         self.window.setTitle_(NSLocalizedString("Rename Group", "Window title"))
-        self.caption.setStringValue_(NSLocalizedString("Enter a new name for the group:", "Alert panel label"))
+        self.caption.setStringValue_(NSLocalizedString("Enter a new name for the group:", "Label"))
         self.window.makeKeyAndOrderFront_(None)
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)

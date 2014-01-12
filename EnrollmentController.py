@@ -149,7 +149,7 @@ class EnrollmentController(NSObject):
             password = unicode(self.passwordText.stringValue())
 
             if not address or "@" not in address:
-                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com", "Alert panel label"),
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com", "Label"),
                                 NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
@@ -157,11 +157,11 @@ class EnrollmentController(NSObject):
                 domain = address.split("@")[1]
                 if domain not in self.allowed_domains:
                     _domains = ",".join(self.allowed_domains)
-                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s" % _domains, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s" % _domains, "Label"), NSLocalizedString("OK", "Button title"), None, None)
                     return False
 
             if not password:
-                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your account password.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your account password.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
             return True
         else:
@@ -173,17 +173,17 @@ class EnrollmentController(NSObject):
             email = unicode(self.newEmailText.stringValue())
 
             if not display_name:
-                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your Display Name.", "Alert panel label"),
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your Display Name.", "Label"),
                     NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
             if not username.strip():
-                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please choose a Username for your account.", "Alert panel label"),
+                NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please choose a Username for your account.", "Label"),
                     NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
             if not re.match("^[1-9a-z][0-9a-z_.-]{2,65}[0-9a-z]$", username):
-                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("The Username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter", "Alert panel label"),
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("The Username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter", "Label"),
                     NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
@@ -191,13 +191,13 @@ class EnrollmentController(NSObject):
                 return "@" in email
 
             if not password:
-                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Please enter a Password for your new SIP Account.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Please enter a Password for your new SIP Account.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
             if password != password2:
-                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Entered Password confirmation doesn't match.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Entered Password confirmation doesn't match.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
             if not email or not validate_email(email):
-                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Please enter a valid Email Address.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Please enter a valid Email Address.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
             return True
@@ -226,7 +226,7 @@ class EnrollmentController(NSObject):
 
             account.save()
         except ValueError, e:
-            NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return False
 
         AccountManager().default_account = account
@@ -386,13 +386,13 @@ class EnrollmentController(NSObject):
         if sip_address is None:
             BlinkLogger().log_info(error_message)
             NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"),
-                            NSLocalizedString("Error creating SIP account: %s" % error_message, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                            NSLocalizedString("Error creating SIP account: %s" % error_message, "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return False
 
         try:
             account = Account(str(sip_address))
         except ValueError, e:
-            NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return False
         else:
             NSApp.delegate().contactsWindowController.created_accounts.add(account.id)
@@ -438,7 +438,7 @@ class EnrollmentController(NSObject):
 
         account.save()
 
-        NSRunAlertPanel(NSLocalizedString("SIP Account Created", "Window title"), NSLocalizedString("Your new SIP Address is:\n\n%s" % sip_address, "Alert panel label"), NSLocalizedString("Continue", "Button title"), None, None)
+        NSRunAlertPanel(NSLocalizedString("SIP Account Created", "Window title"), NSLocalizedString("Your new SIP Address is:\n\n%s" % sip_address, "Label"), NSLocalizedString("Continue", "Button title"), None, None)
 
         # enable account only after Continue pressed to give server time to update
         account.enabled = True

@@ -1284,7 +1284,7 @@ class ContactWindowController(NSWindowController):
                     else:
                         NSApp.activateIgnoringOtherApps_(True)
                         panel = NSGetInformationalAlertPanel(NSLocalizedString("New Account Added", "Window title"),
-                                                             NSLocalizedString("To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.", "Alert panel label"),
+                                                             NSLocalizedString("To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.", "Label"),
                                                              NSLocalizedString("OK", "Button title"), None, None)
                         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(20, self, "newAccountHasBeenAddedNotice:", panel, False)
                         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
@@ -1407,7 +1407,7 @@ class ContactWindowController(NSWindowController):
         else:
             NSApp.activateIgnoringOtherApps_(True)
             panel = NSGetInformationalAlertPanel(NSLocalizedString("New Audio Device", "Window title"),
-                                                 NSLocalizedString("A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(), "Alert panel label"),
+                                                 NSLocalizedString("A new audio device %s has been plugged-in. Would you like to switch to it?" % device.strip(), "Label"),
                                                  NSLocalizedString("Switch", "Button title"), NSLocalizedString("Ignore", "Button title"), None)
             timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(7, self, "newAudioDeviceTimeout:", panel, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
@@ -2066,7 +2066,7 @@ class ContactWindowController(NSWindowController):
                 try:
                     text = str(text)
                 except:
-                    NSRunAlertPanel(NSLocalizedString("Invalid Address", "Alert panel"), NSLocalizedString("The address you typed is invalid, only ASCII characters are allowed.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Invalid Address", "Alert panel"), NSLocalizedString("The address you typed is invalid, only ASCII characters are allowed.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                     return
                 else:
                     _split = text.split(';')
@@ -2265,7 +2265,7 @@ class ContactWindowController(NSWindowController):
             display_name = contact.name
 
         if not account:
-            NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"),
+            NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"),
                             NSLocalizedString("OK", "Button title"), None, None)
             return None
 
@@ -2305,7 +2305,7 @@ class ContactWindowController(NSWindowController):
         NSApp.activateIgnoringOtherApps_(True)
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
@@ -2363,7 +2363,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         try:
@@ -2394,7 +2394,7 @@ class ContactWindowController(NSWindowController):
     def sendSMSToSelectedUri_(self, sender):
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
         try:
@@ -2534,7 +2534,7 @@ class ContactWindowController(NSWindowController):
             # if conference already started:
             #    return
 
-            if NSRunAlertPanel(NSLocalizedString("Audio Conference", "Window title"), NSLocalizedString("Would you like to start a conference with the %i active sessions? Once started you may use drag and drop to add and remove contacts to and from the conference. " % count, "Alert panel label"), NSLocalizedString("OK", "Button title"), NSLocalizedString("Cancel", "Button title"), "") != NSAlertDefaultReturn:
+            if NSRunAlertPanel(NSLocalizedString("Audio Conference", "Window title"), NSLocalizedString("Would you like to start a conference with the %i active sessions? Once started you may use drag and drop to add and remove contacts to and from the conference. " % count, "Label"), NSLocalizedString("OK", "Button title"), NSLocalizedString("Cancel", "Button title"), "") != NSAlertDefaultReturn:
                 self.conferenceButton.setState_(NSOffState)
                 return
 
@@ -3883,7 +3883,7 @@ class ContactWindowController(NSWindowController):
         uri = sender.representedObject()
         account = self.activeAccount()
         if not account:
-            NSRunAlertPanel(NSLocalizedString("Cannot Send File", "Window title"), NSLocalizedString("There are currently no active accounts", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Cannot Send File", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
         try:
             contact = self.getSelectedContacts()[0]

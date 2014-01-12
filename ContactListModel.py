@@ -2331,9 +2331,9 @@ class CustomListModel(NSObject):
                     targetContact = targetGroup.contacts[self.drop_on_contact_index]
 
                     if (sourceContact.name == targetContact.name):
-                        message = NSLocalizedString("Would you like to consolidate the two contacts into %s" % targetContact.name, "Alert panel label") + ' (%s)?' % targetContact.uri
+                        message = NSLocalizedString("Would you like to consolidate the two contacts into %s" % targetContact.name, "Label") + ' (%s)?' % targetContact.uri
                     else:
-                        message = NSLocalizedString("Would you like to merge %s " % sourceContact.name, "Alert panel label") + NSLocalizedString("and", "Alert panel label") + targetContact.name + NSLocalizedString(" contacts into %s" % targetContact.name, "Alert panel label") + " (%s)?" % targetContact.uri
+                        message = NSLocalizedString("Would you like to merge %s " % sourceContact.name, "Label") + NSLocalizedString("and", "Label") + targetContact.name + NSLocalizedString(" contacts into %s" % targetContact.name, "Label") + " (%s)?" % targetContact.uri
 
                     merge_controller = MergeContactController(message)
                     ret = merge_controller.runModal_(message)
@@ -2599,12 +2599,12 @@ class ContactListModel(CustomListModel):
                 cPickle.dump(backup_data, open(storage_path, "w+"))
                 if not silent:
                     l = len(backup_contacts)
-                    NSRunAlertPanel(NSLocalizedString("Contacts Backup",  "Window title"), NSLocalizedString("%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % l, "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Contacts Backup",  "Window title"), NSLocalizedString("%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu." % l, "Label"), NSLocalizedString("OK", "Button title"), None, None)
             except (IOError, cPickle.PicklingError):
                 pass
         else:
             if not silent:
-                NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Window title"), NSLocalizedString("There are no contacts available for backup.", "Alert panel label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Window title"), NSLocalizedString("There are no contacts available for backup.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
 
     def restore_contacts(self, backup):
         restored_contacts = 0
@@ -2631,7 +2631,7 @@ class ContactListModel(CustomListModel):
 
         if contacts:
             l = len(data['contacts'])
-            label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Alert panel label")+ backup[1] + ". " + NSLocalizedString("Newer contacts will be preserved.", "Alert panel label")
+            label = NSLocalizedString("This operation will restore %d contacts present in the backup taken at " % l, "Label")+ backup[1] + ". " + NSLocalizedString("Newer contacts will be preserved.", "Label")
             ret = NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), label, NSLocalizedString("Restore", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
 
             if ret != NSAlertDefaultReturn:
@@ -2746,18 +2746,18 @@ class ContactListModel(CustomListModel):
 
         panel_text = ''
         if not restored_contacts:
-            panel_text += NSLocalizedString("All contacts from the backup were already present. ", "Alert panel label")
+            panel_text += NSLocalizedString("All contacts from the backup were already present. ", "Label")
         elif restored_contacts == 1:
-            panel_text += NSLocalizedString("One contact has been restored. ", "Alert panel label")
+            panel_text += NSLocalizedString("One contact has been restored. ", "Label")
         else:
-            panel_text += NSLocalizedString("%d contacts have been restored. " % restored_contacts, "Alert panel label")
+            panel_text += NSLocalizedString("%d contacts have been restored. " % restored_contacts, "Label")
 
         if not restored_groups:
-            panel_text += NSLocalizedString("All groups from the backup were already present. ", "Alert panel label")
+            panel_text += NSLocalizedString("All groups from the backup were already present. ", "Label")
         elif restored_groups == 1:
-            panel_text += NSLocalizedString("One group has been restored. ", "Alert panel label")
+            panel_text += NSLocalizedString("One group has been restored. ", "Label")
         else:
-            panel_text += NSLocalizedString("%d groups have been restored. " % restored_groups, "Alert panel label")
+            panel_text += NSLocalizedString("%d groups have been restored. " % restored_groups, "Label")
 
         NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), panel_text , NSLocalizedString("OK", "Button title"), None, None)
 
@@ -3879,7 +3879,7 @@ class ContactListModel(CustomListModel):
             return
 
         name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
-        message = NSLocalizedString("Delete '%s' from the Contacts list?" % name, "Alert panel label")
+        message = NSLocalizedString("Delete '%s' from the Contacts list?" % name, "Label")
         message = re.sub("%", "%%", message)
 
         ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
@@ -3891,7 +3891,7 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     def deleteGroup(self, blink_group):
-        message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. " %blink_group.name, "Alert panel label")
+        message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. " %blink_group.name, "Label")
         message = re.sub("%", "%%", message)
         ret = NSRunAlertPanel(NSLocalizedString("Delete Group", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
         if ret == NSAlertDefaultReturn and blink_group in self.groupsList:

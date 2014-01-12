@@ -1730,8 +1730,8 @@ class SessionController(NSObject):
         if data.code in (301, 302) and data.redirect_identities:
             redirect_to = data.redirect_identities[0].uri
             addr = "%s@%s" % (redirect_to.user, redirect_to.host)
-            ret = NSRunAlertPanel(NSLocalizedString("Redirect Call", "Alert panel title"),
-                  NSLocalizedString("The remote party has redirected his calls to %s.\nWould you like to call this address?" % addr, "Alert panel label"),
+            ret = NSRunAlertPanel(NSLocalizedString("Redirect Call", "Window title"),
+                  NSLocalizedString("The remote party has redirected his calls to %s.\nWould you like to call this address?" % addr, "Label"),
                   NSLocalizedString("Call", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
 
             if ret == NSAlertDefaultReturn:
