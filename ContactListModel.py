@@ -2509,11 +2509,29 @@ class ContactListModel(CustomListModel):
             self.addressbook_group.loadAddressBook(notification.userInfo())
 
     def hasContactMatchingURI(self, uri, exact_match=False):
-        return any(blink_contact.matchesURI(uri, exact_match) for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts)
+        # add System AB group at the end so that we find contacts there as a last resort
+        groupsList = self.groupsList[:]
+        try:
+            groupsList.remove(self.addressbook_group)
+        except ValueError:
+            pass
+        else:
+            groupsList.append(self.addressbook_group)
+
+        return any(blink_contact.matchesURI(uri, exact_match) for group in groupsList if not group.ignore_search for blink_contact in group.contacts)
 
     def getFirstContactMatchingURI(self, uri, exact_match=False):
+        # add System AB group at the end so that we find contacts there as a last resort
+        groupsList = self.groupsList[:]
         try:
-            return (blink_contact for group in self.groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
+            groupsList.remove(self.addressbook_group)
+        except ValueError:
+            pass
+        else:
+            groupsList.append(self.addressbook_group)
+
+        try:
+            return (blink_contact for group in groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
         except StopIteration:
             return None
 
