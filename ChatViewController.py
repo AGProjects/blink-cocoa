@@ -127,7 +127,7 @@ class ChatInputTextView(NSTextView):
             pboard = sender.draggingPasteboard()
             fnames = pboard.propertyListForType_(NSFilenamesPboardType)
             for f in fnames:
-                if not os.path.isfile(f):
+                if not os.path.isfile(f) and not os.path.isdir(f):
                     return NSDragOperationNone
             return NSDragOperationCopy
         return NSDragOperationNone
@@ -137,7 +137,7 @@ class ChatInputTextView(NSTextView):
         if pboard.types().containsObject_(NSFilenamesPboardType):
             fnames = pboard.propertyListForType_(NSFilenamesPboardType)
             for f in fnames:
-                if not os.path.isfile(f):
+                if not os.path.isfile(f) and not os.path.isdir(f):
                     return False
             return True
         return False
@@ -169,7 +169,7 @@ class ChatWebView(WebView):
         if pboard.types().containsObject_(NSFilenamesPboardType) and hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
             fnames = pboard.propertyListForType_(NSFilenamesPboardType)
             for f in fnames:
-                if not os.path.isfile(f):
+                if not os.path.isfile(f) and not os.path.isdir(f):
                     return NSDragOperationNone
             return NSDragOperationCopy
         return NSDragOperationNone

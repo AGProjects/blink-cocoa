@@ -428,7 +428,7 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def sendFiles(self, fnames):
-        filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file)]
+        filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
         if filenames:
             self.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
             return True
