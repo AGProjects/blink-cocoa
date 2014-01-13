@@ -1729,8 +1729,6 @@ class ChatWindowController(NSWindowController):
                 item = ConferenceFile(file)
                 self.conference_shared_files.append(item)
 
-            self.conferenceFilesTableView.reloadData()
-
             if session.conference_shared_files:
                 _l = len(self.conference_shared_files)
                 column_header_title = NSLocalizedString("%d Remote Conference Files" % _l) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Column title")
@@ -1750,6 +1748,7 @@ class ChatWindowController(NSWindowController):
             self.resizeDrawerSplitter()
 
         self.participantsTableView.reloadData()
+        self.conferenceFilesTableView.reloadData()
 
     def drawerDidOpen_(self, notification):
         session = self.selectedSessionController()
@@ -1771,6 +1770,7 @@ class ChatWindowController(NSWindowController):
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if self.sessions.has_key(item.identifier()):
             self.revalidateToolbar()
+            self.refreshDrawer()
             self.updateTitle()
             session = self.sessions[item.identifier()]
             chat_stream = session.streamHandlerOfType("chat")
