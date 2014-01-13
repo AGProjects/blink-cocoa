@@ -1654,7 +1654,7 @@ class ChatController(MediaStream):
             except Exception:
                 width = '100%'
 
-            text += "<p><img src='%s' border='0' width='%s'>" % (data.file_path, width)
+            text += '''<p><img src="%s" border=0 width=%s>''' % (data.file_path, width)
         else:
             return
 
