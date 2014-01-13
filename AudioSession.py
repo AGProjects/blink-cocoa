@@ -238,7 +238,7 @@ class AudioSession(NSView):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
             for f in fnames:
-                if not os.path.isfile(f):
+                if not os.path.isfile(f) and not os.path.isdir(f):
                     return NSDragOperationNone
             return NSDragOperationCopy
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-sip-uri"]):
@@ -285,7 +285,7 @@ class AudioSession(NSView):
         pboard = info.draggingPasteboard()
 
         if pboard.types().containsObject_(NSFilenamesPboardType):
-            filenames = [unicodedata.normalize('NFC', file) for file in pboard.propertyListForType_(NSFilenamesPboardType) if os.path.isfile(file)]
+            filenames = [unicodedata.normalize('NFC', file) for file in pboard.propertyListForType_(NSFilenamesPboardType) if os.path.isfile(file) or os.path.isdir(file)]
             if filenames:
                 self.sessionControllersManager.send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
             return
