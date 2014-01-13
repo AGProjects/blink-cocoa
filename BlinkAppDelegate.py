@@ -110,10 +110,11 @@ class BlinkAppDelegate(NSObject):
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallTelephoneNumberWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
+            NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
             NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
             NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
-            NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
+            NotificationCenter().add_observer(self, name="SystemIPAddressDidChange")
 
             # remove obsolete settings
             userdef = NSUserDefaults.standardUserDefaults()
@@ -290,6 +291,11 @@ class BlinkAppDelegate(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_SystemIPAddressDidChange(self, notification):
+        if notification.data.new_ip_address is None:
+            return
+        BlinkLogger().log_info(u"System IP address changed to %s" % notification.data.new_ip_address)
 
     def _NH_SIPApplicationWillEnd(self, notification):
         call_in_thread('file-io', self.purge_temporary_files)
