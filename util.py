@@ -28,7 +28,7 @@ osx_version = re.match("(?P<major>\d+.\d+)(?P<minor>.\d+)?", platform.mac_ver()[
 video_file_extension_pattern = re.compile("\.(mp4|mpeg4|mov|avi)$", re.I)
 image_file_extension_pattern = re.compile("\.(png|tiff|jpg|jpeg|gif)$", re.I)
 sip_prefix_pattern           = re.compile("^(sip:|sips:)")
-external_url_pattern         = re.compile("^(tel:|//|mailto:|xmpp:|callto://|callto:)")
+external_url_pattern         = re.compile("^(tel://|tel:|//|mailto:|xmpp:|sip://|sip:|callto://|callto:)")
 
 _pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
 _pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
