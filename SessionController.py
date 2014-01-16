@@ -1627,8 +1627,6 @@ class SessionController(NSObject):
             self.connectSession()
 
     def _NH_SIPSessionGotRingIndication(self, sender, data):
-        for sc in self.streamHandlers:
-            sc.sessionRinging()
         self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self)
 
     def _NH_SIPSessionWillStart(self, sender, data):
@@ -1781,8 +1779,11 @@ class SessionController(NSObject):
         self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
-        self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
         if data.code != 180:
+            if data.code == 183:
+                self.notification_center.post_notification("BlinkSessionStartedEarlyMedia", sender=sender)
+            else:
+                self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
             log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 

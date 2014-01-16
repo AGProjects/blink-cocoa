@@ -72,9 +72,6 @@ class MediaStream(NSObject):
     def removeFromSession(self):
         self.sessionController.removeStreamHandler(self)
 
-    def sessionRinging(self):
-        pass
-
     def sessionStateChanged(self, newstate, detail):
         pass
 

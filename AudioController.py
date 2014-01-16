@@ -294,9 +294,6 @@ class AudioController(MediaStream):
             self.audioEndTime = time.time()
             self.changeStatus(STREAM_IDLE, detail)
 
-    def sessionRinging(self):
-        self.changeStatus(STREAM_RINGING)
-
     def end(self):
         status = self.status
 
@@ -798,19 +795,6 @@ class AudioController(MediaStream):
 
             for i in range(4):
                 self.conferenceSegmented.setEnabled_forSegment_(False, i)
-
-        if status == STREAM_RINGING and self.outbound_ringtone is None:
-            outbound_ringtone = SIPSimpleSettings().sounds.audio_outbound
-            self.outbound_ringtone = WavePlayer(self.stream.mixer, outbound_ringtone.path, volume=outbound_ringtone.volume, loop_count=0, pause_time=5)
-            self.stream.bridge.add(self.outbound_ringtone)
-            self.outbound_ringtone.start()
-        elif status in (STREAM_CONNECTED, STREAM_DISCONNECTING, STREAM_IDLE, STREAM_FAILED) and self.outbound_ringtone is not None:
-            self.outbound_ringtone.stop()
-            try:
-                self.stream.bridge.remove(self.outbound_ringtone)
-            except ValueError:
-                pass # there is currently a hack in the middleware which stops the bridge when the audio stream ends
-            self.outbound_ringtone = None
 
         if status in (STREAM_IDLE, STREAM_FAILED):
             self.view.setDelegate_(None)
@@ -1483,13 +1467,35 @@ class AudioController(MediaStream):
         elif data.state == 'FAILED':
             self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
 
+    def _NH_BlinkSessionDidStart(self, sender, data):
+        self.stopRinging()
+
+    def _NH_BlinkSessionStartedEarlyMedia(self, sender, data):
+        sender.log_info("Early media started by remote end-point")
+        self.stopRinging()
+
+    def _NH_BlinkDidRenegotiateStreams(self, sender, data):
+        self.stopRinging()
+
+    def _NH_BlinkSessionGotRingIndication(self, sender, data):
+        sender.log_info("Remote end-point is ringing")
+
+        if self.outbound_ringtone is None:
+            outbound_ringtone = SIPSimpleSettings().sounds.audio_outbound
+            self.outbound_ringtone = WavePlayer(self.stream.mixer, outbound_ringtone.path, volume=outbound_ringtone.volume, loop_count=0, pause_time=5)
+            self.stream.bridge.add(self.outbound_ringtone)
+            self.outbound_ringtone.start()
+        self.changeStatus(STREAM_RINGING)
+
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
+        self.stopRinging()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
+        self.stopRinging()
 
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
@@ -1514,5 +1520,16 @@ class AudioController(MediaStream):
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
         reason = data.reason.capitalize()
         self.updateTransferProgress(NSLocalizedString("Transfer: %s" % reason, "Audio status label"))
+
+    def stopRinging(self):
+        if self.outbound_ringtone is None:
+            return
+
+        self.outbound_ringtone.stop()
+        try:
+            self.stream.bridge.remove(self.outbound_ringtone)
+        except ValueError:
+            pass # there is currently a hack in the middleware which stops the bridge when the audio stream ends
+        self.outbound_ringtone = None
 
 
