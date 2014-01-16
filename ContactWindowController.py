@@ -1142,11 +1142,12 @@ class ContactWindowController(NSWindowController):
         except ValueError:
             return
         self.accounts[position].registration_state = 'failed'
-        if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
-            if notification.data.error.startswith('DNS'):
-                self.accounts[position].failure_reason = 'DNS Lookup Failed'
-            else:
-                self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' else notification.data.error
+        if self.accounts[position].failure_reason is None:
+            if hasattr(notification.data, 'error'):
+                if notification.data.error.startswith('DNS'):
+                    self.accounts[position].failure_reason = 'DNS Lookup Failed'
+                else:
+                    self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error else notification.data.error
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
