@@ -273,6 +273,8 @@ class ChatController(MediaStream):
         else:
             if self.sessionController.contact is not None:
                 peer_options['REQUIRE_ENCRYPTION'] = self.sessionController.contact.contact.require_encryption
+            elif self.sessionController.account is BonjourAccount():
+                peer_options['REQUIRE_ENCRYPTION'] = False
             settings = SIPSimpleSettings()
             peer_options['ALLOW_V2'] = settings.chat.enable_encryption
 
