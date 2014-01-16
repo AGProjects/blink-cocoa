@@ -301,6 +301,7 @@ class SessionHistory(object):
             return []
 
     def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None, hidden=None, after_date=None):
+        # TODO: exclude media types like file transfer, as we may not want to redial them
         return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden, after_date))
 
     def hide_entries(self, session_ids):
