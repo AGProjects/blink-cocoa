@@ -1,7 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
+from Foundation import NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask, NSLocalizedString
 
 import hashlib
 import datetime
@@ -105,20 +105,23 @@ class FileTransfer(object):
     def format_progress(self):
         if not self.file_size:
             return ''
+        t = format_size(self.file_pos, 1024) + NSLocalizedString(" of ", "Label") + format_size(self.file_size, 1024)
         if self.transfer_rate is not None:
             if self.transfer_rate == 0:
-                status = "Transferred %s of %s (stalled)" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+                status = NSLocalizedString("Transferred", "Label") + " " + t + " (" + NSLocalizedString("stalled", "Label") + ")"
             else:
                 eta = (self.file_size - self.file_pos) / self.transfer_rate
                 if eta < 60:
-                    time_left = "Less than 1 minute"
+                    time_left = NSLocalizedString("Less than 1 minute", "Label")
                 elif eta < 60*60:
-                    time_left = "About %i minutes" % (eta/60)
+                    e = eta/60
+                    time_left = NSLocalizedString("About %i minutes" % e, "Label")
                 else:
                     time_left = "%s left" % format_duration(datetime.timedelta(seconds=eta))
-                status = "Transferred %s of %s - %s/s - %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024), format_size(self.transfer_rate, bits=True), time_left)
+                
+                status = NSLocalizedString("Transferred", "Label") + " " + t + " - %s/s - %s" % (format_size(self.transfer_rate, bits=True), time_left)
         else:
-            status = "Transferred %s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+            status = NSLocalizedString("Transferred", "Label") + t
         return status
 
     def update_transfer_rate(self):
@@ -173,7 +176,7 @@ class FileTransfer(object):
         handler(notification.sender, notification.data)
 
     def _NH_SIPSessionWillStart(self, sender, data):
-        self.status = "Starting File Transfer..."
+        self.status = Transferred("Starting File Transfer...", "Label")
         notification_center = NotificationCenter()
         notification_center.post_notification("BlinkFileTransferUpdate", sender=self)
 
@@ -207,7 +210,8 @@ class IncomingFileTransferHandler(FileTransfer):
     @property
     def progress_text(self):
         if self.fail_reason:
-            return u"Transferred %s of %s %s %s" % (format_size(self.file_pos), format_size(self.file_size), unichr(0x2014), self.fail_reason)
+            t = format_size(self.file_pos, 1024) + NSLocalizedString(" of ", "Label") + format_size(self.file_size, 1024)
+            return NSLocalizedString("Transferred", "Label") + " " +  t + " - " +  self.fail_reason
         else:
             return self.status
 
@@ -227,7 +231,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.file_selector.fd = open(self.file_path, "w+")
 
         self.ft_info.status = "preparing"
-        self.status = "Accepting File Transfer..."
+        self.status = NSLocalizedString("Accepting File Transfer...", "Label")
 
         notification_center.add_observer(self, sender=self)
         notification_center.add_observer(self, sender=self.session)
@@ -239,8 +243,8 @@ class IncomingFileTransferHandler(FileTransfer):
 
     def cancel(self):
         if not self.finished_transfer:
-            self.fail_reason = "Interrupted" if self.started else "Cancelled"
-            self.ft_info.status = "Interrupted" if self.started else "Cancelled"
+            self.fail_reason = NSLocalizedString("Interrupted", "Label") if self.started else NSLocalizedString("Cancelled", "Label")
+            self.ft_info.status = "interrupted" if self.started else "cancelled"
         self.end()
 
     @run_in_thread('file-transfer')
@@ -279,7 +283,7 @@ class IncomingFileTransferHandler(FileTransfer):
     def _NH_MediaStreamDidStart(self, sender, data):
         self.log_info("Transferring file in progress...")
         self.status = format_size(self.file_pos, 1024)
-        self.ft_info.status = "Transferring file in progress"
+        self.ft_info.status = "transferring"
         self.started = True
         self.start_time = datetime.datetime.now()
         notification_center = NotificationCenter()
@@ -327,7 +331,7 @@ class IncomingFileTransferHandler(FileTransfer):
         if not self.finished_transfer:
             self.log_info(u"Removing incomplete file %s" % self.file_path)
             os.remove(self.file_path)
-            self.fail_reason = "Interrupted"
+            self.fail_reason = NSLocalizedString("Interrupted", "Label")
         else:
             local_hash = 'sha1:' + ':'.join(re.findall(r'..', self.hash.hexdigest()))
             remote_hash = self.file_selector.hash.lower()
@@ -338,7 +342,7 @@ class IncomingFileTransferHandler(FileTransfer):
                 os.rename(oname, self.file_path)
             else:
                 self.error = True
-                self.fail_reason = "File hash mismatch"
+                self.fail_reason = NSLocalizedString("File hash mismatch", "Label")
                 self.log_info(u"Removing corrupted file %s" % self.file_path)
                 os.remove(self.file_path)
 
@@ -347,7 +351,8 @@ class IncomingFileTransferHandler(FileTransfer):
         self.end_time = datetime.datetime.now()
 
         if self.finished_transfer and not self.error:
-            self.status = "Completed transfer of %s in %s %s" % (format_size(self.file_size), format_duration(self.end_time-self.start_time), format_date(self.end_time))
+            t = NSLocalizedString("Completed transfer of ", "Label")
+            self.status = t + format_size(self.file_size) + " in " + format_duration(self.end_time-self.start_time) + " " + format_date(self.end_time)
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_size
             notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
@@ -402,7 +407,9 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        return "To %s from account %s" % (self.remote_identity, self.account.id)
+        t = NSLocalizedString("To %s " % self.remote_identity, "Label")
+        f = NSLocalizedString("from account %s" % self.account.id, "Label")
+        return t + f
 
     @property
     def progress_text(self):
@@ -428,7 +435,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
     def start(self, restart=False):
         self.ft_info = FileTransferInfo(transfer_id=self.transfer_id, direction='outgoing', file_size=self.file_size, local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', remote_uri=self.remote_identity, file_path=self.file_path)
         self.ft_info.status = "pending"
-        self.status = "Pending"
+        self.status = NSLocalizedString("Pending", "Label")
 
         notification_center = NotificationCenter()
         if restart:
@@ -455,7 +462,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.ft_info.file_size = self.file_size
         # compute the file hash first
         self.ft_info.status = "preparing"
-        self.status = "Computing checksum..."
+        self.status = NSLocalizedString("Computing checksum...", "Label")
         hash = hashlib.sha1()
         pos = progress = 0
         chunk_size = limit(self.file_selector.size/100, min=65536, max=1048576)
@@ -479,8 +486,8 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     def cancel(self):
         if not self.finished_transfer:
-            self.fail_reason = "Interrupted" if self.started else "Cancelled"
-            self.ft_info.status = "Interrupted" if self.started else "Cancelled"
+            self.fail_reason = NSLocalizedString("Interrupted", "Label") if self.started else NSLocalizedString("Cancelled", "Label")
+            self.ft_info.status = "interrupted" if self.started else "cancelled"
             self.interrupted = True
             self.log_info("File Transfer has been cancelled")
         self.stop_event.set()
@@ -499,7 +506,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, sender=sender)
         self.log_info("DNS Lookup for SIP routes failed: '%s'" % data.error)
-        self.fail_reason = "DNS Lookup failed"
+        self.fail_reason = NSLocalizedString("DNS Lookup failed", "Label")
         self.status = self.fail_reason
         self.ft_info.status = "failed"
 
@@ -507,7 +514,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.log_info("Outgoing Push File Transfer started")
-        self.status = "Transferred %s of %s" % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+        self.status = NSLocalizedString("Transferred", "Label") + " " + format_size(self.file_pos, 1024) + NSLocalizedString(" of ", "Label") + format_size(self.file_size, 1024)
         self.ft_info.status = "transferring"
         self.started = True
         self.start_time = datetime.datetime.now()
@@ -539,7 +546,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.end_time = datetime.datetime.now()
 
         if not self.finished_transfer:
-            self.fail_reason = "Interrupted"
+            self.fail_reason = NSLocalizedString("Interrupted", "Label")
             self.ft_info.status = "failed"
             self.ft_info.bytes_transfered = self.file_pos
             self.status = "%s %s %s %s" % (str(format_size(self.file_pos, 1024)), unichr(0x2014), self.fail_reason, format_date(self.end_time))
@@ -547,7 +554,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         else:
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered=self.file_size
-            self.status = "Completed transfer of %s in %s %s" % (format_size(self.file_size), format_duration(self.end_time-self.start_time), format_date(self.end_time))
+            self.status = NSLocalizedString("Completed transfer of ", "Label") + format_size(self.file_size) + " " + NSLocalizedString(" in ", "Label") + format_duration(self.end_time-self.start_time) + " " + format_date(self.end_time)
             notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
 
         self.file_selector.fd.close()
@@ -576,7 +583,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification_center.add_observer(self, sender=self.session)
         notification_center.add_observer(self, sender=self.stream)
 
-        self.status = "Offering File..."
+        self.status = NSLocalizedString("Offering File...", "Label")
         self.ft_info.status = "proposing"
 
         self.log_info(u"Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
@@ -640,12 +647,15 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        return "From %s to account %s" % (self.target_uri, self.account.id)
+        f = NSLocalizedString("From %s " % self.target_uri, "Label")
+        t = NSLocalizedString("to account %s" % self.account.id, "Label")
+        return f + t
 
     @property
     def progress_text(self):
         if self.fail_reason:
-            return u"Transferred %s of %s %s %s" % (format_size(self.file_pos), format_size(self.file_size), unichr(0x2014), self.fail_reason)
+            t = format_size(self.file_pos, 1024) + NSLocalizedString(" of ", "Label") + format_size(self.file_size, 1024)
+            return NSLocalizedString("Transferred", "Label") + " " + t + " - " +  self.fail_reason
         else:
             return self.status
 
@@ -673,7 +683,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         notification_center.add_observer(self, sender=self.session)
         notification_center.add_observer(self, sender=self.stream)
 
-        self.status = "Requesting File..."
+        self.status = NSLocalizedString("Requesting File...", "Label")
         self.ft_info.status = "requesting"
 
         self.log_info(u"Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
@@ -696,8 +706,8 @@ class OutgoingPullFileTransferHandler(FileTransfer):
     def cancel(self):
         if not self.finished_transfer:
             self.log_info("File Transfer has been cancelled")
-            self.fail_reason = "Interrupted" if self.started else "Cancelled"
-            self.ft_info.status = "Interrupted" if self.started else "Cancelled"
+            self.fail_reason = NSLocalizedString("Interrupted", "Label") if self.started else NSLocalizedString("Cancelled", "Label")
+            self.ft_info.status = "interrupted" if self.started else "cancelled"
             self.interrupted = True
         if not self.session_ended:
             self.end()
@@ -731,7 +741,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, sender=sender)
         self.log_info("DNS Lookup for SIP routes failed: '%s'" % data.error)
-        self.fail_reason = "DNS Lookup failed"
+        self.fail_reason = NSLocalizedString("DNS Lookup failed", "Label")
         self.status = self.fail_reason
         self.ft_info.status = "failed"
 
@@ -818,7 +828,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
                 os.rename(oname, self.file_path)
             else:
                 self.error = True
-                self.fail_reason = "File hash mismatch"
+                self.fail_reason = NSLocalizedString("File hash mismatch", "Label")
                 self.log_info(u"Removing corrupted file %s" % self.file_path)
                 os.remove(self.file_path)
 
