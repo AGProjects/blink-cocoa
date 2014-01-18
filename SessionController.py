@@ -1781,7 +1781,7 @@ class SessionController(NSObject):
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         if data.code != 180:
             if data.code == 183:
-                self.notification_center.post_notification("BlinkSessionStartedEarlyMedia", sender=sender)
+                self.notification_center.post_notification("BlinkSessionStartedEarlyMedia", sender=self)
             else:
                 self.log_info("Got provisional response %s: %s" %(data.code, data.reason))
             log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)

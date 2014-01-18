@@ -128,6 +128,7 @@ class AudioController(MediaStream):
 
     status = STREAM_IDLE
     hangup_reason = None
+    early_media = False
 
 
     @classmethod
@@ -135,6 +136,7 @@ class AudioController(MediaStream):
         return AudioStream()
 
     def reset(self):
+        self.early_media = False
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
@@ -1473,11 +1475,15 @@ class AudioController(MediaStream):
     def _NH_BlinkSessionStartedEarlyMedia(self, sender, data):
         sender.log_info("Early media started by remote end-point")
         self.stopRinging()
+        self.early_media = True
 
     def _NH_BlinkDidRenegotiateStreams(self, sender, data):
         self.stopRinging()
 
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
+        if self.early_media:
+            return
+
         sender.log_info("Remote end-point is ringing")
 
         if self.outbound_ringtone is None:
