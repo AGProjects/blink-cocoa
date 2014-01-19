@@ -47,6 +47,7 @@ class ChatSettingsExtension(ChatSettings):
     disable_collaboration_editor = Setting(type=bool, default=False)
     disable_history = Setting(type=bool, default=False)
     enable_encryption = Setting(type=bool, default=True)
+    font_size = Setting(type=int, default=0)
 
 
 class ScreenSharingSettingsExtension(ScreenSharingSettings):

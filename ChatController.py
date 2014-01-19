@@ -217,6 +217,18 @@ class ChatController(MediaStream):
             self.chatViewController.setHandleScrolling_(False)
             self.chatViewController.lastMessagesLabel.setHidden_(True)
 
+        settings = SIPSimpleSettings()
+        if settings.chat.font_size < 0:
+            i = settings.chat.font_size
+            while i < 0:
+                self.chatViewController.outputView.makeTextSmaller_(None)
+                i += 1
+        elif settings.chat.font_size > 0:
+            i = settings.chat.font_size
+            while i > 0:
+                self.chatViewController.outputView.makeTextLarger_(None)
+                i -= 1
+
         if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_smileys:
             self.chatViewController.expandSmileys = False
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
@@ -237,7 +249,6 @@ class ChatController(MediaStream):
         if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_chat_history is not None:
             self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
         else:
-            settings = SIPSimpleSettings()
             self.disable_chat_history = settings.chat.disable_history
 
         self.updateDatabaseRecordingButton()

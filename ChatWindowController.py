@@ -110,6 +110,9 @@ CONFERENCE_ROOM_MENU_START_VIDEO_SESSION = 322
 CONFERENCE_ROOM_MENU_SEND_FILES = 323
 CONFERENCE_ROOM_MENU_VIEW_SCREEN = 324
 CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO = 400
+CONFERENCE_ROOM_MENU_FONT_SIZE = 500
+CONFERENCE_ROOM_MENU_INCREASE_FONT_SIZE = 501
+CONFERENCE_ROOM_MENU_DECREASE_FONT_SIZE = 502
 
 TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
 TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
@@ -1174,6 +1177,8 @@ class ChatWindowController(NSWindowController):
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(False)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_(NSLocalizedString("Show Session Information", "Menu item"))
 
+            settings = SIPSimpleSettings()
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_FONT_SIZE).setTitle_(NSLocalizedString("Font Size", "Menu item") + " (%d)" % settings.chat.font_size if settings.chat.font_size != 0 else NSLocalizedString("Font Size", "Menu item"))
 
 
             item = menu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN)
@@ -1406,6 +1411,35 @@ class ChatWindowController(NSWindowController):
                 openFileTransferSelectionDialog(session.account, uri)
             elif tag == CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO:
                 session.info_panel.toggle()
+            elif tag == CONFERENCE_ROOM_MENU_INCREASE_FONT_SIZE:
+                must_save = True
+                for _session in self.sessionControllersManager.sessionControllers:
+                    if _session.hasStreamOfType("chat"):
+                        chat_stream = _session.streamHandlerOfType("chat")
+                        if chat_stream.chatViewController.outputView.canMakeTextLarger():
+                            chat_stream.chatViewController.outputView.makeTextLarger_(None)
+                        else:
+                            must_save = False
+
+                if must_save:
+                    settings = SIPSimpleSettings()
+                    settings.chat.font_size += 1
+                    settings.save()
+
+            elif tag == CONFERENCE_ROOM_MENU_DECREASE_FONT_SIZE:
+                must_save = True
+                for _session in self.sessionControllersManager.sessionControllers:
+                    if _session.hasStreamOfType("chat"):
+                        chat_stream = _session.streamHandlerOfType("chat")
+                        if chat_stream.chatViewController.outputView.canMakeTextSmaller():
+                            chat_stream.chatViewController.outputView.makeTextSmaller_(None)
+                        else:
+                            must_save = False
+
+                if must_save:
+                    settings = SIPSimpleSettings()
+                    settings.chat.font_size -= 1
+                    settings.save()
 
     def viewSharedScreen(self, uri, display_name, url):
         session = self.selectedSessionController()

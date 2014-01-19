@@ -1677,6 +1677,7 @@ PreferenceOptionTypes = {
 "audio.output_device" : AudioOutputDeviceOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.enable_encryption": OTRSettings,
+"chat.font_size": HiddenOption,
 "contacts.missed_calls_period": HiddenOption,
 "contacts.incoming_calls_period": HiddenOption,
 "contacts.outgoing_calls_period": HiddenOption,
