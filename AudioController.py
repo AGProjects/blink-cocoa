@@ -44,6 +44,7 @@ from application.notification import IObserver, NotificationCenter, Notification
 from application.python import Null
 from collections import deque
 from zope.interface import implements
+from util import sip_prefix_pattern
 
 from sipsimple.account import BonjourAccount, AccountManager
 from sipsimple.application import SIPApplication
@@ -841,7 +842,7 @@ class AudioController(MediaStream):
             self.elapsed.setStringValue_(text)
         else:
             if self.status in (STREAM_CONNECTING, STREAM_RINGING):
-                self.elapsed.setStringValue_("Peer: %s" % self.sessionController.routes[0])
+                self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
             else:
                 self.elapsed.setStringValue_(u"")
 
