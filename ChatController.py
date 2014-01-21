@@ -1692,7 +1692,8 @@ class ChatController(MediaStream):
                 self.last_failure_reason = reason
         if not self.mediastream_failed and not self.mediastream_ended:
             if reason != 'Session Cancelled':
-                message = "Connection failed: %s" % reason.title()
+                #message = "Connection failed: %s" % reason.title()
+                message = reason.title()
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
