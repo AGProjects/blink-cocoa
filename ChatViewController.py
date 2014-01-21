@@ -19,6 +19,7 @@ from Foundation import NSArray, NSDate, NSMakeRange, NSNotificationCenter, NSObj
 from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
 from application.notification import NotificationCenter
+from bs4 import BeautifulSoup
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import ISOTimestamp
 from resources import Resources
@@ -473,10 +474,25 @@ class ChatViewController(NSObject):
         else:
             displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
-        #if is_html:
-            #from bs4 import BeautifulSoup
-            #soup = BeautifulSoup(text)
-            #print(soup.prettify())
+        if is_html:
+            # urlify links
+            soup = BeautifulSoup(text)
+            ps = soup.find_all('p')
+            for p in ps:
+                if not p.string:
+                    continue
+                ptext = p.string.strip()
+                p.clear()
+                tokens = _url_pattern.split(ptext)
+                for token in tokens:
+                    if _url_pattern.match(token):
+                        new_tag = soup.new_tag("a", href=token)
+                        new_tag.string = token
+                        p.append(new_tag)
+                    else:
+                        p.append(token)
+
+            text = soup.prettify()
 
         text = processHTMLText(text, self.expandSmileys, is_html)
         private = 1 if is_private else "null"
