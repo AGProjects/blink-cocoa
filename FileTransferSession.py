@@ -121,7 +121,7 @@ class FileTransfer(object):
                 
                 status = NSLocalizedString("Transferred", "Label") + " " + t + " - %s/s - %s" % (format_size(self.transfer_rate, bits=True), time_left)
         else:
-            status = NSLocalizedString("Transferred", "Label") + t
+            status = NSLocalizedString("Transferred", "Label") + " " + t
         return status
 
     def update_transfer_rate(self):
@@ -176,7 +176,7 @@ class FileTransfer(object):
         handler(notification.sender, notification.data)
 
     def _NH_SIPSessionWillStart(self, sender, data):
-        self.status = Transferred("Starting File Transfer...", "Label")
+        self.status = NSLocalizedString("Starting File Transfer...", "Label")
         notification_center = NotificationCenter()
         notification_center.post_notification("BlinkFileTransferUpdate", sender=self)
 

@@ -240,7 +240,7 @@ class FileTransferItemView(NSView):
         if self.transfer and self.transfer.file_path:
             path = self.transfer.file_path
         elif self.oldTransferInfo:
-            # TODO: this does not open after restart because of sandboxing, better open Doanloads folder instead for incoming transfers
+            # TODO: this does not open after restart because of sandboxing, better open Downloads folder instead for incoming transfers
             path = self.oldTransferInfo.file_path
         else:
             return
