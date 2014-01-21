@@ -827,12 +827,11 @@ class OutgoingPullFileTransferHandler(FileTransfer):
                 self.log_info(u"Renaming transferred file to %s" % self.file_path)
                 os.rename(oname, self.file_path)
             else:
+                self.log_info("Incoming File Transfer ended (%i of %i bytes transferred)" % (self.file_pos, self.file_size))
                 self.error = True
                 self.fail_reason = NSLocalizedString("File hash mismatch", "Label")
                 self.log_info(u"Removing corrupted file %s" % self.file_path)
                 os.remove(self.file_path)
-
-        self.log_info("Incoming File Transfer ended (%i of %i bytes transferred)" % (self.file_pos, self.file_size))
 
         self.end_time = datetime.datetime.now()
 
