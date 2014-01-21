@@ -114,7 +114,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="546" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                <font key="font" metaFont="system"/>
+                                <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
                                     <items>
                                         <menuItem state="on" image="display" hidden="YES" id="546"/>
@@ -133,7 +133,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="570" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                <font key="font" metaFont="system"/>
+                                <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
                                     <items>
                                         <menuItem state="on" image="screenshot" hidden="YES" id="570"/>
@@ -186,7 +186,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="663" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                <font key="font" metaFont="system"/>
+                                <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
                                     <items>
                                         <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="663"/>
@@ -312,7 +312,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
                                 <rect key="frame" x="1" y="17" width="258" height="427"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="258" height="427"/>
@@ -349,7 +349,7 @@
                                 <rect key="frame" x="-100" y="-100" width="223" height="15"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="37" horizontal="NO" id="385">
+                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="385">
                                 <rect key="frame" x="224" y="17" width="15" height="102"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
@@ -363,7 +363,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
                                 <rect key="frame" x="1" y="17" width="258" height="98"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="258" height="98"/>
@@ -576,6 +576,7 @@
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
                 <menuItem title="Show Session Information" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
+                    <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="455"/>
                     </connections>

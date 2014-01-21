@@ -109,6 +109,7 @@ class ChatInputTextView(NSTextView):
             self.didChangeText()
 
     def readSelectionFromPasteboard_type_(self, pboard, type):
+        self.owner.textWasPasted = True
         if self.maxLength:
             text = pboard.stringForType_(type)
             if text:
@@ -228,6 +229,9 @@ class ChatViewController(NSObject):
     
     last_sender = None
     previous_msgid = ""
+    
+    textWasPasted = False
+
 
     @property
     def sessionController(self):
@@ -468,6 +472,11 @@ class ChatViewController(NSObject):
             displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
         else:
             displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+
+        #if is_html:
+            #from bs4 import BeautifulSoup
+            #soup = BeautifulSoup(text)
+            #print(soup.prettify())
 
         text = processHTMLText(text, self.expandSmileys, is_html)
         private = 1 if is_private else "null"

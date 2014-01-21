@@ -3,12 +3,17 @@
 
 from AppKit import (NSApp,
                     NSCompositeSourceOver,
+                    NSDocumentTypeDocumentAttribute,
+                    NSExcludedElementsDocumentAttribute,
                     NSEventTrackingRunLoopMode,
                     NSFontAttributeName,
+                    NSHTMLTextDocumentType,
                     NSImageCompressionFactor,
                     NSInformationalRequest,
                     NSJPEGFileType,
                     NSPNGFileType,
+                    NSUTF8StringEncoding,
+                    NSString,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSSplitViewDividerStyleThick,
                     NSSplitViewDividerStyleThin,
@@ -18,12 +23,14 @@ from Foundation import (NSAttributedString,
                         NSBitmapImageRep,
                         NSBundle,
                         NSColor,
+                        NSData,
                         NSDate,
                         NSDictionary,
                         NSFont,
                         NSImage,
                         NSMakeRect,
                         NSMakeSize,
+                        NSMakeRange,
                         NSMenuItem,
                         NSNotificationCenter,
                         NSObject,
@@ -539,24 +546,45 @@ class ChatController(MediaStream):
         elif sender.itemIdentifier() == 'exit':
             self.exitFullScreen()
 
+    @run_in_gui_thread
+    def resetStyle(self):
+        str_attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.fontWithName_size_("Lucida Grande", 11), NSFontAttributeName)
+        self.chatViewController.inputText.textStorage().setAttributedString_(NSAttributedString.alloc().initWithString_attributes_(" ", str_attributes))
+    
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
-            original = textView.string()
-            text = unicode(original)
-            textView.setString_("")
-            if text:
+            # attempt convert rich text to html
+            try:
+                # http://stackoverflow.com/questions/5298188/how-do-i-convert-nsattributedstring-into-html-string
+                text_storage = textView.textStorage()
+                exclude = ["doctype", "html", "head", "body", "xml"]
+                documentAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSHTMLTextDocumentType, NSDocumentTypeDocumentAttribute, exclude, NSExcludedElementsDocumentAttribute)
+                data = text_storage.dataFromRange_documentAttributes_error_(NSMakeRange(0, text_storage.length()), documentAttributes, None)
+                htmlData = NSData.alloc().initWithBytes_length_(data[0], len(data[0]))
+                text = NSString.alloc().initWithData_encoding_(htmlData, NSUTF8StringEncoding)
+                content_type = 'html'
+            except Exception, e:
+                text = unicode(textView.string())
+                content_type = 'text'
                 if text.endswith('\r\n'):
                     text = text[:-2]
                 elif text.endswith('\n'):
                     text = text[:-1]
+
+            if self.chatViewController.textWasPasted:
+                # set style to default
+                self.chatViewController.textWasPasted = False
+                self.resetStyle()
+
+            if text:
+                self.chatViewController.inputText.setString_("")
                 recipient = '%s <sip:%s>' % (self.sessionController.contactDisplayName, format_identity_to_string(self.sessionController.remotePartyObject))
                 try:
                     identity = CPIMIdentity.parse(recipient)
                 except ValueError:
                     identity = None
-                if not self.outgoing_message_handler.send(text, recipient=identity):
-                    textView.setString_(original)
-                else:
+
+                if self.outgoing_message_handler.send(text, recipient=identity, content_type=content_type):
                     NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
@@ -974,7 +1002,7 @@ class ChatController(MediaStream):
                 recipient = None
 
             private = True if message.private == "1" else False
-            self.outgoing_message_handler.resend(message.msgid, message.body, recipient, private)
+            self.outgoing_message_handler.resend(message.msgid, message.body, recipient, private, message.content_type)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -2043,9 +2071,10 @@ class OutgoingMessageHandler(NSObject):
     def _send(self, msgid):
         message = self.messages.pop(msgid)
         message.status = "sent"
+        content_type = 'text/html' if message.content_type == 'html' else 'text/plain'
         if message.private and message.recipient is not None:
             try:
-                id = self.stream.send_message(message.text, timestamp=message.timestamp, recipients=[message.recipient])
+                id = self.stream.send_message(message.text, content_type=content_type, timestamp=message.timestamp, recipients=[message.recipient])
                 self.no_report_received_messages[msgid] = message
             except ChatStreamError, e:
                 self.delegate.sessionController.log_error(u"Error sending private chat message %s: %s" % (msgid, e))
@@ -2077,7 +2106,7 @@ class OutgoingMessageHandler(NSObject):
 
                         self.delegate.updateEncryptionLock(msgid, message.encryption)
 
-                id = self.stream.send_message(newmsg, timestamp=message.timestamp)
+                id = self.stream.send_message(newmsg, timestamp=message.timestamp, content_type=content_type)
                 self.no_report_received_messages[msgid] = message
                 if 'has requested end-to-end encryption but this software does not support this feature' in newmsg:
                     self.delegate.sessionController.log_error(u"Error sending chat message %s: OTR not started remotely" % msgid)
@@ -2097,51 +2126,40 @@ class OutgoingMessageHandler(NSObject):
 
         return id
 
-    def send(self, text, recipient=None, private=False):
+    def send(self, text, recipient=None, private=False, content_type='text'):
         timestamp = ISOTimestamp.now()
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
 
-        leftover = text
-        while leftover:
-            # if the text is too big, break it in a smaller size without corrupting
-            # utf-8 character sequences
-            if len(leftover) > MAX_MESSAGE_LENGTH:
-                text = leftover[:MAX_MESSAGE_LENGTH]
-                while len(text.encode("utf-8")) > MAX_MESSAGE_LENGTH:
-                    text = text[:-1]
-                leftover = leftover[len(text):]
+        hash = hashlib.sha1()
+        hash.update(text.encode("utf-8")+str(timestamp))
+        msgid = hash.hexdigest()
+
+        self.messages[msgid] = MessageInfo(msgid, sender=self.delegate.account, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued", content_type=content_type)
+
+        is_html = True if content_type == 'html' else False
+        if self.connected:
+            try:
+                id = self._send(msgid)
+            except Exception, e:
+                self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="failed", recipient=recipient_html, is_html=is_html)
             else:
-                text = leftover
-                leftover = ""
-
-            hash = hashlib.sha1()
-            hash.update(text.encode("utf-8")+str(timestamp))
-            msgid = hash.hexdigest()
-
-            self.messages[msgid] = MessageInfo(msgid, sender=self.delegate.account, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
-
-            if self.connected:
-                try:
-                    id = self._send(msgid)
-                except Exception, e:
-                    self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
-                    self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="failed", recipient=recipient_html)
-                else:
-                    self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption)
-            else:
-                self.messages[msgid].pending=True
-                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption, is_html=is_html)
+        else:
+            self.messages[msgid].pending=True
+            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html, is_html=is_html)
 
         return True
 
-    def resend(self, msgid, text, recipient=None, private=False):
+    def resend(self, msgid, text, recipient=None, private=False, content_type='text'):
         timestamp = ISOTimestamp.now()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
 
-        self.messages[msgid] = MessageInfo(msgid=msgid, recipient=recipient, timestamp=timestamp, text=text, private=private, status="queued")
+        self.messages[msgid] = MessageInfo(msgid=msgid, recipient=recipient, timestamp=timestamp, text=text, content_type=content_type, private=private, status="queued")
 
+        is_html = True if content_type == 'html' else False
         if self.connected:
             try:
                 id = self._send(msgid)
@@ -2149,10 +2167,10 @@ class OutgoingMessageHandler(NSObject):
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Message delivery failure", timestamp, True)
             else:
-                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption, is_html=is_html)
         else:
             self.messages[msgid].pending=True
-            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html)
+            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="queued", recipient=recipient_html, is_html=is_html)
 
     def setConnected(self, stream):
         self.stream = stream
