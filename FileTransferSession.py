@@ -209,7 +209,7 @@ class IncomingFileTransferHandler(FileTransfer):
 
     @property
     def progress_text(self):
-        if self.fail_reason:
+        if self.fail_reason and self.file_pos:
             t = format_size(self.file_pos, 1024) + NSLocalizedString(" of ", "Label") + format_size(self.file_size, 1024)
             return NSLocalizedString("Transferred", "Label") + " " +  t + " - " +  self.fail_reason
         else:
@@ -653,7 +653,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
     @property
     def progress_text(self):
-        if self.fail_reason:
+        if self.fail_reason and self.file_pos:
             t = format_size(self.file_pos, 1024) + NSLocalizedString(" of ", "Label") + format_size(self.file_size, 1024)
             return NSLocalizedString("Transferred", "Label") + " " + t + " - " +  self.fail_reason
         else:
