@@ -1046,7 +1046,9 @@ class ContactWindowController(NSWindowController):
                 if changed:
                     BlinkLogger().log_debug('Availability for %s in group %s has changed' % (blink_contact.name, group.name))
                     changed_blink_contacts.append((blink_contact,group))
-
+            else:
+                BlinkLogger().log_debug('%s in group %s has not resources in PIDF' % (blink_contact.name, group.name))
+                
         for blink_contact, group in changed_blink_contacts:
             self.contactOutline.reloadItem_reloadChildren_(blink_contact, False)
             if isinstance(group, AllContactsBlinkGroup):
@@ -1056,6 +1058,8 @@ class ContactWindowController(NSWindowController):
 
         if changed_blink_contacts:
             BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (len(changed_blink_contacts), len(blink_contacts_set)))
+        else:
+            BlinkLogger().log_debug("No Availability has changed")
 
 
     def _NH_AddressbookGroupWasActivated(self, notification):

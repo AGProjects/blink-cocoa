@@ -845,6 +845,8 @@ class BlinkPresenceContact(BlinkContact):
         old_pidfs = self.pidfs
         resources_uris = set()
         for uri, resource in resources.iteritems():
+            if not resource.pidf_list:
+                BlinkLogger().log_debug('PIDF list for %s is empty' % uri)
             uri_text = sip_prefix_pattern.sub('', uri)
             try:
                 SIPURI.parse(str('sip:%s' % uri_text))
