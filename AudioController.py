@@ -839,7 +839,7 @@ class AudioController(MediaStream):
             text = u"%02i:%02i:%02i"%(h,m,s)
             self.elapsed.setStringValue_(text)
         else:
-            if self.status in (STREAM_CONNECTING, STREAM_RINGING):
+            if self.status == STREAM_CONNECTING and self.sessionController.routes:
                 self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
             elif self.status == STREAM_RINGING:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Ringing...", "Audio status label"))
