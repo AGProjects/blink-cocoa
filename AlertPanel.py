@@ -547,8 +547,6 @@ class AlertPanel(NSObject, object):
         return subject, default_action, alt_action
 
     def removeSession(self, session):
-        self.sessionControllersManager.ringer.stop_ringing(session)
-
         if not self.sessions.has_key(session):
             return
 

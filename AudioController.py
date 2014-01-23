@@ -301,9 +301,6 @@ class AudioController(MediaStream):
 
     def end(self):
         status = self.status
-
-        self.sessionControllersManager.ringer.stop_ringing(self.session)
-
         if status in [STREAM_IDLE, STREAM_FAILED]:
             self.hangedUp = True
             self.audioEndTime = time.time()

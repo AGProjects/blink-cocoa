@@ -1866,9 +1866,6 @@ class ChatController(MediaStream):
             self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
     def endStream(self, closeTab=False):
-        if self.status != STREAM_DISCONNECTING:
-            self.sessionControllersManager.ringer.stop_ringing(self.sessionController.session)
-
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
