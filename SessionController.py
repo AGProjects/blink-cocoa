@@ -1029,6 +1029,8 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
+        self.log_info(u'Invite to: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
+
         for stream in session.proposed_streams:
             if self.sessionControllersManager.isMediaTypeSupported(stream.type) and not self.hasStreamOfType(stream.type):
                 handlerClass = StreamHandlerForType[stream.type]
