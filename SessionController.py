@@ -1341,6 +1341,7 @@ class SessionController(NSObject):
                         return False
 
                     stream = handlerClass.createStream()
+                    self.log_debug('Created stream %s' % stream)
 
                 if not stream:
                     self.log_info("Cancelled session")
