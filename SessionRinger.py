@@ -48,7 +48,7 @@ class Ringer(object):
     """
     owner = None
     incoming_audio_sessions = {}
-    ringing_sessions = set()
+    outgoing_ringing_sessions = set()
     chat_sessions = {}
     ds_sessions = {}
     filesend_sessions = {}
@@ -94,7 +94,7 @@ class Ringer(object):
             if session not in incoming_sessions:
                 self.handle_session_end(session)
 
-        for session in self.ringing_sessions.copy():
+        for session in self.outgoing_ringing_sessions.copy():
             if session not in outgoing_sessions:
                 self.handle_session_end(session)
 
@@ -130,7 +130,7 @@ class Ringer(object):
         settings = SIPSimpleSettings()
 
         should_play_audio_primary_ringtone = False
-        should_play_audio_primary_ringtone_tone = False
+        should_play_audio_secondary_ringtone = False
         should_play_chat_primary_ringtone = False
         should_play_chat_secondary_ringtone = False
 
@@ -138,7 +138,7 @@ class Ringer(object):
             # play only secondary ringtones when there's active audio sessions
 
             if self.incoming_audio_sessions:
-                should_play_audio_primary_ringtone_tone = True
+                should_play_audio_secondary_ringtone = True
             if self.chat_sessions or self.filerecv_sessions or self.ds_sessions:
                 should_play_chat_secondary_ringtone = True
         else:
@@ -148,13 +148,13 @@ class Ringer(object):
             if self.chat_sessions or self.filerecv_sessions or self.ds_sessions:
                 should_play_chat_primary_ringtone = True
 
-        if self.ringing_sessions:
+        if self.outgoing_ringing_sessions:
             # proposal for adding new streams to an ongoing session
-            proposed_stream_types = [stream.type for stream in chain(*(session.proposed_streams or [] for session in self.ringing_sessions))]
+            proposed_stream_types = [stream.type for stream in chain(*(session.proposed_streams or [] for session in self.outgoing_ringing_sessions))]
             has_chat_proposed = 'chat' in proposed_stream_types
             has_ds_proposed = 'screen-sharing' in proposed_stream_types
             has_file_proposed = 'file-transfer' in proposed_stream_types
-            has_audio_ongoing = 'audio' in (stream.type for stream in chain(*(session.streams for session in self.ringing_sessions if session.streams)))
+            has_audio_ongoing = 'audio' in (stream.type for stream in chain(*(session.streams for session in self.outgoing_ringing_sessions if session.streams)))
             should_play_chat_secondary_ringtone = (has_chat_proposed or has_file_proposed or has_ds_proposed) and not has_audio_ongoing
 
         if self.audio_primary_ringtone:
@@ -187,9 +187,9 @@ class Ringer(object):
                 self.audio_primary_ringtone.stop()
 
         if self.audio_secondary_ringtone:
-            if should_play_audio_primary_ringtone_tone and not self.audio_secondary_ringtone.is_active:
+            if should_play_audio_secondary_ringtone and not self.audio_secondary_ringtone.is_active:
                 self.audio_secondary_ringtone.start()
-            elif not should_play_audio_primary_ringtone_tone and self.audio_secondary_ringtone.is_active:
+            elif not should_play_audio_secondary_ringtone and self.audio_secondary_ringtone.is_active:
                 self.audio_secondary_ringtone.stop()
 
         if self.chat_primary_ringtone:
@@ -317,7 +317,7 @@ class Ringer(object):
         NotificationCenter().add_observer(self, sender=session)
 
     def stop_ringing(self, session):
-        self.ringing_sessions.discard(session)
+        self.outgoing_ringing_sessions.discard(session)
         self.incoming_audio_sessions.pop(session, None)
         self.chat_sessions.pop(session, None)
         self.ds_sessions.pop(session, None)
@@ -411,7 +411,7 @@ class Ringer(object):
         stream_types = [stream.type for stream in data.proposed_streams]
         if 'audio' in stream_types:
             if data.originator == "local":
-                self.ringing_sessions.add(session)
+                self.outgoing_ringing_sessions.add(session)
             else:
                 self.incoming_audio_sessions[session] = data.proposed_streams
         elif 'chat' in stream_types:
@@ -429,7 +429,7 @@ class Ringer(object):
 
     def _NH_SIPSessionGotRingIndication(self, notification):
         session = notification.sender
-        self.ringing_sessions.add(session)
+        self.outgoing_ringing_sessions.add(session)
         self.update_playing_ringtones()
 
     def _NH_AudioStreamDidChangeHoldState(self, notification):
