@@ -1367,7 +1367,7 @@ class SessionController(NSObject):
             else:
                 self.log_debug("%s controller already exists: %s"% (stype, self.streamHandlers))
                 streamController = self.streamHandlerOfType(stype)
-                streamController.reset()
+                streamController.resetStream()
 
                 if stype == 'chat':
                     if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:

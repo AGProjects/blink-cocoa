@@ -136,11 +136,13 @@ class AudioController(MediaStream):
     def createStream(self):
         return AudioStream()
 
-    def reset(self):
-        self.early_media = False
+    def resetStream(self):
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
+
+    def reset(self):
+        self.early_media = False
         super(AudioController, self).reset()
 
     def initWithOwner_stream_(self, scontroller, stream):
@@ -276,8 +278,8 @@ class AudioController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def startOutgoing(self, is_update):
+        self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.reset()
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         NSApp.delegate().contactsWindowController.showAudioSession(self)
@@ -523,7 +525,6 @@ class AudioController(MediaStream):
 
     def updateTimer_(self, timer):
         self.updateTileStatistics()
-
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
             if duration >= SIPSimpleSettings().answering_machine.max_recording_duration:
@@ -843,9 +844,10 @@ class AudioController(MediaStream):
         else:
             if self.status in (STREAM_CONNECTING, STREAM_RINGING):
                 self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
+            elif self.status == STREAM_RINGING:
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Ringing...", "Audio status label"))
             else:
                 self.elapsed.setStringValue_(u"")
-
 
     def updateTileStatistics(self):
         if not self.session:
@@ -1498,11 +1500,13 @@ class AudioController(MediaStream):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stopRinging()
+        self.reset()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stopRinging()
+        self.reset()
 
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True

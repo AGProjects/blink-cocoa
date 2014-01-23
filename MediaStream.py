@@ -69,6 +69,9 @@ class MediaStream(NSObject):
     def reset(self):
         self.status = STREAM_IDLE
 
+    def resetStream(self):
+        pass
+
     def removeFromSession(self):
         self.sessionController.removeStreamHandler(self)
 
