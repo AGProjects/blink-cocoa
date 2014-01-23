@@ -108,7 +108,7 @@ class SessionControllersManager(object):
         self.notification_center.add_observer(self, name='MediaStreamDidFail')
 
         self.sessionControllers = []
-        self.ringer = Ringer(self)
+        self.ringer = None
         self.incomingSessions = set()
         self.activeAudioStreams = set()
         self.redial_uri = None
@@ -144,6 +144,7 @@ class SessionControllersManager(object):
         handler(notification.sender, notification.data)
 
     def _NH_SIPApplicationDidStart(self, sender, data):
+        self.ringer = Ringer(self)
         self.get_redial_uri_from_history()
 
     @run_in_green_thread

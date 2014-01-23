@@ -79,11 +79,19 @@ class Ringer(object):
 
     def __init__(self, owner):
         BlinkLogger().log_debug('Starting Ringtone Manager')
-        notification_center = NotificationCenter()
-        notification_center.add_observer(self, name="SIPApplicationDidStart")
         self.owner = owner
-        self.started = False
-        self.cleanupTimer = None
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
+        notification_center.add_observer(self, name="AudioStreamDidChangeHoldState")
+        notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
+        notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
+        notification_center.add_observer(self, name="ConferenceHasAddedAudio")
+        notification_center.add_observer(self, name="BlinkWillCancelProposal")
+        
+        self.cleanupTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "cleanupTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSEventTrackingRunLoopMode)
+        self.update_ringtones()
 
     def cleanupTimer_(self, timer):
         # Some sessions can remain hanging indefintely due to illegal state errors, this timer will purge them
@@ -98,24 +106,8 @@ class Ringer(object):
             if session not in outgoing_sessions:
                 self.handle_session_end(session)
 
-    def start(self):
-        notification_center = NotificationCenter()
-        notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
-        notification_center.add_observer(self, name="AudioStreamDidChangeHoldState")
-        notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
-        notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
-        notification_center.add_observer(self, name="ConferenceHasAddedAudio")
-        notification_center.add_observer(self, name="BlinkWillCancelProposal")
-
-        self.cleanupTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "cleanupTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSEventTrackingRunLoopMode)
-        self.started = True
 
     def stop(self):
-        if not self.started:
-            return
-
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, name="BlinkFileTransferDidEnd")
         notification_center.remove_observer(self, name="AudioStreamDidChangeHoldState")
@@ -346,10 +338,6 @@ class Ringer(object):
         on_hold_streams = [stream for stream in chain(*(session.streams for session in self.active_sessions if session.streams)) if stream.on_hold]
         if not on_hold_streams and self.secondary_hold_tone is not None and self.secondary_hold_tone.is_active:
             self.secondary_hold_tone.stop()
-
-    def _NH_SIPApplicationDidStart(self, notification):
-        self.start()
-        self.update_ringtones()
 
     def _NH_SIPSessionWillStart(self, notification):
         session = notification.sender
