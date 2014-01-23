@@ -577,7 +577,7 @@ class AudioController(MediaStream):
     def updateAudioStatusWithCodecInformation(self):
         if self.zrtp_show_verify_phrase:
             return
-        if self.transfer_in_progress:
+        if self.transfer_in_progress or self.transferred:
             return
         if self.holdByLocal and not self.answeringMachine:
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
