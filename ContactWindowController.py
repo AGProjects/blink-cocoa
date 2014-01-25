@@ -852,6 +852,7 @@ class ContactWindowController(NSWindowController):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         style.setLineBreakMode_(NSLineBreakByTruncatingTail)
         grayAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.disabledControlTextColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+        redAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.redColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
         self.accountPopUp.removeAllItems()
         self.accounts.sort(key=attrgetter('order'))
 
@@ -879,6 +880,14 @@ class ContactWindowController(NSWindowController):
                         name = account_info.name
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
                     item.setAttributedTitle_(title)
+                else:
+                    if account_info.account.audio.do_not_disturb:
+                        title = NSAttributedString.alloc().initWithString_attributes_(account_info.name, redAttrs)
+                        item.setAttributedTitle_(title)
+                        image = NSImage.imageNamed_("blocked")
+                        image.setScalesWhenResized_(True)
+                        image.setSize_(NSMakeSize(12,12))
+                        item.setImage_(image)
 
             if account_info.account is account_manager.default_account:
                 self.accountPopUp.selectItem_(item)
@@ -2009,6 +2018,8 @@ class ContactWindowController(NSWindowController):
             settings = SIPSimpleSettings()
             status = settings.presence_state.status
             self.setStatusBarIcon(status)
+
+        self.refreshAccountList()
 
     @objc.IBAction
     def checkForUpdates_(self, sender):
