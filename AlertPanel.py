@@ -6,8 +6,7 @@ from AppKit import (NSApp,
                     NSEventTrackingRunLoopMode,
                     NSNibOwner,
                     NSNibTopLevelObjects,
-                    NSRectFill,
-                    NSStatusWindowLevel)
+                    NSRectFill)
 
 from Foundation import (NSBezierPath,
                         NSBox,
@@ -88,7 +87,7 @@ class AlertPanel(NSObject, object):
         self = super(AlertPanel, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("AlertPanel", self)
-            self.panel.setLevel_(NSStatusWindowLevel)
+            self.panel.setLevel_(3000)
             self.panel.setWorksWhenModal_(True)
             self.extraHeight = self.panel.contentRectForFrameRect_(self.panel.frame()).size.height - self.sessionsListView.frame().size.height
             self.sessionsListView.setSpacing_(2)
