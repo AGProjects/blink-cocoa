@@ -1778,12 +1778,14 @@ SettingDescription = {
                       'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Setting decription label"),
                       'sounds.night_volume': NSLocalizedString(" ", "Setting decription label"),
                       'sounds.enable_speech_synthesizer': NSLocalizedString("Say Incoming Caller Name", "Setting decription label"),
-                      'web_alert.alert_url': NSLocalizedString("Alert Web Page", "Setting decription label"),
+                      'web_alert.alert_url': NSLocalizedString("Alert URL", "Setting decription label"),
+                      'web_alert.show_alert_page_after_connect': NSLocalizedString("Open Alert URL After Connect", "Setting decription label"),
                       'server.settings_url': NSLocalizedString("Account Web Page", "Setting decription label"),
                       'server.web_password': NSLocalizedString("Password", "Setting decription label"),
                       'tls.certificate': NSLocalizedString("X.509 Certificate File", "Setting decription label"),
                       'tls.ca_list': NSLocalizedString("Certificate Authority File", "Setting decription label"),
                       'xcap.xcap_root' : NSLocalizedString("Root URI", "Setting decription label")
+                      
                       }
 
 Placeholders = {
@@ -1791,7 +1793,7 @@ Placeholders = {
                  'pstn.idd_prefix': '00',
                  'pstn.prefix': '9',
                  'pstn.dial_plan': '0049 0031',
-                 'web_alert.alert_url' : 'http://example.com/p.phtml?caller=$caller_party&called=$called_party',
+                 'web_alert.alert_url' : 'http://e.com/?caller=$caller_party&called=$called_party',
                  'conference.server_address': 'conference.sip2sip.info',
                  'sip.primary_proxy' : 'sip.example.com:5061;transport=tls',
                  'sip.alternative_proxy' : 'sip2.example.com:5060;transport=tcp',
@@ -1818,7 +1820,8 @@ SectionNames = {
                        'server': NSLocalizedString("Server Website", "Setting decription label"),
                        'tls': NSLocalizedString("TLS Settings", "Setting decription label"),
                        'xcap': NSLocalizedString("XCAP Storage", "Setting decription label"),
-                       'ldap': NSLocalizedString("LDAP Directory", "Setting decription label")
+                       'ldap': NSLocalizedString("LDAP Directory", "Setting decription label"),
+                       'web_alert': NSLocalizedString("External Alert", "Setting decription label")
                        }
 
 GeneralSettingsOrder = {
@@ -1875,7 +1878,7 @@ ToolTips = {
              'pstn.idd_prefix': NSLocalizedString("You may replace the starting + from telephone numbers with 00 or other numeric prefix required by your SIP service provider", "Setting decription label"),
              'pstn.prefix': NSLocalizedString("Always add a numeric prefix when dialing telephone numbers, typically required by a PBX to obtain an outside line", "Setting decription label"),
              'pstn.dial_plan': NSLocalizedString("List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)", "Setting decription label"),
-             'web_alert.alert_url': NSLocalizedString("Web page that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username", "Setting decription label"),
+             'web_alert.alert_url': NSLocalizedString("URL that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username", "Setting decription label"),
              'conference.server_address': NSLocalizedString("Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default", "Setting decription label"),
              'rtp.timeout': NSLocalizedString("If RTP is not received in this interval, audio calls will be hangup when Hangup on Timeout option in the RTP advanced section of the account is enabled", "Setting decription label"),
              'server.settings_url': NSLocalizedString("Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below", "Setting decription label"),
