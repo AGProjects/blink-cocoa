@@ -199,12 +199,6 @@ class PreferencesController(NSWindowController, object):
                     pass
             self.sync_with_icloud_checkbox.setHidden_(True)
         elif NSApp.delegate().applicationName == 'SIP2SIP':
-            for identifier in ('contacts', 'advanced'):
-                try:
-                    item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
-                    self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
-                except StopIteration:
-                    pass
             self.sync_with_icloud_checkbox.setHidden_(True)
 
         else:
