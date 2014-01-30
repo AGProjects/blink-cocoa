@@ -809,7 +809,7 @@ class AudioController(MediaStream):
         stats = self.stream.statistics
         if stats is not None and self.last_stats is not None:
             jitter = stats['rx']['jitter']['last'] / 1000.0 + stats['tx']['jitter']['last'] / 1000.0
-            rtt = stats['rtt']['last'] / 1000
+            rtt = stats['rtt']['last'] / 1000 / 2
             rx_packets = stats['rx']['packets'] - self.last_stats['rx']['packets']
             rx_lost_packets = stats['rx']['packets_lost'] - self.last_stats['rx']['packets_lost']
             loss = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
