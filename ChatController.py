@@ -1786,8 +1786,7 @@ class ChatController(MediaStream):
         # needed to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-        if self.sessionController.account is BonjourAccount():
-            self.sendOwnIcon()
+        self.sendOwnIcon()
 
         self.sendLoggingState()
 
