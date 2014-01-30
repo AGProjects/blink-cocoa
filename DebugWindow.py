@@ -159,6 +159,7 @@ class DebugWindow(NSObject):
 
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
+        notification_center.add_observer(self, name="AudioSessionQualityRestored")
         notification_center.add_observer(self, name="AudioStreamICENegotiationDidSucceed")
         notification_center.add_observer(self, name="AudioStreamICENegotiationDidFail")
 
@@ -328,6 +329,7 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="SIPSessionDidStart")
         notification_center.discard_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.discard_observer(self, name="AudioSessionHasQualityIssues")
+        notification_center.discard_observer(self, name="AudioSessionQualityRestored")
         notification_center.discard_observer(self, name="AudioStreamICENegotiationDidSucceed")
         notification_center.discard_observer(self, name="AudioStreamICENegotiationDidFail")
 
@@ -575,7 +577,13 @@ class DebugWindow(NSObject):
             self.renderRTP(notification.sender)
 
     def _NH_AudioSessionHasQualityIssues(self, notification):
-        text = '%s Audio session to %s has quality issues: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
+        text = '%s Audio session quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.rtpTextView.textStorage().appendAttributedString_(astring)
+        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+
+    def _NH_AudioSessionQualityRestored(self, notification):
+        text = '%s Audio session quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))

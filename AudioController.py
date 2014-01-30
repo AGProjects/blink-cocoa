@@ -130,6 +130,7 @@ class AudioController(MediaStream):
     status = STREAM_IDLE
     hangup_reason = None
     early_media = False
+    audio_has_quality_issues = False
 
 
     @classmethod
@@ -888,9 +889,14 @@ class AudioController(MediaStream):
                 send_qos_notify = True
 
             if send_qos_notify:
-                self.notification_center.post_notification("AudioSessionHasQualityIssues", sender=self, data=qos_data)
                 self.info.setStringValue_(text)
+                if not self.audio_has_quality_issues:
+                    self.notification_center.post_notification("AudioSessionHasQualityIssues", sender=self, data=qos_data)
+                self.audio_has_quality_issues = True
             else:
+                if self.audio_has_quality_issues:
+                    self.notification_center.post_notification("AudioSessionQualityRestored", sender=self, data=qos_data)
+                self.audio_has_quality_issues = False
                 self.info.setStringValue_("")
 
         else:
