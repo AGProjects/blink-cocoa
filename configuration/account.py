@@ -116,7 +116,7 @@ class GUISettings(SettingsGroup):
 
 
 class WebAlertSettings(SettingsGroup):
-    alert_url = Setting(type=HTTPURL, default=None, nillable=True)
+    alert_url = Setting(type=str, default=None, nillable=True)
     show_alert_page_after_connect = Setting(type=bool, default=False)
 
 

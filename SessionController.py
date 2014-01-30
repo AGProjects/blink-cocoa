@@ -854,11 +854,11 @@ class SessionControllersManager(object):
 
             settings = SIPSimpleSettings()
 
-            if settings.gui.use_default_web_browser_for_alerts:
-                session_controller.log_info(u"Opening HTTP URL in default browser %s"% url)
+            if settings.gui.use_default_web_browser_for_alerts or not url.startswith('http'):
+                session_controller.log_info(u"Opening Alert URL %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             else:
-                session_controller.log_info(u"Opening HTTP URL %s"% url)
+                session_controller.log_info(u"Opening Alert URL %s"% url)
                 if not SIPManager()._delegate.accountSettingsPanels.has_key(caller_key):
                     SIPManager()._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
                 SIPManager()._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
