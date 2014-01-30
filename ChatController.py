@@ -1410,6 +1410,7 @@ class ChatController(MediaStream):
             return
 
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
+        self.chatWindowController.window().orderBack_(None)
         self.screenshot_task.launch()
 
     def userClickedConferenceScreenSharingQualityMenu_(self, sender):
@@ -1483,6 +1484,7 @@ class ChatController(MediaStream):
         if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
             self.sendFiles([unicode(self.screencapture_file)])
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, self.screenshot_task)
+        self.chatWindowController.window().orderFront_(None)
         self.screenshot_task = None
 
     def toggleEditor(self):
