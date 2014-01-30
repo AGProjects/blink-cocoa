@@ -1293,7 +1293,7 @@ class AudioController(MediaStream):
         self.sessionController.log_info(u'ICE negotiation failed: %s' % data.reason)
         self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio session label"), True)
         self.ice_negotiation_status = data.reason
-        # TODO: remove stream if the reason is that all candidates failed probing
+        # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
         #self.end()
 
     @run_in_gui_thread
