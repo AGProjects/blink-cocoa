@@ -59,7 +59,7 @@ class NATTraversalSettingsExtension(NATTraversalSettings):
 
 
 class NATTraversalSettingsExtensionSIP2SIP(NATTraversalSettings):
-    use_ice = Setting(type=bool, default=True)
+    use_ice = Setting(type=bool, default=False)
 
 
 class BonjourPresenceSettingsExtension(PresenceSettings):
