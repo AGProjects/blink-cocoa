@@ -41,7 +41,7 @@ from sipsimple.threading.green import run_in_green_thread, Command
 
 from BlinkLogger import BlinkLogger, FileLogger
 
-from configuration.account import AccountExtension, BonjourAccountExtension
+from configuration.account import AccountExtension, BonjourAccountExtension, AccountExtensionSIP2SIP
 from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
@@ -125,7 +125,11 @@ class SIPManager(object):
 
     def init(self):
 
-        Account.register_extension(AccountExtension)
+        if NSApp.delegate().applicationName == 'SIP2SIP':
+            Account.register_extension(AccountExtensionSIP2SIP)
+        else:
+            Account.register_extension(AccountExtension)
+        
         BonjourAccount.register_extension(BonjourAccountExtension)
         Contact.register_extension(BlinkContactExtension)
         Group.register_extension(BlinkGroupExtension)

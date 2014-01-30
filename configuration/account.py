@@ -8,7 +8,7 @@ Blink account settings extensions.
 __all__ = ['AccountExtension', 'BonjourAccountExtension']
 
 
-from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
+from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption, SIPProxyAddress
 
@@ -52,6 +52,14 @@ class MessageSummarySettingsExtension(MessageSummarySettings):
 
 class MSRPSettingsExtension(MSRPSettings):
     connection_model = Setting(type=MSRPConnectionModel, default='relay')
+
+
+class NATTraversalSettingsExtension(NATTraversalSettings):
+    use_ice = Setting(type=bool, default=False)
+
+
+class NATTraversalSettingsExtensionSIP2SIP(NATTraversalSettings):
+    use_ice = Setting(type=bool, default=True)
 
 
 class BonjourPresenceSettingsExtension(PresenceSettings):
@@ -148,6 +156,7 @@ class AccountExtension(SettingsObjectExtension):
     order = Setting(type=int, default=0)
 
     auth = AuthSettingsExtension
+    nat_traversal = NATTraversalSettingsExtension
     audio = AudioSettingsExtension
     chat = ChatSettingsExtension
     sms = SMSSettingsExtension
@@ -165,6 +174,10 @@ class AccountExtension(SettingsObjectExtension):
     xcap = XCAPSettingsExtension
     web_alert = WebAlertSettings
     gui = GUISettings
+
+
+class AccountExtensionSIP2SIP(AccountExtension):
+    nat_traversal = NATTraversalSettingsExtensionSIP2SIP
 
 
 class BonjourAccountExtension(SettingsObjectExtension):
