@@ -15,9 +15,12 @@ import os
 from application.system import makedirs
 from sipsimple.streams import ChatStreamError
 from sipsimple.util import ISOTimestamp
+from util import format_identity_to_string
 
 from resources import ApplicationData
+
 from BlinkLogger import BlinkLogger
+
 
 DEFAULT_OTR_FLAGS = {
                     'ALLOW_V1':False,
@@ -140,15 +143,29 @@ class ChatOtrSmp(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, chatController):
-        self.chatController = chatController
+    def __init__(self, controller, type='chat'):
+        self.controller = controller
         NSBundle.loadNibNamed_owner_("ChatOtrSmp", self)
         self.statusText.setStringValue_('')
         self.progressBar.startAnimation_(None)
-        self.window.setTitle_('Identity Verification for %s' % chatController.sessionController.getTitleShort())
+        if type == 'chat':
+            self.window.setTitle_('Identity Verification for %s' % self.controller.sessionController.getTitleShort())
+            self.stream = self.controller.stream
+            self.remote_address = self.controller.sessionController.remoteSIPAddress
+            self.otr_context_id = self.controller.sessionController.call_id
+        elif type == 'sms':
+            self.window.setTitle_('Identity Verification for %s' % format_identity_to_string(self.controller.target_uri))
+            self.stream = self.controller
+            self.remote_address = self.controller.remote_uri
+            self.otr_context_id = self.controller.session_id
+        else:
+            self.stream = None
+            self.remote_address = ''
+            self.otr_context_id = ''
+
 
     def close(self):
-        self.chatController = None
+        self.controller = None
         if self.timer is not None:
             if self.timer.isValid():
                 self.timer.invalidate()
@@ -160,8 +177,7 @@ class ChatOtrSmp(NSObject):
 
     @property
     def ctx(self):
-        otr_context_id = self.chatController.sessionController.call_id
-        return self.chatController.otr_account.getContext(otr_context_id)
+        return self.controller.otr_account.getContext(self.otr_context_id)
 
     @objc.IBAction
     def okClicked_(self, sender):
@@ -175,7 +191,7 @@ class ChatOtrSmp(NSObject):
             return
 
         if self.response:
-            self.ctx.smpGotSecret(secret, appdata={'stream': self.chatController.stream})
+            self.ctx.smpGotSecret(secret, appdata={'stream': self.stream})
             self.progressBar.setIndeterminate_(False)
             self.progressBar.setDoubleValue_(6)
             self.continueButton.setEnabled_(False)
@@ -184,9 +200,9 @@ class ChatOtrSmp(NSObject):
             try:
                 qtext = self.questionText.stringValue()
                 if qtext:
-                    self.ctx.smpInit(secret, question=qtext.encode('utf-8'), appdata={'stream': self.chatController.stream})
+                    self.ctx.smpInit(secret, question=qtext.encode('utf-8'), appdata={'stream': self.stream})
                 else:
-                    self.ctx.smpInit(secret, appdata={'stream': self.chatController.stream})
+                    self.ctx.smpInit(secret, appdata={'stream': self.stream})
                 self.progressBar.setIndeterminate_(False)
                 self.progressBar.setDoubleValue_(3)
                 self.statusText.setStringValue_('Verification request sent')
@@ -205,7 +221,7 @@ class ChatOtrSmp(NSObject):
         self.window.orderOut_(self)
         self.smp_running = False
         try:
-            self.ctx.smpAbort(appdata={'stream': self.chatController.stream})
+            self.ctx.smpAbort(appdata={'stream': self.stream})
         except potr.context.NotEncryptedError, e:
             self.statusText.setStringValue_('Chat session is not OTR encrypted')
         except RuntimeError, e:
@@ -259,9 +275,9 @@ class ChatOtrSmp(NSObject):
                     self.statusText.setTextColor_(NSColor.greenColor())
                     self.statusText.setStringValue_('Verification succeeded')
                     if fingerprint:
-                        self.chatController.otr_account.setTrust(self.chatController.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
-                        self.chatController.chatWindowController.revalidateToolbar()
-                        self.chatController.updateEncryptionWidgets()
+                        self.controller.otr_account.setTrust(self.remote_address, str(fingerprint), 'verified')
+                        self.controller.revalidateToolbar()
+                        self.controller.updateEncryptionWidgets()
                     self._finish()
                 else:
                     self.statusText.setTextColor_(NSColor.redColor())
@@ -274,9 +290,9 @@ class ChatOtrSmp(NSObject):
                     self.statusText.setTextColor_(NSColor.greenColor())
                     self.statusText.setStringValue_('Verification succeeded')
                     if fingerprint:
-                        self.chatController.otr_account.setTrust(self.chatController.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
-                        self.chatController.chatWindowController.revalidateToolbar()
-                        self.chatController.updateEncryptionWidgets()
+                        self.controller.otr_account.setTrust(self.remote_address, str(fingerprint), 'verified')
+                        self.controller.revalidateToolbar()
+                        self.controller.updateEncryptionWidgets()
                     self._finish()
                 else:
                     self.statusText.setTextColor_(NSColor.redColor())
@@ -321,18 +337,18 @@ class ChatOtrSmp(NSObject):
             self.continueButton.setEnabled_(True)
             if self.question is None:
                 self.questionText.setHidden_(True)
-                self.labelText.setStringValue_(('%s is trying to verify your identity using a commonly known secret.' % self.chatController.sessionController.remoteSIPAddress))
+                self.labelText.setStringValue_(('%s is trying to verify your identity using a commonly known secret.' % self.remote_address))
             else:
                 self.questionText.setHidden_(False)
                 self.secretText.setHidden_(False)
                 self.questionText.setStringValue_(self.question)
                 self.questionText.setEnabled_(False)
-                self.labelText.setStringValue_('%s has asked you a question to verify your identity:' % self.chatController.sessionController.remoteSIPAddress)
+                self.labelText.setStringValue_('%s has asked you a question to verify your identity:' % self.remote_address)
         else:
             self.statusText.setStringValue_('')
             self.continueButton.setEnabled_(True)
             self.questionText.setHidden_(False)
             self.questionText.setStringValue_('')
             self.questionText.setEnabled_(True)
-            self.labelText.setStringValue_(('You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.' % self.chatController.sessionController.remoteSIPAddress))
+            self.labelText.setStringValue_(('You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.' % self.remote_address))
 

@@ -1,9 +1,11 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSApp, NSPortraitOrientation, NSFitPagination
+from AppKit import NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState
+
 from Foundation import (NSBundle,
                         NSImage,
+                        NSLocalizedString,
                         NSNotFound,
                         NSObject,
                         NSPrintInfo,
@@ -17,6 +19,7 @@ from zope.interface import implements
 
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
+from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads.iscomposing import IsComposingMessage
 from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
 from sipsimple.util import ISOTimestamp
@@ -31,6 +34,9 @@ class SMSWindowController(NSWindowController):
 
     tabView = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
+    toolbar = objc.IBOutlet()
+    encryptionMenu = objc.IBOutlet()
+    encryptionIconMenuItem = objc.IBOutlet()
 
     def initWithOwner_(self, owner):
         self= super(SMSWindowController, self).init()
@@ -48,7 +54,11 @@ class SMSWindowController(NSWindowController):
             return activeTab.identifier()
         return None
 
-    def updateTitle(self, display_name = None):
+    def updateTitle(self, display_name=None):
+        title = self.getTitle(display_name=display_name)
+        self.window().setTitle_(title)
+
+    def getTitle(self, display_name=None):
         session = self.selectedSessionController()
         if session:
             sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
@@ -58,8 +68,8 @@ class SMSWindowController(NSWindowController):
                 title = u"Instant Messages with %s" %  format_identity_to_string(session.target_uri)
         else:
             title = u"Instant Messages"
-        self.window().setTitle_(title)
-
+        return title
+    
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -69,6 +79,96 @@ class SMSWindowController(NSWindowController):
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window():
             self.window().orderOut_(self)
+
+    def menuWillOpen_(self, menu):
+        if menu == self.encryptionMenu:
+            settings = SIPSimpleSettings()
+            item = menu.itemWithTag_(1)
+            item.setHidden_(not settings.chat.enable_encryption)
+            
+            item = menu.itemWithTag_(3)
+            item.setEnabled_(False)
+            item.setState_(NSOffState)
+            item.setHidden_(True)
+            
+            item = menu.itemWithTag_(4)
+            item.setState_(NSOffState)
+            item.setEnabled_(False)
+            item.setState_(NSOffState)
+            
+            item = menu.itemWithTag_(5)
+            item.setHidden_(True)
+            
+            item = menu.itemWithTag_(6)
+            item.setHidden_(True)
+            
+            item = menu.itemWithTag_(7)
+            item.setHidden_(True)
+            
+            item = menu.itemWithTag_(9)
+            item.setHidden_(True)
+            
+            selectedSession = self.selectedSessionController()
+            if selectedSession:
+                display_name = '%s@%s' % (selectedSession.target_uri.user, selectedSession.target_uri.host)
+                item.setHidden_(False)
+                item = menu.itemWithTag_(1)
+                my_fingerprint = selectedSession.otr_account.getPrivkey()
+                _f = str(my_fingerprint)
+                item.setTitle_(NSLocalizedString("My fingerprint is %s" % _f, "Menu item"))
+                
+                item = menu.itemWithTag_(3)
+                item.setTitle_(NSLocalizedString("Always require OTR encryption with %s" % display_name, "Menu item"))
+                
+                if selectedSession.contact is not None:
+                    item.setEnabled_(True)
+                    item.setState_(NSOnState if selectedSession.require_encryption else NSOffState)
+                    item.setHidden_(not settings.chat.enable_encryption)
+                else:
+                    item.setEnabled_(False)
+                    item.setHidden_(True)
+                    item.setState_(NSOffState)
+                
+                item = menu.itemWithTag_(4)
+                if settings.chat.enable_encryption:
+                    item.setHidden_(False)
+                    if selectedSession.require_encryption and selectedSession.is_encrypted:
+                        item.setEnabled_(False)
+                    else:
+                        item.setEnabled_(True)
+                    item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not selectedSession.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+        
+                else:
+                    item.setEnabled_(False)
+                    item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
+                
+                if settings.chat.enable_encryption:
+                    ctx = selectedSession.otr_account.getContext(selectedSession.session_id)
+                    fingerprint = ctx.getCurrentKey()
+                    
+                    if fingerprint:
+                        item = menu.itemWithTag_(6)
+                        item.setHidden_(False)
+                        
+                        item = menu.itemWithTag_(7)
+                        item.setHidden_(False)
+                        
+                        fingerprint_verified = selectedSession.otr_account.getTrust(selectedSession.remote_uri, str(fingerprint))
+                        item.setEnabled_(False)
+                        _t = NSLocalizedString("%s's fingerprint is " % display_name, "Menu item")
+                        item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
+                        
+                        item = menu.itemWithTag_(5)
+                        item.setEnabled_(True if fingerprint else False)
+                        item.setHidden_(False)
+                        item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
+                        item.setState_(NSOnState if fingerprint_verified else NSOffState)
+                        
+                        item = menu.itemWithTag_(9)
+                        item.setHidden_(False)
+                    else:
+                        item = menu.itemWithTag_(9)
+                        item.setHidden_(True)
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
@@ -133,6 +233,9 @@ class SMSWindowController(NSWindowController):
         if self.unreadMessageCounts.has_key(item.identifier()):
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            selectedSession.updateEncryptionWidgets()
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0:
@@ -152,6 +255,13 @@ class SMSWindowController(NSWindowController):
             SMSWindowManager().windows.remove(self)
             self.notification_center.remove_observer(self, name="BlinkShouldTerminate")
         return True
+
+    @objc.IBAction
+    def userClickedEncryptionMenu_(self, sender):
+        # dispatch the click to the active session
+        selectedSession = self.selectedSessionController()
+        if selectedSession:
+            selectedSession.userClickedEncryptionMenu_(sender)
 
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):
@@ -234,6 +344,7 @@ class SMSWindowManagerClass(NSObject):
                 self.windows.append(window)
             else:
                 window = self.windows[0]
+            viewer.windowController = window
             window.addViewer_(viewer)
         elif viewer:
             window = self.windowForViewer(viewer)
@@ -311,7 +422,8 @@ class SMSWindowManagerClass(NSObject):
         is_html = content_type == 'text/html'
 
         if content_type in ('text/plain', 'text/html'):
-            BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
+            pass
+            #BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
             body = cpim_message.body if is_cpim else data.body
@@ -350,25 +462,6 @@ class SMSWindowManagerClass(NSObject):
             except Exception:
                 replication_timestamp = ISOTimestamp.now()
 
-        viewer.gotMessage(sender_identity, call_id, body, is_html, is_replication_message, replication_timestamp)
+        window = self.windowForViewer(viewer).window()
+        viewer.gotMessage(sender_identity, call_id, body, is_html, is_replication_message, replication_timestamp, window=window)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
-
-        if is_replication_message:
-            return
-
-        if not self.windowForViewer(viewer).window().isKeyWindow():
-            # notify growl
-            if is_html:
-                nc_body = html2txt(body)
-            else:
-                nc_body = body
-
-            growl_data = NotificationData()
-            growl_data.content = nc_body
-            growl_data.sender = format_identity_to_string(sender_identity, format='compact')
-            self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
-
-            nc_title = 'SMS Message Received'
-            nc_subtitle = format_identity_to_string(sender_identity, format='full')
-            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-

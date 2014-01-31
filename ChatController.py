@@ -525,6 +525,9 @@ class ChatController(MediaStream):
         elif tag == 10:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://www.cypherpunks.ca/otr/Protocol-v2-3.1.0.html"))
 
+        self.revalidateToolbar()
+
+    def revalidateToolbar(self):
         self.chatWindowController.revalidateToolbar()
 
     @objc.IBAction
@@ -1829,7 +1832,7 @@ class ChatController(MediaStream):
         else:
             self.init_otr()
 
-        self.chatWindowController.revalidateToolbar()
+        self.revalidateToolbar()
 
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         settings = SIPSimpleSettings()
@@ -1848,7 +1851,7 @@ class ChatController(MediaStream):
                 elif settings.chat.enable_encryption and not self.is_encrypted:
                     self.outgoing_message_handler.propose_otr()
 
-            self.chatWindowController.revalidateToolbar()
+            self.revalidateToolbar()
 
     def _NH_ChatReplicationJournalEntryReceived(self, sender, data):
         if self.status == STREAM_CONNECTED:

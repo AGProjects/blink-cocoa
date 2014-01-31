@@ -53,7 +53,7 @@ class ChatMessageObject(object):
         self.media_type = media_type
 
 
-def processHTMLText(text, usesmileys=True, is_html=False):
+def processHTMLText(text='', usesmileys=True, is_html=False):
     def suball(pat, repl, html):
         ohtml = ""
         while ohtml != html:
