@@ -2282,7 +2282,7 @@ class OutgoingMessageHandler(NSObject):
                     pass
 
                 message.status = 'failed'
-                self.delegate.sessionController.log_error(u"Chat message %s to %s was not delivered" % message.msgid)
+                self.delegate.sessionController.log_error(u"Chat message %s was not delivered" % message.msgid)
                 self.markMessage(message, MSG_STATE_FAILED)
                 self.add_to_history(message)
         except KeyError:
