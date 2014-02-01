@@ -162,6 +162,7 @@ class SMSViewController(NSObject):
             self.init_otr()
             self.chatOtrSmpWindow = ChatOtrSmp(self, 'sms')
             self.otr_has_been_initialized = False
+            self.log_info('Using local account %s' % self.local_uri)
 
         return self
 
@@ -263,7 +264,7 @@ class SMSViewController(NSObject):
         return True
 
     def log_info(self, text):
-        BlinkLogger().log_info(u"SMS session %s for account %s with %s: %s" % (self.session_id, self.local_uri, self.remote_uri, text))
+        BlinkLogger().log_info(u"[SMS %s with %s] %s" % (self.session_id, self.remote_uri, text))
 
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
