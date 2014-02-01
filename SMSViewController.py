@@ -697,7 +697,7 @@ class SMSViewController(NSObject):
                 message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                           RouteHeader(self.routes[0].uri), content_type, newmsg, credentials=self.account.credentials)
                 self.notification_center.add_observer(self, sender=message_request)
-                message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
+                message_request.send(15)
                 message.status = 'sent'
                 message.call_id = message_request._request.call_id
                 self.log_info(u"Sending message %s" % (message_request._request.call_id))
@@ -715,7 +715,7 @@ class SMSViewController(NSObject):
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                       RouteHeader(self.routes[0].uri), content_type, text, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
-            message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
+            message_request.send(5)
             id=str(message_request)
             message = MessageInfo(id, content_type=content_type, call_id=message_request._request.call_id)
 
