@@ -524,13 +524,18 @@ class SMSViewController(NSObject):
             self.setRoutesResolved(routes)
 
     def _NH_SIPMessageDidSucceed(self, sender, data):
-        self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
         call_id = data.headers['Call-ID'].body
         if message.otr:
-            ctx = self.otr_account.getContext(self.session_id)
-            self.setEncryptionState(ctx)
+            if data.code == 200:
+                ctx = self.otr_account.getContext(self.session_id)
+                self.setEncryptionState(ctx)
+            else:
+                if self.otr_negotiation_in_progress:
+                    self.log_info('OTR negotiation failed')
+                    self.otr_negotiation_in_progress = False
         else:
+            self.composeReplicationMessage(sender, data.code)
             if message.content_type != "application/im-iscomposing+xml":
                 self.log_info(u"Outgoing message %s delivered" % (call_id))
                 if data.code == 202:
@@ -545,14 +550,14 @@ class SMSViewController(NSObject):
         self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPMessageDidFail(self, sender, data):
-        self.composeReplicationMessage(sender, data.code)
         message = self.messages.pop(str(sender))
         call_id = message.call_id
-
         if message.otr:
-            ctx = self.otr_account.getContext(self.session_id)
-            self.setEncryptionState(ctx)
+            if self.otr_negotiation_in_progress:
+                self.log_info('OTR negotiation failed')
+                self.otr_negotiation_in_progress = False
         else:
+            self.composeReplicationMessage(sender, data.code)
             if message.content_type != "application/im-iscomposing+xml":
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                 message.status='failed'
