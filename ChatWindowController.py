@@ -382,7 +382,7 @@ class ChatWindowController(NSWindowController):
         title = self.getConferenceTitle()
         icon = None
         if title:
-            self.window().setTitle_(title)
+            self.window().setTitle_(NSLocalizedString("Chat with %s" % title, "Window title"))
             self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
             session = self.selectedSessionController()
             if session:
