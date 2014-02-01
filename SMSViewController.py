@@ -141,6 +141,7 @@ class SMSViewController(NSObject):
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user, self.target_uri.host)
+            self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
 
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
@@ -152,14 +153,15 @@ class SMSViewController(NSObject):
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_("%i chars left" % MAX_MESSAGE_LENGTH)
 
+            self.enableIsComposing = True
+
+            # OTR stuff
             self.require_encryption = self.contact.contact.require_encryption if self.contact is not None else True
             self.otr_negotiation_in_progress = False
             self.previous_is_encrypted = False
-            self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
             self.init_otr()
             self.chatOtrSmpWindow = ChatOtrSmp(self, 'sms')
-            if self.require_encryption:
-                self.propose_otr()
+            self.otr_has_been_initialized = False
 
         return self
 
@@ -462,6 +464,10 @@ class SMSViewController(NSObject):
             message = MessageInfo(msgid, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=text, content_type="html" if is_html else "text", status="delivered", encryption=encryption)
             self.add_to_history(message)
 
+        if self.require_encryption and not self.otr_has_been_initialized:
+            self.propose_otr()
+            self.otr_has_been_initialized = True
+
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
         if window:
@@ -649,7 +655,7 @@ class SMSViewController(NSObject):
             self.messages[id] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, otr=True)
             message_request.send(15)
 
-    def _sendMessage3(self, msgid, text, content_type="text/plain"):
+    def _sendMessage_not_used_anymore(self, msgid, text, content_type="text/plain"):
         utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
         message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                   RouteHeader(self.routes[0].uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
@@ -784,6 +790,9 @@ class SMSViewController(NSObject):
         if self.enableIsComposing:
             content = IsComposingMessage(state=State("active"), refresh=Refresh(60), last_active=LastActive(last_active or ISOTimestamp.now()), content_type=ContentType('text')).toxml()
             self.sendMessage(content, IsComposingDocument.content_type)
+            if self.require_encryption and not self.otr_has_been_initialized:
+                self.propose_otr()
+                self.otr_has_been_initialized = True
 
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
