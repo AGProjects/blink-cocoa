@@ -184,7 +184,7 @@ class FileTransferWindowController(NSObject, object):
         if not isinstance(sender, IncomingFileTransferHandler):
             if not self.loaded:
                 self.load_transfers_from_history()
-            if 'xscreencapture' not in self.file_path:
+            if 'xscreencapture' not in sender.file_path:
                 self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
@@ -205,7 +205,7 @@ class FileTransferWindowController(NSObject, object):
         # jump dock icon and bring window to front
 
         if not isinstance(sender, IncomingFileTransferHandler):
-            if 'xscreencapture' not in self.file_path:
+            if 'xscreencapture' not in sender.file_path:
                 self.window.orderFront_(None)
                 NSApp.requestUserAttention_(NSInformationalRequest)
         self.refresh_transfer_rate()
