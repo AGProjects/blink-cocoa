@@ -1538,7 +1538,7 @@ class SessionController(NSObject):
             except ValueError:
                 pass
             else:
-                _dtmf_match_regexp = re.compile("^,[0-9,#\*]*[0-9]+$")
+                _dtmf_match_regexp = re.compile("^,[0-9,#\*]+$")
                 if _dtmf_match_regexp.match(target_uri.user[idx:]):
                     self.postdial_string = target_uri.user[idx:]
                     target_uri.user = target_uri.user[0:idx]
