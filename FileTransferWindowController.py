@@ -181,10 +181,11 @@ class FileTransferWindowController(NSObject, object):
         h = NSHeight(self.listView.frame())
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
-        if not (isinstance(sender, IncomingFileTransferHandler) and sender.file_name.startswith('xscreencapture')):
+        if not isinstance(sender, IncomingFileTransferHandler):
             if not self.loaded:
                 self.load_transfers_from_history()
-            self.window.orderFront_(None)
+            if 'xscreencapture' not in self.file_path:
+                self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
         if count == 1:
@@ -202,9 +203,11 @@ class FileTransferWindowController(NSObject, object):
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
         # jump dock icon and bring window to front
-        if not (isinstance(sender, IncomingFileTransferHandler) and sender.file_name.startswith('xscreencapture')):
-            self.window.orderFront_(None)
-            NSApp.requestUserAttention_(NSInformationalRequest)
+
+        if not isinstance(sender, IncomingFileTransferHandler):
+            if 'xscreencapture' not in self.file_path:
+                self.window.orderFront_(None)
+                NSApp.requestUserAttention_(NSInformationalRequest)
         self.refresh_transfer_rate()
 
 
