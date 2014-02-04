@@ -1785,7 +1785,7 @@ SettingDescription = {
                       'tls.certificate': NSLocalizedString("X.509 Certificate File", "Setting decription label"),
                       'tls.ca_list': NSLocalizedString("Certificate Authority File", "Setting decription label"),
                       'xcap.xcap_root' : NSLocalizedString("Root URI", "Setting decription label")
-                      
+
                       }
 
 Placeholders = {

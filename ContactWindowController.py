@@ -1057,7 +1057,7 @@ class ContactWindowController(NSWindowController):
                     changed_blink_contacts.append((blink_contact,group))
             else:
                 BlinkLogger().log_debug('%s in group %s has not resources in PIDF' % (blink_contact.name, group.name))
-                
+
         for blink_contact, group in changed_blink_contacts:
             self.contactOutline.reloadItem_reloadChildren_(blink_contact, False)
             if isinstance(group, AllContactsBlinkGroup):

@@ -1167,7 +1167,7 @@ class BlinkPresenceContact(BlinkContact):
                                 notify = True
                         else:
                             notify = True
-                        
+
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability" % self.name, "System notification title")
                             nc_body = NSLocalizedString("%s is now " % self.name, "System notification body") + status

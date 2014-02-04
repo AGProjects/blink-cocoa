@@ -118,7 +118,7 @@ class FileTransfer(object):
                     time_left = NSLocalizedString("About %i minutes" % e, "Label")
                 else:
                     time_left = "%s left" % format_duration(datetime.timedelta(seconds=eta))
-                
+
                 status = NSLocalizedString("Transferred", "Label") + " " + t + " - %s/s - %s" % (format_size(self.transfer_rate, bits=True), time_left)
         else:
             status = NSLocalizedString("Transferred", "Label") + " " + t

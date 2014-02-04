@@ -129,7 +129,7 @@ class SIPManager(object):
             Account.register_extension(AccountExtensionSIP2SIP)
         else:
             Account.register_extension(AccountExtension)
-        
+
         BonjourAccount.register_extension(BonjourAccountExtension)
         Contact.register_extension(BlinkContactExtension)
         Group.register_extension(BlinkGroupExtension)

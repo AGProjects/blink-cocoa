@@ -227,10 +227,10 @@ class ChatViewController(NSObject):
 
     editorIsComposing = False
     scrolling_back = False
-    
+
     last_sender = None
     previous_msgid = ""
-    
+
     textWasPasted = False
 
 
@@ -459,7 +459,7 @@ class ChatViewController(NSObject):
             icon_path = "null"
         else:
             icon_path = "'%s'" % icon_path
-        
+
         self.last_sender = sender
 
         if not history_entry and not self.delegate.isOutputFrameVisible():

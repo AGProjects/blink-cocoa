@@ -558,7 +558,7 @@ class ChatController(MediaStream):
     def resetStyle(self):
         str_attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.fontWithName_size_("Lucida Grande", 11), NSFontAttributeName)
         self.chatViewController.inputText.textStorage().setAttributedString_(NSAttributedString.alloc().initWithString_attributes_(" ", str_attributes))
-    
+
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
             # attempt convert rich text to html

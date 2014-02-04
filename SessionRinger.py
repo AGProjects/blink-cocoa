@@ -87,7 +87,7 @@ class Ringer(object):
         notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.add_observer(self, name="ConferenceHasAddedAudio")
         notification_center.add_observer(self, name="BlinkWillCancelProposal")
-        
+
         self.cleanupTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "cleanupTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.cleanupTimer, NSEventTrackingRunLoopMode)

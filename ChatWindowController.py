@@ -1549,8 +1549,8 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(False)
                 self.audioStatus.setStringValue_(NSLocalizedString("Connecting...", "Audio status label"))
-            
-            
+
+
             elif state == STATE_CONNECTED:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(False)

@@ -112,7 +112,7 @@ class SMSViewController(NSObject):
     scrollingTimer = None
     scrolling_back = False
     message_count_from_history = 0
-    
+
     otr_account = None
     chatOtrSmpWindow = None
     contact = None
@@ -122,7 +122,7 @@ class SMSViewController(NSObject):
     routes = None
     queue = None
     queued_serial = 0
-    
+
     windowController = None
 
     def initWithAccount_target_name_(self, account, target, display_name):
@@ -211,11 +211,11 @@ class SMSViewController(NSObject):
             if self.contact is not None:
                 self.contact.contact.require_encryption = self.require_encryption
                 self.contact.contact.save()
-            
+
             self.otr_account.peer_options['REQUIRE_ENCRYPTION'] = self.require_encryption
             if self.require_encryption:
                 self.propose_otr()
-        
+
         elif tag == 4: # active
             if self.is_encrypted:
                 ctx.disconnect()
@@ -232,13 +232,13 @@ class SMSViewController(NSObject):
                     self.otr_account.removeFingerprint(self.remote_uri, str(fingerprint))
                 else:
                     self.otr_account.setTrust(self.remote_uri, str(fingerprint), 'verified')
-        
+
         elif tag == 9: # SMP window
             self.chatOtrSmpWindow.show()
-        
+
         elif tag == 10:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://www.cypherpunks.ca/otr/Protocol-v2-3.1.0.html"))
-                
+
     def revalidateToolbar(self):
         pass
 
@@ -256,10 +256,10 @@ class SMSViewController(NSObject):
                 peer_options['REQUIRE_ENCRYPTION'] = self.contact.contact.require_encryption
             settings = SIPSimpleSettings()
             peer_options['ALLOW_V2'] = settings.chat.enable_encryption
-        
+
         self.otr_account = BlinkOtrAccount(peer_options=peer_options)
         self.otr_account.loadTrusts()
-    
+
     def isOutputFrameVisible(self):
         return True
 
@@ -294,7 +294,7 @@ class SMSViewController(NSObject):
                 elif ctx.state == 1:
                     self.log_info('OTR negotiation succeeded')
                 self.otr_negotiation_in_progress = False
-        
+
         if self.previous_is_encrypted != self.is_encrypted:
             self.previous_is_encrypted = self.is_encrypted
             fingerprint = str(ctx.getCurrentKey())
@@ -308,11 +308,11 @@ class SMSViewController(NSObject):
         encrypted = finished or ctx.state == potr.context.STATE_ENCRYPTED
         trusted = encrypted and bool(ctx.getCurrentTrust())
         return (encrypted, trusted, finished)
-    
+
     @property
     def is_encrypted(self):
         return self.otr_status[0]
-    
+
     def updateEncryptionWidgets(self):
         if not self.windowController:
             return
@@ -340,12 +340,12 @@ class SMSViewController(NSObject):
         log_text = '%s changed encryption fingerprint. Please verify it again.' % self.windowController.getTitle()
         self.log_info(log_text)
         self.chatViewController.showSystemMessage(self.session_id, log_text, ISOTimestamp.now(), True)
-        
+
         settings = SIPSimpleSettings()
         if not settings.audio.silent:
             this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
             volume = 0.8
-            
+
             if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
                 if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
                     volume = settings.sounds.night_volume.volume/100.0
@@ -354,10 +354,10 @@ class SMSViewController(NSObject):
                     volume = settings.sounds.night_volume.volume/100.0
                 elif this_hour >=  settings.sounds.night_volume.start_hour:
                     volume = settings.sounds.night_volume.volume/100.0
-            
+
             NSApp.delegate().contactsWindowController.speech_synthesizer.setVolume_(volume)
             NSApp.delegate().contactsWindowController.speech_synthesizer.startSpeakingString_(log_text)
-        
+
         nc_title = 'SMS Encryption Warning'
         nc_subtitle = self.getTitle()
         nc_body = 'Encryption fingerprint has changed'
@@ -394,7 +394,7 @@ class SMSViewController(NSObject):
                     encryption = 'unverified'
 
             self.chatOtrSmpWindow.handle_tlv(tlvs)
-            
+
             if text is None:
                 return
 
@@ -443,12 +443,12 @@ class SMSViewController(NSObject):
                 nc_body = html2txt(text.decode('utf-8'))
             else:
                 nc_body = text.decode('utf-8')
-            
+
             growl_data = NotificationData()
             growl_data.content = nc_body
             growl_data.sender = format_identity_to_string(sender, format='compact')
             self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
-            
+
             nc_title = 'SMS Message Received'
             nc_subtitle = format_identity_to_string(sender, format='full')
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
@@ -564,7 +564,7 @@ class SMSViewController(NSObject):
                 message.status='failed'
                 self.add_to_history(message)
                 self.log_info(u"Outgoing message %s delivery failed: %s" % (call_id, data.reason))
-    
+
         self.notification_center.remove_observer(self, sender=sender)
 
     @run_in_green_thread
@@ -684,7 +684,7 @@ class SMSViewController(NSObject):
         if content_type != "application/im-iscomposing+xml":
             self.enableIsComposing = True
             message = self.messages.pop(msgid)
-        
+
             try:
                 ctx = self.otr_account.getContext(self.session_id)
                 newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.text.encode('utf-8'), appdata={'stream': self})
@@ -697,9 +697,9 @@ class SMSViewController(NSObject):
                         message.encryption = 'verified'
                     else:
                         message.encryption = 'unverified'
-                    
+
                     self.chatViewController.updateEncryptionLock(msgid, message.encryption)
-                
+
                 message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                           RouteHeader(self.routes[0].uri), content_type, newmsg, credentials=self.account.credentials)
                 self.notification_center.add_observer(self, sender=message_request)
@@ -726,7 +726,7 @@ class SMSViewController(NSObject):
             message = MessageInfo(id, content_type=content_type, call_id=message_request._request.call_id)
 
         self.messages[id] = message
-        
+
     def lookup_destination(self, target_uri):
         assert isinstance(target_uri, SIPURI)
 

@@ -69,7 +69,7 @@ class SMSWindowController(NSWindowController):
         else:
             title = u"Instant Messages"
         return title
-    
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -85,29 +85,29 @@ class SMSWindowController(NSWindowController):
             settings = SIPSimpleSettings()
             item = menu.itemWithTag_(1)
             item.setHidden_(not settings.chat.enable_encryption)
-            
+
             item = menu.itemWithTag_(3)
             item.setEnabled_(False)
             item.setState_(NSOffState)
             item.setHidden_(True)
-            
+
             item = menu.itemWithTag_(4)
             item.setState_(NSOffState)
             item.setEnabled_(False)
             item.setState_(NSOffState)
-            
+
             item = menu.itemWithTag_(5)
             item.setHidden_(True)
-            
+
             item = menu.itemWithTag_(6)
             item.setHidden_(True)
-            
+
             item = menu.itemWithTag_(7)
             item.setHidden_(True)
-            
+
             item = menu.itemWithTag_(9)
             item.setHidden_(True)
-            
+
             selectedSession = self.selectedSessionController()
             if selectedSession:
                 display_name = '%s@%s' % (selectedSession.target_uri.user, selectedSession.target_uri.host)
@@ -116,10 +116,10 @@ class SMSWindowController(NSWindowController):
                 my_fingerprint = selectedSession.otr_account.getPrivkey()
                 _f = str(my_fingerprint)
                 item.setTitle_(NSLocalizedString("My fingerprint is %s" % _f, "Menu item"))
-                
+
                 item = menu.itemWithTag_(3)
                 item.setTitle_(NSLocalizedString("Always require OTR encryption with %s" % display_name, "Menu item"))
-                
+
                 if selectedSession.contact is not None:
                     item.setEnabled_(True)
                     item.setState_(NSOnState if selectedSession.require_encryption else NSOffState)
@@ -128,7 +128,7 @@ class SMSWindowController(NSWindowController):
                     item.setEnabled_(False)
                     item.setHidden_(True)
                     item.setState_(NSOffState)
-                
+
                 item = menu.itemWithTag_(4)
                 if settings.chat.enable_encryption:
                     item.setHidden_(False)
@@ -137,33 +137,33 @@ class SMSWindowController(NSWindowController):
                     else:
                         item.setEnabled_(True)
                     item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not selectedSession.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
-        
+
                 else:
                     item.setEnabled_(False)
                     item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
-                
+
                 if settings.chat.enable_encryption:
                     ctx = selectedSession.otr_account.getContext(selectedSession.session_id)
                     fingerprint = ctx.getCurrentKey()
-                    
+
                     if fingerprint:
                         item = menu.itemWithTag_(6)
                         item.setHidden_(False)
-                        
+
                         item = menu.itemWithTag_(7)
                         item.setHidden_(False)
-                        
+
                         fingerprint_verified = selectedSession.otr_account.getTrust(selectedSession.remote_uri, str(fingerprint))
                         item.setEnabled_(False)
                         _t = NSLocalizedString("%s's fingerprint is " % display_name, "Menu item")
                         item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
-                        
+
                         item = menu.itemWithTag_(5)
                         item.setEnabled_(True if fingerprint else False)
                         item.setHidden_(False)
                         item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
                         item.setState_(NSOnState if fingerprint_verified else NSOffState)
-                        
+
                         item = menu.itemWithTag_(9)
                         item.setHidden_(False)
                     else:
