@@ -1029,6 +1029,24 @@ class ContactWindowController(NSWindowController):
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         self.speech_synthesizer_active = False
 
+    def speak_text(self, text):
+        settings = SIPSimpleSettings()
+        if not settings.audio.silent:
+            this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
+            volume = 0.8
+
+            if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
+                if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                    volume = settings.sounds.night_volume.volume/100.0
+            elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
+                if this_hour < settings.sounds.night_volume.end_hour:
+                    volume = settings.sounds.night_volume.volume/100.0
+                elif this_hour >=  settings.sounds.night_volume.start_hour:
+                    volume = settings.sounds.night_volume.volume/100.0
+
+            self.speech_synthesizer.setVolume_(volume)
+            self.speech_synthesizer.startSpeakingString_(text)
+
     @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map

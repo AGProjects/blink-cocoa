@@ -102,6 +102,7 @@ CONFERENCE_ROOM_MENU_SUBJECT = 317
 CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD = 318
 CONFERENCE_ROOM_MENU_COPY_PARTICIPANT_TO_CLIPBOARD = 319
 CONFERENCE_ROOM_MENU_SEND_EMAIL = 325
+CONFERENCE_ROOM_MENU_NOTIFY_CHANGE_PARTICIPANTS = 326
 CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE = 312
 CONFERENCE_ROOM_MENU_GOTO_CONFERENCE_WEBSITE = 313
 CONFERENCE_ROOM_MENU_START_AUDIO_SESSION = 320
@@ -741,6 +742,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SUBJECT).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL).setEnabled_(False)
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_NOTIFY_CHANGE_PARTICIPANTS).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_PARTICIPANT_TO_CLIPBOARD).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_AUDIO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_CHAT_SESSION).setEnabled_(False)
@@ -1161,6 +1163,10 @@ class ChatWindowController(NSWindowController):
         elif menu == self.participantMenu:
             session = self.selectedSessionController()
             if session:
+                item = self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_NOTIFY_CHANGE_PARTICIPANTS)
+                item.setState_(NSOnState if session.notify_when_participants_changed else NSOffState)
+                item.setEnabled_(True if session.session is not None and session.session.state is not None else False)
+
                 item = self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_EMAIL)
                 # TODO: take all uris from conference info payload
                 object = {
@@ -1371,6 +1377,8 @@ class ChatWindowController(NSWindowController):
                     self.removeParticipant(uri)
             elif tag == CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE:
                 self.addParticipants()
+            elif tag == CONFERENCE_ROOM_MENU_NOTIFY_CHANGE_PARTICIPANTS:
+                session.notify_when_participants_changed = not session.notify_when_participants_changed
             elif tag == CONFERENCE_ROOM_MENU_SEND_PRIVATE_MESSAGE:
                 self.sendPrivateMessage()
             elif tag == CONFERENCE_ROOM_MENU_NICKNAME:

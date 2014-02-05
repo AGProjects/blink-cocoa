@@ -892,6 +892,8 @@ class SessionController(NSObject):
     dealloc_timer = None
     answering_machine_filename = ''
     do_not_disturb_until_end = False
+    previous_conference_users = None
+    notify_when_participants_changed = False
 
     @property
     def sessionControllersManager(self):
@@ -1264,6 +1266,9 @@ class SessionController(NSObject):
         self.call_id = None
         self.from_tag = None
         self.to_tag = None
+        self.previous_conference_users = None
+        self.notify_when_participants_changed = False
+
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
         for item in self.invited_participants:
             item.destroy()
@@ -1982,6 +1987,11 @@ class SessionController(NSObject):
 
         # notify controllers who need conference information
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self, data=data)
+        if self.notify_when_participants_changed:
+            if self.previous_conference_users is not None and self.previous_conference_users != self.conference_info.users and len(self.conference_info.users) > 1:
+                NSApp.delegate().contactsWindowController.speak_text('Conference participants changed')
+
+        self.previous_conference_users = self.conference_info.users
 
     def _NH_SIPConferenceDidAddParticipant(self, sender, data):
         self.log_info(u"Added participant to conference: %s" % data.participant)
