@@ -1129,6 +1129,8 @@ class BlinkPresenceContact(BlinkContact):
         else:
             status = 'offline'
 
+        all_uris = list(uri.uri for uri in self.uris if '@' in uri.uri)
+
         if self.old_presence_status is not None:
             if self.old_presence_status != status or self.old_presence_note != self.presence_note:
                 if self.old_presence_status == 'offline' and status == 'offline':
@@ -1144,7 +1146,6 @@ class BlinkPresenceContact(BlinkContact):
                         message += '<p>%s' % log_line
                         media_type = 'availability'
                         try:
-                            all_uris = list(uri.uri for uri in self.uris if '@' in uri.uri)
                             account = (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and self.account_has_pidfs_for_uris(account.id, all_uris)).next()
                         except StopIteration:
                             account = AccountManager().default_account
@@ -1167,6 +1168,13 @@ class BlinkPresenceContact(BlinkContact):
                                 notify = True
                         else:
                             notify = True
+
+                        # discard myself
+                        for _account in AccountManager().iter_accounts():
+                            for _uri in all_uris:
+                                if _uri == _account.id:
+                                    notify = False
+                                    break
 
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability" % self.name, "System notification title")
