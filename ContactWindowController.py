@@ -4835,6 +4835,7 @@ class ContactWindowController(NSWindowController):
         elif menu == self.presencePopUpMenu:
             self.updatePresenceActivityMenu(menu)
         elif menu == self.statusBarMenu:
+            self.window().orderFront_(None)
             settings = SIPSimpleSettings()
             item = menu.itemWithTag_(50) # answering machine
             item.setState_(settings.answering_machine.enabled and NSOnState or NSOffState)
