@@ -115,6 +115,7 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
             NotificationCenter().add_observer(self, name="SystemIPAddressDidChange")
+            NotificationCenter().add_observer(self, name="SIPApplicationNetworkConditionsDidChange")
 
             # remove obsolete settings
             userdef = NSUserDefaults.standardUserDefaults()
@@ -291,6 +292,9 @@ class BlinkAppDelegate(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    def _NH_SIPApplicationNetworkConditionsDidChange(self, notification):
+        BlinkLogger().log_info(u"Network conditions changed")
 
     def _NH_SystemIPAddressDidChange(self, notification):
         if notification.data.new_ip_address is None:
