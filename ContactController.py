@@ -79,7 +79,7 @@ class AddContactController(NSObject):
         self.preferred_media = 'audio'
         self.uris = []
         for (uri, type) in uris:
-            self.uris.append(ContactURI(uri=uri, type=format_uri_type(type)))
+            self.uris.append(ContactURI(uri=uri.strip(), type=format_uri_type(type)))
 
         self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
@@ -392,7 +392,7 @@ class AddContactController(NSObject):
             pass
         else:
             if column == 0:
-                uri = str(object).lower().replace(" ", "")
+                uri = str(object).strip().lower().replace(" ", "")
                 if not self.checkURI(uri):
                     NSRunAlertPanel(NSLocalizedString("Invalid address", "Window title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Label"),
                                     NSLocalizedString("OK", "Button title"), None, None)
