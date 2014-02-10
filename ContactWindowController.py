@@ -94,7 +94,8 @@ from itertools import chain
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
-from application.system import unlink, makedirs
+from application.system import unlink, makedirs, host
+
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.addressbook import AddressbookManager, ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
@@ -867,6 +868,13 @@ class ContactWindowController(NSWindowController):
                 image.setScalesWhenResized_(True)
                 image.setSize_(NSMakeSize(12,12))
                 item.setImage_(image)
+                if account_info.account.enabled and not account_info.registration_state == 'succeeded':
+                    if account_info.failure_reason:
+                        name = '%s (%s)' % (account_info.name, account_info.failure_reason)
+                    else:
+                        name = account_info.name
+                    title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
+                    item.setAttributedTitle_(title)
             else:
                 if not account_info.registration_state == 'succeeded':
                     if account_info.account.sip.register:
@@ -1174,7 +1182,9 @@ class ContactWindowController(NSWindowController):
             return
         self.accounts[position].registration_state = 'failed'
         if self.accounts[position].failure_reason is None:
-            if hasattr(notification.data, 'error'):
+            if host is None or host.default_ip is None:
+                self.accounts[position].failure_reason = 'No IP Address'
+            elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
                     self.accounts[position].failure_reason = 'DNS Lookup Failed'
                 else:
