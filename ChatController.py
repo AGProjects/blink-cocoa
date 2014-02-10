@@ -1685,7 +1685,7 @@ class ChatController(MediaStream):
             return
 
         if image_file_extension_pattern.search(data.file_path):
-            text  = "Incoming image file transfer has finished"
+            text  = NSLocalizedString("Incoming image file transfer finished", "Label")
             try:
                 image = NSImage.alloc().initWithContentsOfFile_(data.file_path)
                 w = image.size().width
