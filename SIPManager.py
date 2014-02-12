@@ -78,7 +78,8 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
-        self.registered_addresses = {}
+        self.registrar_addresses = {}
+        self.contact_addresses = {}
 
     def set_delegate(self, delegate):
         self._delegate = delegate
@@ -513,32 +514,58 @@ class SIPManager(object):
             self.bonjour_conference_services.stop()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        message = u'Account %s registered contact "%s" at SIP Registrar %s:%d;transport=%s and will refresh every %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
         _address = "%s:%s;transport=%s" % (data.registrar.address, data.registrar.port, data.registrar.transport)
+        _contact = data.contact_header.uri
+        registrar_changed = False
+        contact_changed = False
         try:
-            old_address = self.registered_addresses[account.id]
+            old_address = self.registrar_addresses[account.id]
         except KeyError:
-            BlinkLogger().log_info(message)
+            registrar_changed = True
         else:
             if old_address != _address:
-                BlinkLogger().log_info(message)
+                registrar_changed = True
 
-        self.registered_addresses[account.id] = _address
+        try:
+            old_contact = self.contact_addresses[account.id]
+        except KeyError:
+            contact_changed = True
+        else:
+            if old_contact != _contact:
+                contact_changed = True
+
+        if contact_changed and registrar_changed:
+            message = u'Account %s registered SIP contact address %s at SIP registrar %s:%d;transport=%s and will refresh every %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+            BlinkLogger().log_info(message)
+        elif contact_changed:
+            message = u'Account %s changed SIP contact to %s' % (account.id, data.contact_header.uri)
+            BlinkLogger().log_info(message)
+        elif registrar_changed:
+            message = u'Account %s changed SIP registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
+            BlinkLogger().log_info(message)
+
+        self.registrar_addresses[account.id] = _address
+        self.contact_addresses[account.id] = data.contact_header.uri
 
         if account.contact.public_gruu is not None:
-            message = u'Account %s public GRUU %s' % (account.id, account.contact.public_gruu)
+            message = u'Account %s has public SIP GRUU %s' % (account.id, account.contact.public_gruu)
             BlinkLogger().log_debug(message)
         if account.contact.temporary_gruu is not None:
-            message = u'Account %s temporary GRUU %s' % (account.id, account.contact.temporary_gruu)
+            message = u'Account %s has temporary SIP GRUU %s' % (account.id, account.contact.temporary_gruu)
             BlinkLogger().log_debug(message)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info(u"Account %s was unregistered" % account.id)
         try:
-            del self.registered_addresses[account.id]
+            del self.registrar_addresses[account.id]
+        except KeyError:
+            pass
+
+        try:
+            del self.contact_addresses[account.id]
         except KeyError:
             pass
 
