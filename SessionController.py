@@ -31,6 +31,8 @@ from datetime import datetime
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.types import Singleton
+from application.system import host
+
 from zope.interface import implements
 
 from resources import ApplicationData
@@ -1408,8 +1410,6 @@ class SessionController(NSObject):
                         else:
                             self.waitingForITunes = False
 
-                    self.lookup_destination(self.target_uri)
-
                     outdev = SIPSimpleSettings().audio.output_device
                     indev = SIPSimpleSettings().audio.input_device
                     if outdev == u"system_default":
@@ -1422,6 +1422,12 @@ class SessionController(NSObject):
                         global OUTBOUND_AUDIO_CALLS
                         OUTBOUND_AUDIO_CALLS += 1
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
+
+                    if host is None or host.default_ip is None:
+                        self.setRoutesFailed("No IP Address")
+                        self.changeSessionState(STATE_FAILED, NSLocalizedString("No IP Address", "Label"))
+                    else:
+                        self.lookup_destination(self.target_uri)
 
         else:
             if self.canProposeMediaStreamChanges():
@@ -1513,11 +1519,9 @@ class SessionController(NSObject):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
-        self.log_info("DNS lookup for SIP routes failed: '%s'"%msg)
+        self.log_info("Routing failure: '%s'"%msg)
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
-
-        self.changeSessionState(STATE_DNS_FAILED, 'DNS Lookup Failed')
 
     @allocate_autorelease_pool
     @run_in_gui_thread
