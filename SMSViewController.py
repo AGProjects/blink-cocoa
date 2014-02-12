@@ -36,6 +36,7 @@ import hashlib
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
+from application.system import host
 from zope.interface import implements
 
 from sipsimple.account import Account, BonjourAccount
@@ -610,7 +611,6 @@ class SMSViewController(NSObject):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
-        self.log_error(u"DNS Lookup failed: %s" % msg)
         for msgid, text, content_type in self.queue:
             try:
                 message = self.messages.pop(msgid)
@@ -621,7 +621,9 @@ class SMSViewController(NSObject):
                     self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                     message.status='failed'
                     self.add_to_history(message)
-
+                    log_text =  "Routing failure: %s" % msg
+                    self.chatViewController.showSystemMessage('0', msg, ISOTimestamp.now(), True)
+                    self.log_info(log_text)
         self.queue = []
 
     @run_in_green_thread
@@ -635,6 +637,7 @@ class SMSViewController(NSObject):
                          parameters={'transport': self.account.sip.outbound_proxy.transport})
         else:
             uri = SIPURI(host=self.account.id.domain)
+
         lookup = DNSLookup()
         settings = SIPSimpleSettings()
         try:
@@ -741,8 +744,6 @@ class SMSViewController(NSObject):
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     def sendMessage(self, text, content_type="text/plain"):
-        self.lookup_destination(self.target_uri)
-
         timestamp = ISOTimestamp.now()
         hash = hashlib.sha1()
         hash.update(text.encode("utf-8")+str(timestamp))
@@ -757,6 +758,13 @@ class SMSViewController(NSObject):
             self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
 
         self.queue.append((msgid, text, content_type))
+        
+        # Async DNS lookup
+        if host is None or host.default_ip is None:
+            self.setRoutesFailed("No IP Address")
+            return
+
+        self.lookup_destination(self.target_uri)
 
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
