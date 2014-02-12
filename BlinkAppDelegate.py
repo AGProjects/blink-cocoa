@@ -115,8 +115,10 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
             NotificationCenter().add_observer(self, name="SystemIPAddressDidChange")
-            NotificationCenter().add_observer(self, name="SIPApplicationNetworkConditionsDidChange")
-
+            NotificationCenter().add_observer(self, name="NetworkConditionsDidChange")
+            NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
+            NotificationCenter().add_observer(self, name="DNSNameserversDidChange")
+    
             # remove obsolete settings
             userdef = NSUserDefaults.standardUserDefaults()
             userdef.removeObjectForKey_('SIPTrace')
@@ -293,13 +295,18 @@ class BlinkAppDelegate(NSObject):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-    def _NH_SIPApplicationNetworkConditionsDidChange(self, notification):
-        BlinkLogger().log_info(u"Network conditions changed")
+    def _NH_SIPEngineTransportDidDisconnect(self, notification):
+        BlinkLogger().log_info(u"%s transport failed: %s" % (notification.data.transport.upper(), notification.data.reason))
+    
+    def _NH_DNSNameserversDidChange(self, notification):
+        BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
+                               
+    def _NH_NetworkConditionsDidChange(self, notification):
+        pass
+        #BlinkLogger().log_info(u"Network conditions changed")
 
     def _NH_SystemIPAddressDidChange(self, notification):
-        if notification.data.new_ip_address is None:
-            return
-        BlinkLogger().log_info(u"System IP address changed to %s" % notification.data.new_ip_address)
+        BlinkLogger().log_info(u"IP address changed to %s" % notification.data.new_ip_address)
 
     def _NH_SIPApplicationWillEnd(self, notification):
         call_in_thread('file-io', self.purge_temporary_files)
