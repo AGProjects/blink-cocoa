@@ -160,7 +160,7 @@ class ChatWindowController(NSWindowController):
     def init(self):
         self = super(ChatWindowController, self).init()
         if self:
-            BlinkLogger().log_info('Starting Chat Window Controller')
+            BlinkLogger().log_debug('Starting Chat Window Controller')
             smileys = SmileyManager()
             self.closing = False
             self.participants = []
