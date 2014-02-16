@@ -117,6 +117,7 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SystemIPAddressDidChange")
             NotificationCenter().add_observer(self, name="NetworkConditionsDidChange")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
+            NotificationCenter().add_observer(self, name="SIPEngineTransportDidConnect")
             NotificationCenter().add_observer(self, name="DNSNameserversDidChange")
     
             # remove obsolete settings
@@ -296,8 +297,11 @@ class BlinkAppDelegate(NSObject):
         handler(notification)
 
     def _NH_SIPEngineTransportDidDisconnect(self, notification):
-        BlinkLogger().log_info(u"%s transport failed: %s" % (notification.data.transport.upper(), notification.data.reason))
-    
+        BlinkLogger().log_info(u"%s %s connection %s %s <-> %s disconnected: %s" % (notification.data.transport.upper(), notification.data.direction, notification.data.transport_id[2:], notification.data.local_address, notification.data.remote_address, notification.data.reason))
+
+    def _NH_SIPEngineTransportDidConnect(self, notification):
+        BlinkLogger().log_info(u"%s %s connection %s %s <-> %s established" % (notification.data.transport.upper(), notification.data.direction, notification.data.transport_id[2:], notification.data.local_address, notification.data.remote_address))
+
     def _NH_DNSNameserversDidChange(self, notification):
         BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
                                
