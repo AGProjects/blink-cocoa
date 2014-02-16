@@ -1250,9 +1250,7 @@ class ChatController(MediaStream):
                     self.endStream()
                 else:
                     if self.sessionController.canProposeMediaStreamChanges():
-                        if len(self.sessionController.streamHandlers) > 1:
-                            self.sessionController.addChatToSession()
-                        elif self.status in (STREAM_IDLE, STREAM_FAILED):
+                        if self.status in (STREAM_IDLE, STREAM_FAILED):
                             self.sessionController.startChatSession()
                     else:
                         self.sessionController.log_info(u"Session has a pending proposal")
@@ -1783,8 +1781,10 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
-        if self.mediastream_started and not self.mediastream_failed:
+        if self.mediastream_started:
             self.showSystemMessage('Connection closed', ISOTimestamp.now())
+
+        if not self.mediastream_failed:
             self.outgoing_message_handler.setDisconnected()
 
     def _NH_MediaStreamDidFail(self, sender, data):
