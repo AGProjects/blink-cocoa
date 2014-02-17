@@ -1782,7 +1782,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
-            self.showSystemMessage('Connection closed', ISOTimestamp.now())
+            self.showSystemMessage('%s left the conversation' % self.sessionController.getTitleShort(), ISOTimestamp.now())
 
         if not self.mediastream_failed:
             self.outgoing_message_handler.setDisconnected()
@@ -1791,13 +1791,13 @@ class ChatController(MediaStream):
         self.mediastream_failed = True
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
-            reason = 'Connection lost'
+            reason = '%s left the conversation' % self.sessionController.getTitleShort()
         elif data.failure is not None and data.failure.type is GNUTLSError:
-            reason = 'Connection error (TLS)'
+            reason = 'TLS connection broke'
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):
-            reason = 'Connection failed'
+            reason = 'MSRP data connection failed'
         elif data.reason == 'MSRPRelayAuthError':
-            reason = 'Authentication failed'
+            reason = 'MSRP relay authentication failed'
         else:
             reason = data.reason
 
