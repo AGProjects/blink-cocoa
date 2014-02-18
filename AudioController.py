@@ -44,7 +44,7 @@ from application.notification import IObserver, NotificationCenter, Notification
 from application.python import Null
 from collections import deque
 from zope.interface import implements
-from util import sip_prefix_pattern
+from util import sip_prefix_pattern, format_size
 
 from sipsimple.account import BonjourAccount, AccountManager
 from sipsimple.application import SIPApplication
@@ -76,7 +76,11 @@ def loadImages():
 
 AUDIO_CLEANUP_DELAY = 4.0
 TRANSFERRED_CLEANUP_DELAY = 6.0
-STATISTICS_INTERVAL = 3.0
+STATISTICS_INTERVAL = 1.0
+
+# For voice over IP over Ethernet, an RTP packet contains 54 bytes (or 432 bits) header. These 54 bytes consist of 14 bytes Ethernet header, 20 bytes IP header, 8 bytes UDP header and 12 bytes RTP header.
+RTP_PACKET_OVERHEAD = 54
+
 
 class AudioController(MediaStream):
     implements(IObserver)
@@ -131,6 +135,10 @@ class AudioController(MediaStream):
     hangup_reason = None
     early_media = False
     audio_has_quality_issues = False
+    previous_rx_bytes = 0
+    previous_tx_bytes = 0
+    previous_tx_packets = 0
+    previous_rx_packets = 0
 
 
     @classmethod
@@ -141,6 +149,8 @@ class AudioController(MediaStream):
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
+        self.previous_rx_bytes = 0
+        self.previous_tx_bytes = 0
 
     def reset(self):
         self.early_media = False
@@ -150,11 +160,13 @@ class AudioController(MediaStream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
         BlinkLogger().log_debug(u"Creating %s" % self)
 
-        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 }
+        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
         # 5 minutes of history data for Session Info graphs
         self.loss_history = deque(maxlen=300)
         self.rtt_history = deque(maxlen=300)
         self.jitter_history = deque(maxlen=300)
+        self.rx_speed_history = deque(maxlen=300)
+        self.tx_speed_history = deque(maxlen=300)
 
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -816,6 +828,14 @@ class AudioController(MediaStream):
             self.statistics['loss'] = loss
             self.statistics['jitter'] = jitter
             self.statistics['rtt'] = rtt
+            tx_overhead = (stats['tx']['packets'] - self.previous_tx_packets) * RTP_PACKET_OVERHEAD
+            rx_overhead = (stats['tx']['packets'] - self.previous_rx_packets) * RTP_PACKET_OVERHEAD
+            self.statistics['rx_bytes'] = stats['rx']['bytes']/STATISTICS_INTERVAL - self.previous_rx_bytes + rx_overhead
+            self.statistics['tx_bytes'] = stats['tx']['bytes']/STATISTICS_INTERVAL - self.previous_tx_bytes + tx_overhead
+            self.previous_rx_bytes = stats['rx']['bytes']
+            self.previous_tx_bytes = stats['tx']['bytes']
+            self.previous_rx_packets = stats['rx']['packets']
+            self.previous_tx_packets = stats['tx']['packets']
         self.last_stats = stats
 
     def updateDuration(self):
@@ -837,7 +857,9 @@ class AudioController(MediaStream):
             h = elapsed.seconds / (60*60)
             m = (elapsed.seconds / 60) % 60
             s = elapsed.seconds % 60
+            speed = max(self.statistics['rx_bytes'], self.statistics['tx_bytes'])
             text = u"%02i:%02i:%02i"%(h,m,s)
+            text = text + '   %s/s' % format_size(speed, bits=True) if speed else ''
             self.elapsed.setStringValue_(text)
         else:
             if self.status == STREAM_CONNECTING and self.sessionController.routes:
@@ -866,6 +888,10 @@ class AudioController(MediaStream):
                 self.rtt_history.append(rtt)
             if self.loss_history is not None:
                 self.loss_history.append(loss)
+            if self.rx_speed_history is not None:
+                self.rx_speed_history.append(self.statistics['rx_bytes'] * 8)
+            if self.tx_speed_history is not None:
+                self.tx_speed_history.append(self.statistics['tx_bytes'] * 8)
 
             text = ""
             qos_data = NotificationData()

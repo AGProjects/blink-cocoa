@@ -31,7 +31,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from MediaStream import STREAM_CONNECTED
-from util import allocate_autorelease_pool, beautify_audio_codec, run_in_gui_thread
+from util import allocate_autorelease_pool, beautify_audio_codec, run_in_gui_thread, format_size
 
 
 ice_candidates= {'srflx': 'Server Reflexive',
@@ -73,6 +73,10 @@ class SessionInfoController(NSObject):
     audio_rtt_graph = objc.IBOutlet()
     audio_packet_loss_graph = objc.IBOutlet()
     audio_srtp_lock = objc.IBOutlet()
+    rx_speed_graph = objc.IBOutlet()
+    rx_speed = objc.IBOutlet()
+    tx_speed_graph = objc.IBOutlet()
+    tx_speed = objc.IBOutlet()
 
     chat_local_endpoint = objc.IBOutlet()
     chat_remote_endpoint = objc.IBOutlet()
@@ -121,6 +125,18 @@ class SessionInfoController(NSObject):
         self.audio_packet_loss_graph.setAboveLimit_(3) # if higher than 3% show red color
         self.audio_packet_loss_graph.setLineColor_(NSColor.greenColor())
         self.audio_packet_loss_graph.setMinimumHeigth_(5)
+
+        self.rx_speed_graph.setLineWidth_(1.0)
+        self.rx_speed_graph.setLineSpacing_(0.0)
+        self.rx_speed_graph.setLineColor_(NSColor.greenColor())
+        self.rx_speed_graph.setMinimumHeigth_(100000)
+        self.rx_speed_graph.setAboveLimit_(120000)
+
+        self.tx_speed_graph.setLineWidth_(1.0)
+        self.tx_speed_graph.setLineSpacing_(0.0)
+        self.tx_speed_graph.setLineColor_(NSColor.blueColor())
+        self.tx_speed_graph.setMinimumHeigth_(100000)
+        self.tx_speed_graph.setAboveLimit_(120000)
 
         self.resetSession()
         self.updatePanelValues()
@@ -211,6 +227,8 @@ class SessionInfoController(NSObject):
         self.audio_ice_remote_candidate.setStringValue_('')
         self.audio_rtt.setStringValue_('')
         self.audio_packet_loss.setStringValue_('')
+        self.rx_speed.setStringValue_('')
+        self.tx_speed.setStringValue_('')
 
     def resetChat(self):
         self.chat_local_endpoint.setStringValue_('')
@@ -273,6 +291,8 @@ class SessionInfoController(NSObject):
             self.updateAudioStatus()
 
             self.audio_rtt_graph.setDataQueue_needsDisplay_(self.audio_stream.rtt_history, True if self.window.isVisible() else False)
+            self.rx_speed_graph.setDataQueue_needsDisplay_(self.audio_stream.rx_speed_history, True if self.window.isVisible() else False)
+            self.tx_speed_graph.setDataQueue_needsDisplay_(self.audio_stream.tx_speed_history, True if self.window.isVisible() else False)
             self.audio_packet_loss_graph.setDataQueue_needsDisplay_(self.audio_stream.loss_history, True if self.window.isVisible() else False)
 
             rtt = self.audio_stream.statistics['rtt']
@@ -284,6 +304,9 @@ class SessionInfoController(NSObject):
                 text = '%d ms' % rtt
             else:
                 text = ''
+
+            self.rx_speed.setStringValue_('Rx: %s/s' % format_size(self.audio_stream.statistics['rx_bytes'], bits=True))
+            self.tx_speed.setStringValue_('Tx: %s/s' % format_size(self.audio_stream.statistics['tx_bytes'], bits=True))
 
             self.audio_rtt.setStringValue_(text)
             self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'] if self.audio_stream.statistics['loss'] else '')
@@ -482,6 +505,8 @@ class SessionInfoController(NSObject):
     def dealloc(self):
         self.audio_packet_loss_graph.removeFromSuperview()
         self.audio_rtt_graph.removeFromSuperview()
+        self.rx_speed_graph.removeFromSuperview()
+        self.tx_speed_graph.removeFromSuperview()
         super(SessionInfoController, self).dealloc()
 
 
