@@ -830,8 +830,10 @@ class AudioController(MediaStream):
             self.statistics['rtt'] = rtt
             tx_overhead = (stats['tx']['packets'] - self.previous_tx_packets) * RTP_PACKET_OVERHEAD
             rx_overhead = (stats['tx']['packets'] - self.previous_rx_packets) * RTP_PACKET_OVERHEAD
-            self.statistics['rx_bytes'] = stats['rx']['bytes']/STATISTICS_INTERVAL - self.previous_rx_bytes + rx_overhead
-            self.statistics['tx_bytes'] = stats['tx']['bytes']/STATISTICS_INTERVAL - self.previous_tx_bytes + tx_overhead
+            if self.previous_rx_packets:
+                self.statistics['rx_bytes'] = stats['rx']['bytes']/STATISTICS_INTERVAL - self.previous_rx_bytes + rx_overhead
+            if self.previous_tx_packets:
+                self.statistics['tx_bytes'] = stats['tx']['bytes']/STATISTICS_INTERVAL - self.previous_tx_bytes + tx_overhead
             self.previous_rx_bytes = stats['rx']['bytes']
             self.previous_tx_bytes = stats['tx']['bytes']
             self.previous_rx_packets = stats['rx']['packets']
