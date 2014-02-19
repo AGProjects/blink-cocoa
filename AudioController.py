@@ -834,10 +834,18 @@ class AudioController(MediaStream):
                 self.statistics['rx_bytes'] = stats['rx']['bytes']/STATISTICS_INTERVAL - self.previous_rx_bytes + rx_overhead
             if self.previous_tx_packets:
                 self.statistics['tx_bytes'] = stats['tx']['bytes']/STATISTICS_INTERVAL - self.previous_tx_bytes + tx_overhead
-            self.previous_rx_bytes = stats['rx']['bytes']
-            self.previous_tx_bytes = stats['tx']['bytes']
+            if self.statistics['rx_bytes'] < 0:
+                self.statistics['rx_bytes'] = 0
+
+            if self.statistics['tx_bytes'] < 0:
+                self.statistics['tx_bytes'] = 0
+
+            self.previous_rx_bytes = stats['rx']['bytes'] if stats['rx']['bytes'] >=0 else 0
+            self.previous_tx_bytes = stats['tx']['bytes'] if stats['tx']['bytes'] >=0 else 0
+            
             self.previous_rx_packets = stats['rx']['packets']
             self.previous_tx_packets = stats['tx']['packets']
+
         self.last_stats = stats
 
     def updateDuration(self):
@@ -859,9 +867,10 @@ class AudioController(MediaStream):
             h = elapsed.seconds / (60*60)
             m = (elapsed.seconds / 60) % 60
             s = elapsed.seconds % 60
+            text = u"%02i:%02i:%02i" % (h,m,s)
             speed = max(self.statistics['rx_bytes'], self.statistics['tx_bytes'])
-            text = u"%02i:%02i:%02i"%(h,m,s)
-            text = text + '   %s/s' % format_size(speed, bits=True) if speed else ''
+            speed_text = '   %s/s' % format_size(speed, bits=True) if speed else ''
+            text = text + speed_text
             self.elapsed.setStringValue_(text)
         else:
             if self.status == STREAM_CONNECTING and self.sessionController.routes:
