@@ -305,8 +305,8 @@ class SessionInfoController(NSObject):
             else:
                 text = ''
 
-            self.rx_speed.setStringValue_('Rx: %s/s' % format_size(self.audio_stream.statistics['rx_bytes'], bits=True))
-            self.tx_speed.setStringValue_('Tx: %s/s' % format_size(self.audio_stream.statistics['tx_bytes'], bits=True))
+            self.rx_speed.setStringValue_('Rx %s/s' % format_size(self.audio_stream.statistics['rx_bytes'], bits=True))
+            self.tx_speed.setStringValue_('Tx %s/s' % format_size(self.audio_stream.statistics['tx_bytes'], bits=True))
 
             self.audio_rtt.setStringValue_(text)
             self.audio_packet_loss.setStringValue_('%.1f %%' % self.audio_stream.statistics['loss'] if self.audio_stream.statistics['loss'] else '')
