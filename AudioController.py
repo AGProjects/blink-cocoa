@@ -903,16 +903,16 @@ class AudioController(MediaStream):
             if rtt > settings.gui.rtt_threshold:
                 if rtt > 1000:
                     latency = '%.1f' % (float(rtt)/1000.0)
-                    text += 'Latency %ss' % latency
+                    text += NSLocalizedString("%ss Latency" % latency, "Label")
                     send_qos_notify = True
                     qos_data.latency = '%ss' % latency
                 else:
-                    text += 'Latency %dms' % rtt
+                    text += NSLocalizedString("%dms Latency" % rtt, "Label")
                     send_qos_notify = True
                     qos_data.latency = '%sms' % rtt
 
             if loss > 3:
-                text += ' Packet Loss %d%%' % loss
+                text += " " + NSLocalizedString("%d%% Loss" % loss, "Label")
                 qos_data.packet_loss = '%d%%' % loss
                 send_qos_notify = True
 
