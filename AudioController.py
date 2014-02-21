@@ -828,12 +828,16 @@ class AudioController(MediaStream):
             self.statistics['loss'] = loss
             self.statistics['jitter'] = jitter
             self.statistics['rtt'] = rtt
+
+            rx_overhead = (stats['rx']['packets'] - self.previous_rx_packets) * RTP_PACKET_OVERHEAD
             tx_overhead = (stats['tx']['packets'] - self.previous_tx_packets) * RTP_PACKET_OVERHEAD
-            rx_overhead = (stats['tx']['packets'] - self.previous_rx_packets) * RTP_PACKET_OVERHEAD
+
             if self.previous_rx_packets:
                 self.statistics['rx_bytes'] = stats['rx']['bytes']/STATISTICS_INTERVAL - self.previous_rx_bytes + rx_overhead
+
             if self.previous_tx_packets:
                 self.statistics['tx_bytes'] = stats['tx']['bytes']/STATISTICS_INTERVAL - self.previous_tx_bytes + tx_overhead
+
             if self.statistics['rx_bytes'] < 0:
                 self.statistics['rx_bytes'] = 0
 
