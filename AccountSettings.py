@@ -10,6 +10,7 @@ from Foundation import (NSBundle,
                         NSIndexSet,
                         NSNotFound,
                         NSObject,
+                        NSLocalizedString,
                         NSURL,
                         NSURLCredential,
                         NSURLCredentialPersistenceForSession,
@@ -78,7 +79,7 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
+        self.window.setTitle_(NSLocalizedString("Server Tools For %s" %self._account.id, "Window title"))
 
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
@@ -94,7 +95,7 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_("%s %s Blink Server Tools"%(self._account.id, unichr(0x2014)))
+        self.window.setTitle_(NSLocalizedString("Server Tools For %s" %self._account.id, "Window title"))
 
         query_string = "realm=%s&tab=payments&user_agent=blink" % self._account.id
         if account.server.settings_url.query:
@@ -114,7 +115,9 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_("Incoming Call from %s <%s@%s>"%(session.remote_identity.display_name, session.remote_identity.uri.user, session.remote_identity.uri.host))
+        _t = "%s <%s@%s>" % (session.remote_identity.display_name, session.remote_identity.uri.user, session.remote_identity.uri.host)
+
+        self.window.setTitle_(NSLocalizedString("Incoming Call From %s" %_t, "Window title"))
         url = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
@@ -145,9 +148,10 @@ class AccountSettings(NSObject):
         self.spinWheel2.stopAnimation_(None)
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
-        self.errorText.setStringValue_("Could not load Blink Server Tools page: %s" % error.localizedDescription())
+        e = error.localizedDescription()
+        self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s" % e, "Label"))
         self.errorText.setHidden_(False)
-        BlinkLogger().log_error(u"Could not load Blink Server Tools page: %s" % error)
+        BlinkLogger().log_error(u"Could not load Server Tools page: %s" % error)
 
     def webView_didFailLoadWithError_forFrame_(self, sender, error, frame):
         self.spinWheel.stopAnimation_(None)
@@ -155,8 +159,9 @@ class AccountSettings(NSObject):
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
         self.errorText.setHidden_(False)
-        self.errorText.setStringValue_("Could not load Blink Server Tools page: %s" % error.localizedDescription())
-        BlinkLogger().log_error(u"Could not load Blink Server Tools page: %s" % error)
+        e = error.localizedDescription()
+        self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s" % e, "Label"))
+        BlinkLogger().log_error(u"Could not load Server Tools page: %s" % error)
 
     def webView_createWebViewWithRequest_(self, sender, request):
         window = AccountSettings.createWithOwner_(self.owner)
@@ -166,9 +171,10 @@ class AccountSettings(NSObject):
     def webView_resource_didReceiveAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         self._authRequestCount += 1
         if self._authRequestCount > 2:
-            BlinkLogger().log_debug(u"Could not load Blink Server Tools page: authentication failure")
+            BlinkLogger().log_debug(u"Could not load Server Tools page: authentication failure")
             self.errorText.setHidden_(False)
-            self.errorText.setStringValue_("Could not load Blink Server Tools page: authentication failure")
+            e = NSLocalizedString("Authentication failure", "Label")
+            self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s" % e, "Label"))
             self.spinWheel.stopAnimation_(None)
             self.spinWheel2.stopAnimation_(None)
             self.loadingText.setHidden_(True)
@@ -232,7 +238,8 @@ class AccountSettings(NSObject):
     def download_didFailWithError_(self, download, error):
         download.cancel()
         BlinkLogger().log_info(u"Download error: %s" % error.localizedDescription())
-        NSRunAlertPanel("Download Error", "Error downloading file: %s" % error.localizedDescription(), "OK", "", "")
+        e = error.localizedDescription()
+        NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("Error downloading file: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), "", "")
 
     # API exported to webpage. Be careful with what you export.
 
