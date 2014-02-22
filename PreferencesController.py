@@ -601,7 +601,7 @@ class PreferencesController(NSWindowController, object):
                 else:
                     if selected_account.registration_state and selected_account.registration_state != 'ended':
                         if selected_account.registrar and selected_account.registration_state == 'succeeded':
-                            self.registration_status.setStringValue_(NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s" % selected_account.registrar, "Label"))
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s" % selected_account.registrar, "Network address follows"))
                             self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
                             if selected_account.registrar.startswith('tls:'):
                                 frame.origin.x = 312
@@ -681,7 +681,7 @@ class PreferencesController(NSWindowController, object):
 
         if notification.data.code > 200:
             self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = NSLocalizedString("Connection Failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
             self.accounts[position].failure_code = None
             self.accounts[position].failure_reason = None
@@ -697,7 +697,7 @@ class PreferencesController(NSWindowController, object):
         self.accounts[position].registration_state = NSLocalizedString("failed", "Label")
 
         if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
-            self.accounts[position].failure_reason = NSLocalizedString("Connection Failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error
+            self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error
 
         self.refresh_account_table()
         self.updateRegistrationStatus()

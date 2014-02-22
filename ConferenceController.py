@@ -285,10 +285,10 @@ class JoinConferenceWindowController(NSObject):
     def updateConfigurationsPopupButton(self):
         self.configurationsButton.removeAllItems()
         if self.conference_configurations:
-            self.configurationsButton.addItemWithTitle_(NSLocalizedString("Select configuration", "Menu item"))
+            self.configurationsButton.addItemWithTitle_(NSLocalizedString("Select Configuration", "Menu item"))
             self.configurationsButton.lastItem().setEnabled_(False)
             self.configurationsButton.selectItem_(self.configurationsButton.lastItem())
-            self.configurationsButton.addItemWithTitle_(u"None")
+            self.configurationsButton.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
             self.configurationsButton.lastItem().setEnabled_(True)
             for key in self.conference_configurations.keys():
                 self.configurationsButton.addItemWithTitle_(key)
@@ -733,7 +733,7 @@ class AddParticipantsWindowController(NSObject):
 
             if not participant or not validateParticipant(participant):
                 NSRunAlertPanel(NSLocalizedString("Add New Participant", "Window title"),
-                                NSLocalizedString("Participant must be a valid SIP addresses. ", "Label"),
+                                NSLocalizedString("Participant must be a valid SIP address. ", "Label"),
                                 NSLocalizedString("OK", "Button title"),
                                 None, None)
                 return
@@ -761,7 +761,7 @@ class AddParticipantsWindowController(NSObject):
 
         if not participant or not validateParticipant(participant):
             NSRunAlertPanel(NSLocalizedString("Add New Participant", "Window title"),
-                            NSLocalizedString("Participant must be a valid SIP addresses. ", "Label"),
+                            NSLocalizedString("Participant must be a valid SIP address. ", "Label"),
                             NSLocalizedString("OK", "Button title"),
                             None, None)
             return

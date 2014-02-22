@@ -93,7 +93,7 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
     try:
         target_uri = SIPURI.parse(target_uri)
     except SIPCoreError:
-        show_error_panel(NSLocalizedString("Illegal SIP URI: %s" % target_uri, "Label"))
+        show_error_panel(NSLocalizedString("Invalid SIP address: %s" % target_uri, "Label"))
         return None
     return target_uri
 

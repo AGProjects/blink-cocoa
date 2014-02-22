@@ -321,7 +321,7 @@ class StringTupleOption(StringOption):
         try:
             values = [s.strip() for s in str(self.text.stringValue()).split(",")]
         except:
-            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Window title"), NSLocalizedString("Invalid charactes in option value.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Characters", "Window title"), NSLocalizedString("Invalid characters in option value.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 
@@ -1733,7 +1733,7 @@ SettingDescription = {
                       'audio.reject_anonymous': NSLocalizedString("Reject Anonymous Callers", "Label"),
                       'audio.directory': NSLocalizedString("Recordings Directory", "Label"),
                       'audio.silent': NSLocalizedString("Silence Audible Alerts", "Label"),
-                      'audio.pause_music': NSLocalizedString("Pause iTunes during Calls", "Label"),
+                      'audio.pause_music': NSLocalizedString("Pause iTunes During Audio Calls", "Label"),
                       'audio.automatic_device_switch': NSLocalizedString("Switch to New Devices when Plugged-in", "Label"),
                       'audio.enable_aec': NSLocalizedString("Enable Acoustic Echo Cancellation", "Label"),
                       'answering_machine.max_recording_duration': NSLocalizedString("Maximum Duration", "Label"),
@@ -1747,7 +1747,7 @@ SettingDescription = {
                       'contacts.enable_blocked_group': NSLocalizedString("Show Blocked Contacts", "Label"),
                       'screen_sharing_server.disabled': NSLocalizedString("Deny Requests for Sharing My Screen", "Label"),
                       'file_transfer.auto_accept': NSLocalizedString("Automatically Accept Files from Known Contacts", "Label"),
-                      'gui.sync_with_icloud': NSLocalizedString("Sync With iCloud", "Label"),
+                      'gui.sync_with_icloud': NSLocalizedString("Sync with iCloud", "Label"),
                       'ldap.hostname': NSLocalizedString("Server Address", "Label"),
                       'ldap.dn': NSLocalizedString("Search Base", "Label"),
                       'logs.trace_msrp_to_file': NSLocalizedString("Log MSRP Media", "Label"),
@@ -1859,7 +1859,7 @@ UnitOptions = {
                'register_interval': NSLocalizedString("seconds", "Label"),
                'subscribe_interval': NSLocalizedString("seconds", "Label"),
                'idle_threshold': NSLocalizedString("seconds", "Label"),
-               'rtt_threshold': NSLocalizedString("miliseconds", "Label")
+               'rtt_threshold': NSLocalizedString("milliseconds", "Label")
                }
 
 ToolTips = {

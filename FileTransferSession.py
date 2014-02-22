@@ -407,9 +407,9 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        t = NSLocalizedString("To %s " % self.remote_identity, "Label")
+        t = NSLocalizedString("To %s" % self.remote_identity, "Label")
         f = NSLocalizedString("from account %s" % self.account.id, "Label")
-        return t + f
+        return t + " " + f
 
     @property
     def progress_text(self):
@@ -647,9 +647,9 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        f = NSLocalizedString("From %s " % self.target_uri, "Label")
+        f = NSLocalizedString("From %s" % self.target_uri, "Label")
         t = NSLocalizedString("to account %s" % self.account.id, "Label")
-        return f + t
+        return f + " " + t
 
     @property
     def progress_text(self):

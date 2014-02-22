@@ -150,13 +150,13 @@ class ChatOtrSmp(NSObject):
         self.progressBar.startAnimation_(None)
         if type == 'chat':
             _t = self.controller.sessionController.getTitleShort()
-            self.window.setTitle_(NSLocalizedString("Identity Verification For %s" % _t, "Window title"))
+            self.window.setTitle_(NSLocalizedString("Identity Verification for %s" % _t, "Window title"))
             self.stream = self.controller.stream
             self.remote_address = self.controller.sessionController.remoteSIPAddress
             self.otr_context_id = self.controller.sessionController.call_id
         elif type == 'sms':
             _t = format_identity_to_string(self.controller.target_uri)
-            self.window.setTitle_(NSLocalizedString("Identity Verification For %s" % _t, "Window title"))
+            self.window.setTitle_(NSLocalizedString("Identity Verification for %s" % _t, "Window title"))
             self.stream = self.controller
             self.remote_address = self.controller.remote_uri
             self.otr_context_id = self.controller.session_id
@@ -250,7 +250,7 @@ class ChatOtrSmp(NSObject):
 
             # check for TLV_SMP1
             elif self.get_tlv(tlvs, potr.proto.SMP1TLV):
-                self.statusText.setStringValue_(NSLocalizedString("Identiti verification request received", "Label"))
+                self.statusText.setStringValue_(NSLocalizedString("Identity verification request received", "Label"))
                 self.smp_running = True
                 self.question = None
                 self.show(True)

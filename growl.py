@@ -44,12 +44,12 @@ class GrowlNotifications(object):
 
     def _NH_GrowlGotSMS(self, notification):
         title = NSLocalizedString("SMS Received", "System notification title")
-        message = NSLocalizedString("From %s\n\n" % notification.data.sender, "System notification body") + notification.data.content
+        message = NSLocalizedString("From %s" % notification.data.sender, "System notification body") + "\n\n" + notification.data.content
         self.growl.notify('SMS Received', title, message)
 
     def _NH_GrowlGotChatMessage(self, notification):
         title = NSLocalizedString("Chat Message Received", "System notification title")
-        message = NSLocalizedString("From %s\n\n" % notification.data.sender, "System notification body") + notification.data.content
+        message = NSLocalizedString("From %s" % notification.data.sender, "System notification body") + "\n\n" + notification.data.content
         self.growl.notify('Chat Message Received', title, message)
 
     def _NH_GrowlMissedCall(self, notification):
@@ -59,7 +59,7 @@ class GrowlNotifications(object):
 
     def _NH_GrowlAudioSessionRecorded(self, notification):
         title = NSLocalizedString("Audio Session Recorded", "System notification title")
-        message = NSLocalizedString("%s\nat " % notification.data.remote_party, "System notification body") + notification.datetime.strftime("%Y-%m-%d %H:%M")
+        message = "%s\n" % notification.data.remote_party + NSLocalizedString("at ", "Time label") + notification.datetime.strftime("%Y-%m-%d %H:%M")
         self.growl.notify('Audio Session Recorded', title, message, sticky=True)
 
     def _NH_GrowlGotMWI(self, notification):

@@ -2032,7 +2032,7 @@ class SessionController(NSObject):
                     contact.detail = NSLocalizedString("Busy Everywhere", "Contact detail")
                 else:
                     reason = '%s (%s)' % (data.reason, data.code) if data.code else data.reason
-                    contact.detail = NSLocalizedString("Invite Failed: %s" % reason, "Contact detail")
+                    contact.detail = NSLocalizedString("Invitation failed: %s" % reason, "Contact detail")
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):

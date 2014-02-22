@@ -197,7 +197,7 @@ class EnrollmentController(NSObject):
                 NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Entered Password confirmation doesn't match.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
             if not email or not validate_email(email):
-                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Please enter a valid Email Address.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Sign Up For a SIP Account", "Window title"), NSLocalizedString("Please enter a valid email address.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
                 return False
 
             return True
@@ -298,7 +298,7 @@ class EnrollmentController(NSObject):
             try:
                 response = cjson.decode(json_data.replace('\\/', '/'))
             except (TypeError, cjson.DecodeError):
-                error_message = NSLocalizedString("Cannot decode json data from enrollment server", "Enrollment panel label")
+                error_message = NSLocalizedString("Cannot decode data from enrollment server", "Enrollment panel label")
             else:
                 if not response["success"]:
                     BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)

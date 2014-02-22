@@ -2035,7 +2035,7 @@ class ConferenceFile(NSObject):
 
     @property
     def name(self):
-        return NSString.stringWithString_('%s (%s)'% (self.file.name, format_size_rounded(self.file.size) if self.file.status == 'OK' else NSLocalizedString("Failed", "Label")))
+        return NSString.stringWithString_('%s (%s)'% (self.file.name, format_size_rounded(self.file.size) if self.file.status == 'OK' else NSLocalizedString("failed", "Label")))
 
     @property
     def sender(self):

@@ -394,7 +394,7 @@ class AddContactController(NSObject):
             if column == 0:
                 uri = str(object).strip().lower().replace(" ", "")
                 if not self.checkURI(uri):
-                    NSRunAlertPanel(NSLocalizedString("Invalid address", "Window title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Label"),
+                    NSRunAlertPanel(NSLocalizedString("Invalid Address", "Window title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Label"),
                                     NSLocalizedString("OK", "Button title"), None, None)
                     return
                 contact_uri.uri = uri

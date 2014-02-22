@@ -305,7 +305,7 @@ class AudioController(MediaStream):
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
             if detail.startswith("DNS Lookup"):
-                self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failure", "Audio status label"))
+                self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failed", "Audio status label"))
             else:
                 self.changeStatus(STREAM_FAILED, detail)
         elif state == STATE_FINISHED:

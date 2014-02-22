@@ -1170,7 +1170,7 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.code > 200:
             self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = 'Connection Failed' if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
             self.accounts[position].failure_code = None
             self.accounts[position].failure_reason = None
@@ -1183,12 +1183,12 @@ class ContactWindowController(NSWindowController):
         self.accounts[position].registration_state = 'failed'
         if self.accounts[position].failure_reason is None:
             if host is None or host.default_ip is None:
-                self.accounts[position].failure_reason = 'No IP Address'
+                self.accounts[position].failure_reason = NSLocalizedString("No IP Address", "Label")
             elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
-                    self.accounts[position].failure_reason = 'DNS Lookup Failed'
+                    self.accounts[position].failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
                 else:
-                    self.accounts[position].failure_reason = 'Connection Failed' if notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error else notification.data.error
+                    self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error else notification.data.error
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
@@ -4176,9 +4176,9 @@ class ContactWindowController(NSWindowController):
         if isinstance(item, BlinkContact):
             if isinstance(item, SystemAddressBookBlinkContact):
                 if item.job_title and item.organization:
-                    _name = "%s, %s" % (unicode(item.name), unicode(item.job_title)) + NSLocalizedString(" at %s" % unicode(item.organization), "Menu item")
+                    _name = "%s, %s" % (unicode(item.name), unicode(item.job_title)) + NSLocalizedString(" at %s" % unicode(item.organization), "Organization name follows")
                 elif item.organization:
-                    _name = unicode(item.name) + NSLocalizedString(" at %s" % unicode(item.organization), "Menu item")
+                    _name = unicode(item.name) + NSLocalizedString(" at %s" % unicode(item.organization), "Organization name follows")
                 else:
                     _name = unicode(item.name)
             else:

@@ -526,9 +526,9 @@ class HistoryViewer(NSWindowController):
     def updateContactsColumnHeader(self):
         found_contacts = len(self.contacts)-2
         if found_contacts == 1:
-            title = NSLocalizedString("1 Contact Found", "Label")
+            title = NSLocalizedString("1 contact found", "Label")
         elif found_contacts > 1:
-            title =  NSLocalizedString("%d Contacts Found" % found_contacts, "Label")
+            title =  NSLocalizedString("%d contacts found" % found_contacts, "Label")
         else:
             title = NSLocalizedString("Contacts", "Label")
 

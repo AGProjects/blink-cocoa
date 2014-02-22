@@ -425,7 +425,7 @@ class SessionInfoController(NSObject):
                 self.audio_status.setStringValue_("")
 
     def _NH_BlinkSessionGotRingIndication(self, notification):
-        self.updateSessionStatus(sub_state=NSLocalizedString("Ringing", "Label"))
+        self.updateSessionStatus(sub_state=NSLocalizedString("Ringing...", "Label"))
 
     def _NH_BlinkSessionGotProvisionalResponse(self, notification):
         self.updateSessionStatus(sub_state=notification.data.reason)

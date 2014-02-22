@@ -43,7 +43,7 @@ class SoundFile(object):
         self.path = path
         self.volume = int(volume)
         if self.volume < 0 or self.volume > 100:
-            raise ValueError(NSLocalizedString("illegal volume level: %d" % self.volume, "Preference option error"))
+            raise ValueError(NSLocalizedString("Illegal volume level: %d" % self.volume, "Preference option error"))
 
     def __getstate__(self):
         return u'%s,%s' % (self.__dict__['path'], self.volume)
@@ -77,13 +77,13 @@ class NightVolume(object):
         self.volume = int(volume)
 
         if self.volume < 0 or self.volume > 100:
-            raise ValueError(NSLocalizedString("illegal volume level: %d" % self.volume, "Preference option error"))
+            raise ValueError(NSLocalizedString("Illegal volume level: %d" % self.volume, "Preference option error"))
 
         if self.start_hour < 0 or self.start_hour > 23:
-            raise ValueError(NSLocalizedString("illegal start hour value: %d" % self.start_hour, "Preference option error"))
+            raise ValueError(NSLocalizedString("Illegal start hour value: %d" % self.start_hour, "Preference option error"))
 
         if self.end_hour < 0 or self.end_hour > 23:
-            raise ValueError(NSLocalizedString("illegal end hour value: %d" % self.end_hour, "Preference option error"))
+            raise ValueError(NSLocalizedString("Illegal end hour value: %d" % self.end_hour, "Preference option error"))
 
     def __getstate__(self):
         return u'%s,%s,%s' % (self.start_hour, self.end_hour, self.volume)
@@ -267,12 +267,12 @@ class HTTPURL(object):
     def __init__(self, value):
         url = urlparse.urlparse(value)
         if url.scheme not in (u'http', u'https'):
-            raise ValueError(NSLocalizedString("illegal HTTP URL scheme (http and https only): %s" % url.scheme, "Preference option error"))
+            raise ValueError(NSLocalizedString("Illegal HTTP URL scheme (http and https only): %s" % url.scheme, "Preference option error"))
         # check port and hostname
         Hostname(url.hostname)
         if url.port is not None:
             if not (0 < url.port < 65536):
-                raise ValueError(NSLocalizedString("illegal port value: %d" % url.port, "Preference option error"))
+                raise ValueError(NSLocalizedString("Illegal port value: %d" % url.port, "Preference option error"))
         self.url = url
 
     def __getstate__(self):
@@ -301,7 +301,7 @@ class LDAPdn(str):
         try:
             ldap.dn.str2dn(value)
         except ldap.DECODING_ERROR:
-            raise ValueError(NSLocalizedString("illegal LDAP DN format: %s" % value, "Preference option error"))
+            raise ValueError(NSLocalizedString("Illegal LDAP DN format: %s" % value, "Preference option error"))
 
         return value
 
@@ -314,7 +314,7 @@ class LDAPusername(str):
             try:
                 ldap.dn.str2dn(value)
             except ldap.DECODING_ERROR:
-                raise ValueError(NSLocalizedString("illegal LDAP DN format for username: %s" % value, "Preference option error"))
+                raise ValueError(NSLocalizedString("Illegal LDAP DN format for username: %s" % value, "Preference option error"))
 
         return value
 

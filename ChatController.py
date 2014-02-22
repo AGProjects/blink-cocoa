@@ -1065,14 +1065,14 @@ class ChatController(MediaStream):
             elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
                     item.setEnabled_(True)
-                    item.setToolTip_(NSLocalizedString("Cancel chat", "Tooltip"))
+                    item.setToolTip_(NSLocalizedString("Cancel Chat", "Tooltip"))
                     item.setLabel_(NSLocalizedString("Cancel", "Button title"))
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_PROPOSING:
                     if self.sessionController.proposalOriginator == 'remote':
                         item.setEnabled_(False)
                     else:
-                        item.setToolTip_(NSLocalizedString("Cancel chat", "Tooltip"))
+                        item.setToolTip_(NSLocalizedString("Cancel Chat", "Tooltip"))
                         item.setLabel_(NSLocalizedString("Cancel", "Button title"))
                         item.setImage_(NSImage.imageNamed_("stop_chat"))
                         item.setEnabled_(True)
@@ -1092,7 +1092,7 @@ class ChatController(MediaStream):
                         item.setToolTip_(NSLocalizedString("Remove audio", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                        item.setToolTip_(NSLocalizedString("Cancel audio", "Tooltip"))
+                        item.setToolTip_(NSLocalizedString("Cancel Audio", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                 else:
                     if self.sessionController.state == STATE_IDLE:
@@ -1119,7 +1119,7 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
-                        item.setToolTip_(NSLocalizedString("Cancel video", "Tooltip"))
+                        item.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif video_stream.status == STREAM_CONNECTED:
                         item.setToolTip_(NSLocalizedString("End video", "Tooltip"))
@@ -1144,14 +1144,15 @@ class ChatController(MediaStream):
                 item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
 
     def notify_changed_fingerprint(self):
-        log_text = '%s changed encryption fingerprint. Please verify it again.' % self.sessionController.getTitleShort()
+        _t = self.sessionController.getTitleShort()
+        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again." % _t, "Label")
         self.showSystemMessage(log_text, ISOTimestamp.now(), True)
 
         NSApp.delegate().contactsWindowController.speak_text(log_text)
 
-        nc_title = 'Chat Encryption Warning'
+        nc_title = NSLocalizedString("Encryption Warning", "Label")
         nc_subtitle = self.sessionController.getTitleShort()
-        nc_body = 'Encryption fingerprint has changed'
+        nc_body = NSLocalizedString("Encryption fingerprint has changed", "Label")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     def validateToolbarButton(self, item):
@@ -1278,7 +1279,7 @@ class ChatController(MediaStream):
                     else:
                         self.sessionController.addAudioToSession()
 
-                    sender.setToolTip_(NSLocalizedString("Cancel audio", "Tooltip"))
+                    sender.setToolTip_(NSLocalizedString("Cancel Audio", "Tooltip"))
                     sender.setImage_(NSImage.imageNamed_("hangup"))
 
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
@@ -1322,7 +1323,7 @@ class ChatController(MediaStream):
                         sender.setEnabled_(False)
                     else:
                         self.sessionController.addVideoToSession()
-                        sender.setToolTip_(NSLocalizedString("Cancel video", "Tooltip"))
+                        sender.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
 
             elif identifier == 'maximize':
                 self.enterFullScreen()
@@ -1497,14 +1498,14 @@ class ChatController(MediaStream):
             if message.body.lower() == "disabled":
                 self.remote_party_history = False
                 if not self.disable_chat_history:
-                    log = NSLocalizedString("Remote chat history disabled", "Chat system message")
+                    log = NSLocalizedString("Remote chat history disabled", "Label")
                     nc_title = NSLocalizedString("Chat History", "System notification title")
                     nc_subtitle = self.sessionController.getTitleShort()
                     NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
             else:
                 self.remote_party_history = True
                 if not self.disable_chat_history:
-                    log = NSLocalizedString("Remote chat history enabled", "Chat system message")
+                    log = NSLocalizedString("Remote chat history enabled", "Label")
                     nc_title = NSLocalizedString("Chat History", "System notification title")
                     nc_subtitle = self.sessionController.getTitleShort()
                     NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
@@ -1737,7 +1738,7 @@ class ChatController(MediaStream):
 
     def _NH_BlinkProposalDidFail(self, sender, data):
         if self.last_failure_reason != data.failure_reason:
-            message = NSLocalizedString("Proposal failed: %s" % data.failure_reason, "Label")
+            message = NSLocalizedString("Proposal failed", "Label") + ": %s" % data.failure_reason
             self.last_failure_reason = data.failure_reason
             self.showSystemMessage(message, ISOTimestamp.now(), True)
 
@@ -1746,7 +1747,7 @@ class ChatController(MediaStream):
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
                 reason = NSLocalizedString("Remote party failed to establish the connection", "Label") if data.reason == 'Internal Server Error' else '%s (%s)' % (data.reason,data.code)
-                message = NSLocalizedString("Proposal rejected: %s" % reason, "Label") if data.code != 200 else NSLocalizedString("Proposal rejected", "Label")
+                message = NSLocalizedString("Proposal rejected", "Label") + ": %s" % reason if data.code != 200 else NSLocalizedString("Proposal rejected", "Label")
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
@@ -1797,7 +1798,7 @@ class ChatController(MediaStream):
         elif data.failure is not None and data.failure.type is GNUTLSError:
             reason = NSLocalizedString("TLS connection broke", "Label")
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):
-            reason = NSLocalizedString("MSRP data connection failed", "Label")
+            reason = NSLocalizedString("MSRP connection failed", "Label")
         elif data.reason == 'MSRPRelayAuthError':
             reason = NSLocalizedString("MSRP relay authentication failed", "Label")
         else:

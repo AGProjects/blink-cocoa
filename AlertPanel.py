@@ -403,7 +403,7 @@ class AlertPanel(NSObject, object):
                 else:
                     self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev.strip(), indev.strip()))
             else:
-                self.deviceLabel.setStringValue_(NSLocalizedString("Using audio device ", "Label") + outdev.strip())
+                self.deviceLabel.setStringValue_(NSLocalizedString("Using audio device", "Label") + " " + outdev.strip())
 
             BlinkLogger().log_info(u"Using input/output audio devices: %s/%s" % (indev.strip(), outdev.strip()))
 
@@ -501,7 +501,7 @@ class AlertPanel(NSObject, object):
                 subject = NSLocalizedString("My Screen requested by", "Label")
             alt_action = None
         else:
-            subject = NSLocalizedString("Addition of unknown Stream to existing Session requested by", "Label")
+            subject = NSLocalizedString("Addition of unknown stream to existing session requested by", "Label")
             alt_action = None
         return subject, default_action, alt_action
 
@@ -541,7 +541,7 @@ class AlertPanel(NSObject, object):
                 subject = NSLocalizedString("Transfer of File", "Label") + " '%s' (%s) " % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
             else:
                 subject = NSLocalizedString("Incoming Session request from", "Label")
-                BlinkLogger().log_info(u"Unknown Session content %s" % streams)
+                BlinkLogger().log_info(u"Unknown media type %s" % streams)
 
         return subject, default_action, alt_action
 
@@ -651,7 +651,7 @@ class AlertPanel(NSObject, object):
             self.acceptStreams(info["session"])
             return
         remaining = info["delay"] - int(time.time() - info["time"])
-        text = NSLocalizedString("Automaticaly accepting in %i s" % remaining, "Label")
+        text = NSLocalizedString("Automaticaly Accepting in %i s" % remaining, "Label")
         info["label"].setStringValue_(text)
 
     @run_in_gui_thread

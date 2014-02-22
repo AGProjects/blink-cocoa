@@ -249,7 +249,7 @@ class BlinkAppDelegate(NSObject):
 
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
-                if NSRunAlertPanel(NSLocalizedString("Error Reading Configurations", "Window title"),
+                if NSRunAlertPanel(NSLocalizedString("Error", "Window title"),
                     NSLocalizedString("The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. " % config_file, "Label"),
                     NSLocalizedString("Replace", "Button title"), NSLocalizedString("Quit", "Button title"), None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
