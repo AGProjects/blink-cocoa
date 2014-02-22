@@ -3,6 +3,7 @@
 
 from AppKit import NSEventTrackingRunLoopMode
 from Foundation import (NSBundle,
+                        NSLocalizedString,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSTimer)
@@ -38,15 +39,17 @@ from util import allocate_autorelease_pool, run_in_gui_thread
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
-on_the_phone_activity = {'title': 'Busy', 'note': 'I am on the phone'}
+on_the_phone_activity = {'title': NSLocalizedString("Busy", "Menu item"),
+                         'note': NSLocalizedString("I am on the phone", "Label"),
+                         'history_title' : 'Busy'}
 
 PresenceActivityList = (
                        {
-                       'title':           u"Available",
+                       'title':           NSLocalizedString("Available", "Menu item"),
                        'type':            'menu_item',
                        'action':          'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':           u"Available",
+                                           'title':           'Available',
                                            'basic_status':    'open',
                                            'extended_status': 'available',
                                            'image':           'available',
@@ -54,11 +57,11 @@ PresenceActivityList = (
                                            }
                        },
                        {
-                       'title':           u"Away",
+                       'title':           NSLocalizedString("Away", "Menu item"),
                        'type':            'menu_item',
                        'action':          'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':           u"Away",
+                                           'title':           'Away',
                                            'basic_status':    'open',
                                            'extended_status': 'away',
                                            'image':           'away',
@@ -66,11 +69,11 @@ PresenceActivityList = (
                                            }
                        },
                        {
-                       'title':           u"Busy",
+                       'title':           NSLocalizedString("Busy", "Menu item"),
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':           u"Busy",
+                                           'title':           'Busy',
                                            'basic_status':    'open',
                                            'extended_status': 'busy',
                                            'image':           'busy',
@@ -78,11 +81,11 @@ PresenceActivityList = (
                                            }
                        },
                        {
-                       'title':            u"Invisible",
+                       'title':            NSLocalizedString("Invisible", "Menu item"),
                        'type':             'menu_item',
                        'action':           'presenceActivityChanged:',
                        'represented_object': {
-                                           'title':            u"Invisible",
+                                           'title':            'Invisible',
                                            'basic_status':     'closed',
                                            'extended_status':  'offline',
                                            'image':            'offline',
@@ -92,13 +95,13 @@ PresenceActivityList = (
                        {
                        'type':             'delimiter'
                        },
-                       {'title':            u"Offline Note...",
+                       {'title':            NSLocalizedString("Offline Note...", "Menu item"),
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'represented_object': None
                        },
                        {
-                       'title':            u"Empty",
+                       'title':            NSLocalizedString("Empty", "Menu item"),
                        'type':             'menu_item',
                        'action':           'setPresenceOfflineNote:',
                        'indentation':      2,
