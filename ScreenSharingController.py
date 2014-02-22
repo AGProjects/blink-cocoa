@@ -275,7 +275,7 @@ class ScreenSharingController(MediaStream):
     def _NH_MediaStreamDidStart(self, sender, data):
         self.sessionController.log_info("Screen sharing started")
         self.changeStatus(STREAM_CONNECTED)
-        NotificationCenter().add_observer(self, name="MSRPTransportTrace")
+        NotificationCenter().add_observer(self, sender=self.stream.msrp)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_info("Screen sharing failed")
@@ -292,6 +292,8 @@ class ScreenSharingController(MediaStream):
 
         NotificationCenter().remove_observer(self, sender=self.stream.handler)
         NotificationCenter().remove_observer(self, sender=self.stream)
+        if self.status == STREAM_CONNECTED:
+            NotificationCenter().discard_observer(self, sender=self.stream.msrp)
 
     def _NH_MSRPTransportTrace(self, sender, data):
         if sender is self.stream.msrp:
@@ -304,7 +306,7 @@ class ScreenSharingController(MediaStream):
                     self.statusProgress.setHidden_(True)
                     self.stopButton.setHidden_(False)
                     self.stopButton.setTitle_(NSLocalizedString("Stop Screen Sharing", "Button title"))
-                NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+                NotificationCenter().discard_observer(self, sender=sender)
 
     def _NH_ScreenSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
