@@ -13,6 +13,7 @@ from Foundation import (NSAttributedString,
                         NSDictionary,
                         NSFont,
                         NSImage,
+                        NSLocalizedString,
                         NSMakePoint,
                         NSMakeSize,
                         NSMaxX,
@@ -338,15 +339,17 @@ class SMSViewController(NSObject):
 
 
     def notify_changed_fingerprint(self):
-        log_text = '%s changed encryption fingerprint. Please verify it again.' % self.windowController.getTitle()
+        _t = self.windowController.getTitle()
+        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again." % _t, "Label")
         self.log_info(log_text)
+        
         self.chatViewController.showSystemMessage(self.session_id, log_text, ISOTimestamp.now(), True)
 
         NSApp.delegate().contactsWindowController.speak_text(log_text)
 
-        nc_title = 'SMS Encryption Warning'
+        nc_title = NSLocalizedString("Encryption Warning", "Label")
         nc_subtitle = self.getTitle()
-        nc_body = 'Encryption fingerprint has changed'
+        nc_body = NSLocalizedString("Encryption fingerprint has changed", "Label")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     def propose_otr(self):
@@ -389,13 +392,13 @@ class SMSViewController(NSObject):
         except potr.context.UnencryptedMessage, e:
             encryption = 'failed'
             status = 'failed'
-            log = 'Message %s is not encrypted, while encryption was expected' % msgid
+            log = NSLocalizedString("Message %s is not encrypted, while encryption was expected" % msgid, "Label")
             self.log_info(log)
             self.chatViewController.showSystemMessage(call_id, log, ISOTimestamp.now(), True)
         except potr.context.NotEncryptedError, e:
             encryption = 'failed'
             # we got some encrypted data
-            log = 'Encrypted message %s is unreadable, as encryption is disabled' % msgid
+            log = NSLocalizedString("Encrypted message %s is unreadable, as encryption is disabled" % msgid, "Label")
             status = 'failed'
             self.log_info(log)
             self.chatViewController.showSystemMessage(call_id, log, ISOTimestamp.now(), True)
@@ -435,7 +438,7 @@ class SMSViewController(NSObject):
             growl_data.sender = format_identity_to_string(sender, format='compact')
             self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
 
-            nc_title = 'SMS Message Received'
+            nc_title = NSLocalizedString("SMS Message Received", "Label")
             nc_subtitle = format_identity_to_string(sender, format='full')
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
@@ -621,7 +624,7 @@ class SMSViewController(NSObject):
                     self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                     message.status='failed'
                     self.add_to_history(message)
-                    log_text =  "Routing failure: %s" % msg
+                    log_text =  NSLocalizedString("Routing failure: %s" % msg, "Label")
                     self.chatViewController.showSystemMessage('0', msg, ISOTimestamp.now(), True)
                     self.log_info(log_text)
         self.queue = []
@@ -708,7 +711,7 @@ class SMSViewController(NSObject):
                     self.log_info(u"Error sending message %s: OTR not started remotely" % msgid)
                     self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                     message.status = 'failed'
-                    self.chatViewController.showSystemMessage(self.session_id, "Remote party has not started OTR protocol", ISOTimestamp.now(), True)
+                    self.chatViewController.showSystemMessage(self.session_id, NSLocalizedString("Remote party has not started OTR protocol", "Label"), ISOTimestamp.now(), True)
                     return
             except potr.context.NotEncryptedError, e:
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
@@ -761,7 +764,7 @@ class SMSViewController(NSObject):
         
         # Async DNS lookup
         if host is None or host.default_ip is None:
-            self.setRoutesFailed("No IP Address")
+            self.setRoutesFailed(NSLocalizedString("No IP Address", "Label"))
             return
 
         self.lookup_destination(self.target_uri)
@@ -784,7 +787,7 @@ class SMSViewController(NSObject):
 
     def textDidChange_(self, notif):
         chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
-        self.splitView.setText_("%i chars left" % chars_left)
+        self.splitView.setText_(NSLocalizedString("%i chars left" % chars_left, "Label"))
 
     def getContentView(self):
         return self.chatViewController.view
@@ -835,19 +838,19 @@ class SMSViewController(NSObject):
             after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
 
             if zoom_factor == 1:
-                self.zoom_period_label = 'Displaying messages from last day'
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
             elif zoom_factor == 2:
-                self.zoom_period_label = 'Displaying messages from last week'
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last week", "Label")
             elif zoom_factor == 3:
-                self.zoom_period_label = 'Displaying messages from last month'
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last month", "Label")
             elif zoom_factor == 4:
-                self.zoom_period_label = 'Displaying messages from last three months'
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last three months", "Label")
             elif zoom_factor == 5:
-                self.zoom_period_label = 'Displaying messages from last six months'
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last six months", "Label")
             elif zoom_factor == 6:
-                self.zoom_period_label = 'Displaying messages from last year'
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last year", "Label")
             elif zoom_factor == 7:
-                self.zoom_period_label = 'Displaying all messages'
+                self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                 self.chatViewController.setHandleScrolling_(False)
 
             results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
@@ -867,17 +870,17 @@ class SMSViewController(NSObject):
             else:
                 if self.message_count_from_history == len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.chatViewController.lastMessagesLabel.setStringValue_('%s. There are no previous messages.' % self.zoom_period_label)
+                    self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages." % self.zoom_period_label, "Label"))
                     self.chatViewController.setHandleScrolling_(False)
                 else:
                     self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
         else:
             self.message_count_from_history = len(messages)
             if len(messages):
-                self.chatViewController.lastMessagesLabel.setStringValue_('Scroll up for going back in time')
+                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("Scroll up for going back in time", "Label"))
             else:
                 self.chatViewController.setHandleScrolling_(False)
-                self.chatViewController.lastMessagesLabel.setStringValue_('There are no previous messages')
+                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages", "Label"))
 
         if len(messages):
             message = messages[0]
