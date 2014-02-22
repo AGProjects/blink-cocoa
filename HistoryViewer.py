@@ -126,13 +126,13 @@ class HistoryViewer(NSWindowController):
 
     def format_media_type(self, media_type):
         if media_type == 'sms':
-            return NSLocalizedString("Instant Messages", "Column title")
+            return NSLocalizedString("Instant Messages", "Label")
         elif media_type == 'chat':
-            return NSLocalizedString("Chat Sessions", "Column title")
+            return NSLocalizedString("Chat Sessions", "Label")
         elif media_type == 'audio':
-            return NSLocalizedString("Audio Calls", "Column title")
+            return NSLocalizedString("Audio Calls", "Label")
         elif media_type == 'file-transfer':
-            return NSLocalizedString("File Transfers", "Column title")
+            return NSLocalizedString("File Transfers", "Label")
         else:
             return media_type.title()
 
@@ -526,11 +526,11 @@ class HistoryViewer(NSWindowController):
     def updateContactsColumnHeader(self):
         found_contacts = len(self.contacts)-2
         if found_contacts == 1:
-            title = NSLocalizedString("1 Contact Found", "Column title")
+            title = NSLocalizedString("1 Contact Found", "Label")
         elif found_contacts > 1:
-            title =  NSLocalizedString("%d Contacts Found" % found_contacts, "Column title")
+            title =  NSLocalizedString("%d Contacts Found" % found_contacts, "Label")
         else:
-            title = NSLocalizedString("Contacts", "Column title")
+            title = NSLocalizedString("Contacts", "Label")
 
         self.contactTable.tableColumnWithIdentifier_('contacts').headerCell().setStringValue_(title)
 

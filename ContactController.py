@@ -198,11 +198,11 @@ class AddContactController(NSObject):
         self.groupPopUp.removeAllItems()
         nr_groups = len(self.belonging_groups)
         if nr_groups == 0:
-            title = NSLocalizedString("No Selected Groups", "Popup button item")
+            title = NSLocalizedString("No Selected Groups", "Menu item")
         elif nr_groups == 1:
-            title = NSLocalizedString("One Selected Group", "Popup button item")
+            title = NSLocalizedString("One Selected Group", "Menu item")
         else:
-            title = NSLocalizedString("%d Selected Groups" % nr_groups, "Popup button item")
+            title = NSLocalizedString("%d Selected Groups" % nr_groups, "Menu item")
         self.groupPopUp.addItemWithTitle_(title)
         menu_item = self.groupPopUp.lastItem()
         menu_item.setState_(NSOffState)
@@ -218,9 +218,9 @@ class AddContactController(NSObject):
                 menu_item.setState_(NSOffState)
 
         self.groupPopUp.menu().addItem_(NSMenuItem.separatorItem())
-        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Select All", "Popup button item"))
-        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Deselect All", "Popup button item"))
-        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Add Group...", "Popup button item"))
+        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Select All", "Menu item"))
+        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Deselect All", "Menu item"))
+        self.groupPopUp.addItemWithTitle_(NSLocalizedString("Add Group...", "Menu item"))
 
     @objc.IBAction
     def subscribePopUpClicked_(self, sender):

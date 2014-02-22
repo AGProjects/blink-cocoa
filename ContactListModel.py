@@ -2230,7 +2230,7 @@ class CustomListModel(NSObject):
                                                                                                                                           NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                                                                           table.window().graphicsContext(), 0, 1, 0)
                 send_file_menu = NSMenu.alloc().init()
-                titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send File To Address", "Contact menu item"), "", "")
+                titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send File To Address", "Menu item"), "", "")
                 titem.setEnabled_(False)
 
                 for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
@@ -2264,7 +2264,7 @@ class CustomListModel(NSObject):
                                                                                 NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
                                                                                 table.window().graphicsContext(), 0, 1, 0)
                 transfer_menu = NSMenu.alloc().init()
-                titem = transfer_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Transfer Call To", "Contact menu item"), "", "")
+                titem = transfer_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Transfer Call To", "Menu item"), "", "")
                 titem.setEnabled_(False)
                 for uri in item.uris:
                     titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedBlindTransferMenuItem:", "")

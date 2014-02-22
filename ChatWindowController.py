@@ -1761,10 +1761,10 @@ class ChatWindowController(NSWindowController):
             remote_uri = format_identity_to_string(session.remotePartyObject)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
-            column_header_title = NSLocalizedString("Participants", "Table title")
+            column_header_title = NSLocalizedString("Participants", "Label")
             if session.conference_info is not None:
                 _l = len(self.participants)
-                column_header_title = NSLocalizedString("%d Participants" % _l, "Column title") if len(self.participants) > 1 else NSLocalizedString("Participants", "Column title")
+                column_header_title = NSLocalizedString("%d Participants" % _l, "Label") if len(self.participants) > 1 else NSLocalizedString("Participants", "Label")
 
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 
@@ -1776,7 +1776,7 @@ class ChatWindowController(NSWindowController):
 
             if session.conference_shared_files:
                 _l = len(self.conference_shared_files)
-                column_header_title = NSLocalizedString("%d Remote Conference Files" % _l, "Column title") if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Column title")
+                column_header_title = NSLocalizedString("%d Remote Conference Files" % _l, "Label") if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
                 if chat_stream and chat_stream.drawerSplitterPosition is None:
                     top_frame = self.conferenceFilesView.frame()
                     top_frame.size.height = 130
@@ -1784,7 +1784,7 @@ class ChatWindowController(NSWindowController):
                     bottom_frame.size.height = bottom_frame.size.height - 130
                     chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
             else:
-                column_header_title = NSLocalizedString("Remote Conference Files", "Column title")
+                column_header_title = NSLocalizedString("Remote Conference Files", "Label")
                 if chat_stream:
                     chat_stream.drawerSplitterPosition = None
 

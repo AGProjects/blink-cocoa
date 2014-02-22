@@ -136,14 +136,14 @@ class AudioSession(NSView):
               NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(12), NSFontAttributeName))
         point = NSMakePoint(8, 6)
         if self.conferencing:
-            NSString.stringWithString_(NSLocalizedString("Drop outside to remove from conference", "Audio session label")).drawAtPoint_withAttributes_(point,
+            NSString.stringWithString_(NSLocalizedString("Drop outside to remove from conference", "Audio status label")).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
         else:
             audio_sessions = [sess.hasStreamOfType("audio") for sess in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers]
             if self.delegate.transferEnabled:
-                text = NSLocalizedString("Drop this over a session or contact", "Audio session label") if len(audio_sessions) > 1 else NSLocalizedString("Drop this over a contact to transfer", "Audio session label")
+                text = NSLocalizedString("Drop this over a session or contact", "Audio status label") if len(audio_sessions) > 1 else NSLocalizedString("Drop this over a contact to transfer", "Audio status label")
             else:
-                text = NSLocalizedString("Drop this over a session to conference", "Audio session label")
+                text = NSLocalizedString("Drop this over a session to conference", "Audio status label")
             NSString.stringWithString_(text).drawAtPoint_withAttributes_(point,
                   NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName))
 

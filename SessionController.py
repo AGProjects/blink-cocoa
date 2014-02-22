@@ -1743,7 +1743,7 @@ class SessionController(NSObject):
             addr = "%s@%s" % (redirect_to.user, redirect_to.host)
             ret = NSRunAlertPanel(NSLocalizedString("Redirect Call", "Window title"),
                   NSLocalizedString("The remote party has redirected his calls to %s.\nWould you like to call this address?" % addr, "Label"),
-                  NSLocalizedString("Call", "Alert panel button"), NSLocalizedString("Cancel", "Alert panel button"), None)
+                  NSLocalizedString("Call", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
 
             if ret == NSAlertDefaultReturn:
                 target_uri = SIPURI.new(redirect_to)

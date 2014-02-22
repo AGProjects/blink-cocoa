@@ -305,7 +305,7 @@ class AudioController(MediaStream):
         if state in (STATE_FAILED, STATE_DNS_FAILED):
             self.audioEndTime = time.time()
             if detail.startswith("DNS Lookup"):
-                self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failure", "Audio session label"))
+                self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failure", "Audio status label"))
             else:
                 self.changeStatus(STREAM_FAILED, detail)
         elif state == STATE_FINISHED:
@@ -711,12 +711,12 @@ class AudioController(MediaStream):
             NSApp.delegate().contactsWindowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
             if len(self.sessionController.streamHandlers) > 1:
-                self.hangup_reason = NSLocalizedString("Audio Removed", "Audio session label")
+                self.hangup_reason = NSLocalizedString("Audio Removed", "Audio status label")
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Audio Removed", "Audio status label"))
             elif oldstatus == STREAM_WAITING_DNS_LOOKUP:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             else:
-                self.hangup_reason = NSLocalizedString("Session Ended", "Audio session label")
+                self.hangup_reason = NSLocalizedString("Session Ended", "Audio status label")
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio status label"))
         elif status == STREAM_CANCELLING:
             self.updateAudioStatusWithSessionState(NSLocalizedString("Cancelling Request...", "Audio status label"))
@@ -974,17 +974,17 @@ class AudioController(MediaStream):
 
             item = menu.itemWithTag_(21)
             item.setState_(NSOnState if self.zrtp_active else NSOffState)
-            _label = NSLocalizedString("Encrypted", "Menu item title") if self.zrtp_active else NSLocalizedString("Encrypt", "Menu item title")
-            title = NSLocalizedString("%s using Diffie-Hellman key exchange (zRTP)" % _label, "Menu item title")
+            _label = NSLocalizedString("Encrypted", "Menu item") if self.zrtp_active else NSLocalizedString("Encrypt", "Menu item")
+            title = NSLocalizedString("%s using Diffie-Hellman key exchange (zRTP)" % _label, "Menu item")
             item.setTitle_(title)
 
             item = menu.itemWithTag_(22)
             item.setState_(NSOnState if self.zrtp_verified else NSOffState)
             item.setEnabled_(self.zrtp_active and self.zrtp_show_verify_phrase)
-            item.setTitle_(NSLocalizedString("Identity Confirmed", "Menu item title") if self.zrtp_verified else NSLocalizedString("Confirm Identity by verbally comparing the phrase", "Menu item title"))
+            item.setTitle_(NSLocalizedString("Identity Confirmed", "Menu item") if self.zrtp_verified else NSLocalizedString("Confirm Identity by verbally comparing the phrase", "Menu item"))
 
             item = menu.itemWithTag_(23)
-            item.setTitle_(NSLocalizedString("Show Confirm Identity Phrase", "Menu item title") if not self.zrtp_show_verify_phrase else NSLocalizedString("Hide Confirm Identity Phrase", "Menu item title" ))
+            item.setTitle_(NSLocalizedString("Show Confirm Identity Phrase", "Menu item") if not self.zrtp_show_verify_phrase else NSLocalizedString("Hide Confirm Identity Phrase", "Menu item" ))
             item.setEnabled_(self.zrtp_active)
 
             item = menu.itemWithTag_(24)
@@ -1003,7 +1003,7 @@ class AudioController(MediaStream):
                 item.setTarget_(self)
                 item.setRepresentedObject_(session_controller)
 
-            item = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("A contact by dragging this audio call over it", "Menu item title"), "", "")
+            item = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("A contact by dragging this audio call over it", "Menu item"), "", "")
             item.setIndentationLevel_(1)
             item.setEnabled_(False)
 
@@ -1031,9 +1031,9 @@ class AudioController(MediaStream):
             else:
                 chatStream = self.sessionController.streamHandlerOfType("chat")
                 if chatStream:
-                    item.setTitle_(NSLocalizedString("Remove Chat", "Menu item title") if chatStream.status == STREAM_CONNECTED else NSLocalizedString("Add Chat", "Menu item title"))
+                    item.setTitle_(NSLocalizedString("Remove Chat", "Menu item") if chatStream.status == STREAM_CONNECTED else NSLocalizedString("Add Chat", "Menu item"))
                 else:
-                    item.setTitle_(NSLocalizedString("Add Chat", "Menu item title"))
+                    item.setTitle_(NSLocalizedString("Add Chat", "Menu item"))
 
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
@@ -1042,11 +1042,11 @@ class AudioController(MediaStream):
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
-            item.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item title"))
+            item.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item"))
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
             item = menu.itemWithTag_(12) # share local screen
-            item.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item title"))
+            item.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item"))
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
             item = menu.itemWithTag_(13) # cancel
@@ -1055,17 +1055,17 @@ class AudioController(MediaStream):
                 screen_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
                 if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
                     item.setEnabled_(True)
-                    item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item title"))
+                    item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item"))
                 elif screen_sharing_stream.status == STREAM_CONNECTED:
                     item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
-                    item.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item title"))
+                    item.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item"))
             else:
-                item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item title"))
+                item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item"))
             item = menu.itemWithTag_(20) # add to contacts
             item.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
             item = menu.itemWithTag_(30)
             item.setEnabled_(True if self.sessionController.session is not None and self.sessionController.session.state is not None else False)
-            item.setTitle_(NSLocalizedString("Hide Session Information", "Menu item title") if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else NSLocalizedString("Show Session Information", "Menu item title"))
+            item.setTitle_(NSLocalizedString("Hide Session Information", "Menu item") if self.sessionController.info_panel is not None and self.sessionController.info_panel.window.isVisible() else NSLocalizedString("Show Session Information", "Menu item"))
 
             can_move_conference_to_server = self.isConferencing and AccountManager().default_account is not BonjourAccount()
             item = menu.itemWithTag_(40) # move conference to server
@@ -1181,8 +1181,8 @@ class AudioController(MediaStream):
             self.zrtp_show_verify_phrase = False
             self.zrtp_verified = False
             self.end()
-            self.hangup_reason = NSLocalizedString("zRTP Verify Failed", "Audio session label")
-            self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio session label"), True)
+            self.hangup_reason = NSLocalizedString("zRTP Verify Failed", "Audio status label")
+            self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio status label"), True)
 
         self.updateDuration()
         self.update_encryption_icon()
@@ -1332,7 +1332,7 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'ICE negotiation failed: %s' % data.reason)
-        self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio session label"), True)
+        self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
         self.ice_negotiation_status = data.reason
         # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
         #self.end()
@@ -1345,7 +1345,7 @@ class AudioController(MediaStream):
     def _NH_AudioStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
             self.sessionController.log_info(u'Audio stream timeout')
-            self.hangup_reason = NSLocalizedString("Audio Timeout", "Audio session label")
+            self.hangup_reason = NSLocalizedString("Audio Timeout", "Audio status label")
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()
 

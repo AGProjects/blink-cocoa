@@ -1452,7 +1452,7 @@ class ChatController(MediaStream):
             self.chatWindowController.screenShareMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("screen-sharing") else "display"))
 
         menu = self.chatWindowController.conferenceScreenSharingMenu
-        menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_(NSLocalizedString("Share My Screen with Conference Participants", "Menu title") if self.share_screen_in_conference == False else NSLocalizedString("Stop Screen Sharing", "Menu title"))
+        menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_(NSLocalizedString("Share My Screen with Conference Participants", "Menu item") if self.share_screen_in_conference == False else NSLocalizedString("Stop Screen Sharing", "Menu item"))
         self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
         self.chatWindowController.setScreenSharingToolbarIconSize()
