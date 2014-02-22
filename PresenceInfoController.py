@@ -5,6 +5,7 @@ from AppKit import NSApp
 from Foundation import (NSAttributedString,
                         NSBundle,
                         NSImage,
+                        NSLocalizedString,
                         NSMakeRange,
                         NSMakeSize,
                         NSNumber,
@@ -73,7 +74,7 @@ class PresenceInfoController(NSObject):
     def show(self, contact):
         NSApp.activateIgnoringOtherApps_(True)
         self.contact =  contact
-        self.window.setTitle_(u'Availability Information published by %s' % contact.name)
+        self.window.setTitle_(NSLocalizedString("Availability Information published by %s" % contact.name, "Window title"))
         self.name.setStringValue_(self.contact.name)
         self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
         self.window.orderFront_(None)
