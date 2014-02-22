@@ -2998,7 +2998,7 @@ class ContactWindowController(NSWindowController):
         if not history_object['note']:
             return
 
-        if history_object['note'] == on_the_phone_activity['note'] and history_object['title'] == on_the_phone_activity['title']:
+        if history_object['note'] == on_the_phone_activity['note'] and history_object['title'] == on_the_phone_activity['history_title']:
             return
         try:
             item = (item for item in PresenceActivityList if item['type'] == 'menu_item' and item['action'] == 'presenceActivityChanged:' and item['represented_object']['title'] == history_object['title'] and item['represented_object']['note'] == history_object['note']).next()
