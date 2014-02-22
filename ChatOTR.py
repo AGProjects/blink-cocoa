@@ -3,7 +3,7 @@
 
 
 from AppKit import NSApp, NSOKButton, NSCancelButton, NSOnState
-from Foundation import NSObject, NSBundle, NSColor, NSTimer, NSRunLoop, NSRunLoopCommonModes
+from Foundation import NSObject, NSBundle, NSColor, NSLocalizedString, NSTimer, NSRunLoop, NSRunLoopCommonModes
 
 import objc
 
@@ -149,12 +149,14 @@ class ChatOtrSmp(NSObject):
         self.statusText.setStringValue_('')
         self.progressBar.startAnimation_(None)
         if type == 'chat':
-            self.window.setTitle_('Identity Verification for %s' % self.controller.sessionController.getTitleShort())
+            _t = self.controller.sessionController.getTitleShort()
+            self.window.setTitle_(NSLocalizedString("Identity Verification For %s" % _t, "Window title"))
             self.stream = self.controller.stream
             self.remote_address = self.controller.sessionController.remoteSIPAddress
             self.otr_context_id = self.controller.sessionController.call_id
         elif type == 'sms':
-            self.window.setTitle_('Identity Verification for %s' % format_identity_to_string(self.controller.target_uri))
+            _t = format_identity_to_string(self.controller.target_uri)
+            self.window.setTitle_(NSLocalizedString("Identity Verification For %s" % _t, "Window title"))
             self.stream = self.controller
             self.remote_address = self.controller.remote_uri
             self.otr_context_id = self.controller.session_id
@@ -205,14 +207,14 @@ class ChatOtrSmp(NSObject):
                     self.ctx.smpInit(secret, appdata={'stream': self.stream})
                 self.progressBar.setIndeterminate_(False)
                 self.progressBar.setDoubleValue_(3)
-                self.statusText.setStringValue_('Verification request sent')
+                self.statusText.setStringValue_(NSLocalizedString("Verification request sent", "Label"))
                 self.continueButton.setEnabled_(False)
             except potr.context.NotEncryptedError, e:
-                self.statusText.setStringValue_('Chat session is not OTR encrypted')
+                self.statusText.setStringValue_(NSLocalizedString("Chat session is not OTR encrypted", "Label"))
             except RuntimeError, e:
-                self.statusText.setStringValue_('OTR encryption error: %s' % e)
+                self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s" % e, "Label"))
             except Exception, e:
-                self.statusText.setStringValue_('Error: %s' % e)
+                self.statusText.setStringValue_(NSLocalizedString("Error: %s" % e, "Label"))
 
         self.smp_running = True
 
@@ -223,11 +225,11 @@ class ChatOtrSmp(NSObject):
         try:
             self.ctx.smpAbort(appdata={'stream': self.stream})
         except potr.context.NotEncryptedError, e:
-            self.statusText.setStringValue_('Chat session is not OTR encrypted')
+            self.statusText.setStringValue_(NSLocalizedString("Chat session is not OTR encrypted", "Label"))
         except RuntimeError, e:
-            self.statusText.setStringValue_('OTR encryption error: %s' % e)
+            self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s" % e, "Label"))
         except Exception, e:
-            self.statusText.setStringValue_('Error: %s' % e)
+            self.statusText.setStringValue_(NSLocalizedString("Error: %s" % e, "Label"))
 
     def get_tlv(self, tlvs, check):
         for tlv in tlvs:
@@ -243,12 +245,12 @@ class ChatOtrSmp(NSObject):
             # check for TLV_SMP_ABORT or state = CHEATED
             if self.smp_running and not self.ctx.smpIsValid():
                 self.statusText.setTextColor_(NSColor.redColor())
-                self.statusText.setStringValue_('Verification failed. You may try again later.')
+                self.statusText.setStringValue_(NSLocalizedString("Identity verification failed. Try again later.", "Label"))
                 self._finish()
 
             # check for TLV_SMP1
             elif self.get_tlv(tlvs, potr.proto.SMP1TLV):
-                self.statusText.setStringValue_('Verification request received')
+                self.statusText.setStringValue_(NSLocalizedString("Identiti verification request received", "Label"))
                 self.smp_running = True
                 self.question = None
                 self.show(True)
@@ -267,13 +269,13 @@ class ChatOtrSmp(NSObject):
             elif self.get_tlv(tlvs, potr.proto.SMP2TLV):
                 self.progressBar.setIndeterminate_(False)
                 self.progressBar.setDoubleValue_(6)
-                self.statusText.setStringValue_('Verification in progress...')
+                self.statusText.setStringValue_(NSLocalizedString("Identity verification in progress...", "Label"))
 
             # check for TLV_SMP3
             elif self.get_tlv(tlvs, potr.proto.SMP3TLV):
                 if self.ctx.smpIsSuccess():
                     self.statusText.setTextColor_(NSColor.greenColor())
-                    self.statusText.setStringValue_('Verification succeeded')
+                    self.statusText.setStringValue_(NSLocalizedString("Identity verification succeeded", "Label"))
                     if fingerprint:
                         self.controller.otr_account.setTrust(self.remote_address, str(fingerprint), 'verified')
                         self.controller.revalidateToolbar()
@@ -281,14 +283,14 @@ class ChatOtrSmp(NSObject):
                     self._finish()
                 else:
                     self.statusText.setTextColor_(NSColor.redColor())
-                    self.statusText.setStringValue_('Verification failed. You may try again later.')
+                    self.statusText.setStringValue_(NSLocalizedString("Identity verification failed. Try again later.", "Label"))
                     self._finish()
 
             # check for TLV_SMP4
             elif self.get_tlv(tlvs, potr.proto.SMP4TLV):
                 if self.ctx.smpIsSuccess():
                     self.statusText.setTextColor_(NSColor.greenColor())
-                    self.statusText.setStringValue_('Verification succeeded')
+                    self.statusText.setStringValue_(NSLocalizedString("Identity verification succeeded", "Label"))
                     if fingerprint:
                         self.controller.otr_account.setTrust(self.remote_address, str(fingerprint), 'verified')
                         self.controller.revalidateToolbar()
@@ -296,7 +298,7 @@ class ChatOtrSmp(NSObject):
                     self._finish()
                 else:
                     self.statusText.setTextColor_(NSColor.redColor())
-                    self.statusText.setStringValue_('Verification failed. You may try again later.')
+                    self.statusText.setStringValue_(NSLocalizedString("Identity verification failed. Try again later.", "Label"))
                     self._finish()
 
     def _finish(self):
@@ -337,18 +339,18 @@ class ChatOtrSmp(NSObject):
             self.continueButton.setEnabled_(True)
             if self.question is None:
                 self.questionText.setHidden_(True)
-                self.labelText.setStringValue_(('%s is trying to verify your identity using a commonly known secret.' % self.remote_address))
+                self.labelText.setStringValue_(NSLocalizedString("%s wants to verify your identity using a commonly known secret." % self.remote_address, "Label"))
             else:
                 self.questionText.setHidden_(False)
                 self.secretText.setHidden_(False)
                 self.questionText.setStringValue_(self.question)
                 self.questionText.setEnabled_(False)
-                self.labelText.setStringValue_('%s has asked you a question to verify your identity:' % self.remote_address)
+                self.labelText.setStringValue_(NSLocalizedString("%s has asked you a question to verify your identity:" % self.remote_address, "Label"))
         else:
             self.statusText.setStringValue_('')
             self.continueButton.setEnabled_(True)
             self.questionText.setHidden_(False)
             self.questionText.setStringValue_('')
             self.questionText.setEnabled_(True)
-            self.labelText.setStringValue_(('You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.' % self.remote_address))
+            self.labelText.setStringValue_(NSLocalizedString("You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint." % self.remote_address, "Label"))
 
