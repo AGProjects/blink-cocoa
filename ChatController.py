@@ -274,7 +274,7 @@ class ChatController(MediaStream):
         if self.remote_party_history and not self.disable_chat_history:
             self.privateLabel.setHidden_(True)
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-on"))
-            self.databaseLoggingButton.setToolTip_("Text conversation is saved to history database")
+            self.databaseLoggingButton.setToolTip_(NSLocalizedString("Text conversation is saved to history database", "Tooltip"))
         elif not self.remote_party_history and not self.disable_chat_history:
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-remote-off"))
             self.privateLabel.setHidden_(False)
@@ -282,7 +282,7 @@ class ChatController(MediaStream):
         else:
             self.privateLabel.setHidden_(False)
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-local-off"))
-            self.databaseLoggingButton.setToolTip_("Text conversation is not saved to history database")
+            self.databaseLoggingButton.setToolTip_(NSLocalizedString("Text conversation is not saved to history database", "Tooltip"))
 
     def init_otr(self, disable_encryption=False):
         from ChatOTR import DEFAULT_OTR_FLAGS
@@ -872,19 +872,19 @@ class ChatController(MediaStream):
                 after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
 
                 if zoom_factor == 1:
-                    self.zoom_period_label = 'Displaying messages from last day'
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
                 elif zoom_factor == 2:
-                    self.zoom_period_label = 'Displaying messages from last week'
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last week", "Label")
                 elif zoom_factor == 3:
-                    self.zoom_period_label = 'Displaying messages from last month'
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last month", "Label")
                 elif zoom_factor == 4:
-                    self.zoom_period_label = 'Displaying messages from last three months'
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last three months", "Label")
                 elif zoom_factor == 5:
-                    self.zoom_period_label = 'Displaying messages from last six months'
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last six months", "Label")
                 elif zoom_factor == 6:
-                    self.zoom_period_label = 'Displaying messages from last year'
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last year", "Label")
                 elif zoom_factor == 7:
-                    self.zoom_period_label = 'Displaying all messages'
+                    self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
 
                 results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
@@ -918,7 +918,7 @@ class ChatController(MediaStream):
             else:
                 if self.message_count_from_history >= len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.zoom_period_label = '%s. There are no previous messages.' % self.zoom_period_label
+                    self.zoom_period_label = NSLocalizedString("%s. There are no previous messages." % self.zoom_period_label, "Label")
                     self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
                     self.chatViewController.setHandleScrolling_(False)
                 else:
@@ -926,10 +926,10 @@ class ChatController(MediaStream):
         else:
             self.message_count_from_history = len(messages)
             if len(messages):
-                self.chatViewController.lastMessagesLabel.setStringValue_('Scroll up for going back in time')
+                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("Scroll up for going back in time", "Label"))
             else:
                 self.chatViewController.setHandleScrolling_(False)
-                self.chatViewController.lastMessagesLabel.setStringValue_('There are no previous messages')
+                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages", "Label"))
 
         if len(messages):
             message = messages[0]
@@ -1065,40 +1065,40 @@ class ChatController(MediaStream):
             elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
                     item.setEnabled_(True)
-                    item.setToolTip_('Cancel chat')
-                    item.setLabel_(u'Cancel')
+                    item.setToolTip_(NSLocalizedString("Cancel chat", "Tooltip"))
+                    item.setLabel_(NSLocalizedString("Cancel", "Button title"))
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_PROPOSING:
                     if self.sessionController.proposalOriginator == 'remote':
                         item.setEnabled_(False)
                     else:
-                        item.setToolTip_('Cancel chat')
-                        item.setLabel_(u'Cancel')
+                        item.setToolTip_(NSLocalizedString("Cancel chat", "Tooltip"))
+                        item.setLabel_(NSLocalizedString("Cancel", "Button title"))
                         item.setImage_(NSImage.imageNamed_("stop_chat"))
                         item.setEnabled_(True)
                 elif self.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
-                    item.setToolTip_('End chat')
-                    item.setLabel_(u'Disconnect')
+                    item.setToolTip_(NSLocalizedString("End chat", "Tooltip"))
+                    item.setLabel_(NSLocalizedString("Disconnect", "Button title"))
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
                     item.setEnabled_(not self.sessionController.inProposal)
-                    item.setToolTip_('Start chat')
-                    item.setLabel_(u'Connect')
+                    item.setToolTip_(NSLocalizedString("Start chat", "Tooltip"))
+                    item.setLabel_(NSLocalizedString("Connect", "Button title"))
                     item.setImage_(NSImage.imageNamed_("start_chat"))
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_('Remove audio')
+                        item.setToolTip_(NSLocalizedString("Remove audio", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                        item.setToolTip_('Cancel audio')
+                        item.setToolTip_(NSLocalizedString("Cancel audio", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                 else:
                     if self.sessionController.state == STATE_IDLE:
-                        item.setToolTip_('Start audio')
+                        item.setToolTip_(NSLocalizedString("Start audio", "Tooltip"))
                     else:
-                        item.setToolTip_('Add audio')
+                        item.setToolTip_(NSLocalizedString("Add audio", "Tooltip"))
                     item.setImage_(NSImage.imageNamed_("audio"))
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio"):
@@ -1119,13 +1119,13 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
-                        item.setToolTip_('Cancel video call')
+                        item.setToolTip_(NSLocalizedString("Cancel video", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                     elif video_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_('Hangup video call')
+                        item.setToolTip_(NSLocalizedString("End video", "Tooltip"))
                         item.setImage_(NSImage.imageNamed_("hangup"))
                 else:
-                    item.setToolTip_('Add video to session')
+                    item.setToolTip_(NSLocalizedString("Add video", "Tooltip"))
                     item.setImage_(NSImage.imageNamed_("video"))
             elif identifier == 'screen':
                 if self.sessionController.remote_focus:
@@ -1262,10 +1262,10 @@ class ChatController(MediaStream):
                     else:
                         if self.status == STREAM_CONNECTED:
                             self.sessionController.removeAudioFromSession()
-                            sender.setToolTip_('Add audio to session')
+                            sender.setToolTip_(NSLocalizedString("Add audio", "Tooltip"))
                         else:
                             self.sessionController.endStream(audio_stream)
-                            sender.setToolTip_('Start audio session')
+                            sender.setToolTip_(NSLocalizedString("Start audio", "Tooltip"))
 
                     sender.setImage_(NSImage.imageNamed_("audio"))
 
@@ -1278,7 +1278,7 @@ class ChatController(MediaStream):
                     else:
                         self.sessionController.addAudioToSession()
 
-                    sender.setToolTip_('Cancel audio call')
+                    sender.setToolTip_(NSLocalizedString("Cancel audio", "Tooltip"))
                     sender.setImage_(NSImage.imageNamed_("hangup"))
 
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
@@ -1316,13 +1316,13 @@ class ChatController(MediaStream):
                         else:
                             self.sessionController.removeVideoFromSession()
 
-                        sender.setToolTip_('Add video to session')
+                        sender.setToolTip_(NSLocalizedString("Add video", "Tooltip"))
 
                         # The button will be enabled again after operation is finished
                         sender.setEnabled_(False)
                     else:
                         self.sessionController.addVideoToSession()
-                        sender.setToolTip_('Cancel the video call')
+                        sender.setToolTip_(NSLocalizedString("Cancel video", "Tooltip"))
 
             elif identifier == 'maximize':
                 self.enterFullScreen()
@@ -1342,7 +1342,7 @@ class ChatController(MediaStream):
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 self.toggleEditor()
                 sender.setImage_(NSImage.imageNamed_("editor"))
-                sender.setToolTip_("Switch back to chat session" if self.chatViewController.editorVisible else "Show collaborative editor")
+                sender.setToolTip_(NSLocalizedString("Switch back to chat session", "Tooltip") if self.chatViewController.editorVisible else NSLocalizedString("Show collaborative editor", "Tooltip"))
             elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
                 contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
@@ -1452,7 +1452,7 @@ class ChatController(MediaStream):
             self.chatWindowController.screenShareMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("screen-sharing") else "display"))
 
         menu = self.chatWindowController.conferenceScreenSharingMenu
-        menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_("Share My Screen with Conference Participants" if self.share_screen_in_conference == False else "Stop Screen Sharing")
+        menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL).setTitle_(NSLocalizedString("Share My Screen with Conference Participants", "Menu title") if self.share_screen_in_conference == False else NSLocalizedString("Stop Screen Sharing", "Menu title"))
         self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, self.share_screen_in_conference)
 
         self.chatWindowController.setScreenSharingToolbarIconSize()
@@ -1623,7 +1623,7 @@ class ChatController(MediaStream):
                     NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
                     NSApp.requestUserAttention_(NSInformationalRequest)
 
-                    nc_title = 'Chat Message Received'
+                    nc_title = NSLocalizedString("Chat Message Received", "Window title")
                     nc_subtitle = format_identity_to_string(sender, format='full')
                     nc_body = html2txt(text.decode('utf-8'))[0:400] if message.content_type == 'text/html' else text[0:400]
                     NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
@@ -1737,7 +1737,7 @@ class ChatController(MediaStream):
 
     def _NH_BlinkProposalDidFail(self, sender, data):
         if self.last_failure_reason != data.failure_reason:
-            message = "Proposal failed: %s" % data.failure_reason
+            message = NSLocalizedString("Proposal failed: %s" % data.failure_reason, "Label")
             self.last_failure_reason = data.failure_reason
             self.showSystemMessage(message, ISOTimestamp.now(), True)
 
@@ -1745,8 +1745,8 @@ class ChatController(MediaStream):
         if data.code != 487:
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
-                reason = 'Remote party failed to establish the connection' if data.reason == 'Internal Server Error' else '%s (%s)' % (data.reason,data.code)
-                message = "Proposal rejected: %s" % reason if data.code != 200 else "Proposal rejected"
+                reason = NSLocalizedString("Remote party failed to establish the connection", "Label") if data.reason == 'Internal Server Error' else '%s (%s)' % (data.reason,data.code)
+                message = NSLocalizedString("Proposal rejected: %s" % reason, "Label") if data.code != 200 else NSLocalizedString("Proposal rejected", "Label")
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
@@ -1760,7 +1760,7 @@ class ChatController(MediaStream):
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat session established to %s" % endpoint)
-        self.showSystemMessage("Connection established", ISOTimestamp.now())
+        self.showSystemMessage(NSLocalizedString("Connection established", "Label"), ISOTimestamp.now())
 
         # Set nickname if available
         nickname = self.sessionController.nickname
@@ -1782,7 +1782,8 @@ class ChatController(MediaStream):
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
-            self.showSystemMessage('%s left the conversation' % self.sessionController.getTitleShort(), ISOTimestamp.now())
+            t = self.sessionController.getTitleShort()
+            self.showSystemMessage(NSLocalizedString("%s left the conversation" % t, "Label"), ISOTimestamp.now())
 
         if not self.mediastream_failed:
             self.outgoing_message_handler.setDisconnected()
@@ -1791,13 +1792,14 @@ class ChatController(MediaStream):
         self.mediastream_failed = True
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
-            reason = '%s left the conversation' % self.sessionController.getTitleShort()
+            t = self.sessionController.getTitleShort()
+            reason = NSLocalizedString("%s left the conversation" % t, "Label")
         elif data.failure is not None and data.failure.type is GNUTLSError:
-            reason = 'TLS connection broke'
+            reason = NSLocalizedString("TLS connection broke", "Label")
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):
-            reason = 'MSRP data connection failed'
+            reason = NSLocalizedString("MSRP data connection failed", "Label")
         elif data.reason == 'MSRPRelayAuthError':
-            reason = 'MSRP relay authentication failed'
+            reason = NSLocalizedString("MSRP relay authentication failed", "Label")
         else:
             reason = data.reason
 
@@ -2156,7 +2158,7 @@ class OutgoingMessageHandler(NSObject):
                 id = self._send(msgid)
             except Exception, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
-                self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Message delivery failure", timestamp, True)
+                self.delegate.showSystemMessage(self.delegate.sessionController.call_id, NSLocalizedString("Message delivery failure", "Label"), timestamp, True)
             else:
                 self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, text, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption, is_html=is_html)
         else:
