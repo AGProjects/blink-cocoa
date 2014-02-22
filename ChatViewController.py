@@ -15,7 +15,7 @@ import urllib
 import uuid
 
 from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification
-from Foundation import NSArray, NSDate, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL, NSURLRequest, NSWorkspace
+from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL, NSURLRequest, NSWorkspace
 from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
 from application.notification import NotificationCenter
@@ -498,7 +498,9 @@ class ChatViewController(NSObject):
         private = 1 if is_private else "null"
 
         if is_private and recipient:
-            label = 'Private message to %s' % cgi.escape(recipient) if direction == 'outgoing' else 'Private message from %s' % cgi.escape(sender)
+            _t = cgi.escape(recipient)
+            _f = cgi.escape(sender)
+            label = NSLocalizedString("Private message to %s" % _t, "Label") if direction == 'outgoing' else NSLocalizedString("Private message from %s" % s, "Label")
         else:
             if hasattr(self.delegate, "sessionController"):
                 label = cgi.escape(self.delegate.sessionController.nickname or self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
@@ -535,7 +537,7 @@ class ChatViewController(NSObject):
     def showCollaborationEditor(self):
         self.editorVisible = True
         self.last_scrolling_label = self.lastMessagesLabel.stringValue()
-        self.lastMessagesLabel.setStringValue_('Click on Editor toolbar button to switch back to the chat session')
+        self.lastMessagesLabel.setStringValue_(NSLocalizedString("Click on Editor toolbar button to switch back to the chat session", "Label"))
         self.searchMessagesBox.setHidden_(True)
         self.showRelatedMessagesButton.setHidden_(True)
         settings = SIPSimpleSettings()
@@ -634,8 +636,8 @@ class ChatViewController(NSObject):
 
             if scrollTop == 0 and self.handle_scrolling:
                 current_label = self.lastMessagesLabel.stringValue()
-                new_label = 'Keep scrolling up for more than one second to load older messages'
-                if current_label != new_label and 'Loading' not in current_label:
+                new_label = NSLocalizedString("Keep scrolling up for more than one second to load older messages", "Label")
+                if current_label != new_label and NSLocalizedString("Loading", "Label") not in current_label:
                     self.lastMessagesLabel.setStringValue_(new_label)
                 NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", None, False)
 
@@ -649,21 +651,21 @@ class ChatViewController(NSObject):
             if self.scrolling_zoom_factor > 7:
                 self.scrolling_zoom_factor = 7
             self.loadingProgressIndicator.startAnimation_(None)
-            self.lastMessagesLabel.setStringValue_('Loading messages...')
+            self.lastMessagesLabel.setStringValue_(NSLocalizedString("Loading messages...", "Label"))
             if self.scrolling_zoom_factor == 1:
-                zoom_period_label = 'Loading messages from last day...'
+                zoom_period_label = NSLocalizedString("Loading messages from last day...", "Label")
             elif self.scrolling_zoom_factor == 2:
-                zoom_period_label = 'Loading messages from last week...'
+                zoom_period_label = NSLocalizedString("Loading messages from last week...", "Label")
             elif self.scrolling_zoom_factor == 3:
-                zoom_period_label = 'Loading messages from last month...'
+                zoom_period_label = NSLocalizedString("Loading messages from last month...", "Label")
             elif self.scrolling_zoom_factor == 4:
-                zoom_period_label = 'Loading messages from last three months...'
+                zoom_period_label = NSLocalizedString("Loading messages from last three months...", "Label")
             elif self.scrolling_zoom_factor == 5:
-                zoom_period_label = 'Loading messages from last six months...'
+                zoom_period_label = NSLocalizedString("Loading messages from last six months...", "Label")
             elif self.scrolling_zoom_factor == 6:
-                zoom_period_label = 'Loading messages from last year...'
+                zoom_period_label = NSLocalizedString("Loading messages from last year...", "Label")
             elif self.scrolling_zoom_factor == 7:
-                zoom_period_label = 'Loading all messages...'
+                zoom_period_label = NSLocalizedString("Loading all messages...", "Label")
             self.lastMessagesLabel.setStringValue_(zoom_period_label)
             self.delegate.scroll_back_in_time()
 
