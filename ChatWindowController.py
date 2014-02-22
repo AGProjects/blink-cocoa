@@ -1776,7 +1776,7 @@ class ChatWindowController(NSWindowController):
 
             if session.conference_shared_files:
                 _l = len(self.conference_shared_files)
-                column_header_title = NSLocalizedString("%d Remote Conference Files" % _l) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Column title")
+                column_header_title = NSLocalizedString("%d Remote Conference Files" % _l, "Column title") if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Column title")
                 if chat_stream and chat_stream.drawerSplitterPosition is None:
                     top_frame = self.conferenceFilesView.frame()
                     top_frame.size.height = 130
