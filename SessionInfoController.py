@@ -279,7 +279,7 @@ class SessionInfoController(NSObject):
         if sub_state is None:
             sub_state = self.sessionController.session.state if self.sessionController.session is not None else 'none'
 
-        sub_state = re.sub("_", " ", str(sub_state)).title()
+        sub_state = re.sub("_", " ", sub_state.encode('utf-8').title())
         state = self.sessionController.state.title()
 
         self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state and sub_state != 'None' else state)
