@@ -104,10 +104,10 @@
                             <segment toolTip="Call Transfer" image="transfer" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Record the Audio Session to file" image="pause" width="20" tag="1">
+                            <segment toolTip="Put the session on hold" image="pause" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Hangup" image="record" width="20" tag="1">
+                            <segment toolTip="Record the Audio Session to file" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Hangup" image="hangup" width="20" tag="1">
