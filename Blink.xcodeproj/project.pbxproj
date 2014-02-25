@@ -2925,6 +2925,9 @@
 					1F8DC324135084FA0034815C = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 					};
+					8D1107260486CEB800E47090 = {
+						DevelopmentTeam = 4DFEFUDLKZ;
+					};
 				};
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Blink" */;
@@ -4450,7 +4453,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "178F47F8-ED3B-4BA0-A58F-C7751B57BBEF";
+				PROVISIONING_PROFILE = "D5B82CFA-DBF2-44D7-8B70-D3824E010AA9";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4501,7 +4504,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = "";
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/sip2sip.dst;
@@ -4529,7 +4532,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "D5B82CFA-DBF2-44D7-8B70-D3824E010AA9";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4541,7 +4544,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DSTROOT = /tmp/sip2sip.dst;
@@ -4568,7 +4571,7 @@
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "D5B82CFA-DBF2-44D7-8B70-D3824E010AA9";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4605,7 +4608,7 @@
 				);
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "D5B82CFA-DBF2-44D7-8B70-D3824E010AA9";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4642,7 +4645,7 @@
 				);
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "D3C2777B-4739-4624-8A3B-B66ABB9A41A7";
 				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4653,7 +4656,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4681,7 +4685,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
-				PROVISIONING_PROFILE = "19E64E65-8542-4123-B0EA-290676DB8B9C";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4693,7 +4697,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = i386;
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4719,7 +4724,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
-				PROVISIONING_PROFILE = "19E64E65-8542-4123-B0EA-290676DB8B9C";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
