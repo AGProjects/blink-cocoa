@@ -53,7 +53,8 @@ PresenceActivityList = (
                                            'basic_status':    'open',
                                            'extended_status': 'available',
                                            'image':           'available',
-                                           'note':            ''
+                                           'note':            '',
+                                           'tag':             1
                                            }
                        },
                        {
@@ -65,7 +66,8 @@ PresenceActivityList = (
                                            'basic_status':    'open',
                                            'extended_status': 'away',
                                            'image':           'away',
-                                           'note':            ''
+                                           'note':            '',
+                                           'tag':             2
                                            }
                        },
                        {
@@ -77,7 +79,8 @@ PresenceActivityList = (
                                            'basic_status':    'open',
                                            'extended_status': 'busy',
                                            'image':           'busy',
-                                           'note':            ''
+                                           'note':            '',
+                                           'tag':             3
                                            }
                        },
                        {
@@ -89,7 +92,8 @@ PresenceActivityList = (
                                            'basic_status':     'closed',
                                            'extended_status':  'offline',
                                            'image':            'offline',
-                                           'note':             ''
+                                           'note':             '',
+                                           'tag':             4
                                            }
                        },
                        {

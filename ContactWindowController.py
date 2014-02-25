@@ -631,6 +631,12 @@ class ContactWindowController(NSWindowController):
                 continue
 
             lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", item['action'], "")
+            try:
+                tag = item['tag']
+            except KeyError:
+                pass
+            else:
+                lastItem.setTag_(tag)
             title = NSAttributedString.alloc().initWithString_attributes_(item['title'], attributes)
             lastItem.setAttributedTitle_(title)
             try:
@@ -649,6 +655,13 @@ class ContactWindowController(NSWindowController):
                         image.setScalesWhenResized_(True)
                         image.setSize_(NSMakeSize(15,15))
                         lastItem.setImage_(image)
+                        try:
+                            tag = item['represented_object']['tag']
+                        except KeyError:
+                            pass
+                        else:
+                            lastItem.setTag_(tag)
+    
                     except KeyError:
                         pass
                 except KeyError:
@@ -2799,14 +2812,17 @@ class ContactWindowController(NSWindowController):
         settings.presence_state.note = presence_note
 
         status = item['title']
+        tag = 1
         for item in self.presenceMenu.itemArray():
             item.setState_(NSOffState)
-        item = self.presenceMenu.itemWithTitle_(status)
-        if item is not None:
-            item.setState_(NSOnState)
-
+            if item.tag() and item.representedObject() and item.representedObject()['title'] == status:
+                tag = item.tag()
+        
+        item = self.presenceMenu.itemWithTag_(tag)
+        item.setState_(NSOnState)
+        
         menu = self.presenceActivityPopUp.menu()
-        item = menu.itemWithTitle_(status)
+        item = menu.itemWithTag_(tag)
         self.presenceActivityPopUp.selectItem_(item)
         settings.presence_state.status = status
         self.setStatusBarIcon(status)
@@ -3030,11 +3046,11 @@ class ContactWindowController(NSWindowController):
                 i = self.presenceActivityPopUp.indexOfItemWithRepresentedObject_(self.presenceActivityBeforeOnThePhone)
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
                 menu = self.presenceActivityPopUp.menu()
-                item = menu.itemWithTitle_(self.presenceActivityBeforeOnThePhone['title'])
+                item = menu.itemWithTag_(self.presenceActivityBeforeOnThePhone['tag'])
                 self.presenceNoteText.setStringValue_(self.presenceActivityBeforeOnThePhone['note'])
-                self.presenceActivityChanged_(item)
                 self.setStatusBarIcon(self.presenceActivityBeforeOnThePhone['extended_status'])
                 self.presenceActivityBeforeOnThePhone = None
+                self.presenceActivityChanged_(item)
 
         else:
             if hasAudio and current_presence_activity['extended_status'] == 'available':
@@ -3043,7 +3059,6 @@ class ContactWindowController(NSWindowController):
                 self.presenceNoteText.setStringValue_(on_the_phone_activity['note'])
                 self.presenceNoteChanged_(None)
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
-
                 self.setStatusBarIcon('busy')
 
     def updatePresenceWatchersMenu(self, menu):
