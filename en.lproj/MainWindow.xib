@@ -700,12 +700,12 @@ CA
                     <popUpButton toolTip="Set My Availability" id="551" userLabel="Presence Activity Button">
                         <rect key="frame" x="155" y="407" width="112" height="15"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="right" controlSize="small" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="554">
+                        <popUpButtonCell key="cell" type="bevel" title="Availability" bezelStyle="regularSquare" alignment="right" controlSize="small" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="554">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystem"/>
                             <menu key="menu" title="OtherViews" autoenablesItems="NO" id="555">
                                 <items>
-                                    <menuItem title="Availability" id="556"/>
+                                    <menuItem title="Availability" state="on" id="556"/>
                                     <menuItem title="Item 2" id="557"/>
                                     <menuItem title="Item 3" id="558"/>
                                 </items>
@@ -734,7 +734,7 @@ CA
                             <outlet property="nextKeyView" destination="504" id="742"/>
                         </connections>
                     </textField>
-                    <tabView type="noTabsNoBorder" initialItem="499" id="498" userLabel="Main View">
+                    <tabView autoresizesSubviews="NO" type="noTabsNoBorder" initialItem="499" id="498" userLabel="Main View">
                         <rect key="frame" x="0.0" y="32" width="274" height="350"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
@@ -749,7 +749,7 @@ CA
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <clipView key="contentView" id="7tk-Pf-Fob">
                                                 <rect key="frame" x="1" y="1" width="272" height="346"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" autosaveName="contactList" indentationPerLevel="14" indentationMarkerFollowsCell="NO" autoresizesOutlineColumn="YES" outlineTableColumn="507" id="504" customClass="ContactOutlineView">
                                                         <rect key="frame" x="0.0" y="0.0" width="272" height="346"/>
