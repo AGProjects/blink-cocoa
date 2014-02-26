@@ -420,7 +420,7 @@ CA
                                     <action selector="muteClicked:" target="389" id="1119"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Nu Suna (Mod Silențios)" tag="301" keyEquivalent="s" id="1120">
+                            <menuItem title="Oprește Soneria (Mod Silențios)" tag="301" keyEquivalent="s" id="1120">
                                 <connections>
                                     <action selector="silentClicked:" target="389" id="1121"/>
                                 </connections>
@@ -453,7 +453,7 @@ CA
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="863"/>
-                            <menuItem title="Dispozitiv Audio de Sunat" image="bell" tag="403" enabled="NO" id="860">
+                            <menuItem title="Dispozitiv Audio Pentru Sonerie" image="bell" tag="403" enabled="NO" id="860">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                         </items>
@@ -1140,7 +1140,7 @@ ABC</string>
                             <action selector="actionButtonClicked:" target="389" id="497"/>
                         </connections>
                     </segmentedControl>
-                    <button toolTip="Nu Suna (Mod Silențios) " verticalHuggingPriority="750" id="589" userLabel="Silence Alerts Button">
+                    <button toolTip="Oprește Soneria (Mod Silențios) " verticalHuggingPriority="750" id="589" userLabel="Silence Alerts Button">
                         <rect key="frame" x="232" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Mod Silențios" bezelStyle="texturedRounded" image="bellon" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" inset="2" id="590">
@@ -1621,7 +1621,7 @@ ABC</string>
                         <action selector="muteClicked:" target="389" id="1779"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Nu Suna (Mod Silențios)" tag="301" keyEquivalent="s" id="1776">
+                <menuItem title="Oprește Soneria (Mod Silențios)" tag="301" keyEquivalent="s" id="1776">
                     <connections>
                         <action selector="silentClicked:" target="389" id="1778"/>
                     </connections>
@@ -1817,7 +1817,7 @@ ABC</string>
                         <action selector="userClickedParticipantMenu:" target="389" id="1861"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Du-te Pe Website..." tag="313" enabled="NO" indentationLevel="1" id="1853">
+                <menuItem title="Navighează La Siteul Web..." tag="313" enabled="NO" indentationLevel="1" id="1853">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1860"/>

@@ -230,13 +230,13 @@
         </customView>
         <menu title="Sesiune" autoenablesItems="NO" id="53">
             <items>
-                <menuItem title="Adauga Text" tag="10" id="54">
+                <menuItem title="Adaugă Text" tag="10" id="54">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="107"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Adauga Video" tag="14" hidden="YES" id="87">
+                <menuItem title="Adaugă Video" tag="14" hidden="YES" id="87">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>

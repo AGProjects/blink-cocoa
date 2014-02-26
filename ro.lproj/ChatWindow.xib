@@ -464,7 +464,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="317"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Du-te La Site-ul Web..." tag="313" enabled="NO" indentationLevel="1" id="323">
+                <menuItem title="Navighează La Site-ul Web..." tag="313" enabled="NO" indentationLevel="1" id="323">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="324"/>

@@ -69,7 +69,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="356328764">
 								<int key="NSCellFlags">68157504</int>
 								<int key="NSCellFlags2">272630784</int>
-								<string key="NSContents">Adauga participanți în conferință:</string>
+								<string key="NSContents">Adaugă participanți în conferință:</string>
 								<object class="NSFont" key="NSSupport" id="487624446">
 									<string key="NSName">.LucidaGrandeUI</string>
 									<double key="NSSize">13</double>
