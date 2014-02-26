@@ -432,7 +432,7 @@ class HistoryViewer(NSWindowController):
             else:
                 l = len(self.messages)
                 e = start_from + 1
-                text = NSLocalizedString("Displaying %d to "% e, "Label") + str(end) + NSLocalizedString(" out of %d entries" % l, "Label")
+                text = NSLocalizedString("Displaying %d to " % e, "Label") + str(end) + NSLocalizedString(" out of %d entries" % l, "Label")
 
         self.foundMessagesLabel.setStringValue_(text)
 
@@ -528,7 +528,7 @@ class HistoryViewer(NSWindowController):
         if found_contacts == 1:
             title = NSLocalizedString("1 contact found", "Label")
         elif found_contacts > 1:
-            title =  NSLocalizedString("%d contacts found" % found_contacts, "Label")
+            title = NSLocalizedString("%d contacts found" % found_contacts, "Label")
         else:
             title = NSLocalizedString("Contacts", "Label")
 
