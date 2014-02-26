@@ -1775,7 +1775,7 @@ SettingDescription = {
                       'sip.register': NSLocalizedString("Receive Incoming Calls", "Label"),
                       'sip.transport_list': NSLocalizedString("Protocols", "Label"),
                       'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Label"),
-                      'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Label"),
+                      'sounds.audio_outbound': NSLocalizedString("Outbound Ringtone", "Label"),
                       'sounds.night_volume': NSLocalizedString(" ", "Label"),
                       'sounds.enable_speech_synthesizer': NSLocalizedString("Say Incoming Caller Name", "Label"),
                       'web_alert.alert_url': NSLocalizedString("Alert URL", "Label"),

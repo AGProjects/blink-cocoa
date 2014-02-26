@@ -3140,7 +3140,7 @@ class ContactWindowController(NSWindowController):
         lastItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", "setPresenceOfflineNote:", "")
         settings = SIPSimpleSettings()
         offline_note = settings.presence_state.offline_note
-        title = NSAttributedString.alloc().initWithString_attributes_(offline_note or 'Not Set', attributes)
+        title = NSAttributedString.alloc().initWithString_attributes_(offline_note or NSLocalizedString("Not Set", "Menu item"), attributes)
         lastItem.setAttributedTitle_(title)
         lastItem.setIndentationLevel_(2)
         lastItem.setEnabled_(False)
@@ -3393,11 +3393,11 @@ class ContactWindowController(NSWindowController):
 
         contact_backups = self.backend.get_contact_backups()[-10:]
         if not contact_backups:
-            item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("No backups available", None), "", "", 0)
+            item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("No Backups Available", None), "", "", 0)
             item.setEnabled_(False)
 
         for timestamp, file in contact_backups:
-            title = u'From Backup Taken at %s...' % timestamp
+            title = NSLocalizedString("From Backup Taken at %s..." % timestamp, "Menu item")
             item = self.restoreContactsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "restoreContactsClicked:", "", 0)
             item.setTarget_(self)
             item.setRepresentedObject_((file, timestamp))
