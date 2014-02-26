@@ -115,7 +115,7 @@ class FileTransfer(object):
                     time_left = NSLocalizedString("Less than 1 minute", "Label")
                 elif eta < 60*60:
                     e = eta/60
-                    time_left = NSLocalizedString("About %i minutes" % e, "Label")
+                    time_left = NSLocalizedString("About %i minutes", "Label") % e
                 else:
                     time_left = "%s left" % format_duration(datetime.timedelta(seconds=eta))
 
@@ -407,8 +407,8 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        t = NSLocalizedString("To %s" % self.remote_identity, "Label")
-        f = NSLocalizedString("from account %s" % self.account.id, "Label")
+        t = NSLocalizedString("To %s", "Label") % self.remote_identity
+        f = NSLocalizedString("from account %s", "Label") % self.account.id
         return t + " " + f
 
     @property
@@ -647,8 +647,8 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
     @property
     def target_text(self):
-        f = NSLocalizedString("From %s" % self.target_uri, "Label")
-        t = NSLocalizedString("to account %s" % self.account.id, "Label")
+        f = NSLocalizedString("From %s", "Label") % self.target_uri
+        t = NSLocalizedString("to account %s", "Label") % self.account.id
         return f + " " + t
 
     @property

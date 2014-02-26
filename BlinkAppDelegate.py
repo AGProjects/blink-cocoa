@@ -250,7 +250,7 @@ class BlinkAppDelegate(NSObject):
             except FileParserError, exc:
                 BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
                 if NSRunAlertPanel(NSLocalizedString("Error", "Window title"),
-                    NSLocalizedString("The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. " % config_file, "Label"),
+                    NSLocalizedString("The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. ", "Label") % config_file,
                     NSLocalizedString("Replace", "Button title"), NSLocalizedString("Quit", "Button title"), None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
@@ -259,7 +259,7 @@ class BlinkAppDelegate(NSObject):
             except BaseException, exc:
                 import traceback
                 print traceback.print_exc()
-                NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was an error during startup of core  functionality:\n%s" % exc, "Label"),
+                NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was an error during startup of core functionality:\n%s", "Label") % exc,
                         NSLocalizedString("Quit", "Button title"), None, None)
                 NSApp.terminate_(None)
                 return

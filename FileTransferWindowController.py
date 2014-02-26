@@ -95,7 +95,7 @@ class FileTransferWindowController(NSObject, object):
         if count == 1:
             self.bottomLabel.setStringValue_(NSLocalizedString("1 item", "Label"))
         else:
-            self.bottomLabel.setStringValue_(NSLocalizedString("%i items" % count, "Label") if count else u"")
+            self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count if count else u"")
 
         self.loaded = True
 
@@ -130,13 +130,13 @@ class FileTransferWindowController(NSObject, object):
             if incoming_transfer_rate and outgoing_transfer_rate:
                 f1 = format_size(incoming_transfer_rate, bits=True)
                 f2 = format_size(outgoing_transfer_rate, bits=True)
-                text = NSLocalizedString("Incoming %s/s" % f1, "Label") + ", " + NSLocalizedString("Outgoing %s/s" % f2, "Label")
+                text = NSLocalizedString("Incoming %s/s", "Label") % f1 + ", " + NSLocalizedString("Outgoing %s/s", "Label") % f2
             elif incoming_transfer_rate:
                 f = format_size(incoming_transfer_rate, bits=True)
-                text = NSLocalizedString("Incoming %s/s" % f, "Label")
+                text = NSLocalizedString("Incoming %s/s", "Label") % f
             elif outgoing_transfer_rate:
                 f = format_size(outgoing_transfer_rate, bits=True)
-                text = NSLocalizedString("Outgoing %s/s" % f, "Label")
+                text = NSLocalizedString("Outgoing %s/s", "Label") % f
             self.transferSpeed.setStringValue_(text)
         else:
             self.transferSpeed.setStringValue_('')
@@ -191,7 +191,7 @@ class FileTransferWindowController(NSObject, object):
         if count == 1:
             self.bottomLabel.setStringValue_(NSLocalizedString("1 item", "Label"))
         else:
-            self.bottomLabel.setStringValue_(NSLocalizedString("%i items" % count, "Label"))
+            self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count)
 
     def _NH_BlinkFileTransferDidFail(self, sender, data):
         self.listView.relayout()

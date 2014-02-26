@@ -33,7 +33,7 @@ class ChatPrivateMessageController(NSObject):
     def __init__(self, contact):
         NSBundle.loadNibNamed_owner_("ChatPrivateMessage", self)
         recipient = '%s <%s>' % (contact.name, contact.uri)
-        self.title.setStringValue_(NSLocalizedString("To %s" % recipient, "Window title"))
+        self.title.setStringValue_(NSLocalizedString("To %s", "Window title") % recipient)
         self.icon.setImage_(contact.icon)
 
     def runModal(self):

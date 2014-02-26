@@ -74,7 +74,7 @@ class PresenceInfoController(NSObject):
     def show(self, contact):
         NSApp.activateIgnoringOtherApps_(True)
         self.contact =  contact
-        self.window.setTitle_(NSLocalizedString("Availability Information published by %s" % contact.name, "Window title"))
+        self.window.setTitle_(NSLocalizedString("Availability Information published by %s", "Window title") % contact.name)
         self.name.setStringValue_(self.contact.name)
         self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
         self.window.orderFront_(None)

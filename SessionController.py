@@ -1742,7 +1742,7 @@ class SessionController(NSObject):
             redirect_to = data.redirect_identities[0].uri
             addr = "%s@%s" % (redirect_to.user, redirect_to.host)
             ret = NSRunAlertPanel(NSLocalizedString("Redirect Call", "Window title"),
-                  NSLocalizedString("The remote party has redirected his calls to %s.\nWould you like to call this address?" % addr, "Label"),
+                  NSLocalizedString("The remote party has redirected his calls to %s.\nWould you like to call this address?", "Label") % addr,
                   NSLocalizedString("Call", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
 
             if ret == NSAlertDefaultReturn:
@@ -2032,7 +2032,7 @@ class SessionController(NSObject):
                     contact.detail = NSLocalizedString("Busy Everywhere", "Contact detail")
                 else:
                     reason = '%s (%s)' % (data.reason, data.code) if data.code else data.reason
-                    contact.detail = NSLocalizedString("Invitation failed: %s" % reason, "Contact detail")
+                    contact.detail = NSLocalizedString("Invitation failed: %s", "Contact detail") % reason
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
@@ -2106,7 +2106,7 @@ class CallTransferWindowController(NSObject):
     def __init__(self, session_controller, target):
         NSBundle.loadNibNamed_owner_("CallTransferWindow", self)
         self.session_controller = session_controller
-        self.label.setStringValue_(NSLocalizedString("Remote party would like to transfer you to %s\nWould you like to proceed and call this address?" % target, "Label"))
+        self.label.setStringValue_(NSLocalizedString("Remote party would like to transfer you to %s\nWould you like to proceed and call this address?", "Label") % target)
 
     @objc.IBAction
     def callButtonClicked_(self, sender):

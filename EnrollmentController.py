@@ -156,8 +156,7 @@ class EnrollmentController(NSObject):
             if self.allowed_domains:
                 domain = address.split("@")[1]
                 if domain not in self.allowed_domains:
-                    _domains = ",".join(self.allowed_domains)
-                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s" % _domains, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+                    NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Invalid domain name chosen. Valid domain names are: %s", "Label") % ",".join(self.allowed_domains), NSLocalizedString("OK", "Button title"), None, None)
                     return False
 
             if not password:
@@ -226,7 +225,7 @@ class EnrollmentController(NSObject):
 
             account.save()
         except ValueError, e:
-            NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
             return False
 
         AccountManager().default_account = account
@@ -288,9 +287,9 @@ class EnrollmentController(NSObject):
         try:
             raw_response = urllib2.urlopen(req)
         except urllib2.URLError, e:
-            error_message = NSLocalizedString("Cannot connect to enrollment server: %s" % e, "Enrollment panel label")
+            error_message = NSLocalizedString("Cannot connect to enrollment server: %s", "Enrollment panel label") % e
         except urllib2.HTTPError, e:
-            error_message = NSLocalizedString("Error from enrollment server: %s" % e, "Enrollment panel label")
+            error_message = NSLocalizedString("Error from enrollment server: %s", "Enrollment panel label") % e
         else:
             response = None
             json_data = raw_response.read()
@@ -386,13 +385,13 @@ class EnrollmentController(NSObject):
         if sip_address is None:
             BlinkLogger().log_info(error_message)
             NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"),
-                            NSLocalizedString("Error creating SIP account: %s" % error_message, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+                            NSLocalizedString("Error creating SIP account: %s", "Label") % error_message, NSLocalizedString("OK", "Button title"), None, None)
             return False
 
         try:
             account = Account(str(sip_address))
         except ValueError, e:
-            NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
             return False
         else:
             NSApp.delegate().contactsWindowController.created_accounts.add(account.id)
@@ -438,7 +437,7 @@ class EnrollmentController(NSObject):
 
         account.save()
 
-        NSRunAlertPanel(NSLocalizedString("SIP Account Created", "Window title"), NSLocalizedString("Your new SIP Address is:\n\n%s" % sip_address, "Label"), NSLocalizedString("Continue", "Button title"), None, None)
+        NSRunAlertPanel(NSLocalizedString("SIP Account Created", "Window title"), NSLocalizedString("Your new SIP Address is:\n\n%s", "Label") % sip_address, NSLocalizedString("Continue", "Button title"), None, None)
 
         # enable account only after Continue pressed to give server time to update
         account.enabled = True

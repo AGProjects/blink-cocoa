@@ -202,7 +202,7 @@ class AddContactController(NSObject):
         elif nr_groups == 1:
             title = NSLocalizedString("One Selected Group", "Menu item")
         else:
-            title = NSLocalizedString("%d Selected Groups" % nr_groups, "Menu item")
+            title = NSLocalizedString("%d Selected Groups", "Menu item") % nr_groups
         self.groupPopUp.addItemWithTitle_(title)
         menu_item = self.groupPopUp.lastItem()
         menu_item.setState_(NSOffState)

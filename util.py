@@ -81,11 +81,11 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
     try:
         target_uri = str(target_uri)
     except:
-        show_error_panel(NSLocalizedString("SIP address must not contain unicode characters: %s" % target_uri, "Label"))
+        show_error_panel(NSLocalizedString("SIP address must not contain unicode characters: %s", "Label") % target_uri)
         return None
 
     if '@' not in target_uri and isinstance(account, BonjourAccount):
-        show_error_panel(NSLocalizedString("SIP address must contain host in bonjour mode: %s" % target_uri, "Label"))
+        show_error_panel(NSLocalizedString("SIP address must contain host in bonjour mode: %s", "Label") % target_uri)
         return None
 
     target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
@@ -93,7 +93,7 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
     try:
         target_uri = SIPURI.parse(target_uri)
     except SIPCoreError:
-        show_error_panel(NSLocalizedString("Invalid SIP address: %s" % target_uri, "Label"))
+        show_error_panel(NSLocalizedString("Invalid SIP address: %s", "Label") % target_uri)
         return None
     return target_uri
 
@@ -383,7 +383,7 @@ def format_date(dt):
         return NSLocalizedString("at ", "Time label") + dt.strftime("%H:%M")
     elif delta.days <= 1:
         _time = dt.strftime("%H:%M")
-        return NSLocalizedString("Yesterday at %s" % _time, "Date label")
+        return NSLocalizedString("Yesterday at %s", "Date label") % _time
     elif delta.days < 7:
         return NSLocalizedString("on ", "Date label") + dt.strftime("%A")
     elif delta.days < 300:

@@ -278,7 +278,7 @@ class ChatController(MediaStream):
         elif not self.remote_party_history and not self.disable_chat_history:
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-remote-off"))
             self.privateLabel.setHidden_(False)
-            self.databaseLoggingButton.setToolTip_(NSLocalizedString("%s wishes that text conversation is not saved in history database" % remote, "Tooltip text"))
+            self.databaseLoggingButton.setToolTip_(NSLocalizedString("%s wishes that text conversation is not saved in history database", "Tooltip text") % remote)
         else:
             self.privateLabel.setHidden_(False)
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-local-off"))
@@ -918,7 +918,7 @@ class ChatController(MediaStream):
             else:
                 if self.message_count_from_history >= len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.zoom_period_label = NSLocalizedString("%s. There are no previous messages." % self.zoom_period_label, "Label")
+                    self.zoom_period_label = NSLocalizedString("%s. There are no previous messages.", "Label") % self.zoom_period_label
                     self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
                     self.chatViewController.setHandleScrolling_(False)
                 else:
@@ -1145,7 +1145,7 @@ class ChatController(MediaStream):
 
     def notify_changed_fingerprint(self):
         _t = self.sessionController.getTitleShort()
-        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again." % _t, "Label")
+        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % _t
         self.showSystemMessage(log_text, ISOTimestamp.now(), True)
 
         NSApp.delegate().contactsWindowController.speak_text(log_text)
@@ -1784,7 +1784,7 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
             t = self.sessionController.getTitleShort()
-            self.showSystemMessage(NSLocalizedString("%s left the conversation" % t, "Label"), ISOTimestamp.now())
+            self.showSystemMessage(NSLocalizedString("%s left the conversation", "Label") % t, ISOTimestamp.now())
 
         if not self.mediastream_failed:
             self.outgoing_message_handler.setDisconnected()
@@ -1794,7 +1794,7 @@ class ChatController(MediaStream):
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
             t = self.sessionController.getTitleShort()
-            reason = NSLocalizedString("%s left the conversation" % t, "Label")
+            reason = NSLocalizedString("%s left the conversation", "Label") % t
         elif data.failure is not None and data.failure.type is GNUTLSError:
             reason = NSLocalizedString("TLS connection broke", "Label")
         elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):

@@ -114,11 +114,10 @@ class SMSWindowController(NSWindowController):
                 item.setHidden_(False)
                 item = menu.itemWithTag_(1)
                 my_fingerprint = selectedSession.otr_account.getPrivkey()
-                _f = str(my_fingerprint)
-                item.setTitle_(NSLocalizedString("My fingerprint is %s" % _f, "Menu item"))
+                item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(my_fingerprint))
 
                 item = menu.itemWithTag_(3)
-                item.setTitle_(NSLocalizedString("Always require OTR encryption with %s" % display_name, "Menu item"))
+                item.setTitle_(NSLocalizedString("Always require OTR encryption with %s", "Menu item") % display_name)
 
                 if selectedSession.contact is not None:
                     item.setEnabled_(True)
@@ -155,13 +154,13 @@ class SMSWindowController(NSWindowController):
 
                         fingerprint_verified = selectedSession.otr_account.getTrust(selectedSession.remote_uri, str(fingerprint))
                         item.setEnabled_(False)
-                        _t = NSLocalizedString("%s's fingerprint is " % display_name, "Menu item")
+                        _t = NSLocalizedString("%s's fingerprint is ", "Menu item") % display_name
                         item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
 
                         item = menu.itemWithTag_(5)
                         item.setEnabled_(True if fingerprint else False)
                         item.setHidden_(False)
-                        item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
+                        item.setTitle_(NSLocalizedString("I have verified %s's fingerprint", "Menu item") % display_name)
                         item.setState_(NSOnState if fingerprint_verified else NSOffState)
 
                         item = menu.itemWithTag_(9)

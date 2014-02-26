@@ -51,8 +51,7 @@ class StatusItem(NSObject):
             self.statusItem.setImage_(image)
             self.statusItem.setMenu_(self.menu)
         self.items.append(item)
-        _t = item.sessionController.getTitle()
-        mitem = self.menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s - Waiting" % _t, "Menu item"),  "activateItem:", "")
+        mitem = self.menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s - Waiting", "Menu item") % item.sessionController.getTitle(),  "activateItem:", "")
         mitem.setTag_(item.sessionController.identifier)
         mitem.setTarget_(self)
 
@@ -79,10 +78,10 @@ class StatusItem(NSObject):
             if mitem:
                 name = item.sessionController.getTitleShort()
                 if state == STREAM_CONNECTED:
-                    mitem.setTitle_(NSLocalizedString("Disconnect %s" % name, "Menu item"))
+                    mitem.setTitle_(NSLocalizedString("Disconnect %s", "Menu item") % name)
                     mitem.setEnabled_(True)
                 elif state in (STREAM_INCOMING, STREAM_PROPOSING, STREAM_CONNECTING):
-                    mitem.setTitle_(NSLocalizedString("%s - Waiting" % name, "Menu item"))
+                    mitem.setTitle_(NSLocalizedString("%s - Waiting", "Menu item") % name)
                     mitem.setEnabled_(True)
                 elif state in (STREAM_DISCONNECTING, STREAM_CANCELLING):
                     mitem.setTitle_("%s %s" % (state.title(), name))
@@ -125,8 +124,7 @@ class ScreenSharingController(MediaStream):
             self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
-            _t = self.sessionController.getTitleShort()
-            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s" % _t, "Window title"))
+            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
         NotificationCenter().add_observer(self, sender=self.stream.handler)
         NotificationCenter().add_observer(self, sender=self.stream)
@@ -140,8 +138,7 @@ class ScreenSharingController(MediaStream):
             self.sessionController.log_info("Sharing local screen...")
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
-            _t = self.sessionController.getTitleShort()
-            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s" % _t, "Window title"))
+            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.getTitleShort())
             #self.statusItem.show(self)
         NotificationCenter().add_observer(self, sender=self.stream.handler)
         NotificationCenter().add_observer(self, sender=self.stream)
@@ -212,7 +209,7 @@ class ScreenSharingController(MediaStream):
             if self.statusLabel and self.statusWindow:
                 if newstate == STREAM_CONNECTED:
                     _t = self.sessionController.getTitleShort()
-                    label = NSLocalizedString("%s requests your screen. Please confirm when asked." % _t, "Label")
+                    label = NSLocalizedString("%s requests your screen. Please confirm when asked.", "Label") % _t
                     self.statusProgress.setHidden_(False)
                     self.statusProgress.startAnimation_(None)
                 elif newstate == STREAM_DISCONNECTING:
@@ -301,7 +298,7 @@ class ScreenSharingController(MediaStream):
             if self.exhanged_bytes > 16000:
                 if self.statusWindow:
                     _t = self.sessionController.getTitleShort()
-                    label = NSLocalizedString("%s is watching the screen" % _t, "Label")
+                    label = NSLocalizedString("%s is watching the screen", "Label") % _t
                     self.statusLabel.setStringValue_(label)
                     self.statusProgress.setHidden_(True)
                     self.stopButton.setHidden_(False)

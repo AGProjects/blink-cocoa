@@ -405,7 +405,7 @@ class PhotoPicker(NSObject):
         try:
             image = NSImage.alloc().initWithContentsOfFile_(path)
         except:
-            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image", "Label") % path, NSLocalizedString("OK", "Button title"), None, None)
             return
 
         rect = NSZeroRect.copy()
@@ -447,7 +447,7 @@ class PhotoPicker(NSObject):
             try:
                 image = NSImage.alloc().initWithContentsOfFile_(path)
             except:
-                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image" % path, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image", "Label") % path, NSLocalizedString("OK", "Button title"), None, None)
                 return
 
             size = image.size()

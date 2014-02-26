@@ -39,17 +39,17 @@ class GrowlNotifications(object):
 
     def _NH_GrowlContactRequest(self, notification):
         title = NSLocalizedString("New Contact Request", "System notification title")
-        message = NSLocalizedString("%s has subscribed to my availability" % notification.data.watcher, "System notification body")
+        message = NSLocalizedString("%s has subscribed to my availability", "System notification body") % notification.data.watcher
         self.growl.notify('New Contact Request', title, message)
 
     def _NH_GrowlGotSMS(self, notification):
         title = NSLocalizedString("SMS Received", "System notification title")
-        message = NSLocalizedString("From %s" % notification.data.sender, "System notification body") + "\n\n" + notification.data.content
+        message = NSLocalizedString("From %s", "System notification body") % notification.data.sender + "\n\n" + notification.data.content
         self.growl.notify('SMS Received', title, message)
 
     def _NH_GrowlGotChatMessage(self, notification):
         title = NSLocalizedString("Chat Message Received", "System notification title")
-        message = NSLocalizedString("From %s" % notification.data.sender, "System notification body") + "\n\n" + notification.data.content
+        message = NSLocalizedString("From %s", "System notification body") % notification.data.sender + "\n\n" + notification.data.content
         self.growl.notify('Chat Message Received', title, message)
 
     def _NH_GrowlMissedCall(self, notification):
@@ -66,9 +66,9 @@ class GrowlNotifications(object):
         # new_messages will always be > 0 at this point
         title = NSLocalizedString("New Voicemail Message", "System notification title") if notification.data.new_messages == 1 else NSLocalizedString("New Voicemail Messages", "System notification title")
         if notification.data.old_messages > 0:
-            message = NSLocalizedString("You have %d new" % notification.data.new_messages , "System notification body") + NSLocalizedString("and %d old voicemail messages" % notification.data.old_messages , "System notification body")
+            message = NSLocalizedString("You have %d new", "System notification body") % notification.data.new_messages  + NSLocalizedString("and %d old voicemail messages", "System notification body") % notification.data.old_messages 
         else:
-            message = NSLocalizedString("You have %d new voicemail messages" % notification.data.new_messages, "System notification body")
+            message = NSLocalizedString("You have %d new voicemail messages", "System notification body") % notification.data.new_messages
         self.growl.notify('Voicemail Summary', title, message)
 
 

@@ -179,10 +179,10 @@ class AudioController(MediaStream):
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)
-        item.setTitle_(NSLocalizedString("Add %s to Contacts" % format_identity_to_string(self.sessionController.remotePartyObject), "Audio contextual menu"))
+        item.setTitle_(NSLocalizedString("Add %s to Contacts", "Audio contextual menu") % format_identity_to_string(self.sessionController.remotePartyObject))
 
         _label = format_identity_to_string(self.sessionController.remotePartyObject)
-        self.view.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Session to %s" % _label, "Accesibility outlet description"), NSAccessibilityTitleAttribute)
+        self.view.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Session to %s", "Accesibility outlet description") % _label, NSAccessibilityTitleAttribute)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.transferSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Transfer Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
@@ -916,16 +916,16 @@ class AudioController(MediaStream):
             if rtt > settings.gui.rtt_threshold:
                 if rtt > 1000:
                     latency = '%.1f' % (float(rtt)/1000.0)
-                    text += NSLocalizedString("%ss Latency" % latency, "Label")
+                    text += NSLocalizedString("%ss Latency", "Label") % latency
                     send_qos_notify = True
                     qos_data.latency = '%ss' % latency
                 else:
-                    text += NSLocalizedString("%dms Latency" % rtt, "Label")
+                    text += NSLocalizedString("%dms Latency", "Label") % rtt
                     send_qos_notify = True
                     qos_data.latency = '%sms' % rtt
 
             if loss > 3:
-                text += " " + NSLocalizedString("%d%% Loss" % loss, "Label")
+                text += " " + NSLocalizedString("%d%% Loss", "Label") % loss
                 qos_data.packet_loss = '%d%%' % loss
                 send_qos_notify = True
 
@@ -975,7 +975,7 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(21)
             item.setState_(NSOnState if self.zrtp_active else NSOffState)
             _label = NSLocalizedString("Encrypted", "Menu item") if self.zrtp_active else NSLocalizedString("Encrypt", "Menu item")
-            title = NSLocalizedString("%s using Diffie-Hellman key exchange (zRTP)" % _label, "Menu item")
+            title = NSLocalizedString("%s using Diffie-Hellman key exchange (zRTP)", "Menu item") % _label
             item.setTitle_(title)
 
             item = menu.itemWithTag_(22)
@@ -1042,11 +1042,11 @@ class AudioController(MediaStream):
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
-            item.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item"))
+            item.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
             item = menu.itemWithTag_(12) # share local screen
-            item.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item"))
+            item.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % title)
             item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
             item = menu.itemWithTag_(13) # cancel
@@ -1566,7 +1566,7 @@ class AudioController(MediaStream):
         self.transfer_in_progress = False
 
     def _NH_BlinkSessionTransferDidFail(self, sender, data):
-        self.updateTransferProgress(NSLocalizedString("Transfer Rejected (%s)" % data.code, "Audio status label") if data.code in (486, 603) else NSLocalizedString("Transfer Failed (%s)" % data.code, "Audio status label"))
+        self.updateTransferProgress(NSLocalizedString("Transfer Rejected (%s)", "Audio status label") % data.code if data.code in (486, 603) else NSLocalizedString("Transfer Failed (%s)", "Audio status label") % data.code)
         self.transfer_in_progress = False
         self.transfer_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "transferFailed:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSRunLoopCommonModes)
@@ -1574,7 +1574,7 @@ class AudioController(MediaStream):
 
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
         reason = data.reason.capitalize()
-        self.updateTransferProgress(NSLocalizedString("Transfer: %s" % reason, "Audio status label"))
+        self.updateTransferProgress(NSLocalizedString("Transfer: %s", "Audio status label") % reason)
 
     def stopRinging(self):
         if self.outbound_ringtone is None:

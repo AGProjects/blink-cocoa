@@ -150,13 +150,13 @@ class ChatOtrSmp(NSObject):
         self.progressBar.startAnimation_(None)
         if type == 'chat':
             _t = self.controller.sessionController.getTitleShort()
-            self.window.setTitle_(NSLocalizedString("Identity Verification for %s" % _t, "Window title"))
+            self.window.setTitle_(NSLocalizedString("Identity Verification for %s", "Window title") % _t)
             self.stream = self.controller.stream
             self.remote_address = self.controller.sessionController.remoteSIPAddress
             self.otr_context_id = self.controller.sessionController.call_id
         elif type == 'sms':
             _t = format_identity_to_string(self.controller.target_uri)
-            self.window.setTitle_(NSLocalizedString("Identity Verification for %s" % _t, "Window title"))
+            self.window.setTitle_(NSLocalizedString("Identity Verification for %s", "Window title") % _t)
             self.stream = self.controller
             self.remote_address = self.controller.remote_uri
             self.otr_context_id = self.controller.session_id
@@ -212,9 +212,9 @@ class ChatOtrSmp(NSObject):
             except potr.context.NotEncryptedError, e:
                 self.statusText.setStringValue_(NSLocalizedString("Chat session is not OTR encrypted", "Label"))
             except RuntimeError, e:
-                self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s" % e, "Label"))
+                self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s", "Label") % e)
             except Exception, e:
-                self.statusText.setStringValue_(NSLocalizedString("Error: %s" % e, "Label"))
+                self.statusText.setStringValue_(NSLocalizedString("Error: %s", "Label") % e)
 
         self.smp_running = True
 
@@ -227,9 +227,9 @@ class ChatOtrSmp(NSObject):
         except potr.context.NotEncryptedError, e:
             self.statusText.setStringValue_(NSLocalizedString("Chat session is not OTR encrypted", "Label"))
         except RuntimeError, e:
-            self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s" % e, "Label"))
+            self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s", "Label") % e)
         except Exception, e:
-            self.statusText.setStringValue_(NSLocalizedString("Error: %s" % e, "Label"))
+            self.statusText.setStringValue_(NSLocalizedString("Error: %s", "Label") % e)
 
     def get_tlv(self, tlvs, check):
         for tlv in tlvs:
@@ -339,18 +339,18 @@ class ChatOtrSmp(NSObject):
             self.continueButton.setEnabled_(True)
             if self.question is None:
                 self.questionText.setHidden_(True)
-                self.labelText.setStringValue_(NSLocalizedString("%s wants to verify your identity using a commonly known secret." % self.remote_address, "Label"))
+                self.labelText.setStringValue_(NSLocalizedString("%s wants to verify your identity using a commonly known secret.", "Label") % self.remote_address)
             else:
                 self.questionText.setHidden_(False)
                 self.secretText.setHidden_(False)
                 self.questionText.setStringValue_(self.question)
                 self.questionText.setEnabled_(False)
-                self.labelText.setStringValue_(NSLocalizedString("%s has asked you a question to verify your identity:" % self.remote_address, "Label"))
+                self.labelText.setStringValue_(NSLocalizedString("%s has asked you a question to verify your identity:", "Label") % self.remote_address)
         else:
             self.statusText.setStringValue_('')
             self.continueButton.setEnabled_(True)
             self.questionText.setHidden_(False)
             self.questionText.setStringValue_('')
             self.questionText.setEnabled_(True)
-            self.labelText.setStringValue_(NSLocalizedString("You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint." % self.remote_address, "Label"))
+            self.labelText.setStringValue_(NSLocalizedString("You want to verify the identity of %s using a commonly known secret. Optionally, you can ask a question as a hint.", "Label") % self.remote_address)
 

@@ -246,8 +246,7 @@ class SessionInfoController(NSObject):
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
             self.account.setStringValue_(str(self.sessionController.account.id))
             if self.sessionController.conference_info is not None and self.sessionController.remote_focus:
-                l = len(self.sessionController.conference_info.users)
-                self.conference.setStringValue_(NSLocalizedString("%d Participants" % l, "Label"))
+                self.conference.setStringValue_(NSLocalizedString("%d Participants", "Label") % len(self.sessionController.conference_info.users))
             else:
                 self.conference.setStringValue_('')
 
@@ -461,8 +460,7 @@ class SessionInfoController(NSObject):
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
         if self.sessionController is not None and self.sessionController.session is not None and hasattr(notification.data, 'conference_info'):
-            l = len(notification.data.conference_info.users)
-            self.conference.setStringValue_(NSLocalizedString("%d Participants" % l, "Label"))
+            self.conference.setStringValue_(NSLocalizedString("%d Participants", "Label") % len(notification.data.conference_info.users))
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationDidFail(self, notification):

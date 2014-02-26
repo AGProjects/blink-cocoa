@@ -383,7 +383,7 @@ class ChatWindowController(NSWindowController):
         title = self.getConferenceTitle()
         icon = None
         if title:
-            self.window().setTitle_(NSLocalizedString("Chat with %s" % title, "Window title"))
+            self.window().setTitle_(NSLocalizedString("Chat with %s", "Window title") % title)
             self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
             session = self.selectedSessionController()
             if session:
@@ -660,7 +660,7 @@ class ChatWindowController(NSWindowController):
         active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
         if active > 1:
             ret = NSRunAlertPanel(NSLocalizedString("Close Chat Window", "Window Title"),
-                                  NSLocalizedString("There are %i Chat sessions, click Close to terminate them all." % active, "Label"),
+                                  NSLocalizedString("There are %i Chat sessions, click Close to terminate them all.", "Label") % active,
                                   NSLocalizedString("Close", "Button title"),
                                   NSLocalizedString("Cancel", "Button title"),
                                   None)
@@ -1087,11 +1087,10 @@ class ChatWindowController(NSWindowController):
                         item.setHidden_(False)
                         item = menu.itemWithTag_(1)
                         my_fingerprint = chat_stream.otr_account.getPrivkey()
-                        _f = str(my_fingerprint)
-                        item.setTitle_(NSLocalizedString("My fingerprint is %s" % _f, "Menu item"))
+                        item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(my_fingerprint))
 
                     item = menu.itemWithTag_(3)
-                    item.setTitle_(NSLocalizedString("Always require OTR encryption with %s" % display_name, "Menu item"))
+                    item.setTitle_(NSLocalizedString("Always require OTR encryption with %s", "Menu item") % display_name)
 
                     if selectedSession.contact is not None:
                         item.setEnabled_(True)
@@ -1139,7 +1138,7 @@ class ChatWindowController(NSWindowController):
 
                             fingerprint_verified = chat_stream.otr_account.getTrust(selectedSession.remoteSIPAddress, str(fingerprint))
                             item.setEnabled_(False)
-                            _t = NSLocalizedString("%s's fingerprint is " % display_name, "Menu item")
+                            _t = NSLocalizedString("%s's fingerprint is ", "Menu item") % display_name
                             item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
 
                             if selectedSession.account is BonjourAccount():
@@ -1216,9 +1215,9 @@ class ChatWindowController(NSWindowController):
                     if screen_sharing_stream.direction == 'active':
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
                         if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_(NSLocalizedString("Requesting Screen from %s..." % title, "Menu item"))
+                            mitem.setTitle_(NSLocalizedString("Requesting Screen from %s...", "Menu item") % title)
                         else:
-                            mitem.setTitle_(NSLocalizedString("%s is Sharing Her Screen" % title, "Menu item"))
+                            mitem.setTitle_(NSLocalizedString("%s is Sharing Her Screen", "Menu item") % title)
 
                         mitem.setEnabled_(False)
                         mitem.setHidden_(False)
@@ -1233,9 +1232,9 @@ class ChatWindowController(NSWindowController):
 
                         mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
                         if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_(NSLocalizedString("Sharing My Screen with %s..." % title, "Menu item"))
+                            mitem.setTitle_(NSLocalizedString("Sharing My Screen with %s...", "Menu item") % title)
                         else:
-                            mitem.setTitle_(NSLocalizedString("My Screen is Shared with %s" % title, "Menu item"))
+                            mitem.setTitle_(NSLocalizedString("My Screen is Shared with %s", "Menu item") % title)
                         mitem.setEnabled_(False)
                         mitem.setHidden_(False)
 
@@ -1243,12 +1242,12 @@ class ChatWindowController(NSWindowController):
                     menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                    mitem.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item"))
+                    mitem.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
                     mitem.setEnabled_(True)
                     mitem.setHidden_(False)
 
                     mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item"))
+                    mitem.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % title)
                     mitem.setEnabled_(True)
                     mitem.setHidden_(False)
 
@@ -1259,11 +1258,11 @@ class ChatWindowController(NSWindowController):
                 menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
 
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                mitem.setTitle_(NSLocalizedString("Request Screen from %s" % title, "Menu item"))
+                mitem.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
                 mitem.setEnabled_(False)
 
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                mitem.setTitle_(NSLocalizedString("Share My Screen with %s" % title, "Menu item"))
+                mitem.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % title)
                 mitem.setEnabled_(False)
 
                 mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
@@ -1369,7 +1368,7 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().contactsWindowController.addContact(uris=[(remote_uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE:
                 ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Window title"),
-                                      NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?" % uri, "Label"),
+                                      NSLocalizedString("You will request the conference server to remove %s from the room. Are your sure?", "Label") % uri,
                                       NSLocalizedString("Remove", "Button title"),
                                       NSLocalizedString("Cancel", "Button title"),
                                       None)
@@ -1763,8 +1762,7 @@ class ChatWindowController(NSWindowController):
 
             column_header_title = NSLocalizedString("Participants", "Label")
             if session.conference_info is not None:
-                _l = len(self.participants)
-                column_header_title = NSLocalizedString("%d Participants" % _l, "Label") if len(self.participants) > 1 else NSLocalizedString("Participants", "Label")
+                column_header_title = NSLocalizedString("%d Participants", "Label") % len(self.participants) if len(self.participants) > 1 else NSLocalizedString("Participants", "Label")
 
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 
@@ -1775,8 +1773,7 @@ class ChatWindowController(NSWindowController):
                 self.conference_shared_files.append(item)
 
             if session.conference_shared_files:
-                _l = len(self.conference_shared_files)
-                column_header_title = NSLocalizedString("%d Remote Conference Files" % _l, "Label") if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
+                column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
                 if chat_stream and chat_stream.drawerSplitterPosition is None:
                     top_frame = self.conferenceFilesView.frame()
                     top_frame.size.height = 130

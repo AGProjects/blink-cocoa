@@ -590,7 +590,7 @@ class JoinConferenceWindowController(NSObject):
 
         if not validateParticipant(self.target):
             NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
-                            NSLocalizedString("Invalid conference SIP address: %s" % self.target, "Label"),
+                            NSLocalizedString("Invalid conference SIP address: %s", "Label") % self.target,
                             NSLocalizedString("OK", "Button title"),
                             None, None)
             return False

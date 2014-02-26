@@ -79,7 +79,7 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_(NSLocalizedString("Server Tools For %s" %self._account.id, "Window title"))
+        self.window.setTitle_(NSLocalizedString("Server Tools For %s", "Window title") % self._account.id)
 
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
@@ -95,7 +95,7 @@ class AccountSettings(NSObject):
         self.spinWheel.startAnimation_(None)
         self.errorText.setHidden_(True)
 
-        self.window.setTitle_(NSLocalizedString("Server Tools For %s" %self._account.id, "Window title"))
+        self.window.setTitle_(NSLocalizedString("Server Tools For %s", "Window title") % self._account.id)
 
         query_string = "realm=%s&tab=payments&user_agent=blink" % self._account.id
         if account.server.settings_url.query:
@@ -117,7 +117,7 @@ class AccountSettings(NSObject):
 
         _t = "%s <%s@%s>" % (session.remote_identity.display_name, session.remote_identity.uri.user, session.remote_identity.uri.host)
 
-        self.window.setTitle_(NSLocalizedString("Incoming Call From %s" %_t, "Window title"))
+        self.window.setTitle_(NSLocalizedString("Incoming Call From %s", "Window title") % _t)
         url = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
@@ -149,7 +149,7 @@ class AccountSettings(NSObject):
         self.loadingText.setHidden_(True)
         self.spinWheel.setHidden_(True)
         e = error.localizedDescription()
-        self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s" % e, "Label"))
+        self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s", "Label") % e)
         self.errorText.setHidden_(False)
         BlinkLogger().log_error(u"Could not load Server Tools page: %s" % error)
 
@@ -160,7 +160,7 @@ class AccountSettings(NSObject):
         self.spinWheel.setHidden_(True)
         self.errorText.setHidden_(False)
         e = error.localizedDescription()
-        self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s" % e, "Label"))
+        self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s", "Label") % e)
         BlinkLogger().log_error(u"Could not load Server Tools page: %s" % error)
 
     def webView_createWebViewWithRequest_(self, sender, request):
@@ -174,7 +174,7 @@ class AccountSettings(NSObject):
             BlinkLogger().log_debug(u"Could not load Server Tools page: authentication failure")
             self.errorText.setHidden_(False)
             e = NSLocalizedString("Authentication failure", "Label")
-            self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s" % e, "Label"))
+            self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s", "Label") % e)
             self.spinWheel.stopAnimation_(None)
             self.spinWheel2.stopAnimation_(None)
             self.loadingText.setHidden_(True)
@@ -239,7 +239,7 @@ class AccountSettings(NSObject):
         download.cancel()
         BlinkLogger().log_info(u"Download error: %s" % error.localizedDescription())
         e = error.localizedDescription()
-        NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("Error downloading file: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), "", "")
+        NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("Error downloading file: %s", "Label") % e, NSLocalizedString("OK", "Button title"), "", "")
 
     # API exported to webpage. Be careful with what you export.
 

@@ -965,7 +965,7 @@ class MessageRecorder(NSObject):
             else:
                 self.recording_time_left -= 1
         elif self.counter > 0:
-            self.label.setStringValue_(NSLocalizedString("Recording will start in %is..." % self.counter, "Audio recording text label"))
+            self.label.setStringValue_(NSLocalizedString("Recording will start in %is...", "Audio recording text label") % self.counter)
 
     def windowWillClose_(self, notif):
         NSApp.stopModalWithCode_(0)
@@ -973,7 +973,7 @@ class MessageRecorder(NSObject):
     def run(self):
         self.counter = 5
         self.recording_time_left = 60
-        self.label.setStringValue_(NSLocalizedString("Recording will start in %is..." % self.counter, "Audio recording text label"))
+        self.label.setStringValue_(NSLocalizedString("Recording will start in %is...", "Audio recording text label") % self.counter)
         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "timerTick:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSEventTrackingRunLoopMode)
@@ -1025,7 +1025,7 @@ class SoundFileOption(Option):
     @objc.IBAction
     def changeVolume_(self, sender):
         value = sender.integerValue() * 10
-        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Label"))
+        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value)
         self.store()
 
     @objc.IBAction
@@ -1099,7 +1099,7 @@ class SoundFileOption(Option):
         if value:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.volume/10)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Label"))
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value.volume)
             value = unicode(value.path)
             self.play.setEnabled_(True)
         else:
@@ -1151,7 +1151,7 @@ class NightVolumeOption(Option):
     @objc.IBAction
     def changeVolume_(self, sender):
         value = sender.integerValue() * 10
-        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value, "Label"))
+        self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value)
         self.store()
 
     @objc.IBAction
@@ -1207,7 +1207,7 @@ class NightVolumeOption(Option):
             self.slider.setIntegerValue_(value.volume/10)
             self.start_hour.setStringValue_(value.start_hour)
             self.end_hour.setStringValue_(value.end_hour)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.volume, "Label"))
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value.volume)
         else:
             self.slider.setEnabled_(False)
 
@@ -1420,7 +1420,7 @@ class AccountSoundFileOption(SoundFileOption):
         else:
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
-            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%" % value.sound_file.volume, "Label"))
+            self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value.sound_file.volume)
             path = unicode(value.sound_file.path)
             for i in range(self.popup.numberOfItems()):
                 if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
@@ -1552,7 +1552,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
                 address = STUNServerAddress(self.values[row][0], int(object))
                 self.values[row] = (address.host, address.port)
         except Exception, e:
-            NSRunAlertPanel(NSLocalizedString("Enter STUN server", "Window title"), NSLocalizedString("Invalid server address: %s" % e, "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Enter STUN server", "Window title"), NSLocalizedString("Invalid server address: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
             return
         self.store()
         table.reloadData()

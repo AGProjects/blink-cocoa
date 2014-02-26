@@ -179,7 +179,7 @@ class PreferencesController(NSWindowController, object):
         notification_center.add_observer(self, name="AudioDevicesDidChange")
 
         applicationName = NSApp.delegate().applicationNamePrint
-        self.window().setTitle_(NSLocalizedString("%s Preferences" % applicationName, "Window title"))
+        self.window().setTitle_(NSLocalizedString("%s Preferences", "Window title") % applicationName)
 
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
@@ -272,7 +272,7 @@ class PreferencesController(NSWindowController, object):
             settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             rate = settings.audio.sample_rate/1000
-            help_line = NSLocalizedString("Audio sample rate is set to %dkHz" % rate, "Preferences text label") + NSLocalizedString(" covering 0-%dkHz spectrum" % spectrum, "Preferences text label")
+            help_line = NSLocalizedString("Audio sample rate is set to %dkHz", "Preferences text label") % rate + NSLocalizedString(" covering 0-%dkHz spectrum", "Preferences text label") % spectrum
             if spectrum >=20:
                 help_line += NSLocalizedString(".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Preferences text label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
@@ -538,7 +538,7 @@ class PreferencesController(NSWindowController, object):
         account_info = self.selectedAccount()
         if account_info:
             account = account_info.account
-            text = NSLocalizedString("Permanently remove account %s?" % account_info.name, "Label")
+            text = NSLocalizedString("Permanently remove account %s?", "Label") % account_info.name
             text = re.sub("%", "%%", text)
             # http://stackoverflow.com/questions/4498709/problem-in-displaying-in-nsrunalertpanel
             if NSRunAlertPanel(NSLocalizedString("Remove Account", "Button title"), text, NSLocalizedString("Remove", "Button title"), NSLocalizedString("Cancel", "Button title"), None) != NSAlertDefaultReturn:
@@ -601,13 +601,13 @@ class PreferencesController(NSWindowController, object):
                 else:
                     if selected_account.registration_state and selected_account.registration_state != 'ended':
                         if selected_account.registrar and selected_account.registration_state == 'succeeded':
-                            self.registration_status.setStringValue_(NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s" % selected_account.registrar, "Network address follows"))
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s", "Network address follows") % selected_account.registrar)
                             self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
                             if selected_account.registrar.startswith('tls:'):
                                 frame.origin.x = 312
                                 self.registration_status.setFrame_(frame)
                         else:
-                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s" % selected_account.registration_state, "Label"))
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s", "Label") % selected_account.registration_state)
                         self.registration_status.setHidden_(False)
 
     @allocate_autorelease_pool
@@ -799,7 +799,7 @@ class PreferencesController(NSWindowController, object):
             settings = SIPSimpleSettings()
             spectrum = settings.audio.sample_rate/1000/2 if int(settings.audio.sample_rate)/1000/2 < 20 else 20
             rate = settings.audio.sample_rate/1000
-            help_line = NSLocalizedString("Audio sample rate is set to %dkHz" % rate, "Preferences text label") + NSLocalizedString(" covering 0-%dkHz spectrum" % spectrum, "Preferences text label")
+            help_line = NSLocalizedString("Audio sample rate is set to %dkHz", "Preferences text label") % rate + NSLocalizedString(" covering 0-%dkHz spectrum", "Preferences text label") % spectrum
             if spectrum >=20:
                 help_line += ".\n" + NSLocalizedString("For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
@@ -943,7 +943,7 @@ class PreferencesController(NSWindowController, object):
         self.purgeLogsButton.setEnabled_(bool(logs_size))
         self.purgeLogsButton.setHidden_(False)
         self.openLogsFolderButton.setHidden_(False)
-        self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("There are currently %s of log files" % size, "Label"))
+        self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("There are currently %s of log files", "Label") % size)
         self.sectionHelpPlaceholder.setHidden_(not bool(logs_size))
 
     def tableViewSelectionDidChange_(self, notification):

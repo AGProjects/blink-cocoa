@@ -339,8 +339,7 @@ class SMSViewController(NSObject):
 
 
     def notify_changed_fingerprint(self):
-        _t = self.windowController.getTitle()
-        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again." % _t, "Label")
+        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % self.windowController.getTitle()
         self.log_info(log_text)
         
         self.chatViewController.showSystemMessage(self.session_id, log_text, ISOTimestamp.now(), True)
@@ -392,13 +391,13 @@ class SMSViewController(NSObject):
         except potr.context.UnencryptedMessage, e:
             encryption = 'failed'
             status = 'failed'
-            log = NSLocalizedString("Message %s is not encrypted, while encryption was expected" % msgid, "Label")
+            log = NSLocalizedString("Message %s is not encrypted, while encryption was expected", "Label") % msgid
             self.log_info(log)
             self.chatViewController.showSystemMessage(call_id, log, ISOTimestamp.now(), True)
         except potr.context.NotEncryptedError, e:
             encryption = 'failed'
             # we got some encrypted data
-            log = NSLocalizedString("Encrypted message %s is unreadable, as encryption is disabled" % msgid, "Label")
+            log = NSLocalizedString("Encrypted message %s is unreadable, as encryption is disabled", "Label") % msgid
             status = 'failed'
             self.log_info(log)
             self.chatViewController.showSystemMessage(call_id, log, ISOTimestamp.now(), True)
@@ -624,7 +623,7 @@ class SMSViewController(NSObject):
                     self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                     message.status='failed'
                     self.add_to_history(message)
-                    log_text =  NSLocalizedString("Routing failure: %s" % msg, "Label")
+                    log_text =  NSLocalizedString("Routing failure: %s", "Label") % msg
                     self.chatViewController.showSystemMessage('0', msg, ISOTimestamp.now(), True)
                     self.log_info(log_text)
         self.queue = []
@@ -787,7 +786,7 @@ class SMSViewController(NSObject):
 
     def textDidChange_(self, notif):
         chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
-        self.splitView.setText_(NSLocalizedString("%i chars left" % chars_left, "Label"))
+        self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % chars_left)
 
     def getContentView(self):
         return self.chatViewController.view
@@ -870,7 +869,7 @@ class SMSViewController(NSObject):
             else:
                 if self.message_count_from_history == len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages." % self.zoom_period_label, "Label"))
+                    self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages.", "Label") % self.zoom_period_label)
                     self.chatViewController.setHandleScrolling_(False)
                 else:
                     self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)

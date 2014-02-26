@@ -82,7 +82,7 @@ class ConferenceScreenSharing(NSObject):
 
     def setTitle(self):
         name = "%s <%s> %s" % (self.display_name, self.screensharing_uri, "(" + NSLocalizedString("stopped", "Label") + ")" if not self.loading else "")
-        self.window.setTitle_(NSLocalizedString("Shared Screen of %s" % name, "Window title"))
+        self.window.setTitle_(NSLocalizedString("Shared Screen of %s", "Window title") % name)
 
     def close_(self, sender):
         self.window.close()

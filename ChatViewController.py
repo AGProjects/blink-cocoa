@@ -498,9 +498,7 @@ class ChatViewController(NSObject):
         private = 1 if is_private else "null"
 
         if is_private and recipient:
-            _t = cgi.escape(recipient)
-            _f = cgi.escape(sender)
-            label = NSLocalizedString("Private message to %s" % _t, "Label") if direction == 'outgoing' else NSLocalizedString("Private message from %s" % s, "Label")
+            label = NSLocalizedString("Private message to %s", "Label") % cgi.escape(recipient) if direction == 'outgoing' else NSLocalizedString("Private message from %s", "Label") % cgi.escape(sender)
         else:
             if hasattr(self.delegate, "sessionController"):
                 label = cgi.escape(self.delegate.sessionController.nickname or self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
