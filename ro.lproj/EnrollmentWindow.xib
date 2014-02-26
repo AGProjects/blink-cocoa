@@ -358,6 +358,7 @@
 							<reference key="NSNextResponder" ref="1006"/>
 							<string key="NSFrame">{{20, 85}, {423, 237}}</string>
 							<reference key="NSSuperview" ref="1006"/>
+							<reference key="NSNextKeyView" ref="559146557"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="437338801">
