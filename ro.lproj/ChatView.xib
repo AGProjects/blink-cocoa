@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
+        <plugIn identifier="com.apple.QTKitIBPlugin" version="3338"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="3338"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="ChatController">
+            <connections>
+                <outlet property="chatViewController" destination="164" id="240"/>
+                <outlet property="databaseLoggingButton" destination="234" id="238"/>
+                <outlet property="inputContainer" destination="23" id="209"/>
+                <outlet property="outputContainer" destination="178" id="193"/>
+                <outlet property="privateLabel" destination="253" id="255"/>
+                <outlet property="smileyButton" destination="126" id="170"/>
+                <outlet property="splitView" destination="19" id="210"/>
+                <outlet property="videoContainer" destination="211" id="213"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <splitView id="19">
+            <rect key="frame" x="0.0" y="0.0" width="501" height="500"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <customView id="178">
+                    <rect key="frame" x="0.0" y="0.0" width="501" height="418"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <subviews>
+                        <webView id="38" customClass="ChatWebView">
+                            <rect key="frame" x="0.0" y="0.0" width="501" height="391"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
+                                <nil key="identifier"/>
+                            </webPreferences>
+                            <accessibility description="Istoria Sesiunilor Text"/>
+                            <connections>
+                                <outlet property="UIDelegate" destination="164" id="174"/>
+                                <outlet property="frameLoadDelegate" destination="164" id="171"/>
+                                <outlet property="policyDelegate" destination="164" id="172"/>
+                                <outlet property="resourceLoadDelegate" destination="164" id="173"/>
+                            </connections>
+                        </webView>
+                        <textField verticalHuggingPriority="750" id="217">
+                            <rect key="frame" x="17" y="397" width="275" height="14"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Mesaje Precedente" id="218">
+                                <font key="font" metaFont="smallSystem"/>
+                                <color key="textColor" white="0.2063067036" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
+                        <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" id="220">
+                            <rect key="frame" x="234" y="186" width="32" height="32"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        </progressIndicator>
+                        <searchField verticalHuggingPriority="750" id="222">
+                            <rect key="frame" x="319" y="396" width="162" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Caută Mesaje" usesSingleLineMode="YES" bezelStyle="round" id="223">
+                                <font key="font" metaFont="system" size="10"/>
+                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </searchFieldCell>
+                            <connections>
+                                <action selector="searchMessages:" target="164" id="229"/>
+                            </connections>
+                        </searchField>
+                        <button hidden="YES" toolTip="Arată toate mesajele care aparțin de aceiași sesiune" verticalHuggingPriority="750" id="230">
+                            <rect key="frame" x="297" y="395" width="18" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="231">
+                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="systemBold" size="12"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="showRelatedMessages:" target="164" id="233"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                </customView>
+                <customView id="23">
+                    <rect key="frame" x="0.0" y="427" width="501" height="73"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <subviews>
+                        <popUpButton id="126">
+                            <rect key="frame" x="466" y="45" width="34" height="30"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="129" id="127">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="menu"/>
+                                <menu key="menu" title="OtherViews" id="128">
+                                    <items>
+                                        <menuItem state="on" hidden="YES" id="129">
+                                            <attributedString key="attributedTitle"/>
+                                        </menuItem>
+                                        <menuItem title="Item 2" id="130"/>
+                                        <menuItem title="Item 3" id="131"/>
+                                    </items>
+                                </menu>
+                            </popUpButtonCell>
+                            <accessibility description="Selectează Icoană Fața"/>
+                        </popUpButton>
+                        <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="24">
+                            <rect key="frame" x="0.0" y="0.0" width="464" height="73"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <clipView key="contentView" id="TfF-ad-GAx">
+                                <rect key="frame" x="1" y="1" width="462" height="71"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <textView importsGraphics="NO" findStyle="panel" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" id="25" customClass="ChatInputTextView">
+                                        <rect key="frame" x="0.0" y="0.0" width="463" height="71"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <size key="minSize" width="462" height="71"/>
+                                        <size key="maxSize" width="1000" height="10000000"/>
+                                        <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                        <size key="minSize" width="462" height="71"/>
+                                        <size key="maxSize" width="1000" height="10000000"/>
+                                        <accessibility description="Introduce text pentru a trimite celuilalt"/>
+                                        <connections>
+                                            <outlet property="delegate" destination="-2" id="177"/>
+                                        </connections>
+                                    </textView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="26">
+                                <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="27">
+                                <rect key="frame" x="451" y="1" width="16" height="71"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                        </scrollView>
+                        <button id="234">
+                            <rect key="frame" x="472" y="8" width="22" height="23"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="database-on" imagePosition="above" alignment="left" imageScaling="proportionallyUpOrDown" id="235">
+                                <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="userClickedDatabaseLoggingButton:" target="-2" id="239"/>
+                            </connections>
+                        </button>
+                        <textField verticalHuggingPriority="750" id="253">
+                            <rect key="frame" x="380" y="53" width="83" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Privat" id="254">
+                                <font key="font" metaFont="systemBold" size="16"/>
+                                <color key="textColor" white="0.55884576610000003" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </textFieldCell>
+                        </textField>
+                    </subviews>
+                </customView>
+            </subviews>
+            <holdingPriorities>
+                <real value="250"/>
+                <real value="250"/>
+            </holdingPriorities>
+        </splitView>
+        <customObject id="164" customClass="ChatViewController">
+            <connections>
+                <outlet property="delegate" destination="-2" id="168"/>
+                <outlet property="inputText" destination="25" id="176"/>
+                <outlet property="inputView" destination="23" id="194"/>
+                <outlet property="lastMessagesLabel" destination="217" id="219"/>
+                <outlet property="loadingProgressIndicator" destination="220" id="221"/>
+                <outlet property="outputView" destination="38" id="165"/>
+                <outlet property="searchMessagesBox" destination="222" id="228"/>
+                <outlet property="showRelatedMessagesButton" destination="230" id="232"/>
+                <outlet property="view" destination="19" id="166"/>
+            </connections>
+        </customObject>
+        <customView id="211" customClass="VideoView">
+            <rect key="frame" x="0.0" y="0.0" width="405" height="226"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <qtMovieView controllerVisible="NO" preservesAspectRatio="YES" id="212">
+                    <rect key="frame" x="0.0" y="0.0" width="405" height="226"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <color key="fillColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                </qtMovieView>
+            </subviews>
+            <connections>
+                <outlet property="videoView" destination="212" id="216"/>
+            </connections>
+        </customView>
+        <textField verticalHuggingPriority="750" id="251">
+            <rect key="frame" x="0.0" y="0.0" width="38" height="17"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Etichetă" id="252">
+                <font key="font" metaFont="system"/>
+                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+            </textFieldCell>
+        </textField>
+    </objects>
+    <resources>
+        <image name="NSAddTemplate" width="8" height="8"/>
+        <image name="database-on" width="306" height="256"/>
+    </resources>
+</document>
