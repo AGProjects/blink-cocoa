@@ -661,7 +661,7 @@ class ContactWindowController(NSWindowController):
                             pass
                         else:
                             lastItem.setTag_(tag)
-    
+
                     except KeyError:
                         pass
                 except KeyError:
@@ -2817,10 +2817,10 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOffState)
             if item.tag() and item.representedObject() and item.representedObject()['title'] == status:
                 tag = item.tag()
-        
+
         item = self.presenceMenu.itemWithTag_(tag)
         item.setState_(NSOnState)
-        
+
         menu = self.presenceActivityPopUp.menu()
         item = menu.itemWithTag_(tag)
         self.presenceActivityPopUp.selectItem_(item)

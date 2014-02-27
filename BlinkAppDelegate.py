@@ -119,7 +119,7 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidConnect")
             NotificationCenter().add_observer(self, name="DNSNameserversDidChange")
-    
+
             # remove obsolete settings
             userdef = NSUserDefaults.standardUserDefaults()
             userdef.removeObjectForKey_('SIPTrace')
@@ -304,7 +304,7 @@ class BlinkAppDelegate(NSObject):
 
     def _NH_DNSNameserversDidChange(self, notification):
         BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
-                               
+
     def _NH_NetworkConditionsDidChange(self, notification):
         pass
         #BlinkLogger().log_info(u"Network conditions changed")

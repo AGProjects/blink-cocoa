@@ -66,7 +66,7 @@ class GrowlNotifications(object):
         # new_messages will always be > 0 at this point
         title = NSLocalizedString("New Voicemail Message", "System notification title") if notification.data.new_messages == 1 else NSLocalizedString("New Voicemail Messages", "System notification title")
         if notification.data.old_messages > 0:
-            message = NSLocalizedString("You have %d new", "System notification body") % notification.data.new_messages  + NSLocalizedString("and %d old voicemail messages", "System notification body") % notification.data.old_messages 
+            message = NSLocalizedString("You have %d new", "System notification body") % notification.data.new_messages  + NSLocalizedString("and %d old voicemail messages", "System notification body") % notification.data.old_messages
         else:
             message = NSLocalizedString("You have %d new voicemail messages", "System notification body") % notification.data.new_messages
         self.growl.notify('Voicemail Summary', title, message)

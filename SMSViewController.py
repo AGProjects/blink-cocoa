@@ -341,7 +341,7 @@ class SMSViewController(NSObject):
     def notify_changed_fingerprint(self):
         log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % self.windowController.getTitle()
         self.log_info(log_text)
-        
+
         self.chatViewController.showSystemMessage(self.session_id, log_text, ISOTimestamp.now(), True)
 
         NSApp.delegate().contactsWindowController.speak_text(log_text)
@@ -760,7 +760,7 @@ class SMSViewController(NSObject):
             self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
 
         self.queue.append((msgid, text, content_type))
-        
+
         # Async DNS lookup
         if host is None or host.default_ip is None:
             self.setRoutesFailed(NSLocalizedString("No IP Address", "Label"))

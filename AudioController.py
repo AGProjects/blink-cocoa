@@ -846,7 +846,7 @@ class AudioController(MediaStream):
 
             self.previous_rx_bytes = stats['rx']['bytes'] if stats['rx']['bytes'] >=0 else 0
             self.previous_tx_bytes = stats['tx']['bytes'] if stats['tx']['bytes'] >=0 else 0
-            
+
             self.previous_rx_packets = stats['rx']['packets']
             self.previous_tx_packets = stats['tx']['packets']
 
