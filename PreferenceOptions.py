@@ -238,7 +238,7 @@ class StringOption(Option):
 
     def restore(self):
         value = self.get()
-        self.text.setStringValue_(value and str(value.decode('utf-8')) or "")
+        self.text.setStringValue_(value and str(value.encode('utf-8')) or "")
 
     def setTooltip(self, text):
         self.text.setToolTip_(text)
