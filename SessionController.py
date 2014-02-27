@@ -1438,6 +1438,7 @@ class SessionController(NSObject):
                        self.session.add_stream(stream)
                        self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
                     except IllegalStateError, e:
+                        self.inProposal = False
                         self.log_info("IllegalStateError: %s" % e)
                         log_data = NotificationData(timestamp=datetime.now(), failure_reason=e)
                         self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
