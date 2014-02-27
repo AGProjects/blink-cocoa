@@ -46,6 +46,7 @@ from AppKit import (NSAlertDefaultReturn,
                         NSPNGFileType,
                         NSRunAlertPanel,
                         NSTIFFCompressionLZW)
+
 from Foundation import (NSArray,
                         NSBitmapImageRep,
                         NSBundle,
@@ -111,6 +112,12 @@ from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread
 
+status_localized = {
+    'busy':      NSLocalizedString("Busy", "Label"),
+    'available': NSLocalizedString("Available", "Label"),
+    'away':      NSLocalizedString("Away", "Label"),
+    'offline':   NSLocalizedString("Offline", "Label")
+}
 
 ICON_SIZE = 128
 
@@ -1178,7 +1185,7 @@ class BlinkPresenceContact(BlinkContact):
 
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name
-                            nc_body = NSLocalizedString("%s is now ", "System notification body %s is a a person name") % self.name + status
+                            nc_body = NSLocalizedString("%s is now ", "System notification body %s is a a person name") % self.name + status_localized[status]
                             NSApp.delegate().gui_notify(nc_title, nc_body)
 
                     if log and status == 'available':

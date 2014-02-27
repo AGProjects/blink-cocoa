@@ -945,7 +945,7 @@ class ContactWindowController(NSWindowController):
 
         if outdev != indev:
             if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
-                self.selectedAudioDeviceLabel.setStringValue_(u'Built-in Microphone and Output')
+                self.selectedAudioDeviceLabel.setStringValue_(NSLocalizedString("Built-in Microphone and Output", "Label"))
             else:
                 self.selectedAudioDeviceLabel.setStringValue_(u"%s/%s" % (outdev, indev))
         else:
@@ -4774,7 +4774,7 @@ class ContactWindowController(NSWindowController):
 
             index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
 
-            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("None", selector, "", index)
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("None", "Menu item"), selector, "", index)
             item.setRepresentedObject_("None")
             item.setTarget_(self)
             item.setTag_(tag*100)
@@ -4784,7 +4784,7 @@ class ContactWindowController(NSWindowController):
 
             default_device = self.backend._app.engine.default_output_device if tag in (401, 403) else self.backend._app.engine.default_input_device
 
-            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_("System Default (%s)" % default_device.strip() , selector, "", index)
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("System Default (%s)", "Menu item") % default_device.strip() , selector, "", index)
             item.setRepresentedObject_("system_default")
             item.setTarget_(self)
             item.setTag_(tag*100+1)
@@ -4794,7 +4794,7 @@ class ContactWindowController(NSWindowController):
 
             i = 2
             for dev in devices:
-                dev_title = 'Built-in Microphone' if dev.startswith('Built-in Microp') else dev.strip()
+                dev_title = NSLocalizedString("Built-in Microphone", "Label") if dev.startswith('Built-in Microp') else dev.strip()
                 item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev_title, selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)

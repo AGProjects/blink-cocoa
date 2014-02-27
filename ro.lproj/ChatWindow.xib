@@ -513,7 +513,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="328"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Oprește Sonorul..." tag="315" enabled="NO" indentationLevel="1" id="336">
+                <menuItem title="Oprește Microfonul..." tag="315" enabled="NO" indentationLevel="1" id="336">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="337"/>

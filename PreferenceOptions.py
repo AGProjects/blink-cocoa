@@ -149,7 +149,7 @@ class Option(HorizontalBoxView):
         try:
             self._store()
         except Exception, e:
-            NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e)), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e.decode('utf-8'))), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
 
     def _store(self):
@@ -238,7 +238,7 @@ class StringOption(Option):
 
     def restore(self):
         value = self.get()
-        self.text.setStringValue_(value and str(value) or "")
+        self.text.setStringValue_(value and str(value.decode('utf-8')) or "")
 
     def setTooltip(self, text):
         self.text.setToolTip_(text)
@@ -665,7 +665,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
     def __init__(self, object, name, option, description=None):
         AudioCodecListOption.__init__(self, object, name, option, description)
 
-        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 100, 20))
+        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 110, 20))
         self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
         self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
         self.check.setButtonType_(NSSwitchButton)
@@ -1727,29 +1727,58 @@ DisabledPreferenceSections = ['service_provider', 'server']
 StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
+                      'auth.username': NSLocalizedString("Username", "Label"),
+                      'audio.alert_device': NSLocalizedString("Audio Alert Device", "Label"),
+                      'audio.input_device': NSLocalizedString("Audio Input Device", "Label"),
+                      'audio.output_device': NSLocalizedString("Audio Output Device", "Label"),
                       'audio.auto_accept': NSLocalizedString("Automatic Answer", "Label"),
                       'audio.auto_transfer': NSLocalizedString("Automatic Transfer", "Label"),
                       'audio.auto_recording': NSLocalizedString("Automatic Recording", "Label"),
+                      'audio.do_not_disturb': NSLocalizedString("Do Not Disturb", "Label"),
+                      'audio.call_waiting': NSLocalizedString("Call Waiting", "Label"),
+                      'audio.muted': NSLocalizedString("Muted", "Label"),
+                      'audio.answer_delay': NSLocalizedString("Answer Delay", "Label"),
                       'audio.reject_anonymous': NSLocalizedString("Reject Anonymous Callers", "Label"),
+                      'audio.reject_unauthorized_contacts': NSLocalizedString("Reject Unauthorized Callers", "Label"),
                       'audio.directory': NSLocalizedString("Recordings Directory", "Label"),
                       'audio.silent': NSLocalizedString("Silence Audible Alerts", "Label"),
                       'audio.pause_music': NSLocalizedString("Pause iTunes During Audio Calls", "Label"),
                       'audio.automatic_device_switch': NSLocalizedString("Switch to New Devices when Plugged-in", "Label"),
                       'audio.enable_aec': NSLocalizedString("Enable Acoustic Echo Cancellation", "Label"),
                       'answering_machine.max_recording_duration': NSLocalizedString("Maximum Duration", "Label"),
+                      'answering_machine.answer_delay': NSLocalizedString("Answer Delay", "Label"),
+                      'answering_machine.unavailable_message': NSLocalizedString("Unavailable Message", "Label"),
+                      'answering_machine.enabled': NSLocalizedString("Enabled", "Label"),
+                      'answering_machine.enabled': NSLocalizedString("Show In Alert Panel", "Label"),
                       'chat.auto_accept': NSLocalizedString("Automatically Accept Chat Requests from Known Contacts", "Label"),
                       'chat.disable_collaboration_editor': NSLocalizedString("Disable Collaboration Editor", "Label"),
                       'chat.enable_encryption': NSLocalizedString("OTR Encryption", "Label"),
+                      'chat.disable_replication': NSLocalizedString("Disable Replication", "Label"),
+                      'chat.replication_password': NSLocalizedString("Replication Password", "Label"),
+                      'chat.disabled': NSLocalizedString("Disabled", "Label"),
+                      'chat.disable_history': NSLocalizedString("Disable History", "Label"),
                       'contacts.enable_address_book': NSLocalizedString("Show Address Book", "Label"),
                       'contacts.enable_incoming_calls_group': NSLocalizedString("Show Incoming Calls", "Label"),
                       'contacts.enable_missed_calls_group': NSLocalizedString("Show Missed Calls", "Label"),
                       'contacts.enable_outgoing_calls_group': NSLocalizedString("Show Outgoing Calls", "Label"),
                       'contacts.enable_blocked_group': NSLocalizedString("Show Blocked Contacts", "Label"),
+                      'contacts.enable_no_group': NSLocalizedString("Show Contacts Without Group", "Label"),
+                      'contacts.enable_online_group': NSLocalizedString("Show Online Group", "Label"),
+                      'conference.nickname': NSLocalizedString("Nickname", "Label"),
+                      'conference.server_address': NSLocalizedString("Server Address", "Label"),
                       'screen_sharing_server.disabled': NSLocalizedString("Deny Requests for Sharing My Screen", "Label"),
                       'file_transfer.auto_accept': NSLocalizedString("Automatically Accept Files from Known Contacts", "Label"),
+                      'file_transfer.disabled': NSLocalizedString("Disabled", "Label"),
                       'gui.sync_with_icloud': NSLocalizedString("Sync with iCloud", "Label"),
+                      'gui.extended_debug': NSLocalizedString("Extended Debug", "Label"),
+                      'gui.use_default_web_browser_for_alerts': NSLocalizedString("Use Default Web Browser For Alerts", "Label"),
+                      'gui.rtt_threshold': NSLocalizedString("RTT Threshold", "Label"),
+                      'gui.idle_threshold': NSLocalizedString("Idle Threshold", "Label"),
                       'ldap.hostname': NSLocalizedString("Server Address", "Label"),
                       'ldap.dn': NSLocalizedString("Search Base", "Label"),
+                      'ldap.enabled': NSLocalizedString("Enabled", "Label"),
+                      'ldap.username': NSLocalizedString("Username", "Label"),
+                      'ldap.password': NSLocalizedString("Password", "Label"),
                       'logs.trace_msrp_to_file': NSLocalizedString("Log MSRP Media", "Label"),
                       'logs.trace_sip_to_file': NSLocalizedString("Log SIP Signaling", "Label"),
                       'logs.trace_xcap_to_file': NSLocalizedString("Log XCAP Storage", "Label"),
@@ -1757,23 +1786,38 @@ SettingDescription = {
                       'logs.trace_notifications_to_file': NSLocalizedString("Log Notifications", "Label"),
                       'logs.pjsip_level': NSLocalizedString("Core Engine Level", "Label"),
                       'message_summary.voicemail_uri': NSLocalizedString("Mailbox URI", "Label"),
+                      'message_summary.enabled': NSLocalizedString("Enabled", "Label"),
                       'nat_traversal.stun_server_list': NSLocalizedString("STUN Servers", "Label"),
+                      'nat_traversal.use_msrp_relay_for_outbound': NSLocalizedString("Use MSRP Relay For Outbound", "Label"),
+                      'nat_traversal.msrp_relay': NSLocalizedString("MSRP Relay", "Label"),
+                      'nat_traversal.use_ice': NSLocalizedString("Use ICE", "Label"),
                       'presence.use_rls': NSLocalizedString("Use Resource List Server", "Label"),
                       'presence.enabled': NSLocalizedString("Enabled", "Label"),
                       'presence.disable_timezone': NSLocalizedString("Hide My Timezone", "Label"),
                       'presence.disable_location': NSLocalizedString("Hide My Location", "Label"),
+                      'presence.enable_on_the_phone': NSLocalizedString("Enable On The Phone", "Label"),
+                      'presence.homepage': NSLocalizedString("Web Page", "Label"),
                       'pstn.idd_prefix': NSLocalizedString("Replace Starting +", "Label"),
                       'pstn.prefix': NSLocalizedString("External Line Prefix", "Label"),
+                      'pstn.dial_plan': NSLocalizedString("Dial Plan", "Label"),
                       'pstn.anonymous_to_answering_machine': NSLocalizedString("Anonymous To Answering Machine", "Label"),
                       'rtp.inband_dtmf': NSLocalizedString("Send Inband DTMF", "Label"),
                       'rtp.audio_codec_list': NSLocalizedString("Audio Codecs", "Label"),
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Label"),
+                      'rtp.hangup_on_timeout': NSLocalizedString("Hangup On Timeout", "Label"),
                       'rtp.srtp_encryption': NSLocalizedString("sRTP Encryption", "Label"),
                       'sip.invite_timeout': NSLocalizedString("INVITE Timeout", "Label"),
-                      'sip.outbound_proxy': NSLocalizedString("Primary Proxy", "Label"),
+                      'sip.always_use_my_proxy': NSLocalizedString("Always Use My Proxy", "Label"),
+                      'sip.outbound_proxy': NSLocalizedString("Outbound Proxy", "Label"),
+                      'sip.primary_proxy': NSLocalizedString("Primary Proxy", "Label"),
                       'sip.alternative_proxy': NSLocalizedString("Alternate Proxy", "Label"),
                       'sip.register': NSLocalizedString("Receive Incoming Calls", "Label"),
                       'sip.transport_list': NSLocalizedString("Protocols", "Label"),
+                      'sip.do_not_disturb_code': NSLocalizedString("Do Not Disturb Code", "Label"),
+                      'sip.register_interval': NSLocalizedString("register Interval", "Label"),
+                      'sip.subscribe_interval': NSLocalizedString("Subscribe Interval", "Label"),
+                      'sip.publish_interval': NSLocalizedString("Publish Interval", "Label"),
+                      'sms.disable_replication': NSLocalizedString("Disable Replication", "Label"),
                       'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Label"),
                       'sounds.audio_outbound': NSLocalizedString("Outbound Ringtone", "Label"),
                       'sounds.night_volume': NSLocalizedString(" ", "Label"),
@@ -1784,6 +1828,8 @@ SettingDescription = {
                       'server.web_password': NSLocalizedString("Password", "Label"),
                       'tls.certificate': NSLocalizedString("X.509 Certificate File", "Label"),
                       'tls.ca_list': NSLocalizedString("Certificate Authority File", "Label"),
+                      'tls.veriy_server': NSLocalizedString("Verify Server", "Label"),
+                      'xcap.enabled' : NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root' : NSLocalizedString("Root URI", "Label")
 
                       }
