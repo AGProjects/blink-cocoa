@@ -56,13 +56,13 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Oprește sonorul la acest participant" image="mute" width="20" tag="3">
+                            <segment toolTip="Taie sonorul" image="mute" width="20" tag="3">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Pauzează acest participant" image="pause" width="20">
+                            <segment toolTip="Pauză" image="pause" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Înregistrează Convorbire Audio" image="record" width="20" tag="1">
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Închide" image="hangup" width="20" tag="2">
@@ -81,13 +81,13 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="90">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Transfer Convorbire" image="transfer" width="20" tag="3">
+                            <segment toolTip="Transferă" image="transfer" width="20" tag="3">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Pauzează acest participant" image="pause" width="20">
+                            <segment toolTip="Pauză" image="pause" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Înregistrează Convorbire Audio" image="record" width="20" tag="1">
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Închide" image="hangup" width="20" tag="2">
@@ -106,16 +106,16 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Criptare sRTP" image="NSLockUnlockedTemplate" width="20" tag="4">
+                            <segment toolTip="Criptare" image="NSLockUnlockedTemplate" width="20" tag="4">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Transfer Convorbire" image="transfer" width="20">
+                            <segment toolTip="Transferă" image="transfer" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Înregistrează Convorbire Audio" image="pause" width="20" tag="1">
+                            <segment toolTip="Pauză" image="pause" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Închide" image="record" width="20" tag="1">
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Închide" image="hangup" width="20" tag="1">
@@ -134,10 +134,10 @@
                     <segmentedCell key="cell" controlSize="small" state="on" alignment="left" style="rounded" trackingMode="momentary" id="35">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Pauzează" image="pause" width="20">
+                            <segment toolTip="Pauză" image="pause" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Înregistrează Convorbire Audio" image="record" width="20" tag="1">
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Închide" image="hangup_small" width="20" tag="2">

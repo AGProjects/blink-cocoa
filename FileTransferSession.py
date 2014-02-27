@@ -105,7 +105,7 @@ class FileTransfer(object):
     def format_progress(self):
         if not self.file_size:
             return ''
-        t = NSLocalizedString("Transferred %s of %s ", "Label") % (format_size(self.file_pos, 1024), format_size(self.file_size, 1024))
+        t = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.file_pos, 1024) + format_size(self.file_size, 1024)
         if self.transfer_rate is not None:
             if self.transfer_rate == 0:
                 status = t + "(" + NSLocalizedString("stalled", "Label") + ")"
@@ -210,7 +210,7 @@ class IncomingFileTransferHandler(FileTransfer):
     @property
     def progress_text(self):
         if self.fail_reason and self.file_pos:
-            t = NSLocalizedString("Transferred %s of %s ", "Label") % (format_size(self.file_pos, 1024), format_size(self.file_size))
+            t = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.file_pos, 1024) + format_size(self.file_size)
             return t + " - " +  self.fail_reason
         else:
             return self.status

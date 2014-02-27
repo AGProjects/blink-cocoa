@@ -56,9 +56,9 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Mute this participant" image="mute" width="20" tag="3"/>
-                            <segment toolTip="Put this participant on hold" image="pause" width="20"/>
-                            <segment toolTip="Record the Audio Session to file" image="record" width="20" tag="1"/>
+                            <segment toolTip="Mute" image="mute" width="20" tag="3"/>
+                            <segment toolTip="Pause" image="pause" width="20"/>
+                            <segment toolTip="Record" image="record" width="20" tag="1"/>
                             <segment toolTip="Hangup" image="hangup" width="20" tag="2"/>
                         </segments>
                     </segmentedCell>
@@ -73,13 +73,13 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="90">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Call Transfer" image="transfer" width="20" tag="3">
+                            <segment toolTip="Transfer" image="transfer" width="20" tag="3">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Put this participant on hold" image="pause" width="20">
+                            <segment toolTip="Pauze" image="pause" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Record the Audio Session to file" image="record" width="20" tag="1">
+                            <segment toolTip="Record" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Hangup" image="hangup" width="20" tag="2">
@@ -98,16 +98,16 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="sRTP encryption" image="NSLockUnlockedTemplate" width="20" tag="4">
+                            <segment toolTip="Encryption" image="NSLockUnlockedTemplate" width="20" tag="4">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Call Transfer" image="transfer" width="20">
+                            <segment toolTip="Transfer" image="transfer" width="20">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Record the Audio Session to file" image="pause" width="20" tag="1">
+                            <segment toolTip="Pause" image="pause" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Hangup" image="record" width="20" tag="1">
+                            <segment toolTip="Record" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Hangup" image="hangup" width="20" tag="1">
@@ -126,8 +126,8 @@
                     <segmentedCell key="cell" controlSize="small" state="on" alignment="left" style="rounded" trackingMode="momentary" id="35">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Put the session on hold" image="pause" width="20"/>
-                            <segment toolTip="Record the Audio Session to file" image="record" width="20" tag="1"/>
+                            <segment toolTip="Pause" image="pause" width="20"/>
+                            <segment toolTip="Record" image="record" width="20" tag="1"/>
                             <segment toolTip="Hangup" image="hangup_small" width="20" tag="2"/>
                         </segments>
                     </segmentedCell>
