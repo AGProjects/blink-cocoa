@@ -1440,7 +1440,7 @@ class SessionController(NSObject):
                     except IllegalStateError, e:
                         self.inProposal = False
                         self.log_info("IllegalStateError: %s" % e)
-                        log_data = NotificationData(timestamp=datetime.now(), failure_reason=e)
+                        log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=[stream])
                         self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
                         return False
             else:
@@ -1874,8 +1874,10 @@ class SessionController(NSObject):
         self.proposalOriginator = None
         self.log_info("Proposal cancelled" if data.code == 487 else "Proposal was rejected: %s (%s)"%(data.reason, data.code))
 
-        log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
+        log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code, proposed_streams=data.proposed_streams)
         self.notification_center.post_notification("BlinkProposalGotRejected", sender=self, data=log_data)
+        if data.code > 500:
+            self.notification_center.post_notification("BlinkProposalFailed", sender=self, data=log_data)
 
         for stream in data.proposed_streams:
             if stream == self.cancelledStream:
@@ -1922,7 +1924,7 @@ class SessionController(NSObject):
         self.proposalOriginator = None
         self.log_info("Proposal failure: %s" % data.failure_reason)
 
-        log_data = NotificationData(timestamp=datetime.now(), failure_reason=data.failure_reason)
+        log_data = NotificationData(timestamp=datetime.now(), failure_reason=data.failure_reason, proposed_streams=data.proposed_streams)
         self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
 
         for stream in data.proposed_streams:

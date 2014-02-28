@@ -380,6 +380,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkSessionChangedState")
         nc.add_observer(self, name="BlinkContactBecameAvailable")
         nc.add_observer(self, name="BlinkStreamHandlersChanged")
+        nc.add_observer(self, name="BlinkProposalDidFail")
         nc.add_observer(self, name="SIPAccountGotSelfPresenceState")
         nc.add_observer(self, name="BonjourAccountWillRegister")
         nc.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
@@ -1434,6 +1435,14 @@ class ContactWindowController(NSWindowController):
 
         if not hasChat:
             self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
+
+    @run_in_gui_thread
+    def _NH_BlinkProposalDidFail(self, notification):
+        media_type = notification.data.proposed_streams[0].type
+        target_uri = notification.sender.target_uri
+        local_uri = notification.sender.account.id
+        BlinkLogger().log_info(u"Starting new %s session to %s because adding stream failed" % (media_type, target_uri))
+        self.startSessionWithTarget(target_uri, media_type=media_type, local_uri=local_uri)
 
     @run_in_gui_thread
     def _NH_SIPSessionLoggedToHistory(self, notification):
