@@ -1774,6 +1774,7 @@ SettingDescription = {
                       'gui.use_default_web_browser_for_alerts': NSLocalizedString("Use Default Web Browser For Alerts", "Label"),
                       'gui.rtt_threshold': NSLocalizedString("RTT Threshold", "Label"),
                       'gui.idle_threshold': NSLocalizedString("Idle Threshold", "Label"),
+                      'gui.account_label': NSLocalizedString("Account Label", "Label"),
                       'ldap.hostname': NSLocalizedString("Server Address", "Label"),
                       'ldap.dn': NSLocalizedString("Search Base", "Label"),
                       'ldap.enabled': NSLocalizedString("Enabled", "Label"),

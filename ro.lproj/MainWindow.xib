@@ -643,7 +643,7 @@ CA
                 <rect key="frame" x="0.0" y="0.0" width="274" height="480"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <popUpButton toolTip="Selectează Contul Folosit Pentru Sesiuni Exterioare" id="446" userLabel="Active Account Popup button">
+                    <popUpButton toolTip="Selectează Contul Folosit Pentru Apeluri" id="446" userLabel="Active Account Popup button">
                         <rect key="frame" x="5" y="452" width="264" height="26"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" title="Contul Activ" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" selectedItem="449" id="447">
@@ -657,12 +657,12 @@ CA
                                 </items>
                             </menu>
                         </popUpButtonCell>
-                        <accessibility description="Cont folosit pentru sesiuni exterioare"/>
+                        <accessibility description="Cont folosit pentru apeluri"/>
                         <connections>
                             <action selector="accountSelectionChanged:" target="389" id="667"/>
                         </connections>
                     </popUpButton>
-                    <searchField toolTip="Poți introduce text pentru a căuta contacte sau pentru a porni o sesiune către o adresa arbitrară." verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
+                    <searchField toolTip="Poți introduce text pentru a căuta contacte sau pentru a porni un apel către o adresa arbitrară." verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Caută Contacte sau Introduce Adresă" bezelStyle="round" recentsAutosaveName="" id="464">
@@ -813,7 +813,7 @@ CA
                                                 <font key="font" metaFont="system"/>
                                                 <string key="title">Nu s-a găsit nici un contact.
 Apasă Enter pentru a porni 
-o sesiune către aceasta adresă.</string>
+un apel către aceasta adresă.</string>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -1126,16 +1126,16 @@ ABC</string>
                                 <segment toolTip="Pornește Convorbire Audio" image="audio" width="30">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Invită La Convorbire Text sau Trimite Mesaje Scurte" image="pencil" width="30" tag="1">
+                                <segment toolTip="Convorbire Text sau Trimite Mesaje Scurte" image="pencil" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Partajează Ecranul" image="display" width="30">
                                     <nil key="label"/>
                                 </segment>
                             </segments>
-                            <accessibility description="Porneste Sesiuni"/>
+                            <accessibility description="Porneste Apeluri"/>
                         </segmentedCell>
-                        <accessibility description="Butoane De Pornire Sesiuni"/>
+                        <accessibility description="Butoane De Pornire Apeluri"/>
                         <connections>
                             <action selector="actionButtonClicked:" target="389" id="497"/>
                         </connections>
@@ -1769,7 +1769,7 @@ ABC</string>
                 <menuItem title="Pornește Convorbire Text" id="952">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Trimite Mesaj Text" id="953">
+                <menuItem title="Trimite Mesaje Scurte" id="953">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>

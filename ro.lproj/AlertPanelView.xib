@@ -261,7 +261,7 @@
 								<object class="NSTextFieldCell" key="NSCell" id="769770969">
 									<int key="NSCellFlags">68157504</int>
 									<int key="NSCellFlags2">138413056</int>
-									<string key="NSContents">Text Rapid</string>
+									<string key="NSContents">IM</string>
 									<object class="NSFont" key="NSSupport">
 										<string key="NSName">GillSans</string>
 										<double key="NSSize">28</double>

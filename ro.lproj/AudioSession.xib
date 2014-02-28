@@ -45,7 +45,7 @@
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Starea sesiunii"/>
+                    <accessibility description="Starea apelului"/>
                     <connections>
                         <outlet property="menu" destination="53" id="66"/>
                     </connections>
@@ -70,7 +70,7 @@
                             </segment>
                         </segments>
                     </segmentedCell>
-                    <accessibility description="Butoane Control Sesiune"/>
+                    <accessibility description="Butoane Control Apel"/>
                     <connections>
                         <action selector="userClickedAudioButton:" target="-2" id="74"/>
                     </connections>
@@ -95,7 +95,7 @@
                             </segment>
                         </segments>
                     </segmentedCell>
-                    <accessibility description="Butoane Control Sesiune"/>
+                    <accessibility description="Butoane Control Apel"/>
                     <connections>
                         <action selector="userClickedAudioButton:" target="-2" id="91"/>
                     </connections>
@@ -123,7 +123,7 @@
                             </segment>
                         </segments>
                     </segmentedCell>
-                    <accessibility description="Butoane Control Sesiune"/>
+                    <accessibility description="Butoane Control Apel"/>
                     <connections>
                         <action selector="userClickedAudioButton:" target="-2" id="200"/>
                     </connections>
@@ -145,7 +145,7 @@
                             </segment>
                         </segments>
                     </segmentedCell>
-                    <accessibility description="Butoane Control Sesiune"/>
+                    <accessibility description="Butoane Control Apel"/>
                     <connections>
                         <action selector="userClickedAudioButton:" target="-2" id="48"/>
                     </connections>
@@ -178,7 +178,7 @@
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Durata Sesiunii"/>
+                    <accessibility description="Durata Apelului"/>
                     <connections>
                         <outlet property="menu" destination="53" id="63"/>
                     </connections>
@@ -203,7 +203,7 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
-                    <accessibility description="Deschide Panoul Informațional Al Sesiunii"/>
+                    <accessibility description="Deschide Panoul Informațional Al Apelului"/>
                     <connections>
                         <accessibilityConnection property="link" destination="160" id="175"/>
                         <action selector="userClickedSessionInfoButton:" target="-2" id="169"/>
@@ -228,7 +228,7 @@
                 <outlet property="menu" destination="53" id="57"/>
             </connections>
         </customView>
-        <menu title="Sesiune" autoenablesItems="NO" id="53">
+        <menu title="Apel" autoenablesItems="NO" id="53">
             <items>
                 <menuItem title="Adaugă Text" tag="10" id="54">
                     <modifierMask key="keyEquivalentModifierMask"/>
@@ -275,7 +275,7 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="162"/>
-                <menuItem title="Arată Informații Despre Sesiune" tag="30" enabled="NO" keyEquivalent="i" id="160">
+                <menuItem title="Arată Informații Despre Apel" tag="30" enabled="NO" keyEquivalent="i" id="160">
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="161"/>
                     </connections>

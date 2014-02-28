@@ -34,7 +34,7 @@
                             <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
                                 <nil key="identifier"/>
                             </webPreferences>
-                            <accessibility description="Istoria Sesiunilor Text"/>
+                            <accessibility description="Istoria Conversațiilor Text"/>
                             <connections>
                                 <outlet property="UIDelegate" destination="164" id="174"/>
                                 <outlet property="frameLoadDelegate" destination="164" id="171"/>
@@ -67,7 +67,7 @@
                                 <action selector="searchMessages:" target="164" id="229"/>
                             </connections>
                         </searchField>
-                        <button hidden="YES" toolTip="Arată toate mesajele care aparțin de aceiași sesiune" verticalHuggingPriority="750" id="230">
+                        <button hidden="YES" toolTip="Arată toate mesajele care aparțin de aceiași conversație" verticalHuggingPriority="750" id="230">
                             <rect key="frame" x="297" y="395" width="18" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="231">

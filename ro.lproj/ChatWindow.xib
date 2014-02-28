@@ -65,22 +65,22 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconOnly" sizeMode="small" id="72">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conecteză" paletteLabel="Conecteză" toolTip="Pornește Convorbire Text" tag="100" image="start_chat" id="81">
+                    <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectează" paletteLabel="Conectează" toolTip="Pornește Convorbire Text" tag="100" image="start_chat" id="81">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="83"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" toolTip="Adaugă Convorbire Audio" tag="101" image="audio" id="113">
+                    <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" toolTip="Adaugă Audio" tag="101" image="audio" id="113">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Pauză" paletteLabel="Pauză" toolTip="Pune Pauză" tag="102" image="pause" id="224">
+                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Pauză" paletteLabel="Pauză" toolTip="Pune pe/Scoate din Pauză" tag="102" image="pause" id="224">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Înregistrează" paletteLabel="Înregistrează" toolTip="Înregistrează Convorbire Audio" tag="103" image="record" autovalidates="NO" id="244">
+                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Înregistrează" paletteLabel="Înregistrează" toolTip="Înregistrează Convorbirea Audio" tag="103" image="record" autovalidates="NO" id="244">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
@@ -101,7 +101,7 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
-                    <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Trimite fișier" paletteLabel="Trimite fișier" toolTip="Trimite fișiere" tag="105" image="upfile" id="92">
+                    <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Trimite Fișier" paletteLabel="Trimite Fișier" toolTip="Trimite Fișiere" tag="105" image="upfile" id="92">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
@@ -301,7 +301,7 @@
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Starea Sesiunii Audio"/>
+                    <accessibility description="Starea Apelului Audio"/>
                 </textField>
                 <splitView autosaveName="chat_drawer_view" id="348">
                     <rect key="frame" x="0.0" y="30" width="260" height="570"/>
@@ -549,7 +549,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="484"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Trimite fișier(e)..." tag="323" enabled="NO" indentationLevel="1" id="266">
+                <menuItem title="Trimite Fișiere..." tag="323" enabled="NO" indentationLevel="1" id="266">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="267"/>
@@ -581,7 +581,7 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
-                <menuItem title="Arată Informații Despre Sesiune" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
+                <menuItem title="Arată Informații Despre Apel" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="455"/>
@@ -620,7 +620,7 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="553"/>
-                <menuItem title="Renuntă La Propunere Partajare Ecran" tag="203" id="494">
+                <menuItem title="Renunță La Partajarea Ecranului" tag="203" id="494">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedScreenSharingMenu:" target="-2" id="560"/>

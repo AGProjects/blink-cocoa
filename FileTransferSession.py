@@ -352,7 +352,7 @@ class IncomingFileTransferHandler(FileTransfer):
 
         if self.finished_transfer and not self.error:
             t = NSLocalizedString("Completed transfer of ", "Label")
-            self.status = t + format_size(self.file_size) + " in " + format_duration(self.end_time-self.start_time) + " " + format_date(self.end_time)
+            self.status = t + format_size(self.file_size) + NSLocalizedString(" in ", "Label") + format_duration(self.end_time-self.start_time) + " " + format_date(self.end_time)
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_size
             notification_center.post_notification("BlinkFileTransferDidEnd", sender=self, data=NotificationData(file_path=self.file_path))
