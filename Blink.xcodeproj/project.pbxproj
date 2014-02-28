@@ -1080,10 +1080,6 @@
 		1FF32B6F17ED0D8600E63A20 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
 		1FF32B7017ED0D8900E63A20 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
 		1FF32B7117ED0D8D00E63A20 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
-		1FF32B7217ED0DA400E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
-		1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
-		1FF32B7417ED0DA600E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
-		1FF32B7517ED0DA600E63A20 /* blink-gold.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F94DEA8168B758D00168FBA /* blink-gold.icns */; };
 		1FF32B7617ED0DAD00E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
 		1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
 		1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F0E260C1402F097004AED9C /* blink-crypto.icns */; };
@@ -1859,7 +1855,6 @@
 		1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-darkgray.png"; path = "icons/unlocked-darkgray.png"; sourceTree = "<group>"; };
 		1F946C9B17CB60D50056ADB4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/OTRSettings.xib; sourceTree = "<group>"; };
 		1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Clearcom.entitlements; sourceTree = "<group>"; };
-		1F94DEA8168B758D00168FBA /* blink-gold.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-gold.icns"; sourceTree = "<group>"; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
@@ -2463,7 +2458,6 @@
 				1F6963F617BF771A00985747 /* unlocked-red.png */,
 				1F6963F117BF770900985747 /* locked-green.png */,
 				1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */,
-				1F94DEA8168B758D00168FBA /* blink-gold.icns */,
 				1FCE2BDE166BABBC00090A86 /* time.png */,
 				1F9BE2E1167B7AC8006DFF3F /* lupa.png */,
 				1FE59BB8161621BB00CD7B21 /* location.png */,
@@ -3231,7 +3225,6 @@
 				1F5BC26417E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1FD0808E18C02E1F00A3B313 /* offline.png in Resources */,
 				1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */,
-				1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */,
 				1FB9BB4217F8117500D7FFA8 /* database-on.png in Resources */,
 				1F17D31217F9825D00CB74EC /* database-local-off.png in Resources */,
@@ -3487,7 +3480,6 @@
 				1F5BC26017E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26617E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC30017E66DAC00D1D8BE /* Localizable.strings in Resources */,
-				1FF32B7517ED0DA600E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7917ED0DB300E63A20 /* blink-crypto.icns in Resources */,
 				1FB9BB4417F8117500D7FFA8 /* database-on.png in Resources */,
 				1F17D31417F9825D00CB74EC /* database-local-off.png in Resources */,
@@ -3743,7 +3735,6 @@
 				1F5BC26517E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC2FF17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 				1FF32B7117ED0D8D00E63A20 /* silence.wav in Resources */,
-				1FF32B7417ED0DA600E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7B17ED0DDC00E63A20 /* Info-lite.plist in Resources */,
 				1FB9BB4317F8117500D7FFA8 /* database-on.png in Resources */,
@@ -3999,7 +3990,6 @@
 				1FF32B6E17ED0C9B00E63A20 /* Updater.py in Resources */,
 				1FF32B6F17ED0D8600E63A20 /* zrtp-securemode.wav in Resources */,
 				1FF32B7017ED0D8900E63A20 /* zrtp-security-failed.wav in Resources */,
-				1FF32B7217ED0DA400E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7617ED0DAD00E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7C17ED0DE200E63A20 /* Info.plist in Resources */,
 				1FB9BB4117F8117500D7FFA8 /* database-on.png in Resources */,
