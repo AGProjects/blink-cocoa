@@ -1018,6 +1018,10 @@
 		1FD0808E18C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
 		1FD0808F18C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
 		1FD0809018C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
+		1FD0809218C02F4C00A3B313 /* about.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0809118C02F4C00A3B313 /* about.tiff */; };
+		1FD0809318C02F4C00A3B313 /* about.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0809118C02F4C00A3B313 /* about.tiff */; };
+		1FD0809418C02F4C00A3B313 /* about.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0809118C02F4C00A3B313 /* about.tiff */; };
+		1FD0809518C02F4C00A3B313 /* about.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0809118C02F4C00A3B313 /* about.tiff */; };
 		1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
@@ -1920,6 +1924,7 @@
 		1FD0807A18C02DA800A3B313 /* busy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = busy.png; sourceTree = "<group>"; };
 		1FD0807B18C02DA800A3B313 /* invisible.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = invisible.png; sourceTree = "<group>"; };
 		1FD0808C18C02E1F00A3B313 /* offline.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = offline.png; sourceTree = "<group>"; };
+		1FD0809118C02F4C00A3B313 /* about.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = about.tiff; path = icons/about.tiff; sourceTree = SOURCE_ROOT; };
 		1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pending_watcher.tiff; path = icons/pending_watcher.tiff; sourceTree = "<group>"; };
 		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
 		1FD2EF951439CCC300DFBB2A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
@@ -2446,6 +2451,7 @@
 			isa = PBXGroup;
 			children = (
 				1FE50E59164D1B6200840B18 /* presence */,
+				1FD0809118C02F4C00A3B313 /* about.tiff */,
 				1F7E0484176DC43D0006FF31 /* hangup_16.png */,
 				1FB9BB3C17F8117500D7FFA8 /* database-on.png */,
 				1F17D31017F9825D00CB74EC /* database-remote-off.png */,
@@ -3149,6 +3155,7 @@
 				1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673013A8A987006EEB0F /* default.crt in Resources */,
+				1FD0809318C02F4C00A3B313 /* about.tiff in Resources */,
 				1FF2F5B413AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3213B246FF0081F90B /* contacts.png in Resources */,
 				1FF32B5217EC841500E63A20 /* CallTransferWindow.xib in Resources */,
@@ -3267,6 +3274,7 @@
 				1F35CF9617894FFF00C6FE38 /* ring_inbound.wav in Resources */,
 				1F35CF9717894FFF00C6FE38 /* ring_outbound.wav in Resources */,
 				1F35CF9817894FFF00C6FE38 /* VerticalBoxView.py in Resources */,
+				1FD0809518C02F4C00A3B313 /* about.tiff in Resources */,
 				1F35CF9917894FFF00C6FE38 /* PreferenceOptions.py in Resources */,
 				1F35CF9A17894FFF00C6FE38 /* TableView.py in Resources */,
 				1F35CF9B17894FFF00C6FE38 /* AudioSession.py in Resources */,
@@ -3640,6 +3648,7 @@
 				1F8DC3BD135084FA0034815C /* ConferenceConfigurationPanel.py in Resources */,
 				DEFD8CA0135DF34200456E86 /* resources.py in Resources */,
 				DE5E4A0E1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
+				1FD0809418C02F4C00A3B313 /* about.tiff in Resources */,
 				1FA6252213828E2500DFC8E3 /* editor.png in Resources */,
 				1F2747C71388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */,
 				1F27467A1388755F0052C384 /* fullscreen.png in Resources */,
@@ -3895,6 +3904,7 @@
 				1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 				DEFD8CA2135DF34400456E86 /* resources.py in Resources */,
 				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
+				1FD0809218C02F4C00A3B313 /* about.tiff in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
 				1F2747C51388F93B0052C384 /* FullScreenVideoPanel.xib in Resources */,
