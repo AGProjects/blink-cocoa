@@ -1271,7 +1271,7 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
         self.loadUserIcon()
-        self.loadPresenceStateAtStart()
+        self.loadPresenceStates()
         self.setSpeechSynthesis()
 
         if not NSApp.delegate().wait_for_enrollment:
@@ -2748,30 +2748,28 @@ class ContactWindowController(NSWindowController):
        else:
            contact.delete()
 
-    def loadPresenceStateAtStart(self):
+    def loadPresenceStates(self):
         settings = SIPSimpleSettings()
 
         # populate presence menus
         self.presenceActivityPopUp.removeAllItems()
         while self.presenceMenu.numberOfItems() > 0:
             self.presenceMenu.removeItemAtIndex_(0)
+
         self.fillPresenceMenu(self.presenceMenu)
         self.fillPresenceMenu(self.presenceActivityPopUp.menu())
+
+        status = settings.presence_state.status
+        if not status:
+            status = 'Available'
+            settings.presence_state.status = status
+            settings.save()
+
+        self.changeMyPresenceFromStatus(status)
 
         note = settings.presence_state.note
         if note:
             self.presenceNoteText.setStringValue_(note if note != on_the_phone_activity['note'] else '')
-
-        status = settings.presence_state.status
-        if status:
-            self.setStatusBarIcon(status)
-            self.presenceActivityPopUp.selectItemWithTitle_(status)
-            for item in self.presenceMenu.itemArray():
-                item.setState_(NSOnState if item.title() == status else NSOffState)
-        else:
-            item = self.presenceActivityPopUp.selectedItem()
-            settings.presence_state.status = item.title()
-            settings.save()
 
     def setLastPresenceActivity(self):
         settings = SIPSimpleSettings()
@@ -2801,33 +2799,23 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def setPresenceActivityFromHistory_(self, sender):
+        object = sender.representedObject()
+
         settings = SIPSimpleSettings()
+
         settings.presence_state.timestamp = ISOTimestamp.now()
 
-        item = sender.representedObject()
-        history_object = item
-
-        presence_note = item['note']
-        self.presenceNoteText.setStringValue_(presence_note)
-        settings.presence_state.note = presence_note
-
-        status = item['title']
-        tag = 1
-        for item in self.presenceMenu.itemArray():
-            item.setState_(NSOffState)
-            if item.tag() and item.representedObject() and item.representedObject()['title'] == status:
-                tag = item.tag()
-
-        item = self.presenceMenu.itemWithTag_(tag)
-        item.setState_(NSOnState)
-
-        menu = self.presenceActivityPopUp.menu()
-        item = menu.itemWithTag_(tag)
-        self.presenceActivityPopUp.selectItem_(item)
+        status = object['title']
+        self.changeMyPresenceFromStatus(status)
         settings.presence_state.status = status
-        self.setStatusBarIcon(status)
+
+        note = object['note']
+        self.presenceNoteText.setStringValue_(note)
+        settings.presence_state.note = note
+
         settings.save()
-        self.savePresenceActivityToHistory(history_object)
+
+        self.savePresenceActivityToHistory(object)
 
     def _NH_SIPAccountGotSelfPresenceState(self, notification):
         settings = SIPSimpleSettings()
@@ -2915,24 +2903,14 @@ class ContactWindowController(NSWindowController):
                 title = selected_presence_activity['title']
                 if title != settings.presence_state.status:
                     change = True
-                    for item in self.presenceMenu.itemArray():
-                        item.setState_(NSOffState)
-                    item = self.presenceMenu.itemWithTitle_(title)
-                    if item is not None:
-                        item.setState_(NSOnState)
-
-                    menu = self.presenceActivityPopUp.menu()
-                    item = menu.itemWithTitle_(title)
-                    self.presenceActivityPopUp.selectItem_(item)
-
+                    self.changeMyPresenceFromStatus(title)
                     settings.presence_state.status = title
-                    self.setStatusBarIcon(status)
 
             if change:
                 settings.save()
-                history_object = dict(selected_presence_activity)
-                history_object['note'] = note
-                self.savePresenceActivityToHistory(history_object)
+                object = dict(selected_presence_activity)
+                object['note'] = note
+                self.savePresenceActivityToHistory(object)
 
             if must_publish:
                 self.presencePublisher.publish()
@@ -2965,34 +2943,42 @@ class ContactWindowController(NSWindowController):
                 if selected_presence_activity is None:
                     return
 
-                history_object = dict(selected_presence_activity)
-                history_object['note'] = presence_note
-                self.savePresenceActivityToHistory(history_object)
+                object = dict(selected_presence_activity)
+                object['note'] = presence_note
+                self.savePresenceActivityToHistory(object)
 
+    def changeMyPresenceFromStatus(self, status='Available'):
+        tag = 1
+        # update presence activity popup menu
+        for item in self.presenceMenu.itemArray():
+            item.setState_(NSOffState)
+            if item.tag() and item.representedObject() and item.representedObject()['title'] == status:
+                tag = item.tag()
+
+        item = self.presenceMenu.itemWithTag_(tag)
+        item.setState_(NSOnState)
+
+        menu = self.presenceActivityPopUp.menu()
+        item = menu.itemWithTag_(tag)
+        self.presenceActivityPopUp.selectItem_(item)
+
+        self.setStatusBarIcon(status)
 
     @objc.IBAction
     def presenceActivityChanged_(self, sender):
         settings = SIPSimpleSettings()
         settings.presence_state.timestamp = ISOTimestamp.now()
 
-        # update system status bar
-        status = sender.title()
-        self.setStatusBarIcon(status)
-
-        # update presence activity popup menu
-        for item in self.presenceMenu.itemArray():
-            item.setState_(NSOffState)
-        item = self.presenceMenu.itemWithTitle_(status)
-        item.setState_(NSOnState)
-
-        menu = self.presenceActivityPopUp.menu()
-        item = menu.itemWithTitle_(status)
-        self.presenceActivityPopUp.selectItem_(item)
+        object = sender.representedObject()
+        status = object['title']
+        self.changeMyPresenceFromStatus(status)
 
         presence_note = None
+
         if settings.presence_state.status == status:
             # if is the same status, delete existing note
             presence_note = ''
+
         if status == 'Invisible':
             presence_note = ''
 
@@ -3006,25 +2992,24 @@ class ContactWindowController(NSWindowController):
         settings.save()
 
         if presence_note:
-            history_object = item.representedObject()
-            history_object['note'] = presence_note
-            self.savePresenceActivityToHistory(history_object)
+            object['note'] = presence_note
+            self.savePresenceActivityToHistory(object)
 
-    def savePresenceActivityToHistory(self, history_object):
-        if not history_object['note']:
+    def savePresenceActivityToHistory(self, object):
+        if not object['note']:
             return
 
-        if history_object['note'] == on_the_phone_activity['note'] and history_object['title'] == on_the_phone_activity['history_title']:
+        if object['note'] == on_the_phone_activity['note'] and object['title'] == on_the_phone_activity['history_title']:
             return
         try:
-            item = (item for item in PresenceActivityList if item['type'] == 'menu_item' and item['action'] == 'presenceActivityChanged:' and item['represented_object']['title'] == history_object['title'] and item['represented_object']['note'] == history_object['note']).next()
+            item = (item for item in PresenceActivityList if item['type'] == 'menu_item' and item['action'] == 'presenceActivityChanged:' and item['represented_object']['title'] == object['title'] and item['represented_object']['note'] == object['note']).next()
         except StopIteration:
             try:
-                self.presence_notes_history.remove(history_object)
+                self.presence_notes_history.remove(object)
             except ValueError:
                 pass
 
-            self.presence_notes_history.append(history_object)
+            self.presence_notes_history.append(object)
             storage_path = ApplicationData.get('presence/presence_notes_history.pickle')
             try:
                 cPickle.dump(self.presence_notes_history, open(storage_path, "w+"))
@@ -3187,21 +3172,14 @@ class ContactWindowController(NSWindowController):
     def setStatusBarIcon(self, status=None):
         if status is None:
             return
+
         status = status.lower()
 
         account = AccountManager().default_account
         if account is not None and account.audio.do_not_disturb:
             status = 'busy'
 
-        if status == 'busy':
-            icon = NSImage.imageNamed_('blink-status-red')
-        elif status == 'away':
-            icon = NSImage.imageNamed_('blink-status-yellow')
-        elif status in ('offline', 'invisible'):
-            icon = NSImage.imageNamed_('blink-status-gray')
-        else:
-            icon = NSImage.imageNamed_('blink-status-green')
-
+        icon = NSImage.imageNamed_(status)
         icon.setScalesWhenResized_(True)
         icon.setSize_(NSMakeSize(18,18))
         self.statusBarItem.setImage_(icon)

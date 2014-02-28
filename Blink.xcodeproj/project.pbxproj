@@ -472,15 +472,6 @@
 		1F35D05217894FFF00C6FE38 /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
 		1F35D05317894FFF00C6FE38 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
 		1F35D05417894FFF00C6FE38 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
-		1F35D05517894FFF00C6FE38 /* available.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5A164D1B6200840B18 /* available.tiff */; };
-		1F35D05617894FFF00C6FE38 /* away.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5B164D1B6200840B18 /* away.tiff */; };
-		1F35D05717894FFF00C6FE38 /* busy.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5D164D1B6200840B18 /* busy.tiff */; };
-		1F35D05817894FFF00C6FE38 /* offline.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5E164D1B6200840B18 /* offline.tiff */; };
-		1F35D05917894FFF00C6FE38 /* blink-status-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */; };
-		1F35D05A17894FFF00C6FE38 /* blink-status-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */; };
-		1F35D05B17894FFF00C6FE38 /* blink-status-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F872164D7B3A008F56E8 /* blink-status-green.png */; };
-		1F35D05C17894FFF00C6FE38 /* blink-status-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F873164D7B3A008F56E8 /* blink-status-red.png */; };
-		1F35D05D17894FFF00C6FE38 /* blink-status-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */; };
 		1F35D05E17894FFF00C6FE38 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
 		1F35D05F17894FFF00C6FE38 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1F35D06017894FFF00C6FE38 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
@@ -1007,6 +998,26 @@
 		1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
 		1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
 		1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
+		1FD0807C18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
+		1FD0807D18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
+		1FD0807E18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
+		1FD0807F18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
+		1FD0808018C02DA800A3B313 /* away.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807918C02DA800A3B313 /* away.png */; };
+		1FD0808118C02DA800A3B313 /* away.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807918C02DA800A3B313 /* away.png */; };
+		1FD0808218C02DA800A3B313 /* away.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807918C02DA800A3B313 /* away.png */; };
+		1FD0808318C02DA800A3B313 /* away.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807918C02DA800A3B313 /* away.png */; };
+		1FD0808418C02DA800A3B313 /* busy.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807A18C02DA800A3B313 /* busy.png */; };
+		1FD0808518C02DA800A3B313 /* busy.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807A18C02DA800A3B313 /* busy.png */; };
+		1FD0808618C02DA800A3B313 /* busy.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807A18C02DA800A3B313 /* busy.png */; };
+		1FD0808718C02DA800A3B313 /* busy.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807A18C02DA800A3B313 /* busy.png */; };
+		1FD0808818C02DA800A3B313 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
+		1FD0808918C02DA800A3B313 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
+		1FD0808A18C02DA800A3B313 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
+		1FD0808B18C02DA800A3B313 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
+		1FD0808D18C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
+		1FD0808E18C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
+		1FD0808F18C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
+		1FD0809018C02E1F00A3B313 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
 		1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
 		1FD0F0AC15C9537400D2EE39 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
@@ -1016,21 +1027,6 @@
 		1FD2EF971439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
 		1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
 		1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
-		1FD3F875164D7B3A008F56E8 /* blink-status-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */; };
-		1FD3F876164D7B3A008F56E8 /* blink-status-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */; };
-		1FD3F877164D7B3A008F56E8 /* blink-status-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */; };
-		1FD3F878164D7B3A008F56E8 /* blink-status-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */; };
-		1FD3F879164D7B3A008F56E8 /* blink-status-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */; };
-		1FD3F87A164D7B3A008F56E8 /* blink-status-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */; };
-		1FD3F87B164D7B3A008F56E8 /* blink-status-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F872164D7B3A008F56E8 /* blink-status-green.png */; };
-		1FD3F87C164D7B3A008F56E8 /* blink-status-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F872164D7B3A008F56E8 /* blink-status-green.png */; };
-		1FD3F87D164D7B3A008F56E8 /* blink-status-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F872164D7B3A008F56E8 /* blink-status-green.png */; };
-		1FD3F87E164D7B3A008F56E8 /* blink-status-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F873164D7B3A008F56E8 /* blink-status-red.png */; };
-		1FD3F87F164D7B3A008F56E8 /* blink-status-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F873164D7B3A008F56E8 /* blink-status-red.png */; };
-		1FD3F880164D7B3A008F56E8 /* blink-status-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F873164D7B3A008F56E8 /* blink-status-red.png */; };
-		1FD3F881164D7B3A008F56E8 /* blink-status-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */; };
-		1FD3F882164D7B3A008F56E8 /* blink-status-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */; };
-		1FD3F883164D7B3A008F56E8 /* blink-status-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */; };
 		1FD614BA1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD614BB1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
@@ -1050,18 +1046,6 @@
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
-		1FE50E60164D1B6200840B18 /* available.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5A164D1B6200840B18 /* available.tiff */; };
-		1FE50E61164D1B6200840B18 /* available.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5A164D1B6200840B18 /* available.tiff */; };
-		1FE50E62164D1B6200840B18 /* available.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5A164D1B6200840B18 /* available.tiff */; };
-		1FE50E63164D1B6200840B18 /* away.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5B164D1B6200840B18 /* away.tiff */; };
-		1FE50E64164D1B6200840B18 /* away.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5B164D1B6200840B18 /* away.tiff */; };
-		1FE50E65164D1B6200840B18 /* away.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5B164D1B6200840B18 /* away.tiff */; };
-		1FE50E69164D1B6200840B18 /* busy.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5D164D1B6200840B18 /* busy.tiff */; };
-		1FE50E6A164D1B6200840B18 /* busy.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5D164D1B6200840B18 /* busy.tiff */; };
-		1FE50E6B164D1B6200840B18 /* busy.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5D164D1B6200840B18 /* busy.tiff */; };
-		1FE50E6C164D1B6200840B18 /* offline.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5E164D1B6200840B18 /* offline.tiff */; };
-		1FE50E6D164D1B6200840B18 /* offline.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5E164D1B6200840B18 /* offline.tiff */; };
-		1FE50E6E164D1B6200840B18 /* offline.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FE50E5E164D1B6200840B18 /* offline.tiff */; };
 		1FE59BB9161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBA161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBB161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
@@ -1931,14 +1915,14 @@
 		1FCF160812B5639F00F71BE5 /* Info-pro.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-pro.plist"; sourceTree = "<group>"; };
 		1FCF1D1E12B57D1400F71BE5 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = Distribution/Resources/lib; sourceTree = "<group>"; };
 		1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Pro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FD0807818C02DA800A3B313 /* available.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = available.png; sourceTree = "<group>"; };
+		1FD0807918C02DA800A3B313 /* away.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = away.png; sourceTree = "<group>"; };
+		1FD0807A18C02DA800A3B313 /* busy.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = busy.png; sourceTree = "<group>"; };
+		1FD0807B18C02DA800A3B313 /* invisible.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = invisible.png; sourceTree = "<group>"; };
+		1FD0808C18C02E1F00A3B313 /* offline.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = offline.png; sourceTree = "<group>"; };
 		1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pending_watcher.tiff; path = icons/pending_watcher.tiff; sourceTree = "<group>"; };
 		1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceScreenSharing.py; sourceTree = "<group>"; };
 		1FD2EF951439CCC300DFBB2A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
-		1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-blue.png"; sourceTree = "<group>"; };
-		1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-gray.png"; sourceTree = "<group>"; };
-		1FD3F872164D7B3A008F56E8 /* blink-status-green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-green.png"; sourceTree = "<group>"; };
-		1FD3F873164D7B3A008F56E8 /* blink-status-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-red.png"; sourceTree = "<group>"; };
-		1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "blink-status-yellow.png"; sourceTree = "<group>"; };
 		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
 		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
@@ -1946,10 +1930,6 @@
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
-		1FE50E5A164D1B6200840B18 /* available.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = available.tiff; sourceTree = "<group>"; };
-		1FE50E5B164D1B6200840B18 /* away.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = away.tiff; sourceTree = "<group>"; };
-		1FE50E5D164D1B6200840B18 /* busy.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = busy.tiff; sourceTree = "<group>"; };
-		1FE50E5E164D1B6200840B18 /* offline.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = offline.tiff; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
@@ -2352,16 +2332,11 @@
 		1FE50E59164D1B6200840B18 /* presence */ = {
 			isa = PBXGroup;
 			children = (
-				1FD3F870164D7B3A008F56E8 /* blink-status-blue.png */,
-				1FD3F871164D7B3A008F56E8 /* blink-status-gray.png */,
-				1FD3F872164D7B3A008F56E8 /* blink-status-green.png */,
-				1FD3F873164D7B3A008F56E8 /* blink-status-red.png */,
-				1FD3F874164D7B3A008F56E8 /* blink-status-yellow.png */,
-				1FE50E5A164D1B6200840B18 /* available.tiff */,
-				1FE50E5B164D1B6200840B18 /* away.tiff */,
-				1FE50E5D164D1B6200840B18 /* busy.tiff */,
-				1FE50E5E164D1B6200840B18 /* offline.tiff */,
-				1F7E0484176DC43D0006FF31 /* hangup_16.png */,
+				1FD0807818C02DA800A3B313 /* available.png */,
+				1FD0807918C02DA800A3B313 /* away.png */,
+				1FD0807A18C02DA800A3B313 /* busy.png */,
+				1FD0807B18C02DA800A3B313 /* invisible.png */,
+				1FD0808C18C02E1F00A3B313 /* offline.png */,
 			);
 			name = presence;
 			path = icons/presence;
@@ -2471,6 +2446,7 @@
 			isa = PBXGroup;
 			children = (
 				1FE50E59164D1B6200840B18 /* presence */,
+				1F7E0484176DC43D0006FF31 /* hangup_16.png */,
 				1FB9BB3C17F8117500D7FFA8 /* database-on.png */,
 				1F17D31017F9825D00CB74EC /* database-remote-off.png */,
 				1F17D30F17F9825D00CB74EC /* database-local-off.png */,
@@ -3061,8 +3037,10 @@
 				1F2272CF12B554F50010A8B2 /* speaker.png in Resources */,
 				1F2272D012B554F50010A8B2 /* bell.png in Resources */,
 				1F2272D112B554F50010A8B2 /* bluelock.png in Resources */,
+				1FD0808518C02DA800A3B313 /* busy.png in Resources */,
 				1F2272D212B554F50010A8B2 /* greenlock.png in Resources */,
 				1F2272D312B554F50010A8B2 /* ContactOutlineView.py in Resources */,
+				1FD0808118C02DA800A3B313 /* away.png in Resources */,
 				1F2272D412B554F50010A8B2 /* FileTransferWindow.xib in Resources */,
 				1F2272D512B554F50010A8B2 /* FileTransferItemView.xib in Resources */,
 				1F2272D612B554F50010A8B2 /* FileTransferItemView.py in Resources */,
@@ -3098,6 +3076,7 @@
 				1F2272F712B554F50010A8B2 /* dtmf_D_tone.wav in Resources */,
 				1F2272F812B554F50010A8B2 /* dtmf_pound_tone.wav in Resources */,
 				1F2272F912B554F50010A8B2 /* dtmf_star_tone.wav in Resources */,
+				1FD0807D18C02DA800A3B313 /* available.png in Resources */,
 				1F2272FA12B554F50010A8B2 /* hangup_tone.wav in Resources */,
 				1F2272FB12B554F50010A8B2 /* hold_tone.wav in Resources */,
 				1F2272FC12B554F50010A8B2 /* ring_outbound2.wav in Resources */,
@@ -3196,6 +3175,7 @@
 				1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1FB3080B146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99714730F6F00F2C981 /* ldap.png in Resources */,
+				1FD0808918C02DA800A3B313 /* invisible.png in Resources */,
 				1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
 				1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */,
@@ -3222,15 +3202,6 @@
 				1F3C358615F522FA005356AE /* PresenceInfoController.py in Resources */,
 				1F3BF8BF1611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BBA161621BB00CD7B21 /* location.png in Resources */,
-				1FE50E61164D1B6200840B18 /* available.tiff in Resources */,
-				1FE50E64164D1B6200840B18 /* away.tiff in Resources */,
-				1FE50E6A164D1B6200840B18 /* busy.tiff in Resources */,
-				1FE50E6D164D1B6200840B18 /* offline.tiff in Resources */,
-				1FD3F876164D7B3A008F56E8 /* blink-status-blue.png in Resources */,
-				1FD3F879164D7B3A008F56E8 /* blink-status-gray.png in Resources */,
-				1FD3F87C164D7B3A008F56E8 /* blink-status-green.png in Resources */,
-				1FD3F87F164D7B3A008F56E8 /* blink-status-red.png in Resources */,
-				1FD3F882164D7B3A008F56E8 /* blink-status-yellow.png in Resources */,
 				1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */,
 				1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE0166BABBC00090A86 /* time.png in Resources */,
@@ -3251,6 +3222,7 @@
 				1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
 				1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26417E6114700D1D8BE /* AlertPanelView.xib in Resources */,
+				1FD0808E18C02E1F00A3B313 /* offline.png in Resources */,
 				1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 				1FF32B7317ED0DA500E63A20 /* blink-gold.icns in Resources */,
 				1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */,
@@ -3383,12 +3355,14 @@
 				1F35CFF017894FFF00C6FE38 /* SMSViewController.py in Resources */,
 				1F35CFF117894FFF00C6FE38 /* 3333@sip2sip.info.tiff in Resources */,
 				1F35CFF217894FFF00C6FE38 /* PresenceOfflineWindow.xib in Resources */,
+				1FD0809018C02E1F00A3B313 /* offline.png in Resources */,
 				1F35CFF317894FFF00C6FE38 /* 4444@sip2sip.info.tiff in Resources */,
 				1F35CFF417894FFF00C6FE38 /* 200901@login.zipdx.com.tiff in Resources */,
 				1F35CFF517894FFF00C6FE38 /* blink-full-72dpi.tif in Resources */,
 				1F35CFF617894FFF00C6FE38 /* ConferenceController.py in Resources */,
 				1F35CFF717894FFF00C6FE38 /* test@conference.sip2sip.info.tiff in Resources */,
 				1F35CFF817894FFF00C6FE38 /* ChatWindowController.py in Resources */,
+				1FD0808B18C02DA800A3B313 /* invisible.png in Resources */,
 				1F35CFF917894FFF00C6FE38 /* AddParticipantsWindow.xib in Resources */,
 				1F35CFFA17894FFF00C6FE38 /* FileTransferController.py in Resources */,
 				1F35CFFB17894FFF00C6FE38 /* ParticipantsTableView.py in Resources */,
@@ -3421,12 +3395,14 @@
 				1F35D01717894FFF00C6FE38 /* VideoMirrowWindow.xib in Resources */,
 				1F35D01817894FFF00C6FE38 /* VideoMirrorWindowController.py in Resources */,
 				1F35D01917894FFF00C6FE38 /* chat.png in Resources */,
+				1FD0807F18C02DA800A3B313 /* available.png in Resources */,
 				1F35D01A17894FFF00C6FE38 /* alerts.png in Resources */,
 				1F35D01B17894FFF00C6FE38 /* logs.png in Resources */,
 				1F35D01C17894FFF00C6FE38 /* audio-preferences.png in Resources */,
 				1F35D01D17894FFF00C6FE38 /* answering_machine.png in Resources */,
 				1F35D01E17894FFF00C6FE38 /* editor-changed.png in Resources */,
 				1F35D01F17894FFF00C6FE38 /* MigrationPanel.xib in Resources */,
+				1FD0808718C02DA800A3B313 /* busy.png in Resources */,
 				1F35D02017894FFF00C6FE38 /* default.crt in Resources */,
 				1F35D02117894FFF00C6FE38 /* contact.py in Resources */,
 				1F35D02217894FFF00C6FE38 /* contacts.png in Resources */,
@@ -3480,15 +3456,6 @@
 				1F35D05217894FFF00C6FE38 /* PresenceInfoController.py in Resources */,
 				1F35D05317894FFF00C6FE38 /* WorldMapView.py in Resources */,
 				1F35D05417894FFF00C6FE38 /* location.png in Resources */,
-				1F35D05517894FFF00C6FE38 /* available.tiff in Resources */,
-				1F35D05617894FFF00C6FE38 /* away.tiff in Resources */,
-				1F35D05717894FFF00C6FE38 /* busy.tiff in Resources */,
-				1F35D05817894FFF00C6FE38 /* offline.tiff in Resources */,
-				1F35D05917894FFF00C6FE38 /* blink-status-blue.png in Resources */,
-				1F35D05A17894FFF00C6FE38 /* blink-status-gray.png in Resources */,
-				1F35D05B17894FFF00C6FE38 /* blink-status-green.png in Resources */,
-				1F35D05C17894FFF00C6FE38 /* blink-status-red.png in Resources */,
-				1F35D05D17894FFF00C6FE38 /* blink-status-yellow.png in Resources */,
 				1F35D05E17894FFF00C6FE38 /* BlockedContact.py in Resources */,
 				1F35D05F17894FFF00C6FE38 /* BlockedContact.xib in Resources */,
 				1F35D06017894FFF00C6FE38 /* time.png in Resources */,
@@ -3517,6 +3484,7 @@
 				1FB9BB4417F8117500D7FFA8 /* database-on.png in Resources */,
 				1F17D31417F9825D00CB74EC /* database-local-off.png in Resources */,
 				1F17D31817F9825D00CB74EC /* database-remote-off.png in Resources */,
+				1FD0808318C02DA800A3B313 /* away.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3541,6 +3509,7 @@
 				1F8DC334135084FA0034815C /* SIPManager.py in Resources */,
 				1F8DC335135084FA0034815C /* EnrollmentController.py in Resources */,
 				1F8DC336135084FA0034815C /* Main.py in Resources */,
+				1FD0808F18C02E1F00A3B313 /* offline.png in Resources */,
 				1F8DC337135084FA0034815C /* ChatController.py in Resources */,
 				1F8DC338135084FA0034815C /* pause.png in Resources */,
 				1F8DC339135084FA0034815C /* BlinkLogger.py in Resources */,
@@ -3577,6 +3546,7 @@
 				1F8DC35C135084FA0034815C /* mic.png in Resources */,
 				1F8DC35D135084FA0034815C /* speaker.png in Resources */,
 				1FF6C40B1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
+				1FD0807E18C02DA800A3B313 /* available.png in Resources */,
 				1F8DC35E135084FA0034815C /* bell.png in Resources */,
 				1F8DC35F135084FA0034815C /* bluelock.png in Resources */,
 				1F8DC360135084FA0034815C /* greenlock.png in Resources */,
@@ -3676,6 +3646,7 @@
 				1F2747D41388FC5C0052C384 /* restore.png in Resources */,
 				1F274897138930580052C384 /* VideoView.py in Resources */,
 				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
+				1FD0808A18C02DA800A3B313 /* invisible.png in Resources */,
 				1F8A7632138A982E007E84C0 /* mute-white.png in Resources */,
 				1F07D8A5138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
 				1F07D768138BDFF200C91AD7 /* VideoMirrorWindowController.py in Resources */,
@@ -3689,6 +3660,7 @@
 				DE3A673213A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B213AB406A00502BDB /* contact.py in Resources */,
 				1FA47A3013B246FF0081F90B /* contacts.png in Resources */,
+				1FD0808218C02DA800A3B313 /* away.png in Resources */,
 				1FF32B5317EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E013FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1FB22A0F140308950024F921 /* zrtp-securemode.wav in Resources */,
@@ -3739,16 +3711,8 @@
 				1F3C358715F522FA005356AE /* PresenceInfoController.py in Resources */,
 				1F3BF8C01611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BBB161621BB00CD7B21 /* location.png in Resources */,
-				1FE50E62164D1B6200840B18 /* available.tiff in Resources */,
-				1FE50E65164D1B6200840B18 /* away.tiff in Resources */,
-				1FE50E6B164D1B6200840B18 /* busy.tiff in Resources */,
-				1FE50E6E164D1B6200840B18 /* offline.tiff in Resources */,
-				1FD3F877164D7B3A008F56E8 /* blink-status-blue.png in Resources */,
-				1FD3F87A164D7B3A008F56E8 /* blink-status-gray.png in Resources */,
-				1FD3F87D164D7B3A008F56E8 /* blink-status-green.png in Resources */,
-				1FD3F880164D7B3A008F56E8 /* blink-status-red.png in Resources */,
-				1FD3F883164D7B3A008F56E8 /* blink-status-yellow.png in Resources */,
 				1FAA83A016566D8C00C4C212 /* BlockedContact.py in Resources */,
+				1FD0808618C02DA800A3B313 /* busy.png in Resources */,
 				1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE1166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E4167B7AC8006DFF3F /* lupa.png in Resources */,
@@ -3800,6 +3764,7 @@
 				2BAF382C0FE088E80040117A /* SIPManager.py in Resources */,
 				2BAF387E0FE096A00040117A /* EnrollmentController.py in Resources */,
 				2BAF39C40FE1B0CF0040117A /* Main.py in Resources */,
+				1FD0808D18C02E1F00A3B313 /* offline.png in Resources */,
 				2B6328850FE422AE00446655 /* ChatController.py in Resources */,
 				2B11AA580FF323A1007FC176 /* pause.png in Resources */,
 				2B11B0B30FF55C52007FC176 /* BlinkLogger.py in Resources */,
@@ -3836,6 +3801,7 @@
 				2B4C40FA1047809C00F40437 /* mic.png in Resources */,
 				2B4C40FB1047809C00F40437 /* speaker.png in Resources */,
 				2B4C4100104783D800F40437 /* bell.png in Resources */,
+				1FD0807C18C02DA800A3B313 /* available.png in Resources */,
 				2B2DE97D1053431600F267F9 /* bluelock.png in Resources */,
 				2B2DE97E1053431600F267F9 /* greenlock.png in Resources */,
 				2B2DF3C81059F27C00F267F9 /* ContactOutlineView.py in Resources */,
@@ -3935,6 +3901,7 @@
 				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
 				1F2747D51388FC5C0052C384 /* restore.png in Resources */,
 				1F274898138930580052C384 /* VideoView.py in Resources */,
+				1FD0808818C02DA800A3B313 /* invisible.png in Resources */,
 				1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7630138A982E007E84C0 /* mute-white.png in Resources */,
 				1F07D8A3138BF22E00C91AD7 /* VideoMirrowWindow.xib in Resources */,
@@ -3948,6 +3915,7 @@
 				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673113A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B313AB406A00502BDB /* contact.py in Resources */,
+				1FD0808018C02DA800A3B313 /* away.png in Resources */,
 				1FA47A3113B246FF0081F90B /* contacts.png in Resources */,
 				1FF32B5117EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */,
@@ -3995,19 +3963,11 @@
 				1F3C358515F522FA005356AE /* PresenceInfoController.py in Resources */,
 				1F3BF8BE1611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BB9161621BB00CD7B21 /* location.png in Resources */,
-				1FE50E60164D1B6200840B18 /* available.tiff in Resources */,
-				1FE50E63164D1B6200840B18 /* away.tiff in Resources */,
-				1FE50E69164D1B6200840B18 /* busy.tiff in Resources */,
-				1FE50E6C164D1B6200840B18 /* offline.tiff in Resources */,
-				1FD3F875164D7B3A008F56E8 /* blink-status-blue.png in Resources */,
-				1FD3F878164D7B3A008F56E8 /* blink-status-gray.png in Resources */,
-				1FD3F87B164D7B3A008F56E8 /* blink-status-green.png in Resources */,
-				1FD3F87E164D7B3A008F56E8 /* blink-status-red.png in Resources */,
-				1FD3F881164D7B3A008F56E8 /* blink-status-yellow.png in Resources */,
 				1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */,
 				1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BDF166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */,
+				1FD0808418C02DA800A3B313 /* busy.png in Resources */,
 				1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */,
 				1F72E53A16A027F600837311 /* MergeContactController.py in Resources */,
 				1F7E0485176DC43D0006FF31 /* hangup_16.png in Resources */,
