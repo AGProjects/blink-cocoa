@@ -495,7 +495,11 @@ class ChatWindowController(NSWindowController):
                     if chat_stream.isConnecting:
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
-                        chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                        audio_stream = session.streamHandlerOfType("audio")
+                        if audio_stream and audio_stream.isConnecting:
+                            chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                        else:
+                            chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.revalidateToolbar()
         self.refreshDrawer()
 
@@ -511,7 +515,11 @@ class ChatWindowController(NSWindowController):
                     if chat_stream.isConnecting:
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
-                        chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                        audio_stream = session.streamHandlerOfType("audio")
+                        if audio_stream and audio_stream.isConnecting:
+                            chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                        else:
+                            chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.revalidateToolbar()
         self.refreshDrawer()
 
