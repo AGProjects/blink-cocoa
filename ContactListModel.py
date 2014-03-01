@@ -1874,7 +1874,12 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 blink_contact.answering_machine_filenames = set()
                 if len(result.am_filename):
                     blink_contact.answering_machine_filenames.add(result.am_filename)
-                blink_contact.detail = u'%s call %s' % (self.type.capitalize(), format_date(result.start_time))
+                if self.type == "missed":
+                    blink_contact.detail = NSLocalizedString("Missed call", "Contact detail") + " " + format_date(result.start_time)
+                elif self.type == "incoming":
+                    blink_contact.detail = NSLocalizedString("Incoming call", "Contact detail")  + " " + format_date(result.start_time)
+                elif self.type == "outgoing":
+                    blink_contact.detail = NSLocalizedString("Outgoing call", "Contact detail") + " " + format_date(result.start_time)
                 blink_contact.contact = contact
                 contacts.append(blink_contact)
 
@@ -1886,7 +1891,10 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 pass
             try:
                 if seen[k] > 1:
-                    new_detail = blink_contact.detail + u' and %d other time%s' % (seen[k] - 1, 's' if seen[k] > 2 else '')
+                    if seen[k] - 2:
+                        new_detail = blink_contact.detail + NSLocalizedString(" and %d other times", "Label") % seen[k]
+                    else:
+                        new_detail = blink_contact.detail + NSLocalizedString(" and one other time", "Label")
                     blink_contact.detail = new_detail
 
             except KeyError:

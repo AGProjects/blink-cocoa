@@ -373,6 +373,15 @@ def beautify_audio_codec(codec):
 
     return codec
 
+day_of_week_localized = {
+               'Monday':    NSLocalizedString("Monday", "Label"),
+               'Tuesday':   NSLocalizedString("Tuesday", "Label"),
+               'Wednesday': NSLocalizedString("Wednesday", "Label"),
+               'Thursday':  NSLocalizedString("Thursday", "Label"),
+               'Friday':    NSLocalizedString("Friday", "Label"),
+               'Saturday':  NSLocalizedString("Saturday", "Label"),
+               'Sunday':    NSLocalizedString("Sunday", "Label")
+               }
 
 def format_date(dt):
     if not dt:
@@ -380,16 +389,15 @@ def format_date(dt):
     now = datetime.now()
     delta = now - dt
     if (dt.year,dt.month,dt.day) == (now.year,now.month,now.day):
-        return NSLocalizedString("at ", "Time label") + dt.strftime("%H:%M")
+        return NSLocalizedString("at %s", "Time label") % dt.strftime("%H:%M")
     elif delta.days <= 1:
-        _time = dt.strftime("%H:%M")
-        return NSLocalizedString("Yesterday at %s", "Date label") % _time
+        return NSLocalizedString("yesterday at %s", "Date label") % dt.strftime("%H:%M")
     elif delta.days < 7:
-        return NSLocalizedString("on ", "Date label") + dt.strftime("%A")
+        return day_of_week_localized[dt.strftime("%A")]
     elif delta.days < 300:
-        return NSLocalizedString("on ", "Date label") + dt.strftime("%B %d")
+        return dt.strftime("%B %d")
     else:
-        return NSLocalizedString("on ", "Date label") + dt.strftime("%Y-%m-%d")
+        return NSLocalizedString("on %s", "Date label") % dt.strftime("%Y-%m-%d")
 
 
 class AccountInfo(object):

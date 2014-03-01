@@ -66,7 +66,8 @@ class FileTransferItemView(NSView):
 
             time_print = format_date(transferInfo.time)
             if transferInfo.status == "completed":
-                status = "Completed transfer of %s %s" % (format_size(transferInfo.file_size, 1024), time_print)
+                t = NSLocalizedString("Completed transfer of ", "Label")
+                status = t + "%s %s" % (format_size(transferInfo.file_size, 1024), time_print)
             else:
                 if transferInfo.direction == "outgoing":
                     status = '%s %s' % (transferInfo.status.title(), time_print)

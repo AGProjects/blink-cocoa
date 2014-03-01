@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
@@ -22,7 +22,7 @@
                                     <action selector="orderFrontAboutPanel:" target="373" id="877"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Verifica Daca Exista O versiune Mai Noua..." tag="2" id="945">
+                            <menuItem title="Caută Actualizări..." tag="2" id="945">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="checkForUpdates:" target="389" id="1868"/>
@@ -469,7 +469,7 @@ CA
                             <menuItem title="Intimitate" enabled="NO" id="1862">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
-                            <menuItem title="Nu Salva Mesajele Text În Istorie" tag="101" indentationLevel="1" id="1863">
+                            <menuItem title="Nu Salva Conversațiile Text" tag="101" indentationLevel="1" id="1863">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleChatPrivacy:" target="389" id="1867"/>
@@ -1123,10 +1123,10 @@ ABC</string>
                         <segmentedCell key="cell" state="on" alignment="left" style="texturedSquare" trackingMode="momentary" id="458" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
                             <segments>
-                                <segment toolTip="Pornește Convorbire Audio" image="audio" width="30">
+                                <segment toolTip="Convorbire Audio" image="audio" width="30">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Convorbire Text sau Trimite Mesaje Scurte" image="pencil" width="30" tag="1">
+                                <segment toolTip="Convorbire Text sau Mesaje Scurte" image="pencil" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Partajează Ecranul" image="display" width="30">
@@ -1766,10 +1766,10 @@ ABC</string>
         </menu>
         <menu id="951" userLabel="Start Chat Button Menu">
             <items>
-                <menuItem title="Pornește Convorbire Text" id="952">
+                <menuItem title="Convorbire Text" id="952">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Trimite Mesaje Scurte" id="953">
+                <menuItem title="Mesaje Scurte" id="953">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>
@@ -1851,13 +1851,13 @@ ABC</string>
                         <action selector="userClickedParticipantMenu:" target="389" id="1586"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Pornește Convorbire Audio" tag="320" enabled="NO" indentationLevel="1" id="1577">
+                <menuItem title="Convorbire Audio" tag="320" enabled="NO" indentationLevel="1" id="1577">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1587"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Pornește Convorbire Text" tag="321" enabled="NO" indentationLevel="1" id="1576">
+                <menuItem title="Convorbire Text" tag="321" enabled="NO" indentationLevel="1" id="1576">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1588"/>
@@ -1869,7 +1869,7 @@ ABC</string>
                         <action selector="userClickedParticipantMenu:" target="389" id="1589"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Trimite Fișier(e)..." tag="323" enabled="NO" indentationLevel="1" id="1575">
+                <menuItem title="Trimite Fișiere..." tag="323" enabled="NO" indentationLevel="1" id="1575">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1590"/>
