@@ -401,7 +401,7 @@ class AlertPanel(NSObject, object):
                 if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
                     self.deviceLabel.setStringValue_(NSLocalizedString("Using Built-in Microphone and Output", "Label"))
                 else:
-                    self.deviceLabel.setStringValue_(u"Using %s for output, and %s for input" % (outdev.strip(), indev.strip()))
+                    self.deviceLabel.setStringValue_(NSLocalizedString("Using %s for output ", "Label") % outdev.strip() + NSLocalizedString(" and %s for input", "Label") % indev.strip())
             else:
                 self.deviceLabel.setStringValue_(NSLocalizedString("Using audio device", "Label") + " " + outdev.strip())
 

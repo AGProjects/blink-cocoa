@@ -402,7 +402,7 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Apel" autoenablesItems="NO" id="1054">
                         <items>
-                            <menuItem title="Sună din Nou" tag="1" keyEquivalent="r" id="1116">
+                            <menuItem title="Reapelează" tag="1" keyEquivalent="r" id="1116">
                                 <connections>
                                     <action selector="redialLast:" target="389" id="1117"/>
                                 </connections>
@@ -529,7 +529,7 @@ CA
                                     <action selector="setUseSpeechRecognition:" target="389" id="1655"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Rostește Numele Apelantului" tag="43" indentationLevel="2" id="1658">
+                            <menuItem title="Spune Numele Apelantului" tag="43" indentationLevel="2" id="1658">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setSpeechSyntezis:" target="389" id="1668"/>
@@ -1091,7 +1091,7 @@ ABC</string>
                             </tabViewItem>
                         </tabViewItems>
                     </tabView>
-                    <button hidden="YES" toolTip="Adauga Un Contact Nou" verticalHuggingPriority="750" id="459" userLabel="Add Contact Button ">
+                    <button hidden="YES" toolTip="Adaugă Un Contact Nou" verticalHuggingPriority="750" id="459" userLabel="Add Contact Button ">
                         <rect key="frame" x="13" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Adaugă Contact" bezelStyle="texturedRounded" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="460">
@@ -1605,7 +1605,7 @@ ABC</string>
                     </menu>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="1781"/>
-                <menuItem title="Sună din Nou" tag="25" keyEquivalent="r" id="1799">
+                <menuItem title="Reapelează" tag="25" keyEquivalent="r" id="1799">
                     <connections>
                         <action selector="redialLast:" target="389" id="1800"/>
                     </connections>

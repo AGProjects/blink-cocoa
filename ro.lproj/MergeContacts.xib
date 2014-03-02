@@ -61,7 +61,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="651030965">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">4194304</int>
-								<string key="NSContents">Dorești să combini aceset două contacte</string>
+								<string key="NSContents">Dorești să combini aceste două contacte</string>
 								<object class="NSFont" key="NSSupport" id="822251742">
 									<string key="NSName">.LucidaGrandeUI</string>
 									<double key="NSSize">13</double>

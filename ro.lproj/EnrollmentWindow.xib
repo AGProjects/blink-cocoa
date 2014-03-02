@@ -358,7 +358,6 @@
 							<reference key="NSNextResponder" ref="1006"/>
 							<string key="NSFrame">{{20, 85}, {423, 237}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSNextKeyView" ref="559146557"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="437338801">
@@ -762,7 +761,7 @@
 														<object class="NSTextFieldCell" key="NSCell" id="591129452">
 															<int key="NSCellFlags">68157504</int>
 															<int key="NSCellFlags2">71304192</int>
-															<string key="NSContents">Nume utilizator:</string>
+															<string key="NSContents">Nume Utilizator:</string>
 															<reference key="NSSupport" ref="205924054"/>
 															<reference key="NSControlView" ref="117238210"/>
 															<reference key="NSBackgroundColor" ref="169502143"/>

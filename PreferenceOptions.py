@@ -812,7 +812,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
 
     def refresh(self):
         self.popup.removeAllItems()
-        self.popup.addItemWithTitle_("None")
+        self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
         self.popup.lastItem().setRepresentedObject_("None")
         self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
@@ -833,7 +833,7 @@ class AudioOutputDeviceOption(PopUpMenuOption):
 
     def refresh(self):
         self.popup.removeAllItems()
-        self.popup.addItemWithTitle_("None")
+        self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
         self.popup.lastItem().setRepresentedObject_("None")
         self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
@@ -1010,7 +1010,7 @@ class SoundFileOption(Option):
         NSBundle.loadNibNamed_owner_("SoundSetting", self)
 
         self.popup.removeAllItems()
-        self.popup.addItemWithTitle_("None")
+        self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
 
         path = NSBundle.mainBundle().resourcePath()
         for filename in (name for name in os.listdir(path) if name.endswith('.wav')):

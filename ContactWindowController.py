@@ -3295,7 +3295,7 @@ class ContactWindowController(NSWindowController):
             lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Outbound Proxy", "Menu item"), "", "")
             lastItem.setEnabled_(False)
 
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_('None', "selectOutboundProxyClicked:", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("None", "Menu Item"), "selectOutboundProxyClicked:", "")
             lastItem.setIndentationLevel_(2)
             lastItem.setState_(NSOffState if account.sip.always_use_my_proxy else NSOnState)
             lastItem.setTag_(700)
@@ -3596,7 +3596,7 @@ class ContactWindowController(NSWindowController):
                         status = "%i hours, " % (duration.days * 60 * 60 * 24 + int(duration.seconds/(60 * 60)))
                     s = duration.seconds % (60 * 60)
                     status += "%02i:%02i" % (int(s/60), s%60)
-                title = u'%s %s (%s)' % (label, format_date(result.start_time), status)
+                title = u'%s %s (%s)' % (label, format_date(utc_to_local(result.start_time)), status)
                 r_item = self.last_calls_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "", "", 0)
                 image = None
                 if 'screen' in result.media_types:
@@ -4524,7 +4524,7 @@ class ContactWindowController(NSWindowController):
                     all_uris = []
                     for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                         all_uris.append(unicode(uri.uri))
-                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Menu item"), "viewHistory:", "")
+                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)
                     history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
 
@@ -4672,7 +4672,7 @@ class ContactWindowController(NSWindowController):
 
             if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Tell me when %s becomes available", "Menu item") % item.name, "tellMeWhenContactBecomesAvailable:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Tell Me When Contact Is Available", "Menu item"), "tellMeWhenContactBecomesAvailable:", "")
                 mitem.setEnabled_(item.contact.presence.subscribe and presence_status_for_contact(item) != 'available')
                 mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
                 mitem.setRepresentedObject_(item.contact)
@@ -4681,13 +4681,13 @@ class ContactWindowController(NSWindowController):
                 mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
                 mitem.setRepresentedObject_(item)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Subscribe to %s's Availability", "Menu item") % item.name,  "setSubscribeToPresence:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Subscribe to Availability", "Menu item"),  "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block %s", "Menu item") % item.name , "setPresencePolicy:", "")
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block Contact", "Menu item"), "setPresencePolicy:", "")
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)

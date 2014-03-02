@@ -113,10 +113,10 @@ from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread
 
 status_localized = {
-    'busy':      NSLocalizedString("Busy", "Label"),
-    'available': NSLocalizedString("Available", "Label"),
-    'away':      NSLocalizedString("Away", "Label"),
-    'offline':   NSLocalizedString("Offline", "Label")
+    'busy':      NSLocalizedString("busy", "Label"),
+    'available': NSLocalizedString("available", "Label"),
+    'away':      NSLocalizedString("away", "Label"),
+    'offline':   NSLocalizedString("offline", "Label")
 }
 
 ICON_SIZE = 128

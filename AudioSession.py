@@ -314,7 +314,7 @@ class AudioSession(NSView):
                                                                                                                                                   NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
                                                                                                                                                   self.window().graphicsContext(), 0, 1, 0)
                         invite_menu = NSMenu.alloc().init()
-                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_(u'Invite To Conference', "", "")
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item"), "", "")
                         titem.setEnabled_(False)
                         for uri in sourceContact.uris:
                             titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedInviteToConference:", "")
