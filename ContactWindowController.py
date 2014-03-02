@@ -35,6 +35,7 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSTableViewSelectionDidChangeNotification,
                     NSTableViewDropAbove,
                     NSVariableStatusItemLength)
+
 from Foundation import (NSArray,
                         NSAttributedString,
                         NSBezierPath,
@@ -148,7 +149,8 @@ from util import (allocate_autorelease_pool,
                   sip_prefix_pattern,
                   sipuri_components_from_string,
                   translate_alpha2digit,
-                  AccountInfo)
+                  AccountInfo,
+                  utc_to_local)
 
 
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
@@ -3636,7 +3638,7 @@ class ContactWindowController(NSWindowController):
             "target_uri": target_uri,
             "status": result.status,
             "failure_reason": result.failure_reason,
-            "start_time": format_date(result.start_time),
+            "start_time": format_date(utc_to_local(result.start_time)),
             "duration": result.end_time - result.start_time,
             "focus": result.remote_focus,
             "participants": result.participants.split(",") if result.participants else []
@@ -3661,7 +3663,7 @@ class ContactWindowController(NSWindowController):
             "target_uri": target_uri,
             "status": result.status,
             "failure_reason": result.failure_reason,
-            "start_time": format_date(result.start_time),
+            "start_time": format_date(utc_to_local(result.start_time)),
             "duration": result.end_time - result.start_time,
             "focus": result.remote_focus,
             "participants": result.participants.split(",") if result.participants else []
@@ -3686,7 +3688,7 @@ class ContactWindowController(NSWindowController):
             "target_uri": target_uri,
             "status": result.status,
             "failure_reason": result.failure_reason,
-            "start_time": format_date(result.start_time),
+            "start_time": format_date(utc_to_local(result.start_time)),
             "duration": result.end_time - result.start_time,
             "focus": result.remote_focus,
             "participants": result.participants.split(",") if result.participants else []

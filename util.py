@@ -4,7 +4,7 @@
 __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'call_in_gui_thread', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
-           'AccountInfo', 'DictDiffer']
+           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local']
 
 from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSBundle, NSThread, NSLocalizedString
@@ -13,6 +13,9 @@ import platform
 import re
 import shlex
 import unicodedata
+import time
+import calendar
+
 
 from datetime import datetime
 from htmlentitydefs import name2codepoint
@@ -533,3 +536,10 @@ def html2txt_old(s):
     s = re.sub(' +', ' ', s) # remove running spaces this remove the \n and \t
     return s
 
+def local_to_utc(t):
+    secs = time.mktime(t.timetuple())
+    return datetime.utcfromtimestamp(secs)
+
+def utc_to_local(t):
+    secs = calendar.timegm(t.timetuple())
+    return datetime.fromtimestamp(time.mktime(time.localtime(secs)))
