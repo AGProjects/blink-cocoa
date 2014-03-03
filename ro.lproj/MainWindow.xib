@@ -734,7 +734,7 @@ CA
                             <outlet property="nextKeyView" destination="504" id="742"/>
                         </connections>
                     </textField>
-                    <tabView autoresizesSubviews="NO" type="noTabsNoBorder" initialItem="499" id="498" userLabel="Main View">
+                    <tabView type="noTabsNoBorder" initialItem="499" id="498" userLabel="Main View">
                         <rect key="frame" x="0.0" y="32" width="274" height="350"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>

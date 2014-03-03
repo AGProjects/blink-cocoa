@@ -311,6 +311,12 @@ class BlinkAppDelegate(NSObject):
 
     def _NH_SystemIPAddressDidChange(self, notification):
         BlinkLogger().log_info(u"IP address changed to %s" % notification.data.new_ip_address)
+        if notification.data.new_ip_address is not None:
+            settings = SIPSimpleSettings()
+            app = SIPApplication()
+            app._initialize_tls()
+            app.engine.set_tcp_port(None)
+            app.engine.set_tcp_port(settings.sip.tcp_port)
 
     def _NH_SIPApplicationWillEnd(self, notification):
         call_in_thread('file-io', self.purge_temporary_files)

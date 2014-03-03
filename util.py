@@ -386,6 +386,21 @@ day_of_week_localized = {
                'Sunday':    NSLocalizedString("Sunday", "Label")
                }
 
+month_of_year_localized = {
+    'January':   NSLocalizedString("January", "Label"),
+    'February':  NSLocalizedString("February", "Label"),
+    'March':     NSLocalizedString("March", "Label"),
+    'April':     NSLocalizedString("April", "Label"),
+    'May':       NSLocalizedString("May", "Label"),
+    'June':      NSLocalizedString("June", "Label"),
+    'July':      NSLocalizedString("July", "Label"),
+    'August':    NSLocalizedString("August", "Label"),
+    'September': NSLocalizedString("September", "Label"),
+    'October':   NSLocalizedString("October", "Label"),
+    'November':  NSLocalizedString("November", "Label"),
+    'December':  NSLocalizedString("December", "Label")
+}
+
 def format_date(dt):
     if not dt:
         return NSLocalizedString("unknown", "Unknown date")
@@ -398,7 +413,7 @@ def format_date(dt):
     elif delta.days < 7:
         return day_of_week_localized[dt.strftime("%A")]
     elif delta.days < 300:
-        return dt.strftime("%B %d")
+        return month_of_year_localized[dt.strftime("%B")] + dt.strftime(" %d")
     else:
         return NSLocalizedString("on %s", "Date label") % dt.strftime("%Y-%m-%d")
 

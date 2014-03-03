@@ -1027,7 +1027,7 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(10) # add Chat
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
             if not self.sessionController.hasStreamOfType("chat"):
-                item.setTitle_('Add Chat')
+                item.setTitle_(NSLocalizedString("Add Chat", "Menu item"))
             else:
                 chatStream = self.sessionController.streamHandlerOfType("chat")
                 if chatStream:

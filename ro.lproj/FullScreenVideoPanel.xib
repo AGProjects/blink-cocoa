@@ -102,8 +102,8 @@
 							<object class="NSMutableString" key="NSToolbarItemIdentifier">
 								<characters key="NS.bytes">97D92722-5076-4408-86C4-07E3EA4D9BE4</characters>
 							</object>
-							<string key="NSToolbarItemLabel">Oprește Sonorul</string>
-							<string key="NSToolbarItemPaletteLabel">Oprește Sonorul</string>
+							<string key="NSToolbarItemLabel">Oprește Microfonul</string>
+							<string key="NSToolbarItemPaletteLabel">Oprește Microfonul</string>
 							<string key="NSToolbarItemToolTip">Dezactivează Microfonul</string>
 							<nil key="NSToolbarItemView"/>
 							<object class="NSCustomResource" key="NSToolbarItemImage">

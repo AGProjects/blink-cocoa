@@ -308,7 +308,7 @@ class ChatOtrSmp(NSObject):
         self.questionText.setEnabled_(False)
         self.progressBar.setDoubleValue_(9)
         self.continueButton.setEnabled_(True)
-        self.continueButton.setTitle_('Finish')
+        self.continueButton.setTitle_(NSLocalizedString("Finish", "Button Title"))
         self.cancelButton.setHidden_(True)
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "verificationFinished:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
@@ -320,7 +320,7 @@ class ChatOtrSmp(NSObject):
         self.secretText.setEnabled_(True)
         self.questionText.setEnabled_(True)
         self.cancelButton.setHidden_(False)
-        self.continueButton.setTitle_('Continue')
+        self.continueButton.setTitle_(NSLocalizedString("Continue", "Button title"))
         self.progressBar.setIndeterminate_(True)
         self.progressBar.setDoubleValue_(0)
 
@@ -334,7 +334,7 @@ class ChatOtrSmp(NSObject):
         self.window.makeKeyAndOrderFront_(None)
 
         if response is not None:
-            self.continueButton.setTitle_('Respond')
+            self.continueButton.setTitle_(NSLocalizedString("Respond", "Button title"))
             self.progressBar.setIndeterminate_(True)
             self.continueButton.setEnabled_(True)
             if self.question is None:

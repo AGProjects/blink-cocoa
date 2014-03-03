@@ -218,7 +218,7 @@ class AccountSettings(NSObject):
     # download delegate
     def download_decideDestinationWithSuggestedFilename_(self, download, filename):
         panel = NSSavePanel.savePanel()
-        panel.setTitle_("Download File")
+        panel.setTitle_(NSLocalizedString("Download File", "Window title"))
         if panel.runModalForDirectory_file_("", filename) == NSFileHandlingPanelOKButton:
             download.setDestination_allowOverwrite_(panel.filename(), True)
             BlinkLogger().log_info(u"Downloading file to %s" % panel.filename())

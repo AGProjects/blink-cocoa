@@ -153,7 +153,7 @@ class SMSViewController(NSObject):
 
             self.chatViewController.inputText.unregisterDraggedTypes()
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
-            self.splitView.setText_("%i chars left" % MAX_MESSAGE_LENGTH)
+            self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
 
             self.enableIsComposing = True
 

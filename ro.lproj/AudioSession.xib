@@ -280,7 +280,7 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="161"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Nu mă deranja pe durata acestei convorbiri" tag="41" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
+                <menuItem title="Nu Mă Deranja Pe Durata Acestei Convorbiri" tag="41" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="332"/>

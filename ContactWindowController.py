@@ -173,6 +173,13 @@ red_font_color = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfS
 mini_blue = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(10), NSFontAttributeName,
                                                            NSColor.alternateSelectedControlColor(), NSForegroundColorAttributeName)
 
+session_status_localized = {
+                          'missed':    NSLocalizedString("missed", "Label"),
+                          'completed': NSLocalizedString("completed", "Label"),
+                          'failed':    NSLocalizedString("failed", "Label"),
+                          'cancelled': NSLocalizedString("cancelled", "Label")
+}
+
 class PhotoView(NSImageView):
     entered = False
     callback = None
@@ -3585,15 +3592,15 @@ class ContactWindowController(NSWindowController):
         if results:
             for result in reversed(list(results)):
                 label = result.media_types.title()
-                label += ' from ' if result.direction == 'incoming' else ' to '
+                label += NSLocalizedString(" from ", "Menu item") if result.direction == 'incoming' else NSLocalizedString(" to ", "Menu item")
                 label += result.remote_uri
                 duration = result.end_time - result.start_time
                 if result.duration == 0:
-                    status = result.status
+                    status = session_status_localized[result.status]
                 else:
                     status = ''
                     if duration.days > 0 or duration.seconds > 60 * 60:
-                        status = "%i hours, " % (duration.days * 60 * 60 * 24 + int(duration.seconds/(60 * 60)))
+                        status = NSLocalizedString("%i hours, ", "Menu item") % (duration.days * 60 * 60 * 24 + int(duration.seconds/(60 * 60)))
                     s = duration.seconds % (60 * 60)
                     status += "%02i:%02i" % (int(s/60), s%60)
                 title = u'%s %s (%s)' % (label, format_date(utc_to_local(result.start_time)), status)
@@ -3794,7 +3801,7 @@ class ContactWindowController(NSWindowController):
 
     def format_history_menu_item(self, item):
         a = NSMutableAttributedString.alloc().init()
-        n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  "%item, normal_font_color)
+        n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  " % item, normal_font_color)
         a.appendAttributedString_(n)
         text = "%(start_time)s"%item
         if (item["duration"].seconds > 0):
@@ -3808,7 +3815,7 @@ class ContactWindowController(NSWindowController):
             if item['status'] == 'failed':
                 text += " %s" % item['failure_reason'].capitalize()
             elif item['status'] not in ('completed', 'missed'):
-                text += " %s" % item['status'].capitalize()
+                text += " %s" % session_status_localized[item['status']]
 
         text_format = red_font_color if item['status'] == 'failed' else gray_font_color
         t = NSAttributedString.alloc().initWithString_attributes_(text, text_format)

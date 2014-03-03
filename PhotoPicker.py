@@ -467,7 +467,7 @@ class PhotoPicker(NSObject):
     @objc.IBAction
     def browseFile_(self, sender):
         panel = NSOpenPanel.openPanel()
-        panel.setTitle_(u"Select a Picture")
+        panel.setTitle_(NSLocalizedString("Select a Picture", "Label"))
 
         if panel.runModalForTypes_(NSArray.arrayWithObjects_("png", "tiff", "jpeg", "jpg", "tif")) == NSOKButton:
             path = unicode(panel.filename())

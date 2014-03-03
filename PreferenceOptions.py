@@ -854,7 +854,7 @@ class PathOption(NullableUnicodeOption):
         self.addSubview_(self.button)
 
         self.button.setBezelStyle_(NSRoundedBezelStyle)
-        self.button.setTitle_(u"Browse")
+        self.button.setTitle_(NSLocalizedString("Browse", "Button title"))
         self.button.sizeToFit()
         self.button.setAction_("browse:")
         self.button.setTarget_(self)
@@ -862,7 +862,7 @@ class PathOption(NullableUnicodeOption):
     def browse_(self, sender):
         panel = NSOpenPanel.openPanel()
 
-        panel.setTitle_(u"Select File")
+        panel.setTitle_(NSLocalizedString("Select File", "Button title"))
         panel.setCanChooseFiles_(True)
         panel.setCanChooseDirectories_(True)
 
