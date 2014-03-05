@@ -69,7 +69,6 @@
 							<int key="NSvFlags">18</int>
 							<string key="NSFrame">{{13, 41}, {490, 352}}</string>
 							<reference key="NSSuperview" ref="1006"/>
-							<reference key="NSNextKeyView" ref="928645203"/>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="767916711">
 									<string key="NSIdentifier">recent</string>
@@ -82,7 +81,6 @@
 												<int key="NSvFlags">293</int>
 												<string key="NSFrame">{{134, 0}, {203, 32}}</string>
 												<reference key="NSSuperview" ref="928645203"/>
-												<reference key="NSNextKeyView" ref="556202494"/>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="978923102">
 													<int key="NSCellFlags">67108864</int>
@@ -116,7 +114,7 @@
 																<int key="NSvFlags">274</int>
 																<string key="NSFrameSize">{474, 264}</string>
 																<reference key="NSSuperview" ref="979260278"/>
-																<reference key="NSNextKeyView" ref="395312194"/>
+																<reference key="NSNextKeyView" ref="534503274"/>
 																<string key="NSMinGridSize">{0, 0}</string>
 																<string key="NSMaxGridSize">{0, 0}</string>
 																<int key="NSMaxNumberOfGridRows">0</int>
@@ -174,7 +172,7 @@
 												</array>
 												<string key="NSFrame">{{-3, 37}, {476, 266}}</string>
 												<reference key="NSSuperview" ref="928645203"/>
-												<reference key="NSNextKeyView" ref="534503274"/>
+												<reference key="NSNextKeyView" ref="979260278"/>
 												<int key="NSsFlags">133650</int>
 												<reference key="NSVScroller" ref="395312194"/>
 												<reference key="NSHScroller" ref="534503274"/>
@@ -215,7 +213,6 @@
 												<int key="NSvFlags">293</int>
 												<string key="NSFrame">{{187, 0}, {95, 32}}</string>
 												<reference key="NSSuperview" ref="653468545"/>
-												<reference key="NSNextKeyView" ref="556202494"/>
 												<int key="NSTag">5</int>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="862792296">

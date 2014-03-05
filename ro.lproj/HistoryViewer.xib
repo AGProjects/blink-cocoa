@@ -581,7 +581,9 @@
 								<object class="NSSearchFieldCell" key="NSCell" id="117868059">
 									<int key="NSCellFlags">343408704</int>
 									<int key="NSCellFlags2">1342178304</int>
-									<string key="NSContents"/>
+									<object class="NSAttributedString" key="NSContents">
+										<string key="NSString"/>
+									</object>
 									<reference key="NSSupport" ref="428869344"/>
 									<string key="NSPlaceholderString">Introduce Adresă</string>
 									<reference key="NSControlView" ref="889615600"/>
@@ -2500,7 +2502,6 @@
 				<string key="80.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="81.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<string key="82.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<integer value="0" key="83.IBNSSegmentedControlInspectorSelectedSegmentMetadataKey"/>
 				<string key="83.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<integer value="0" key="83.IBSegmentedControlInspectorSelectedSegmentMetadataKey"/>
 				<string key="9.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
