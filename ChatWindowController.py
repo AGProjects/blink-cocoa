@@ -334,8 +334,10 @@ class ChatWindowController(NSWindowController):
         chat_stream = session.streamHandlerOfType("chat")
         self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting if chat_stream else False)
         if chat_stream and chat_stream.isConnecting:
+            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Connecting...")
             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
         else:
+            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
 
@@ -493,12 +495,15 @@ class ChatWindowController(NSWindowController):
                     tabItem = self.tabView.tabViewItemAtIndex_(index)
                     self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
                     if chat_stream.isConnecting:
+                        chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Connecting...")
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
                         audio_stream = session.streamHandlerOfType("audio")
                         if audio_stream and audio_stream.isConnecting:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Adding Audio...")
                             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                         else:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.revalidateToolbar()
         self.refreshDrawer()
@@ -513,12 +518,15 @@ class ChatWindowController(NSWindowController):
                     tabItem = self.tabView.tabViewItemAtIndex_(index)
                     self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
                     if chat_stream.isConnecting:
+                        chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Connecting...")
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
                         audio_stream = session.streamHandlerOfType("audio")
                         if audio_stream and audio_stream.isConnecting:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Adding Audio...")
                             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                         else:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.revalidateToolbar()
         self.refreshDrawer()

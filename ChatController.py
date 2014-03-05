@@ -992,6 +992,7 @@ class ChatController(MediaStream):
         if scrollToMessageId is not None:
             self.chatViewController.scrollToId(scrollToMessageId)
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+        self.chatViewController.loadingTextIndicator.setStringValue_("")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1738,7 +1739,7 @@ class ChatController(MediaStream):
 
     def _NH_BlinkProposalDidFail(self, sender, data):
         if self.last_failure_reason != data.failure_reason:
-            message = NSLocalizedString("Proposal failed", "Label") + ": %s" % data.failure_reason
+            message = NSLocalizedString("Proposal failed", "Label")
             self.last_failure_reason = data.failure_reason
             self.showSystemMessage(message, ISOTimestamp.now(), True)
 
@@ -1747,7 +1748,7 @@ class ChatController(MediaStream):
             if self.last_failure_reason != data.reason:
                 self.last_failure_reason = data.reason
                 reason = NSLocalizedString("Remote party failed to establish the connection", "Label") if data.reason == 'Internal Server Error' else '%s (%s)' % (data.reason,data.code)
-                message = NSLocalizedString("Proposal rejected", "Label") + ": %s" % reason if data.code != 200 else NSLocalizedString("Proposal rejected", "Label")
+                message = NSLocalizedString("Proposal rejected", "Label") if data.code < 500 else NSLocalizedString("Proposal failed", "Label")
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):

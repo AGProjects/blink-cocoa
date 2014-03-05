@@ -78,6 +78,15 @@
                                 <action selector="showRelatedMessages:" target="164" id="233"/>
                             </connections>
                         </button>
+                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="bS8-LL-yJQ">
+                            <rect key="frame" x="88" y="133" width="324" height="45"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Lrh-hm-LDo">
+                                <font key="font" metaFont="system" size="32"/>
+                                <color key="textColor" name="controlShadowColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
                     </subviews>
                 </customView>
                 <customView id="23">
@@ -170,6 +179,7 @@
                 <outlet property="inputView" destination="23" id="194"/>
                 <outlet property="lastMessagesLabel" destination="217" id="219"/>
                 <outlet property="loadingProgressIndicator" destination="220" id="221"/>
+                <outlet property="loadingTextIndicator" destination="bS8-LL-yJQ" id="TXB-av-ph4"/>
                 <outlet property="outputView" destination="38" id="165"/>
                 <outlet property="searchMessagesBox" destination="222" id="228"/>
                 <outlet property="showRelatedMessagesButton" destination="230" id="232"/>

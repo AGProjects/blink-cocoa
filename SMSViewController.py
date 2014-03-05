@@ -940,6 +940,7 @@ class SMSViewController(NSObject):
                 last_chat_timestamp = timestamp
 
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+        self.chatViewController.loadingTextIndicator.setStringValue_("")
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument()

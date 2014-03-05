@@ -192,6 +192,7 @@ class ChatViewController(NSObject):
     inputView = objc.IBOutlet()
     lastMessagesLabel = objc.IBOutlet()
     loadingProgressIndicator = objc.IBOutlet()
+    loadingTextIndicator = objc.IBOutlet()
     searchMessagesBox = objc.IBOutlet()
     showRelatedMessagesButton = objc.IBOutlet()
 
