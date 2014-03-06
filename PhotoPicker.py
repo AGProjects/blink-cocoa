@@ -8,8 +8,10 @@ from AppKit import (NSApp,
                     NSFrameRect,
                     NSPNGFileType,
                     NSRunAlertPanel,
+                    NSModalPanelRunLoopMode,
                     NSOKButton,
-                    NSOnState)
+                    NSOnState,
+                    NSSound)
 
 from Foundation import (CIImage,
                         NSArray,
@@ -20,6 +22,7 @@ from Foundation import (CIImage,
                         NSCIImageRep,
                         NSCollectionView,
                         NSColor,
+                        NSDefaultRunLoopMode,
                         NSDictionary,
                         NSHeight,
                         NSImage,
@@ -35,6 +38,8 @@ from Foundation import (CIImage,
                         NSMutableArray,
                         NSObject,
                         NSOpenPanel,
+                        NSRunLoop,
+                        NSTimer,
                         NSLocalizedString,
                         NSWidth,
                         NSZeroRect)
@@ -169,6 +174,8 @@ class PhotoPicker(NSObject):
     useButton = objc.IBOutlet()
     cameraTabView = objc.IBOutlet()
     historyTabView = objc.IBOutlet()
+    countdownCheckbox = objc.IBOutlet()
+    countdownProgress = objc.IBOutlet()
 
     browseView = objc.IBOutlet()
     cropWindow = objc.IBOutlet()
@@ -183,6 +190,7 @@ class PhotoPicker(NSObject):
     captureSession = None
     captureDeviceInput = None
     capture_session_initialized = False
+    countdown_counter = 10
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -193,6 +201,7 @@ class PhotoPicker(NSObject):
         self.lock = NSLock.alloc().init()
         self.captureButton.setHidden_(True)
         self.previewButton.setHidden_(False)
+        self.countdownCheckbox.setHidden_(True)
         self.storage_folder = storage_folder
         self.high_res = high_res
         if self.high_res:
@@ -201,6 +210,7 @@ class PhotoPicker(NSObject):
         if not self.history:
             self.tabView.selectTabViewItem_(self.cameraTabView)
             self.previewButton.setHidden_(True)
+            self.countdownCheckbox.setHidden_(False)
             self.captureButton.setHidden_(False)
 
     def awakeFromNib(self):
@@ -317,6 +327,7 @@ class PhotoPicker(NSObject):
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
             self.previewButton.setHidden_(True)
+            self.countdownCheckbox.setHidden_(False)
             self.captureButton.setHidden_(False)
             self.useButton.setEnabled_(False)
 
@@ -330,19 +341,56 @@ class PhotoPicker(NSObject):
         if self.captureSession is not None:
             self.captureSession.startRunning()
         self.previewButton.setHidden_(True)
+        self.countdownCheckbox.setHidden_(False)
         self.captureButton.setHidden_(False)
         self.useButton.setEnabled_(False)
 
+
     @objc.IBAction
     def captureButtonClicked_(self, sender):
+        if self.countdownCheckbox.state() == NSOnState:
+            self.countdown_counter = 10
+            self.previewButton.setHidden_(True)
+            self.captureButton.setHidden_(True)
+            self.countdownCheckbox.setHidden_(True)
+            self.countdownProgress.setHidden_(False)
+            self.countdownProgress.startAnimation_(None)
+            self.countdownProgress.setIndeterminate_(False)
+            self.countdownProgress.setDoubleValue_(self.countdown_counter)
+
+            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "executeTimerCapture:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+        else:
+            self.countdownCheckbox.setHidden_(True)
+            self.countdownProgress.setHidden_(True)
+            self.executeCapture()
+
+    def executeTimerCapture_(self, timer):
+        if self.countdown_counter == 1:
+            self.executeCapture()
+            self.countdownProgress.stopAnimation_(None)
+            self.countdownCheckbox.setHidden_(True)
+            self.countdownProgress.setHidden_(True)
+            timer.invalidate()
+            timer = None
+        else:
+            self.countdown_counter = self.countdown_counter - 1
+            NSSound.soundNamed_("Tink").play()
+            self.countdownProgress.setDoubleValue_(self.countdown_counter)
+
+    def executeCapture(self):
         self.photoView.setHidden_(False)
         self.captureView.setHidden_(True)
         self.previewButton.setHidden_(False)
+        self.countdownCheckbox.setHidden_(True)
         self.captureButton.setHidden_(True)
         self.useButton.setEnabled_(True)
         if self.captureSession is not None:
             self.captureImage()
+            NSSound.soundNamed_("Grab").play()
             self.captureSession.stopRunning()
+
 
     @objc.IBAction
     def cropWindowButtonClicked_(self, sender):

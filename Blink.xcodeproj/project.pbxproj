@@ -914,6 +914,10 @@
 		1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
+		1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
+		1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
+		1FAD022F18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
+		1FAD023018C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAF8C5D12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
 		1FAF8C5E12DA18960029857C /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
 		1FAF8D5312DA31100029857C /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
@@ -1868,6 +1872,7 @@
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
 		1FAA839D16566D8C00C4C212 /* BlockedContact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlockedContact.py; sourceTree = "<group>"; };
 		1FAA83A81656745500C4C212 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BlockedContact.xib; sourceTree = "<group>"; };
+		1FAD022C18C8010C00FBE7EE /* Grab.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grab.aif; path = sounds/Grab.aif; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
 		1FAF8D5212DA31100029857C /* video-hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-hangup.png"; path = "icons/video-hangup.png"; sourceTree = "<group>"; };
 		1FB22A07140306EC0024F921 /* lock-zrtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "lock-zrtp.png"; path = "icons/lock-zrtp.png"; sourceTree = "<group>"; };
@@ -2637,6 +2642,7 @@
 		2B5DE6760FFDADE300701821 /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
+				1FAD022C18C8010C00FBE7EE /* Grab.aif */,
 				1FB22A09140308950024F921 /* zrtp-securemode.wav */,
 				1FB22A0A140308950024F921 /* zrtp-security-failed.wav */,
 				1F17C25D137335D700DF4724 /* silence.wav */,
@@ -3044,6 +3050,7 @@
 				1F2272D412B554F50010A8B2 /* FileTransferWindow.xib in Resources */,
 				1F2272D512B554F50010A8B2 /* FileTransferItemView.xib in Resources */,
 				1F2272D612B554F50010A8B2 /* FileTransferItemView.py in Resources */,
+				1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */,
 				1F2272D712B554F50010A8B2 /* ListView.py in Resources */,
 				1F2272D812B554F50010A8B2 /* FileTransferWindowController.py in Resources */,
 				1F2272D912B554F50010A8B2 /* SmileyManager.py in Resources */,
@@ -3356,6 +3363,7 @@
 				1F35CFF017894FFF00C6FE38 /* SMSViewController.py in Resources */,
 				1F35CFF117894FFF00C6FE38 /* 3333@sip2sip.info.tiff in Resources */,
 				1F35CFF217894FFF00C6FE38 /* PresenceOfflineWindow.xib in Resources */,
+				1FAD023018C8010C00FBE7EE /* Grab.aif in Resources */,
 				1FD0809018C02E1F00A3B313 /* offline.png in Resources */,
 				1F35CFF317894FFF00C6FE38 /* 4444@sip2sip.info.tiff in Resources */,
 				1F35CFF417894FFF00C6FE38 /* 200901@login.zipdx.com.tiff in Resources */,
@@ -3581,6 +3589,7 @@
 				1F8DC37E135084FA0034815C /* dtmf_8_tone.wav in Resources */,
 				1F8DC37F135084FA0034815C /* dtmf_9_tone.wav in Resources */,
 				1F8DC380135084FA0034815C /* dtmf_A_tone.wav in Resources */,
+				1FAD022F18C8010C00FBE7EE /* Grab.aif in Resources */,
 				1F8DC381135084FA0034815C /* dtmf_B_tone.wav in Resources */,
 				1F8DC382135084FA0034815C /* dtmf_C_tone.wav in Resources */,
 				1F8DC383135084FA0034815C /* dtmf_D_tone.wav in Resources */,
@@ -3836,6 +3845,7 @@
 				1FB9B1221095BFF500284E18 /* dtmf_8_tone.wav in Resources */,
 				1FB9B1231095BFF500284E18 /* dtmf_9_tone.wav in Resources */,
 				1FB9B1241095BFF500284E18 /* dtmf_A_tone.wav in Resources */,
+				1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */,
 				1FB9B1251095BFF500284E18 /* dtmf_B_tone.wav in Resources */,
 				1FB9B1261095BFF500284E18 /* dtmf_C_tone.wav in Resources */,
 				1FB9B1271095BFF500284E18 /* dtmf_D_tone.wav in Resources */,
