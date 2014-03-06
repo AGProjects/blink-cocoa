@@ -177,7 +177,7 @@
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Adresa celuilalt"/>
+                    <accessibility description="Adresa Celuilalt"/>
                     <connections>
                         <outlet property="menu" destination="53" id="62"/>
                     </connections>
@@ -247,7 +247,7 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="110"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Opreste Partajarea Ecranului" tag="13" enabled="NO" indentationLevel="1" id="170">
+                <menuItem title="Oprește Partajarea Ecranului" tag="13" enabled="NO" indentationLevel="1" id="170">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="171"/>
