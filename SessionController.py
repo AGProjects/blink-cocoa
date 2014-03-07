@@ -1721,7 +1721,12 @@ class SessionController(NSObject):
 
         self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
 
-        must_retry = data.code == 408 and data.originator == 'local' and len(self.routes) > 1
+        must_retry = False
+        if len(self.routes) > 1:
+            if data.code == 408 and data.originator == 'local':
+                must_retry = True
+            elif data.code >= 500:
+                must_retry = True
 
         if not must_retry:
             log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
