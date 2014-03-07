@@ -62,13 +62,15 @@ def format_uri_type(type):
 
 
 def normalize_sip_uri_for_outgoing_session(target_uri, account):
-    def format_uri(uri, default_domain, idd_prefix = None, prefix = None):
+    def format_uri(uri, default_domain, idd_prefix = None, prefix = None, strip_digits=None):
         if default_domain is not None:
             if "@" not in uri:
                 if _pstn_match_regexp.match(uri):
                     username = strip_addressbook_special_characters(uri)
                     if idd_prefix:
                         username = _pstn_plus_regexp.sub(idd_prefix, username)
+                    if strip_digits and len(username) > strip_digits:
+                        username = username[strip_digits:]
                     if prefix:
                         username = prefix + username
                 else:
@@ -91,7 +93,7 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
         show_error_panel(NSLocalizedString("SIP address must contain host in bonjour mode: %s", "Label") % target_uri)
         return None
 
-    target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None)
+    target_uri = format_uri(target_uri, account.id.domain if not isinstance(account, BonjourAccount) else None, account.pstn.idd_prefix if not isinstance(account, BonjourAccount) else None, account.pstn.prefix if not isinstance(account, BonjourAccount) else None, account.pstn.strip_digits if not isinstance(account, BonjourAccount) else None)
 
     try:
         target_uri = SIPURI.parse(target_uri)

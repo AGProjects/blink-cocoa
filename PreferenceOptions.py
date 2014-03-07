@@ -1801,6 +1801,7 @@ SettingDescription = {
                       'pstn.idd_prefix': NSLocalizedString("Replace Starting +", "Label"),
                       'pstn.prefix': NSLocalizedString("External Line Prefix", "Label"),
                       'pstn.dial_plan': NSLocalizedString("Dial Plan", "Label"),
+                      'pstn.strip_digits': NSLocalizedString("Strip Digits", "Label"),
                       'pstn.anonymous_to_answering_machine': NSLocalizedString("Anonymous To Answering Machine", "Label"),
                       'rtp.inband_dtmf': NSLocalizedString("Send Inband DTMF", "Label"),
                       'rtp.audio_codec_list': NSLocalizedString("Audio Codecs", "Label"),
@@ -1892,7 +1893,7 @@ AccountSettingsOrder = {
                        'audio': ['do_not_disturb', 'call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'reject_unauthorized_contacts', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
-                       'pstn': ['dial_plan', 'idd_prefix', 'prefix'],
+                       'pstn': ['dial_plan', 'idd_prefix', 'strip_digits', 'prefix'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
                        'presence': ['enabled', 'enable_on_the_phone', 'disable_location', 'disable_timezone']
                        }

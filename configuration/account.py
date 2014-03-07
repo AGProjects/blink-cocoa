@@ -77,6 +77,7 @@ class PresenceSettingsExtension(PresenceSettings):
 
 class PSTNSettings(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
+    strip_digits = Setting(type=NonNegativeInteger, default=0, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
     dial_plan = Setting(type=str, default='', nillable=True)
     anonymous_to_answering_machine = Setting(type=bool, default=False)
