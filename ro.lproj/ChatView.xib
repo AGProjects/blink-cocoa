@@ -80,7 +80,7 @@
                         </button>
                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="bS8-LL-yJQ">
                             <rect key="frame" x="88" y="133" width="324" height="45"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Lrh-hm-LDo">
                                 <font key="font" metaFont="system" size="32"/>
                                 <color key="textColor" name="controlShadowColor" catalog="System" colorSpace="catalog"/>
