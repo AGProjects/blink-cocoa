@@ -96,7 +96,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <qtCaptureView id="13">
-                                            <rect key="frame" x="-3" y="37.499999920821466" width="476" height="265"/>
+                                            <rect key="frame" x="-3" y="37.500000079178527" width="476" height="265"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                             <color key="fillColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         </qtCaptureView>
@@ -112,7 +112,7 @@
                                             </connections>
                                         </button>
                                         <imageView hidden="YES" id="70" customClass="EditImageView">
-                                            <rect key="frame" x="-3" y="37.499999920821466" width="476" height="265"/>
+                                            <rect key="frame" x="-3" y="37.500000079178527" width="476" height="265"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                             <imageCell key="cell" selectable="YES" editable="YES" alignment="left" imageScaling="proportionallyDown" id="71"/>
                                         </imageView>

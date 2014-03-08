@@ -51,6 +51,15 @@
                             <rect key="frame" x="235" y="138" width="32" height="32"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         </progressIndicator>
+                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="1tL-Y6-1yc">
+                            <rect key="frame" x="89" y="85" width="324" height="45"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Ila-en-eXf">
+                                <font key="font" metaFont="system" size="32"/>
+                                <color key="textColor" name="controlShadowColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
                         <searchField verticalHuggingPriority="750" id="201">
                             <rect key="frame" x="321" y="302" width="162" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
@@ -143,6 +152,7 @@
                 <outlet property="inputText" destination="25" id="170"/>
                 <outlet property="lastMessagesLabel" destination="193" id="196"/>
                 <outlet property="loadingProgressIndicator" destination="199" id="200"/>
+                <outlet property="loadingTextIndicator" destination="1tL-Y6-1yc" id="Fbv-pY-uxi"/>
                 <outlet property="outputView" destination="38" id="169"/>
                 <outlet property="searchMessagesBox" destination="201" id="207"/>
                 <outlet property="showRelatedMessagesButton" destination="209" id="213"/>

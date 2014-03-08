@@ -160,7 +160,7 @@
 									<int key="NSCellFlags">70254657</int>
 									<int key="NSCellFlags2">4195328</int>
 									<string key="NSContents">123456@somewhere.com</string>
-									<object class="NSFont" key="NSSupport" id="929586547">
+									<object class="NSFont" key="NSSupport" id="197730384">
 										<string key="NSName">.LucidaGrandeUI</string>
 										<double key="NSSize">13</double>
 										<int key="NSfFlags">1044</int>
@@ -351,7 +351,7 @@
 									<int key="NSCellFlags">68157504</int>
 									<int key="NSCellFlags2">272630784</int>
 									<string key="NSContents">Mașina De Mesaje pornește în %i s</string>
-									<reference key="NSSupport" ref="929586547"/>
+									<reference key="NSSupport" ref="197730384"/>
 									<reference key="NSControlView" ref="167136895"/>
 									<reference key="NSBackgroundColor" ref="202590527"/>
 									<object class="NSColor" key="NSTextColor">
