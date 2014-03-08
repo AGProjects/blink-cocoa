@@ -839,6 +839,40 @@ class ContactWindowController(NSWindowController):
             self.show_last_chat_conversations()
 
     @objc.IBAction
+    def showSMSWindow_(self, sender):
+        self.show_last_sms_conversations()
+
+    @run_in_green_thread
+    def show_last_sms_conversations(self):
+        results = SessionHistory().get_last_sms_conversations(4)
+        self.open_last_sms_conversations(results)
+
+    @run_in_gui_thread
+    def open_last_sms_conversations(self, conversations=[]):
+        if SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
+            return
+
+        for parties in conversations:
+            try:
+                account = AccountManager().get_account(parties[0])
+            except KeyError:
+                account = AccountManager().default_account
+            if account is BonjourAccount():
+                continue
+
+            target = normalize_sip_uri_for_outgoing_session(parties[1], account)
+            if not target:
+                continue
+
+            contact = self.model.getFirstContactFromAllContactsGroupMatchingURI(target, exact_match=True)
+            if contact:
+                display_name = contact.name
+            else:
+                display_name = target
+
+            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
+
+    @objc.IBAction
     def showChangelog_(self, sender):
         if NSApp.delegate().applicationName == 'Blink Lite':
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))

@@ -382,6 +382,27 @@ class SessionHistory(object):
     def get_last_chat_conversations(self, count=5):
         return block_on(self._get_last_chat_conversations(count))
 
+    def get_last_sms_conversations(self, count=5):
+        return block_on(self._get_last_sms_conversations(count))
+
+    @run_in_db_thread
+    def _get_last_sms_conversations(self, count):
+        query="select local_uri, remote_uri from chat_messages where media_type = 'sms' order by time desc limit 100"
+        results = []
+        try:
+            rows = list(self.db.queryAll(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting last sms convesations: %s" % e)
+            return results
+        for row in rows:
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
+            pair = (row[0], target_uri)
+            if pair not in results:
+                results.append(pair)
+                if len(results) == count:
+                    break
+        return reversed(results)
+
     @run_in_db_thread
     def delete_entries(self, local_uri=None, remote_uri=None, after_date=None, before_date=None):
         query = "delete from sessions where 1=1"

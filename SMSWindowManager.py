@@ -54,16 +54,13 @@ class SMSWindowController(NSWindowController):
             return activeTab.identifier()
         return None
 
-    def updateTitle(self, display_name=None):
-        title = self.getTitle(display_name=display_name)
-        self.window().setTitle_(title)
-
-    def getTitle(self, display_name=None):
+    def getTitle(self):
         session = self.selectedSessionController()
         if session:
+            display_name = session.display_name
             sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
             if display_name and display_name != sip_address:
-                title = NSLocalizedString("Instant Messages with %s", "Window Title") % display_name +  "<%s>" % format_identity_to_string(session.target_uri)
+                title = NSLocalizedString("Instant Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
             else:
                 title = NSLocalizedString("Instant Messages with %s", "Window Title") %  format_identity_to_string(session.target_uri)
         else:
@@ -201,7 +198,6 @@ class SMSWindowController(NSWindowController):
             tabItem.setLabel_(format_identity_to_string(viewer.target_uri))
         self.tabSwitcher.addTabViewItem_(tabItem)
         self.tabSwitcher.selectLastTabViewItem_(None)
-        self.updateTitle(viewer.display_name)
         self.window().makeFirstResponder_(viewer.chatViewController.inputText)
 
     def removeViewer_(self, viewer):
@@ -228,7 +224,7 @@ class SMSWindowController(NSWindowController):
         return True
 
     def tabView_didSelectTabViewItem_(self, sender, item):
-        self.updateTitle()
+        self.window().setTitle_(self.getTitle())
         if self.unreadMessageCounts.has_key(item.identifier()):
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
@@ -324,6 +320,15 @@ class SMSWindowManagerClass(NSObject):
 
     def setOwner_(self, owner):
         self._owner = owner
+
+    def raiseLastWindowFront(self):
+        try:
+            window = self.windows[0]
+        except IndexError:
+            return False
+
+        window.window().makeKeyAndOrderFront_(None)
+        return True
 
     def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True):
         for window in self.windows:

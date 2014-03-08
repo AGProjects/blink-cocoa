@@ -582,12 +582,17 @@ CA
                                     <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Transfer de Fișiere" tag="4" keyEquivalent="4" id="1114" userLabel="Menu Item (File Transfers..)">
+                            <menuItem title="Instant Messages" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item (File Transfers..)">
+                                <connections>
+                                    <action selector="showSMSWindow:" target="389" id="zvH-Hr-KwH"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Transfer de Fișiere" tag="4" keyEquivalent="5" id="1114" userLabel="Menu Item (File Transfers..)">
                                 <connections>
                                     <action selector="showWindow:" target="848" id="1115"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Istoria Conversațiilor" tag="3" keyEquivalent="5" id="1112" userLabel="Menu Item (Chat Conversations...)">
+                            <menuItem title="Istoria Conversațiilor" tag="3" keyEquivalent="6" id="1112" userLabel="Menu Item (Chat Conversations...)">
                                 <connections>
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
