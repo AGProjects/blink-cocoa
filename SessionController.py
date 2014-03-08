@@ -1081,7 +1081,10 @@ class SessionController(NSObject):
 
     def canProposeMediaStreamChanges(self):
         # TODO: hold is not handled by this, how to deal with it
-        return not self.inProposal
+        return not self.inProposal and self.state in (STATE_CONNECTED)
+
+    def canStartSession(self):
+        return self.state in (STATE_IDLE, STATE_FINISHED, STATE_FAILED)
 
     def canCancelProposal(self):
         if self.session is None:

@@ -1026,6 +1026,18 @@ class ChatController(MediaStream):
         if self.mustShowUnreadMessages:
             self.chatWindowController.noteNewMessageForSession_(self.sessionController)
 
+    def notify_changed_fingerprint(self):
+        _t = self.sessionController.getTitleShort()
+        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % _t
+        self.showSystemMessage(log_text, ISOTimestamp.now(), True)
+
+        NSApp.delegate().contactsWindowController.speak_text(log_text)
+
+        nc_title = NSLocalizedString("Encryption Warning", "Label")
+        nc_subtitle = self.sessionController.getTitleShort()
+        nc_body = NSLocalizedString("Encryption fingerprint has changed", "Label")
+        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
     def updateEncryptionWidgets(self):
         if self.status == STREAM_CONNECTED:
             if self.is_encrypted:
@@ -1049,6 +1061,31 @@ class ChatController(MediaStream):
         else:
             self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
 
+    def connectButtonEnabled(self):
+        if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTED):
+            return True
+        elif self.status == STREAM_PROPOSING:
+            return self.sessionController.proposalOriginator == 'local'
+        elif self.status == STREAM_DISCONNECTING:
+            return False
+        else:
+            return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
+
+    def audioButtonEnabled(self):
+        if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING):
+            return False
+
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream.status == STREAM_CONNECTED:
+                return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
+            elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
+                return True if self.sessionController.canCancelProposal() else False
+            else:
+                return True if self.sessionController.canProposeMediaStreamChanges() and self.status in (STATE_IDLE, STREAM_CONNECTED) else False
+        else:
+            return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
+
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
@@ -1065,28 +1102,24 @@ class ChatController(MediaStream):
 
             elif identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
-                    item.setEnabled_(True)
                     item.setToolTip_(NSLocalizedString("Cancel Chat", "Tooltip"))
                     item.setLabel_(NSLocalizedString("Cancel", "Button title"))
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 elif self.status == STREAM_PROPOSING:
-                    if self.sessionController.proposalOriginator == 'remote':
-                        item.setEnabled_(False)
-                    else:
+                    if self.sessionController.proposalOriginator != 'remote':
                         item.setToolTip_(NSLocalizedString("Cancel Chat", "Tooltip"))
                         item.setLabel_(NSLocalizedString("Cancel", "Button title"))
                         item.setImage_(NSImage.imageNamed_("stop_chat"))
-                        item.setEnabled_(True)
                 elif self.status == STREAM_CONNECTED:
-                    item.setEnabled_(True)
                     item.setToolTip_(NSLocalizedString("End chat", "Tooltip"))
                     item.setLabel_(NSLocalizedString("Disconnect", "Button title"))
                     item.setImage_(NSImage.imageNamed_("stop_chat"))
                 else:
-                    item.setEnabled_(not self.sessionController.inProposal)
                     item.setToolTip_(NSLocalizedString("Start chat", "Tooltip"))
                     item.setLabel_(NSLocalizedString("Connect", "Button title"))
                     item.setImage_(NSImage.imageNamed_("start_chat"))
+                item.setEnabled_(self.connectButtonEnabled())
+
             elif identifier == 'audio':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
@@ -1144,19 +1177,8 @@ class ChatController(MediaStream):
             elif identifier == 'sendfile':
                 item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
 
-    def notify_changed_fingerprint(self):
-        _t = self.sessionController.getTitleShort()
-        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % _t
-        self.showSystemMessage(log_text, ISOTimestamp.now(), True)
-
-        NSApp.delegate().contactsWindowController.speak_text(log_text)
-
-        nc_title = NSLocalizedString("Encryption Warning", "Label")
-        nc_subtitle = self.sessionController.getTitleShort()
-        nc_body = NSLocalizedString("Encryption fingerprint has changed", "Label")
-        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-
     def validateToolbarButton(self, item):
+
         """
         Called automatically by Cocoa in ChatWindowController to enable/disable each toolbar item
         """
@@ -1174,22 +1196,11 @@ class ChatController(MediaStream):
                 return True
 
             elif identifier == 'connect_button':
-                if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP):
-                    return True
-                elif self.status in (STREAM_PROPOSING, STREAM_CONNECTED):
-                    return True if self.sessionController.canCancelProposal() else False
-                else:
-                    return True if self.sessionController.canProposeMediaStreamChanges() else False
+                _chat_enabled = self.connectButtonEnabled()
+                return _chat_enabled
             elif identifier == 'audio':
-                if self.sessionController.hasStreamOfType("audio"):
-                    if audio_stream.status == STREAM_CONNECTED:
-                        return True if self.sessionController.canProposeMediaStreamChanges() else False
-                    elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                        return True if self.sessionController.canCancelProposal() else False
-                    else:
-                        return True if self.sessionController.canProposeMediaStreamChanges() and self.status in (STATE_IDLE, STREAM_CONNECTED) else False
-                else:
-                    return True if self.sessionController.canProposeMediaStreamChanges() else False
+                _audio_enabled = self.audioButtonEnabled()
+                return _audio_enabled
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
                     return True
@@ -1201,13 +1212,13 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status == STREAM_CONNECTED:
-                        return True if self.sessionController.canProposeMediaStreamChanges() else False
+                        return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
                     elif video_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
                         return True if self.sessionController.canCancelProposal() else False
                     else:
-                        return True if self.sessionController.canProposeMediaStreamChanges() else False
+                        return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
                 else:
-                    return True if self.sessionController.canProposeMediaStreamChanges() else False
+                    return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
             elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer') and self.status == STREAM_CONNECTED:
                 return True
             elif identifier == 'smileys':
@@ -1251,7 +1262,7 @@ class ChatController(MediaStream):
                 if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                     self.endStream()
                 else:
-                    if self.sessionController.canProposeMediaStreamChanges():
+                    if self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession():
                         if self.status in (STREAM_IDLE, STREAM_FAILED):
                             self.sessionController.startChatSession()
                     else:
