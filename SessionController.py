@@ -871,6 +871,7 @@ class SessionController(NSObject):
 
     session = None
     state = STATE_IDLE
+    sub_state = None
     routes = None
     target_uri = None
     remoteParty = None
@@ -1080,8 +1081,7 @@ class SessionController(NSObject):
         return self.state in (STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP)
 
     def canProposeMediaStreamChanges(self):
-        # TODO: hold is not handled by this, how to deal with it
-        return not self.inProposal and self.state in (STATE_CONNECTED)
+        return not self.inProposal and self.state == STATE_CONNECTED and self.sub_state in ("normal", None)
 
     def canStartSession(self):
         return self.state in (STATE_IDLE, STATE_FINISHED, STATE_FAILED)
@@ -1251,6 +1251,7 @@ class SessionController(NSObject):
 
     def resetSession(self):
         self.state = STATE_IDLE
+        self.state = None
         self.session = None
         self.endingBy = None
         self.failureReason = None
@@ -1651,6 +1652,7 @@ class SessionController(NSObject):
         self.log_info("Session with call id %s will start" % self.call_id)
 
     def _NH_SIPSessionDidStart(self, sender, data):
+        self.notification_center.add_observer(self, sender=self.session._invitation)
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
         if self.session.remote_focus:
             self.remote_focus = True
@@ -1797,7 +1799,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
-
+        self.notification_center.discard_observer(self, sender=sender._invitation)
         self.notification_center.remove_observer(self, sender=sender)
 
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
@@ -1947,7 +1949,9 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPInvitationChangedState(self, sender, data):
-        self.notification_center.post_notification("BlinkInvitationChangedState", sender=self, data=data)
+        if hasattr(data, 'sub_state'):
+            self.sub_state = data.sub_state
+            self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionDidProcessTransaction(self, sender, data):
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=data)
