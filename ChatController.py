@@ -135,6 +135,7 @@ kCGWindowImageDefault = 0
 
 
 class ChatController(MediaStream):
+    type = "chat"
     implements(IObserver)
 
     chatViewController = objc.IBOutlet()

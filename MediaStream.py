@@ -37,6 +37,7 @@ class MediaStream(NSObject):
     sessionController = None
     stream = None
     status = None
+    type = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithOwner_stream_(*args)

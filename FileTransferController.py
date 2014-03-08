@@ -6,6 +6,8 @@ from MediaStream import MediaStream
 
 
 class FileTransferController(MediaStream):
+    type = "file-transfer"
+
     """
     Dummy controller/handler for file transfers.
     The entire session is handled by the code in FileTransferSession, except when

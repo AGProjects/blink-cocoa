@@ -84,6 +84,7 @@ RTP_PACKET_OVERHEAD = 54
 
 class AudioController(MediaStream):
     implements(IObserver)
+    type = "audio"
 
     view = objc.IBOutlet()
     label = objc.IBOutlet()

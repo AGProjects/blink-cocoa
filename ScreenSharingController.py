@@ -92,6 +92,7 @@ class StatusItem(NSObject):
 
 
 class ScreenSharingController(MediaStream):
+    type = "screen-sharing"
     implements(IObserver)
 
     viewer = None
