@@ -147,6 +147,7 @@ class AudioController(MediaStream):
         return AudioStream()
 
     def resetStream(self):
+        self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
@@ -159,7 +160,7 @@ class AudioController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
-        BlinkLogger().log_debug(u"Creating %s" % self)
+        scontroller.log_debug(u"Creating %s" % self)
 
         self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
         # 5 minutes of history data for Session Info graphs
@@ -250,7 +251,6 @@ class AudioController(MediaStream):
 
     def dealloc(self):
         self.notification_center = None
-        self.sessionController = None
         self.stream = None
         if self.timer is not None and self.timer.isValid():
             self.timer.invalidate()
@@ -258,10 +258,12 @@ class AudioController(MediaStream):
         self.hangup_reason = None
         self.view.removeFromSuperview()
         self.view.release()
-        BlinkLogger().log_debug(u"Dealloc %s" % self)
+        self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.sessionController = None
         super(AudioController, self).dealloc()
 
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
+        self.sessionController.log_debug(u"Start incoming %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
 
@@ -292,6 +294,7 @@ class AudioController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def startOutgoing(self, is_update):
+        self.sessionController.log_debug(u"Start outgoing %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))

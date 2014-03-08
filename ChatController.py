@@ -194,13 +194,14 @@ class ChatController(MediaStream):
         return ChatStream()
 
     def resetStream(self):
+        self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = ChatStream()
         self.notification_center.add_observer(self, sender=self.stream)
 
     def initWithOwner_stream_(self, sessionController, stream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
-        BlinkLogger().log_debug(u"Creating %s" % self)
+        sessionController.log_debug(u"Creating %s" % self)
         self.mediastream_failed = False
         self.mediastream_ended = False
         self.mediastream_started = False
@@ -1979,12 +1980,12 @@ class ChatController(MediaStream):
         self.stream = None
         self.outgoing_message_handler = None
         self.chatViewController = None
-        self.sessionController = None
         self.screensharing_handler = None
         self.history = None
         self.backend = None
 
-        BlinkLogger().log_debug(u"Dealloc %s" % self)
+        self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.sessionController = None
         super(ChatController, self).dealloc()
 
 

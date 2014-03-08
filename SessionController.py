@@ -1242,6 +1242,7 @@ class SessionController(NSObject):
     @allocate_autorelease_pool
     @run_in_gui_thread
     def changeSessionState(self, newstate, fail_reason=None):
+        self.log_debug("changed state to %s" % newstate)
         self.state = newstate
         # Below it makes a copy of the list because sessionChangedState can have the side effect of removing the handler from the list.
         # This is very bad behavior and should be fixed. -Dan
@@ -1250,6 +1251,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=NotificationData(state=newstate, reason=fail_reason))
 
     def resetSession(self):
+        self.log_debug("Reset session")
         self.state = STATE_IDLE
         self.state = None
         self.session = None
@@ -1322,6 +1324,7 @@ class SessionController(NSObject):
             self.resetSession()
 
         self.initInfoPanel()
+        self.log_debug("Existing streams: %s" % self.streamHandlers)
 
         new_session = False
         add_streams = []
@@ -1342,6 +1345,8 @@ class SessionController(NSObject):
                 self.streams_log.append(stype)
 
             if not self.hasStreamOfType(stype):
+                self.log_debug("%s controller does not yet exist" % stype)
+
                 stream = None
 
                 if self.sessionControllersManager.isMediaTypeSupported(stype):
@@ -1380,7 +1385,7 @@ class SessionController(NSObject):
                     SIPManager().mute(False)
 
             else:
-                self.log_debug("%s controller already exists: %s"% (stype, self.streamHandlers))
+                self.log_debug("%s controller already exists in %s"% (stype, self.streamHandlers))
                 streamController = self.streamHandlerOfType(stype)
                 streamController.resetStream()
 
@@ -1949,7 +1954,10 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPInvitationChangedState(self, sender, data):
+        if data.prev_state != data.state:
+            self.log_debug('Invitation changed state %s -> %s' % (data.prev_state, data.state))
         if hasattr(data, 'sub_state'):
+            self.log_debug('Invitation changed substate %s -> %s' % (data.sub_state, data.prev_sub_state))
             self.sub_state = data.sub_state
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
