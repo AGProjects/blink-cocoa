@@ -1253,7 +1253,7 @@ class SessionController(NSObject):
     def resetSession(self):
         self.log_debug("Reset session")
         self.state = STATE_IDLE
-        self.state = None
+        self.sub_state = None
         self.session = None
         self.endingBy = None
         self.failureReason = None
@@ -1397,6 +1397,11 @@ class SessionController(NSObject):
                         else:
                             add_streams.append(streamController.stream)
                         streamController.startOutgoing(not new_session, **kwargs)
+
+        for streamController in self.streamHandlers:
+            if streamController.type not in self.streams_log: # old handler, not dealt with above
+                self.log_debug("%s controller already exists" % streamController.type)
+                streamController.resetStream()
 
         if new_session or self.state == STATE_IDLE:
             if not self.open_chat_window_only:
@@ -1959,6 +1964,8 @@ class SessionController(NSObject):
         if hasattr(data, 'sub_state'):
             self.log_debug('Invitation changed substate %s -> %s' % (data.sub_state, data.prev_sub_state))
             self.sub_state = data.sub_state
+            if self.sub_state == 'normal':
+                self.inProposal = False
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     def _NH_SIPSessionDidProcessTransaction(self, sender, data):

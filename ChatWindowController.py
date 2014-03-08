@@ -1635,7 +1635,7 @@ class ChatWindowController(NSWindowController):
                 if session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
                     active_media.append('message')
 
-                if session.hasStreamOfType("audio"):
+                if session.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
                     active_media.append('audio' if not audio_stream.holdByLocal else 'audio-onhold')
 
                 # Add ourselves

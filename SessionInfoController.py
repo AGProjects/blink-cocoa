@@ -275,6 +275,10 @@ class SessionInfoController(NSObject):
         self.updateChat()
 
     def updateSessionStatus(self, sub_state=None):
+        if self.sessionController.state is None:
+            self.status.setStringValue_("")
+            return
+
         if sub_state is None:
             sub_state = self.sessionController.session.state if self.sessionController.session is not None else 'none'
 

@@ -1064,7 +1064,7 @@ class ChatController(MediaStream):
             self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
 
     def connectButtonEnabled(self):
-        if self.status in (STREAM_CONNECTING, STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTED):
+        if self.status in (STREAM_IDLE, STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_CONNECTED):
             return True
         elif self.status == STREAM_PROPOSING:
             return self.sessionController.proposalOriginator == 'local'
@@ -1079,6 +1079,8 @@ class ChatController(MediaStream):
 
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream.status == STREAM_FAILED:
+                return False
             if audio_stream.status == STREAM_CONNECTED:
                 return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
             elif audio_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
