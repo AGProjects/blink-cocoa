@@ -17,7 +17,7 @@ from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFil
 
 class AnsweringMachineSettings(SettingsGroup):
     enabled = Setting(type=bool, default=False)
-    show_in_alert_panel = Setting(type=bool, default=True)
+    show_in_alert_panel = Setting(type=bool, default=False)
     answer_delay = Setting(type=NonNegativeInteger, default=10)
     max_recording_duration = Setting(type=NonNegativeInteger, default=120)
     unavailable_message = Setting(type=AnsweringMachineSoundFile, default=AnsweringMachineSoundFile(AnsweringMachineSoundFile.DefaultSoundFile('unavailable_message.wav')), nillable=True)
