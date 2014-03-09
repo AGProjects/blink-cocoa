@@ -1749,7 +1749,7 @@ SettingDescription = {
                       'answering_machine.answer_delay': NSLocalizedString("Answer Delay", "Label"),
                       'answering_machine.unavailable_message': NSLocalizedString("Unavailable Message", "Label"),
                       'answering_machine.enabled': NSLocalizedString("Enabled", "Label"),
-                      'answering_machine.enabled': NSLocalizedString("Show In Alert Panel", "Label"),
+                      'answering_machine.show_in_alert_panel': NSLocalizedString("Show In Alert Panel", "Label"),
                       'chat.auto_accept': NSLocalizedString("Automatically Accept Chat Requests from Known Contacts", "Label"),
                       'chat.disable_collaboration_editor': NSLocalizedString("Disable Collaboration Editor", "Label"),
                       'chat.enable_encryption': NSLocalizedString("OTR Encryption", "Label"),
