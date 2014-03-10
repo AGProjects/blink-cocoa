@@ -81,7 +81,7 @@ class AnsweringMachine(object):
             self.unavailable_message = None
 
         self.stream.device.input_muted = False
-        if self.stream.recording_active:
+        if self.stream.recorder is not None:
             self.stream.stop_recording()
 
     @allocate_autorelease_pool

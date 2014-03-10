@@ -1152,7 +1152,7 @@ class ChatController(MediaStream):
                 else:
                     item.setImage_(NSImage.imageNamed_("pause"))
             elif identifier == 'record':
-                item.setImage_(NSImage.imageNamed_("recording1" if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recording_active else "record"))
+                item.setImage_(NSImage.imageNamed_("recording1" if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recorder is not None else "record"))
             elif identifier == 'video' and self.sessionControllersManager.isMediaTypeSupported('video'):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")

@@ -555,7 +555,7 @@ class AudioController(MediaStream):
                     timer.invalidate()
                 self.audioEndTime = None
 
-        if self.stream and self.stream.recording_active and (self.audioSegmented or self.transferSegmented or self.encryptionSegmented):
+        if self.stream and self.stream.recorder is not None and self.stream.recorder.is_active and (self.audioSegmented or self.transferSegmented or self.encryptionSegmented):
             if self.isConferencing:
                 self.conferenceSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], 2)
             else:
@@ -1258,7 +1258,7 @@ class AudioController(MediaStream):
             else:
                 self.hold()
         elif seg == record_segment:
-            if self.stream.recording_active:
+            if self.stream.recorder is not None:
                 self.stream.stop_recording()
             else:
                 self.startAudioRecording()
