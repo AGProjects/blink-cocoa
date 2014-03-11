@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AlertPanel">
             <connections>
+                <outlet property="acceptAllButton" destination="30" id="c04-T6-yY3"/>
+                <outlet property="acceptButton" destination="32" id="Vh0-1g-yvH"/>
+                <outlet property="answeringMachineButton" destination="54" id="rg1-cP-nPO"/>
+                <outlet property="busyButton" destination="39" id="Yib-eW-a32"/>
+                <outlet property="conferenceButton" destination="57" id="xN7-TR-l12"/>
                 <outlet property="deviceLabel" destination="49" id="51"/>
                 <outlet property="panel" destination="3" id="22"/>
+                <outlet property="rejectButton" destination="34" id="EAR-vw-fUq"/>
                 <outlet property="sessionsListView" destination="11" id="23"/>
             </connections>
         </customObject>
@@ -26,7 +32,7 @@
                     <button verticalHuggingPriority="750" tag="10" id="30">
                         <rect key="frame" x="529" y="12" width="100" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Accept All" bezelStyle="rounded" image="2A638B62-1369-4D1A-9C1C-39A0AA38EDB0" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
+                        <buttonCell key="cell" type="push" title="Accept All" bezelStyle="rounded" image="FAC4B7F2-E6D0-4276-BE13-262C1B8DD02D" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -134,7 +140,7 @@ Gw
         </window>
     </objects>
     <resources>
-        <image name="2A638B62-1369-4D1A-9C1C-39A0AA38EDB0" width="1" height="1">
+        <image name="FAC4B7F2-E6D0-4276-BE13-262C1B8DD02D" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw

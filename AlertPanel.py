@@ -74,6 +74,12 @@ class AlertPanel(NSObject, object):
     speech_recognizer = None
     speech_synthesizer = None
     muted_by_synthesizer = False
+    rejectButton = objc.IBOutlet()
+    acceptButton = objc.IBOutlet()
+    acceptAllButton = objc.IBOutlet()
+    busyButton = objc.IBOutlet()
+    conferenceButton = objc.IBOutlet()
+    answeringMachineButton = objc.IBOutlet()
 
     @property
     def isConferencing(self):
@@ -253,14 +259,18 @@ class AlertPanel(NSObject, object):
 
         NotificationCenter().add_observer(self, sender=session)
 
-        captionT = view.viewWithTag_(1)
-        fromT = view.viewWithTag_(2)
-        destT = view.viewWithTag_(3)
-        acceptB = view.viewWithTag_(5)
-        rejectB = view.viewWithTag_(7)
-        otherB = view.viewWithTag_(6)
-        busyB = view.viewWithTag_(8)
-        photoImage = view.viewWithTag_(99)
+        subjectLabel = view.viewWithTag_(1)
+        fromLabel    = view.viewWithTag_(2)
+        accountLabel = view.viewWithTag_(3)
+        acceptButton = view.viewWithTag_(5)
+        rejectButton = view.viewWithTag_(7)
+        onlyButton   = view.viewWithTag_(6)
+        busyButton   = view.viewWithTag_(8)
+        callerIcon   = view.viewWithTag_(99)
+        chatIcon     = view.viewWithTag_(31)
+        audioIcon    = view.viewWithTag_(32)
+        fileIcon     = view.viewWithTag_(33)
+        screenIcon   = view.viewWithTag_(34)
 
         stream_types = [s.type for s in streams]
 
@@ -271,7 +281,6 @@ class AlertPanel(NSObject, object):
 
         typeCount = 0
         if 'audio' in stream_types:
-            audioIcon = view.viewWithTag_(32)
             frame = audioIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
@@ -290,7 +299,6 @@ class AlertPanel(NSObject, object):
                     self.enableAnsweringMachine(view, session)
 
         if 'chat' in stream_types:
-            chatIcon = view.viewWithTag_(31)
             frame = chatIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
@@ -298,7 +306,6 @@ class AlertPanel(NSObject, object):
             chatIcon.setHidden_(False)
 
         if 'screen-sharing' in stream_types:
-            screenIcon = view.viewWithTag_(34)
             frame = screenIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
@@ -308,7 +315,6 @@ class AlertPanel(NSObject, object):
         is_file_transfer = False
         if 'file-transfer' in stream_types:
             is_file_transfer = True
-            fileIcon = view.viewWithTag_(33)
             frame = fileIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
@@ -336,42 +342,33 @@ class AlertPanel(NSObject, object):
         self.panel.setFrame_display_animate_(frame, True, True)
         self.sessionsListView.relayout()
 
-        acceptB.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
-        otherB.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
-        rejectB.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
-        busyB.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
+        acceptButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
+        onlyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
+        rejectButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
+        busyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
 
         # no Busy or partial accept option for Stream Update Proposals
-        busyB.setHidden_(is_update_proposal or is_file_transfer)
-        otherB.setHidden_(is_update_proposal)
+        busyButton.setHidden_(is_update_proposal or is_file_transfer)
+        onlyButton.setHidden_(is_update_proposal)
         if is_file_transfer:
-            busyB.setAttributedTitle_("")
-
-        panelAcceptB = self.panel.contentView().viewWithTag_(10)
-        panelOtherB = self.panel.contentView().viewWithTag_(11)
-
-        panelRejectB = self.panel.contentView().viewWithTag_(12)
-        panelBusyB = self.panel.contentView().viewWithTag_(13)
-
-        panelVmB = self.panel.contentView().viewWithTag_(14)
-        panelConfB = self.panel.contentView().viewWithTag_(15)
+            busyButton.setAttributedTitle_("")
 
         if is_update_proposal:
             subject, accept, other = self.format_subject_for_incoming_reinvite(session, streams)
             other = ""
         else:
             subject, accept, other = self.format_subject_for_incoming_invite(session, streams)
-        captionT.setStringValue_(subject)
+        subjectLabel.setStringValue_(subject)
 
-        frame = captionT.frame()
+        frame = subjectLabel.frame()
         frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
-        captionT.setFrame_(frame)
+        subjectLabel.setFrame_(frame)
 
         has_audio_streams = any(s for s in reduce(lambda a,b:a+b, [session.proposed_streams for session in self.sessions.keys()], []) if s.type=="audio")
         caller_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri)
         if caller_contact:
             if caller_contact.icon:
-                photoImage.setImage_(caller_contact.icon)
+                callerIcon.setImage_(caller_contact.icon)
 
             if not is_update_proposal and caller_contact.auto_answer and NSApp.delegate().contactsWindowController.my_device_is_active:
                 if has_audio_streams:
@@ -382,8 +379,8 @@ class AlertPanel(NSObject, object):
                     BlinkLogger().log_info(u"Auto answer enabled for this contact")
                     self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
-        fromT.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
-        fromT.sizeToFit()
+        fromLabel.setStringValue_(u"%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
+        fromLabel.sizeToFit()
 
         if has_audio_streams:
             outdev = settings.audio.output_device
@@ -412,45 +409,45 @@ class AlertPanel(NSObject, object):
         else:
             self.deviceLabel.setHidden_(True)
 
-        acceptB.setTitle_(accept or "")
-        otherB.setTitle_(other or "")
+        acceptButton.setTitle_(accept or "")
+        onlyButton.setTitle_(other or "")
 
         if False and sum(a.enabled for a in AccountManager().iter_accounts())==1:
-            destT.setHidden_(True)
+            accountLabel.setHidden_(True)
         else:
-            destT.setHidden_(False)
+            accountLabel.setHidden_(False)
             if isinstance(session.account, BonjourAccount):
-                destT.setStringValue_(NSLocalizedString("To Bonjour account", "Label"))
+                accountLabel.setStringValue_(NSLocalizedString("To Bonjour account", "Label"))
             else:
                 to = format_identity_to_string(session.account)
-                destT.setStringValue_(NSLocalizedString("To %s", "Label") % to)
-            destT.sizeToFit()
+                accountLabel.setStringValue_(NSLocalizedString("To %s", "Label") % to)
+            accountLabel.sizeToFit()
 
         if len(self.sessions) == 1:
-            panelAcceptB.setTitle_(accept)
-            panelAcceptB.setHidden_(False)
-            panelOtherB.setTitle_(other or "")
-            panelOtherB.setHidden_(not other)
-            panelRejectB.setTitle_(NSLocalizedString("Reject", "Button title"))
+            self.acceptAllButton.setTitle_(accept)
+            self.acceptAllButton.setHidden_(False)
+            self.acceptButton.setTitle_(other or "")
+            self.acceptButton.setHidden_(not other)
+            self.rejectButton.setTitle_(NSLocalizedString("Reject", "Button title"))
 
-            panelAcceptB.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
-            panelRejectB.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
-            panelBusyB.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
-            panelOtherB.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
-            panelVmB.cell().setRepresentedObject_(NSNumber.numberWithInt_(4))
-            panelConfB.cell().setRepresentedObject_(NSNumber.numberWithInt_(5))
+            self.acceptAllButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
+            self.rejectButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
+            self.busyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
+            self.acceptButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
+            self.answeringMachineButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(4))
+            self.conferenceButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(5))
 
-            panelBusyB.setHidden_(is_update_proposal or is_file_transfer)
+            self.busyButton.setHidden_(is_update_proposal or is_file_transfer)
 
             for i in (5, 6, 7, 8):
                 view.viewWithTag_(i).setHidden_(True)
 
         else:
-            panelAcceptB.setHidden_(False)
-            panelAcceptB.setTitle_(NSLocalizedString("Accept All", "Button title"))
-            panelOtherB.setHidden_(True)
-            panelBusyB.setHidden_(is_update_proposal or is_file_transfer)
-            panelRejectB.setTitle_(NSLocalizedString("Reject All", "Button title"))
+            self.acceptAllButton.setHidden_(False)
+            self.acceptAllButton.setTitle_(NSLocalizedString("Accept All", "Button title"))
+            self.acceptButton.setHidden_(True)
+            self.busyButton.setHidden_(is_update_proposal or is_file_transfer)
+            self.rejectButton.setTitle_(NSLocalizedString("Reject All", "Button title"))
 
             for v in self.sessions.values():
                 for i in (5, 6, 7, 8):
@@ -458,14 +455,14 @@ class AlertPanel(NSObject, object):
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
 
         if not has_audio_streams or is_update_proposal:
-            panelVmB.setHidden_(True)
+            self.answeringMachineButton.setHidden_(True)
         else:
-            panelVmB.setHidden_(not settings.answering_machine.show_in_alert_panel)
+            self.answeringMachineButton.setHidden_(not settings.answering_machine.show_in_alert_panel)
 
         if not self.isConferencing:
-            panelConfB.setHidden_(True)
+            self.conferenceButton.setHidden_(True)
         else:
-            panelConfB.setHidden_(False)
+            self.conferenceButton.setHidden_(False)
 
     def format_subject_for_incoming_reinvite(self, session, streams):
         default_action = u"Accept"
@@ -920,9 +917,8 @@ class AlertPanel(NSObject, object):
             return
 
         view = self.sessions[session]
-        captionT = view.viewWithTag_(1)
-        captionT.setStringValue_(reason or u'')
-        captionT.sizeToFit()
+        self.acceptAllButton.setStringValue_(reason or u'')
+        self.acceptAllButton.sizeToFit()
         for i in (5, 6, 7, 8):
             view.viewWithTag_(i).setEnabled_(False)
         self.removeSession(session)
