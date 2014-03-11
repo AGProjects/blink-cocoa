@@ -110,7 +110,7 @@ from HistoryManager import SessionHistory
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread
+from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local
 
 status_localized = {
     'busy':      NSLocalizedString("busy", "Label"),
@@ -1875,11 +1875,11 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 if len(result.am_filename):
                     blink_contact.answering_machine_filenames.add(result.am_filename)
                 if self.type == "missed":
-                    blink_contact.detail = NSLocalizedString("Missed call", "Contact detail") + " " + format_date(result.start_time)
+                    blink_contact.detail = NSLocalizedString("Missed call", "Contact detail") + " " + format_date(utc_to_local(result.start_time))
                 elif self.type == "incoming":
-                    blink_contact.detail = NSLocalizedString("Incoming call", "Contact detail")  + " " + format_date(result.start_time)
+                    blink_contact.detail = NSLocalizedString("Incoming call", "Contact detail")  + " " + format_date(utc_to_local(result.start_time))
                 elif self.type == "outgoing":
-                    blink_contact.detail = NSLocalizedString("Outgoing call", "Contact detail") + " " + format_date(result.start_time)
+                    blink_contact.detail = NSLocalizedString("Outgoing call", "Contact detail") + " " + format_date(utc_to_local(result.start_time))
                 blink_contact.contact = contact
                 contacts.append(blink_contact)
 

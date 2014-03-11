@@ -25,8 +25,11 @@ import shutil
 import time
 import urlparse
 import urllib
+import pytz
+
 from datetime import datetime
 from uuid import uuid1
+from pytz import timezone
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -1168,9 +1171,17 @@ class SessionHistoryReplicator(object):
                             continue
 
                         try:
+                            _timezone = timezone(call['timezone'])
+                        except KeyError:
+                            _timezone = timezone('Europe/Amsterdam') #default used by CDRTool app
+                        
+                        try:
                             end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
                         except (TypeError, ValueError):
                             end_time = start_time
+
+                        start_time = _timezone.localize(start_time).astimezone(pytz.utc)
+                        end_time = _timezone.localize(end_time).astimezone(pytz.utc)
 
                         success = 'completed' if duration > 0 else 'missed'
 
@@ -1197,8 +1208,7 @@ class SessionHistoryReplicator(object):
                             notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=bool(media_type =='missed-call')))
 
                         if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
-                            now = datetime(*time.localtime()[:6])
-                            elapsed = now - start_time
+                            elapsed = datetime.utcnow() - start_time
                             elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                             if elapsed_hours < 48:
                                 growl_data = NotificationData()
@@ -1258,6 +1268,14 @@ class SessionHistoryReplicator(object):
                             end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
                         except (TypeError, ValueError):
                             end_time = start_time
+
+                        try:
+                            _timezone = timezone(call['timezone'])
+                        except KeyError:
+                            _timezone = timezone('Europe/Amsterdam') #default used by CDRTool app
+
+                        start_time = _timezone.localize(start_time).astimezone(pytz.utc)
+                        end_time = _timezone.localize(end_time).astimezone(pytz.utc)
 
                         if duration > 0:
                             success = 'completed'
@@ -1666,9 +1684,10 @@ class ChatHistoryReplicator(object):
                         data['encryption'] = ''
 
                     ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id, call_id=data['call_id'], encryption=data['encryption'])
-                    now = datetime(*time.localtime()[:6])
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
                     elapsed = now - start_time
+                    elapsed = datetime.utcnow() - start_time
+
                     elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                     if elapsed_hours < 2:
                         try:
