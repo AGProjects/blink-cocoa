@@ -28,6 +28,7 @@ import Foundation
 import LaunchServices
 import objc
 import time
+import urllib
 
 import os
 import platform
@@ -386,8 +387,9 @@ class BlinkAppDelegate(NSObject):
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
         url = self.normalizeExternalURL(url)
 
-        BlinkLogger().log_info(u"Will start outgoing session to %s from external link" % url)
+        BlinkLogger().log_info(u"Will start outgoing session from external link: %s" % url)
 
+        url = urllib.unquote(url).replace(" ", "")
         _split = url.split(';')
         _url = []
         for item in _split[:]:
