@@ -1685,7 +1685,6 @@ class ChatHistoryReplicator(object):
 
                     ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id, call_id=data['call_id'], encryption=data['encryption'])
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
-                    elapsed = now - start_time
                     elapsed = datetime.utcnow() - start_time
 
                     elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
