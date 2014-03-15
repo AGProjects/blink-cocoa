@@ -191,6 +191,7 @@ class PhotoPicker(NSObject):
     captureDeviceInput = None
     capture_session_initialized = False
     countdown_counter = 10
+    timer = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -358,9 +359,9 @@ class PhotoPicker(NSObject):
             self.countdownProgress.setIndeterminate_(False)
             self.countdownProgress.setDoubleValue_(self.countdown_counter)
 
-            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "executeTimerCapture:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
+            self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "executeTimerCapture:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
         else:
             self.countdownCheckbox.setHidden_(True)
             self.countdownProgress.setHidden_(True)
@@ -372,8 +373,8 @@ class PhotoPicker(NSObject):
             self.countdownProgress.stopAnimation_(None)
             self.countdownCheckbox.setHidden_(True)
             self.countdownProgress.setHidden_(True)
-            timer.invalidate()
-            timer = None
+            self.timer.invalidate()
+            self.timer = None
         else:
             self.countdown_counter = self.countdown_counter - 1
             NSSound.soundNamed_("Tink").play()
@@ -528,6 +529,9 @@ class PhotoPicker(NSObject):
 
     @objc.IBAction
     def CancelButtonClicked_(self, sender):
+        if self.timer is not None and self.timer.isValid():
+            self.timer.invalidate()
+            self.timer = None
         self.window.close()
         NSApp.stopModalWithCode_(0)
 
