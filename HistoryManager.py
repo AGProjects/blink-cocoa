@@ -1174,7 +1174,7 @@ class SessionHistoryReplicator(object):
                             _timezone = timezone(call['timezone'])
                         except KeyError:
                             _timezone = timezone('Europe/Amsterdam') #default used by CDRTool app
-                        
+
                         try:
                             end_time = datetime.strptime(stopTime, "%Y-%m-%d  %H:%M:%S")
                         except (TypeError, ValueError):
