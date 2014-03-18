@@ -958,6 +958,9 @@ class ChatController(MediaStream):
         last_media_type = None
 
         for message in messages:
+            if message.status == 'sent':
+                message.status = 'failed'
+
             if message.status == 'failed':
                 continue
 
