@@ -917,8 +917,9 @@ class AlertPanel(NSObject, object):
             return
 
         view = self.sessions[session]
-        self.acceptAllButton.setStringValue_(reason or u'')
-        self.acceptAllButton.sizeToFit()
+        subjectLabel = view.viewWithTag_(1)
+        subjectLabel.setStringValue_(reason or u'')
+        subjectLabel.sizeToFit()
         for i in (5, 6, 7, 8):
             view.viewWithTag_(i).setEnabled_(False)
         self.removeSession(session)
