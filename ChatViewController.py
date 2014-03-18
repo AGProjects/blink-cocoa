@@ -35,7 +35,7 @@ MSG_STATE_DEFERRED = "deferred" # msg delivered to a server but deferred for lat
 # if user doesnt type for this time, we consider it idling
 TYPING_IDLE_TIMEOUT = 5
 
-# if user is typing, is-composing notificaitons will be sent in the following interval
+# if user is typing, is-composing notifications will be sent in the following interval
 TYPING_NOTIFY_INTERVAL = 30
 
 
