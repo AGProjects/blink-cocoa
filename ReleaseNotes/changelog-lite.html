@@ -6,6 +6,132 @@
 
 <body>
 
+
+<h2>Version 3.2.0</h2>
+
+<p>March 16th, 2014
+
+<ul>
+<li>Added network bandwidth utilization for audio calls
+<li>Added option to conference menu to tell when participants list has changed
+<li>Added menu item to open last Instant Messages window
+<li>Decode URLs received from external apps
+<li>Adapt to API changes in AudioStream recording
+<li>Fixed detecting session state
+<li>Improve debug logging of sessions
+<li>Detect pending hold requests to disable session buttons accordingly
+<li>Improved detection of session status for enabling session action buttons
+<li>Retry alternative route in case of server failure
+<li>Improve visual and audible feedback when taking snapshot with camera
+<li>Save session start and end time in UTC
+<li>Show progress indicator when adding audio from Chat window
+<li>Refactor changing presence state
+<li>Start a new session from scratch if proposal fails
+<li>Fixed selecting presence from history
+<li>Fixed detecting screen sharing active connection
+<li>Improve engine connection logs
+<li>Fixed marking chat messages as failed if stream did not start
+<li>Improved logging of account registration status
+<li>Imediately fail to start session if we have no IP address
+<li>Imediately fail sending SMS if we have no IP address
+<li>Improved logging of network changes
+<li>Fixed account registration status string when no IP address is available  
+<li>OTR fixes for SMS messages
+<li>Strip spaces from URIs in contacts
+<li>Bring main window on top when clicking on the system menu icon
+<li>Discard availability UI notifications for myself
+<li>Improve anonymous user detection
+<li>Don't bring up file transfer window when sending screenshots
+<li>Fix crash if sdp_done callback is processed too late
+<li>Mute microphone imediately when deactivating audio stream
+<li>Handle errors when sending hold/unhold requests
+<li>Use 127.0.0.1 for bonjour when the default IP address is not available
+<li>Fixed some ICE negotication corner cases
+<li>Added OTR encryption for SIP Message sessions
+<li>Improve logging of SMS sessions
+<li>Fixed post dial DTMF checks
+<li>Update Chat window title
+<li>Always send own icon after starting a chat session
+<li>Renamed Latency to Network Latency
+<li>Divide RTT value by 2 for audio latency display
+<li>Don't repeat audio quality log messages
+<li>Get chat window out of the way when sending screen shots
+<li>Improve external alert description
+<li>Added rich text capabilities for Chat sessions
+<li>Allow using Alert panel even when screen saver is active
+<li>Highlight DND SIP accounts with red
+<li>Log when starting session from a call transfer request
+<li>Don't update codec data in audio status if call was transfered
+<li>Refactored how the streams are reused
+<li>Fixed handling failed outgoing pull file transfer
+<li>Fixed stopping ringtone in some failure cases
+<li>Shorten Chat session failure messages
+<li>Strip sip: from sip next hop in audio status
+<li>Allow File transfer of entire folders as zip archives
+<li>Don't play local ringtone if early media is active
+<li>Show encryption status for history messages in SMS window
+<li>Show Activity tab on logs window load
+<li>Print connectivity failure in sip registration status for some PJSIP errors
+<li>Don't require OTR encryption for Bonjour sessions
+<li>Improved parsing of sip addresses called from external applications
+<li>Allow dragging folders over Audio session to start File transfer
+<li>Fixed rendering incoming image file transfer in Chat window
+<li>Allow dropping folders over Chat window to start File transfer
+<li>Log when IP address changes
+<li>Stick visually Chat messages from the same recipient together
+<li>Add system address book at the end of the group lists when searching matching contact
+<li>Don't print connection system messages for replayed Chat history
+<li>Don't print OTR encryption errors in Chat window
+<li>Refactor purging of temporary files
+<li>Print SIP registration details once
+<li>Fixed stopping outgoing ringtones when both 180 and 183 are received
+<li>Fixed displaying shared conference files when switching Chat tabs
+<li>Added toggle Outgoing calls group to contextual menu
+<li>Fixed updating encryption icon for pending messages
+<li>Fixed backup of default_uri
+<li>Don't require presence to enable start chat menu item
+<li>Fixed contextual menu item for anonymous history entries
+<li>Added Opus codec 1.1
+<li>Added send snapshot from camera to Chat sessions (click on Grab toolbar menu)
+<li>Added advanced option to automatically send anonymous calls to Answering Machine
+<li>Fixed flipping audio status after the Audio stream has ended
+<li>Fixed setting encryption lock for sent messages without encryption
+<li>Fixed initializing AddressBook contacts if no uris are available
+<li>Fixed OTR chat negotiating bugs
+<li>Fixed cancelling adding Audio from the Chat window
+<li>Fixed stoping ringing if re-Invite failed due to illegal session status
+<li>Fixed sending pending outgoing Chat messages after session has started
+<li>Fixed Chat iscomposing indication in some situations
+<li>Remove contact from online group when subscribe for Presence is disabled
+<li>Improved display of File Transfers status
+<li>Don't update iCloud settings for accounts that have this feature disabled
+<li>Properly capture exceptions when creating a new SIP account
+<li>Refactored publishing icon URLs for presence
+<li>Trim last spurious newline for Chat messages
+<li>Allow retry File Transfer for failed transfers after program restart
+<li>Purge temporary snapshot files on exit
+<li>Avoid exceptions if NOTIFY cannot be sent when terminating subscriptions
+<li>Use 101 as the telephone-event SDP payload type
+<li>Added toolbar button to start audio call from SMS window
+<li>Added manual sorting for Contact URIs belonging to a Contact
+<li>Added Jabber and all Email addresses to AB contacts
+<li>Added copy/paste from Watcher list to Contact list
+<li>Added option to skip contacts sync with server when adding existing account
+<li>Added DND until call is ended
+<li>Added job title and organization for Address Book contacts
+<li>Added search in Address Book note and job title
+<li>Unmute microphone before starting an audio call
+<li>Improved handling of Chat messsages with html payload
+<li>Enable audio button only if session is not in progress
+<li>Disable Presence if contacts sync is disabled during enrollment
+<li>Fixed sorting SIP addresses when droping file over contact
+<li>Lookup icons in blink presence contacts only
+<li>Handle multiple URIS when create presence contact from another contact
+<li>Use first SIP URI as name if missing for Address Book contacts
+<li>Print SIP next hop in audio tile
+</ul>
+
+
 <h2>Version 3.3.1</h2>
 
 <p>October 21st, 2013
