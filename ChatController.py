@@ -1810,6 +1810,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = True
         self.sessionController.log_info(u"Chat session ended")
         if self.mediastream_started:
+            self.mediastream_started = False
             t = self.sessionController.getTitleShort()
             self.showSystemMessage(NSLocalizedString("%s left the conversation", "Label") % t, ISOTimestamp.now())
 
@@ -1818,6 +1819,7 @@ class ChatController(MediaStream):
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.mediastream_failed = True
+
         self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
         if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
             t = self.sessionController.getTitleShort()
@@ -1920,7 +1922,6 @@ class ChatController(MediaStream):
         self.mediastream_failed = False
         self.mediastream_ended = False
         self.session_succeeded = False
-        self.mediastream_started = False
         self.last_failure_reason = None
         self.remoteIcon = None
         self.share_screen_in_conference = False
