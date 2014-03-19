@@ -2,6 +2,7 @@
 #
 
 from AppKit import (NSApp,
+                    NSEventTrackingRunLoopMode,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
                     NSWorkspace)
@@ -19,6 +20,8 @@ from Foundation import (NSAttributedString,
                         NSMaxX,
                         NSMenuItem,
                         NSObject,
+                        NSRunLoopCommonModes,
+                        NSRunLoop,
                         NSSplitView,
                         NSString,
                         NSTimer,
@@ -126,6 +129,7 @@ class SMSViewController(NSObject):
     queued_serial = 0
 
     windowController = None
+    OTRNegotiationTimer = None
 
     def initWithAccount_target_name_(self, account, target, display_name):
         self = super(SMSViewController, self).init()
@@ -171,6 +175,10 @@ class SMSViewController(NSObject):
 
     def dealloc(self):
         # release OTR check window
+        if self.OTRNegotiationTimer is not None and self.OTRNegotiationTimer.isValid():
+            self.OTRNegotiationTimer.invalidate()
+            self.OTRNegotiationTimer = None
+
         if self.chatOtrSmpWindow:
             self.chatOtrSmpWindow.close()
             self.chatOtrSmpWindow = None
@@ -292,15 +300,19 @@ class SMSViewController(NSObject):
         if self.otr_negotiation_in_progress:
             if ctx.state > 0 or ctx.tagOffer == 2:
                 if ctx.tagOffer == 2:
+                    self.chatViewController.showSystemMessage('0', NSLocalizedString("Failed to enable OTR encryption", "Label"), ISOTimestamp.now(), False)
                     self.log_info('OTR negotiation failed')
                 elif ctx.state == 1:
                     self.log_info('OTR negotiation succeeded')
                 self.otr_negotiation_in_progress = False
+                self.chatViewController.loadingTextIndicator.setStringValue_("")
+                self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
         if self.previous_is_encrypted != self.is_encrypted:
             self.previous_is_encrypted = self.is_encrypted
             fingerprint = str(ctx.getCurrentKey())
-            self.log_info('Remote OTR fingerprint %s' %fingerprint)
+            self.log_info('Remote OTR fingerprint %s' % fingerprint)
+
         self.updateEncryptionWidgets()
 
     @property
@@ -356,8 +368,25 @@ class SMSViewController(NSObject):
         newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, '?OTRv2?', appdata={'stream':self})
         self.otr_negotiation_in_progress = True
         self.setEncryptionState(ctx)
+        self.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Negotiating Encryption...", "Label"))
+        self.chatViewController.loadingProgressIndicator.startAnimation_(None)
         self.log_info(u"OTR negotiation started")
+        if self.OTRNegotiationTimer is None:
+            self.OTRNegotiationTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "resetOTRTimer:", None, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.OTRNegotiationTimer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.OTRNegotiationTimer, NSEventTrackingRunLoopMode)
+
         self.send_message(newmsg, timestamp=ISOTimestamp.now())
+
+    def resetOTRTimer_(self, timer):
+        self.OTRNegotiationTimer.invalidate()
+        self.OTRNegotiationTimer = None
+        if self.otr_negotiation_in_progress:
+            self.otr_negotiation_in_progress = False
+            self.log_info('OTR negotiation timeout')
+            self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
+            self.chatViewController.loadingTextIndicator.setStringValue_("")
+            self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
     def gotMessage(self, sender, call_id, text, is_html=False, is_replication_message=False, timestamp=None, window=None):
         self.enableIsComposing = True
@@ -525,6 +554,9 @@ class SMSViewController(NSObject):
                     self.setEncryptionState(ctx)
                 else:
                     if self.otr_negotiation_in_progress:
+                        self.chatViewController.loadingTextIndicator.setStringValue_("")
+                        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                        self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
                         self.log_info('OTR negotiation failed')
                         self.otr_negotiation_in_progress = False
             else:
@@ -551,6 +583,9 @@ class SMSViewController(NSObject):
             call_id = message.call_id
             if message.otr:
                 if self.otr_negotiation_in_progress:
+                    self.chatViewController.loadingTextIndicator.setStringValue_("")
+                    self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                    self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
                     self.log_info('OTR negotiation failed')
                     self.otr_negotiation_in_progress = False
             else:
@@ -939,8 +974,9 @@ class SMSViewController(NSObject):
             if message.media_type == 'chat':
                 last_chat_timestamp = timestamp
 
-        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-        self.chatViewController.loadingTextIndicator.setStringValue_("")
+        if not self.otr_negotiation_in_progress:
+            self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+            self.chatViewController.loadingTextIndicator.setStringValue_("")
 
     def webviewFinishedLoading_(self, notification):
         self.document = self.outputView.mainFrameDocument()

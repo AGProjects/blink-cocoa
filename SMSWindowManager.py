@@ -132,7 +132,12 @@ class SMSWindowController(NSWindowController):
                         item.setEnabled_(False)
                     else:
                         item.setEnabled_(True)
-                    item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not selectedSession.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+
+                    if selectedSession.otr_negotiation_in_progress:
+                        item.setTitle_(NSLocalizedString("OTR negotiation in progress...", "Menu item"))
+                        item.setEnabled_(False)
+                    else:
+                        item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not selectedSession.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
 
                 else:
                     item.setEnabled_(False)

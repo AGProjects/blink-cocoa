@@ -334,12 +334,12 @@ class ChatWindowController(NSWindowController):
         chat_stream = session.streamHandlerOfType("chat")
         self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting if chat_stream else False)
         if chat_stream and chat_stream.isConnecting:
-            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Connecting...")
+            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Connecting...", "Label"))
             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
         else:
-            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
-            chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-
+            if not chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
+                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
         self.updateTitle()
         if session.mustShowDrawer:
@@ -495,13 +495,15 @@ class ChatWindowController(NSWindowController):
                     tabItem = self.tabView.tabViewItemAtIndex_(index)
                     self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
                     if chat_stream.isConnecting:
-                        chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Connecting...")
+                        chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Connecting...", "Label"))
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
                         audio_stream = session.streamHandlerOfType("audio")
                         if audio_stream and audio_stream.isConnecting:
-                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Adding Audio...")
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
                             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                        elif chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
+                            pass
                         else:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
@@ -518,13 +520,15 @@ class ChatWindowController(NSWindowController):
                     tabItem = self.tabView.tabViewItemAtIndex_(index)
                     self.tabSwitcher.setTabViewItem_busy_(tabItem, chat_stream.isConnecting)
                     if chat_stream.isConnecting:
-                        chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Connecting...")
+                        chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Connecting...", "Label"))
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
                         audio_stream = session.streamHandlerOfType("audio")
                         if audio_stream and audio_stream.isConnecting:
-                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("Adding Audio...")
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
                             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                        elif chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
+                            pass
                         else:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
@@ -1132,7 +1136,12 @@ class ChatWindowController(NSWindowController):
                                         item.setEnabled_(False)
                                     else:
                                         item.setEnabled_(True)
-                                item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+
+                                if chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
+                                    item.setTitle_(NSLocalizedString("OTR negotiation in progress...", "Menu item"))
+                                    item.setEnabled_(False)
+                                else:
+                                    item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
                         else:
                             item.setEnabled_(False)
                             item.setTitle_(NSLocalizedString("OTR encryption is possible after connection is established", "Menu item"))

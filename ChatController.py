@@ -311,7 +311,12 @@ class ChatController(MediaStream):
             if ctx.state > 0 or ctx.tagOffer == 2:
                 if ctx.tagOffer == 2:
                     self.sessionController.log_info('OTR negotiation failed')
+                    self.showSystemMessage(self.sessionController.call_id, NSLocalizedString("Failed to enable OTR encryption", "Label"), True)
+                    self.chatViewController.loadingTextIndicator.setStringValue_("")
+                    self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                 elif ctx.state == 1:
+                    self.chatViewController.loadingTextIndicator.setStringValue_("")
+                    self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                     self.sessionController.log_info('OTR negotiation succeeded')
                 self.outgoing_message_handler.otr_negotiation_in_progress = False
                 self.outgoing_message_handler.sendPendingMessages()
@@ -319,7 +324,8 @@ class ChatController(MediaStream):
         if self.previous_is_encrypted != self.is_encrypted:
             self.previous_is_encrypted = self.is_encrypted
             fingerprint = str(ctx.getCurrentKey())
-            self.sessionController.log_info('Remote OTR fingerprint %s' %fingerprint)
+            self.sessionController.log_info('Remote OTR fingerprint %s' % fingerprint)
+
         self.updateEncryptionWidgets()
 
     @property
@@ -996,8 +1002,10 @@ class ChatController(MediaStream):
 
         if scrollToMessageId is not None:
             self.chatViewController.scrollToId(scrollToMessageId)
-        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-        self.chatViewController.loadingTextIndicator.setStringValue_("")
+
+        if not self.outgoing_message_handler.otr_negotiation_in_progress:
+            self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+            self.chatViewController.loadingTextIndicator.setStringValue_("")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -2038,6 +2046,7 @@ class OutgoingMessageHandler(NSObject):
     local_uri = None
     must_propose_otr = False
     otr_negotiation_in_progress = False
+    OTRNegotiationTimer = None
 
     def initWithView_(self, chatView):
         self = super(OutgoingMessageHandler, self).init()
@@ -2060,6 +2069,9 @@ class OutgoingMessageHandler(NSObject):
         self.stream = None
         self.connected = None
         self.history = None
+        if self.OTRNegotiationTimer is not None and self.OTRNegotiationTimer.isValid():
+            self.OTRNegotiationTimer.invalidate()
+            self.OTRNegotiationTimer = None
 
     def propose_otr(self):
         if self.delegate.delegate.status != STREAM_CONNECTED:
@@ -2077,9 +2089,26 @@ class OutgoingMessageHandler(NSObject):
         self.delegate.delegate.setEncryptionState(ctx)
         try:
             self.delegate.sessionController.log_info(u"OTR negotiation started")
+            self.delegate.loadingTextIndicator.setStringValue_(NSLocalizedString("Negotiating Encryption...", "Label"))
+            self.delegate.loadingProgressIndicator.startAnimation_(None)
+            if self.OTRNegotiationTimer is None:
+                self.OTRNegotiationTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "resetOTRTimer:", None, False)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.OTRNegotiationTimer, NSRunLoopCommonModes)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.OTRNegotiationTimer, NSEventTrackingRunLoopMode)
+
             self.stream.send_message(newmsg, timestamp=ISOTimestamp.now())
         except ChatStreamError:
             pass
+
+    def resetOTRTimer_(self, timer):
+        self.OTRNegotiationTimer.invalidate()
+        self.OTRNegotiationTimer = None
+        if self.otr_negotiation_in_progress:
+            self.otr_negotiation_in_progress = False
+            self.delegate.sessionController.log_info('OTR negotiation timeout')
+            self.delegate.showSystemMessage(self.delegate.sessionController.call_id, NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
+            self.delegate.loadingTextIndicator.setStringValue_("")
+            self.delegate.loadingProgressIndicator.stopAnimation_(None)
 
     def _send(self, msgid):
         message = self.messages.pop(msgid)
