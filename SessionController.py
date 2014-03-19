@@ -1660,10 +1660,6 @@ class SessionController(NSObject):
     def _NH_SIPSessionWillStart(self, sender, data):
         self.call_id = sender._invitation.call_id
         self.log_info("Session with call id %s will start" % self.call_id)
-
-    def _NH_SIPSessionDidStart(self, sender, data):
-        self.notification_center.add_observer(self, sender=self.session._invitation)
-        self.remoteParty = format_identity_to_string(self.session.remote_identity)
         if self.session.remote_focus:
             self.remote_focus = True
             self.remote_focus_log = True
@@ -1673,6 +1669,10 @@ class SessionController(NSObject):
                 item.destroy()
             self.invited_participants = []
             self.conference_shared_files = []
+
+    def _NH_SIPSessionDidStart(self, sender, data):
+        self.notification_center.add_observer(self, sender=self.session._invitation)
+        self.remoteParty = format_identity_to_string(self.session.remote_identity)
         self.mustShowDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         self.log_info("Session started")
