@@ -56,10 +56,18 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Taie sonorul" image="mute" width="20" tag="3"/>
-                            <segment toolTip="Pauză" image="pause" width="20"/>
-                            <segment toolTip="Înregistrează" image="record" width="20" tag="1"/>
-                            <segment toolTip="Închide" image="hangup" width="20" tag="2"/>
+                            <segment toolTip="Taie sonorul" image="mute" width="20" tag="3">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Pauză" image="pause" width="20">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Închide" image="hangup" width="20" tag="2">
+                                <nil key="label"/>
+                            </segment>
                         </segments>
                     </segmentedCell>
                     <accessibility description="Butoane Control Apel"/>
@@ -126,9 +134,15 @@
                     <segmentedCell key="cell" controlSize="small" state="on" alignment="left" style="rounded" trackingMode="momentary" id="35">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Pauză" image="pause" width="20"/>
-                            <segment toolTip="Înregistrează" image="record" width="20" tag="1"/>
-                            <segment toolTip="Închide" image="hangup_small" width="20" tag="2"/>
+                            <segment toolTip="Pauză" image="pause" width="20">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Închide" image="hangup_small" width="20" tag="2">
+                                <nil key="label"/>
+                            </segment>
                         </segments>
                     </segmentedCell>
                     <accessibility description="Butoane Control Apel"/>

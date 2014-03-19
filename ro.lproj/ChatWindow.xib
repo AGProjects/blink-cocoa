@@ -419,7 +419,7 @@
                     </connections>
                 </splitView>
                 <levelIndicator toolTip="Semnal De Intrare Microfon" verticalHuggingPriority="750" id="586">
-                    <rect key="frame" x="186" y="9" width="27.5" height="12"/>
+                    <rect key="frame" x="186" y="9" width="28" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
                         <font key="font" metaFont="miniSystem"/>
