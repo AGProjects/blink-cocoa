@@ -372,7 +372,7 @@ class SMSViewController(NSObject):
         self.chatViewController.loadingProgressIndicator.startAnimation_(None)
         self.log_info(u"OTR negotiation started")
         if self.OTRNegotiationTimer is None:
-            self.OTRNegotiationTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "resetOTRTimer:", None, False)
+            self.OTRNegotiationTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(8, self, "resetOTRTimer:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.OTRNegotiationTimer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.OTRNegotiationTimer, NSEventTrackingRunLoopMode)
 
