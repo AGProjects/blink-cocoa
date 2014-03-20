@@ -1728,11 +1728,16 @@ class ChatController(MediaStream):
             return
 
         if self.status == STREAM_CONNECTED:
-            name = format_identity_to_string(self.sessionController.session.remote_identity, format='full')
-            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+            if sender.direction == 'incoming':
+                name = self.sessionController.getTitleShort()
+                icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+            else:
+                name = None
+                icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
+
             timestamp = ISOTimestamp.now()
             if self.chatViewController:
-                self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
+                self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), sender.direction, name, icon, text, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.outgoing_message_handler.setDisconnected()
