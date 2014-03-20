@@ -307,6 +307,7 @@ class ChatController(MediaStream):
         self.otr_account.loadTrusts()
 
     def setEncryptionState(self, ctx):
+        succeeded_printed = False
         if self.outgoing_message_handler.otr_negotiation_in_progress:
             if ctx.state > 0 or ctx.tagOffer == 2:
                 if ctx.tagOffer == 2:
@@ -317,6 +318,7 @@ class ChatController(MediaStream):
                 elif ctx.state == 1:
                     self.chatViewController.loadingTextIndicator.setStringValue_("")
                     self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                    succeeded_printed = True
                     self.sessionController.log_info('OTR negotiation succeeded')
                 self.outgoing_message_handler.otr_negotiation_in_progress = False
                 self.outgoing_message_handler.sendPendingMessages()
@@ -324,6 +326,8 @@ class ChatController(MediaStream):
         if self.previous_is_encrypted != self.is_encrypted:
             self.previous_is_encrypted = self.is_encrypted
             fingerprint = str(ctx.getCurrentKey())
+            if not succeeded_printed:
+                self.sessionController.log_info('OTR negotiation succeeded')
             self.sessionController.log_info('Remote OTR fingerprint %s' % fingerprint)
 
         self.updateEncryptionWidgets()
