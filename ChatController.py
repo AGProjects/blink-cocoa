@@ -2116,7 +2116,7 @@ class OutgoingMessageHandler(NSObject):
         if self.otr_negotiation_in_progress:
             self.otr_negotiation_in_progress = False
             self.delegate.sessionController.log_info('OTR negotiation timeout')
-            self.delegate.showSystemMessage(self.delegate.sessionController.call_id, NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
+            #self.delegate.showSystemMessage(self.delegate.sessionController.call_id, NSLocalizedString("OTR negotiation timed out", "Label"), ISOTimestamp.now(), False)
         else:
             if self.delegate.delegate.is_encrypted:
                 self.delegate.sessionController.log_info('OTR negotiation succeeded')
