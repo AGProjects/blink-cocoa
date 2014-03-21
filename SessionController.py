@@ -169,7 +169,6 @@ class SessionControllersManager(object):
     def _NH_SIPSessionDidFail(self, session, data):
         self.incomingSessions.discard(session)
         if self.pause_music:
-            self.incomingSessions.discard(session)
             if not self.activeAudioStreams and not self.incomingSessions:
                 MusicApplications().resume()
 
