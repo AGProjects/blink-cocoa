@@ -1194,7 +1194,7 @@ class ChatController(MediaStream):
             elif identifier == 'screenshot':
                 item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
             elif identifier == 'sendfile':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
+                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
 
     def validateToolbarButton(self, item):
 
@@ -1238,7 +1238,7 @@ class ChatController(MediaStream):
                         return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
                 else:
                     return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
-            elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer') and self.status == STREAM_CONNECTED:
+            elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                 return True
             elif identifier == 'smileys':
                 return True
