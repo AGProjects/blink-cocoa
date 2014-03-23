@@ -385,7 +385,7 @@ class SMSViewController(NSObject):
         if self.otr_negotiation_in_progress:
             self.otr_negotiation_in_progress = False
             self.log_info('OTR negotiation timeout')
-            self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
+            #self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
             self.chatViewController.loadingTextIndicator.setStringValue_("")
             self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
@@ -559,7 +559,7 @@ class SMSViewController(NSObject):
                     if self.otr_negotiation_in_progress:
                         self.chatViewController.loadingTextIndicator.setStringValue_("")
                         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-                        self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
+                        #self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
                         self.log_info('OTR negotiation failed')
                         self.otr_negotiation_in_progress = False
             else:
@@ -591,7 +591,7 @@ class SMSViewController(NSObject):
                 if self.otr_negotiation_in_progress:
                     self.chatViewController.loadingTextIndicator.setStringValue_("")
                     self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-                    self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
+                    #self.chatViewController.showSystemMessage('0', NSLocalizedString("Remote party does not support encryption", "Label"), ISOTimestamp.now(), False)
                     self.log_info('OTR negotiation failed')
                     self.otr_negotiation_in_progress = False
             else:
