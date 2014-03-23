@@ -130,6 +130,7 @@ class SMSViewController(NSObject):
 
     windowController = None
     OTRNegotiationTimer = None
+    last_route = None
 
     def initWithAccount_target_name_(self, account, target, display_name):
         self = super(SMSViewController, self).init()
@@ -547,6 +548,8 @@ class SMSViewController(NSObject):
         except KeyError:
             pass
         else:
+            if self.routes:
+                self.last_route = self.routes[0]
             call_id = data.headers['Call-ID'].body
             if message.otr:
                 if data.code == 200:
@@ -580,6 +583,9 @@ class SMSViewController(NSObject):
         except KeyError:
             pass
         else:
+            if data.code == 408:
+                self.last_route = None
+
             call_id = message.call_id
             if message.otr:
                 if self.otr_negotiation_in_progress:
@@ -624,17 +630,25 @@ class SMSViewController(NSObject):
                          parameters={'transport': self.account.sip.outbound_proxy.transport})
         else:
             uri = SIPURI(host=self.account.id.domain)
-        lookup = DNSLookup()
-        settings = SIPSimpleSettings()
-        try:
-            routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list).wait()
-        except DNSLookupError:
-            pass
+
+        route = None
+        if self.last_route is None:
+            lookup = DNSLookup()
+            settings = SIPSimpleSettings()
+            try:
+                routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list).wait()
+            except DNSLookupError:
+                pass
+            else:
+                route = routes[0]
         else:
+            route = self.last_route
+
+        if route:
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
-                                      RouteHeader(routes[0].uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
+                                      RouteHeader(route.uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
     @allocate_autorelease_pool
@@ -693,25 +707,6 @@ class SMSViewController(NSObject):
             self.messages[id] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, otr=True)
             message_request.send(15)
 
-    def _sendMessage_not_used_anymore(self, msgid, text, content_type="text/plain"):
-        utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
-        message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                  RouteHeader(self.routes[0].uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials)
-        self.notification_center.add_observer(self, sender=message_request)
-        message_request.send(15 if content_type!="application/im-iscomposing+xml" else 5)
-
-        id=str(message_request)
-        if content_type != "application/im-iscomposing+xml":
-            self.log_info(u"Sending message %s" % (message_request._request.call_id))
-            self.enableIsComposing = True
-            message = self.messages.pop(msgid)
-            message.status='sent'
-            message.call_id = message_request._request.call_id
-        else:
-            message = MessageInfo(id, content_type=content_type, call_id=message_request._request.call_id)
-
-        self.messages[id] = message
-
     def _sendMessage(self, msgid, text, content_type="text/plain"):
         if content_type != "application/im-iscomposing+xml":
             self.enableIsComposing = True
@@ -732,8 +727,9 @@ class SMSViewController(NSObject):
 
                     self.chatViewController.updateEncryptionLock(msgid, message.encryption)
 
+                route = self.last_route or self.routes[0]
                 message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                          RouteHeader(self.routes[0].uri), content_type, newmsg, credentials=self.account.credentials)
+                                          RouteHeader(route.uri), content_type, newmsg, credentials=self.account.credentials)
                 self.notification_center.add_observer(self, sender=message_request)
                 message_request.send(15)
                 message.status = 'sent'
@@ -752,8 +748,9 @@ class SMSViewController(NSObject):
                 self.log_info('SMS message was not send. Either end your private OTR conversation, or restart it')
                 return
         else:
+            route = self.last_route or self.routes[0]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                      RouteHeader(self.routes[0].uri), content_type, text, credentials=self.account.credentials)
+                                      RouteHeader(route.uri), content_type, text, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
             message_request.send(5)
             id=str(message_request)
@@ -801,7 +798,10 @@ class SMSViewController(NSObject):
             self.setRoutesFailed(NSLocalizedString("No IP Address", "Label"))
             return
 
-        self.lookup_destination(self.target_uri)
+        if self.last_route is None:
+            self.lookup_destination(self.target_uri)
+        else:
+            self.setRoutesResolved([self.last_route])
 
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
