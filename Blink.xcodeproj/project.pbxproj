@@ -256,7 +256,6 @@
 		1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
 		1F32884C17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
 		1F32884D17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
-		1F35CF7A17894FFF00C6FE38 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F35CF7D17894FFF00C6FE38 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -674,7 +673,6 @@
 		1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
-		1F8DC326135084FA0034815C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F8DC328135084FA0034815C /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F8DC329135084FA0034815C /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -1272,7 +1270,6 @@
 		85E8550810F643350083D346 /* account.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550410F643350083D346 /* account.py */; };
 		85E8550910F643350083D346 /* datatypes.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550510F643350083D346 /* datatypes.py */; };
 		85E8550A10F643350083D346 /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
-		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		DE3A673013A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
@@ -1729,7 +1726,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		089C165DFE840E0CC02AAC07 /* en */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AB517AF925A003867C4 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/ScriptingBridge.framework; sourceTree = DEVELOPER_DIR; };
@@ -1806,7 +1802,6 @@
 		1F64609618BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
 		1F64609718BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
 		1F64609818BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AccountSettings.xib; sourceTree = "<group>"; };
-		1F64609918BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F64609A18BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1F64609B18BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Updater.xib; sourceTree = "<group>"; };
 		1F64609C18BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MainWindow.xib; sourceTree = "<group>"; };
@@ -1884,11 +1879,11 @@
 		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
 		1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-darkgray.png"; path = "icons/unlocked-darkgray.png"; sourceTree = "<group>"; };
 		1F946C9B17CB60D50056ADB4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/OTRSettings.xib; sourceTree = "<group>"; };
-		1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Clearcom.entitlements; sourceTree = "<group>"; };
 		1F960C4618E0F83D00060690 /* pause-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "pause-white.png"; path = "icons/pause-white.png"; sourceTree = SOURCE_ROOT; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
+		1FA0800918E4EB5A0051FBBE /* Info-sip2sip.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-sip2sip.plist"; sourceTree = "<group>"; };
 		1FA47A2F13B246FF0081F90B /* contacts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = contacts.png; path = icons/contacts.png; sourceTree = "<group>"; };
 		1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin-setup.py"; sourceTree = "<group>"; };
 		1FA4907C1549631A0011EE27 /* AddressBookEmail-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookEmail-plugin.py"; path = "PlugIn/AddressBook/AddressBookEmail-plugin.py"; sourceTree = "<group>"; };
@@ -2334,7 +2329,6 @@
 			isa = PBXGroup;
 			children = (
 				1F2FBFFC1462A444008B3D52 /* container-migration.plist */,
-				1F94DEA6168B74CA00168FBA /* Clearcom.entitlements */,
 				1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */,
 				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
 			);
@@ -2424,7 +2418,7 @@
 				8D1107310486CEB800E47090 /* Info.plist */,
 				1F8DC9111351D7460034815C /* Info-lite.plist */,
 				1FCF160812B5639F00F71BE5 /* Info-pro.plist */,
-				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
+				1FA0800918E4EB5A0051FBBE /* Info-sip2sip.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -3285,7 +3279,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F35CF7A17894FFF00C6FE38 /* InfoPlist.strings in Resources */,
 				1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */,
 				1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */,
 				1F35CF7D17894FFF00C6FE38 /* ContactListModel.py in Resources */,
@@ -3547,7 +3540,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F8DC326135084FA0034815C /* InfoPlist.strings in Resources */,
 				1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */,
 				1F8DC328135084FA0034815C /* ContactCell.py in Resources */,
 				1F8DC329135084FA0034815C /* ContactListModel.py in Resources */,
@@ -3808,7 +3800,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */,
 				2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */,
 				2BC596600FCE1EA90017CB1B /* ContactListModel.py in Resources */,
@@ -4107,15 +4098,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				089C165DFE840E0CC02AAC07 /* en */,
-				1F64609918BC926300AC41E0 /* ro */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		1F07D8A2138BF22E00C91AD7 /* LocalVideoWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
