@@ -135,7 +135,7 @@ from SIPManager import MWIData
 from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
-from VideoMirrorWindowController import VideoMirrorWindowController
+from LocalVideoWindowController import LocalVideoWindowController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import (allocate_autorelease_pool,
@@ -230,7 +230,7 @@ class ContactWindowController(NSWindowController):
     fileTransfersWindow = objc.IBOutlet()
 
     debugWindow = None
-    mirrorWindow = None
+    localVideoWindow = None
 
     loaded = False
     collapsedState = False
@@ -382,6 +382,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="AudioDevicesDidChange")
         nc.add_observer(self, name="ActiveAudioSessionChanged")
         nc.add_observer(self, name="BlinkChatWindowClosed")
+        nc.add_observer(self, name="BlinkVideoWindowClosed")
         nc.add_observer(self, name="BlinkConferenceGotUpdate")
         nc.add_observer(self, name="BlinkContactsHaveChanged")
         nc.add_observer(self, name="BlinkMuteChangedState")
@@ -1346,6 +1347,9 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkChatWindowClosed(self, notification):
+        self.showAudioDrawer()
+
+    def _NH_BlinkVideoWindowClosed(self, notification):
         self.showAudioDrawer()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
@@ -2452,6 +2456,10 @@ class ContactWindowController(NSWindowController):
         self.startSessionWithTarget(sender.representedObject(), media_type="audio")
 
     @objc.IBAction
+    def startVideoSessionWithSIPURI_(self, sender):
+        self.startSessionWithTarget(sender.representedObject(), media_type=("audio", "video"))
+
+    @objc.IBAction
     def startChatSessionWithSIPURI_(self, sender):
         self.startSessionWithTarget(sender.representedObject(), media_type="chat")
 
@@ -2461,7 +2469,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startVideoToSelected_(self, sender):
-        self.startSessionToSelectedContact("video", sender.representedObject())
+        self.startSessionToSelectedContact(("audio", "video"), sender.representedObject())
 
     @objc.IBAction
     def startChatToSelected_(self, sender):
@@ -2768,20 +2776,20 @@ class ContactWindowController(NSWindowController):
         settings.save()
 
     @objc.IBAction
-    def toggleMirrorWindow_(self, sender):
-        if self.mirrorWindow and self.mirrorWindow.visible:
-            self.hideVideoMirrorWindow.hide()
+    def toggleLocalVideoWindow_(self, sender):
+        if self.localVideoWindow and self.localVideoWindow.visible:
+            self.hideLocalVideoWindow()
         else:
-            self.showVideoMirrorWindow()
+            self.showLocalVideoWindow()
 
-    def hideVideoMirrorWindow(self):
-        if self.mirrorWindow and self.mirrorWindow.visible:
-            self.mirrorWindow.hide()
+    def hideLocalVideoWindow(self):
+        if self.localVideoWindow and self.localVideoWindow.visible:
+            self.localVideoWindow.hide()
 
-    def showVideoMirrorWindow(self):
-        if self.mirrorWindow is None:
-            self.mirrorWindow = VideoMirrorWindowController.alloc().init()
-        self.mirrorWindow.show()
+    def showLocalVideoWindow(self):
+        if self.localVideoWindow is None:
+            self.localVideoWindow = LocalVideoWindowController.alloc().init()
+        self.localVideoWindow.show()
 
     @objc.IBAction
     def displayNameChanged_(self, sender):
@@ -3954,6 +3962,10 @@ class ContactWindowController(NSWindowController):
             # give priority to chat stream so that we do not open audio drawer for composite streams
             sorted_streams = sorted(streams, key=lambda stream: 0 if stream=='chat' else 1)
             session_controller.startCompositeSessionWithStreamsOfTypes(sorted_streams)
+        elif 'audio' in streams and 'video' in streams:
+            # give priority to audio stream so that we do not open video window first
+            sorted_streams = sorted(streams, key=lambda stream: 0 if stream=='video' else 1)
+            session_controller.startCompositeSessionWithStreamsOfTypes(sorted_streams)
         elif 'audio' in streams:
             session_controller.startAudioSession()
         elif 'chat' in streams:
@@ -4354,6 +4366,56 @@ class ContactWindowController(NSWindowController):
                     if chat_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
+
+                if self.sessionControllersManager.isMediaTypeSupported('video'):
+                    video_submenu = NSMenu.alloc().init()
+                    video_submenu.setAutoenablesItems_(False)
+
+                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
+                        if uri.type is not None and uri.type.lower() == 'url':
+                            continue
+
+                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
+                        target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
+                        video_item.setRepresentedObject_(target_uri)
+
+                        #aor_supports_video = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'video' in device['caps'])
+                        video_item.setEnabled_(True)
+
+                        if isinstance(item, BlinkPresenceContact):
+                            status = presence_status_for_contact(item, uri.uri) or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            video_item.setImage_(icon)
+
+                    if gruu_devices:
+                        video_submenu.addItem_(NSMenuItem.separatorItem())
+                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Menu item"), "", "")
+                        video_item.setEnabled_(False)
+
+                        for device in gruu_devices:
+                            if device['user_agent'] and device['local_time']:
+                                title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                            else:
+                                title = unicode(device['description'])
+                            title += ' in %s' % unicode(device['location']) if device['location'] else ''
+                            video_item = video_submenu.addItemWithTitle_action_keyEquivalent_(title, "startVideoSessionWithSIPURI:", "")
+                            video_item.setRepresentedObject_(device['contact'])
+
+                            status = device['status'] or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            video_item.setImage_(icon)
+
+                            video_item.setIndentationLevel_(1)
+                            if device['caps'] is not None and 'video' not in device['caps']:
+                                video_item.setEnabled_(False)
+
+                    if video_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call...", "Menu item"), "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
 

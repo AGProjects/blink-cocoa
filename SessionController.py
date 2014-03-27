@@ -1170,8 +1170,12 @@ class SessionController(NSObject):
 
     def endStream(self, streamHandler):
         if self.session is not None:
-            if streamHandler.stream.type == "audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers)==2:
+            if streamHandler.stream.type == "audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers) == 2:
                 # if session is screen-sharing end it
+                self.end()
+                return True
+            elif streamHandler.stream.type == "audio" and self.hasStreamOfType("video") and len(self.streamHandlers) == 2:
+                # if session is video end it
                 self.end()
                 return True
             elif self.session.streams is not None and self.streamHandlers == [streamHandler]:
@@ -1180,19 +1184,32 @@ class SessionController(NSObject):
                 # end the whole session
                 self.end()
                 return True
-            elif len(self.streamHandlers) > 1 and self.session.streams and streamHandler.stream in self.session.streams:
+            #elif len(self.streamHandlers) > 1 and self.session.streams and streamHandler.stream in self.session.streams: TODO: fix when adding video
+            elif len(self.streamHandlers) > 1 and self.session.streams:
                 # session established, streamHandler is one of many streams
                 if self.canProposeMediaStreamChanges():
                     self.log_info("Removing %s stream" % streamHandler.stream.type)
-                    try:
-                        self.session.remove_stream(streamHandler.stream)
+                    if streamHandler.stream.type == "chat" and self.hasStreamOfType("video"): # detach video window
+                        chat_stream = self.streamHandlerOfType("chat")
+                        if chat_stream.video_frame_visible:
+                            chat_stream.detach_video()
+                    if streamHandler.stream.type == "video":
                         self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
-                    except IllegalStateError, e:
-                        self.log_info("IllegalStateError: %s" % e)
-                        if streamHandler.stream.type == "audio":
-                            # end the whole session otherwise we keep hearing each other after audio tile is gone
-                            self.log_info("Ending session with %s stream"% streamHandler.stream.type)
-                            self.end()
+                        streamHandler.end() #TODO: remove when adding video, capture this in mediastreamdidend
+                        if self.hasStreamOfType("chat"):
+                            chat_stream = self.streamHandlerOfType("chat")
+                            if chat_stream.video_frame_visible:
+                                chat_stream.toggleVideoFrame()
+                    else:
+                        try:
+                            self.session.remove_stream(streamHandler.stream)
+                            self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
+                        except IllegalStateError, e:
+                            self.log_info("IllegalStateError: %s" % e)
+                            if streamHandler.stream.type == "audio":
+                                # end the whole session otherwise we keep hearing each other after audio tile is gone
+                                self.log_info("Ending session with %s stream"% streamHandler.stream.type)
+                                self.end()
                     return True
                 else:
                     self.log_info("Another proposal is already in progress")
@@ -1201,7 +1218,7 @@ class SessionController(NSObject):
 
             elif not self.streamHandlers and streamHandler.stream is None: # 3
                 # session established, streamHandler is being proposed but not yet established
-                self.log_info("Ending session with not-estabslihed %s stream"% streamHandler.stream.type)
+                self.log_info("Ending session with not-established %s stream"% streamHandler.stream.type)
                 self.end()
                 return True
             else:
@@ -1334,6 +1351,7 @@ class SessionController(NSObject):
             self.failureReason = None
             new_session = True
 
+        # TODO video: add audio if missing and remove screen sharing if present
         for stype in stype_tuple:
             if type(stype) == tuple:
                 stype, kwargs = stype
@@ -1364,7 +1382,6 @@ class SessionController(NSObject):
 
                 streamController = handlerClass(self, stream)
                 self.streamHandlers.append(streamController)
-
                 if stype == 'chat':
                     if (len(stype_tuple) == 1 and self.open_chat_window_only) or (not new_session and not self.canProposeMediaStreamChanges()):
                         # just show the window and wait for user to type before starting the outgoing session
@@ -1446,16 +1463,30 @@ class SessionController(NSObject):
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
                 for stream in add_streams:
-                    self.log_info("Proposing %s stream" % stream.type)
-                    try:
-                       self.session.add_stream(stream)
-                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
-                    except IllegalStateError, e:
+                    if stream.type == 'video': # TODO: remove me when adding video
+                        self.log_info("Adding %s stream" % stream.type)
                         self.inProposal = False
-                        self.log_info("IllegalStateError: %s" % e)
-                        log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=[stream])
-                        self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
-                        return False
+                        streamController = self.streamHandlerOfType("video")
+                        chatController = self.streamHandlerOfType("chat")
+                        if chatController:
+                            chatController.attach_video()
+                        else:
+                            streamController.show()
+                        self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+                    else:
+                        self.log_info("Proposing %s stream" % stream.type)
+                        try:
+                           self.session.add_stream(stream)
+                           self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+                        except IllegalStateError, e:
+                            self.inProposal = False
+                            self.log_info("IllegalStateError: %s" % e)
+                            log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=[stream])
+                            self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
+                            return False
+                    if stream.type == 'chat' and self.hasStreamOfType("video"):
+                        chatController = self.streamHandlerOfType("chat")
+                        chatController.attach_video()
             else:
                 self.log_info("A stream proposal is already in progress")
                 return False
@@ -1705,6 +1736,7 @@ class SessionController(NSObject):
         if self.transfer_window is not None:
             self.transfer_window.close()
             self.transfer_window = None
+        self.notification_center.post_notification("BlinkSessionWillEnd", sender=self)
 
     def _NH_SIPSessionDidFail(self, sender, data):
         try:

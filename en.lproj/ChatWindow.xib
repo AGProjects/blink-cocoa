@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="12F45" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
@@ -29,6 +29,7 @@
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="72" id="85"/>
+                <outlet property="videoMenu" destination="gOf-lM-IGj" id="saJ-bI-uqr"/>
                 <outlet property="window" destination="1" id="25"/>
             </connections>
         </customObject>
@@ -85,16 +86,6 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="CF784727-4755-45B6-804D-EFE9BF65B174" explicitItemIdentifier="maximize" label="Fullscreen" paletteLabel="Fullscreen" toolTip="Toggle full screen" tag="110" image="fullscreen" id="119">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="120"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="9DE13838-0083-46B3-8591-750282FD0FC1" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Add video to session" tag="104" image="video" id="251">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="252"/>
-                        </connections>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Show collaborative editor" tag="109" image="editor" id="441">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
@@ -112,7 +103,7 @@
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="47"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="546" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
@@ -131,7 +122,7 @@
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="570" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="571" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
@@ -184,7 +175,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="55" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="663" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -236,6 +227,70 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="DEC70AE9-E5F0-4552-8EFC-5F1501330852" explicitItemIdentifier="video" label="Video" paletteLabel="Video" image="video" id="eIh-o1-LpH">
+                        <nil key="toolTip"/>
+                        <size key="minSize" width="47" height="22"/>
+                        <size key="maxSize" width="55" height="31"/>
+                        <popUpButton key="view" id="WLQ-qX-0Kq">
+                            <rect key="frame" x="0.0" y="14" width="55" height="31"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="video" alignment="left" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="fM7-lv-qBF">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="menu"/>
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="gOf-lM-IGj">
+                                    <items>
+                                        <menuItem image="video" hidden="YES" id="Fx9-Nk-oqa">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Connect" tag="1" id="Zt8-cr-V6X">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedVideoMenu:" target="-2" id="sZi-ww-kqk"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="vh2-BX-chG"/>
+                                        <menuItem title="Window" enabled="NO" id="pMo-9g-vxH">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Maximize" tag="2" indentationLevel="1" id="bw5-Q6-WEM">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedVideoMenu:" target="-2" id="XtR-gF-4AV"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Detach" tag="3" indentationLevel="1" id="Udw-SJ-LJY">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedVideoMenu:" target="-2" id="YtV-Hc-9XZ"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Bring To Front" tag="5" indentationLevel="1" id="leL-u3-FEw">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedVideoMenu:" target="-2" id="yF2-lL-zRN"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Always On Top" tag="6" indentationLevel="1" id="DT8-3W-CmS">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedVideoMenu:" target="-2" id="Owd-Lt-DHK"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="eur-EC-Cwe"/>
+                                        <menuItem title="Toggle Mirror" tag="4" id="APC-Mu-ONO">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedVideoMenu:" target="-2" id="yQH-6h-4ci"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                    <connections>
+                                        <outlet property="delegate" destination="-2" id="XdC-0R-Bzl"/>
+                                    </connections>
+                                </menu>
+                            </popUpButtonCell>
+                        </popUpButton>
+                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="81"/>
@@ -243,8 +298,7 @@
                     <toolbarItem reference="113"/>
                     <toolbarItem reference="224"/>
                     <toolbarItem reference="244"/>
-                    <toolbarItem reference="251"/>
-                    <toolbarItem reference="119"/>
+                    <toolbarItem reference="eIh-o1-LpH"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="441"/>
                     <toolbarItem reference="573"/>
@@ -668,36 +722,21 @@
                 <outlet property="delegate" destination="-2" id="533"/>
             </connections>
         </menu>
-        <toolbar implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="620">
-            <allowedToolbarItems>
-                <toolbarItem implicitItemIdentifier="NSToolbarShowColorsItem" id="622"/>
-                <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="623"/>
-                <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="625"/>
-                <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="621"/>
-                <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="624"/>
-            </allowedToolbarItems>
-            <defaultToolbarItems>
-                <toolbarItem reference="622"/>
-                <toolbarItem reference="623"/>
-                <toolbarItem reference="624"/>
-                <toolbarItem reference="625"/>
-            </defaultToolbarItems>
-        </toolbar>
+        <menuItem isSeparatorItem="YES" id="uS8-Jc-8ac"/>
     </objects>
     <resources>
-        <image name="NSActionTemplate" width="15" height="15"/>
+        <image name="NSActionTemplate" width="14" height="14"/>
         <image name="NSEveryone" width="32" height="32"/>
-        <image name="audio" width="239.11439514160156" height="239.11439514160156"/>
+        <image name="audio" width="240" height="240"/>
         <image name="display" width="32" height="32"/>
         <image name="editor" width="153" height="153"/>
-        <image name="fullscreen" width="128" height="128"/>
         <image name="mute" width="24" height="24"/>
         <image name="muted" width="24" height="24"/>
         <image name="pause" width="48" height="48"/>
         <image name="record" width="48" height="48"/>
         <image name="screenshot" width="128" height="128"/>
         <image name="smiley_on" width="32" height="32"/>
-        <image name="start_chat" width="26.400880813598633" height="26.400880813598633"/>
+        <image name="start_chat" width="26.399999618530273" height="26.399999618530273"/>
         <image name="time" width="128" height="128"/>
         <image name="unlocked-darkgray" width="171" height="170"/>
         <image name="upfile" width="32" height="32"/>

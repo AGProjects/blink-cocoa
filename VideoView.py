@@ -1,40 +1,39 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import NSView
-from QTKit import QTMovie
+from Foundation import NSView, NSScreen
 import objc
+
+import QTKit
 
 
 class VideoView(NSView):
-    # TODO: replace this view with PJSIP SDL view -adi
+    # TODO video: replace this view with PJSIP SDL view -adi
 
+    streamView = objc.IBOutlet()
+    show_video = False
     delegate = None
-    videoView = objc.IBOutlet()
-    video_initialized = False
 
     def setDelegate_(self, delegate):
         self.delegate = delegate
 
-    def initVideoSource(self, url='/System/Library/Compositions/Sunset.mov'):
-        if not self.video_initialized:
-            video_source = QTMovie.alloc().initWithFile_(url)
-            self.videoView.setMovie_(video_source)
-            self.video_initialized = True
+    def show(self):
+        if self.show_video:
+            return
+        self.show_video = True
+        self.attachToStream()
 
-    def updateVideoSource(self, url):
-        if self.video_initialized:
-            video_source = QTMovie.alloc().initWithFile_(url)
-            self.videoView.setMovie_(video_source)
+    def hide(self):
+        if not self.show_video:
+            return
+        self.show_video = False
+        self.detachFromStream()
 
-    def showVideo(self):
-        self.initVideoSource()
-        self.videoView.play_(None)
+    def attachToStream(self):
+        pass
 
-    def hideVideo(self):
-        if self.video_initialized:
-            self.videoView.setMovie_(None)
-            self.video_initialized=None
+    def detachFromStream(self):
+        pass
 
     def keyDown_(self, event):
         s = event.characters()
@@ -45,3 +44,70 @@ class VideoView(NSView):
         else:
             NSView.keyDown_(self, event)
 
+class LocalVideoView(NSView):
+    # TODO video: replace this view with my own PJSIP SDL view -adi
+    initialLocation = None
+    mirrorSession = None
+    deviceView = objc.IBOutlet()
+
+    def keyDown_(self, event):
+        s = event.characters()
+        key = s[0].upper()
+        if key == chr(27):
+            self.delegate.hide()
+        else:
+            NSView.keyDown_(self, event)
+
+    def mouseDown_(self, event):
+        self.initialLocation = event.locationInWindow()
+
+    def mouseDragged_(self, event):
+        screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
+        windowFrame = self.window().frame();
+        newOrigin = windowFrame.origin;
+
+        currentLocation = event.locationInWindow()
+
+        newOrigin.x += (currentLocation.x - self.initialLocation.x);
+        newOrigin.y += (currentLocation.y - self.initialLocation.y);
+
+        if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
+            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height);
+
+        self.window().setFrameOrigin_(newOrigin);
+
+    def show(self):
+        self.attachToDevice()
+
+    def hide(self):
+        if self.mirrorSession is not None:
+            self.mirrorSession.stopRunning()
+
+    def detachFromDevice(self):
+        pass
+
+    def attachToDevice(self):
+        if self.mirrorSession is None:
+            self.mirrorSession = QTKit.QTCaptureSession.alloc().init()
+
+            # Find a video device
+            device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
+            success, error = device.open_(None)
+            if not success:
+                return
+
+            # Add a device input for that device to the capture session
+            captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
+            success, error = self.mirrorSession.addInput_error_(captureDeviceInput, None)
+            if not success:
+                return
+
+            # Add a decompressed video output that returns raw frames to the session
+            captureDecompressedVideoOutput = QTKit.QTCaptureVideoPreviewOutput.alloc().init()
+            captureDecompressedVideoOutput.setDelegate_(self)
+            success, error = self.mirrorSession.addOutput_error_(captureDecompressedVideoOutput, None)
+            if not success:
+                return
+
+            self.deviceView.setCaptureSession_(self.mirrorSession)
+        self.mirrorSession.startRunning()

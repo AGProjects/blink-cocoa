@@ -1042,6 +1042,14 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
             item.setHidden_(not(self.sessionControllersManager.isMediaTypeSupported('video')))
+            if not self.sessionController.hasStreamOfType("video"):
+                item.setTitle_(NSLocalizedString("Add Video", "Menu item"))
+            else:
+                videoStream = self.sessionController.streamHandlerOfType("video")
+                if videoStream:
+                    item.setTitle_(NSLocalizedString("Remove Video", "Menu item") if videoStream.status == STREAM_CONNECTED else NSLocalizedString("Add Video", "Menu item"))
+                else:
+                    item.setTitle_(NSLocalizedString("Add Video", "Menu item"))
 
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
@@ -1097,15 +1105,25 @@ class AudioController(MediaStream):
             else:
                 chatStream = self.sessionController.streamHandlerOfType("chat")
                 if chatStream:
-                    if chatStream.status != STREAM_CONNECTED:
-                        self.sessionController.addChatToSession()
+                    if chatStream.status in (STREAM_IDLE, STREAM_FAILED):
+                        self.sessionController.startChatSession()
                     else:
                         self.sessionController.removeChatFromSession()
                 else:
                     self.sessionController.removeChatFromSession()
         elif tag == 14: # add video
-            NSApp.delegate().contactsWindowController.drawer.close()
-            self.sessionController.addVideoToSession()
+            if not self.sessionController.hasStreamOfType("video"):
+                NSApp.delegate().contactsWindowController.drawer.close()
+                self.sessionController.addVideoToSession()
+            else:
+                videoStream = self.sessionController.streamHandlerOfType("video")
+                if videoStream:
+                    if videoStream.status != STREAM_CONNECTED:
+                        self.sessionController.addVideoToSession()
+                    else:
+                        self.sessionController.removeVideoFromSession()
+                else:
+                    self.sessionController.removeVideoFromSession()
         elif tag == 11: # share remote screen
             self.sessionController.addRemoteScreenToSession()
         elif tag == 12: # share local screen

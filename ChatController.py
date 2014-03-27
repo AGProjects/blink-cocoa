@@ -145,14 +145,11 @@ class ChatController(MediaStream):
     splitViewFrame = None
     video_frame_visible = False
 
-    videoContainer = objc.IBOutlet()
+    remoteVideoView = objc.IBOutlet()
     inputContainer = objc.IBOutlet()
     outputContainer = objc.IBOutlet()
     databaseLoggingButton = objc.IBOutlet()
     privateLabel = objc.IBOutlet()
-
-    fullScreenVideoPanel = objc.IBOutlet()
-    fullScreenVideoPanelToobar = objc.IBOutlet()
 
     document = None
     fail_reason = None
@@ -188,6 +185,8 @@ class ChatController(MediaStream):
     chatOtrSmpWindow = None
     disable_chat_history = False
     remote_party_history = True
+    video_window_detached = False
+    full_screen = False
 
     @classmethod
     def createStream(self):
@@ -392,13 +391,13 @@ class ChatController(MediaStream):
 
     def saveSplitterPosition(self):
         self.mainViewSplitterPosition={'output_frame': self.outputContainer.frame(), 'input_frame': self.inputContainer.frame()}
-        if self.videoContainer:
-            self.mainViewSplitterPosition['video_frame']=self.videoContainer.frame()
+        if self.remoteVideoView:
+            self.mainViewSplitterPosition['video_frame']=self.remoteVideoView.frame()
 
     def restoreSplitterPosition(self):
         if self.mainViewSplitterPosition:
-            if self.videoContainer and self.mainViewSplitterPosition['video_frame']:
-                self.videoContainer.setFrame_(self.mainViewSplitterPosition['video_frame'])
+            if self.remoteVideoView and self.mainViewSplitterPosition['video_frame']:
+                self.remoteVideoView.setFrame_(self.mainViewSplitterPosition['video_frame'])
             self.outputContainer.setFrame_(self.mainViewSplitterPosition['output_frame'])
             self.inputContainer.setFrame_(self.mainViewSplitterPosition['input_frame'])
 
@@ -543,28 +542,64 @@ class ChatController(MediaStream):
         self.chatWindowController.revalidateToolbar()
 
     @objc.IBAction
-    def userClickedFullScreenToolbarButton_(self, sender):
-        if sender.itemIdentifier() == 'hangup':
-            self.closeTab()
-        elif sender.itemIdentifier() == 'mirror':
-            self.toggleVideoMirror()
-        elif sender.itemIdentifier() == 'mute':
-            self.backend.mute(False if self.backend.is_muted() else True)
-        elif sender.itemIdentifier() == 'hold':
-            if self.sessionController.hasStreamOfType("audio"):
-                audio_stream = self.sessionController.streamHandlerOfType("audio")
-                if self.status == STREAM_CONNECTED and not self.sessionController.inProposal:
-                    if audio_stream.holdByLocal:
-                        audio_stream.unhold()
-                        audio_stream.view.setSelected_(True)
-                        sender.setImage_(NSImage.imageNamed_("pause"))
+    def userClickedVideoMenu_(self, sender):
+        if not self.sessionControllersManager.isMediaTypeSupported('video'):
+            return
+
+        tag = sender.tag()
+        video_stream = self.sessionController.streamHandlerOfType("video")
+
+        if tag == 1: # connect
+            if video_stream:
+                if video_stream.status == STREAM_PROPOSING:
+                    self.sessionController.cancelProposal(video_stream)
+                else:
+                    if self.status == STREAM_CONNECTED:
+                        self.sessionController.removeVideoFromSession()
                     else:
-                        sender.setImage_(NSImage.imageNamed_("paused"))
-                        audio_stream.hold()
-        elif sender.itemIdentifier() == 'participants':
-            self.chatWindowController.window().performZoom_(None)
-        elif sender.itemIdentifier() == 'exit':
-            self.exitFullScreen()
+                        self.sessionController.endStream(video_stream)
+                if self.video_frame_visible:
+                    self.toggleVideoFrame()
+            else:
+                self.sessionController.addVideoToSession()
+                if not self.video_frame_visible:
+                    self.toggleVideoFrame()
+        elif tag == 2: # maximize
+            if video_stream and self.video_frame_visible:
+                self.enterFullScreen()
+        elif tag == 5: # bring to front
+            if video_stream and video_stream.windowController:
+                video_stream.windowController.window().orderFront_(None)
+        elif tag == 6: # bring to front
+            if video_stream and video_stream.windowController:
+                video_stream.windowController.toogleAlwaysOnTop()
+        elif tag == 3: # detach
+            self.video_window_detached = not self.video_window_detached
+            self.toggleVideoFrame()
+            if video_stream:
+                if self.video_window_detached:
+                    video_stream.goToFullScreen()
+                else:
+                    video_stream.hide()
+
+        elif tag == 4: # mirror
+            self.toggleLocalVideo()
+
+    def attach_video(self):
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream:
+            self.video_window_detached = False
+            if not self.video_frame_visible:
+                self.toggleVideoFrame()
+            video_stream.hide()
+
+    def detach_video(self):
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream:
+            self.video_window_detached = True
+            if self.video_frame_visible:
+                self.toggleVideoFrame()
+            video_stream.show()
 
     @run_in_gui_thread
     def resetStyle(self):
@@ -641,14 +676,18 @@ class ChatController(MediaStream):
                 if self.backend.is_muted():
                     mute_item.setImage_(NSImage.imageNamed_("muted"))
                 else:
-                    mute_item.setImage_(NSImage.imageNamed_("mute"))
+                    mute_item.setImage_(NSImage.imageNamed_("mute-white"))
 
     def fullScreenViewPressedEscape(self):
         self.exitFullScreen()
 
     def enterFullScreen(self):
+        self.full_screen = True
         self.chatWindowController.drawer.open()
 
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream:
+            video_stream.showControlPanel()
         self.splitViewFrame = self.chatWindowController.window().frame()
 
         self.saveSplitterPosition()
@@ -664,7 +703,7 @@ class ChatController(MediaStream):
         # Hide Dock and other screen items
         SetSystemUIMode(kUIModeAllHidden, 0)
 
-        self.chatWindowController.window().makeFirstResponder_(self.videoContainer)
+        self.chatWindowController.window().makeFirstResponder_(self.remoteVideoView)
 
         self.chatWindowController.window().setMovableByWindowBackground_(True)
         fullframe = NSScreen.mainScreen().frame()
@@ -674,13 +713,16 @@ class ChatController(MediaStream):
 
         self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
 
-        self.showFullScreenVideoPanel()
-        self.showVideoMirror()
-
-        self.chatWindowController.window().setInitialFirstResponder_(self.videoContainer)
+        self.showLocalVideo()
+        self.chatWindowController.window().setInitialFirstResponder_(self.remoteVideoView)
 
     def exitFullScreen(self):
-        self.hideVideoMirror()
+        self.full_screen = False
+        self.hideLocalVideo()
+
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream:
+            video_stream.hideControlPanel()
 
         if self.splitViewFrame:
             self.chatWindowController.window().setFrame_display_(self.splitViewFrame, True)
@@ -690,41 +732,19 @@ class ChatController(MediaStream):
             self.restoreSplitterPosition()
             self.splitViewFrame = None
 
-        if self.fullScreenVideoPanel:
-            self.fullScreenVideoPanel.orderOut_(self)
-
         # Restore Dock and other screen items
         SetSystemUIMode(kUIModeNormal, kUIOptionAutoShowMenuBar)
 
         self.notification_center.post_notification("BlinkVideoExitedFullScreen", sender=self)
 
-    def showFullScreenVideoPanel(self):
-        if not self.fullScreenVideoPanel:
-            NSBundle.loadNibNamed_owner_("FullScreenVideoPanel", self)
+    def showLocalVideo(self):
+        NSApp.delegate().contactsWindowController.showLocalVideoWindow()
 
-            userdef = NSUserDefaults.standardUserDefaults()
-            savedFrame = userdef.stringForKey_("NSWindow Frame FullScreenVideoPanel")
+    def hideLocalVideo(self):
+        NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
 
-            if savedFrame:
-                x, y, w, h = str(savedFrame).split()[:4]
-                frame = NSMakeRect(int(x), int(y), int(w), int(h))
-                self.fullScreenVideoPanel.setFrame_display_(frame, True)
-
-        self.fullScreenVideoPanel.orderFront_(None)
-        self.fullScreenVideoPanelToobar.validateVisibleItems()
-        self.updateToolbarMuteIcon()
-
-    def showVideoMirror(self):
-        NSApp.delegate().contactsWindowController.showVideoMirrorWindow()
-
-    def hideVideoMirror(self):
-        NSApp.delegate().contactsWindowController.hideVideoMirrorWindow()
-
-    def toggleVideoMirror(self):
-        if NSApp.delegate().contactsWindowController.mirrorWindow.visible:
-            self.hideVideoMirror()
-        else:
-            self.showVideoMirror()
+    def toggleLocalVideo(self):
+        NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(None)
 
     def showChatViewWhileVideoActive(self):
         if self.video_frame_visible:
@@ -741,7 +761,7 @@ class ChatController(MediaStream):
             # video frame
             video_height = view_height - input_frame.size.height - 2 * splitter_height - new_output_height
             video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
-            self.videoContainer.setFrame_(video_frame)
+            self.remoteVideoView.setFrame_(video_frame)
 
             # output frame
             output_frame.size.height = new_output_height
@@ -768,7 +788,7 @@ class ChatController(MediaStream):
             # video frame
             video_height = view_height - input_frame.size.height - 2 * splitter_height - new_output_height
             video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
-            self.videoContainer.setFrame_(video_frame)
+            self.remoteVideoView.setFrame_(video_frame)
 
             # output frame
             output_frame.size.height = new_output_height
@@ -794,9 +814,9 @@ class ChatController(MediaStream):
             splitter_height = 5
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThin)
 
-            self.splitView.addSubview_positioned_relativeTo_(self.videoContainer,  NSWindowBelow, self.outputContainer)
-            self.videoContainer.setDelegate_(self)
-            self.videoContainer.showVideo()
+            self.splitView.addSubview_positioned_relativeTo_(self.remoteVideoView,  NSWindowBelow, self.outputContainer)
+            self.remoteVideoView.setDelegate_(self)
+            self.remoteVideoView.show()
 
             # input frame
             input_frame.size.height = 35
@@ -805,7 +825,7 @@ class ChatController(MediaStream):
             # video frame
             video_height = view_height - input_frame.size.height - 2 * splitter_height
             video_frame = NSMakeRect(0, 0, input_frame.size.width, video_height)
-            self.videoContainer.setFrame_(video_frame)
+            self.remoteVideoView.setFrame_(video_frame)
 
             # output frame
             output_frame.size.height = 0
@@ -821,9 +841,9 @@ class ChatController(MediaStream):
             self.chatWindowController.drawer.open()
             self.splitView.setDividerStyle_(NSSplitViewDividerStyleThick)
             splitter_height = 10
-            self.videoContainer.hideVideo()
-            self.videoContainer.removeFromSuperview()
-            self.videoContainer.setDelegate_(None)
+            self.remoteVideoView.hide()
+            self.remoteVideoView.removeFromSuperview()
+            self.remoteVideoView.setDelegate_(None)
 
             # input frame
             input_frame.size.height = 65
@@ -1153,6 +1173,15 @@ class ChatController(MediaStream):
                     else:
                         item.setToolTip_(NSLocalizedString("Add audio", "Tooltip"))
                     item.setImage_(NSImage.imageNamed_("audio"))
+            elif identifier == 'video':
+                if self.sessionController.hasStreamOfType("video"):
+                    video_stream = self.sessionController.streamHandlerOfType("video")
+                    if video_stream.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING):
+                        item.setImage_(NSImage.imageNamed_("video-hangup"))
+                    else:
+                        item.setImage_(NSImage.imageNamed_("video"))
+                else:
+                    item.setImage_(NSImage.imageNamed_("video"))
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
@@ -1168,18 +1197,6 @@ class ChatController(MediaStream):
                     item.setImage_(NSImage.imageNamed_("pause"))
             elif identifier == 'record':
                 item.setImage_(NSImage.imageNamed_("recording1" if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recorder is not None else "record"))
-            elif identifier == 'video' and self.sessionControllersManager.isMediaTypeSupported('video'):
-                if self.sessionController.hasStreamOfType("video"):
-                    video_stream = self.sessionController.streamHandlerOfType("video")
-                    if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
-                        item.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
-                        item.setImage_(NSImage.imageNamed_("hangup"))
-                    elif video_stream.status == STREAM_CONNECTED:
-                        item.setToolTip_(NSLocalizedString("End video", "Tooltip"))
-                        item.setImage_(NSImage.imageNamed_("hangup"))
-                else:
-                    item.setToolTip_(NSLocalizedString("Add video", "Tooltip"))
-                    item.setImage_(NSImage.imageNamed_("video"))
             elif identifier == 'screen':
                 if self.sessionController.remote_focus:
                     item.setEnabled_(True if self.status == STREAM_CONNECTED and self.screensharing_allowed else False)
@@ -1225,19 +1242,17 @@ class ChatController(MediaStream):
                     return True
             elif identifier == 'record':
                 return True if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and NSApp.delegate().applicationName != 'Blink Lite' else False
-            elif identifier == 'maximize' and self.video_frame_visible:
-                return True
-            elif identifier == 'video' and self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('video'):
+            elif identifier == 'video':
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
-                    if video_stream.status == STREAM_CONNECTED:
-                        return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
-                    elif video_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
-                        return True if self.sessionController.canCancelProposal() else False
+                    if video_stream.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING):
+                        item.setImage_(NSImage.imageNamed_("video-hangup"))
                     else:
-                        return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
+                        item.setImage_(NSImage.imageNamed_("video"))
                 else:
-                    return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
+                    item.setImage_(NSImage.imageNamed_("video"))
+                return True
+
             elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                 return True
             elif identifier == 'smileys':
@@ -1335,29 +1350,6 @@ class ChatController(MediaStream):
                 else:
                     sender.setImage_(NSImage.imageNamed_("paused"))
                     audio_stream.hold()
-
-            elif identifier == 'video':
-                self.toggleVideoFrame()
-                sender.setImage_(NSImage.imageNamed_("video") if not self.video_frame_visible else NSImage.imageNamed_("video-hangup"))
-                # TODO: add interaction with video stream from middleware -adi
-                return
-                if self.status == STREAM_CONNECTED:
-                    if self.sessionController.hasStreamOfType("video"):
-                        if video_stream.status == STREAM_PROPOSING or video_stream.status == STREAM_RINGING:
-                            self.sessionController.cancelProposal(video_stream)
-                        else:
-                            self.sessionController.removeVideoFromSession()
-
-                        sender.setToolTip_(NSLocalizedString("Add video", "Tooltip"))
-
-                        # The button will be enabled again after operation is finished
-                        sender.setEnabled_(False)
-                    else:
-                        self.sessionController.addVideoToSession()
-                        sender.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
-
-            elif identifier == 'maximize':
-                self.enterFullScreen()
 
             elif identifier == 'sendfile':
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
@@ -1699,9 +1691,6 @@ class ChatController(MediaStream):
     def _NH_ChatStreamDidNotSetNickname(self, stream, data):
         self.nickname_request_map.pop(data.message_id)
 
-    def _NH_BlinkMuteChangedState(self, sender, data):
-        self.updateToolbarMuteIcon()
-
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         if self.sessionController.session is None:
             return
@@ -1909,6 +1898,8 @@ class ChatController(MediaStream):
                 # it we have more than chat, we could just stop the chat stream only but is counter intuitive in the GUI so we end the whole session
                 self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
+            if self.video_frame_visible:
+                self.toggleVideoFrame()
 
     # lifetime of a chat controler: possible deallocation paths
     # 1. User click on close tab: closeTab -> endStream -> CloseWindow -> deallocTimer -> dealloc
@@ -1927,7 +1918,6 @@ class ChatController(MediaStream):
         self.startDeallocTimer()
 
     def reset(self):
-
         self.mediastream_failed = False
         self.mediastream_ended = False
         self.session_succeeded = False
@@ -1936,7 +1926,7 @@ class ChatController(MediaStream):
         self.share_screen_in_conference = False
         self.previous_is_encrypted = False
 
-        self.videoContainer.hideVideo()
+        self.remoteVideoView.hide()
         self.exitFullScreen()
         self.setScreenSharingToolbarIcon()
         self.resetEditorToolbarIcon()

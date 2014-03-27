@@ -13,9 +13,9 @@
                 <outlet property="inputContainer" destination="23" id="209"/>
                 <outlet property="outputContainer" destination="178" id="193"/>
                 <outlet property="privateLabel" destination="253" id="255"/>
+                <outlet property="remoteVideoView" destination="211" id="213"/>
                 <outlet property="smileyButton" destination="126" id="170"/>
                 <outlet property="splitView" destination="19" id="210"/>
-                <outlet property="videoContainer" destination="211" id="213"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -197,18 +197,9 @@
                 </qtMovieView>
             </subviews>
             <connections>
-                <outlet property="videoView" destination="212" id="216"/>
+                <outlet property="streamView" destination="212" id="R6u-CL-RBj"/>
             </connections>
         </customView>
-        <textField verticalHuggingPriority="750" id="251">
-            <rect key="frame" x="0.0" y="0.0" width="38" height="17"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Label" id="252">
-                <font key="font" metaFont="system"/>
-                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-            </textFieldCell>
-        </textField>
     </objects>
     <resources>
         <image name="NSAddTemplate" width="8" height="8"/>
