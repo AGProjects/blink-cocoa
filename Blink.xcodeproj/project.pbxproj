@@ -563,6 +563,30 @@
 		1F447E8D18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1F447E8E18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1F447E8F18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
+		1F48BF3318E51484004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
+		1F48BF3418E51484004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
+		1F48BF3518E51484004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
+		1F48BF3618E51484004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
+		1F48BF3718E51484004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
+		1F48BF3818E51484004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
+		1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
+		1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
+		1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
+		1F48BF3C18E51716004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
+		1F48BF3D18E51716004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
+		1F48BF3E18E51716004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
+		1F48BF3F18E5171F004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
+		1F48BF4018E5171F004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
+		1F48BF4118E5171F004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
+		1F48BF4218E5171F004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
+		1F48BF4318E5171F004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
+		1F48BF4418E5171F004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
+		1F48BF4518E51728004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
+		1F48BF4618E51728004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
+		1F48BF4718E51728004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
+		1F48BF4818E51728004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
+		1F48BF4918E51728004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
+		1F48BF4A18E51728004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
@@ -1386,6 +1410,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F48BF3318E51484004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
+				1F48BF3418E51484004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
+				1F48BF3518E51484004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
+				1F48BF3618E51484004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
+				1F48BF3718E51484004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
+				1F48BF3818E51484004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F22737112B5558A0010A8B2 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F22737212B5558A0010A8B2 /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -1494,6 +1524,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
+				1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
+				1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
+				1F48BF3C18E51716004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
+				1F48BF3D18E51716004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
+				1F48BF3E18E51716004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */,
 				1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */,
 				1F35D0A717894FFF00C6FE38 /* libgcrypt.11.dylib in Copy Frameworks */,
@@ -1603,6 +1639,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F48BF3F18E5171F004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
+				1F48BF4018E5171F004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
+				1F48BF4118E5171F004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
+				1F48BF4218E5171F004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
+				1F48BF4318E5171F004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
+				1F48BF4418E5171F004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
 				1F8DC406135084FA0034815C /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -1684,6 +1726,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F48BF4518E51728004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
+				1F48BF4618E51728004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
+				1F48BF4718E51728004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
+				1F48BF4818E51728004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
+				1F48BF4918E51728004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
+				1F48BF4A18E51728004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */,
@@ -1779,6 +1827,12 @@
 		1F447E8618DF8E61001EF4C9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F447E8818DF8E66001EF4C9 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoControlPanel.py; sourceTree = "<group>"; };
+		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libavcodec.55.dylib; sourceTree = "<group>"; };
+		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libavformat.55.dylib; sourceTree = "<group>"; };
+		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libavutil.52.dylib; sourceTree = "<group>"; };
+		1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
+		1F48BF3118E51466004D41B1 /* libswscale.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libswscale.2.dylib; sourceTree = "<group>"; };
+		1F48BF3218E5146E004D41B1 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libx264.142.dylib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
 		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
@@ -1858,8 +1912,6 @@
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F72E53916A027F600837311 /* MergeContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MergeContactController.py; sourceTree = "<group>"; };
 		1F72E54216A02B3600837311 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MergeContacts.xib; sourceTree = "<group>"; };
-		1F769A9F18E0A0FF0008A793 /* libx264.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libx264.dylib; sourceTree = "<group>"; };
-		1F769AA418E0A2700008A793 /* libSDL2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libSDL2.dylib; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
@@ -2304,9 +2356,13 @@
 				1F69E8E517F5611800B98B1E /* libgnutls.26.dylib */,
 				1F69E8E617F5611800B98B1E /* libgpg-error.0.dylib */,
 				1F69E8E717F5611800B98B1E /* liblzo.1.dylib */,
-				1F769A9F18E0A0FF0008A793 /* libx264.dylib */,
 				1F69E8E817F5611800B98B1E /* libtasn1.3.dylib */,
-				1F769AA418E0A2700008A793 /* libSDL2.dylib */,
+				1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */,
+				1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */,
+				1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */,
+				1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */,
+				1F48BF3118E51466004D41B1 /* libswscale.2.dylib */,
+				1F48BF3218E5146E004D41B1 /* libx264.142.dylib */,
 				1F69E8E917F5611800B98B1E /* Python.framework */,
 				1F69E8EA17F5611800B98B1E /* Sparkle.framework */,
 			);
