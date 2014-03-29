@@ -523,16 +523,23 @@ CA
                                     <action selector="setUseSpeechRecognition:" target="389" id="1661"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Folosește Comenzi Vocale pentru a Accepta sau Rejecta Convorbirile" tag="43" indentationLevel="2" id="1653">
+                            <menuItem title="Folosește Comenzi Vocale pentru a Accepta sau Rejecta Convorbirile" indentationLevel="2" id="1653" userLabel="Menu Item - Use Speech to Accept or Reject Calls">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setUseSpeechRecognition:" target="389" id="1655"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Spune Numele Apelantului" tag="43" indentationLevel="2" id="1658">
+                            <menuItem title="Spune Numele Apelantului" indentationLevel="2" id="1658">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setSpeechSyntezis:" target="389" id="1668"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" tag="405" id="Sxo-78-E1C"/>
+                            <menuItem title="Show Local Video" tag="50" id="3zb-2K-tHc">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleLocalVideoWindow:" target="389" id="QX9-kp-VaE"/>
                                 </connections>
                             </menuItem>
                         </items>

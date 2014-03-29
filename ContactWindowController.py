@@ -3312,6 +3312,9 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
 
+        item = self.toolsMenu.itemWithTag_(50)
+        item.setState_(NSOnState if self.localVideoWindow.visible else NSOffState)
+
     @allocate_autorelease_pool
     def updateCallMenu(self):
         menu = self.callMenu
