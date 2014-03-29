@@ -3,18 +3,26 @@
 
 from AppKit import NSApp, NSWindowController, NSEventTrackingRunLoopMode
 from Foundation import NSBundle, NSImage, NSRunLoop, NSRunLoopCommonModes, NSTimer
-
-from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
-
 import objc
+import time
 
+from application.notification import IObserver, NotificationCenter
+from application.python import Null
+from zope.interface import implements
+
+from util import allocate_autorelease_pool, run_in_gui_thread
+
+from BlinkLogger import BlinkLogger
+from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
 from SIPManager import SIPManager
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
+IDLE_TIME = 8
 
 class VideoControlPanel(NSWindowController):
+    implements(IObserver)
 
     toolbar = objc.IBOutlet()
     visible = False
@@ -25,6 +33,8 @@ class VideoControlPanel(NSWindowController):
     idle_timer = None
     fade_timer = None
     is_idle = False
+    closed = False
+    show_time = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -33,7 +43,26 @@ class VideoControlPanel(NSWindowController):
         self.videoWindowController = videoWindowController
         NSBundle.loadNibNamed_owner_("VideoControlPanel", self)
         self.window().setTitle_(self.videoWindowController.window().title())
+        self.notification_center = NotificationCenter()
+        self.notification_center.add_observer(self,sender=self.videoWindowController)
+        self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+
         #self.window().setMovable_(False)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_BlinkMuteChangedState(self, sender, data):
+        self.updateMuteButton()
+
+    def _NH_BlinkVideoWindowFullScreenChanged(self, sender, data):
+        if sender.full_screen:
+            self.fullscreenButton.setImage_(NSImage.imageNamed_("restore"))
+        else:
+            self.fullscreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
 
     @property
     def streamController(self):
@@ -61,7 +90,6 @@ class VideoControlPanel(NSWindowController):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.fade_timer, NSEventTrackingRunLoopMode)
 
     def stopFadeTimer(self):
-        self.window().setAlphaValue_(1.0)
         if self.fade_timer is not None and self.fade_timer.isValid():
             self.fade_timer.invalidate()
             self.fade_timer = None
@@ -72,13 +100,33 @@ class VideoControlPanel(NSWindowController):
         self.visible = False
 
     def show(self):
+        if self.is_idle:
+            return
+        self.show_time = time.time()
         self.stopFadeTimer()
         self.startIdleTimer()
+        self.window().setAlphaValue_(1.0)
         self.window().orderFront_(None)
         self.visible = True
 
+    def close(self):
+        if self.closed:
+            return
+        self.closed = True
+        self.stopIdleTimer()
+        self.stopFadeTimer()
+        self.window().orderOut_(None)
+        self.window().setAlphaValue_(1.0)
+
     def dealloc(self):
+        BlinkLogger().log_debug('Dealoc %s' % self)
+        self.notification_center.remove_observer(self, sender=self.videoWindowController)
+        self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
+
+        self.stopIdleTimer()
+        self.stopFadeTimer()
         self.videoWindowController = None
+        self.notification_center = None
         super(VideoControlPanel, self).dealloc()
 
     def awakeFromNib(self):
@@ -99,31 +147,36 @@ class VideoControlPanel(NSWindowController):
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
 
-    def close(self):
-        self.stopIdleTimer()
-        self.stopFadeTimer()
-        self.window().performClose_(None)
-
     def windowWillClose_(self, sender):
         self.stopFadeTimer()
 
     def updateIdleTimer_(self, timer):
         last_idle_counter = CGEventSourceSecondsSinceLastEventType(0, int(4294967295))
-        if last_idle_counter > 5:
+        chat_stream = self.sessionController.streamHandlerOfType("chat")
+        if not chat_stream:
+            if self.show_time is not None and time.time() - self.show_time < IDLE_TIME:
+                return
+
+        if last_idle_counter > IDLE_TIME:
+            self.show_time = None
             if not self.is_idle:
                 if self.visible:
                     self.startFadeTimer()
+                    self.visible = False
                 self.is_idle = True
         else:
-            if self.visible:
+            if not self.visible:
                 self.stopFadeTimer()
+                self.window().setAlphaValue_(1.0)
                 self.window().orderFront_(None)
+                self.visible = True
             self.is_idle = False
 
     def fade_(self, timer):
         if self.window().alphaValue() > 0.0:
             self.window().setAlphaValue_(self.window().alphaValue() - 0.05)
         else:
+            self.stopFadeTimer()
             self.window().orderOut_(None)
 
     @objc.IBAction
@@ -147,7 +200,6 @@ class VideoControlPanel(NSWindowController):
                         sender.setImage_(NSImage.imageNamed_("restore"))
             else:
                 self.videoWindowController.toggleFullScreen()
-                sender.setImage_(NSImage.imageNamed_("fullscreen" if self.videoWindowController.full_screen else "restore"))
         elif sender.itemIdentifier() == 'chat':
             chat_stream = self.sessionController.streamHandlerOfType("chat")
             if chat_stream:

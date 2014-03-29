@@ -9,6 +9,9 @@ import objc
 
 from application.notification import NotificationCenter
 from VideoControlPanel import VideoControlPanel
+from LocalVideoInitialWindowController import LocalVideoInitialWindowController
+
+from BlinkLogger import BlinkLogger
 
 
 class VideoWindowController(NSWindowController):
@@ -20,21 +23,28 @@ class VideoWindowController(NSWindowController):
     full_screen = False
     initialLocation = None
     always_on_top = False
+    localVideoWindow = None
+    full_screen_in_progress = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
     def __init__(self, streamController):
         self.streamController = streamController
+
         NSBundle.loadNibNamed_owner_("VideoWindow", self)
         self.window().setTitle_(NSLocalizedString("Video with %s", "Window title") % self.sessionController.getTitleShort())
-        self.videoControlPanel = VideoControlPanel(self)
-        # TODO video: start close window timer after media did start
-        self.close_mirror_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(15.0, self, "closeLocalVideoWindowTimer:", None, False)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_mirror_timer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_mirror_timer, NSEventTrackingRunLoopMode)
-        NSApp.delegate().contactsWindowController.showLocalVideoWindow()
         self.toogleAlwaysOnTop()
+
+        self.videoControlPanel = VideoControlPanel(self)
+        if not NSApp.delegate().contactsWindowController.localVideoWindow.visible:
+            if self.sessionController.hasStreamOfType("chat"):
+                NSApp.delegate().contactsWindowController.showLocalVideoWindow()
+                self.close_mirror_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(15.0, self, "closeLocalVideoWindowTimer:", None, False)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_mirror_timer, NSRunLoopCommonModes)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_mirror_timer, NSEventTrackingRunLoopMode)
+            else:
+                self.localVideoWindow = LocalVideoInitialWindowController(self)
 
     @property
     def sessionController(self):
@@ -42,37 +52,58 @@ class VideoWindowController(NSWindowController):
 
     def show(self):
         self.remoteVideoView.show()
-        self.videoControlPanel.show()
-        self.window().orderFront_(None)
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.show()
+
+        if self.localVideoWindow:
+            self.localVideoWindow.window().flipToShowWindow_forward_(self.window(), True)
+            self.localVideoWindow.localVideoView.hide()
+        else:
+            self.window().orderFront_(self)
+
+    def windowDidBecomeKey_(self, notification):
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.show()
+
+    def windowDidResignKey_(self, notification):
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.hide()
 
     def hide(self):
         self.window().orderOut_(self)
         self.remoteVideoView.hide()
-        self.videoControlPanel.hide()
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.hide()
 
     def goToFullScreen(self):
+        self.localVideoWindow = None
         if not self.full_screen and self.window().isVisible():
             self.window().toggleFullScreen_(None)
 
     def goToWindowMode(self):
         if self.full_screen and self.window().isVisible():
             self.window().toggleFullScreen_(None)
-            self.show()
+        self.show()
 
     def toggleFullScreen(self):
+        if self.full_screen_in_progress:
+            return
+        self.full_screen_in_progress = True
         if self.full_screen:
             self.goToWindowMode()
         else:
             self.goToFullScreen()
 
     def windowDidEnterFullScreen_(self, notification):
+        self.full_screen_in_progress = False
         self.full_screen = True
         self.videoControlPanel.show()
-        self.videoControlPanel.fullscreenButton.setImage_(NSImage.imageNamed_("restore"))
+        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
     def windowDidExitFullScreen_(self, notification):
+        self.full_screen_in_progress = False
         self.full_screen = False
-        self.videoControlPanel.fullscreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
+        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
     def keyDown_(self, event):
         super(VideoWindowController, self).keyDown_(event)
@@ -80,21 +111,21 @@ class VideoWindowController(NSWindowController):
     def windowShouldClose_(self, sender):
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         self.streamController.end()
-        self.videoControlPanel.window().close()
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.close()
         if not self.sessionController.hasStreamOfType("chat"):
             NotificationCenter().post_notification("BlinkVideoWindowClosed", sender=self)
 
         timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.05, self, "fade:", None, True)
         return False
 
-    def close_(self, sender):
-        self.close()
-
     def close(self):
         if self.finished:
             return
         self.finished = True
-        self.videoControlPanel.close()
+        self.goToWindowMode()
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.close()
         self.window().performClose_(None)
 
     def fade_(self, timer):
@@ -107,11 +138,13 @@ class VideoWindowController(NSWindowController):
             self.window().setAlphaValue_(1.0) # make the window fully opaque again for next time
 
     def dealloc(self):
+        BlinkLogger().log_debug('Dealoc %s' % self)
         chat_stream = self.sessionController.streamHandlerOfType("chat") # TODO video move to chat stream
         if chat_stream:
             chat_stream.video_window_detached = False
-        self.sessionController.log_debug(u"Dealloc %s" % self)
         self.streamController = None
+        self.videoControlPanel = None
+        self.localVideoWindow = None
         super(VideoWindowController, self).dealloc()
 
     def toogleAlwaysOnTop(self):

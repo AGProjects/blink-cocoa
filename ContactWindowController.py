@@ -541,6 +541,8 @@ class ContactWindowController(NSWindowController):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
 
+        self.localVideoWindow = LocalVideoWindowController.alloc().init()
+
         self.loaded = True
 
     @property
@@ -2777,18 +2779,16 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def toggleLocalVideoWindow_(self, sender):
-        if self.localVideoWindow and self.localVideoWindow.visible:
+        if self.localVideoWindow.visible:
             self.hideLocalVideoWindow()
         else:
             self.showLocalVideoWindow()
 
     def hideLocalVideoWindow(self):
-        if self.localVideoWindow and self.localVideoWindow.visible:
+        if self.localVideoWindow.visible:
             self.localVideoWindow.hide()
 
     def showLocalVideoWindow(self):
-        if self.localVideoWindow is None:
-            self.localVideoWindow = LocalVideoWindowController.alloc().init()
         self.localVideoWindow.show()
 
     @objc.IBAction

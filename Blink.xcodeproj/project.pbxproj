@@ -658,6 +658,23 @@
 		1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
+		1F6EF7F418E61C44008592D2 /* NSWindow_Flipr.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EF7F318E61C1F008592D2 /* NSWindow_Flipr.m */; };
+		1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
+		1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
+		1F6EF7FF18E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* LocalVideoInitialWindowController.py */; };
+		1F6EF80018E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* LocalVideoInitialWindowController.py */; };
+		1F6EF80118E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* LocalVideoInitialWindowController.py */; };
+		1F6EF80218E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* LocalVideoInitialWindowController.py */; };
+		1F6EF80318E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF80818E63FB8008592D2 /* LocalVideoInitialWindow.xib */; };
+		1F6EF80418E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF80818E63FB8008592D2 /* LocalVideoInitialWindow.xib */; };
+		1F6EF80518E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF80818E63FB8008592D2 /* LocalVideoInitialWindow.xib */; };
+		1F6EF80618E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF80818E63FB8008592D2 /* LocalVideoInitialWindow.xib */; };
+		1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
+		1F6EF80B18E64FD7008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
+		1F6EF80C18E64FDF008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
+		1F6EF80D18E64FE4008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
+		1F6EF80E18E64FEB008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
+		1F6EF80F18E64FF0008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
 		1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
 		1F72E53A16A027F600837311 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
@@ -1827,12 +1844,12 @@
 		1F447E8618DF8E61001EF4C9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F447E8818DF8E66001EF4C9 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoControlPanel.py; sourceTree = "<group>"; };
-		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libavcodec.55.dylib; sourceTree = "<group>"; };
-		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libavformat.55.dylib; sourceTree = "<group>"; };
-		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libavutil.52.dylib; sourceTree = "<group>"; };
-		1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
-		1F48BF3118E51466004D41B1 /* libswscale.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libswscale.2.dylib; sourceTree = "<group>"; };
-		1F48BF3218E5146E004D41B1 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libx264.142.dylib; sourceTree = "<group>"; };
+		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.55.dylib; path = Distribution/Frameworks/libavcodec.55.dylib; sourceTree = "<group>"; };
+		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.55.dylib; path = Distribution/Frameworks/libavformat.55.dylib; sourceTree = "<group>"; };
+		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.52.dylib; path = Distribution/Frameworks/libavutil.52.dylib; sourceTree = "<group>"; };
+		1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "Distribution/Frameworks/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
+		1F48BF3118E51466004D41B1 /* libswscale.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.2.dylib; path = Distribution/Frameworks/libswscale.2.dylib; sourceTree = "<group>"; };
+		1F48BF3218E5146E004D41B1 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.142.dylib; path = Distribution/Frameworks/libx264.142.dylib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
 		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
@@ -1899,15 +1916,14 @@
 		1F6963F617BF771A00985747 /* unlocked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-red.png"; path = "icons/unlocked-red.png"; sourceTree = "<group>"; };
 		1F6963FB17BF777D00985747 /* locked-orange.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-orange.png"; path = "icons/locked-orange.png"; sourceTree = "<group>"; };
 		1F6963FC17BF777D00985747 /* locked-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-yellow.png"; path = "icons/locked-yellow.png"; sourceTree = "<group>"; };
-		1F69E8E317F5611800B98B1E /* libgcrypt.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libgcrypt.11.dylib; sourceTree = "<group>"; };
-		1F69E8E417F5611800B98B1E /* libgnutls-extra.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libgnutls-extra.26.dylib"; sourceTree = "<group>"; };
-		1F69E8E517F5611800B98B1E /* libgnutls.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libgnutls.26.dylib; sourceTree = "<group>"; };
-		1F69E8E617F5611800B98B1E /* libgpg-error.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libgpg-error.0.dylib"; sourceTree = "<group>"; };
-		1F69E8E717F5611800B98B1E /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = liblzo.1.dylib; sourceTree = "<group>"; };
-		1F69E8E817F5611800B98B1E /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libtasn1.3.dylib; sourceTree = "<group>"; };
-		1F69E8E917F5611800B98B1E /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Python.framework; sourceTree = "<group>"; };
-		1F69E8EA17F5611800B98B1E /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F6EF7F218E61C1F008592D2 /* NSWindow_Flipr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSWindow_Flipr.h; sourceTree = "<group>"; };
+		1F6EF7F318E61C1F008592D2 /* NSWindow_Flipr.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSWindow_Flipr.m; sourceTree = "<group>"; };
+		1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		1F6EF7F718E61CC8008592D2 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		1F6EF7FE18E637E0008592D2 /* LocalVideoInitialWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = LocalVideoInitialWindowController.py; sourceTree = "<group>"; };
+		1F6EF80718E63FB8008592D2 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/LocalVideoInitialWindow.xib; sourceTree = "<group>"; };
+		1F6EF80918E63FC1008592D2 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/LocalVideoInitialWindow.xib; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F72E53916A027F600837311 /* MergeContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MergeContactController.py; sourceTree = "<group>"; };
@@ -2184,6 +2200,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
+				1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */,
 				1F065AB617AF925A003867C4 /* ScriptingBridge.framework in Frameworks */,
 				DE4E6F12174F9DBC00E1D5F9 /* libpython2.7.dylib in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
@@ -2197,6 +2215,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F6EF80D18E64FE4008592D2 /* QuartzCore.framework in Frameworks */,
+				1F6EF80C18E64FDF008592D2 /* OpenGL.framework in Frameworks */,
 				1FEDE7CE17AFD33C0038C579 /* ScriptingBridge.framework in Frameworks */,
 				1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */,
 				1F35D06917894FFF00C6FE38 /* libpython2.7.dylib in Frameworks */,
@@ -2211,6 +2231,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F6EF80B18E64FD7008592D2 /* QuartzCore.framework in Frameworks */,
+				1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */,
 				1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
@@ -2223,6 +2245,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F6EF80F18E64FF0008592D2 /* QuartzCore.framework in Frameworks */,
+				1F6EF80E18E64FEB008592D2 /* OpenGL.framework in Frameworks */,
 				1F69E8EC17F5614600B98B1E /* ScriptingBridge.framework in Frameworks */,
 				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
 				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
@@ -2348,28 +2372,6 @@
 			name = Keychain;
 			sourceTree = "<group>";
 		};
-		1F69E8E217F5611800B98B1E /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1F69E8E317F5611800B98B1E /* libgcrypt.11.dylib */,
-				1F69E8E417F5611800B98B1E /* libgnutls-extra.26.dylib */,
-				1F69E8E517F5611800B98B1E /* libgnutls.26.dylib */,
-				1F69E8E617F5611800B98B1E /* libgpg-error.0.dylib */,
-				1F69E8E717F5611800B98B1E /* liblzo.1.dylib */,
-				1F69E8E817F5611800B98B1E /* libtasn1.3.dylib */,
-				1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */,
-				1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */,
-				1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */,
-				1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */,
-				1F48BF3118E51466004D41B1 /* libswscale.2.dylib */,
-				1F48BF3218E5146E004D41B1 /* libx264.142.dylib */,
-				1F69E8E917F5611800B98B1E /* Python.framework */,
-				1F69E8EA17F5611800B98B1E /* Sparkle.framework */,
-			);
-			name = Frameworks;
-			path = Distribution/Frameworks;
-			sourceTree = "<group>";
-		};
 		1F89844212FCC78900490C6C /* History */ = {
 			isa = PBXGroup;
 			children = (
@@ -2407,12 +2409,16 @@
 		1FAF8D2E12DA1F5F0029857C /* Video */ = {
 			isa = PBXGroup;
 			children = (
+				1F6EF7F218E61C1F008592D2 /* NSWindow_Flipr.h */,
+				1F6EF7F318E61C1F008592D2 /* NSWindow_Flipr.m */,
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
-				1FC0184D18E0774D0009145A /* VideoControlPanel.xib */,
-				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
 				1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */,
 				1F447E8718DF8E61001EF4C9 /* VideoWindow.xib */,
 				1F274895138930580052C384 /* VideoView.py */,
+				1FC0184D18E0774D0009145A /* VideoControlPanel.xib */,
+				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
+				1F6EF80818E63FB8008592D2 /* LocalVideoInitialWindow.xib */,
+				1F6EF7FE18E637E0008592D2 /* LocalVideoInitialWindowController.py */,
 				1F07D765138BDFF200C91AD7 /* LocalVideoWindowController.py */,
 				1F07D8A2138BF22E00C91AD7 /* LocalVideoWindow.xib */,
 			);
@@ -2438,6 +2444,12 @@
 		1FEDE7CF17AFD4C50038C579 /* C-Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */,
+				1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */,
+				1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */,
+				1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */,
+				1F48BF3118E51466004D41B1 /* libswscale.2.dylib */,
+				1F48BF3218E5146E004D41B1 /* libx264.142.dylib */,
 				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
 				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
 				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
@@ -2453,7 +2465,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				1F69E8E217F5611800B98B1E /* Frameworks */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -2482,6 +2493,8 @@
 		29B97323FDCFA39411CA2CEA /* SystemFrameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F6EF7F718E61CC8008592D2 /* OpenGL.framework */,
+				1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */,
 				1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */,
 				1F0F2AA115456DAD00ECB98E /* AppKit.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
@@ -3085,6 +3098,7 @@
 				1F22729D12B554F50010A8B2 /* Contact.xib in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
+				1F6EF80018E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */,
 				1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */,
 				1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
@@ -3146,6 +3160,7 @@
 				1F2272DD12B554F50010A8B2 /* About.xib in Resources */,
 				1F2272DE12B554F50010A8B2 /* incoming_file.png in Resources */,
 				1F2272DF12B554F50010A8B2 /* upfile.png in Resources */,
+				1F6EF80418E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */,
 				1F2272E112B554F50010A8B2 /* hangup.png in Resources */,
 				1F2272E212B554F50010A8B2 /* belloff.png in Resources */,
 				1F2272E312B554F50010A8B2 /* bellon.png in Resources */,
@@ -3514,6 +3529,7 @@
 				1F35D02417894FFF00C6FE38 /* AudioSession.xib in Resources */,
 				1F35D02517894FFF00C6FE38 /* zrtp-securemode.wav in Resources */,
 				1F35D02617894FFF00C6FE38 /* zrtp-security-failed.wav in Resources */,
+				1F6EF80218E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */,
 				1F35D02717894FFF00C6FE38 /* SessionInfoPanel.xib in Resources */,
 				1F35D02817894FFF00C6FE38 /* SessionInfoController.py in Resources */,
 				1F35D02917894FFF00C6FE38 /* lock-zrtp.png in Resources */,
@@ -3535,6 +3551,7 @@
 				1F35D03917894FFF00C6FE38 /* mime.types in Resources */,
 				1F35D03A17894FFF00C6FE38 /* ldap.png in Resources */,
 				1F35D03B17894FFF00C6FE38 /* NightVolumeSetting.xib in Resources */,
+				1F6EF80618E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */,
 				1F35D03C17894FFF00C6FE38 /* ScreensharingPreviewPanel.xib in Resources */,
 				1F35D03D17894FFF00C6FE38 /* iCloudManager.py in Resources */,
 				1F35D03E17894FFF00C6FE38 /* BlinkLite.entitlements in Resources */,
@@ -3752,6 +3769,7 @@
 				1FD0809418C02F4C00A3B313 /* about.tiff in Resources */,
 				1FA6252213828E2500DFC8E3 /* editor.png in Resources */,
 				1F27467A1388755F0052C384 /* fullscreen.png in Resources */,
+				1F6EF80118E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */,
 				1F2747D41388FC5C0052C384 /* restore.png in Resources */,
 				1F274897138930580052C384 /* VideoView.py in Resources */,
 				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
@@ -3782,6 +3800,7 @@
 				1F6896A1140CE18E00DA5329 /* screenshot.png in Resources */,
 				1FF62301140E20C000E81891 /* help.png in Resources */,
 				1FD996FF142DEFC400EE171F /* start_chat.png in Resources */,
+				1F6EF80518E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */,
 				1FD99704142DEFD100EE171F /* stop_chat.png in Resources */,
 				1F9406C014307D180053D741 /* display_16.png in Resources */,
 				1FFB386A1432026D003B29ED /* display_red.png in Resources */,
@@ -4012,6 +4031,7 @@
 				1FD0809218C02F4C00A3B313 /* about.tiff in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
+				1F6EF7FF18E637E0008592D2 /* LocalVideoInitialWindowController.py in Resources */,
 				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
 				1F2747D51388FC5C0052C384 /* restore.png in Resources */,
 				1F274898138930580052C384 /* VideoView.py in Resources */,
@@ -4042,6 +4062,7 @@
 				1FF62303140E20C000E81891 /* help.png in Resources */,
 				1FD99701142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99706142DEFD100EE171F /* stop_chat.png in Resources */,
+				1F6EF80318E63FB8008592D2 /* LocalVideoInitialWindow.xib in Resources */,
 				1F9406C214307D180053D741 /* display_16.png in Resources */,
 				1FFB386C1432026D003B29ED /* display_red.png in Resources */,
 				1FFB38D9143209E0003B29ED /* display_red_16.png in Resources */,
@@ -4121,6 +4142,7 @@
 			files = (
 				1F22732212B554F50010A8B2 /* main.m in Sources */,
 				1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */,
+				1F6EF7F418E61C44008592D2 /* NSWindow_Flipr.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4286,6 +4308,15 @@
 				1F6460B218BC926500AC41E0 /* ro */,
 			);
 			name = AddParticipantsWindow.xib;
+			sourceTree = "<group>";
+		};
+		1F6EF80818E63FB8008592D2 /* LocalVideoInitialWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F6EF80718E63FB8008592D2 /* en */,
+				1F6EF80918E63FC1008592D2 /* ro */,
+			);
+			name = LocalVideoInitialWindow.xib;
 			sourceTree = "<group>";
 		};
 		1F72E54316A02B3600837311 /* MergeContacts.xib */ = {

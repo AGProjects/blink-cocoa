@@ -580,7 +580,7 @@ class SessionControllersManager(object):
 
         if type == 'video':
             # TODO: enable Video -adi
-            return False
+            return True
 
         return True
 

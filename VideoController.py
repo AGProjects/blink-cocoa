@@ -49,7 +49,7 @@ class VideoController(MediaStream):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=sessionController)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
-        sessionController.log_info(u"Creating %s" % self)
+        sessionController.log_debug(u"Creating %s" % self)
         self.windowController = VideoWindowController(self)
         return self
 
@@ -60,10 +60,12 @@ class VideoController(MediaStream):
         self.windowController.hide()
 
     def showControlPanel(self):
-        self.windowController.videoControlPanel.show()
+        if self.windowController.videoControlPanel is not None:
+            self.windowController.videoControlPanel.show()
 
     def hideControlPanel(self):
-        self.windowController.videoControlPanel.hide()
+        if self.windowController.videoControlPanel is not None:
+            self.windowController.videoControlPanel.hide()
 
     def goToFullScreen(self):
         self.show()
@@ -115,7 +117,6 @@ class VideoController(MediaStream):
 
         self.removeFromSession()
         self.windowController.close()
-        self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
         self.notification_center.discard_observer(self, sender=self.sessionController)
 
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
@@ -126,48 +127,50 @@ class VideoController(MediaStream):
         self.status = newstate
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.windowController.show()
         self.changeStatus(STREAM_CONNECTED)
         if self.initial_timer is None:
-            self.initial_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "initialTimer:", None, False)
+            self.initial_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(4.0, self, "initialTimer:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.initial_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.initial_timer, NSEventTrackingRunLoopMode)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.changeStatus(STREAM_FAILED, data.reason)
+        self.windowController.close()
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.windowController.goToWindowMode()
-        self.windowController.videoControlPanel.hide()
+        self.windowController.close()
 
     def _NH_BlinkSessionDidStart(self, sender, data):
+        self.windowController.show()
         if self.initial_timer is None: # TODO video: remove me after initial_timer works in mediadidstart
             self.initial_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "initialTimer:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.initial_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.initial_timer, NSEventTrackingRunLoopMode)
 
     def _NH_BlinkSessionWillEnd(self, sender, data):
-        self.windowController.goToWindowMode()
-        self.windowController.videoControlPanel.hide()
+        self.windowController.close()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        self.windowController.goToWindowMode()
-        self.windowController.videoControlPanel.hide()
         self.notification_center.discard_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
+        if self.initial_timer is not None:
+            self.initial_timer.invalidate()
+            self.initial_timer = None
+        self.windowController.goToWindowMode()
         self.windowController.close()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.notification_center.discard_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
+        if self.initial_timer is not None:
+            self.initial_timer.invalidate()
+            self.initial_timer = None
         self.windowController.close()
 
     def initialTimer_(self, timer):
         self.initial_timer = None
-        self.windowController.show()
+        if self.status in (STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING):
+            return
         self.windowController.goToFullScreen()
-
-    def _NH_BlinkMuteChangedState(self, sender, data):
-        self.windowController.videoControlPanel.updateMuteButton()
-
-

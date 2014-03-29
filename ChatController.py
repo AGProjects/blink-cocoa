@@ -713,7 +713,7 @@ class ChatController(MediaStream):
 
         self.notification_center.post_notification("BlinkVideoEnteredFullScreen", sender=self)
 
-        self.showLocalVideo()
+        #self.showLocalVideo()
         self.chatWindowController.window().setInitialFirstResponder_(self.remoteVideoView)
 
     def exitFullScreen(self):
