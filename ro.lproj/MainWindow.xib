@@ -535,13 +535,6 @@ CA
                                     <action selector="setSpeechSyntezis:" target="389" id="1668"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="405" id="Sxo-78-E1C"/>
-                            <menuItem title="Show Local Video" tag="50" id="3zb-2K-tHc">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="toggleLocalVideoWindow:" target="389" id="QX9-kp-VaE"/>
-                                </connections>
-                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="389" id="1019"/>
@@ -574,6 +567,11 @@ CA
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1652"/>
+                            <menuItem title="Loguri" keyEquivalent="0" id="1648">
+                                <connections>
+                                    <action selector="showDebugWindow:" target="389" id="1649"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Contacte" tag="1" keyEquivalent="1" id="669">
                                 <connections>
                                     <action selector="showWindow:" target="389" id="670"/>
@@ -584,29 +582,29 @@ CA
                                     <action selector="toggleAudioSessionsDrawer:" target="389" id="1111"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Conversații Text" tag="5" keyEquivalent="3" id="1675" userLabel="Menu Item (File Transfers..)">
+                            <menuItem title="Conversații Text" tag="5" keyEquivalent="3" id="1675">
                                 <connections>
                                     <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Mesaje Scurte" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item (File Transfers..)">
+                            <menuItem title="Mesaje Scurte" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
                                 <connections>
                                     <action selector="showSMSWindow:" target="389" id="zvH-Hr-KwH"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Transfer de Fișiere" tag="4" keyEquivalent="5" id="1114" userLabel="Menu Item (File Transfers..)">
+                            <menuItem title="Transfer de Fișiere" tag="4" keyEquivalent="5" id="1114">
                                 <connections>
                                     <action selector="showWindow:" target="848" id="1115"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Istoria Conversațiilor" tag="3" keyEquivalent="6" id="1112" userLabel="Menu Item (Chat Conversations...)">
+                            <menuItem title="Istoria Conversațiilor" tag="3" keyEquivalent="6" id="1112">
                                 <connections>
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Loguri" keyEquivalent="0" id="1648">
+                            <menuItem title="Show Local Video" tag="50" keyEquivalent="7" id="3zb-2K-tHc">
                                 <connections>
-                                    <action selector="showDebugWindow:" target="389" id="1649"/>
+                                    <action selector="toggleLocalVideoWindow:" target="389" id="QX9-kp-VaE"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="92">

@@ -3312,9 +3312,6 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
 
-        item = self.toolsMenu.itemWithTag_(50)
-        item.setState_(NSOnState if self.localVideoWindow.visible else NSOffState)
-
     @allocate_autorelease_pool
     def updateCallMenu(self):
         menu = self.callMenu
@@ -3444,7 +3441,8 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_((file, timestamp))
 
     def updateWindowMenu(self):
-        self.windowMenu.itemWithTag_(5)
+        item = self.windowMenu.itemWithTag_(50)
+        item.setState_(NSOnState if self.localVideoWindow.visible else NSOffState)
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
