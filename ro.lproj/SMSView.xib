@@ -41,7 +41,7 @@
                         <textField verticalHuggingPriority="750" id="193">
                             <rect key="frame" x="17" y="303" width="278" height="14"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Mesajul Precedent" id="194">
+                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Mesajele Anterioare" id="194">
                                 <font key="font" metaFont="smallSystem"/>
                                 <color key="textColor" white="0.20999999999999999" alpha="1" colorSpace="calibratedWhite"/>
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

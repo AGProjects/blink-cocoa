@@ -239,10 +239,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -298,10 +298,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>

@@ -43,7 +43,7 @@
 				<int key="NSWindowBacking">2</int>
 				<string key="NSWindowRect">{{680, 535}, {416, 121}}</string>
 				<int key="NSWTFlags">544735232</int>
-				<string key="NSWindowTitle">Combină Contacte</string>
+				<string key="NSWindowTitle">Combină Contactele</string>
 				<string key="NSWindowClass">NSWindow</string>
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
