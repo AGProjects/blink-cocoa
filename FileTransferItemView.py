@@ -1,7 +1,8 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSCompositeSourceOver
+from AppKit import NSCompositeSourceOver, NSProcessInfo
+
 from Foundation import (NSBundle,
                         NSColor,
                         NSHeight,
@@ -11,10 +12,13 @@ from Foundation import (NSBundle,
                         NSMakeRect,
                         NSMakeSize,
                         NSView,
-                        NSWorkspace)
+                        NSWorkspace,
+                        NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
+                        )
 import objc
 
 import os
+import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -242,7 +246,12 @@ class FileTransferItemView(NSView):
         if self.transfer and self.transfer.file_path:
             path = self.transfer.file_path
         elif self.oldTransferInfo:
-            # TODO: this does not open after restart because of sandboxing, better open Downloads folder instead for incoming transfers
+            environ = NSProcessInfo.processInfo().environment()
+            inSandbox = environ.objectForKey_("APP_SANDBOX_CONTAINER_ID")
+            if inSandbox is not None:
+                download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
+                NSWorkspace.sharedWorkspace().openFile_(download_folder)
+                return
             path = self.oldTransferInfo.file_path
         else:
             return
