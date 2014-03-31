@@ -89,13 +89,14 @@ class VideoWindowController(NSWindowController):
 
     def goToFullScreen(self):
         self.localVideoWindow = None
-        if not self.full_screen and self.window().isVisible():
+        if not self.full_screen:
             self.window().toggleFullScreen_(None)
+            self.show()
 
     def goToWindowMode(self):
-        if self.full_screen and self.window().isVisible():
+        if self.full_screen:
             self.window().toggleFullScreen_(None)
-        self.show()
+            self.show()
 
     def toggleFullScreen(self):
         if self.full_screen_in_progress:

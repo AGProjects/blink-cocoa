@@ -68,13 +68,8 @@ class VideoController(MediaStream):
             self.windowController.videoControlPanel.hide()
 
     def goToFullScreen(self):
-        self.show()
         self.windowController.goToFullScreen()
         self.showControlPanel()
-
-    def goToWindowMode(self):
-        self.show()
-        self.windowController.goToWindowMode()
 
     def startOutgoing(self, is_update):
         if is_update and self.sessionController.canProposeMediaStreamChanges():
