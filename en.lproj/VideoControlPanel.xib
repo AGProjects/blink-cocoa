@@ -10,6 +10,7 @@
                 <outlet property="holdButton" destination="KjW-gV-lDX" id="B4B-BE-fUA"/>
                 <outlet property="muteButton" destination="IGv-ve-yk1" id="7tA-sO-rN8"/>
                 <outlet property="toolbar" destination="gnF-kZ-Vhi" id="2Fq-RV-J2g"/>
+                <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
                 <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
             </connections>
         </customObject>
@@ -22,9 +23,12 @@
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
             <value key="minSize" type="size" width="355" height="1"/>
             <value key="maxSize" type="size" width="355" height="1"/>
-            <view key="contentView" id="ygh-EU-NlO">
+            <view key="contentView" id="ygh-EU-NlO" customClass="controlPanelToolbarView">
                 <rect key="frame" x="0.0" y="0.0" width="355" height="1"/>
                 <autoresizingMask key="autoresizingMask"/>
+                <connections>
+                    <outlet property="parentWindow" destination="WqC-T4-L8j" id="btW-Ya-cOD"/>
+                </connections>
             </view>
             <toolbar key="toolbar" implicitIdentifier="324D1955-E07A-4C7A-B5D7-99E3538D78D8" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="gnF-kZ-Vhi">
                 <allowedToolbarItems>

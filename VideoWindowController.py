@@ -25,6 +25,8 @@ class VideoWindowController(NSWindowController):
     always_on_top = False
     localVideoWindow = None
     full_screen_in_progress = False
+    mouse_in_window = True
+    mouse_timer = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -46,6 +48,7 @@ class VideoWindowController(NSWindowController):
             else:
                 self.localVideoWindow = LocalVideoInitialWindowController(self)
 
+
     @property
     def sessionController(self):
         return self.streamController.sessionController
@@ -61,6 +64,15 @@ class VideoWindowController(NSWindowController):
         else:
             self.window().orderFront_(self)
 
+    def mouseIn(self):
+        self.mouse_in_window = True
+        self.stopMouseOutTimer()
+        self.videoControlPanel.show()
+
+    def mouseOut(self):
+        self.mouse_in_window = False
+        self.startMouseOutTimer()
+    
     def windowDidBecomeKey_(self, notification):
         if self.videoControlPanel is not None:
             self.videoControlPanel.show()
@@ -126,6 +138,7 @@ class VideoWindowController(NSWindowController):
         self.goToWindowMode()
         if self.videoControlPanel is not None:
             self.videoControlPanel.close()
+        self.stopMouseOutTimer()
         self.window().performClose_(None)
 
     def fade_(self, timer):
@@ -154,4 +167,21 @@ class VideoWindowController(NSWindowController):
     def closeLocalVideoWindowTimer_(self, timer):
         self.close_mirror_timer = None
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
+
+    def stopMouseOutTimer(self):
+        if self.mouse_timer is not None:
+            if self.mouse_timer.isValid():
+                self.mouse_timer.invalidate()
+            self.mouse_timer = None
+
+    def startMouseOutTimer(self):
+        if self.mouse_timer is None:
+            self.mouse_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "mouseOutTimer:", None, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.mouse_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.mouse_timer, NSEventTrackingRunLoopMode)
+
+    def mouseOutTimer_(self, timer):
+        self.videoControlPanel.hide()
+        self.mouse_timer = None
+
 

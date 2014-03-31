@@ -1,7 +1,8 @@
 # Copyright (C) 2011 AG Projects. See LICENSE for details.
 #
 
-from Foundation import NSView, NSScreen
+from AppKit import NSTrackingMouseEnteredAndExited, NSTrackingMouseMoved, NSTrackingActiveAlways
+from Foundation import NSView, NSScreen, NSTrackingArea, NSZeroRect
 import objc
 
 import QTKit
@@ -11,11 +12,28 @@ class VideoView(NSView):
     # TODO video: replace this view with PJSIP SDL view -adi
 
     streamView = objc.IBOutlet()
+    parentWindow = objc.IBOutlet()
     show_video = False
     delegate = None
 
     def setDelegate_(self, delegate):
         self.delegate = delegate
+
+    def awakeFromNib(self):
+        rect = NSZeroRect
+        rect.size = self.frame().size
+        tarea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
+                                                                            NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
+        self.addTrackingArea_(tarea)
+
+    def mouseEntered_(self, event):
+        self.parentWindow.delegate().mouseIn()
+
+    def mouseExited_(self, event):
+        self.parentWindow.delegate().mouseOut()
+
+    def mouseMoved_(self, event):
+        pass
 
     def show(self):
         if self.show_video:
@@ -111,3 +129,22 @@ class LocalVideoView(NSView):
 
             self.deviceView.setCaptureSession_(self.mirrorSession)
         self.mirrorSession.startRunning()
+
+
+class controlPanelToolbarView(NSView):
+    parentWindow = objc.IBOutlet()
+
+    def awakeFromNib(self):
+        rect = NSZeroRect
+        rect.size = self.frame().size
+        tarea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
+                                                                    NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
+        self.addTrackingArea_(tarea)
+
+    def mouseEntered_(self, event):
+        self.parentWindow.delegate().mouseIn()
+
+    def mouseExited_(self, event):
+        self.parentWindow.delegate().mouseOut()
+
+

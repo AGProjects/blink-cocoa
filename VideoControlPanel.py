@@ -25,6 +25,7 @@ class VideoControlPanel(NSWindowController):
     implements(IObserver)
 
     toolbar = objc.IBOutlet()
+    toolbarView = objc.IBOutlet()
     visible = False
     full_screen = True
     holdButton = objc.IBOutlet()
@@ -35,6 +36,7 @@ class VideoControlPanel(NSWindowController):
     is_idle = False
     closed = False
     show_time = None
+    mouse_in_window = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -64,6 +66,12 @@ class VideoControlPanel(NSWindowController):
         else:
             self.fullscreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
 
+    def mouseIn(self):
+        self.mouse_in_window = True
+
+    def mouseOut(self):
+        self.mouse_in_window = False
+
     @property
     def streamController(self):
         return self.videoWindowController.streamController
@@ -85,7 +93,7 @@ class VideoControlPanel(NSWindowController):
 
     def startFadeTimer(self):
         if self.fade_timer is None:
-            self.fade_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "fade:", None, True)
+            self.fade_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.05, self, "fade:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.fade_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.fade_timer, NSEventTrackingRunLoopMode)
 
@@ -100,6 +108,15 @@ class VideoControlPanel(NSWindowController):
         self.visible = False
 
     def show(self):
+        chat_stream = self.sessionController.streamHandlerOfType("chat")
+        if chat_stream:
+            if chat_stream.video_window_detached:
+                if not self.videoWindowController.mouse_in_window:
+                    return
+        else:
+            if not self.videoWindowController.mouse_in_window:
+                return
+
         if self.is_idle:
             return
         self.show_time = time.time()
@@ -174,7 +191,7 @@ class VideoControlPanel(NSWindowController):
 
     def fade_(self, timer):
         if self.window().alphaValue() > 0.0:
-            self.window().setAlphaValue_(self.window().alphaValue() - 0.05)
+            self.window().setAlphaValue_(self.window().alphaValue() - 0.025)
         else:
             self.stopFadeTimer()
             self.window().orderOut_(None)
