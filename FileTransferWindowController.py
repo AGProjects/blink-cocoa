@@ -202,12 +202,13 @@ class FileTransferWindowController(NSObject, object):
 
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
-        # jump dock icon and bring window to front
-
-        if not isinstance(sender, IncomingFileTransferHandler):
-            if 'xscreencapture' not in sender.file_path:
-                self.window.orderFront_(None)
-                NSApp.requestUserAttention_(NSInformationalRequest)
         self.refresh_transfer_rate()
+        # jump dock icon and bring window to front
+        if isinstance(sender, IncomingFileTransferHandler):
+            self.window.orderFront_(None)
+            NSApp.requestUserAttention_(NSInformationalRequest)
+        elif 'xscreencapture' not in sender.file_path:
+            self.window.orderFront_(None)
+            NSApp.requestUserAttention_(NSInformationalRequest)
 
 
