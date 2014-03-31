@@ -1771,7 +1771,7 @@ class SessionController(NSObject):
         if self.routes is not None and len(self.routes) > 1:
             if data.code == 408 and data.originator == 'local':
                 must_retry = True
-            elif data.code >= 500:
+            elif data.code >= 500 and data.code < 600:
                 must_retry = True
 
         if not must_retry:
