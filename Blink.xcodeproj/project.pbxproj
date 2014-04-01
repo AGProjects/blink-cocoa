@@ -1116,6 +1116,9 @@
 		1FE59BB9161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBA161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBB161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
+		1FEB83FB18EB0DAA0084FA31 /* NSWindow_Flipr.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EF7F318E61C1F008592D2 /* NSWindow_Flipr.m */; };
+		1FEB83FC18EB0E7E0084FA31 /* NSWindow_Flipr.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EF7F318E61C1F008592D2 /* NSWindow_Flipr.m */; };
+		1FEB83FD18EB6D320084FA31 /* NSWindow_Flipr.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EF7F318E61C1F008592D2 /* NSWindow_Flipr.m */; };
 		1FEC3E9114D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9214D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9314D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
@@ -3050,6 +3053,9 @@
 					1F22729312B554F50010A8B2 = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 					};
+					1F35CF7817894FFF00C6FE38 = {
+						DevelopmentTeam = 4DFEFUDLKZ;
+					};
 					1F8DC324135084FA0034815C = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 					};
@@ -4150,6 +4156,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FEB83FB18EB0DAA0084FA31 /* NSWindow_Flipr.m in Sources */,
 				1F35D06617894FFF00C6FE38 /* main.m in Sources */,
 				1F35D06717894FFF00C6FE38 /* EMKeychainItem.m in Sources */,
 			);
@@ -4159,6 +4166,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FEB83FD18EB6D320084FA31 /* NSWindow_Flipr.m in Sources */,
 				1F8DC3BF135084FA0034815C /* main.m in Sources */,
 				1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 			);
@@ -4168,6 +4176,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FEB83FC18EB0E7E0084FA31 /* NSWindow_Flipr.m in Sources */,
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 			);
@@ -4624,7 +4633,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -4664,7 +4673,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects (4DFEFUDLKZ)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application: AG Projects (4DFEFUDLKZ)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -4702,7 +4711,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = "";
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/sip2sip.dst;
@@ -4742,7 +4751,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DSTROOT = /tmp/sip2sip.dst;
@@ -4804,6 +4813,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "D5B82CFA-DBF2-44D7-8B70-D3824E010AA9";
@@ -4841,6 +4851,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "D3C2777B-4739-4624-8A3B-B66ABB9A41A7";
@@ -4854,7 +4865,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -4879,7 +4890,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
@@ -4895,7 +4906,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -4918,7 +4929,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
