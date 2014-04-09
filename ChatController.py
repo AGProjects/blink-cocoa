@@ -1130,8 +1130,7 @@ class ChatController(MediaStream):
         """Called by ChatWindowController when receiving various middleware notifications"""
         settings = SIPSimpleSettings()
 
-        if self.sessionController.hasStreamOfType("audio"):
-            audio_stream = self.sessionController.streamHandlerOfType("audio")
+        audio_stream = self.sessionController.streamHandlerOfType("audio")
 
         for item in toolbar.visibleItems():
             identifier = item.itemIdentifier()
@@ -1186,17 +1185,28 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
                         if audio_stream.holdByRemote:
+                            item.setToolTip_(NSLocalizedString("On Hold", "Tooltip"))
                             item.setImage_(NSImage.imageNamed_("paused"))
                         elif audio_stream.holdByLocal:
+                            item.setToolTip_(NSLocalizedString("Unhold", "Tooltip"))
                             item.setImage_(NSImage.imageNamed_("paused"))
                         else:
+                            item.setToolTip_(NSLocalizedString("Hold", "Tooltip"))
                             item.setImage_(NSImage.imageNamed_("pause"))
                     else:
                         item.setImage_(NSImage.imageNamed_("pause"))
                 else:
                     item.setImage_(NSImage.imageNamed_("pause"))
             elif identifier == 'record':
-                item.setImage_(NSImage.imageNamed_("recording1" if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recorder is not None else "record"))
+                if audio_stream:
+                    if audio_stream.status == STREAM_CONNECTED and audio_stream.stream.recorder is not None and audio_stream.stream.recorder.is_active:
+                        item.setImage_(NSImage.imageNamed_("recording1"))
+                        item.setToolTip_(NSLocalizedString("Stop Recording", "Tooltip"))
+                    else:
+                        item.setToolTip_(NSLocalizedString("Start Recording", "Tooltip"))
+                        item.setImage_(NSImage.imageNamed_("record"))
+                else:
+                    item.setToolTip_(NSLocalizedString("Start Recording", "Tooltip"))
             elif identifier == 'screen':
                 if self.sessionController.remote_focus:
                     item.setEnabled_(True if self.status == STREAM_CONNECTED and self.screensharing_allowed else False)
@@ -1329,7 +1339,7 @@ class ChatController(MediaStream):
                     sender.setImage_(NSImage.imageNamed_("hangup"))
 
             elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
-                if audio_stream.stream.recording_active:
+                if audio_stream and audio_stream.stream.recorder is not None and audio_stream.stream.recorder.is_active:
                     audio_stream.stream.stop_recording()
                     sender.setImage_(NSImage.imageNamed_("record"))
                 else:
