@@ -311,7 +311,7 @@ class ChatController(MediaStream):
             if ctx.state > 0 or ctx.tagOffer == 2:
                 if ctx.tagOffer == 2:
                     self.sessionController.log_info('OTR negotiation failed')
-                    self.showSystemMessage(self.sessionController.call_id, NSLocalizedString("Failed to enable OTR encryption", "Label"), True)
+                    self.showSystemMessage(NSLocalizedString("Failed to enable OTR encryption", "Label"), ISOTimestamp.now(), True)
                     self.chatViewController.loadingTextIndicator.setStringValue_("")
                     self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                 elif ctx.state == 1:
