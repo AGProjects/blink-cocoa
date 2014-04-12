@@ -2422,7 +2422,6 @@ class ConferenceScreenSharingHandler(object):
 
     def setDisconnected(self):
         self.log_first_frame = False
-        self.delegate = None
         self.connected = False
         self.may_send = True
         self.frames = 0
