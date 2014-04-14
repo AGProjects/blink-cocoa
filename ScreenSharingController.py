@@ -20,6 +20,7 @@ from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
 from sipsimple.streams.msrp import ScreenSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
+from sipsimple.configuration.settings import SIPSimpleSettings
 
 from BlinkLogger import BlinkLogger
 from MediaStream import (MediaStream,
@@ -98,6 +99,7 @@ class ScreenSharingController(MediaStream):
     viewer = None
     vncServerPort = 5900
     exhanged_bytes = 0
+    must_reset_trace_msrp = False
 
     #statusItem = StatusItem.alloc().init()
 
@@ -126,6 +128,13 @@ class ScreenSharingController(MediaStream):
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.getTitleShort())
+            settings = SIPSimpleSettings()
+            if not settings.logs.trace_msrp:
+                settings.logs.trace_msrp = True
+                settings.save()
+                self.must_reset_trace_msrp = True
+
+            NotificationCenter().add_observer(self, name="MSRPTransportTrace")
             #self.statusItem.show(self)
         NotificationCenter().add_observer(self, sender=self.stream.handler)
         NotificationCenter().add_observer(self, sender=self.stream)
@@ -140,6 +149,12 @@ class ScreenSharingController(MediaStream):
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.getTitleShort())
+            settings = SIPSimpleSettings()
+            if not settings.logs.trace_msrp:
+                settings.logs.trace_msrp = True
+                settings.save()
+                self.must_reset_trace_msrp = True
+            NotificationCenter().add_observer(self, name="MSRPTransportTrace")
             #self.statusItem.show(self)
         NotificationCenter().add_observer(self, sender=self.stream.handler)
         NotificationCenter().add_observer(self, sender=self.stream)
@@ -273,11 +288,11 @@ class ScreenSharingController(MediaStream):
     def _NH_MediaStreamDidStart(self, sender, data):
         self.sessionController.log_info("Screen sharing started")
         self.changeStatus(STREAM_CONNECTED)
-        NotificationCenter().add_observer(self, sender=self.stream.msrp)
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_info("Screen sharing failed")
         self.changeStatus(STREAM_IDLE)
+        self.resetTrace()
         if self.statusWindow:
             self.stopButton.setHidden_(True)
 
@@ -290,13 +305,12 @@ class ScreenSharingController(MediaStream):
 
         NotificationCenter().remove_observer(self, sender=self.stream.handler)
         NotificationCenter().remove_observer(self, sender=self.stream)
-        if self.status == STREAM_CONNECTED:
-            NotificationCenter().discard_observer(self, sender=self.stream.msrp)
+        self.resetTrace()
 
     def _NH_MSRPTransportTrace(self, sender, data):
         if sender is self.stream.msrp:
             self.exhanged_bytes += len(data.data)
-            if self.exhanged_bytes > 16000:
+            if self.exhanged_bytes > 10000:
                 if self.statusWindow:
                     _t = self.sessionController.getTitleShort()
                     label = NSLocalizedString("%s is watching the screen", "Label") % _t
@@ -304,17 +318,25 @@ class ScreenSharingController(MediaStream):
                     self.statusProgress.setHidden_(True)
                     self.stopButton.setHidden_(False)
                     self.stopButton.setTitle_(NSLocalizedString("Stop Screen Sharing", "Button title"))
-                NotificationCenter().discard_observer(self, sender=sender)
+                self.resetTrace()
 
     def _NH_ScreenSharingHandlerDidFail(self, sender, data):
         if data.failure.type == VNCConnectionError:
             self.sessionController.log_info("%s" % data.reason.title())
 
+    def resetTrace(self):
+        if self.must_reset_trace_msrp:
+            settings = SIPSimpleSettings()
+            settings.logs.trace_msrp = False
+            settings.save()
+            self.must_reset_trace_msrp = False
+        NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
+
     def dealloc(self):
+        BlinkLogger().log_debug(u"Dealloc %s" % self)
+        self.resetTrace()
         self.stream = None
         self.sessionController = None
-        NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
-        BlinkLogger().log_debug(u"Dealloc %s" % self)
         super(ScreenSharingController, self).dealloc()
 
 class ScreenSharingViewerController(ScreenSharingController):
