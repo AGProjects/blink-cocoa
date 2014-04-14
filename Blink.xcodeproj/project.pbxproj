@@ -2030,6 +2030,7 @@
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1FDFBBA918FC79240042F9AE /* Blink.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Blink.entitlements; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
@@ -2390,6 +2391,7 @@
 			isa = PBXGroup;
 			children = (
 				1F2FBFFC1462A444008B3D52 /* container-migration.plist */,
+				1FDFBBA918FC79240042F9AE /* Blink.entitlements */,
 				1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */,
 				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
 			);
@@ -3061,6 +3063,11 @@
 					};
 					8D1107260486CEB800E47090 = {
 						DevelopmentTeam = 4DFEFUDLKZ;
+						SystemCapabilities = {
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -4865,7 +4872,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_ENTITLEMENTS = Blink.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -4906,7 +4914,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_ENTITLEMENTS = Blink.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";

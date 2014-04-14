@@ -85,10 +85,6 @@ class EnrollmentController(NSObject):
             if NSApp.delegate().contactsWindowController.first_run:
                 NotificationCenter().add_observer(self, name='SIPAccountManagerDidAddAccount')
 
-            if NSApp.delegate().applicationName == 'Blink':
-                self.syncWithiCloudCheckbox.setHidden_(True)
-                self.syncWithiCloudCheckbox.setState_(NSOffState)
-
             if NSApp.delegate().applicationName == 'SIP2SIP':
                 self.allowed_domains = ['sip2sip.info']
                 self.syncWithiCloudCheckbox.setHidden_(True)
