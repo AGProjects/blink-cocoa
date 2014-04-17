@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-	<string>$(TeamIdentifierPrefix)com.agprojects.Blink</string>
+	<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	<key>com.apple.security.device.bluetooth</key>
@@ -41,5 +41,10 @@
 			<string>com.spotify.client.playback</string>
 		</array>
 	</dict>
+	<key>com.apple.security.temporary-exception.sbpl</key>
+	<string>
+            (begin
+                (allow ipc-posix-sem))
+        </string>
 </dict>
 </plist>

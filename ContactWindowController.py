@@ -104,7 +104,7 @@ from sipsimple.audio import AudioConference, WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
-from sipsimple.threading import call_in_thread, run_in_thread
+from sipsimple.threading import call_in_thread, run_in_thread, run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
 from zope.interface import implements
@@ -127,7 +127,7 @@ from ContactCell import ContactCell
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
-from FileTransferWindowController import openFileTransferSelectionDialog
+from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
 from ConferenceController import random_room, default_conference_server, JoinConferenceWindowController, AddParticipantsWindowController
 from PresenceInfoController import PresenceInfoController
 from SessionController import SessionControllersManager
@@ -135,7 +135,8 @@ from SIPManager import MWIData
 from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
-from LocalVideoWindowController import LocalVideoWindowController
+#from VideoStreamLocalWindowController import VideoStreamLocalWindowController
+from VideoNativeLocalWindowController import VideoNativeLocalWindowController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import (allocate_autorelease_pool,
@@ -227,7 +228,7 @@ class ContactWindowController(NSWindowController):
     participants = []
 
     searchResultsModel = objc.IBOutlet()
-    fileTransfersWindow = objc.IBOutlet()
+    fileTransfersWindow = None
 
     debugWindow = None
     localVideoWindow = None
@@ -540,8 +541,6 @@ class ContactWindowController(NSWindowController):
 
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
-
-        self.localVideoWindow = LocalVideoWindowController.alloc().init()
 
         self.loaded = True
 
@@ -1314,6 +1313,9 @@ class ContactWindowController(NSWindowController):
 
         self.audioLevelTimer.invalidate()
         self.conference_timer.invalidate()
+        if self.localVideoWindow:
+            self.localVideoWindow.close()
+            self.localVideoWindow = None
 
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
@@ -1322,7 +1324,7 @@ class ContactWindowController(NSWindowController):
         self.setSpeechSynthesis()
 
         if not NSApp.delegate().wait_for_enrollment:
-            BlinkLogger().log_info('Starting Main User Interface')
+            BlinkLogger().log_info('Starting main user interface')
             self.showWindow_(None)
 
     def _NH_SIPApplicationDidStart(self, notification):
@@ -1333,6 +1335,7 @@ class ContactWindowController(NSWindowController):
         self.setSelectedInputAudioDeviceForLevelMeter()
         self.updateAudioDeviceLabel()
         self.removePresenceContactForOurselves()
+        self.fileTransfersWindow = FileTransferWindowController()
 
     def _NH_BlinkShouldTerminate(self, notification):
         NotificationCenter().remove_observer(self, name="BlinkContactsHaveChanged")
@@ -1421,6 +1424,10 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.modified.has_key("ldap.enabled"):
             self.refreshLdapDirectory()
+
+        if notification.data.modified.has_key("video.device"):
+            if self.localVideoWindow:
+                self.localVideoWindow.refreshAfterCameraChanged()
 
         if notification.data.modified.has_key("ldap.hostname"):
             self.refreshLdapDirectory()
@@ -1560,7 +1567,7 @@ class ContactWindowController(NSWindowController):
             self.drawer.open()
 
     def shuffleUpAudioSession(self, audioSessionView):
-        # move up the given view in the audio session list so that it is after
+        # move up the given view in the audio call list so that it is after
         # all other conferenced sessions already at the top and before anything else
         last = None
         found = False
@@ -1579,7 +1586,7 @@ class ContactWindowController(NSWindowController):
             audioSessionView.setNeedsDisplay_(True)
 
     def shuffleDownAudioSession(self, audioSessionView):
-        # move down the given view in the audio session list so that it is after
+        # move down the given view in the audio call list so that it is after
         # all other conferenced sessions
         audioSessionView.retain()
         audioSessionView.removeFromSuperview()
@@ -1684,6 +1691,7 @@ class ContactWindowController(NSWindowController):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
         audioOk = False
         chatOk = False
+        videoOk = False
         screenOk = False
         account = self.activeAccount()
         contacts = self.getSelectedContacts()
@@ -1693,8 +1701,10 @@ class ContactWindowController(NSWindowController):
                     audioOk = len(contacts) > 0
                     if contacts and account is BonjourAccount() and not is_sip_aor_format(contacts[0].uri):
                         chatOk = False
+                        videoOk = False
                     else:
                         chatOk = audioOk
+                        videoOk = audioOk
                     if contacts and not is_sip_aor_format(contacts[0].uri):
                         screenOk = False
                     else:
@@ -1703,13 +1713,16 @@ class ContactWindowController(NSWindowController):
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = audioOk
                 screenOk = audioOk
+                videoOk = audioOk
             elif tabItem == "dialpad":
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = False
+                videoOk = False
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
-        self.actionButtons.setEnabled_forSegment_(chatOk and self.sessionControllersManager.isMediaTypeSupported('chat'), 1)
-        self.actionButtons.setEnabled_forSegment_(screenOk, 2)
+        self.actionButtons.setEnabled_forSegment_(videoOk and self.sessionControllersManager.isMediaTypeSupported('video'), 1)
+        self.actionButtons.setEnabled_forSegment_(chatOk and self.sessionControllersManager.isMediaTypeSupported('chat'), 2)
+        self.actionButtons.setEnabled_forSegment_(screenOk, 3)
 
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_(True if ((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0)) and self.searchBox.stringValue().strip()!= u"" else False)
@@ -2288,7 +2301,7 @@ class ContactWindowController(NSWindowController):
         elif self.isAddParticipantsWindowOpen():
             self.addParticipantsWindow.addParticipant(target)
         elif active_sessions:
-            # start conference with active audio sessions
+            # start conference with active audio calls
             for s in active_sessions:
                 handler = s.streamHandlerOfType("audio")
                 handler.view.setConferencing_(True)
@@ -2600,9 +2613,13 @@ class ContactWindowController(NSWindowController):
                     media_type = "chat"
                 elif contact.preferred_media in ("chat+audio", "audio+chat"):
                     media_type = ("chat", "audio")
+                elif contact.preferred_media == "video":
+                    media_type = ("audio", "video")
                 else:
                     media_type = "audio"
             elif sender.selectedSegment() == 1:
+                media_type=('audio', 'video')
+            elif sender.selectedSegment() == 2:
                 # IM button
                 point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -2610,7 +2627,7 @@ class ContactWindowController(NSWindowController):
                                 sender.window().graphicsContext(), 0, 1, 0)
                 NSMenu.popUpContextMenu_withEvent_forView_(self.chatMenu, event, sender)
                 return
-            elif sender.selectedSegment() == 2:
+            elif sender.selectedSegment() == 3:
                 # DS button
                 point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -2679,6 +2696,15 @@ class ContactWindowController(NSWindowController):
                 self.historyViewer = HistoryViewer()
                 self.historyViewer.refreshViewer()
             self.historyViewer.showWindow_(None)
+
+    @objc.IBAction
+    def showFileTransfers_(self, sender):
+        self.initFileTransfersWindow()
+        self.fileTransfersWindow.showWindow_(None)
+
+    def initFileTransfersWindow(self):
+        if not self.fileTransfersWindow:
+            self.fileTransfersWindow = FileTransferWindowController()
 
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
@@ -2777,18 +2803,26 @@ class ContactWindowController(NSWindowController):
         settings.sounds.use_speech_recognition = not settings.sounds.use_speech_recognition
         settings.save()
 
+    def localVideoVisible(self):
+        if not self.localVideoWindow:
+            return False
+        else:
+            return self.localVideoWindow.visible
+
     @objc.IBAction
     def toggleLocalVideoWindow_(self, sender):
-        if self.localVideoWindow.visible:
+        if self.localVideoVisible():
             self.hideLocalVideoWindow()
         else:
             self.showLocalVideoWindow()
 
     def hideLocalVideoWindow(self):
-        if self.localVideoWindow.visible:
+        if self.localVideoVisible():
             self.localVideoWindow.hide()
 
     def showLocalVideoWindow(self):
+        if self.localVideoWindow is None:
+            self.localVideoWindow = VideoNativeLocalWindowController()
         self.localVideoWindow.show()
 
     @objc.IBAction
@@ -3442,7 +3476,7 @@ class ContactWindowController(NSWindowController):
 
     def updateWindowMenu(self):
         item = self.windowMenu.itemWithTag_(50)
-        item.setState_(NSOnState if self.localVideoWindow.visible else NSOffState)
+        item.setState_(NSOnState if self.localVideoVisible() else NSOffState)
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -4415,7 +4449,7 @@ class ContactWindowController(NSWindowController):
                                 video_item.setEnabled_(False)
 
                     if video_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call...", "Menu item"), "", "")
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
@@ -4868,7 +4902,7 @@ class ContactWindowController(NSWindowController):
             index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
 
             item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("None", "Menu item"), selector, "", index)
-            item.setRepresentedObject_("None")
+            item.setRepresentedObject_(None)
             item.setTarget_(self)
             item.setTag_(tag*100)
             item.setIndentationLevel_(2)
@@ -4935,8 +4969,8 @@ class ContactWindowController(NSWindowController):
             if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and 'Built-in Output' in self.backend._app.engine.output_devices:
                 in_out_devices.append('Built-in Microphone and Output')
             setupAudioInputOutputDeviceMenu(menu, 404, in_out_devices, "selectInputOutputDevice:")
-            setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices, "input_device", "selectInputDevice:")
+            setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device", "selectAlertDevice:")
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()
@@ -5064,18 +5098,12 @@ class ContactWindowController(NSWindowController):
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
-        dev = unicode(sender.representedObject())
-        if dev == u'None':
-            dev = None
-        settings.audio.input_device = dev
+        settings.audio.input_device = sender.representedObject()
         settings.save()
 
     def selectOutputDevice_(self, sender):
         settings = SIPSimpleSettings()
-        dev = unicode(sender.representedObject())
-        if dev == u'None':
-            dev = None
-        settings.audio.output_device = dev
+        settings.audio.output_device = sender.representedObject()
         settings.save()
 
     def selectInputOutputDevice_(self, sender):
@@ -5087,17 +5115,16 @@ class ContactWindowController(NSWindowController):
             except StopIteration:
                 pass
             else:
-                settings.audio.input_device = unicode(input_device)
+                settings.audio.input_device = input_device
                 settings.audio.output_device = unicode('Built-in Output')
         else:
-            settings.audio.output_device = unicode(dev)
-            settings.audio.input_device = unicode(dev)
+            settings.audio.output_device = dev
+            settings.audio.input_device = dev
         settings.save()
 
     def selectAlertDevice_(self, sender):
         settings = SIPSimpleSettings()
-        dev = sender.representedObject()
-        settings.audio.alert_device = unicode(dev)
+        settings.audio.alert_device = sender.representedObject()
         settings.save()
 
     def photoClicked(self, sender):

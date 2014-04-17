@@ -20,6 +20,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSStringPboardType,
                     NSWindowDocumentIconButton)
+
 from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         kCFStringEncodingUTF8,
                         NSArray,
@@ -48,6 +49,7 @@ from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         NSWindowController,
                         NSWorkspace,
                         NSZeroPoint)
+
 from Quartz import (CGWindowListCopyWindowInfo,
                     kCGNullWindowID,
                     kCGWindowBounds,
@@ -78,7 +80,7 @@ import FancyTabSwitcher
 import ParticipantsTableView
 from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
-from MediaStream import STREAM_PROPOSING, STREAM_RINGING, STREAM_CONNECTED
+from MediaStream import STREAM_PROPOSING, STREAM_RINGING, STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
 from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_DNS_LOOKUP
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
@@ -1234,61 +1236,45 @@ class ChatWindowController(NSWindowController):
                 item.setEnabled_(False)
 
         elif menu == self.videoMenu:
+            # TODO: how to attach video to chat window?
             selectedSession = self.selectedSessionController()
             if selectedSession:
                 chat_stream = selectedSession.streamHandlerOfType("chat")
                 video_stream = selectedSession.streamHandlerOfType("video")
-                item = menu.itemWithTag_(0)
-                if video_stream and video_stream.status == STREAM_CONNECTED:
-                    item.setImage_(NSImage.imageNamed_("video-hangup"))
-                else:
-                    item.setImage_(NSImage.imageNamed_("video"))
-
                 item = menu.itemWithTag_(1)
                 if video_stream:
                     if video_stream.status == STREAM_CONNECTED:
                         item.setTitle_(NSLocalizedString("Remove video", "Menu item"))
-                    elif video_stream.status == STREAM_RINGING:
+                        item.setEnabled_(selectedSession.canProposeMediaStreamChanges())
+                    elif video_stream.status in (STREAM_RINGING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                         item.setTitle_(NSLocalizedString("Cancel", "Menu item"))
-
-                else:
-                    item.setTitle_(NSLocalizedString("Add video", "Menu item"))
-
-                item = menu.itemWithTag_(2)
-                if video_stream and video_stream.status == STREAM_CONNECTED and chat_stream.video_frame_visible:
-                    item.setEnabled_(True)
-                else:
-                    item.setEnabled_(False)
-                item.setTitle_(NSLocalizedString("Maximize", "Menu item"))
-
-                item = menu.itemWithTag_(3) #detach
-                if video_stream and video_stream.status == STREAM_CONNECTED:
-                    item.setEnabled_(True)
-                else:
-                    item.setEnabled_(False)
-
-                if video_stream and video_stream.status == STREAM_CONNECTED:
-                    item.setEnabled_(True)
-                    if chat_stream.video_window_detached:
-                        item.setTitle_(NSLocalizedString("Attach", "Menu item"))
+                        item.setEnabled_(True)
                     else:
-                        item.setTitle_(NSLocalizedString("Detach", "Menu item"))
+                        if chat_stream.status == STREAM_CONNECTED:
+                            item.setTitle_(NSLocalizedString("Add video", "Menu item"))
+                        else:
+                            item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
+                        item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
                 else:
-                    item.setEnabled_(False)
+                    if chat_stream.status == STREAM_CONNECTED:
+                        item.setTitle_(NSLocalizedString("Add video", "Menu item"))
+                    else:
+                        item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
+                    item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
 
                 item = menu.itemWithTag_(5) # bring to front
-                if video_stream and video_stream.status == STREAM_CONNECTED and chat_stream.video_window_detached:
-                    item.setEnabled_(not video_stream.windowController.always_on_top)
+                if video_stream and video_stream.status == STREAM_CONNECTED:
+                    item.setEnabled_(not video_stream.videoWindowController.always_on_top)
                 else:
                     item.setEnabled_(False)
 
                 item = menu.itemWithTag_(6) # always on top
-                if video_stream and video_stream.status == STREAM_CONNECTED and chat_stream.video_window_detached:
+                if video_stream and video_stream.status == STREAM_CONNECTED:
                     item.setEnabled_(True)
-                    item.setState_(NSOnState if video_stream.windowController.always_on_top else NSOffState)
                 else:
                     item.setEnabled_(False)
-                    item.setState_(NSOffState)
+                if video_stream:
+                    item.setState_(NSOnState if video_stream.videoWindowController.always_on_top else NSOffState)
 
         elif menu == self.screenShareMenu:
             selectedSession = self.selectedSessionController()
@@ -1930,8 +1916,7 @@ class ChatWindowController(NSWindowController):
 
             if session.hasStreamOfType("video"):
                 video_stream = session.streamHandlerOfType("video")
-                if chat_stream.video_window_detached:
-                    video_stream.show()
+                video_stream.show()
 
         self.unreadMessageCounts[item.identifier()] = 0
         sitem = self.tabSwitcher.itemForTabViewItem_(item)

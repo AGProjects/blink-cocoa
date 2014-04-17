@@ -1,0 +1,116 @@
+# Copyright (C) 2014 AG Projects. See LICENSE for details.
+#
+
+from AppKit import (NSWindowController, NSFloatingWindowLevel, NSWindow)
+
+from Foundation import NSBundle, NSTimer
+import objc
+import AppKit
+
+from BlinkLogger import BlinkLogger
+
+from util import run_in_gui_thread
+from sipsimple.threading import run_in_twisted_thread
+
+ALPHA = 1.0
+
+class VideoStreamInitialLocalWindowController(NSWindowController):
+    window = None
+    finished = False
+    initial_size = None
+    dif_y = 0
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    @run_in_twisted_thread
+    def __init__(self, videoWindowController):
+        BlinkLogger().log_debug('Init %s' % self)
+        self.videoWindowController = videoWindowController
+        self.retain()
+        if self.stream.video_windows is not None:
+            # Stream may have died in the mean time
+            self.sdl_window = self.stream.video_windows.local
+            self.initial_size = self.sdl_window.size
+            self.videoWindowController.sessionController.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
+            self.stream.video_windows.local.size = (self.initial_size[0]/2, self.initial_size[1]/2)
+            self.window = NSWindow(cobject=self.sdl_window.native_handle)
+            self.window.setAlphaValue_(ALPHA)
+            self.window.setDelegate_(self)
+            self.window.setTitle_(self.videoWindowController.title)
+            self.window.orderFront_(None)
+            self.window.center()
+            self.window.setLevel_(NSFloatingWindowLevel)
+            # this hold the height of the Cocoa window title bar
+            self.dif_y = self.window.frame().size.height - self.stream.video_windows.local.size[1]
+
+    @property
+    def stream(self):
+        return self.videoWindowController.streamController.stream
+
+    @property
+    def streamController(self):
+        return self.videoWindowController.streamController
+
+    def dealloc(self):
+        BlinkLogger().log_debug('Dealloc %s' % self)
+        super(VideoStreamInitialLocalWindowController, self).dealloc()
+
+    def windowDidBecomeMain_(self, notification):
+        if self.videoWindowController.window:
+            # remote video window opened faster than local video window
+            if self.videoWindowController.window.isVisible():
+                self.hide()
+
+    def windowWillResize_toSize_(self, window, frameSize):
+        currentSize = self.window.frame().size
+        scaledSize = frameSize
+        scaleFactor = float(self.initial_size[0]) / self.initial_size[1]
+        scaledSize.width = frameSize.width
+        scaledSize.height = scaledSize.width / scaleFactor
+        scaledSize.height += self.dif_y
+        return scaledSize
+
+    def windowDidResize_(self, notification):
+        # stuff may vanish while we drag the window
+        if not self.videoWindowController:
+            return
+        if not self.streamController:
+            return
+        if not self.stream:
+            return
+
+        frame = self.window.frame()
+        if frame.size.width != self.stream.video_windows.local.size[0]:
+            self.stream.video_windows.local.size = (frame.size.width, frame.size.height - self.dif_y)
+
+    def windowShouldClose_(self, sender):
+        if self.finished:
+            return True
+        self.streamController.sessionController.end()
+        if self.window:
+            self.window.close()
+        return False
+
+    @run_in_gui_thread
+    def windowWillClose_(self, sender):
+        self.finished = True
+        self.sdl_window = None
+        self.videoWindowController = None
+
+    def keyDown_(self, event):
+        if event.keyCode() == 53:
+            self.streamController.sessionController.end()
+        self.hide()
+
+    @run_in_gui_thread
+    def hide(self):
+        if self.window:
+            self.window.close()
+
+    @run_in_twisted_thread
+    def close(self):
+        BlinkLogger().log_debug('Close %s' % self)
+        self.sdl_window = None
+        if self.window:
+            self.window.close()

@@ -17,7 +17,7 @@ class GrowlNotifications(object):
 
     implements(IObserver)
 
-    notification_names = ('SMS Received', 'Chat Message Received', 'Missed Call', 'Audio Session Recorded', 'Voicemail Summary', 'New Contact Request')
+    notification_names = ('SMS Received', 'Chat Message Received', 'Missed Call', 'Audio Call Recorded', 'Voicemail Summary', 'New Contact Request')
 
     def __init__(self):
         dir = os.path.dirname(__file__)
@@ -58,9 +58,9 @@ class GrowlNotifications(object):
         self.growl.notify('Missed Call', title, message, sticky=True)
 
     def _NH_GrowlAudioSessionRecorded(self, notification):
-        title = NSLocalizedString("Audio Session Recorded", "System notification title")
+        title = NSLocalizedString("Audio Call Recorded", "System notification title")
         message = "%s\n" % notification.data.remote_party + NSLocalizedString("at ", "Time label") + notification.datetime.strftime("%Y-%m-%d %H:%M")
-        self.growl.notify('Audio Session Recorded', title, message, sticky=True)
+        self.growl.notify('Audio Call Recorded', title, message, sticky=True)
 
     def _NH_GrowlGotMWI(self, notification):
         # new_messages will always be > 0 at this point

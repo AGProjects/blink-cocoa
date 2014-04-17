@@ -31,7 +31,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from MediaStream import STREAM_CONNECTED
-from util import allocate_autorelease_pool, beautify_audio_codec, run_in_gui_thread, format_size
+from util import allocate_autorelease_pool, beautify_audio_codec, beautify_video_codec, run_in_gui_thread, format_size
 
 
 ice_candidates= {'srflx': 'Server Reflexive',
@@ -47,6 +47,7 @@ class SessionInfoController(NSObject):
 
     sessionBox = objc.IBOutlet()
     audioBox = objc.IBOutlet()
+    videoBox = objc.IBOutlet()
     chatBox = objc.IBOutlet()
 
     remote_party = objc.IBOutlet()
@@ -54,16 +55,11 @@ class SessionInfoController(NSObject):
     duration = objc.IBOutlet()
     remote_ua = objc.IBOutlet()
     status = objc.IBOutlet()
-    conference = objc.IBOutlet()
     remote_endpoint = objc.IBOutlet()
-    local_endpoint = objc.IBOutlet()
     tls_lock = objc.IBOutlet()
 
     audio_status = objc.IBOutlet()
-    audio_srtp_active = objc.IBOutlet()
     audio_codec = objc.IBOutlet()
-    audio_sample_rate = objc.IBOutlet()
-    audio_local_endpoint = objc.IBOutlet()
     audio_remote_endpoint = objc.IBOutlet()
     audio_ice_negotiation = objc.IBOutlet()
     audio_ice_local_candidate = objc.IBOutlet()
@@ -78,7 +74,18 @@ class SessionInfoController(NSObject):
     tx_speed_graph = objc.IBOutlet()
     tx_speed = objc.IBOutlet()
 
-    chat_local_endpoint = objc.IBOutlet()
+    video_status = objc.IBOutlet()
+    video_codec = objc.IBOutlet()
+    video_remote_endpoint = objc.IBOutlet()
+    video_ice_negotiation = objc.IBOutlet()
+    video_ice_local_candidate = objc.IBOutlet()
+    video_ice_remote_candidate = objc.IBOutlet()
+    video_srtp_lock = objc.IBOutlet()
+    video_rx_speed_graph = objc.IBOutlet()
+    video_rx_speed = objc.IBOutlet()
+    video_tx_speed_graph = objc.IBOutlet()
+    video_tx_speed = objc.IBOutlet()
+
     chat_remote_endpoint = objc.IBOutlet()
     chat_connection_mode = objc.IBOutlet()
     chat_tls_lock = objc.IBOutlet()
@@ -93,10 +100,12 @@ class SessionInfoController(NSObject):
 
         self.sessionController = None
         self.audio_stream = None
+        self.video_stream = None
         self.chat_stream = None
 
         self.add_session(sessionController)
         self.add_audio_stream()
+        self.add_video_stream()
         self.add_chat_stream()
 
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateTimer:", None, True)
@@ -109,6 +118,9 @@ class SessionInfoController(NSObject):
 
         audioBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("Audio Stream", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.audioBox.setTitle_(audioBoxTitle)
+
+        videoBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("Video Stream", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+        self.videoBox.setTitle_(videoBoxTitle)
 
         chatBoxTitle = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString("Chat Stream", "Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
         self.chatBox.setTitle_(chatBoxTitle)
@@ -138,6 +150,18 @@ class SessionInfoController(NSObject):
         self.tx_speed_graph.setMinimumHeigth_(100000)
         self.tx_speed_graph.setAboveLimit_(120000)
 
+        self.video_rx_speed_graph.setLineWidth_(1.0)
+        self.video_rx_speed_graph.setLineSpacing_(0.0)
+        self.video_rx_speed_graph.setLineColor_(NSColor.greenColor())
+        self.video_rx_speed_graph.setMinimumHeigth_(100000)
+        self.video_rx_speed_graph.setAboveLimit_(1200000)
+
+        self.video_tx_speed_graph.setLineWidth_(1.0)
+        self.video_tx_speed_graph.setLineSpacing_(0.0)
+        self.video_tx_speed_graph.setLineColor_(NSColor.blueColor())
+        self.video_tx_speed_graph.setMinimumHeigth_(100000)
+        self.video_tx_speed_graph.setAboveLimit_(1200000)
+
         self.resetSession()
         self.updatePanelValues()
 
@@ -152,6 +176,7 @@ class SessionInfoController(NSObject):
             self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
             self.sessionController = None
         self.remove_audio_stream()
+        self.remove_video_stream()
         self.remove_chat_stream()
 
     def add_audio_stream(self):
@@ -162,10 +187,24 @@ class SessionInfoController(NSObject):
 
     def remove_audio_stream(self):
         if self.audio_stream is not None:
-            self.notification_center.remove_observer(self, sender=self.audio_stream)
-            self.notification_center.remove_observer(self, sender=self.audio_stream.stream)
+            self.notification_center.discard_observer(self, sender=self.audio_stream)
+            self.notification_center.discard_observer(self, sender=self.audio_stream.stream)
             self.audio_stream = None
             self.updateAudioStatus()
+
+    def add_video_stream(self):
+        if self.sessionController is not None and self.sessionController.hasStreamOfType("video") and self.video_stream is None:
+            self.video_stream = self.sessionController.streamHandlerOfType("video")
+            self.notification_center.add_observer(self, sender=self.video_stream)
+            self.notification_center.add_observer(self, sender=self.video_stream.stream)
+
+    def remove_video_stream(self):
+        if self.video_stream is not None:
+            self.notification_center.discard_observer(self, sender=self.video_stream)
+            self.notification_center.discard_observer(self, sender=self.video_stream.stream)
+            self.video_stream = None
+            self.resetVideo()
+            self.updateVideoStatus()
 
     def add_chat_stream(self):
         if self.sessionController is not None and self.sessionController.hasStreamOfType("chat") and self.chat_stream is None:
@@ -175,21 +214,22 @@ class SessionInfoController(NSObject):
         if self.chat_stream is not None:
             self.chat_stream = None
 
-    def _NH_MediaStreamDidFail(self, notification):
-        self.remove_audio_stream()
-
     def _NH_BlinkDidRenegotiateStreams(self, notification):
         for stream in notification.data.removed_streams:
             if stream.type == 'audio':
                 self.remove_audio_stream()
             elif stream.type == 'chat':
                 self.remove_chat_stream()
+            elif stream.type == 'video':
+                self.remove_video_stream()
 
         for stream in notification.data.added_streams:
             if stream.type == 'audio':
                 self.add_audio_stream()
             elif stream.type == 'chat':
                 self.add_chat_stream()
+            elif stream.type == 'video':
+                self.add_video_stream()
 
         self.updatePanelValues()
 
@@ -205,22 +245,18 @@ class SessionInfoController(NSObject):
         handler(notification)
 
     def resetSession(self):
-        self.local_endpoint.setStringValue_('')
         self.remote_endpoint.setStringValue_('')
         self.remote_ua.setStringValue_('')
-        self.conference.setStringValue_('')
         self.status.setStringValue_('')
         self.duration.setStringValue_('')
 
         self.resetAudio()
+        self.resetVideo()
         self.resetChat()
 
     def resetAudio(self):
         self.audio_status.setStringValue_('')
         self.audio_codec.setStringValue_('')
-        self.audio_sample_rate.setStringValue_('')
-        self.audio_srtp_active.setStringValue_('')
-        self.audio_local_endpoint.setStringValue_('')
         self.audio_remote_endpoint.setStringValue_('')
         self.audio_ice_negotiation.setStringValue_('')
         self.audio_ice_local_candidate.setStringValue_('')
@@ -230,8 +266,17 @@ class SessionInfoController(NSObject):
         self.rx_speed.setStringValue_('')
         self.tx_speed.setStringValue_('')
 
+    def resetVideo(self):
+        self.video_status.setStringValue_('')
+        self.video_codec.setStringValue_('')
+        self.video_remote_endpoint.setStringValue_('')
+        self.video_ice_negotiation.setStringValue_('')
+        self.video_ice_local_candidate.setStringValue_('')
+        self.video_ice_remote_candidate.setStringValue_('')
+        self.video_rx_speed.setStringValue_('')
+        self.video_tx_speed.setStringValue_('')
+
     def resetChat(self):
-        self.chat_local_endpoint.setStringValue_('')
         self.chat_remote_endpoint.setStringValue_('')
         self.chat_connection_mode.setStringValue_('')
 
@@ -246,32 +291,27 @@ class SessionInfoController(NSObject):
             self.remote_party.setStringValue_(self.sessionController.getTitleFull())
             self.account.setStringValue_(str(self.sessionController.account.id))
             if self.sessionController.conference_info is not None and self.sessionController.remote_focus:
-                self.conference.setStringValue_(NSLocalizedString("%d Participants", "Label") % len(self.sessionController.conference_info.users))
-            else:
-                self.conference.setStringValue_('')
-
+                pass
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:
                 self.remote_ua.setStringValue_(self.sessionController.session.remote_user_agent)
 
             if self.sessionController.session is not None:
                 if self.sessionController.session.transport is not None:
                     transport = self.sessionController.session.transport
-                    local_contact = self.sessionController.account.contact[transport]
-                    self.local_endpoint.setStringValue_('%s:%s:%d' % (transport, local_contact.host, local_contact.port))
-
-                if self.sessionController.session.peer_address is not None:
-                    self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
-                    self.tls_lock.setHidden_(False if transport == 'tls' else True)
-                elif self.sessionController.routes:
-                    route = self.sessionController.routes[0]
-                    self.remote_endpoint.setStringValue_('%s:%s:%s' % (route.transport, route.address, route.port))
-                    self.tls_lock.setHidden_(False if route.transport == 'tls' else True)
+                    if self.sessionController.session.peer_address is not None:
+                        self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
+                        self.tls_lock.setHidden_(False if transport == 'tls' else True)
+                    elif self.sessionController.routes:
+                        route = self.sessionController.routes[0]
+                        self.remote_endpoint.setStringValue_('%s:%s:%s' % (route.transport, route.address, route.port))
+                        self.tls_lock.setHidden_(False if route.transport == 'tls' else True)
             elif self.sessionController.routes:
                 route = self.sessionController.routes[0]
                 self.remote_endpoint.setStringValue_('%s:%s:%s' % (route.transport, route.address, route.port))
                 self.tls_lock.setHidden_(False if route.transport == 'tls' else True)
 
         self.updateAudio()
+        self.updateVideo()
         self.updateChat()
 
     def updateSessionStatus(self, sub_state=None):
@@ -316,30 +356,20 @@ class SessionInfoController(NSObject):
 
             if self.audio_stream.stream.codec and self.audio_stream.stream.sample_rate:
                 codec = beautify_audio_codec(self.audio_stream.stream.codec)
-                self.audio_codec.setStringValue_(codec)
+
                 try:
                     settings = SIPSimpleSettings()
                     sample_rate = self.audio_stream.stream.sample_rate/1000
-                    self.audio_sample_rate.setStringValue_("%0.fkHz" % sample_rate)
+                    codec = codec + " %0.fkHz" % sample_rate
                 except TypeError:
                     pass
 
-                if self.audio_stream.zrtp_active:
-                    label = 'zRTP Diffie-Hellman'
-                elif self.audio_stream.stream.srtp_active:
-                    label = 'SDES'
-                else:
-                    label = NSLocalizedString("Disabled", "Label")
-
-                self.audio_srtp_active.setStringValue_(label)
+                self.audio_codec.setStringValue_(codec)
                 self.audio_srtp_lock.setHidden_(False if self.audio_stream.stream.srtp_active else True)
             else:
                 self.audio_codec.setStringValue_('')
-                self.audio_sample_rate.setStringValue_('')
-                self.audio_srtp_active.setStringValue_('')
                 self.audio_srtp_lock.setHidden_(True)
 
-            self.audio_local_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.local_rtp_address, self.audio_stream.stream.local_rtp_port) if self.audio_stream.stream.local_rtp_address else '')
             self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
 
             if self.audio_stream.stream.ice_active:
@@ -378,11 +408,86 @@ class SessionInfoController(NSObject):
 
             self.audio_ice_negotiation.setStringValue_(ice_status)
 
+    def updateVideo(self):
+        if self.video_status.stringValue() and (self.sessionController is None or self.video_stream is None or self.video_stream.stream is None):
+            self.resetVideo()
+        elif (self.sessionController is not None and self.video_stream is not None and self.video_stream.stream is not None):
+            self.updateVideoStatus()
+
+            self.video_rx_speed_graph.setDataQueue_needsDisplay_(self.video_stream.rx_speed_history, True if self.window.isVisible() else False)
+            self.video_tx_speed_graph.setDataQueue_needsDisplay_(self.video_stream.tx_speed_history, True if self.window.isVisible() else False)
+
+            rtt = self.video_stream.statistics['rtt']
+            if rtt > 1000:
+                text = '%.1f s' % (float(rtt)/1000.0)
+            elif rtt > 100:
+                text = '%d ms' % rtt
+            elif rtt:
+                text = '%d ms' % rtt
+            else:
+                text = ''
+
+            self.video_rx_speed.setStringValue_('Rx %s/s' % format_size(self.video_stream.statistics['rx_bytes'], bits=True))
+            self.video_tx_speed.setStringValue_('Tx %s/s' % format_size(self.video_stream.statistics['tx_bytes'], bits=True))
+
+            if self.video_stream.stream.codec and self.video_stream.stream.clock_rate:
+                codec = beautify_video_codec(self.video_stream.stream.codec)
+
+                try:
+                    settings = SIPSimpleSettings()
+                    sample_rate = self.video_stream.stream.clock_rate/1000
+                    codec = codec + " %0.fkHz" % sample_rate
+                except TypeError:
+                    pass
+
+                self.video_codec.setStringValue_(codec)
+                self.video_srtp_lock.setHidden_(False if self.video_stream.stream.srtp_active else True)
+            else:
+                self.video_codec.setStringValue_('')
+                self.video_srtp_lock.setHidden_(True)
+
+            self.video_remote_endpoint.setStringValue_('%s:%s' % (self.video_stream.stream.remote_rtp_address, self.video_stream.stream.remote_rtp_port) if self.video_stream.stream.remote_rtp_address else '')
+
+            if self.video_stream.stream.ice_active:
+                if self.video_stream.stream.local_rtp_candidate is not None:
+                    try:
+                        candidate = ice_candidates[self.video_stream.stream.local_rtp_candidate.type.lower()]
+                    except KeyError:
+                        candidate = self.video_stream.stream.local_rtp_candidate.type.capitalize()
+                else:
+                    candidate = ''
+
+                self.video_ice_local_candidate.setStringValue_(candidate)
+
+                if self.video_stream.stream.remote_rtp_candidate is not None:
+                    try:
+                        candidate = ice_candidates[self.video_stream.stream.remote_rtp_candidate.type.lower()]
+                    except KeyError:
+                        candidate = self.video_stream.stream.remote_rtp_candidate.type.capitalize()
+                else:
+                    candidate = ''
+
+                self.video_ice_remote_candidate.setStringValue_(candidate)
+
+                ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''
+                if self.video_stream.stream.ice_active:
+                    if self.video_stream.stream.local_rtp_candidate and self.video_stream.stream.remote_rtp_candidate:
+                        if self.video_stream.stream.local_rtp_candidate.type.lower() != 'relay' and self.video_stream.stream.remote_rtp_candidate.type.lower() != 'relay':
+                            ice_status += ' ('+ NSLocalizedString("Peer to Peer", "Label")+')'
+                        else:
+                            ice_status += ' ('+ NSLocalizedString("Server Relayed", "Label") + ')'
+
+            else:
+                self.video_ice_local_candidate.setStringValue_('')
+                self.video_ice_remote_candidate.setStringValue_('')
+                ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''
+
+            self.video_ice_negotiation.setStringValue_(ice_status)
+
     def updateChat(self):
         if self.sessionController is None or self.chat_stream is None or self.chat_stream.stream is None or self.chat_stream.stream.msrp is None:
             self.resetChat()
         else:
-            self.chat_local_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_local_path[-1]))
             if self.chat_stream and self.chat_stream.stream and self.chat_stream.stream.msrp:
                 if len(self.chat_stream.stream.msrp.full_local_path) > 1:
                     self.chat_remote_endpoint.setStringValue_(str(self.chat_stream.stream.msrp.full_local_path[0]))
@@ -396,6 +501,7 @@ class SessionInfoController(NSObject):
         if self.sessionController is not None:
             self.updateDuration()
             self.updateAudio()
+            self.updateVideo()
 
     def updateDuration(self):
         if self.sessionController is not None and self.sessionController.session is not None:
@@ -423,9 +529,30 @@ class SessionInfoController(NSObject):
             elif self.audio_stream.holdByRemote:
                 self.audio_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.audio_stream.status == STREAM_CONNECTED:
-                self.audio_status.setStringValue_(NSLocalizedString("Active", "Label"))
+                title = NSLocalizedString("Active", "Label")
+                if self.audio_stream.stream.srtp_active:
+                    title = title + ' ' + NSLocalizedString("Encrypted", "Label")
+                    title = title + ' (SDES)'
+                self.audio_status.setStringValue_(title)
             else:
                 self.audio_status.setStringValue_("")
+
+    def updateVideoStatus(self):
+        if self.sessionController is None or self.video_stream is None:
+            self.video_status.setStringValue_("")
+        else:
+            if self.audio_stream and self.audio_stream.holdByLocal:
+                self.video_status.setStringValue_(NSLocalizedString("On Hold", "Label"))
+            elif self.audio_stream and self.audio_stream.holdByRemote:
+                self.video_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
+            elif self.video_stream.status == STREAM_CONNECTED:
+                title = NSLocalizedString("Active", "Label")
+                if self.video_stream.stream.srtp_active:
+                    title = title + ' ' + NSLocalizedString("Encrypted", "Label")
+                    title = title + ' (SDES)'
+                self.video_status.setStringValue_(title)
+            else:
+                self.video_status.setStringValue_("")
 
     def _NH_BlinkSessionGotRingIndication(self, notification):
         self.updateSessionStatus(sub_state=NSLocalizedString("Ringing...", "Label"))
@@ -456,6 +583,7 @@ class SessionInfoController(NSObject):
 
     def _NH_BlinkSessionDidStart(self, notification):
         self.add_audio_stream()
+        self.add_video_stream()
         self.add_chat_stream()
         self.updatePanelValues()
 
@@ -464,7 +592,7 @@ class SessionInfoController(NSObject):
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
         if self.sessionController is not None and self.sessionController.session is not None and hasattr(notification.data, 'conference_info'):
-            self.conference.setStringValue_(NSLocalizedString("%d Participants", "Label") % len(notification.data.conference_info.users))
+             pass
 
     @run_in_gui_thread
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
@@ -475,6 +603,16 @@ class SessionInfoController(NSObject):
     def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
         if self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
+
+    @run_in_gui_thread
+    def _NH_VideoStreamICENegotiationDidFail(self, notification):
+        if self.video_stream is not None:
+            self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
+
+    @run_in_gui_thread
+    def _NH_VideoStreamICENegotiationDidSucceed(self, notification):
+        if self.video_stream is not None:
+            self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
 
     def _NH_AudioStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
@@ -509,6 +647,8 @@ class SessionInfoController(NSObject):
         self.audio_rtt_graph.removeFromSuperview()
         self.rx_speed_graph.removeFromSuperview()
         self.tx_speed_graph.removeFromSuperview()
+        self.video_rx_speed_graph.removeFromSuperview()
+        self.video_tx_speed_graph.removeFromSuperview()
         super(SessionInfoController, self).dealloc()
 
 

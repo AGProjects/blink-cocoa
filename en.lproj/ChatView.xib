@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="4514" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5053" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
-        <plugIn identifier="com.apple.QTKitIBPlugin" version="3338"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="3338"/>
+        <deployment defaultVersion="1070" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5053"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="5053"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatController">
@@ -13,7 +13,6 @@
                 <outlet property="inputContainer" destination="23" id="209"/>
                 <outlet property="outputContainer" destination="178" id="193"/>
                 <outlet property="privateLabel" destination="253" id="255"/>
-                <outlet property="remoteVideoView" destination="211" id="213"/>
                 <outlet property="smileyButton" destination="126" id="170"/>
                 <outlet property="splitView" destination="19" id="210"/>
             </connections>
@@ -186,20 +185,6 @@
                 <outlet property="view" destination="19" id="166"/>
             </connections>
         </customObject>
-        <customView id="211" customClass="VideoView">
-            <rect key="frame" x="0.0" y="0.0" width="405" height="226"/>
-            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <subviews>
-                <qtMovieView controllerVisible="NO" preservesAspectRatio="YES" id="212">
-                    <rect key="frame" x="0.0" y="0.0" width="405" height="226"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                    <color key="fillColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                </qtMovieView>
-            </subviews>
-            <connections>
-                <outlet property="streamView" destination="212" id="R6u-CL-RBj"/>
-            </connections>
-        </customView>
     </objects>
     <resources>
         <image name="NSAddTemplate" width="8" height="8"/>

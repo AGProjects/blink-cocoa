@@ -8,8 +8,8 @@ Blink settings extensions.
 __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
-from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
-from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
+from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate, H264Profile, VideoResolution
+from sipsimple.configuration.settings import H264Settings, AudioSettings, VideoSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings, VideoCodecList
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
@@ -23,10 +23,18 @@ class AnsweringMachineSettings(SettingsGroup):
     unavailable_message = Setting(type=AnsweringMachineSoundFile, default=AnsweringMachineSoundFile(AnsweringMachineSoundFile.DefaultSoundFile('unavailable_message.wav')), nillable=True)
 
 
+class H264SettingsExtension(H264Settings):
+    profile = Setting(type=H264Profile, default='baseline')
+    level = Setting(type=float, default=3.1)
+    max_resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
+    max_framerate = Setting(type=int, default=30)
+    avg_bitrate = Setting(type=int, default=0)
+    max_bitrate = Setting(type=int, default=0)
+
+
 class EchoCancellerSettingsExtension(EchoCancellerSettings):
     enabled = Setting(type=bool, default=True)
     tail_length = Setting(type=NonNegativeInteger, default=2)
-
 
 class AudioSettingsExtension(AudioSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('history'))
@@ -40,6 +48,11 @@ class AudioSettingsExtension(AudioSettings):
     automatic_device_switch = Setting(type=bool, default=True)
     pause_music = Setting(type=bool, default=True)
 
+
+class VideoSettingsExtension(VideoSettings):
+    enable_when_auto_answer = Setting(type=bool, default=False)
+    full_screen_after_connect = Setting(type=bool, default=True)
+    h264 = H264SettingsExtension
 
 class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
@@ -98,8 +111,8 @@ class GUISettings(SettingsGroup):
 
 
 class RTPSettingsExtension(RTPSettings):
-    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'speex', 'G722', 'PCMU', 'PCMA')))
-
+    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
+    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264',)))
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
@@ -148,6 +161,7 @@ class PresenceStateSettings(SettingsGroup):
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
+    video = VideoSettingsExtension
     chat = ChatSettingsExtension
     screen_sharing_server = ScreenSharingSettingsExtension
     file_transfer = FileTransferSettingsExtension

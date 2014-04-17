@@ -304,6 +304,8 @@ class PresenceInfoController(NSObject):
             caps = []
             if service.capabilities.audio:
                 caps.append("Audio")
+            if service.capabilities.video:
+                caps.append("Video")
             if service.capabilities.message:
                 caps.append("Chat")
             if service.capabilities.file_transfer:

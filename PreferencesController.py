@@ -11,6 +11,7 @@ from AppKit import (NSAccessibilityTitleAttribute,
                     NSEventTrackingRunLoopMode,
                     NSDragOperationGeneric,
                     NSNoTabsBezelBorder,
+                    NSNoTabsNoBorder,
                     NSOnState,
                     NSOffState,
                     NSRunAlertPanel,
@@ -19,6 +20,7 @@ from AppKit import (NSAccessibilityTitleAttribute,
                     NSTopTabsBezelBorder,
                     NSViewHeightSizable,
                     NSViewWidthSizable)
+
 from Foundation import (NSArray,
                         NSBezierPath,
                         NSBundle,
@@ -32,6 +34,7 @@ from Foundation import (NSArray,
                         NSString,
                         NSLocalizedString,
                         NSTabViewItem,
+                        NSTabView,
                         NSURL,
                         NSUserDefaults,
                         NSWindowController,
@@ -44,7 +47,7 @@ import objc
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.system import unlink
-from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
@@ -177,6 +180,7 @@ class PreferencesController(NSWindowController, object):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="AudioDevicesDidChange")
+        notification_center.add_observer(self, name="VideoDevicesDidChange")
 
         applicationName = NSApp.delegate().applicationNamePrint
         self.window().setTitle_(NSLocalizedString("%s Preferences", "Window title") % applicationName)
@@ -248,9 +252,9 @@ class PreferencesController(NSWindowController, object):
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
-        section = sender.itemIdentifier()
+        section_name = sender.itemIdentifier()
 
-        if section == 'advanced':
+        if section_name == 'advanced':
             self.generalTabView.setTabViewType_(NSTopTabsBezelBorder)
             self.createGeneralOptionsUI('advanced')
             self.sectionHelpPlaceholder.setHidden_(False)
@@ -258,11 +262,11 @@ class PreferencesController(NSWindowController, object):
             self.createGeneralOptionsUI('basic')
             self.generalTabView.setTabViewType_(NSNoTabsBezelBorder)
 
-        if section == 'accounts':
+        if section_name == 'accounts':
             self.mainTabView.selectTabViewItemWithIdentifier_("accounts")
-            self.window().setTitle_(NSLocalizedString("Audio", "Window title"))
+            self.window().setTitle_(NSLocalizedString("Accounts", "Window title"))
             self.sectionHelpPlaceholder.setHidden_(True)
-        elif section == 'audio':
+        elif section_name == 'audio':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("audio")
             self.sectionDescription.setStringValue_(NSLocalizedString("Audio Settings", "Label"))
@@ -277,49 +281,56 @@ class PreferencesController(NSWindowController, object):
                 help_line += NSLocalizedString(".\nFor studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Preferences text label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
             self.window().setTitle_(NSLocalizedString("Audio", "Window title"))
-        elif section == 'answering_machine':
+        elif section_name == 'video':
+            self.generalTabView.setTabViewType_(NSNoTabsNoBorder)
+            self.mainTabView.selectTabViewItemWithIdentifier_("settings")
+            self.generalTabView.selectTabViewItemWithIdentifier_("video")
+            self.sectionDescription.setStringValue_(NSLocalizedString("Video Settings", "Label"))
+            self.sectionHelpPlaceholder.setHidden_(False)
+            self.window().setTitle_(NSLocalizedString("Video", "Window title"))
+        elif section_name == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
             self.sectionDescription.setStringValue_(NSLocalizedString("Answering Machine Settings", "Label"))
             self.window().setTitle_(NSLocalizedString("Answering Machine", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("When enabled, Answering Machine will auto answer the call after the predefined delay", "Preferences placeholder text"))
-        elif section == 'chat':
+        elif section_name == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
             self.sectionDescription.setStringValue_(NSLocalizedString("Chat Settings", "Label"))
             self.window().setTitle_(NSLocalizedString("Chat", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
-        elif section == 'file-transfer':
+        elif section_name == 'file-transfer':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("file_transfer")
             self.sectionDescription.setStringValue_(NSLocalizedString("File Transfer Settings", "Label"))
             self.window().setTitle_(NSLocalizedString("File Transfer", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
-        elif section == 'screen-sharing':
+        elif section_name == 'screen-sharing':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("screen_sharing_server")
             self.sectionDescription.setStringValue_(NSLocalizedString("Screen Sharing Settings", "Label"))
             self.window().setTitle_(NSLocalizedString("Screen Sharing", "Window title"))
             self.sectionHelpPlaceholder.setHidden_(False)
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Enable Screen Sharing in System Preferences > Sharing section.\nClick on the 'Computer Settings...' button and check the option 'Anyone may request permission to control screen'", "Preferences help label"))
-        elif section == 'alerts':
+        elif section_name == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")
             self.sectionDescription.setStringValue_(NSLocalizedString("Sound Alerts", "Label"))
             self.window().setTitle_(NSLocalizedString("Alerts", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
-        elif section == 'contacts':
+        elif section_name == 'contacts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("contacts")
             self.sectionDescription.setStringValue_(NSLocalizedString("Contacts Settings", "Label"))
             self.window().setTitle_(NSLocalizedString("Contacts", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
-        elif section == 'advanced':
+        elif section_name == 'advanced':
             self.sectionDescription.setStringValue_(NSLocalizedString("Advanced Settings", "Label"))
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.window().setTitle_(NSLocalizedString("Advanced", "Window title"))
 
-        elif section == 'help':
+        elif section_name == 'help':
             self.window().setTitle_(NSLocalizedString("Help", "Window title"))
             NSApp.delegate().contactsWindowController.showHelp('#preferences')
 
@@ -328,88 +339,113 @@ class PreferencesController(NSWindowController, object):
             self.generalTabView.removeTabViewItem_(self.generalTabView.tabViewItemAtIndex_(0))
 
         settings = SIPSimpleSettings()
-        sections = [section for section in dir(SIPSimpleSettings) if isinstance(getattr(SIPSimpleSettings, section, None), SettingsGroupMeta)]
+        sections = [section_name for section_name in dir(SIPSimpleSettings) if isinstance(getattr(SIPSimpleSettings, section_name, None), SettingsGroupMeta)]
         frame = self.generalTabView.frame()
         frame.origin.x = 0
         frame.origin.y = 0
 
         if type == 'advanced':
-            for section in AdvancedGeneralSectionOrder:
-                view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
-                tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
+            for section_name in AdvancedGeneralSectionOrder:
+                view = self.createViewForSection(settings, frame, section_name, getattr(SIPSimpleSettings, section_name))
+                tabItem = NSTabViewItem.alloc().initWithIdentifier_(section_name)
 
                 try:
-                    label = SectionNames[section]
+                    label = SectionNames[section_name]
                 except KeyError:
-                    label = formatName(section)
+                    label = formatName(section_name)
 
                 tabItem.setLabel_(label)
-                tabItem.setIdentifier_(section)
+                tabItem.setIdentifier_(section_name)
                 tabItem.setView_(view)
-                if section not in StaticPreferenceSections:
+                if section_name not in StaticPreferenceSections:
                     self.generalTabView.addTabViewItem_(tabItem)
 
-        if type == 'basic':
+        elif type == 'basic':
             for section in (section for section in sections if section not in DisabledPreferenceSections):
-                view = self.createUIForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
+                section_object = getattr(settings, section, None)
+                section_names = [section_name for section_name in dir(section_object.__class__) if isinstance(getattr(section_object.__class__, section_name, None), SettingsGroupMeta) and section_name not in DisabledPreferenceSections]
+                view = self.createViewForSection(settings, frame, section, getattr(SIPSimpleSettings, section))
                 tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
 
-                try:
-                    label = SectionNames[section]
-                except KeyError:
-                    label = formatName(section)
-
-                tabItem.setLabel_(label)
-                tabItem.setView_(view)
-                if section in StaticPreferenceSections:
+                if section_names:
+                    subsectionsTabView = NSTabView.alloc().init()
+                    tabItem.setView_(subsectionsTabView)
                     self.generalTabView.addTabViewItem_(tabItem)
+                    tabItem = NSTabViewItem.alloc().initWithIdentifier_('General')
+                    tabItem.setLabel_(NSLocalizedString("General", "Label"))
+                    tabItem.setView_(view)
+                    subsectionsTabView.addTabViewItem_(tabItem)
+                    for section_name in section_names:
+                        view = self.createViewForSection(settings, frame, section_name, getattr(section_object.__class__, section_name), section_object=getattr(section_object, section_name))
+                        tabItem = NSTabViewItem.alloc().initWithIdentifier_(section_name)
+                        try:
+                            label = SectionNames[section_name]
+                        except KeyError:
+                            label = formatName(section_name)
+
+                        tabItem.setLabel_(label)
+                        tabItem.setView_(view)
+                        subsectionsTabView.addTabViewItem_(tabItem)
+                elif section in StaticPreferenceSections:
+                    try:
+                        label = SectionNames[section]
+                    except KeyError:
+                        label = formatName(section)
+
+                    tabItem.setLabel_(label)
+                    tabItem.setView_(view)
+                    self.generalTabView.addTabViewItem_(tabItem)
+
 
     def createAccountOptionsUI(self, account):
         self.advancedPop.removeAllItems()
         for i in range(self.advancedTabView.numberOfTabViewItems()):
             self.advancedTabView.removeTabViewItem_(self.advancedTabView.tabViewItemAtIndex_(0))
 
-        #sections = [section for section in dir(account.__class__) if isinstance(getattr(account.__class__, section, None), SettingsGroupMeta)]
+        #sections = [section_name for section_name in dir(account.__class__) if isinstance(getattr(account.__class__, section_name, None), SettingsGroupMeta)]
         sections = BonjourAccountSectionOrder if account is BonjourAccount() else AccountSectionOrder
 
         frame = self.advancedTabView.frame()
-        for section in (section for section in sections if section not in DisabledAccountPreferenceSections):
-            if NSApp.delegate().applicationName == 'Blink Lite' and section in ('audio', 'chat', 'pstn', 'ldap', 'web_alert'):
+        for section_name in (section_name for section_name in sections if section_name not in DisabledAccountPreferenceSections):
+            if NSApp.delegate().applicationName == 'Blink Lite' and section_name in ('audio', 'chat', 'pstn', 'ldap', 'web_alert'):
                 continue
 
-            if NSApp.delegate().applicationName == 'SIP2SIP' and section in ('auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui'):
+            if NSApp.delegate().applicationName == 'SIP2SIP' and section_name in ('auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui'):
                 continue
 
             if NSApp.delegate().applicationName in ('Blink Lite', 'Blink Pro'):
                 PreferenceOptionTypes['chat.replication_password'] = HiddenOption
 
-            if section == 'tls':
+            if section_name == 'tls':
                 continue
 
-            view = self.createUIForSection(account, frame, section, getattr(account.__class__, section), True)
+            view = self.createViewForSection(account, frame, section_name, getattr(account.__class__, section_name))
 
-            tabItem = NSTabViewItem.alloc().initWithIdentifier_(section)
+            tabItem = NSTabViewItem.alloc().initWithIdentifier_(section_name)
             try:
-                label = SectionNames[section]
+                label = SectionNames[section_name]
             except KeyError:
-                label = formatName(section)
+                label = formatName(section_name)
 
             self.advancedPop.addItemWithTitle_(label)
-            self.advancedPop.lastItem().setRepresentedObject_(section)
+            self.advancedPop.lastItem().setRepresentedObject_(section_name)
 
             tabItem.setLabel_(label)
             tabItem.setView_(view)
 
             self.advancedTabView.addTabViewItem_(tabItem)
 
-    def createUIForSection(self, object, frame, section_name, section, forAccount=False):
-        section_object = getattr(object, section_name)
+    def createViewForSection(self, storage_object, frame, section_name, section_class, section_object=None):
+        if section_object is None:
+            section_object = getattr(storage_object, section_name)
 
+        forAccount = isinstance(storage_object, (Account, BonjourAccount))
         section_view = NSScrollView.alloc().initWithFrame_(frame)
         section_view.setDrawsBackground_(False)
         section_view.setAutohidesScrollers_(True)
-        # TODO: we will need a scrollbar if the number of settings cause the box to become to high -adi
-        section_view.setHasVerticalScroller_(False)
+        # we will need a scrollbar if the number of settings cause the box to become to high
+        e = True if section_name in ('rtp') else False
+        section_view.setHasVerticalScroller_(e)
         section_view.setAutoresizingMask_(NSViewWidthSizable|NSViewHeightSizable)
 
         settings_box_view = VerticalBoxView.alloc().initWithFrame_(frame)
@@ -419,8 +455,8 @@ class PreferencesController(NSWindowController, object):
 
         section_view.setDocumentView_(settings_box_view)
 
-        unordered_options = [opt for opt in dir(section) if isinstance(getattr(section, opt, None), Setting)]
-        #assert not [opt for opt in dir(section) if isinstance(getattr(section, opt, None), SettingsGroupMeta)]
+        unordered_options = [opt for opt in dir(section_class) if isinstance(getattr(section_class, opt, None), Setting)]
+        #assert not [opt for opt in dir(section_class) if isinstance(getattr(section_class, opt, None), SettingsGroupMeta)]
         try:
             options = AccountSettingsOrder[section_name] if forAccount else GeneralSettingsOrder[section_name]
             remaining_options = [opt for opt in unordered_options if opt not in options]
@@ -441,7 +477,7 @@ class PreferencesController(NSWindowController, object):
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
                 continue
-            option = getattr(section, option_name, None)
+            option = getattr(section_class, option_name, None)
             if option is None:
                 continue
 
@@ -492,7 +528,7 @@ class PreferencesController(NSWindowController, object):
             settings_box_view.addSubview_(control)
 
             control.delegate = self
-            control.owner = object
+            control.owner = storage_object
             control.restore()
 
         return section_view
@@ -818,6 +854,12 @@ class PreferencesController(NSWindowController, object):
 
     def _NH_AudioDevicesDidChange(self, notification):
         self.updateAudioDevices_(None)
+
+    def _NH_DeviceDevicesDidChange(self, notification):
+        self.updateVideoDevices_(None)
+
+    def updateVideoDevices_(self, object):
+        pass
 
     def updateAudioDevices_(self, object):
         audio_device_option_types = (PreferenceOptionTypes["audio.input_device"], PreferenceOptionTypes["audio.output_device"])

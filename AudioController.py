@@ -272,17 +272,17 @@ class AudioController(MediaStream):
             self.sessionController.log_info("Sending session to answering machine")
             self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.audioSegmented.setEnabled_forSegment_(False, 1)
-            self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio session tooltip"), 0)
+            self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio call tooltip"), 0)
 
             self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.transferSegmented.setEnabled_forSegment_(False, 1)
             self.transferSegmented.setEnabled_forSegment_(False, 2)
-            self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio session tooltip"), 0)
+            self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio call tooltip"), 0)
 
             self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 1)
             self.encryptionSegmented.setEnabled_forSegment_(False, 2)
             self.encryptionSegmented.setEnabled_forSegment_(False, 3)
-            self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio session tooltip"), 1)
+            self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio call tooltip"), 1)
 
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
@@ -351,21 +351,21 @@ class AudioController(MediaStream):
     def answerCall(self):
         self.sessionController.log_info("Taking over call on answering machine...")
 
-        self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio session tooltip"), 0)
+        self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio call tooltip"), 0)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 0)
         self.audioSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 1)
         self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 1)
 
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 0)
-        self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio session tooltip"), 1)
-        self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio session tooltip"), 1)
+        self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio call tooltip"), 1)
+        self.transferSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio call tooltip"), 1)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 1)
         self.transferSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 2)
         self.transferSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 2)
 
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), 1)
-        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio session tooltip"), 2)
-        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio session tooltip"), 2)
+        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio call tooltip"), 2)
+        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio call tooltip"), 2)
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), 2)
         self.encryptionSegmented.setEnabled_forSegment_(True and self.recordingEnabled, 3)
         self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), 3)
@@ -461,7 +461,7 @@ class AudioController(MediaStream):
         if type(peer) == str:
             self.sessionController.log_info(u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
                   peer))
-            # start audio session to peer and add it to conference
+            # start Audio call to peer and add it to conference
             self.view.setConferencing_(True)
             session = NSApp.delegate().contactsWindowController.startSessionWithTarget(peer)
             if session:
@@ -1032,25 +1032,37 @@ class AudioController(MediaStream):
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
             if not self.sessionController.hasStreamOfType("chat"):
                 item.setTitle_(NSLocalizedString("Add Chat", "Menu item"))
+                item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
             else:
                 chatStream = self.sessionController.streamHandlerOfType("chat")
                 if chatStream:
-                    item.setTitle_(NSLocalizedString("Remove Chat", "Menu item") if chatStream.status == STREAM_CONNECTED else NSLocalizedString("Add Chat", "Menu item"))
-                else:
-                    item.setTitle_(NSLocalizedString("Add Chat", "Menu item"))
-
+                    if chatStream.status == STREAM_CONNECTED:
+                        item.setTitle_(NSLocalizedString("Remove chat", "Menu item"))
+                        item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
+                    elif chatStream.status in (STREAM_RINGING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                        item.setTitle_(NSLocalizedString("Cancel", "Menu item"))
+                        item.setEnabled_(True)
+                    else:
+                        item.setTitle_(NSLocalizedString("Add chat", "Menu item"))
+                        item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
             item.setHidden_(not(self.sessionControllersManager.isMediaTypeSupported('video')))
             if not self.sessionController.hasStreamOfType("video"):
                 item.setTitle_(NSLocalizedString("Add Video", "Menu item"))
+                item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
             else:
                 videoStream = self.sessionController.streamHandlerOfType("video")
                 if videoStream:
-                    item.setTitle_(NSLocalizedString("Remove Video", "Menu item") if videoStream.status == STREAM_CONNECTED else NSLocalizedString("Add Video", "Menu item"))
-                else:
-                    item.setTitle_(NSLocalizedString("Add Video", "Menu item"))
-
+                    if videoStream.status == STREAM_CONNECTED:
+                        item.setTitle_(NSLocalizedString("Remove video", "Menu item"))
+                        item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
+                    elif videoStream.status in (STREAM_RINGING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                        item.setTitle_(NSLocalizedString("Cancel", "Menu item"))
+                        item.setEnabled_(True)
+                    else:
+                        item.setTitle_(NSLocalizedString("Add video", "Menu item"))
+                        item.setEnabled_(self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession())
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
@@ -1118,8 +1130,8 @@ class AudioController(MediaStream):
             else:
                 videoStream = self.sessionController.streamHandlerOfType("video")
                 if videoStream:
-                    if videoStream.status != STREAM_CONNECTED:
-                        self.sessionController.addVideoToSession()
+                    if videoStream.status in (STREAM_IDLE, STREAM_FAILED):
+                        self.sessionController.startVideoSession()
                     else:
                         self.sessionController.removeVideoFromSession()
                 else:
@@ -1326,7 +1338,7 @@ class AudioController(MediaStream):
         self.stream.start_recording(self.recording_path)
 
     def addRecordingToHistory(self, filename):
-        message = "<h3>Audio Session Recorded</h3>"
+        message = "<h3>Audio Call Recorded</h3>"
         message += "<p>%s" % filename
         message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
         media_type = 'audio-recording'
@@ -1352,13 +1364,6 @@ class AudioController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
-    def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
-        self.sessionController.log_info(u'ICE negotiation failed: %s' % data.reason)
-        self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
-        self.ice_negotiation_status = data.reason
-        # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
-        #self.end()
-
     @run_in_gui_thread
     def _NH_AudioStreamSupportsZRTP(self, sender, data):
         self.setZRTPViewHeight()
@@ -1371,9 +1376,15 @@ class AudioController(MediaStream):
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()
 
-    def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
-        self.sessionController.log_info(u'ICE negotiation succeeded')
+    def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
+        self.sessionController.log_info(u'Audio ICE negotiation failed: %s' % data.reason)
+        self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
+        self.ice_negotiation_status = data.reason
+        # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
+        #self.end()
 
+    def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
+        self.sessionController.log_info(u'Audio ICE negotiation succeeded')
         self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
                                                                                              self.stream.local_rtp_port,
                                                                                              ice_candidates[self.stream.local_rtp_candidate.type.lower()],
@@ -1415,9 +1426,9 @@ class AudioController(MediaStream):
         growl_data.timestamp = ISOTimestamp.now()
         self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
-        nc_title = NSLocalizedString("Audio Session Recorded", "System notification title")
+        nc_title = NSLocalizedString("Audio Call Recorded", "System notification title")
         nc_subtitle = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='full')
-        nc_body = NSLocalizedString("This audio session has been recorded", "System notification body")
+        nc_body = NSLocalizedString("This audio call has been recorded", "System notification body")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     @run_in_gui_thread

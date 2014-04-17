@@ -41,7 +41,7 @@ class Ringer(object):
 
     - updates ringtone when settings or default account change
     - plays ringtone when an incoming session arrives
-    - plays ringtone when an outgoing audio session gets SIPSessionGotRingIndication
+    - plays ringtone when an outgoing audio calls gets SIPSessionGotRingIndication
     - selects between user ringtone and "discrete", tone based ringtone according to active sessions
     - stops playing ringtones when appropriate
     - "beeps" when call ends
@@ -127,7 +127,7 @@ class Ringer(object):
         should_play_chat_secondary_ringtone = False
 
         if 'audio' in (stream.type for stream in chain(*(session.streams for session in self.active_sessions if session.streams))):
-            # play only secondary ringtones when there's active audio sessions
+            # play only secondary ringtones when there's active audio calls
 
             if self.incoming_audio_sessions:
                 should_play_audio_secondary_ringtone = True

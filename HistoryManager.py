@@ -1208,7 +1208,7 @@ class SessionHistoryReplicator(object):
                             notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=bool(media_type =='missed-call')))
 
                         if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
-                            elapsed = datetime.utcnow() - start_time
+                            elapsed = end_time - start_time
                             elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                             if elapsed_hours < 48:
                                 growl_data = NotificationData()
@@ -1233,6 +1233,8 @@ class SessionHistoryReplicator(object):
             pass
         except Exception, e:
             BlinkLogger().log_error(u"Error: %s" % e)
+            import traceback
+            print traceback.print_exc()
 
         try:
             if calls['placed']:
@@ -1308,6 +1310,9 @@ class SessionHistoryReplicator(object):
             pass
         except Exception, e:
             BlinkLogger().log_error(u"Error: %s" % e)
+            import traceback
+            print traceback.print_exc()
+
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
@@ -1684,6 +1689,8 @@ class ChatHistoryReplicator(object):
                         data['encryption'] = ''
 
                     ChatHistory().add_message(data['msgid'], data['media_type'], data['local_uri'], data['remote_uri'], data['direction'], data['cpim_from'], data['cpim_to'], data['cpim_timestamp'], data['body'], data['content_type'], data['private'], data['status'], time=data['time'], uuid=uuid, journal_id=journal_id, call_id=data['call_id'], encryption=data['encryption'])
+
+
                     start_time = datetime.strptime(data['time'], "%Y-%m-%d %H:%M:%S")
                     elapsed = datetime.utcnow() - start_time
 

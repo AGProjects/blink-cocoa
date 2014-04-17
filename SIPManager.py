@@ -5,6 +5,7 @@ from __future__ import with_statement
 
 from Foundation import NSBundle, NSLocalizedString
 from AppKit import NSApp, NSRunAlertPanel
+import AppKit
 
 import cjson
 import os
@@ -45,7 +46,7 @@ from configuration.account import AccountExtension, BonjourAccountExtension, Acc
 from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, beautify_audio_codec, format_identity_to_string, run_in_gui_thread
+from util import allocate_autorelease_pool, beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread
 
 
 class SIPManager(object):
@@ -137,6 +138,7 @@ class SIPManager(object):
         ContactURI.register_extension(BlinkContactURIExtension)
         SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
+        app = AppKit.NSApplication.sharedApplication()
         self._app.start(FileStorage(ApplicationData.directory))
 
         # start session mgr
@@ -476,6 +478,11 @@ class SIPManager(object):
             codecs_print.append(beautify_audio_codec(codec))
         BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
 
+        codecs_print = []
+        for codec in settings.rtp.video_codec_list:
+            codecs_print.append(beautify_video_codec(codec))
+        BlinkLogger().log_info(u"Enabled video codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_info(u"Using video camera: %s" % self._app.video_device.real_name)
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
             for transport in settings.sip.transport_list:

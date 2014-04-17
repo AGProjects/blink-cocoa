@@ -93,6 +93,7 @@ class StatusItem(NSObject):
 
 
 class ScreenSharingController(MediaStream):
+    # TODO video: stop stream if video is added
     type = "screen-sharing"
     implements(IObserver)
 

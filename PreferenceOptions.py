@@ -57,7 +57,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
-from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress
+from sipsimple.configuration.datatypes import AudioCodecList, VideoCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress,H264Profile
 from sipsimple.configuration.settings import SIPSimpleSettings
 from configuration.settings import EchoCancellerSettingsExtension
 from zope.interface import implements
@@ -68,7 +68,7 @@ from ChatOTR import BlinkOtrAccount
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
-from util import audio_codecs, allocate_autorelease_pool, osx_version
+from util import audio_codecs, video_codecs, allocate_autorelease_pool, osx_version
 
 
 def makeLabel(label):
@@ -564,17 +564,21 @@ class SIPTransportListOption(MultipleSelectionOption):
 
 
 class AudioCodecListOption(MultipleSelectionOption):
+    available_codec_list = AudioCodecList
+    beautified_codecs = audio_codecs
+    type = 'audio'
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 125))
 
     def __init__(self, object, name, option, description=None):
-        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=100, description=description)
+        MultipleSelectionOption.__init__(self, object, name, option, allowReorder=True, tableWidth=120, description=description)
 
         self.selection = set()
         self.options = []
-        for option in list(AudioCodecList.available_values):
+        for option in list(self.available_codec_list.available_values):
             try:
-                codec_option = audio_codecs[option]
+                codec_option = self.beautified_codecs[option]
             except KeyError:
                 codec_option = option
 
@@ -609,7 +613,6 @@ class AudioCodecListOption(MultipleSelectionOption):
                 return
             MultipleSelectionOption.tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row)
 
-
     def tableViewSelectionDidChange_(self, notification):
         if self.table.selectedRow() < 0:
             self.moveUp.setEnabled_(False)
@@ -636,7 +639,7 @@ class AudioCodecListOption(MultipleSelectionOption):
         for opt in self.options:
             if opt in self.selection:
                 try:
-                    opt = (k for k, v in audio_codecs.iteritems() if opt == v).next()
+                    opt = (k for k, v in self.beautified_codecs.iteritems() if opt == v).next()
                 except StopIteration:
                     pass
                 value.append(opt)
@@ -648,7 +651,7 @@ class AudioCodecListOption(MultipleSelectionOption):
         options = []
         for val in list(value):
             try:
-                v = (v for k, v in audio_codecs.iteritems() if val == k).next()
+                v = (v for k, v in self.beautified_codecs.iteritems() if val == k).next()
             except StopIteration:
                 options.append(val)
             else:
@@ -659,6 +662,12 @@ class AudioCodecListOption(MultipleSelectionOption):
             if opt not in options:
                 options.append(opt)
         self.options = options
+
+
+class VideoCodecListOption(AudioCodecListOption):
+    available_codec_list = VideoCodecList
+    beautified_codecs = video_codecs
+    type = 'video'
 
 
 class AccountAudioCodecListOption(AudioCodecListOption):
@@ -718,6 +727,63 @@ class AccountAudioCodecListOption(AudioCodecListOption):
             cell.setEnabled_(True)
 
 
+class AccountVideoCodecListOption(VideoCodecListOption):
+    def __init__(self, object, name, option, description=None):
+        VideoCodecListOption.__init__(self, object, name, option, description)
+
+        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 110, 20))
+        self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
+        self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
+        self.check.setButtonType_(NSSwitchButton)
+        self.check.setTarget_(self)
+        self.check.setAction_("customizeCodecs:")
+        self.sideView.addSubview_(self.check)
+
+    def loadGlobalSettings(self):
+        value = SIPSimpleSettings().rtp.video_codec_list or []
+        options = []
+        for val in list(value):
+            try:
+                v = (v for k, v in video_codecs.iteritems() if val == k).next()
+            except StopIteration:
+                options.append(val)
+            else:
+                options.append(v)
+
+        self.selection = set(options)
+        for opt in self.options:
+            if opt not in options:
+                options.append(opt)
+        self.options = options
+
+    def customizeCodecs_(self, sender):
+        if sender.state() == NSOffState:
+            self.loadGlobalSettings()
+
+        self.table.reloadData()
+        self.store()
+
+    def _store(self):
+        if self.check.state() == NSOnState:
+            VideoCodecListOption._store(self)
+        else:
+            self.set(None)
+
+    def restore(self):
+        if self.get() is None:
+            self.check.setState_(NSOffState)
+            self.loadGlobalSettings()
+        else:
+            self.check.setState_(NSOnState)
+            VideoCodecListOption.restore(self)
+
+    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
+        if self.check.state() == NSOffState:
+            cell.setEnabled_(False)
+        else:
+            cell.setEnabled_(True)
+
+
 class PopUpMenuOption(Option):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().initWithFrame_(NSMakeRect(0, 0, 300, 26))
@@ -738,30 +804,46 @@ class PopUpMenuOption(Option):
 
         self.popup.setTarget_(self)
         self.popup.setAction_("changed:")
+        try:
+            unit = UnitOptions[name]
+            self.units = makeLabel(unit)
+            self.units.sizeToFit()
+            self.addSubview_(self.units)
+        except KeyError:
+            pass
+
 
     def changed_(self, sender):
         self.store()
 
     def _store(self):
         if self.useRepresentedObject:
-            item = unicode(self.popup.selectedItem().representedObject())
-            if item != unicode(self.get()):
+            item = self.popup.selectedItem().representedObject()
+            if item != self.get():
                 self.set(item)
         else:
             if unicode(self.popup.titleOfSelectedItem()) != unicode(self.get()):
                 self.set(unicode(self.popup.titleOfSelectedItem()))
 
     def restore(self):
-        value = unicode(self.get(False))
         if self.useRepresentedObject:
-            index = self.popup.indexOfItemWithRepresentedObject_(value)
+            value = self.get()
+            index = -1
+            i = 0
+            for item in self.popup.itemArray():
+                if item.representedObject() == value:
+                    index = i
+                    break
+                i += 1
+
             if index < 0 and self.addMissingOptions:
                 print "adding unknown item %s to popup for %s"%(value, self.option)
-                self.popup.addItemWithTitle_(value)
+                self.popup.addItemWithTitle_(unicode(value))
                 self.popup.lastItem().setRepresentedObject_(value)
                 index = self.popup.numberOfItems()
             self.popup.selectItemAtIndex_(index)
         else:
+            value = unicode(self.get(False))
             if self.popup.indexOfItemWithTitle_(value) < 0:
               self.popup.addItemWithTitle_(value)
             self.popup.selectItemWithTitle_(value)
@@ -813,7 +895,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
     def refresh(self):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_("None")
+        self.popup.lastItem().setRepresentedObject_(None)
         self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
         for item in Engine().input_devices:
@@ -834,10 +916,87 @@ class AudioOutputDeviceOption(PopUpMenuOption):
     def refresh(self):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_("None")
+        self.popup.lastItem().setRepresentedObject_(None)
         self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
         for item in Engine().output_devices:
+            self.popup.addItemWithTitle_(item)
+            self.popup.lastItem().setRepresentedObject_(item)
+
+
+class H264ProfileOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
+        self.addMissingOptions = False
+        self.popup.sizeToFit()
+        for item in H264Profile._valid_values:
+            self.popup.addItemWithTitle_(str(item))
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
+class H264ResolutionOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
+        self.addMissingOptions = True
+        self.popup.sizeToFit()
+        for item in ("1280x720", "720x480", "720x576"):
+            self.popup.addItemWithTitle_(str(item))
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
+class H264FramerateOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
+        self.addMissingOptions = True
+        for item in ("15", "30", "60", "90"):
+            self.popup.addItemWithTitle_(str(item))
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
+class H264LevelOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
+        self.addMissingOptions = True
+        self.popup.sizeToFit()
+        self.popup.addItemWithTitle_("3.1")
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
+class VideoDeviceOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=None)
+        self.addMissingOptions = False
+        self.refresh()
+        frame = self.popup.frame()
+        frame.size.width = 300
+        self.popup.setFrame_(frame)
+
+        self.myVideoButton = NSButton.alloc().initWithFrame_(NSMakeRect(0, 24, 90, 24))
+        self.popup.superview().addSubview_(self.myVideoButton)
+        self.myVideoButton.setBezelStyle_(NSRoundedBezelStyle)
+        self.myVideoButton.setTitle_(NSLocalizedString("My Video", "Button title"))
+        self.myVideoButton.setTarget_(NSApp.delegate().contactsWindowController)
+        self.myVideoButton.setAction_("toggleLocalVideoWindow:")
+        self.myVideoButton.cell().setControlSize_(NSSmallControlSize)
+        self.myVideoButton.cell().setFont_(NSFont.systemFontOfSize_(10))
+
+    def refresh(self):
+        self.popup.removeAllItems()
+        self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_(None)
+        self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
+        self.popup.lastItem().setRepresentedObject_("system_default")
+        for item in Engine().video_devices:
+            if str(item) == "Colorbar generator":
+                continue
             self.popup.addItemWithTitle_(item)
             self.popup.lastItem().setRepresentedObject_(item)
 
@@ -1663,8 +1822,10 @@ PreferenceOptionTypes = {
 "AccountSoundFile" : AccountSoundFileOption,
 #"SIPTransportList" : SIPTransportListOption,
 "SIPTransportList" : HiddenOption,
+"VideoCodecList" : VideoCodecListOption,
 "AudioCodecList" : AudioCodecListOption,
 "AudioCodecList:account" : AccountAudioCodecListOption,
+"VideoCodecList:account" : AccountVideoCodecListOption,
 "CountryCode" : CountryCodeOption,
 "STUNServerAddressList" : STUNServerAddressListOption,
 "SIPProxyAddress" : SIPProxyAddressOption,
@@ -1675,6 +1836,8 @@ PreferenceOptionTypes = {
 "audio.directory" : HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
+"video.device" : VideoDeviceOption,
+"video.paused" : HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.enable_encryption": OTRSettings,
 "chat.font_size": HiddenOption,
@@ -1711,6 +1874,12 @@ PreferenceOptionTypes = {
 "tls.ca_list": HiddenOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.timeout" : HiddenOption,
+"h264.profile": H264ProfileOption,
+"h264.level": H264LevelOption,
+"h264.max_resolution": H264ResolutionOption,
+"h264.max_framerate": H264FramerateOption,
+"h264.avg_bitrate": NonNegativeIntegerOption,
+"h264.max_bitrate": NonNegativeIntegerOption,
 "xcap.discovered": HiddenOption,
 "UserIcon": HiddenOption
 }
@@ -1721,16 +1890,16 @@ if osx_version == '10.6':
     DisabledAccountPreferenceSections.append('chat')
 
 # These general sections are always hidden
-DisabledPreferenceSections = ['service_provider', 'server']
+DisabledPreferenceSections = ['service_provider', 'server', 'echo_canceller']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
+StaticPreferenceSections = ['audio', 'video', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
                       'auth.username': NSLocalizedString("Username", "Label"),
-                      'audio.alert_device': NSLocalizedString("Audio Alert Device", "Label"),
-                      'audio.input_device': NSLocalizedString("Audio Input Device", "Label"),
-                      'audio.output_device': NSLocalizedString("Audio Output Device", "Label"),
+                      'audio.alert_device': NSLocalizedString("Alert Device", "Label"),
+                      'audio.input_device': NSLocalizedString("Input Device", "Label"),
+                      'audio.output_device': NSLocalizedString("Output Device", "Label"),
                       'audio.auto_accept': NSLocalizedString("Automatic Answer", "Label"),
                       'audio.auto_transfer': NSLocalizedString("Automatic Transfer", "Label"),
                       'audio.auto_recording': NSLocalizedString("Automatic Recording", "Label"),
@@ -1805,6 +1974,7 @@ SettingDescription = {
                       'pstn.anonymous_to_answering_machine': NSLocalizedString("Anonymous To Answering Machine", "Label"),
                       'rtp.inband_dtmf': NSLocalizedString("Send Inband DTMF", "Label"),
                       'rtp.audio_codec_list': NSLocalizedString("Audio Codecs", "Label"),
+                      'rtp.video_codec_list': NSLocalizedString("Video Codecs", "Label"),
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Label"),
                       'rtp.hangup_on_timeout': NSLocalizedString("Hangup On Timeout", "Label"),
                       'rtp.srtp_encryption': NSLocalizedString("sRTP Encryption", "Label"),
@@ -1831,9 +2001,10 @@ SettingDescription = {
                       'tls.certificate': NSLocalizedString("X.509 Certificate File", "Label"),
                       'tls.ca_list': NSLocalizedString("Certificate Authority File", "Label"),
                       'tls.veriy_server': NSLocalizedString("Verify Server", "Label"),
+                      'video.enable_when_auto_answer': NSLocalizedString("Enabled When Automatic Answering Calls", "Label"),
+                      'video.full_screen_after_connect': NSLocalizedString("Full Screen After Connect", "Label"),
                       'xcap.enabled' : NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root' : NSLocalizedString("Root URI", "Label")
-
                       }
 
 Placeholders = {
@@ -1869,7 +2040,8 @@ SectionNames = {
                        'tls': NSLocalizedString("TLS Settings", "Label"),
                        'xcap': NSLocalizedString("XCAP Storage", "Label"),
                        'ldap': NSLocalizedString("LDAP Directory", "Label"),
-                       'web_alert': NSLocalizedString("External Alert", "Label")
+                       'web_alert': NSLocalizedString("External Alert", "Label"),
+                       'h264': NSLocalizedString("H.264 Codec", "Label")
                        }
 
 GeneralSettingsOrder = {
@@ -1877,10 +2049,12 @@ GeneralSettingsOrder = {
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
                        'chat': ['disabled'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
+                       'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
                        'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'enable_speech_synthesizer', 'night_volume'],
                        'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'idle_threshold', 'rtt_threshold'],
-                       'logs': ['trace_sip_to_file', 'trace_msrp_to_file', 'trace_xcap_to_file', 'trace_notifications_to_file', 'trace_pjsip_to_file', 'pjsip_level']
+                       'logs': ['trace_sip_to_file', 'trace_msrp_to_file', 'trace_xcap_to_file', 'trace_notifications_to_file', 'trace_pjsip_to_file', 'pjsip_level'],
+                       'h264': ['profile', 'level', 'max_resolution', 'max_framerate']
                        }
 
 AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal', 'presence', 'xcap', 'server', 'ldap', 'gui')
@@ -1895,6 +2069,7 @@ AccountSettingsOrder = {
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'strip_digits', 'prefix'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
+                       'rtp': ['inband_dtmf', 'hangup_on_timeout', 'srtp_encryption', 'audio_codec_list', 'video_codec_list'],
                        'presence': ['enabled', 'enable_on_the_phone', 'disable_location', 'disable_timezone']
                        }
 
@@ -1907,7 +2082,11 @@ UnitOptions = {
                'register_interval': NSLocalizedString("seconds", "Label"),
                'subscribe_interval': NSLocalizedString("seconds", "Label"),
                'idle_threshold': NSLocalizedString("seconds", "Label"),
-               'rtt_threshold': NSLocalizedString("milliseconds", "Label")
+               'rtt_threshold': NSLocalizedString("milliseconds", "Label"),
+               'max_bitrate': NSLocalizedString("bits/s", "Label"),
+               'avg_bitrate': NSLocalizedString("bits/s", "Label"),
+               'max_framerate': NSLocalizedString("frames/s", "Label"),
+               'max_resolution': NSLocalizedString("pixels", "Label")
                }
 
 ToolTips = {

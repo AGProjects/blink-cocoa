@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5053" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5053"/>
+        <deployment defaultVersion="1070" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
@@ -309,6 +310,7 @@
                                 </connections>
                             </menuItem>
                             <menuItem title="Find Contact" keyEquivalent="f" id="1682">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="focusSearchTextField:" target="389" id="1684"/>
                                 </connections>
@@ -485,7 +487,7 @@ CA
                             <menuItem title="File Transfers" tag="100" id="1106" userLabel="Menu Item (File Transfers..)">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="showWindow:" target="848" id="1107"/>
+                                    <action selector="showFileTransfers:" target="389" id="hT3-ui-dJz"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -582,7 +584,7 @@ CA
                                     <action selector="toggleAudioSessionsDrawer:" target="389" id="1111"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Chat Sessions" tag="5" keyEquivalent="3" id="1675">
+                            <menuItem title="Chat Conversations" tag="5" keyEquivalent="3" id="1675">
                                 <connections>
                                     <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
@@ -594,7 +596,7 @@ CA
                             </menuItem>
                             <menuItem title="File Transfers" tag="4" keyEquivalent="5" id="1114">
                                 <connections>
-                                    <action selector="showWindow:" target="848" id="1115"/>
+                                    <action selector="showFileTransfers:" target="389" id="Kv8-9N-sC1"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="History Viewer" tag="3" keyEquivalent="6" id="1112">
@@ -1129,7 +1131,7 @@ ABC</string>
                         </connections>
                     </button>
                     <segmentedControl verticalHuggingPriority="750" id="457" userLabel="Start Session Buttons">
-                        <rect key="frame" x="90" y="6" width="94" height="25"/>
+                        <rect key="frame" x="75" y="6" width="125" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <segmentedCell key="cell" state="on" alignment="left" style="texturedSquare" trackingMode="momentary" id="458" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
@@ -1137,10 +1139,13 @@ ABC</string>
                                 <segment toolTip="Start Audio Call" image="audio" width="30">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Invite to Chat or send  Instant Messages" image="pencil" width="30" tag="1">
+                                <segment toolTip="Start Video Call" image="video" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Start Screen Sharing" image="display" width="30">
+                                <segment toolTip="Test Messages" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Screen Sharing" image="display" width="30" tag="3">
                                     <nil key="label"/>
                                 </segment>
                             </segments>
@@ -1178,7 +1183,7 @@ ABC</string>
                 <textField verticalHuggingPriority="750" id="643" userLabel="Drawer Title Bar">
                     <rect key="frame" x="-23" y="381" width="327" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Audio Sessions" id="644">
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Audio Calls" id="644">
                         <font key="font" metaFont="smallSystemBold"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -1440,7 +1445,7 @@ ABC</string>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="354"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <customView id="547" userLabel="Audio Sessions List View" customClass="ListView">
                                         <rect key="frame" x="0.0" y="0.0" width="259" height="16"/>
@@ -1468,7 +1473,7 @@ ABC</string>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="Atq-KM-J9c">
                                 <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>
@@ -1702,7 +1707,6 @@ ABC</string>
                 <outlet property="dialPadView" destination="1457" id="1500"/>
                 <outlet property="drawer" destination="475" id="495"/>
                 <outlet property="drawerSplitView" destination="1524" id="1542"/>
-                <outlet property="fileTransfersWindow" destination="848" id="1615"/>
                 <outlet property="groupButton" destination="1689" id="1707"/>
                 <outlet property="groupMenu" destination="1693" id="1697"/>
                 <outlet property="historyMenu" destination="798" id="801"/>
@@ -1756,7 +1760,6 @@ ABC</string>
             </connections>
         </customObject>
         <customObject id="920" userLabel="Search Model" customClass="SearchContactListModel"/>
-        <customObject id="848" customClass="FileTransferWindowController"/>
         <menu autoenablesItems="NO" id="928" userLabel="Screen Sharing Button Menu">
             <items>
                 <menuItem title="Ask to Share Remote Screen" tag="1" id="929">
@@ -1906,9 +1909,6 @@ ABC</string>
                 </connections>
             </menu>
         </menuItem>
-        <menuItem title="Item 3" id="1749">
-            <modifierMask key="keyEquivalentModifierMask"/>
-        </menuItem>
         <menuItem title="Menu" id="1752">
             <modifierMask key="keyEquivalentModifierMask"/>
             <menu key="submenu" title="Menu" id="1753">
@@ -1931,7 +1931,8 @@ ABC</string>
         <image name="display" width="32" height="32"/>
         <image name="mic" width="15" height="19"/>
         <image name="mute" width="24" height="24"/>
-        <image name="pencil" width="16" height="16"/>
+        <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
         <image name="speaker" width="14" height="12"/>
+        <image name="video" width="520" height="520"/>
     </resources>
 </document>

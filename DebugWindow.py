@@ -162,6 +162,8 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="AudioSessionQualityRestored")
         notification_center.add_observer(self, name="AudioStreamICENegotiationDidSucceed")
         notification_center.add_observer(self, name="AudioStreamICENegotiationDidFail")
+        notification_center.add_observer(self, name="VideoStreamICENegotiationDidSucceed")
+        notification_center.add_observer(self, name="VideoStreamICENegotiationDidFail")
 
         if settings.logs.trace_notifications_in_gui:
             notification_center.add_observer(self)
@@ -332,6 +334,8 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="AudioSessionQualityRestored")
         notification_center.discard_observer(self, name="AudioStreamICENegotiationDidSucceed")
         notification_center.discard_observer(self, name="AudioStreamICENegotiationDidFail")
+        notification_center.discard_observer(self, name="VideoStreamICENegotiationDidSucceed")
+        notification_center.discard_observer(self, name="VideoStreamICENegotiationDidFail")
 
         # Observers added when settings change
         notification_center.discard_observer(self, name="SIPEngineSIPTrace")
@@ -370,12 +374,16 @@ class DebugWindow(NSObject):
             self.append_line(self.activityTextView, text)
 
     def renderRTP(self, session):
+        self.renderAudio(session)
+        self.renderVideo(session)
+
+    def renderAudio(self, session):
         try:
             audio_stream = (s for s in session.streams or [] if s.type=='audio').next()
         except StopIteration:
             return
 
-        text = u'\n%s New Audio session %s\n' % (session.start_time, session.remote_identity)
+        text = u'\n%s New Audio call %s\n' % (session.start_time, session.remote_identity)
         if audio_stream.local_rtp_address and audio_stream.local_rtp_port and audio_stream.remote_rtp_address and audio_stream.remote_rtp_port:
             if audio_stream.ice_active and audio_stream.local_rtp_candidate and audio_stream.remote_rtp_candidate:
                 text += '%s Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time,
@@ -392,9 +400,42 @@ class DebugWindow(NSObject):
                                                                       audio_stream.remote_rtp_address,
                                                                       audio_stream.remote_rtp_port)
         if audio_stream.codec and audio_stream.sample_rate:
-            text += '%s Audio session established using "%s" codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
+            text += '%s Audio call established using "%s" codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.srtp_active:
             text += '%s RTP audio stream is encrypted\n' % session.start_time
+        if session.remote_user_agent is not None:
+            text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
+
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.rtpTextView.textStorage().appendAttributedString_(astring)
+        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+
+    def renderVideo(self, session):
+        try:
+            video_stream = (s for s in session.streams or [] if s.type=='video').next()
+        except StopIteration:
+            return
+
+        text = u'\n%s New Video call %s\n' % (session.start_time, session.remote_identity)
+        if video_stream.local_rtp_address and video_stream.local_rtp_port and video_stream.remote_rtp_address and video_stream.remote_rtp_port:
+            if video_stream.ice_active and video_stream.local_rtp_candidate and video_stream.remote_rtp_candidate:
+                text += '%s Video RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time,
+                                                                                                  video_stream.local_rtp_address,
+                                                                                                  video_stream.local_rtp_port,
+                                                                                                  ice_candidates[video_stream.local_rtp_candidate.type.lower()],
+                                                                                                  video_stream.remote_rtp_address,
+                                                                                                  video_stream.remote_rtp_port,
+                                                                                                  ice_candidates[video_stream.remote_rtp_candidate.type.lower()])
+            else:
+                text += '%s Video RTP endpoints %s:%d <-> %s:%d\n' % (session.start_time,
+                                                                      video_stream.local_rtp_address,
+                                                                      video_stream.local_rtp_port,
+                                                                      video_stream.remote_rtp_address,
+                                                                      video_stream.remote_rtp_port)
+        if video_stream.codec and video_stream.clock_rate:
+            text += '%s Video call established using "%s" codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.clock_rate)
+        if video_stream.srtp_active:
+            text += '%s RTP video stream is encrypted\n' % session.start_time
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
@@ -577,13 +618,13 @@ class DebugWindow(NSObject):
             self.renderRTP(notification.sender)
 
     def _NH_AudioSessionHasQualityIssues(self, notification):
-        text = '%s Audio session quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
+        text = '%s Audio call quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_AudioSessionQualityRestored(self, notification):
-        text = '%s Audio session quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
+        text = '%s Audio call quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -653,7 +694,7 @@ class DebugWindow(NSObject):
     def _NH_AudioStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
 
-        text = u'%s Audio session to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
+        text = u'%s Audio call to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
         if stream.local_rtp_address and stream.local_rtp_port and stream.remote_rtp_address and stream.remote_rtp_port:
             text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime,
                                                                   stream.local_rtp_address,
@@ -661,7 +702,7 @@ class DebugWindow(NSObject):
                                                                   stream.remote_rtp_address,
                                                                   stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
-            text += '%s Audio session established using "%s" codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
+            text += '%s Audio call established using "%s" codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
         if stream.srtp_active:
             text += '%s RTP audio stream is encrypted\n' % notification.datetime
         astring = NSAttributedString.alloc().initWithString_(text)
@@ -672,7 +713,7 @@ class DebugWindow(NSObject):
         data = notification.data
         stream = notification.sender
 
-        text = u'%s Audio session %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        text = u'%s Audio call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
         if stream.local_rtp_candidate and stream.remote_rtp_candidate:
             text += '%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
                                                                                              stream.local_rtp_address,
@@ -682,13 +723,40 @@ class DebugWindow(NSObject):
                                                                                              stream.remote_rtp_port,
                                                                                              stream.remote_rtp_candidate.type.lower())
 
-        text += '\nLocal ICE candidates:\n'
+        text += '\nAudio Local ICE candidates:\n'
         for candidate in data.local_candidates:
             text += '\t%s\n' % candidate
-        text += '\nRemote ICE candidates:\n'
+        text += '\nAudio Remote ICE candidates:\n'
         for candidate in data.remote_candidates:
             text += '\t%s\n' % candidate
-        text += '\nICE connectivity checks results:\n'
+        text += '\nAudio ICE connectivity checks results:\n'
+        for check in data.valid_list:
+            text += '\t%s\n' % check
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.rtpTextView.textStorage().appendAttributedString_(astring)
+        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+
+    def _NH_VideoStreamICENegotiationDidSucceed(self, notification):
+        data = notification.data
+        stream = notification.sender
+
+        text = u'%s Video call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        if stream.local_rtp_candidate and stream.remote_rtp_candidate:
+            text += '%s Video RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
+                                                                                             stream.local_rtp_address,
+                                                                                             stream.local_rtp_port,
+                                                                                             stream.local_rtp_candidate.type.lower(),
+                                                                                             stream.remote_rtp_address,
+                                                                                             stream.remote_rtp_port,
+                                                                                             stream.remote_rtp_candidate.type.lower())
+
+        text += '\nVideo Local ICE candidates:\n'
+        for candidate in data.local_candidates:
+            text += '\t%s\n' % candidate
+        text += '\nVideo Remote ICE candidates:\n'
+        for candidate in data.remote_candidates:
+            text += '\t%s\n' % candidate
+        text += '\nVideo ICE connectivity checks results:\n'
         for check in data.valid_list:
             text += '\t%s\n' % check
         astring = NSAttributedString.alloc().initWithString_(text)
@@ -698,7 +766,15 @@ class DebugWindow(NSObject):
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
         data = notification.data
 
-        text = '%s ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
+        text = '%s Audio ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
+        astring = NSAttributedString.alloc().initWithString_(text)
+        self.rtpTextView.textStorage().appendAttributedString_(astring)
+        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+
+    def _NH_VideoStreamICENegotiationDidFail(self, notification):
+        data = notification.data
+
+        text = '%s Video ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))

@@ -45,7 +45,7 @@ def openFileTransferSelectionDialog(account, dest_uri, filename=None):
     NSApp.delegate().contactsWindowController.sessionControllersManager.send_files_to_contact(account, dest_uri, filenames)
 
 
-class FileTransferWindowController(NSObject, object):
+class FileTransferWindowController(NSObject):
     implements(IObserver)
 
     window = objc.IBOutlet()
@@ -55,18 +55,22 @@ class FileTransferWindowController(NSObject, object):
     history = []
     loaded = False
 
-    def init(self):
-        NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
-        NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
-        NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
-        NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
-        NotificationCenter().add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
-        NotificationCenter().add_observer(self, name="BlinkShouldTerminate")
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
 
-        NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
+    def __init__(self):
+        if self:
+            NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
+            NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
+            NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
+            NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
+            NotificationCenter().add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
+            NotificationCenter().add_observer(self, name="BlinkShouldTerminate")
 
-        self.transferSpeed.setStringValue_('')
-        return self
+            NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
+
+            self.transferSpeed.setStringValue_('')
+            self.load_transfers_from_history()
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -158,8 +162,6 @@ class FileTransferWindowController(NSObject, object):
     @objc.IBAction
     def showWindow_(self, sender):
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
-            if not self.loaded:
-                self.load_transfers_from_history()
             self.window.makeKeyAndOrderFront_(None)
 
     @run_in_green_thread
@@ -181,11 +183,8 @@ class FileTransferWindowController(NSObject, object):
         h = NSHeight(self.listView.frame())
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
-        if not isinstance(sender, IncomingFileTransferHandler):
-            if not self.loaded:
-                self.load_transfers_from_history()
-            if 'xscreencapture' not in sender.file_path:
-                self.window.orderFront_(None)
+        if 'xscreencapture' not in sender.file_path:
+            self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
         if count == 1:

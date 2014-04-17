@@ -201,7 +201,7 @@ class PresencePublisher(object):
                     self.get_location([account])
         elif notification.sender is SIPSimpleSettings():
             account_manager = AccountManager()
-            if set(['chat.disabled', 'screen_sharing_server.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
+            if set(['chat.disabled', 'video.device', 'screen_sharing_server.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
                 self.publish()
             if 'presence_state.offline_note' in notification.data.modified:
                 for account in (account for account in account_manager.get_accounts() if hasattr(account, 'xcap') and account.enabled and account.xcap.enabled and account.xcap.discovered):
@@ -387,6 +387,7 @@ class PresencePublisher(object):
             service.device_info.time_offset = pidf.TimeOffset()
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
         service.capabilities.message = not settings.chat.disabled
+        service.capabilities.video = (settings.video.device != "None")
         service.capabilities.file_transfer = not settings.file_transfer.disabled
         service.capabilities.screen_sharing_server = not settings.screen_sharing_server.disabled
         service.capabilities.screen_sharing_client = True

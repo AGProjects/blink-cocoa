@@ -1,8 +1,11 @@
 # Copyright (C) 2014 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSApp, NSWindowController, NSEventTrackingRunLoopMode
-from Foundation import NSBundle, NSImage, NSRunLoop, NSRunLoopCommonModes, NSTimer
+from AppKit import NSApp, NSWindowController, NSEventTrackingRunLoopMode, NSTrackingMouseEnteredAndExited, NSTrackingActiveAlways, NSFloatingWindowLevel
+
+from Foundation import NSBundle, NSImage, NSRunLoop, NSRunLoopCommonModes, NSTimer, NSView, NSTrackingArea, NSZeroRect
+
+
 import objc
 import time
 
@@ -19,7 +22,8 @@ from SIPManager import SIPManager
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
-IDLE_TIME = 8
+IDLE_TIME = 5
+ALPHA = 1.0
 
 class VideoControlPanel(NSWindowController):
     implements(IObserver)
@@ -41,10 +45,12 @@ class VideoControlPanel(NSWindowController):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
+    @run_in_gui_thread
     def __init__(self, videoWindowController):
+        BlinkLogger().log_debug('Init %s' % self)
         self.videoWindowController = videoWindowController
         NSBundle.loadNibNamed_owner_("VideoControlPanel", self)
-        self.window().setTitle_(self.videoWindowController.window().title())
+        self.window().setTitle_(self.videoWindowController.title)
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self,sender=self.videoWindowController)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
@@ -92,6 +98,7 @@ class VideoControlPanel(NSWindowController):
             self.idle_timer = None
 
     def startFadeTimer(self):
+        self.visible = False
         if self.fade_timer is None:
             self.fade_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.05, self, "fade:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.fade_timer, NSRunLoopCommonModes)
@@ -102,48 +109,50 @@ class VideoControlPanel(NSWindowController):
             self.fade_timer.invalidate()
             self.fade_timer = None
 
+    @run_in_gui_thread
     def hide(self):
         self.stopIdleTimer()
         self.startFadeTimer()
-        self.visible = False
 
+    @run_in_gui_thread
     def show(self):
-        chat_stream = self.sessionController.streamHandlerOfType("chat")
-        if chat_stream:
-            if chat_stream.video_window_detached:
-                if not self.videoWindowController.mouse_in_window:
-                    return
-        else:
-            if not self.videoWindowController.mouse_in_window:
-                return
+        if not self.videoWindowController:
+            return
+
+        if not self.videoWindowController.mouse_in_window:
+            return
 
         if self.is_idle:
             return
+
         self.show_time = time.time()
         self.stopFadeTimer()
         self.startIdleTimer()
-        self.window().setAlphaValue_(1.0)
+        self.window().setAlphaValue_(ALPHA)
         self.window().orderFront_(None)
         self.visible = True
 
+    @run_in_gui_thread
     def close(self):
+        BlinkLogger().log_debug('Close %s' % self)
+
         if self.closed:
             return
         self.closed = True
-        self.stopIdleTimer()
-        self.stopFadeTimer()
-        self.window().orderOut_(None)
-        self.window().setAlphaValue_(1.0)
 
-    def dealloc(self):
-        BlinkLogger().log_debug('Dealoc %s' % self)
         self.notification_center.remove_observer(self, sender=self.videoWindowController)
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
 
         self.stopIdleTimer()
         self.stopFadeTimer()
+        if self.window():
+            self.window().close()
         self.videoWindowController = None
         self.notification_center = None
+
+    def dealloc(self):
+        self.toolbarView.removeFromSuperview()
+        BlinkLogger().log_debug('Dealloc %s' % self)
         super(VideoControlPanel, self).dealloc()
 
     def awakeFromNib(self):
@@ -164,11 +173,30 @@ class VideoControlPanel(NSWindowController):
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
 
+    def windowDidMove_(self, notification):
+        self.stopFadeTimer()
+        self.window().setAlphaValue_(ALPHA)
+        self.visible = True
+
+    def windowDidBecomeKey_(self, notification):
+        self.stopFadeTimer()
+        self.window().setAlphaValue_(ALPHA)
+        self.visible = True
+        if self.videoWindowController and self.videoWindowController.window is not None:
+            self.videoWindowController.window.orderFront_(None)
+
+    def windowDidBecomeMain_(self, notification):
+        self.stopFadeTimer()
+        self.window().setAlphaValue_(ALPHA)
+        self.visible = True
+
     def windowWillClose_(self, sender):
         self.stopFadeTimer()
 
     def updateIdleTimer_(self, timer):
-        last_idle_counter = CGEventSourceSecondsSinceLastEventType(0, int(4294967295))
+        if not self.window():
+            return
+        last_idle_counter = CGEventSourceSecondsSinceLastEventType(1, int(4294967295))
         chat_stream = self.sessionController.streamHandlerOfType("chat")
         if not chat_stream:
             if self.show_time is not None and time.time() - self.show_time < IDLE_TIME:
@@ -179,73 +207,71 @@ class VideoControlPanel(NSWindowController):
             if not self.is_idle:
                 if self.visible:
                     self.startFadeTimer()
-                    self.visible = False
                 self.is_idle = True
         else:
             if not self.visible:
                 self.stopFadeTimer()
-                self.window().setAlphaValue_(1.0)
-                self.window().orderFront_(None)
-                self.visible = True
+                if self.window():
+                    self.window().setAlphaValue_(ALPHA)
+                    self.window().orderFront_(None)
+                    self.visible = True
             self.is_idle = False
 
     def fade_(self, timer):
-        if self.window().alphaValue() > 0.0:
-            self.window().setAlphaValue_(self.window().alphaValue() - 0.025)
-        else:
-            self.stopFadeTimer()
-            self.window().orderOut_(None)
+        if self.window():
+            if self.window().alphaValue() > 0.0:
+                self.window().setAlphaValue_(self.window().alphaValue() - 0.025)
+            else:
+                self.stopFadeTimer()
+                self.window().orderOut_(None)
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
+        if not self.videoWindowController:
+            return
+
+        if self.videoWindowController.full_screen_in_progress:
+            return
+
+        self.stopFadeTimer()
+        self.streamController.stopInitialTimer()
+
         if sender.itemIdentifier() == 'hangup':
             self.stopIdleTimer()
             self.sessionController.end()
             self.hide()
         elif sender.itemIdentifier() == 'fullscreen':
-            chat_stream = self.sessionController.streamHandlerOfType("chat")
-            if chat_stream:
-                if chat_stream.video_window_detached:
-                    self.videoWindowController.toggleFullScreen()
-                    sender.setImage_(NSImage.imageNamed_("fullscreen" if self.videoWindowController.full_screen else "restore"))
-                else:
-                    if chat_stream.full_screen:
-                        chat_stream.exitFullScreen()
-                        sender.setImage_(NSImage.imageNamed_("fullscreen"))
-                    else:
-                        chat_stream.enterFullScreen()
-                        sender.setImage_(NSImage.imageNamed_("restore"))
-            else:
-                self.videoWindowController.toggleFullScreen()
+            self.window().orderOut_(None)
+            self.videoWindowController.toggleFullScreen()
+        elif sender.itemIdentifier() == 'aspect':
+            self.videoWindowController.changeAspectRatio()
         elif sender.itemIdentifier() == 'chat':
+            if self.videoWindowController.always_on_top:
+                self.videoWindowController.toogleAlwaysOnTop()
             chat_stream = self.sessionController.streamHandlerOfType("chat")
             if chat_stream:
-                if chat_stream.video_window_detached:
-                    chat_stream.attach_video()
                 if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
                     self.sessionController.startChatSession()
+
             else:
-                if self.videoWindowController.full_screen:
-                    self.videoWindowController.toggleFullScreen()
                 self.sessionController.addChatToSession()
+
+            if self.videoWindowController.full_screen:
+                NSApp.delegate().contactsWindowController.showChatWindow_(None)
+                self.videoWindowController.goToWindowMode(NSApp.delegate().contactsWindowController.chatWindowController.window())
+
+        elif sender.itemIdentifier() == 'info':
+            if self.sessionController.info_panel is not None:
+                self.sessionController.info_panel.toggle()
         elif sender.itemIdentifier() == 'mirror':
-            if self.videoWindowController is not None and self.videoWindowController.close_mirror_timer is not None:
-                if self.videoWindowController.close_mirror_timer.isValid():
-                    self.videoWindowController.close_mirror_timer.invalidate()
-                    self.videoWindowController.close_mirror_timer = None
             NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
         elif sender.itemIdentifier() == 'mute':
             SIPManager().mute(not SIPManager().is_muted())
             self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
-        elif sender.itemIdentifier() == 'participants':
-            chat_stream = self.sessionController.streamHandlerOfType("chat")
-            if chat_stream and chat_stream.status == STREAM_CONNECTED:
-                if not chat_stream.video_window_detached:
-                    chat_stream.chatWindowController.window().performZoom_(None)
-            else:
-                if self.videoWindowController.full_screen:
-                    self.videoWindowController.toggleFullScreen()
-                NSApp.delegate().contactsWindowController.focusSearchTextField()
+        elif sender.itemIdentifier() == 'contacts':
+            if self.videoWindowController.full_screen:
+                self.videoWindowController.toggleFullScreen()
+            NSApp.delegate().contactsWindowController.focusSearchTextField()
         elif sender.itemIdentifier() == 'hold':
             if self.sessionController.hasStreamOfType("audio"):
                 audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -257,3 +283,27 @@ class VideoControlPanel(NSWindowController):
                     else:
                         sender.setImage_(NSImage.imageNamed_("paused-red"))
                         audio_stream.hold()
+
+
+class controlPanelToolbarView(NSView):
+    parentWindow = objc.IBOutlet()
+    tarea = None
+
+    def awakeFromNib(self):
+        rect = NSZeroRect
+        rect.size = self.frame().size
+        self.tarea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
+                                                                            NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
+        self.addTrackingArea_(self.tarea)
+
+    def mouseEntered_(self, event):
+        self.parentWindow.delegate().mouseIn()
+
+    def mouseExited_(self, event):
+        self.parentWindow.delegate().mouseOut()
+
+    def dealloc(self):
+        self.removeTrackingArea_(self.tarea)
+        self.tarea = None
+        BlinkLogger().log_debug('Dealloc %s' % self)
+        super(controlPanelToolbarView, self).dealloc()

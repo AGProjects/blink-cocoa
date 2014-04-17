@@ -695,7 +695,7 @@ class MapView(NSView):
             item = menu.addItemWithTitle_action_keyEquivalent_(unicode(title), "", "")
             item.setEnabled_(False)
             menu.addItem_(NSMenuItem.separatorItem())
-        item = menu.addItemWithTitle_action_keyEquivalent_("Start Audio Session", "startAudioSessionWithSIPURI:", "")
+        item = menu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "startAudioSessionWithSIPURI:", "")
         item.setTarget_(NSApp.delegate().contactsWindowController)
         if device is not None:
             item.setRepresentedObject_(device['contact'])

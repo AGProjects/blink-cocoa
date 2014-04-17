@@ -26,5 +26,10 @@
 	<true/>
 	<key>com.apple.security.print</key>
 	<true/>
+        <key>com.apple.security.temporary-exception.sbpl</key>
+        <string>
+            (begin
+                (allow ipc-posix-sem))
+        </string>
 </dict>
 </plist>

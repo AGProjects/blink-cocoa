@@ -63,7 +63,7 @@ class AddContactController(NSObject):
     addressTypesPopUpButton = objc.IBOutlet()
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = None
-    media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3}
+    media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3, 'video': 4}
 
     def __new__(cls, *args, **kwargs):
         from ContactListModel import DefaultUserAvatar
@@ -253,7 +253,9 @@ class AddContactController(NSObject):
             elif menu_item.tag() == 2:
                 menu_item.setState_(NSOnState if self.preferred_media == 'chat' else NSOffState)
             elif menu_item.tag() == 3:
-                menu_item.setState_(NSOnState if self.preferred_media == 'audio+chat' else NSOffState)
+                menu_item.setState_(NSOnState if self.preferred_media in ('audio+chat', 'chat+audio') else NSOffState)
+            elif menu_item.tag() == 4:
+                menu_item.setState_(NSOnState if self.preferred_media == 'video' else NSOffState)
 
         try:
             tag = self.media_tags[self.preferred_media]

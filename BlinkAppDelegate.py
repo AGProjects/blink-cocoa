@@ -284,7 +284,7 @@ class BlinkAppDelegate(NSObject):
         os.kill(os.getpid(), signal.SIGTERM)
 
     def applicationShouldTerminate_(self, sender):
-        BlinkLogger().log_debug('Application will terminate')
+        BlinkLogger().log_info('Application will terminate')
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
         NotificationCenter().post_notification("BlinkShouldTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")

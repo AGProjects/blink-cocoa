@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5053" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5053"/>
+        <deployment defaultVersion="1070" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoControlPanel">
@@ -10,6 +11,7 @@
                 <outlet property="holdButton" destination="KjW-gV-lDX" id="B4B-BE-fUA"/>
                 <outlet property="muteButton" destination="IGv-ve-yk1" id="7tA-sO-rN8"/>
                 <outlet property="toolbar" destination="gnF-kZ-Vhi" id="2Fq-RV-J2g"/>
+                <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
                 <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
             </connections>
         </customObject>
@@ -18,13 +20,16 @@
         <window title="Control Video" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="579" y="75" width="355" height="1"/>
+            <rect key="contentRect" x="579" y="75" width="416" height="1"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <value key="minSize" type="size" width="355" height="1"/>
-            <value key="maxSize" type="size" width="355" height="1"/>
-            <view key="contentView" id="ygh-EU-NlO">
-                <rect key="frame" x="0.0" y="0.0" width="355" height="1"/>
+            <value key="minSize" type="size" width="416" height="1"/>
+            <value key="maxSize" type="size" width="416" height="1"/>
+            <view key="contentView" id="ygh-EU-NlO" customClass="controlPanelToolbarView">
+                <rect key="frame" x="0.0" y="0.0" width="416" height="1"/>
                 <autoresizingMask key="autoresizingMask"/>
+                <connections>
+                    <outlet property="parentWindow" destination="WqC-T4-L8j" id="btW-Ya-cOD"/>
+                </connections>
             </view>
             <toolbar key="toolbar" implicitIdentifier="324D1955-E07A-4C7A-B5D7-99E3538D78D8" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="gnF-kZ-Vhi">
                 <allowedToolbarItems>
@@ -48,7 +53,12 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="TST-Ky-veK"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="341176F2-6018-4939-82CB-A964889A1730" explicitItemIdentifier="participants" label="Participanți" paletteLabel="Participanți" toolTip="Comută Participanții" image="NSEveryone" id="yhG-M6-u9I">
+                    <toolbarItem implicitItemIdentifier="565FF72E-B8A8-4A9D-8668-54869EBCFF4C" explicitItemIdentifier="info" label="Info" paletteLabel="Info" toolTip="Chat" image="NSInfo" id="vgp-oU-nmc">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="I6R-g1-j8B"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="341176F2-6018-4939-82CB-A964889A1730" explicitItemIdentifier="contacts" label="Participanți" paletteLabel="Participanți" toolTip="Comută Participanții" image="NSUser" id="yhG-M6-u9I">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="UPd-48-3gs"/>
                         </connections>
@@ -56,6 +66,11 @@
                     <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="Pe tot ecranul" paletteLabel="Pe tot ecranul" toolTip="Pe tot ecranul" image="fullscreen" id="pCH-pn-Db0">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="CXe-bY-CGH"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Toggle Full Screen" image="NSComputer" id="Uhc-Ev-Qzq">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="BVL-yJ-hTg"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="75r-Mm-tLs"/>
@@ -67,11 +82,13 @@
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="pCH-pn-Db0"/>
+                    <toolbarItem reference="Uhc-Ev-Qzq"/>
                     <toolbarItem reference="IGv-ve-yk1"/>
                     <toolbarItem reference="KjW-gV-lDX"/>
                     <toolbarItem reference="6Zi-pi-Dt2"/>
                     <toolbarItem reference="nwU-a9-8Ys"/>
                     <toolbarItem reference="yhG-M6-u9I"/>
+                    <toolbarItem reference="vgp-oU-nmc"/>
                     <toolbarItem reference="75r-Mm-tLs"/>
                     <toolbarItem reference="1ln-DS-p7Y"/>
                 </defaultToolbarItems>
@@ -85,12 +102,14 @@
         </window>
     </objects>
     <resources>
-        <image name="NSEveryone" width="32" height="32"/>
+        <image name="NSComputer" width="32" height="32"/>
+        <image name="NSInfo" width="32" height="32"/>
+        <image name="NSUser" width="32" height="32"/>
         <image name="fullscreen" width="128" height="128"/>
         <image name="hangup" width="240" height="240"/>
         <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
         <image name="mute-white" width="24" height="24"/>
         <image name="pause-white" width="48" height="48"/>
-        <image name="pencil" width="16" height="16"/>
+        <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
     </resources>
 </document>

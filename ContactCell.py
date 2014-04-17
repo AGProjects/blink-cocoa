@@ -30,7 +30,7 @@ class ContactCell(NSTextFieldCell):
 
     audioIcon = NSImage.imageNamed_("audio_16")
     audioHoldIcon = NSImage.imageNamed_("paused_16")
-    chatIcon = NSImage.imageNamed_("pencil")
+    chatIcon = NSImage.imageNamed_("pencil_16")
     screenIcon = NSImage.imageNamed_("display_16")
     locationIcon = NSImage.imageNamed_("location")
 

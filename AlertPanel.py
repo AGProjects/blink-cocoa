@@ -42,7 +42,7 @@ from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import SessionManager, IllegalStateError
-from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, ScreenSharingStream
+from sipsimple.streams import AudioStream, VideoStream, ChatStream, FileTransferStream, ScreenSharingStream
 from zope.interface import implements
 
 
@@ -53,7 +53,8 @@ from util import format_identity_to_string, format_size, run_in_gui_thread, is_a
 
 
 ACCEPT = 0
-ACCEPT_CHAT = 1
+ONLY_CHAT = 1
+ONLY_AUDIO = 6
 REJECT = 2
 BUSY = 3
 ANSWERING_MACHINE = 4
@@ -239,6 +240,8 @@ class AlertPanel(NSObject, object):
         if len(self.sessions) == 1:
             if "screen-sharing" in stream_type_list:
                 base_text = NSLocalizedString("Screen Sharing from %s", "Label")
+            elif "video" in stream_type_list:
+                base_text = NSLocalizedString("Video call from %s", "Label")
             elif "audio" in stream_type_list:
                 base_text = NSLocalizedString("Audio call from %s", "Label")
             elif stream_type_list == ["file-transfer"]:
@@ -259,18 +262,19 @@ class AlertPanel(NSObject, object):
 
         NotificationCenter().add_observer(self, sender=session)
 
-        subjectLabel = view.viewWithTag_(1)
-        fromLabel    = view.viewWithTag_(2)
-        accountLabel = view.viewWithTag_(3)
-        acceptButton = view.viewWithTag_(5)
-        rejectButton = view.viewWithTag_(7)
-        onlyButton   = view.viewWithTag_(6)
-        busyButton   = view.viewWithTag_(8)
-        callerIcon   = view.viewWithTag_(99)
-        chatIcon     = view.viewWithTag_(31)
-        audioIcon    = view.viewWithTag_(32)
-        fileIcon     = view.viewWithTag_(33)
-        screenIcon   = view.viewWithTag_(34)
+        subjectLabel     = view.viewWithTag_(1)
+        fromLabel        = view.viewWithTag_(2)
+        accountLabel     = view.viewWithTag_(3)
+        acceptButton     = view.viewWithTag_(5)
+        rejectButton     = view.viewWithTag_(7)
+        accepyOnlyButton = view.viewWithTag_(6)
+        busyButton       = view.viewWithTag_(8)
+        callerIcon       = view.viewWithTag_(99)
+        chatIcon         = view.viewWithTag_(31)
+        audioIcon        = view.viewWithTag_(32)
+        fileIcon         = view.viewWithTag_(33)
+        screenIcon       = view.viewWithTag_(34)
+        videoIcon        = view.viewWithTag_(35)
 
         stream_types = [s.type for s in streams]
 
@@ -312,6 +316,17 @@ class AlertPanel(NSObject, object):
             screenIcon.setFrame_(frame)
             screenIcon.setHidden_(False)
 
+        if 'video' in stream_types:
+            #have_video_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'video' in (stream.type for stream in s.streams))
+            #if not have_video_call:
+            #    NSApp.delegate().contactsWindowController.showLocalVideoWindow()
+
+            frame = videoIcon.frame()
+            typeCount+= 1
+            frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
+            videoIcon.setFrame_(frame)
+            videoIcon.setHidden_(False)
+
         is_file_transfer = False
         if 'file-transfer' in stream_types:
             is_file_transfer = True
@@ -343,23 +358,22 @@ class AlertPanel(NSObject, object):
         self.sessionsListView.relayout()
 
         acceptButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
-        onlyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
         rejectButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
         busyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
 
         # no Busy or partial accept option for Stream Update Proposals
         busyButton.setHidden_(is_update_proposal or is_file_transfer)
-        onlyButton.setHidden_(is_update_proposal)
+        accepyOnlyButton.setHidden_(is_update_proposal)
         if is_file_transfer:
             busyButton.setAttributedTitle_("")
 
         if is_update_proposal:
-            subject, accept, other = self.format_subject_for_incoming_reinvite(session, streams)
-            other = ""
+            subject, only_button_title, only_button_object = self.format_subject_for_incoming_reinvite(session, streams)
+            only_button_title = ""
         else:
-            subject, accept, other = self.format_subject_for_incoming_invite(session, streams)
+            subject, only_button_title, only_button_object = self.format_subject_for_incoming_invite(session, streams)
         subjectLabel.setStringValue_(subject)
-
+        accepyOnlyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(only_button_object))
         frame = subjectLabel.frame()
         frame.size.width = NSWidth(self.sessionsListView.frame()) - 80 - 40 * typeCount
         subjectLabel.setFrame_(frame)
@@ -374,8 +388,16 @@ class AlertPanel(NSObject, object):
                 if has_audio_streams:
                     if not NSApp.delegate().contactsWindowController.has_audio:
                         BlinkLogger().log_info(u"Auto answer enabled for this contact")
+                        video_requested = any(s for s in session.blink_supported_streams if s.type == "video")
+                        if video_requested and not settings.video.enable_when_auto_answer:
+                            blink_supported_streams = [s for s in session.blink_supported_streams if s.type != "video"]
+                            session.blink_supported_streams = blink_supported_streams
                         self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
                 else:
+                    video_requested = any(s for s in session.blink_supported_streams if s.type == "video")
+                    if video_requested and not settings.video.enable_when_auto_answer:
+                        blink_supported_streams = [s for s in session.blink_supported_streams if s.type != "video"]
+                        session.blink_supported_streams = blink_supported_streams
                     BlinkLogger().log_info(u"Auto answer enabled for this contact")
                     self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
@@ -409,8 +431,8 @@ class AlertPanel(NSObject, object):
         else:
             self.deviceLabel.setHidden_(True)
 
-        acceptButton.setTitle_(accept or "")
-        onlyButton.setTitle_(other or "")
+        acceptButton.setTitle_(NSLocalizedString("Accept", "Button title"))
+        accepyOnlyButton.setTitle_(only_button_title or "")
 
         if False and sum(a.enabled for a in AccountManager().iter_accounts())==1:
             accountLabel.setHidden_(True)
@@ -424,16 +446,16 @@ class AlertPanel(NSObject, object):
             accountLabel.sizeToFit()
 
         if len(self.sessions) == 1:
-            self.acceptAllButton.setTitle_(accept)
+            self.acceptAllButton.setTitle_(NSLocalizedString("Accept", "Button title"))
             self.acceptAllButton.setHidden_(False)
-            self.acceptButton.setTitle_(other or "")
-            self.acceptButton.setHidden_(not other)
+            self.acceptButton.setTitle_(only_button_title or "")
+            self.acceptButton.setHidden_(not only_button_title)
             self.rejectButton.setTitle_(NSLocalizedString("Reject", "Button title"))
 
             self.acceptAllButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(0))
             self.rejectButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(2))
             self.busyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(3))
-            self.acceptButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(1))
+            self.acceptButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(only_button_object))
             self.answeringMachineButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(4))
             self.conferenceButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(5))
 
@@ -465,7 +487,8 @@ class AlertPanel(NSObject, object):
             self.conferenceButton.setHidden_(False)
 
     def format_subject_for_incoming_reinvite(self, session, streams):
-        default_action = u"Accept"
+        alt_action = None
+        alt_object = ONLY_CHAT
 
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
@@ -478,40 +501,48 @@ class AlertPanel(NSObject, object):
                     else:
                         type_names.append(NSLocalizedString("My Screen requested by", "Label"))
                 subject = NSLocalizedString("Addition of %s", "Label") % ", ".join(type_names)
+            elif 'Video' in type_names:
+                subject = NSLocalizedString("Video call requested by", "Label")
             else:
                 subject = NSLocalizedString("Addition of %s requested by", "Label") % ", ".join(type_names)
 
-            alt_action = NSLocalizedString("Chat Only", "Label")
+
+            type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
+            if "Chat" in type_names:
+                alt_action = NSLocalizedString("Chat Only", "Button title")
+                alt_object = ONLY_CHAT
+            elif "Audio" in type_names:
+                alt_action = NSLocalizedString("Audio Only", "Button title")
+                alt_object = ONLY_AUDIO
+        elif type(streams[0]) is VideoStream:
+            subject = NSLocalizedString("Addition of Video requested by", "Label")
         elif type(streams[0]) is AudioStream:
             subject = NSLocalizedString("Addition of Audio requested by", "Label")
-            alt_action = None
         elif type(streams[0]) is ChatStream:
             subject = NSLocalizedString("Addition of Chat requested by", "Label")
-            alt_action = None
         elif type(streams[0]) is FileTransferStream:
             subject = NSLocalizedString("Transfer of File", "Label") + " '%s' (%s) " % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
-            alt_action = None
         elif type(streams[0]) is ScreenSharingStream:
             if streams[0].handler.type == "active":
                 subject = NSLocalizedString("Remote Screen offered by", "Label")
             else:
                 subject = NSLocalizedString("My Screen requested by", "Label")
-            alt_action = None
         else:
             subject = NSLocalizedString("Addition of unknown stream to existing session requested by", "Label")
-            alt_action = None
-        return subject, default_action, alt_action
+        return subject, alt_action, alt_object
 
     def format_subject_for_incoming_invite(self, session, streams):
-        default_action = NSLocalizedString("Accept", "Button title")
         alt_action = None
+        alt_object = ONLY_CHAT
 
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
             if "Chat" in type_names:
                 alt_action = NSLocalizedString("Chat Only", "Button title")
+                alt_object = ONLY_CHAT
             elif "Audio" in type_names and len(type_names) > 1:
                 alt_action = NSLocalizedString("Audio Only", "Button title")
+                alt_object = ONLY_AUDIO
 
         if session.subject:
             subject = session.subject
@@ -526,10 +557,14 @@ class AlertPanel(NSObject, object):
                         else:
                             type_names.append(NSLocalizedString("My Screen requested by", "Label"))
                     subject = ", ".join(type_names)
+                elif 'Video' in type_names:
+                    subject = NSLocalizedString("Video call requested by", "Label")
                 else:
                     subject = NSLocalizedString("%s Session requested by", "Label") % ", ".join(type_names)
+            elif type(streams[0]) is VideoStream:
+                subject = NSLocalizedString("Video call requested by", "Label")
             elif type(streams[0]) is AudioStream:
-                subject = NSLocalizedString("Audio Session requested by", "Label")
+                subject = NSLocalizedString("Audio call requested by", "Label")
             elif type(streams[0]) is ChatStream:
                 subject = NSLocalizedString("Chat Session requested by", "Label")
             elif type(streams[0]) is ScreenSharingStream:
@@ -540,7 +575,7 @@ class AlertPanel(NSObject, object):
                 subject = NSLocalizedString("Incoming Session request from", "Label")
                 BlinkLogger().log_info(u"Unknown media type %s" % streams)
 
-        return subject, default_action, alt_action
+        return subject, alt_action, alt_object
 
     def removeSession(self, session):
         if not self.sessions.has_key(session):
@@ -761,10 +796,18 @@ class AlertPanel(NSObject, object):
             except Exception, exc:
                 sessionController.log_info(u"Error accepting session: %s" % exc)
                 self.removeSession(session)
-        elif action == ACCEPT_CHAT:
+        elif action == ONLY_CHAT:
             NSApp.activateIgnoringOtherApps_(True)
             try:
-                sessionController.log_info(u"Accepting chat session from %s" % format_identity_to_string(session.remote_identity))
+                sessionController.log_info(u"Accepting chat from %s" % format_identity_to_string(session.remote_identity))
+                self.acceptChatStream(session)
+            except Exception, exc:
+                sessionController.log_info(u"Error accepting session: %s" % exc)
+                self.removeSession(session)
+        elif action == ONLY_AUDIO:
+            NSApp.activateIgnoringOtherApps_(True)
+            try:
+                sessionController.log_info(u"Accepting audio  from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptChatStream(session)
             except Exception, exc:
                 sessionController.log_info(u"Error accepting session: %s" % exc)
@@ -807,17 +850,29 @@ class AlertPanel(NSObject, object):
                 except Exception, exc:
                     sessionController.log_info(u"Error accepting session: %s" % exc)
                     self.removeSession(session)
-        elif action == ACCEPT_CHAT:
+        elif action == ONLY_CHAT:
             NSApp.activateIgnoringOtherApps_(True)
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
                 if sessionController is None:
                     continue
                 try:
-                    sessionController.log_info(u"Accepting chat stream to session with %s" % format_identity_to_string(session.remote_identity))
+                    sessionController.log_info(u"Accepting chat with %s" % format_identity_to_string(session.remote_identity))
                     self.acceptChatStream(session)
                 except Exception, exc:
-                    sessionController.log_info(u"Error accepting session: %s" % exc)
+                    sessionController.log_info(u"Error accepting chat stream: %s" % exc)
+                    self.removeSession(session)
+        elif action == ONLY_AUDIO:
+            NSApp.activateIgnoringOtherApps_(True)
+            for session in self.sessions.keys():
+                sessionController = self.sessionControllersManager.sessionControllerForSession(session)
+                if sessionController is None:
+                    continue
+                try:
+                    sessionController.log_info(u"Accepting audio with %s" % format_identity_to_string(session.remote_identity))
+                    self.acceptAudioStream(session)
+                except Exception, exc:
+                    sessionController.log_info(u"Error accepting audio stream: %s" % exc)
                     self.removeSession(session)
         elif action == REJECT:
             self.rejectAllSessions()
