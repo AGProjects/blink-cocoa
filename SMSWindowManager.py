@@ -269,6 +269,8 @@ class SMSWindowController(NSWindowController):
         contactWindow = self._owner._owner
         if sender.itemIdentifier() == 'audio':
             contactWindow.startSessionWithTarget(format_identity_to_string(session.target_uri))
+        elif sender.itemIdentifier() == 'video':
+            contactWindow.startSessionWithTarget(format_identity_to_string(session.target_uri), media_type="video")
         elif sender.itemIdentifier() == 'smileys':
             chatViewController = self.selectedSessionController().chatViewController
             chatViewController.expandSmileys = not chatViewController.expandSmileys
