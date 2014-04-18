@@ -43,8 +43,6 @@ from VideoDisconnectWindow import VideoDisconnectWindow
 from VideoStreamInitialLocalWindowController import VideoStreamInitialLocalWindowController
 from util import run_in_gui_thread
 
-from BlinkLogger import BlinkLogger
-
 
 class VideoWindowController(NSWindowController):
 
@@ -76,8 +74,8 @@ class VideoWindowController(NSWindowController):
         return cls.alloc().init()
 
     def __init__(self, streamController):
-        BlinkLogger().log_debug('Init %s' % self)
         self.streamController = streamController
+        self.sessionController.log_debug('Init %s' % self)
         self.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.getTitleShort()
         self.videoControlPanel = VideoControlPanel(self)
         self.flipWnd = mbFlipWindow.alloc().init()
@@ -85,10 +83,14 @@ class VideoWindowController(NSWindowController):
         self.retain()
 
     def initLocalVideoWindow(self):
-        sessionControllers = self.streamController.sessionController.sessionControllersManager.sessionControllers
+        sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
         other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
         if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
             self.localVideoWindow = VideoStreamInitialLocalWindowController(self)
+
+    @property
+    def sessionController(self):
+        return self.streamController.sessionController
 
     @run_in_gui_thread
     def init_sdl_window(self):
@@ -123,7 +125,7 @@ class VideoWindowController(NSWindowController):
             self.valid_aspect_ratios.append(self.aspect_ratio)
 
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
-        BlinkLogger().log_debug('Init %s in %s' % (self.window, self))
+        self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.window.setDelegate_(self)
         self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
 
@@ -371,6 +373,8 @@ class VideoWindowController(NSWindowController):
 
 
     def windowDidEnterFullScreen_(self, notification):
+        self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
+
         self.full_screen_in_progress = False
         self.full_screen = True
         self.stopMouseOutTimer()
@@ -385,6 +389,7 @@ class VideoWindowController(NSWindowController):
             self.window.setLevel_(NSNormalWindowLevel)
 
     def windowDidExitFullScreen_(self, notification):
+        self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
         self.full_screen_in_progress = False
         self.full_screen = False
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
@@ -402,10 +407,12 @@ class VideoWindowController(NSWindowController):
         super(VideoWindowController, self).keyDown_(event)
 
     def windowWillClose_(self, sender):
+        self.sessionController.log_debug('windowWillClose %s' % self)
         self.sdl_window = None
         self.window = None
 
     def windowShouldClose_(self, sender):
+        self.sessionController.log_debug('windowShouldClose %s' % self)
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         self.streamController.end()
         if not self.sessionController.hasStreamOfType("chat"):
@@ -416,7 +423,7 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def close(self):
-        BlinkLogger().log_debug('Close %s' % self)
+        self.sessionController.log_debug('Close %s' % self)
 
         if self.finished:
             return
@@ -456,14 +463,14 @@ class VideoWindowController(NSWindowController):
             self.fade_timer = None
 
     def dealloc(self):
-        BlinkLogger().log_debug('Dealloc %s' % self)
+        self.sessionController.log_debug('Dealloc %s' % self)
         self.tracking_area = None
-        self.streamController = None
         self.videoControlPanel.release()
         self.videoControlPanel = None
         if self.localVideoWindow:
             self.localVideoWindow.release()
             self.localVideoWindow = None
+        self.streamController = None
         super(VideoWindowController, self).dealloc()
 
     def toogleAlwaysOnTop(self):

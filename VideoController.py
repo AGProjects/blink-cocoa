@@ -180,9 +180,10 @@ class VideoController(MediaStream):
         self.release()
 
     def end(self):
-        self.sessionController.log_debug(u"End %s" % self)
         if self.ended:
             return
+
+        self.sessionController.log_debug(u"End %s" % self)
 
         self.ended = True
 
@@ -238,6 +239,7 @@ class VideoController(MediaStream):
         self.ice_negotiation_status = 'Success'
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
         self.retain()
         self.started = True
         sample_rate = self.stream.clock_rate/1000
@@ -253,6 +255,7 @@ class VideoController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
 
     def _NH_MediaStreamDidFail(self, sender, data):
+        super(VideoController, self)._NH_MediaStreamDidFail(sender, data)
         self.sessionController.log_info(u"Video call failed: %s" % data.reason)
         self.changeStatus(STREAM_FAILED, data.reason)
         self.ice_negotiation_status = None
@@ -265,6 +268,7 @@ class VideoController(MediaStream):
         self.stopTimers()
 
     def _NH_MediaStreamDidEnd(self, sender, data):
+        super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
         self.ice_negotiation_status = None
         self.rtt_history = None
         self.loss_history = None
@@ -282,6 +286,7 @@ class VideoController(MediaStream):
         self.stopTimers()
         if not self.started and self.sessionController.failureReason != "Session Cancelled":
             self.videoWindowController.showDisconnectedPanel()
+
 
     def invalidateTimers(self):
         if self.statistics_timer is not None and self.statistics_timer.isValid():

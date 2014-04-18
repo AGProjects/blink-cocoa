@@ -47,8 +47,8 @@ class VideoControlPanel(NSWindowController):
 
     @run_in_gui_thread
     def __init__(self, videoWindowController):
-        BlinkLogger().log_debug('Init %s' % self)
         self.videoWindowController = videoWindowController
+        self.log_debug('Init %s' % self)
         NSBundle.loadNibNamed_owner_("VideoControlPanel", self)
         self.window().setTitle_(self.videoWindowController.title)
         self.notification_center = NotificationCenter()
@@ -72,6 +72,25 @@ class VideoControlPanel(NSWindowController):
         else:
             self.fullscreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
 
+    @property
+    def sessionController(self):
+        if self.streamController:
+            return self.streamController.sessionController
+        else:
+            return None
+
+    def log_debug(self, log):
+        if self.sessionController:
+            self.sessionController.log_debug(log)
+        else:
+            BlinkLogger().log_debug(log)
+
+    def log_info(self, log):
+        if self.sessionController:
+            self.sessionController.log_info(log)
+        else:
+            BlinkLogger().log_info(log)
+
     def mouseIn(self):
         self.mouse_in_window = True
 
@@ -80,11 +99,10 @@ class VideoControlPanel(NSWindowController):
 
     @property
     def streamController(self):
-        return self.videoWindowController.streamController
-
-    @property
-    def sessionController(self):
-        return self.videoWindowController.streamController.sessionController
+        if self.videoWindowController:
+            return self.videoWindowController.streamController
+        else:
+            return None
 
     def startIdleTimer(self):
         if self.idle_timer is None:
@@ -134,7 +152,7 @@ class VideoControlPanel(NSWindowController):
 
     @run_in_gui_thread
     def close(self):
-        BlinkLogger().log_debug('Close %s' % self)
+        self.log_debug('Close %s' % self)
 
         if self.closed:
             return
@@ -152,7 +170,7 @@ class VideoControlPanel(NSWindowController):
 
     def dealloc(self):
         self.toolbarView.removeFromSuperview()
-        BlinkLogger().log_debug('Dealloc %s' % self)
+        self.log_debug('Dealloc %s' % self)
         super(VideoControlPanel, self).dealloc()
 
     def awakeFromNib(self):

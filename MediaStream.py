@@ -82,4 +82,13 @@ class MediaStream(NSObject):
     def sessionStateChanged(self, newstate, detail):
         pass
 
+    def _NH_MediaStreamDidStart(self, sender, data):
+        self.sessionController.log_debug("MediaStreamDidStart %s" % self)
+
+    def _NH_MediaStreamDidEnd(self, sender, data):
+        self.sessionController.log_debug("MediaStreamDidEnd %s" % self)
+
+    def _NH_MediaStreamDidFail(self, sender, data):
+        self.sessionController.log_debug("MediaStreamDidFail %s" % self)
+
 

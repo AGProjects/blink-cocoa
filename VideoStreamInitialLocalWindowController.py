@@ -25,14 +25,14 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
 
     @run_in_twisted_thread
     def __init__(self, videoWindowController):
-        BlinkLogger().log_debug('Init %s' % self)
         self.videoWindowController = videoWindowController
+        self.log_debug('Init %s' % self)
         self.retain()
         if self.stream.video_windows is not None:
             # Stream may have died in the mean time
             self.sdl_window = self.stream.video_windows.local
             self.initial_size = self.sdl_window.size
-            self.videoWindowController.sessionController.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
+            self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
             self.stream.video_windows.local.size = (self.initial_size[0]/2, self.initial_size[1]/2)
             self.window = NSWindow(cobject=self.sdl_window.native_handle)
             self.window.setAlphaValue_(ALPHA)
@@ -50,10 +50,32 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
 
     @property
     def streamController(self):
-        return self.videoWindowController.streamController
+        if self.videoWindowController:
+            return self.videoWindowController.streamController
+        else:
+            return None
+
+    @property
+    def sessionController(self):
+        if self.streamController:
+            return self.streamController.sessionController
+        else:
+            return None
+
+    def log_debug(self, log):
+        if self.sessionController:
+            self.sessionController.log_debug(log)
+        else:
+            BlinkLogger().log_debug(log)
+
+    def log_info(self, log):
+        if self.sessionController:
+            self.sessionController.log_info(log)
+        else:
+            BlinkLogger().log_info(log)
 
     def dealloc(self):
-        BlinkLogger().log_debug('Dealloc %s' % self)
+        self.log_debug('Dealloc %s' % self)
         super(VideoStreamInitialLocalWindowController, self).dealloc()
 
     def windowDidBecomeMain_(self, notification):
@@ -110,7 +132,7 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
 
     @run_in_twisted_thread
     def close(self):
-        BlinkLogger().log_debug('Close %s' % self)
+        self.log_debug('Close %s' % self)
         self.sdl_window = None
         if self.window:
             self.window.close()
