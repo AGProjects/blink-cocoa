@@ -1017,7 +1017,6 @@ class ChatController(MediaStream):
                 else:
                     item.setImage_(NSImage.imageNamed_("video"))
                 return True
-
             elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                 return True
             elif identifier == 'smileys':

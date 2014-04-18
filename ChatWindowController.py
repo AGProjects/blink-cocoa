@@ -1250,17 +1250,25 @@ class ChatWindowController(NSWindowController):
                         item.setTitle_(NSLocalizedString("Cancel", "Menu item"))
                         item.setEnabled_(True)
                     else:
+                        if selectedSession.remote_focus:
+                            item.setTitle_(NSLocalizedString("Video not supported by remote", "Menu item"))
+                            item.setEnabled_(False)
+                        else:
+                            if chat_stream.status == STREAM_CONNECTED:
+                                item.setTitle_(NSLocalizedString("Add video", "Menu item"))
+                            else:
+                                item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
+                            item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
+                else:
+                    if selectedSession.remote_focus:
+                        item.setTitle_(NSLocalizedString("Video not supported by remote", "Menu item"))
+                        item.setEnabled_(False)
+                    else:
                         if chat_stream.status == STREAM_CONNECTED:
                             item.setTitle_(NSLocalizedString("Add video", "Menu item"))
                         else:
                             item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
                         item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
-                else:
-                    if chat_stream.status == STREAM_CONNECTED:
-                        item.setTitle_(NSLocalizedString("Add video", "Menu item"))
-                    else:
-                        item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
-                    item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
 
                 item = menu.itemWithTag_(5) # bring to front
                 if video_stream and video_stream.status == STREAM_CONNECTED:
