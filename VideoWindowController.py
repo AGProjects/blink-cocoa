@@ -106,6 +106,7 @@ class VideoWindowController(NSWindowController):
             return
 
         self.sdl_window = self.streamController.stream.video_windows.remote
+
         self.initial_size = self.streamController.stream.video_windows.remote.size
         self.aspect_ratio = float(self.initial_size[0]) / self.initial_size[1]
         self.sessionController.log_debug('Remote aspect ratio is %.2f' % self.aspect_ratio)
@@ -127,15 +128,12 @@ class VideoWindowController(NSWindowController):
             self.valid_aspect_ratios.append(self.aspect_ratio)
 
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
-        self.sessionController.log_debug('Init %s in %s' % (self.window, self))
+        self.window.setTitle_(self.title)
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
-
         self.toogleAlwaysOnTop()
-        self.window.setTitle_(self.title)
         self.updateTrackingAreas()
-
 
         frame = self.window.frame()
         self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (frame.size.width, frame.size.height-self.dif_y))
