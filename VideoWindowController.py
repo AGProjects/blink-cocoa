@@ -284,7 +284,11 @@ class VideoWindowController(NSWindowController):
         if self.videoControlPanel is not None:
             self.videoControlPanel.show()
 
+        self.flip1()
+
+    def flip2(self):
         if self.localVideoWindow and not self.fliped:
+            self.window.orderOut_(None)
             self.flipWnd.flip_to_(self.localVideoWindow.window, self.window)
             self.fliped = True
         else:
