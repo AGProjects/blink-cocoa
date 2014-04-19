@@ -108,6 +108,8 @@ class VideoWindowController(NSWindowController):
         self.sdl_window = self.streamController.stream.video_windows.remote
         self.initial_size = self.streamController.stream.video_windows.remote.size
         self.aspect_ratio = float(self.initial_size[0]) / self.initial_size[1]
+        self.sessionController.log_debug('Remote aspect ratio is %.2f' % self.aspect_ratio)
+
         self.initial_aspect_ratio = self.aspect_ratio
 
         found = False
@@ -127,6 +129,7 @@ class VideoWindowController(NSWindowController):
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.window.setDelegate_(self)
+        self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
 
         self.toogleAlwaysOnTop()
@@ -273,6 +276,7 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def show(self):
+        self.sessionController.log_debug("Show %s" % self)
         if self.finished:
             return
 

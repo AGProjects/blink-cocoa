@@ -119,6 +119,7 @@ class VideoNativeLocalWindowController(NSWindowController):
         self.localVideoView.refreshAfterCameraChanged()
 
     def show(self):
+        BlinkLogger().log_debug('Show %s' % self)
         self.visible = True
         self.localVideoView.show()
         if self.close_timer is not None and self.close_timer.isValid():
@@ -248,6 +249,7 @@ class LocalNativeVideoView(NSView):
         self.show(not must_show)
 
     def show(self, skip_running=False):
+        BlinkLogger().log_debug('Show %s' % self)
         if self.mirrorSession is None:
             self.mirrorSession = QTKit.QTCaptureSession.alloc().init()
 
@@ -280,6 +282,7 @@ class LocalNativeVideoView(NSView):
             self.mirrorSession.startRunning()
 
     def hide(self):
+        BlinkLogger().log_debug('Show %s' % self)
         if self.mirrorSession is not None:
             self.mirrorSession.stopRunning()
 
