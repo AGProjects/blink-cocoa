@@ -255,9 +255,10 @@ class VideoControlPanel(NSWindowController):
         self.streamController.stopInitialTimer()
 
         if sender.itemIdentifier() == 'hangup':
+            self.stopFadeTimer()
             self.stopIdleTimer()
+            self.window().orderOut_(None)
             self.sessionController.end()
-            self.hide()
         elif sender.itemIdentifier() == 'fullscreen':
             self.window().orderOut_(None)
             self.videoWindowController.toggleFullScreen()
