@@ -414,7 +414,6 @@ class VideoWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
-        self.sdl_window = None
         self.window = None
 
     def windowShouldClose_(self, sender):
@@ -447,8 +446,6 @@ class VideoWindowController(NSWindowController):
 
         if self.window:
             self.window.performClose_(None)
-        else:
-            self.sdl_window = None
 
     def fade_(self, timer):
         if self.window:
@@ -477,6 +474,7 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.release()
             self.localVideoWindow = None
         self.streamController = None
+        self.sdl_window = None
         super(VideoWindowController, self).dealloc()
 
     def toogleAlwaysOnTop(self):
