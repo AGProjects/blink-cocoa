@@ -68,7 +68,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="CXe-bY-CGH"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Toggle Full Screen" image="NSComputer" id="Uhc-Ev-Qzq">
+                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Toggle Aspect Ratio" image="NSComputer" id="Uhc-Ev-Qzq">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="BVL-yJ-hTg"/>
                         </connections>
