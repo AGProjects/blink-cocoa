@@ -1704,7 +1704,7 @@ class PendingWatchersGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = False
 
-    def __init__(self, name=NSLocalizedString("New Contact Requests", "Group name label"), expanded=False):
+    def __init__(self, name=NSLocalizedString("New Contact Requests", "Group name label"), expanded=True):
         super(PendingWatchersGroup, self).__init__(name, expanded)
 
 
@@ -1744,7 +1744,7 @@ class AllContactsBlinkGroup(VirtualBlinkGroup):
     remove_contact_allowed = False
     delete_contact_allowed = True
 
-    def __init__(self, name=NSLocalizedString("All Contacts", "Group name label"), expanded=False):
+    def __init__(self, name=NSLocalizedString("All Contacts", "Group name label"), expanded=True):
         super(AllContactsBlinkGroup, self).__init__(name, expanded)
 
 
