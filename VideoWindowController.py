@@ -337,6 +337,8 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def goToFullScreen(self):
+        self.sessionController.log_debug('goToFullScreen %s' % self)
+
         if self.finished:
             return
 
@@ -350,6 +352,8 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def goToWindowMode(self, window=None):
+        self.sessionController.log_debug('goToWindowMode %s' % self)
+
         if self.full_screen:
             self.show_window_after_full_screen_ends = window
             if self.window:
@@ -358,6 +362,8 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def toggleFullScreen(self):
+        self.sessionController.log_debug('toggleFullScreen %s' % self)
+
         if self.full_screen_in_progress:
             return
 
