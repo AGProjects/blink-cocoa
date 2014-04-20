@@ -65,7 +65,7 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconOnly" sizeMode="small" id="72">
+            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectează" paletteLabel="Conectează" toolTip="Convorbire Text" tag="100" image="start_chat" id="81">
                         <connections>
@@ -729,6 +729,6 @@
         <image name="time" width="128" height="128"/>
         <image name="unlocked-darkgray" width="171" height="170"/>
         <image name="upfile" width="32" height="32"/>
-        <image name="video" width="154" height="154"/>
+        <image name="video" width="520" height="520"/>
     </resources>
 </document>
