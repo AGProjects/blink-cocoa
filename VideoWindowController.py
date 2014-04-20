@@ -382,8 +382,12 @@ class VideoWindowController(NSWindowController):
         scaledSize.height = scaledSize.width / self.aspect_ratio
         return scaledSize
 
-
     def windowDidEnterFullScreen_(self, notification):
+        if self.streamController.ended:
+            if self.window:
+                self.window.orderOut_(self)
+            return
+
         self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
 
         self.full_screen_in_progress = False
