@@ -313,6 +313,10 @@ class VideoWindowController(NSWindowController):
     def windowDidResize_(self, notification):
         if not self.streamController.stream:
             return
+
+        if not self.streamController.stream.video_window:
+            return
+
         if not self.streamController.stream.video_windows.remote:
             return
 
