@@ -139,6 +139,9 @@ class VideoControlPanel(NSWindowController):
 
         if not self.videoWindowController.mouse_in_window:
             return
+        
+        if not self.window():
+            return
 
         if self.is_idle:
             return
@@ -166,9 +169,6 @@ class VideoControlPanel(NSWindowController):
 
         if self.window():
             self.window().close()
-
-        self.toolbarView.removeFromSuperview()
-        self.toolbarView = None
 
         self.videoWindowController = None
         self.notification_center = None
@@ -307,21 +307,3 @@ class VideoControlPanel(NSWindowController):
                         audio_stream.hold()
 
 
-class controlPanelToolbarView(NSView):
-    parentWindow = objc.IBOutlet()
-
-    def awakeFromNib(self):
-        rect = NSZeroRect
-        rect.size = self.frame().size
-        tarea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
-        self.addTrackingArea_(tarea)
-
-    def mouseEntered_(self, event):
-        self.parentWindow.delegate().mouseIn()
-
-    def mouseExited_(self, event):
-        self.parentWindow.delegate().mouseOut()
-
-    def dealloc(self):
-        BlinkLogger().log_debug('Dealloc %s' % self)
-        super(controlPanelToolbarView, self).dealloc()

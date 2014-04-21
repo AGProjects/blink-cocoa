@@ -136,7 +136,7 @@ class VideoController(MediaStream):
                 self.tx_speed_history.append(self.statistics['tx_bytes'] * 8)
 
         self.last_stats = stats
-            
+
         if self.all_rx_bytes > 200000 and not self.initial_full_screen:
             settings = SIPSimpleSettings()
             if settings.video.full_screen_after_connect:
