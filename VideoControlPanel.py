@@ -253,7 +253,6 @@ class VideoControlPanel(NSWindowController):
             return
 
         self.stopFadeTimer()
-        self.streamController.stopInitialTimer()
 
         if sender.itemIdentifier() == 'hangup':
             self.stopFadeTimer()

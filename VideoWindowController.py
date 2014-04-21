@@ -314,7 +314,7 @@ class VideoWindowController(NSWindowController):
         if not self.streamController.stream:
             return
 
-        if not self.streamController.stream.video_window:
+        if not self.streamController.stream.video_windows:
             return
 
         if not self.streamController.stream.video_windows.remote:

@@ -28,14 +28,15 @@ class VideoController(MediaStream):
     implements(IObserver)
     type = "video"
     ended = False
-    initial_timer = None
     started = False
     previous_rx_bytes = 0
     previous_tx_bytes = 0
     previous_tx_packets = 0
     previous_rx_packets = 0
+    all_rx_bytes = 0
     statistics_timer = None
     last_stats = None
+    initial_full_screen = False
     # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
     zrtp_supported = False          # stream supports zRTP
     zrtp_active = False             # stream is engaging zRTP
@@ -54,6 +55,8 @@ class VideoController(MediaStream):
         self.started = False
         self.previous_rx_bytes = 0
         self.previous_tx_bytes = 0
+        self.all_rx_bytes = 0
+        self.initial_full_screen = False
         self.notification_center.add_observer(self, sender=self.stream)
 
     @allocate_autorelease_pool
@@ -88,6 +91,7 @@ class VideoController(MediaStream):
             jitter = stats['rx']['jitter']['last'] / 1000.0 + stats['tx']['jitter']['last'] / 1000.0
             rtt = stats['rtt']['last'] / 1000 / 2
             rx_packets = stats['rx']['packets'] - self.last_stats['rx']['packets']
+            self.all_rx_bytes =+ stats['rx']['bytes']
             rx_lost_packets = stats['rx']['packets_lost'] - self.last_stats['rx']['packets_lost']
             loss = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
             self.statistics['loss'] = loss
@@ -132,6 +136,12 @@ class VideoController(MediaStream):
                 self.tx_speed_history.append(self.statistics['tx_bytes'] * 8)
 
         self.last_stats = stats
+            
+        if self.all_rx_bytes > 200000 and not self.initial_full_screen:
+            settings = SIPSimpleSettings()
+            if settings.video.full_screen_after_connect:
+                self.initial_full_screen = True
+                self.videoWindowController.goToFullScreen()
 
     def show(self):
         self.videoWindowController.show()
@@ -221,6 +231,7 @@ class VideoController(MediaStream):
     def _NH_VideoStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
         self.ice_negotiation_status = data.reason
+        self.stopTimers()
 
     def _NH_VideoStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation succeeded')
@@ -248,7 +259,9 @@ class VideoController(MediaStream):
 
         self.videoWindowController.show()
         self.changeStatus(STREAM_CONNECTED)
-        self.startInitialTimer()
+
+        if self.sessionController.hasStreamOfType("chat") and self.videoWindowController.always_on_top:
+            self.videoWindowController.toogleAlwaysOnTop()
 
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
@@ -257,6 +270,9 @@ class VideoController(MediaStream):
     def _NH_MediaStreamDidFail(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidFail(sender, data)
         self.sessionController.log_info(u"Video call failed: %s" % data.reason)
+
+        self.stopTimers()
+
         self.changeStatus(STREAM_FAILED, data.reason)
         self.ice_negotiation_status = None
         self.rtt_history = None
@@ -265,10 +281,11 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
-        self.stopTimers()
-
     def _NH_MediaStreamDidEnd(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
+
+        self.stopTimers()
+
         self.ice_negotiation_status = None
         self.rtt_history = None
         self.loss_history = None
@@ -283,19 +300,8 @@ class VideoController(MediaStream):
             self.sessionController.log_info(u"Video stream canceled")
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.stopTimers()
         if not self.started and self.sessionController.failureReason != "Session Cancelled":
             self.videoWindowController.showDisconnectedPanel()
-
-
-    def invalidateTimers(self):
-        if self.statistics_timer is not None and self.statistics_timer.isValid():
-            self.statistics_timer.invalidate()
-        self.statistics_timer = None
-
-        if self.transfer_timer is not None and self.transfer_timer.isValid():
-            self.transfer_timer.invalidate()
-        self.transfer_timer = None
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.stopTimers()
@@ -303,34 +309,7 @@ class VideoController(MediaStream):
     def _NH_BlinkSessionDidEnd(self, sender, data):
         pass
 
-    def initialTimer_(self, timer):
-        self.initial_timer = None
-        if self.status in (STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING):
-            return
-        self.videoWindowController.goToFullScreen()
-
-    def startInitialTimer(self):
-        if self.sessionController.hasStreamOfType("chat"):
-            if self.videoWindowController.always_on_top:
-                self.videoWindowController.toogleAlwaysOnTop()
-            return
-
-        settings = SIPSimpleSettings()
-        if settings.video.full_screen_after_connect:
-            if self.initial_timer is None:
-                self.initial_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(4.0, self, "initialTimer:", None, False)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.initial_timer, NSRunLoopCommonModes)
-                NSRunLoop.currentRunLoop().addTimer_forMode_(self.initial_timer, NSEventTrackingRunLoopMode)
-
-    def stopInitialTimer(self):
-        if self.initial_timer is not None:
-            if self.initial_timer.isValid():
-                self.initial_timer.invalidate()
-            self.initial_timer = None
-
     def stopTimers(self):
-        self.stopInitialTimer()
-
         if self.statistics_timer is not None:
             if self.statistics_timer.isValid():
                 self.statistics_timer.invalidate()
