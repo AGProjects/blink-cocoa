@@ -289,7 +289,6 @@ class VideoControlPanel(NSWindowController):
         self.stopFadeTimer()
 
         if sender.itemIdentifier() == 'hangup':
-            self.stopFadeTimer()
             self.stopIdleTimer()
             self.window().orderOut_(None)
             self.sessionController.end()
