@@ -69,6 +69,7 @@ class VideoWindowController(NSWindowController):
     fliped = False
     aspect_ratio = None
     initial_aspect_ratio = None
+    closed = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -128,6 +129,7 @@ class VideoWindowController(NSWindowController):
             self.valid_aspect_ratios.append(self.aspect_ratio)
 
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
+        self.window.retain()
         self.window.setTitle_(self.title)
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
@@ -350,6 +352,7 @@ class VideoWindowController(NSWindowController):
 
         if not self.full_screen:
             if self.window:
+                self.window.retain() #avoid window beeing released while in transition to full screen
                 self.window.toggleFullScreen_(None)
                 self.show()
 
@@ -387,55 +390,54 @@ class VideoWindowController(NSWindowController):
         return scaledSize
 
     def windowDidEnterFullScreen_(self, notification):
-        try:
+        if self.window:
             if self.streamController.ended:
-                if self.window:
-                    self.window.orderOut_(self)
+                self.window.orderOut_(self)
                 return
 
-            self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
+        self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
 
-            self.full_screen_in_progress = False
-            self.full_screen = True
-            self.stopMouseOutTimer()
-            NSApp.delegate().contactsWindowController.showLocalVideoWindow()
-            NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
+        self.full_screen_in_progress = False
+        self.full_screen = True
+        self.stopMouseOutTimer()
+        NSApp.delegate().contactsWindowController.showLocalVideoWindow()
+        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
-            if self.videoControlPanel:
-                self.videoControlPanel.show()
-                self.videoControlPanel.window().makeKeyAndOrderFront_(None)
+        if self.videoControlPanel:
+            self.videoControlPanel.show()
+            self.videoControlPanel.window().makeKeyAndOrderFront_(None)
 
-            if self.window:
-                self.window.setLevel_(NSNormalWindowLevel)
-        except Exception:
-            import traceback
-            print traceback.print_exc()
+        if self.window:
+            self.window.setLevel_(NSNormalWindowLevel)
 
     def windowDidExitFullScreen_(self, notification):
-        try:
-            self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
-            self.full_screen_in_progress = False
-            self.full_screen = False
-            NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
-            NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
+        self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
+        self.window.release()
+        if self.closed:
+            self.window = None
 
-            if self.show_window_after_full_screen_ends is not None:
-                self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
-                self.show_window_after_full_screen_ends = None
-            else:
-                if self.window:
-                    self.window.orderFront_(self)
-                    self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
-        except Exception:
-            import traceback
-            print traceback.print_exc()
+        self.full_screen_in_progress = False
+        self.full_screen = False
+        NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
+        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
+
+        if self.show_window_after_full_screen_ends is not None:
+            self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
+            self.show_window_after_full_screen_ends = None
+        else:
+            if self.window:
+                self.window.orderFront_(self)
+                self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
 
     def keyDown_(self, event):
         super(VideoWindowController, self).keyDown_(event)
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
-        self.window = None
+        self.closed = True
+        self.window.release()
+        if not self.full_screen:
+            self.window = None
 
     def windowShouldClose_(self, sender):
         self.sessionController.log_debug('windowShouldClose %s' % self)
@@ -456,6 +458,8 @@ class VideoWindowController(NSWindowController):
                 return
 
             self.finished = True
+
+            self.goToWindowMode()
 
             if self.localVideoWindow:
                 self.localVideoWindow.close()
