@@ -20,12 +20,12 @@
         <window title="Video Controller" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="579" y="75" width="416" height="1"/>
+            <rect key="contentRect" x="579" y="75" width="434" height="1"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <value key="minSize" type="size" width="416" height="1"/>
-            <value key="maxSize" type="size" width="416" height="1"/>
+            <value key="minSize" type="size" width="434" height="1"/>
+            <value key="maxSize" type="size" width="434" height="1"/>
             <view key="contentView" id="ygh-EU-NlO" customClass="controlPanelToolbarView">
-                <rect key="frame" x="0.0" y="0.0" width="416" height="1"/>
+                <rect key="frame" x="0.0" y="0.0" width="434" height="1"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <connections>
                     <outlet property="parentWindow" destination="WqC-T4-L8j" id="btW-Ya-cOD"/>
@@ -63,12 +63,12 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="UPd-48-3gs"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="FullScreen" paletteLabel="FullScreen" toolTip="Toggle Full Screen" image="fullscreen" id="pCH-pn-Db0">
+                    <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="Full Screen" paletteLabel="Full Screen" toolTip="Toggle Full Screen" image="fullscreen" id="pCH-pn-Db0">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="CXe-bY-CGH"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Toggle Aspect Ratio" image="NSComputer" id="Uhc-Ev-Qzq">
+                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Toggle Aspect Ratio" image="aspect_ratio" id="Uhc-Ev-Qzq">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="BVL-yJ-hTg"/>
                         </connections>
@@ -102,9 +102,9 @@
         </window>
     </objects>
     <resources>
-        <image name="NSComputer" width="32" height="32"/>
         <image name="NSInfo" width="32" height="32"/>
         <image name="NSUser" width="32" height="32"/>
+        <image name="aspect_ratio" width="79.680000305175781" height="79.680000305175781"/>
         <image name="fullscreen" width="128" height="128"/>
         <image name="hangup" width="240" height="240"/>
         <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
