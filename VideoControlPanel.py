@@ -158,15 +158,18 @@ class VideoControlPanel(NSWindowController):
             return
         self.closed = True
 
-        self.toolbarView.removeFromSuperview()
-        self.toolbarView = None
         self.notification_center.remove_observer(self, sender=self.videoWindowController)
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
 
         self.stopIdleTimer()
         self.stopFadeTimer()
+
         if self.window():
             self.window().close()
+
+        self.toolbarView.removeFromSuperview()
+        self.toolbarView = None
+
         self.videoWindowController = None
         self.notification_center = None
 
