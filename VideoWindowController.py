@@ -387,40 +387,48 @@ class VideoWindowController(NSWindowController):
         return scaledSize
 
     def windowDidEnterFullScreen_(self, notification):
-        if self.streamController.ended:
+        try:
+            if self.streamController.ended:
+                if self.window:
+                    self.window.orderOut_(self)
+                return
+
+            self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
+
+            self.full_screen_in_progress = False
+            self.full_screen = True
+            self.stopMouseOutTimer()
+            NSApp.delegate().contactsWindowController.showLocalVideoWindow()
+            NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
+
+            if self.videoControlPanel:
+                self.videoControlPanel.show()
+                self.videoControlPanel.window().makeKeyAndOrderFront_(None)
+
             if self.window:
-                self.window.orderOut_(self)
-            return
-
-        self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
-
-        self.full_screen_in_progress = False
-        self.full_screen = True
-        self.stopMouseOutTimer()
-        NSApp.delegate().contactsWindowController.showLocalVideoWindow()
-        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
-
-        if self.videoControlPanel:
-            self.videoControlPanel.show()
-            self.videoControlPanel.window().makeKeyAndOrderFront_(None)
-
-        if self.window:
-            self.window.setLevel_(NSNormalWindowLevel)
+                self.window.setLevel_(NSNormalWindowLevel)
+        except Exception:
+            import traceback
+            print traceback.print_exc()
 
     def windowDidExitFullScreen_(self, notification):
-        self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
-        self.full_screen_in_progress = False
-        self.full_screen = False
-        NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
-        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
+        try:
+            self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
+            self.full_screen_in_progress = False
+            self.full_screen = False
+            NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
+            NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
-        if self.show_window_after_full_screen_ends is not None:
-            self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
-            self.show_window_after_full_screen_ends = None
-        else:
-            if self.window:
-                self.window.orderFront_(self)
-                self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
+            if self.show_window_after_full_screen_ends is not None:
+                self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
+                self.show_window_after_full_screen_ends = None
+            else:
+                if self.window:
+                    self.window.orderFront_(self)
+                    self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
+        except Exception:
+            import traceback
+            print traceback.print_exc()
 
     def keyDown_(self, event):
         super(VideoWindowController, self).keyDown_(event)
@@ -441,24 +449,28 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def close(self):
-        self.sessionController.log_debug('Close %s' % self)
+        try:
+            self.sessionController.log_debug('Close %s' % self)
 
-        if self.finished:
-            return
+            if self.finished:
+                return
 
-        self.finished = True
+            self.finished = True
 
-        if self.localVideoWindow:
-            self.localVideoWindow.close()
+            if self.localVideoWindow:
+                self.localVideoWindow.close()
 
-        self.flipWnd = None
+            self.flipWnd = None
 
-        self.videoControlPanel.close()
-        self.stopMouseOutTimer()
-        self.stopFadeTimer()
+            self.videoControlPanel.close()
+            self.stopMouseOutTimer()
+            self.stopFadeTimer()
 
-        if self.window:
-            self.window.performClose_(None)
+            if self.window:
+                self.window.performClose_(None)
+        except Exception:
+            import traceback
+            print traceback.print_exc()
 
     def fade_(self, timer):
         if self.window:
