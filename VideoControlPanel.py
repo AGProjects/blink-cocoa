@@ -278,6 +278,8 @@ class VideoControlPanel(NSWindowController):
 
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
+        self.log_debug('userClickedToolbarButton_ %s' % self)
+
         if not self.videoWindowController:
             return
 
