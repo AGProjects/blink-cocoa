@@ -1,9 +1,30 @@
 # Copyright (C) 2014 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSApp, NSWindowController, NSEventTrackingRunLoopMode, NSTrackingMouseEnteredAndExited, NSTrackingActiveAlways, NSFloatingWindowLevel
+from AppKit import (NSApp,
+                    NSWindowController,
+                    NSEventTrackingRunLoopMode,
+                    NSTrackingMouseEnteredAndExited,
+                    NSTrackingActiveAlways,
+                    NSFloatingWindowLevel,
+                    NSFontAttributeName,
+                    NSForegroundColorAttributeName
+                    )
 
-from Foundation import NSBundle, NSImage, NSRunLoop, NSRunLoopCommonModes, NSTimer, NSView, NSTrackingArea, NSZeroRect
+from Foundation import (NSString,
+                        NSAttributedString,
+                        NSLocalizedString,
+                        NSBundle,
+                        NSColor,
+                        NSImage,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer,
+                        NSView,
+                        NSTrackingArea,
+                        NSZeroRect,
+                        NSDictionary
+                        )
 
 
 import objc
@@ -28,13 +49,18 @@ ALPHA = 1.0
 class VideoControlPanel(NSWindowController):
     implements(IObserver)
 
-    toolbar = objc.IBOutlet()
-    toolbarView = objc.IBOutlet()
     visible = False
     full_screen = True
     holdButton = objc.IBOutlet()
+    hangupButton = objc.IBOutlet()
+    chatButton = objc.IBOutlet()
+    infoButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
+    aspectButton = objc.IBOutlet()
+    contactsButton = objc.IBOutlet()
     fullscreenButton = objc.IBOutlet()
+    myvideoButton = objc.IBOutlet()
+    
     idle_timer = None
     fade_timer = None
     is_idle = False
@@ -54,8 +80,11 @@ class VideoControlPanel(NSWindowController):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self,sender=self.videoWindowController)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+    
+        for button in (self.holdButton, self.hangupButton, self.chatButton, self.infoButton, self.muteButton, self.aspectButton, self.contactsButton, self.fullscreenButton, self.myvideoButton):
 
-        #self.window().setMovable_(False)
+            lightGrayTitle = NSAttributedString.alloc().initWithString_attributes_(button.label(), NSDictionary.dictionaryWithObject_forKey_(NSColor.lightGrayColor(), NSForegroundColorAttributeName))
+            button.setLabel_(lightGrayTitle)
 
     @allocate_autorelease_pool
     @run_in_gui_thread

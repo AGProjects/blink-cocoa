@@ -7,9 +7,15 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoControlPanel">
             <connections>
+                <outlet property="aspectButton" destination="Uhc-Ev-Qzq" id="riB-xk-3Sv"/>
+                <outlet property="chatButton" destination="nwU-a9-8Ys" id="HXm-AY-t0Q"/>
+                <outlet property="contactsButton" destination="yhG-M6-u9I" id="tLI-oh-X7v"/>
                 <outlet property="fullscreenButton" destination="pCH-pn-Db0" id="cHQ-S0-rsw"/>
+                <outlet property="hangupButton" destination="6Zi-pi-Dt2" id="PBV-rs-Abv"/>
                 <outlet property="holdButton" destination="KjW-gV-lDX" id="B4B-BE-fUA"/>
+                <outlet property="infoButton" destination="vgp-oU-nmc" id="IvK-Cb-HaZ"/>
                 <outlet property="muteButton" destination="IGv-ve-yk1" id="7tA-sO-rN8"/>
+                <outlet property="myvideoButton" destination="1ln-DS-p7Y" id="vmb-UT-2No"/>
                 <outlet property="toolbar" destination="gnF-kZ-Vhi" id="2Fq-RV-J2g"/>
                 <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
                 <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
@@ -24,7 +30,7 @@
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
             <value key="minSize" type="size" width="434" height="1"/>
             <value key="maxSize" type="size" width="434" height="1"/>
-            <view key="contentView" id="ygh-EU-NlO" customClass="controlPanelToolbarView">
+            <view key="contentView" id="ygh-EU-NlO">
                 <rect key="frame" x="0.0" y="0.0" width="434" height="1"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <connections>
