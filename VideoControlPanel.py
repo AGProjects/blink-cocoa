@@ -158,6 +158,8 @@ class VideoControlPanel(NSWindowController):
             return
         self.closed = True
 
+        self.toolbarView.removeFromSuperview()
+        self.toolbarView = None
         self.notification_center.remove_observer(self, sender=self.videoWindowController)
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
 
@@ -169,7 +171,6 @@ class VideoControlPanel(NSWindowController):
         self.notification_center = None
 
     def dealloc(self):
-        self.toolbarView.removeFromSuperview()
         self.log_debug('Dealloc %s' % self)
         super(VideoControlPanel, self).dealloc()
 
@@ -306,14 +307,12 @@ class VideoControlPanel(NSWindowController):
 
 class controlPanelToolbarView(NSView):
     parentWindow = objc.IBOutlet()
-    tarea = None
 
     def awakeFromNib(self):
         rect = NSZeroRect
         rect.size = self.frame().size
-        self.tarea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
-                                                                            NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
-        self.addTrackingArea_(self.tarea)
+        tarea = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
+        self.addTrackingArea_(tarea)
 
     def mouseEntered_(self, event):
         self.parentWindow.delegate().mouseIn()
@@ -322,7 +321,5 @@ class controlPanelToolbarView(NSView):
         self.parentWindow.delegate().mouseOut()
 
     def dealloc(self):
-        self.removeTrackingArea_(self.tarea)
-        self.tarea = None
         BlinkLogger().log_debug('Dealloc %s' % self)
         super(controlPanelToolbarView, self).dealloc()
