@@ -18,6 +18,10 @@
 		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
+		1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
+		1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
+		1F14255C1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
+		1F14255D1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F17C25E137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F17C25F137335D700DF4724 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
 		1F17D31117F9825D00CB74EC /* database-local-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30F17F9825D00CB74EC /* database-local-off.png */; };
@@ -1817,6 +1821,7 @@
 		1F0F2AAB15456DAD00ECB98E /* BlinkPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlinkPlugin.h; sourceTree = "<group>"; };
 		1F0F2AAC15456DAD00ECB98E /* BlinkPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlinkPlugin.m; sourceTree = "<group>"; };
 		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
+		1F1425591905335300CFEC42 /* aspect_ratio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = aspect_ratio.png; path = icons/aspect_ratio.png; sourceTree = SOURCE_ROOT; };
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F17D30F17F9825D00CB74EC /* database-local-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-local-off.png"; path = "icons/database-local-off.png"; sourceTree = SOURCE_ROOT; };
 		1F17D31017F9825D00CB74EC /* database-remote-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-remote-off.png"; path = "icons/database-remote-off.png"; sourceTree = SOURCE_ROOT; };
@@ -2442,6 +2447,7 @@
 			isa = PBXGroup;
 			children = (
 				1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */,
+				1F1425591905335300CFEC42 /* aspect_ratio.png */,
 				1F7EAC6018E0FA6500CA7B86 /* paused-red.png */,
 				1F960C4618E0F83D00060690 /* pause-white.png */,
 				1FD0807818C02DA800A3B313 /* available.png */,
@@ -3232,6 +3238,7 @@
 				1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */,
 				1F22730812B554F50010A8B2 /* ChatView.html in Resources */,
 				1FDA2F5418F97EC50081B087 /* VideoNativeLocalWindowController.py in Resources */,
+				1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				1F22730912B554F50010A8B2 /* smiley_off.png in Resources */,
 				1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */,
 				1F22730B12B554F50010A8B2 /* growl.py in Resources */,
@@ -3568,6 +3575,7 @@
 				1F35D02817894FFF00C6FE38 /* SessionInfoController.py in Resources */,
 				1F35D02917894FFF00C6FE38 /* lock-zrtp.png in Resources */,
 				1F35D02A17894FFF00C6FE38 /* panel-info.png in Resources */,
+				1F14255D1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				1F35D02B17894FFF00C6FE38 /* screenshot.png in Resources */,
 				1F35D02C17894FFF00C6FE38 /* help.png in Resources */,
 				1F35D02D17894FFF00C6FE38 /* start_chat.png in Resources */,
@@ -3846,6 +3854,7 @@
 				1FDCDAD41462945600476792 /* BlinkPro.entitlements in Resources */,
 				1F2FBFFE1462A445008B3D52 /* container-migration.plist in Resources */,
 				1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
+				1F14255C1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				1FB3080C146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99814730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
@@ -4024,6 +4033,7 @@
 				2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */,
 				2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */,
 				1FDA2F5318F97EC50081B087 /* VideoNativeLocalWindowController.py in Resources */,
+				1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */,
 				2BD011E210D8198400D27A92 /* ChatView.html in Resources */,
 				2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */,
