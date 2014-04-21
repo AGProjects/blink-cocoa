@@ -44,10 +44,13 @@ class iCloudManager(NSObject):
     first_sync_completed = property(_get_first_sync_completed, _set_first_sync_completed)
 
     def __init__(self):
-        major, minor = platform.mac_ver()[0].split('.')[0:2]
-        if NSApp.delegate().applicationName not in ('Blink Pro', 'Blink'):
+        if NSApp.delegate().applicationName == 'Blink':
+            NSUserDefaults.standardUserDefaults().setObject_forKey_("Disabled", "iCloudSyncEnabled")
+
+        if NSApp.delegate().applicationName not in ('Blink Pro'):
             return
 
+        major, minor = platform.mac_ver()[0].split('.')[0:2]
         if (int(major) == 10 and int(minor) >= 7) or int(major) > 10:
             self.notification_center = NotificationCenter()
             enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
@@ -173,6 +176,9 @@ class iCloudManager(NSObject):
     @run_in_thread('file-io')
     def sync(self):
         if self.sync_active:
+            return
+
+        if not self.cloud_storage:
             return
 
         self.sync_active = True

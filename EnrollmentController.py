@@ -92,6 +92,9 @@ class EnrollmentController(NSObject):
                 self.domainButton.setHidden_(True)
                 self.addressText.cell().setPlaceholderString_('user@sip2sip.info')
 
+            if NSApp.delegate().applicationName == 'Blink':
+                self.syncWithiCloudCheckbox.setHidden_(True)
+
         return self
 
     def dealloc(self):

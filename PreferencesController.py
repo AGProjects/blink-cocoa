@@ -205,6 +205,8 @@ class PreferencesController(NSWindowController, object):
         elif NSApp.delegate().applicationName == 'SIP2SIP':
             self.sync_with_icloud_checkbox.setHidden_(True)
 
+        elif NSApp.delegate().applicationName == 'Blink':
+            self.sync_with_icloud_checkbox.setHidden_(True)
         else:
             major, minor = platform.mac_ver()[0].split('.')[0:2]
             self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
