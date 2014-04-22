@@ -61,7 +61,7 @@ class VideoControlPanel(NSWindowController):
     fullscreenButton = objc.IBOutlet()
     myvideoButton = objc.IBOutlet()
     pauseButton = objc.IBOutlet()
-    
+
     idle_timer = None
     fade_timer = None
     is_idle = False
@@ -85,7 +85,7 @@ class VideoControlPanel(NSWindowController):
 
     def updateButtons(self):
         for button in (self.holdButton, self.hangupButton, self.chatButton, self.infoButton, self.muteButton, self.aspectButton, self.contactsButton, self.fullscreenButton, self.myvideoButton, self.pauseButton):
-            
+
             lightGrayTitle = NSAttributedString.alloc().initWithString_attributes_(button.label(), NSDictionary.dictionaryWithObject_forKey_(NSColor.lightGrayColor(), NSForegroundColorAttributeName))
             button.setLabel_(lightGrayTitle)
 
@@ -171,7 +171,7 @@ class VideoControlPanel(NSWindowController):
 
         if not self.videoWindowController.mouse_in_window:
             return
-        
+
         if not self.window():
             return
 
