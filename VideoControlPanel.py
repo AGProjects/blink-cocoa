@@ -303,8 +303,9 @@ class VideoControlPanel(NSWindowController):
         elif sender.itemIdentifier() == 'aspect':
             self.videoWindowController.changeAspectRatio()
         elif sender.itemIdentifier() == 'pause':
+            self.pauseButton.setImage_(NSImage.imageNamed_("video-paused" if not self.streamController.paused else "video"))
             self.streamController.togglePause()
-            self.pauseButton.setImage_(NSImage.imageNamed_("video-paused" if self.streamController.paused else "video"))
+            print self.streamController.paused
         elif sender.itemIdentifier() == 'chat':
             if self.videoWindowController.always_on_top:
                 self.videoWindowController.toogleAlwaysOnTop()
@@ -312,7 +313,6 @@ class VideoControlPanel(NSWindowController):
             if chat_stream:
                 if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
                     self.sessionController.startChatSession()
-
             else:
                 self.sessionController.addChatToSession()
 

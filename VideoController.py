@@ -156,12 +156,12 @@ class VideoController(MediaStream):
 
         if self.paused:
             self.sessionController.log_debug("Resume Video")
-            self.stream.resume()
             self.paused = False
+            self.stream.resume()
         else:
+            self.paused = True
             self.sessionController.log_debug("Pause Video")
             self.stream.pause()
-            self.paused = True
 
     def show(self):
         self.videoWindowController.show()
