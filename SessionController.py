@@ -1210,6 +1210,9 @@ class SessionController(NSObject):
                             # end the whole session otherwise we keep hearing each other after audio tile is gone
                             self.log_info("Ending session with %s stream" % streamHandler.stream.type)
                             self.end()
+                        else:
+                            handler.changeStatus(STREAM_FAILED, 'Illegal State Error')
+
                     return True
                 else:
                     self.log_info("Another proposal is already in progress")
