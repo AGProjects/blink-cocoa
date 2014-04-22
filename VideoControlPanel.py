@@ -179,7 +179,7 @@ class VideoControlPanel(NSWindowController):
         self.stopFadeTimer()
         self.startIdleTimer()
         self.window().setAlphaValue_(ALPHA)
-        self.window().makeKeyAndOrderFront_(None)
+        self.window().orderFront_(None)
         self.visible = True
 
     @run_in_gui_thread
