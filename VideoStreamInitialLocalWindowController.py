@@ -27,7 +27,6 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
     def __init__(self, videoWindowController):
         self.videoWindowController = videoWindowController
         self.log_debug('Init %s' % self)
-        self.retain()
         if self.stream.video_windows is not None:
             # Stream may have died in the mean time
             self.sdl_window = self.stream.video_windows.local
@@ -76,6 +75,7 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
 
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
+        self.videoWindowController = None
         super(VideoStreamInitialLocalWindowController, self).dealloc()
 
     def windowDidBecomeMain_(self, notification):
@@ -112,13 +112,11 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
         self.streamController.sessionController.end()
         if self.window:
             self.window.close()
-        return False
+        return True
 
     @run_in_gui_thread
     def windowWillClose_(self, sender):
         self.finished = True
-        self.sdl_window = None
-        self.videoWindowController = None
 
     def keyDown_(self, event):
         if event.keyCode() == 53:
@@ -133,6 +131,7 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
     @run_in_twisted_thread
     def close(self):
         self.log_debug('Close %s' % self)
-        self.sdl_window = None
         if self.window:
             self.window.close()
+
+        self.release()

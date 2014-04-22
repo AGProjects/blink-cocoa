@@ -10,6 +10,7 @@ from collections import deque
 from zope.interface import implements
 from sipsimple.streams import VideoStream
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading.green import run_in_green_thread
 
 from MediaStream import MediaStream, STREAM_IDLE, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_FAILED, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_CONNECTED, STREAM_CONNECTING
 from MediaStream import STATE_CONNECTING, STATE_FAILED, STATE_DNS_FAILED, STATE_FINISHED
@@ -149,17 +150,8 @@ class VideoController(MediaStream):
     def hide(self):
         self.videoWindowController.hide()
 
-    def showControlPanel(self):
-        if self.videoWindowController.videoControlPanel is not None:
-            self.videoWindowController.videoControlPanel.show()
-
-    def hideControlPanel(self):
-        if self.videoWindowController.videoControlPanel is not None:
-            self.videoWindowController.videoControlPanel.hide()
-
     def goToFullScreen(self):
         self.videoWindowController.goToFullScreen()
-        self.showControlPanel()
 
     def startOutgoing(self, is_update):
         self.ended = False
@@ -178,7 +170,6 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
-        self.videoWindowController.release()
         self.videoWindowController = None
         self.stream = None
         self.notification_center = None
@@ -186,7 +177,6 @@ class VideoController(MediaStream):
         super(VideoController, self).dealloc()
 
     def deallocTimer_(self, timer):
-        self.stream = None
         self.release()
 
     def end(self):
@@ -251,7 +241,6 @@ class VideoController(MediaStream):
 
     def _NH_MediaStreamDidStart(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
-        self.retain()
         self.started = True
         sample_rate = self.stream.clock_rate/1000
         codec = beautify_video_codec(self.stream.codec)
@@ -295,7 +284,6 @@ class VideoController(MediaStream):
 
         if self.started:
             self.sessionController.log_info(u"Video stream ended")
-            self.release()
         else:
             self.sessionController.log_info(u"Video stream canceled")
 

@@ -199,11 +199,13 @@ class VideoControlPanel(NSWindowController):
         if self.window():
             self.window().close()
 
-        self.videoWindowController = None
         self.notification_center = None
+
+        self.release()
 
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
+        self.videoWindowController = None
         super(VideoControlPanel, self).dealloc()
 
     def awakeFromNib(self):
@@ -335,5 +337,4 @@ class VideoControlPanel(NSWindowController):
                     else:
                         sender.setImage_(NSImage.imageNamed_("paused-red"))
                         audio_stream.hold()
-
 

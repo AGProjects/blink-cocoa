@@ -57,7 +57,6 @@ class VideoWindowController(NSWindowController):
     full_screen_in_progress = False
     mouse_in_window = True
     mouse_timer = None
-    fade_timer = None
     window = None
     title = None
     initial_size = None
@@ -69,7 +68,6 @@ class VideoWindowController(NSWindowController):
     fliped = False
     aspect_ratio = None
     initial_aspect_ratio = None
-    closed = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -81,7 +79,6 @@ class VideoWindowController(NSWindowController):
         self.videoControlPanel = VideoControlPanel(self)
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
-        self.retain()
 
     def initLocalVideoWindow(self):
         sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
@@ -129,7 +126,6 @@ class VideoWindowController(NSWindowController):
             self.valid_aspect_ratios.append(self.aspect_ratio)
 
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
-        self.window.retain()
         self.window.setTitle_(self.title)
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
@@ -217,7 +213,8 @@ class VideoWindowController(NSWindowController):
     def mouseEntered_(self, event):
         self.mouse_in_window = True
         self.stopMouseOutTimer()
-        self.videoControlPanel.show()
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.show()
 
     def mouseExited_(self, event):
         if self.full_screen or self.full_screen_in_progress:
@@ -352,14 +349,11 @@ class VideoWindowController(NSWindowController):
 
         if not self.full_screen:
             if self.window:
-                self.window.retain() #avoid window beeing released while in transition to full screen
                 self.window.toggleFullScreen_(None)
                 self.show()
 
     @run_in_gui_thread
     def goToWindowMode(self, window=None):
-        self.sessionController.log_debug('goToWindowMode %s' % self)
-
         if self.full_screen:
             self.show_window_after_full_screen_ends = window
             if self.window:
@@ -412,9 +406,6 @@ class VideoWindowController(NSWindowController):
 
     def windowDidExitFullScreen_(self, notification):
         self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
-        self.window.release()
-        if self.closed:
-            self.window = None
 
         self.full_screen_in_progress = False
         self.full_screen = False
@@ -434,76 +425,43 @@ class VideoWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
-        self.closed = True
-        self.window.release()
-        if not self.full_screen:
-            self.window = None
-
-    def windowShouldClose_(self, sender):
-        self.sessionController.log_debug('windowShouldClose %s' % self)
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
-        self.streamController.end()
+        self.sessionController.removeVideoFromSession()
         if not self.sessionController.hasStreamOfType("chat"):
             NotificationCenter().post_notification("BlinkVideoWindowClosed", sender=self)
 
-        self.fade_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.05, self, "fade:", None, True)
-        return False
+    def windowShouldClose_(self, sender):
+        return True
 
     @run_in_gui_thread
     def close(self):
-        try:
-            self.sessionController.log_debug('Close %s' % self)
+        self.sessionController.log_debug('Close %s' % self)
 
-            if self.finished:
-                return
+        if self.finished:
+            return
 
-            self.finished = True
+        self.finished = True
 
-            self.goToWindowMode()
+        self.goToWindowMode()
 
-            if self.localVideoWindow:
-                self.localVideoWindow.close()
+        self.flipWnd = None
 
-            self.flipWnd = None
+        self.stopMouseOutTimer()
 
-            self.videoControlPanel.close()
-            self.stopMouseOutTimer()
-            self.stopFadeTimer()
+        self.videoControlPanel.close()
 
-            if self.window:
-                self.window.performClose_(None)
-        except Exception:
-            import traceback
-            print traceback.print_exc()
-
-    def fade_(self, timer):
         if self.window:
-            if self.window.alphaValue() > 0.0:
-                self.window.setAlphaValue_(self.window.alphaValue() - 0.03)
-            else:
-                self.stopFadeTimer()
-                self.window.close()
-                self.window.setAlphaValue_(1.0) # make the window fully opaque again for next time
-        else:
-            self.stopFadeTimer()
+            self.window.performClose_(None)
 
-
-    def stopFadeTimer(self):
-        if self.fade_timer is not None:
-            if self.fade_timer.isValid():
-                self.fade_timer.invalidate()
-            self.fade_timer = None
+        if self.localVideoWindow:
+            self.localVideoWindow.close()
 
     def dealloc(self):
         self.sessionController.log_debug('Dealloc %s' % self)
         self.tracking_area = None
-        self.videoControlPanel.release()
         self.videoControlPanel = None
-        if self.localVideoWindow:
-            self.localVideoWindow.release()
-            self.localVideoWindow = None
+        self.localVideoWindow = None
         self.streamController = None
-        self.sdl_window = None
         super(VideoWindowController, self).dealloc()
 
     def toogleAlwaysOnTop(self):
