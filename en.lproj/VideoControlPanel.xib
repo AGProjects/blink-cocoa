@@ -16,6 +16,7 @@
                 <outlet property="infoButton" destination="vgp-oU-nmc" id="IvK-Cb-HaZ"/>
                 <outlet property="muteButton" destination="IGv-ve-yk1" id="7tA-sO-rN8"/>
                 <outlet property="myvideoButton" destination="1ln-DS-p7Y" id="vmb-UT-2No"/>
+                <outlet property="pauseButton" destination="Coo-lh-C1B" id="rLY-RP-5it"/>
                 <outlet property="toolbar" destination="gnF-kZ-Vhi" id="2Fq-RV-J2g"/>
                 <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
                 <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
@@ -26,12 +27,12 @@
         <window title="Video Controller" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="579" y="75" width="434" height="1"/>
+            <rect key="contentRect" x="579" y="75" width="491" height="1"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <value key="minSize" type="size" width="434" height="1"/>
-            <value key="maxSize" type="size" width="434" height="1"/>
+            <value key="minSize" type="size" width="491" height="1"/>
+            <value key="maxSize" type="size" width="491" height="1"/>
             <view key="contentView" id="ygh-EU-NlO">
-                <rect key="frame" x="0.0" y="0.0" width="434" height="1"/>
+                <rect key="frame" x="0.0" y="0.0" width="491" height="1"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <connections>
                     <outlet property="parentWindow" destination="WqC-T4-L8j" id="btW-Ya-cOD"/>
@@ -85,6 +86,11 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="N7V-OS-oQ1"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="DCC1DA56-9560-4E79-8B21-F0876EB9CE00" explicitItemIdentifier="pause" label="Pause" paletteLabel="Pause" toolTip="My Video" image="video" id="Coo-lh-C1B">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="bb3-2A-g2n"/>
+                        </connections>
+                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="pCH-pn-Db0"/>
@@ -96,6 +102,7 @@
                     <toolbarItem reference="yhG-M6-u9I"/>
                     <toolbarItem reference="vgp-oU-nmc"/>
                     <toolbarItem reference="75r-Mm-tLs"/>
+                    <toolbarItem reference="Coo-lh-C1B"/>
                     <toolbarItem reference="1ln-DS-p7Y"/>
                 </defaultToolbarItems>
                 <connections>
@@ -117,5 +124,6 @@
         <image name="mute-white" width="24" height="24"/>
         <image name="pause-white" width="48" height="48"/>
         <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
+        <image name="video" width="520" height="520"/>
     </resources>
 </document>

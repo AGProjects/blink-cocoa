@@ -38,6 +38,7 @@ class VideoController(MediaStream):
     statistics_timer = None
     last_stats = None
     initial_full_screen = False
+    paused = False
     # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
     zrtp_supported = False          # stream supports zRTP
     zrtp_active = False             # stream is engaging zRTP
@@ -58,6 +59,7 @@ class VideoController(MediaStream):
         self.previous_tx_bytes = 0
         self.all_rx_bytes = 0
         self.initial_full_screen = False
+        self.paused = False
         self.notification_center.add_observer(self, sender=self.stream)
 
     @allocate_autorelease_pool
@@ -143,6 +145,23 @@ class VideoController(MediaStream):
             if settings.video.full_screen_after_connect:
                 self.initial_full_screen = True
                 self.videoWindowController.goToFullScreen()
+
+    @run_in_green_thread
+    def togglePause(self):
+        if self.stream is None:
+            return
+
+        if self.status != STREAM_CONNECTED:
+            return
+
+        if self.paused:
+            self.sessionController.log_debug("Resume Video")
+            self.stream.resume()
+            self.paused = False
+        else:
+            self.sessionController.log_debug("Pause Video")
+            self.stream.pause()
+            self.paused = True
 
     def show(self):
         self.videoWindowController.show()

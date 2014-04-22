@@ -60,6 +60,7 @@ class VideoControlPanel(NSWindowController):
     contactsButton = objc.IBOutlet()
     fullscreenButton = objc.IBOutlet()
     myvideoButton = objc.IBOutlet()
+    pauseButton = objc.IBOutlet()
     
     idle_timer = None
     fade_timer = None
@@ -80,9 +81,11 @@ class VideoControlPanel(NSWindowController):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self,sender=self.videoWindowController)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
-    
-        for button in (self.holdButton, self.hangupButton, self.chatButton, self.infoButton, self.muteButton, self.aspectButton, self.contactsButton, self.fullscreenButton, self.myvideoButton):
+        self.updateButtons()
 
+    def updateButtons(self):
+        for button in (self.holdButton, self.hangupButton, self.chatButton, self.infoButton, self.muteButton, self.aspectButton, self.contactsButton, self.fullscreenButton, self.myvideoButton, self.pauseButton):
+            
             lightGrayTitle = NSAttributedString.alloc().initWithString_attributes_(button.label(), NSDictionary.dictionaryWithObject_forKey_(NSColor.lightGrayColor(), NSForegroundColorAttributeName))
             button.setLabel_(lightGrayTitle)
 
@@ -299,6 +302,9 @@ class VideoControlPanel(NSWindowController):
             self.videoWindowController.toggleFullScreen()
         elif sender.itemIdentifier() == 'aspect':
             self.videoWindowController.changeAspectRatio()
+        elif sender.itemIdentifier() == 'pause':
+            self.streamController.togglePause()
+            self.pauseButton.setImage_(NSImage.imageNamed_("video-paused" if self.streamController.paused else "video"))
         elif sender.itemIdentifier() == 'chat':
             if self.videoWindowController.always_on_top:
                 self.videoWindowController.toogleAlwaysOnTop()

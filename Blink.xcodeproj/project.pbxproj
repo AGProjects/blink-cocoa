@@ -240,6 +240,11 @@
 		1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
 		1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
+		1F29D0EC1905BD670051B1BC /* sip2sip.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0EB1905BD670051B1BC /* sip2sip.icns */; };
+		1F29D0FD1906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
+		1F29D0FE1906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
+		1F29D0FF1906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
+		1F29D1001906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2BDEFE1147CFD500772C04 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
@@ -1841,6 +1846,8 @@
 		1F2747D21388FC5C0052C384 /* restore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = restore.png; path = icons/restore.png; sourceTree = "<group>"; };
 		1F27973115D24E2C00FB33D9 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		1F27973315D24E3500FB33D9 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		1F29D0EB1905BD670051B1BC /* sip2sip.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = sip2sip.icns; sourceTree = "<group>"; };
+		1F29D0FC1906D55E0051B1BC /* video-paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-paused.png"; path = "icons/video-paused.png"; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
@@ -2484,6 +2491,7 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				1F29D0EB1905BD670051B1BC /* sip2sip.icns */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -2573,6 +2581,7 @@
 				1FAE0B1118FD7A2300038AA4 /* pencil_16.png */,
 				1FB3AE7318F1E73E001C612B /* close.png */,
 				1FE50E59164D1B6200840B18 /* presence */,
+				1F29D0FC1906D55E0051B1BC /* video-paused.png */,
 				1FD0809118C02F4C00A3B313 /* about.tiff */,
 				1F7E0484176DC43D0006FF31 /* hangup_16.png */,
 				1FB9BB3C17F8117500D7FFA8 /* database-on.png */,
@@ -3283,6 +3292,7 @@
 				DE5E4A0C1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1FA6252113828E2500DFC8E3 /* editor.png in Resources */,
 				1F2746791388755F0052C384 /* fullscreen.png in Resources */,
+				1F29D0FE1906D55E0051B1BC /* video-paused.png in Resources */,
 				1F2747D31388FC5C0052C384 /* restore.png in Resources */,
 				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
@@ -3549,6 +3559,7 @@
 				1F35D00E17894FFF00C6FE38 /* silence.wav in Resources */,
 				1F35D00F17894FFF00C6FE38 /* ConferenceFileCell.py in Resources */,
 				1F35D01017894FFF00C6FE38 /* editor.png in Resources */,
+				1F29D1001906D55E0051B1BC /* video-paused.png in Resources */,
 				1F35D01217894FFF00C6FE38 /* fullscreen.png in Resources */,
 				1F35D01317894FFF00C6FE38 /* restore.png in Resources */,
 				1F35D01517894FFF00C6FE38 /* mirror.png in Resources */,
@@ -3612,6 +3623,7 @@
 				1F35D04C17894FFF00C6FE38 /* VirtualGroups.py in Resources */,
 				1F35D04D17894FFF00C6FE38 /* pending_watcher.tiff in Resources */,
 				1F35D04E17894FFF00C6FE38 /* blocked.png in Resources */,
+				1F29D0EC1905BD670051B1BC /* sip2sip.icns in Resources */,
 				1F35D04F17894FFF00C6FE38 /* PresencePublisher.py in Resources */,
 				1F35D05017894FFF00C6FE38 /* OfflineNoteController.py in Resources */,
 				1F35D05117894FFF00C6FE38 /* PresenceInfoPanel.xib in Resources */,
@@ -3821,6 +3833,7 @@
 				1F07D768138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */,
 				1FCF11901390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11981390EDFD001D1CAF /* alerts.png in Resources */,
+				1F29D0FF1906D55E0051B1BC /* video-paused.png in Resources */,
 				1FCF119C1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */,
 				1FB3AE7618F1E73E001C612B /* close.png in Resources */,
@@ -4078,6 +4091,7 @@
 				1F17C25E137335D700DF4724 /* silence.wav in Resources */,
 				1FD0809218C02F4C00A3B313 /* about.tiff in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
+				1F29D0FD1906D55E0051B1BC /* video-paused.png in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
 				1F6EF7FF18E637E0008592D2 /* VideoStreamInitialLocalWindowController.py in Resources */,
 				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
