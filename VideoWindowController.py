@@ -130,7 +130,7 @@ class VideoWindowController(NSWindowController):
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
-        self.toogleAlwaysOnTop()
+        #self.toogleAlwaysOnTop()
         self.updateTrackingAreas()
 
         frame = self.window.frame()
