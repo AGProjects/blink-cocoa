@@ -7,17 +7,25 @@ from AppKit import (NSSize,
                     NSWindowController,
                     NSPanel,
                     NSWindow,
+                    NSOnState,
                     NSView,
                     NSFloatingWindowLevel,
                     NSTrackingMouseEnteredAndExited,
-                    NSTrackingActiveAlways
+                    NSTrackingActiveAlways,
+                    NSRightMouseUp
                     )
 
 from Foundation import (NSBundle,
                         NSColor,
+                        NSDate,
+                        NSEvent,
+                        NSLocalizedString,
                         NSMakeRect,
+                        NSMenu,
                         NSUserDefaults,
                         NSTimer,
+                        NSMenu,
+                        NSMenuItem,
                         NSScreen,
                         NSTrackingArea,
                         NSZeroRect
@@ -30,8 +38,9 @@ import objc
 
 from BlinkLogger import BlinkLogger
 from util import run_in_gui_thread
-
+from sipsimple.core import Engine
 from sipsimple.application import SIPApplication
+from sipsimple.configuration.settings import SIPSimpleSettings
 
 
 ALPHA = 1.0
@@ -190,6 +199,31 @@ class LocalNativeVideoView(NSView):
             self.parentWindow.delegate().hide()
         else:
             NSView.keyDown_(self, event)
+
+    def rightMouseDown_(self, event):
+        point = self.parentWindow.convertScreenToBase_(NSEvent.mouseLocation())
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                                                                                    NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.parentWindow.windowNumber(),
+                                                                            self.parentWindow.graphicsContext(), 0, 1, 0)
+
+        videoDevicesMenu = NSMenu.alloc().init()
+        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
+        lastItem.setEnabled_(False)
+        videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+        for item in Engine().video_devices:
+            if str(item) == "Colorbar generator":
+                continue
+            lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
+            lastItem.setRepresentedObject_(item)
+            if SIPApplication.video_device.name == item:
+                lastItem.setState_(NSOnState)
+
+        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self)
+
+    def changeVideoDevice_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.video.device = sender.representedObject()
+        settings.save()
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()

@@ -424,6 +424,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="VirtualGroupWasDeleted")
         nc.add_observer(self, name="VirtualGroupDidChange")
         nc.add_observer(self, name="SIPSessionLoggedToHistory")
+        nc.add_observer(self, name="VideoDeviceDidChangeCamera")
 
         nc.add_observer(self, sender=AccountManager())
 
@@ -1406,6 +1407,10 @@ class ContactWindowController(NSWindowController):
                         panel.close()
                         NSReleaseAlertPanel(panel)
 
+    def _NH_VideoDeviceDidChangeCamera(self, notification):
+        if self.localVideoWindow:
+            self.localVideoWindow.refreshAfterCameraChanged()
+
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
         if notification.data.modified.has_key("audio.silent"):
@@ -1424,10 +1429,6 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.modified.has_key("ldap.enabled"):
             self.refreshLdapDirectory()
-
-        if notification.data.modified.has_key("video.device"):
-            if self.localVideoWindow:
-                self.localVideoWindow.refreshAfterCameraChanged()
 
         if notification.data.modified.has_key("ldap.hostname"):
             self.refreshLdapDirectory()
