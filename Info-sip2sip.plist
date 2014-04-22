@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>SIP2SIP</string>
 	<key>CFBundleIconFile</key>
-	<string>blink</string>
+	<string>sip2sip</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.agprojects.SIP2SIP</string>
 	<key>CFBundleInfoDictionaryVersion</key>
