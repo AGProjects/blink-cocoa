@@ -4932,6 +4932,44 @@ class ContactWindowController(NSWindowController):
                 item.setState_(NSOnState if value == dev else NSOffState)
                 index += 1
 
+        def setupVideoDeviceMenu(menu, tag, devices, option_name, selector):
+            settings = SIPSimpleSettings()
+
+            for i in range(100):
+                old = menu.itemWithTag_(tag*100+i)
+                if old:
+                    menu.removeItem_(old)
+                else:
+                    break
+
+            value = getattr(settings.video, option_name)
+
+            index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
+
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("None", "Menu item"), selector, "", index)
+            item.setRepresentedObject_(None)
+            item.setTarget_(self)
+            item.setTag_(tag*100)
+            item.setIndentationLevel_(2)
+            item.setState_(NSOnState if value in (None, "None") else NSOffState)
+            index += 1
+
+            if value == 'system_default':
+                value = self.backend._app.video_device.real_name
+
+            i = 1
+            for dev in devices:
+                if dev == "Colorbar generator":
+                    continue
+                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
+                item.setRepresentedObject_(dev)
+                item.setTarget_(self)
+                item.setTag_(tag * 100 + i)
+                item.setIndentationLevel_(2)
+                i += 1
+                item.setState_(NSOnState if value == dev else NSOffState)
+                index += 1
+
         def setupAudioInputOutputDeviceMenu(menu, tag, devices, selector):
             settings = SIPSimpleSettings()
             for i in range(100):
@@ -4970,9 +5008,11 @@ class ContactWindowController(NSWindowController):
             if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and 'Built-in Output' in self.backend._app.engine.output_devices:
                 in_out_devices.append('Built-in Microphone and Output')
             setupAudioInputOutputDeviceMenu(menu, 404, in_out_devices, "selectInputOutputDevice:")
-            setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices, "input_device", "selectInputDevice:")
+            setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices,  "input_device",  "selectInputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
-            setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device", "selectAlertDevice:")
+            setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device",  "selectAlertDevice:")
+            setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
+
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()
         elif menu == self.historyMenu:
@@ -5126,6 +5166,11 @@ class ContactWindowController(NSWindowController):
     def selectAlertDevice_(self, sender):
         settings = SIPSimpleSettings()
         settings.audio.alert_device = sender.representedObject()
+        settings.save()
+
+    def selectVideoDevice_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.video.device = sender.representedObject()
         settings.save()
 
     def photoClicked(self, sender):

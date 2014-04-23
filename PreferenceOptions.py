@@ -992,8 +992,6 @@ class VideoDeviceOption(PopUpMenuOption):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
         self.popup.lastItem().setRepresentedObject_(None)
-        self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
-        self.popup.lastItem().setRepresentedObject_("system_default")
         for item in Engine().video_devices:
             if str(item) == "Colorbar generator":
                 continue

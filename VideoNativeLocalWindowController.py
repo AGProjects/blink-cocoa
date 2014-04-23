@@ -8,6 +8,7 @@ from AppKit import (NSSize,
                     NSPanel,
                     NSWindow,
                     NSOnState,
+                    NSOffState,
                     NSView,
                     NSFloatingWindowLevel,
                     NSTrackingMouseEnteredAndExited,
@@ -210,6 +211,10 @@ class LocalNativeVideoView(NSView):
         lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+
+        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("None", "Menu item"), "changeVideoDevice:", "")
+        lastItem.setState_(NSOnState if SIPApplication.video_device.real_name in (None, "None") else NSOffState)
+
         for item in Engine().video_devices:
             if str(item) == "Colorbar generator":
                 continue
@@ -274,15 +279,13 @@ class LocalNativeVideoView(NSView):
     def refreshAfterCameraChanged(self):
         if not self.mirrorSession:
             return
-        must_show = False
         if self.mirrorSession.isRunning():
             self.hide()
-            must_show = True
         self.mirrorSession = None
         self.aspect_ratio = None
-        self.show(not must_show)
+        self.show()
 
-    def show(self, skip_running=False):
+    def show(self):
         BlinkLogger().log_debug('Show %s' % self)
         if self.mirrorSession is None:
             self.mirrorSession = QTKit.QTCaptureSession.alloc().init()
@@ -312,11 +315,10 @@ class LocalNativeVideoView(NSView):
 
             self.deviceView.setCaptureSession_(self.mirrorSession)
 
-        if not skip_running:
             self.mirrorSession.startRunning()
 
     def hide(self):
-        BlinkLogger().log_debug('Show %s' % self)
+        BlinkLogger().log_debug('Hide %s' % self)
         if self.mirrorSession is not None:
             self.mirrorSession.stopRunning()
 

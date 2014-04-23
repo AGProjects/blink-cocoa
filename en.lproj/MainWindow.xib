@@ -443,9 +443,7 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Devices" autoenablesItems="NO" id="751">
                         <items>
-                            <menuItem title="Quick Audio Input and Output Device Switch" tag="404" enabled="NO" id="1132" userLabel="Menu Item (Quick Settings)">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                            </menuItem>
+                            <menuItem title="Audio Input/Output Devices" tag="404" enabled="NO" keyEquivalent="s" id="1132" userLabel="Menu Item (Quick Settings)"/>
                             <menuItem isSeparatorItem="YES" tag="405" id="1131"/>
                             <menuItem title="Audio Output Device" image="speaker" tag="401" enabled="NO" id="755">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -456,6 +454,10 @@ CA
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="863"/>
                             <menuItem title="Audio Alert Device" image="bell" tag="403" enabled="NO" id="860">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="s0l-sF-xRK"/>
+                            <menuItem title="Video Devices" tag="500" enabled="NO" id="mbW-k8-Lkd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                         </items>
