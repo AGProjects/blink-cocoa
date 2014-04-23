@@ -275,13 +275,9 @@ class BlinkAppDelegate(NSObject):
         self.contactsWindowController.setupFinished()
 
     def killSelfAfterTimeout_(self, arg):
-        # wait 8 seconds then kill self
-        import time
-        time.sleep(8)
-        import os
-        import signal
+        time.sleep(5)
         BlinkLogger().log_info(u"Forcing termination of apparently hanged Blink process")
-        os.kill(os.getpid(), signal.SIGTERM)
+        os._exit(1)
 
     def applicationShouldTerminate_(self, sender):
         BlinkLogger().log_info('Application will terminate')
