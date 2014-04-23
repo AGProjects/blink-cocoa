@@ -59,7 +59,7 @@ class NATTraversalSettingsExtension(NATTraversalSettings):
 
 
 class NATTraversalSettingsExtensionSIP2SIP(NATTraversalSettings):
-    use_ice = Setting(type=bool, default=False)
+    use_ice = Setting(type=bool, default=True)
 
 
 class BonjourPresenceSettingsExtension(PresenceSettings):
@@ -88,6 +88,10 @@ class RTPSettingsExtension(RTPSettings):
     use_srtp_without_tls = Setting(type=bool, default=True)
     hangup_on_timeout = Setting(type=bool, default=True)
     srtp_encryption = Setting(type=SRTPEncryption, default='disabled')
+
+
+class RTPSettingsExtensionSIP2SIP(RTPSettingsExtension):
+    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
 
 
 class BonjourRTPSettingsExtension(RTPSettings):
@@ -179,6 +183,7 @@ class AccountExtension(SettingsObjectExtension):
 
 class AccountExtensionSIP2SIP(AccountExtension):
     nat_traversal = NATTraversalSettingsExtensionSIP2SIP
+    rtp = RTPSettingsExtensionSIP2SIP
 
 
 class BonjourAccountExtension(SettingsObjectExtension):

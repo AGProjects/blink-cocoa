@@ -126,7 +126,6 @@ class SIPManager(object):
             configuration_manager.save()
 
     def init(self):
-
         if NSApp.delegate().applicationName == 'SIP2SIP':
             Account.register_extension(AccountExtensionSIP2SIP)
         else:
