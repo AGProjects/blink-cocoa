@@ -1142,7 +1142,7 @@ ABC</string>
                                 <segment toolTip="Start Video Call" image="video" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Test Messages" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                <segment toolTip="Chat Sessions" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Screen Sharing" image="display" width="30" tag="3">
