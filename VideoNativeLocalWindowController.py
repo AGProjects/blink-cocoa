@@ -215,7 +215,7 @@ class LocalNativeVideoView(NSView):
                 continue
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
             lastItem.setRepresentedObject_(item)
-            if SIPApplication.video_device.name == item:
+            if SIPApplication.video_device.real_name == item:
                 lastItem.setState_(NSOnState)
 
         NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self)
