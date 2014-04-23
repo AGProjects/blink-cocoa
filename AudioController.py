@@ -1063,6 +1063,15 @@ class AudioController(MediaStream):
                     else:
                         item.setTitle_(NSLocalizedString("Add video", "Menu item"))
                         item.setEnabled_(self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession())
+            item = menu.itemWithTag_(15) # video always on top
+            item.setEnabled_(False)
+            item.setState_(NSOffState)
+            videoStream = self.sessionController.streamHandlerOfType("video")
+            if videoStream:
+                if videoStream.status == STREAM_CONNECTED:
+                    item.setEnabled_(True)
+                    item.setState_(NSOnState if videoStream.videoWindowController.always_on_top else NSOffState)
+
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
@@ -1123,6 +1132,10 @@ class AudioController(MediaStream):
                         self.sessionController.removeChatFromSession()
                 else:
                     self.sessionController.removeChatFromSession()
+        elif tag == 15: # video always on top
+            videoStream = self.sessionController.streamHandlerOfType("video")
+            if videoStream:
+                videoStream.videoWindowController.toogleAlwaysOnTop()
         elif tag == 14: # add video
             if not self.sessionController.hasStreamOfType("video"):
                 NSApp.delegate().contactsWindowController.drawer.close()

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
+        <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
@@ -222,17 +223,30 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="107"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Adaugă Video" tag="14" hidden="YES" id="87">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
-                    </connections>
-                </menuItem>
                 <menuItem isSeparatorItem="YES" id="68"/>
                 <menuItem title="Partajare Ecran" enabled="NO" id="55">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="109"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Adaugă Video" tag="14" indentationLevel="1" id="87">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Always On Top" tag="15" indentationLevel="1" id="aYc-EH-OI4">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="zCh-pD-PSX"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
+                <menuItem title="Screen Sharing" enabled="NO" id="fb4-p2-ArO">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="iAj-YG-4Nj"/>
                     </connections>
                 </menuItem>
                 <menuItem title="Partajează Ecranul Meu cu Celălalt" tag="11" indentationLevel="1" id="173">
