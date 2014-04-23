@@ -269,19 +269,24 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="172"/>
-                <menuItem title="Add to Contacts" tag="20" id="69">
+                <menuItem title="Other" enabled="NO" id="L9e-9T-Nxv">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="Vmw-cE-V7O"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Add to Contacts" tag="20" indentationLevel="1" id="69">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="111"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" id="162"/>
-                <menuItem title="Show Session Information" tag="30" enabled="NO" keyEquivalent="i" id="160">
+                <menuItem title="Show Session Information" tag="30" enabled="NO" keyEquivalent="i" indentationLevel="1" id="160">
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="161"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Do Not Disturb During This Call" tag="41" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
+                <menuItem title="Do Not Disturb During This Call" tag="41" indentationLevel="1" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="332"/>

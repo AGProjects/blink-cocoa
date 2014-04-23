@@ -32,7 +32,7 @@
                     <button verticalHuggingPriority="750" tag="10" id="30">
                         <rect key="frame" x="529" y="12" width="100" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Acceptă Tot" bezelStyle="rounded" image="33DDBFD1-FB3F-4694-89BA-ADD04214D4C8" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
+                        <buttonCell key="cell" type="push" title="Acceptă Tot" bezelStyle="rounded" image="7D917C71-A9F8-4696-8EAF-A83420DE0BE1" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -140,7 +140,7 @@ Gw
         </window>
     </objects>
     <resources>
-        <image name="33DDBFD1-FB3F-4694-89BA-ADD04214D4C8" width="1" height="1">
+        <image name="7D917C71-A9F8-4696-8EAF-A83420DE0BE1" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
