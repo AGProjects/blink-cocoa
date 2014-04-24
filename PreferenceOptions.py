@@ -998,6 +998,12 @@ class VideoDeviceOption(PopUpMenuOption):
             self.popup.addItemWithTitle_(item)
             self.popup.lastItem().setRepresentedObject_(item)
 
+    def get(self, default=None):
+        v = getattr(self.object, self.option, default)
+        if v == 'system_default':
+            v = SIPApplication.video_device.real_name
+        return v
+
 
 class PathOption(NullableUnicodeOption):
     def __init__(self, object, name, option, description=None):

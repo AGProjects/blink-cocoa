@@ -93,8 +93,6 @@ class VideoNativeLocalWindowController(NSWindowController):
         self.window().closeButton.setHidden_(True)
 
     def windowShouldClose_(self, sender):
-        if not self.visible:
-            return
         self.visible = False
         if self.close_timer is None:
             self.close_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.05, self, "fade:", None, True)
@@ -213,9 +211,6 @@ class LocalNativeVideoView(NSView):
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
-        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("None", "Menu item"), "changeVideoDevice:", "")
-        lastItem.setState_(NSOnState if SIPApplication.video_device.real_name in (None, "None") else NSOffState)
-
         for item in Engine().video_devices:
             if str(item) == "Colorbar generator":
                 continue
@@ -272,10 +267,15 @@ class LocalNativeVideoView(NSView):
         if device:
             for desc in device.formatDescriptions():
                 value = desc.attributeForKey_(QTFormatDescriptionVideoEncodedPixelsSizeAttribute)
-                size = value.sizeValue()
-                self.aspect_ratio = size.width/float(size.height) if size.width > size.height else size.height/float(size.width)
-                BlinkLogger().log_info('Opened local video at %0.fx%0.f resolution' % (size.width, size.height))
+                if value:
+                    size = value.sizeValue()
+                    self.aspect_ratio = size.width/float(size.height) if size.width > size.height else size.height/float(size.width)
+                    BlinkLogger().log_info('Opened %s camera at %0.fx%0.f resolution' % (SIPApplication.video_device.real_name, size.width, size.height))
+                else:
+                    BlinkLogger().log_debug('Error getting camera properties')
+                    self.aspect_ratio = 1.77
                 self.parentWindow.delegate()._show()
+                break
 
     def refreshAfterCameraChanged(self):
         if not self.mirrorSession:
@@ -316,11 +316,13 @@ class LocalNativeVideoView(NSView):
 
             self.deviceView.setCaptureSession_(self.mirrorSession)
 
-            self.mirrorSession.startRunning()
+        BlinkLogger().log_debug('Start aquire video %s' % self)
+        self.mirrorSession.startRunning()
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
         if self.mirrorSession is not None:
+            BlinkLogger().log_debug('Stop aquire video %s' % self)
             self.mirrorSession.stopRunning()
 
 

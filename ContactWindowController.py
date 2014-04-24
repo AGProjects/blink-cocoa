@@ -1409,6 +1409,7 @@ class ContactWindowController(NSWindowController):
                         NSReleaseAlertPanel(panel)
 
     def _NH_VideoDeviceDidChangeCamera(self, notification):
+        BlinkLogger().log_info(u"Switched to %s video camera" % self.backend._app.video_device.real_name)
         if self.localVideoWindow:
             self.localVideoWindow.refreshAfterCameraChanged()
 

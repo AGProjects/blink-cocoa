@@ -481,6 +481,8 @@ class SIPManager(object):
         for codec in settings.rtp.video_codec_list:
             codecs_print.append(beautify_video_codec(codec))
         BlinkLogger().log_info(u"Enabled video codecs: %s" % ", ".join(codecs_print))
+        cameras = (camera for camera in self._app.engine.video_devices if str(camera) != "Colorbar generator")
+        BlinkLogger().log_info(u"Available video cameras: %s" % ", ".join(cameras))
         BlinkLogger().log_info(u"Using video camera: %s" % self._app.video_device.real_name)
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
