@@ -305,6 +305,7 @@ class ContactWindowController(NSWindowController):
     useSpeechSynthesisMenuItem = objc.IBOutlet()
     micLevelIndicator = objc.IBOutlet()
     selectedAudioDeviceLabel = objc.IBOutlet()
+    myvideoMenuItem = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     screenShareMenu = objc.IBOutlet()
@@ -3476,8 +3477,10 @@ class ContactWindowController(NSWindowController):
             item.setRepresentedObject_((file, timestamp))
 
     def updateWindowMenu(self):
+        settings = SIPSimpleSettings()
         item = self.windowMenu.itemWithTag_(50)
         item.setState_(NSOnState if self.localVideoVisible() else NSOffState)
+        item.setEnabled_(True if settings.video.device is not None else False)
 
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:

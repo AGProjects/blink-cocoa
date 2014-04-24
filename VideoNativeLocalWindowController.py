@@ -160,6 +160,7 @@ class VideoNativeLocalWindowController(NSWindowController):
     def hide(self):
         if not self.visible:
             return
+        self.visible = False
         self.window().performClose_(None)
 
     def fade_(self, timer):

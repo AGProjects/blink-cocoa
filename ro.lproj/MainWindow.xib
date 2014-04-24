@@ -1714,6 +1714,7 @@ ABC</string>
                 <outlet property="micLevelIndicator" destination="1820" id="1822"/>
                 <outlet property="model" destination="831" id="837"/>
                 <outlet property="muteButton" destination="878" id="881"/>
+                <outlet property="myvideoMenuItem" destination="3zb-2K-tHc" id="S6h-Nf-ccU"/>
                 <outlet property="nameText" destination="731" id="733"/>
                 <outlet property="notFoundText" destination="631" id="633"/>
                 <outlet property="participantMenu" destination="1563" id="1580"/>
