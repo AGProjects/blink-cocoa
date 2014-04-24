@@ -1468,17 +1468,16 @@ class SessionController(NSObject):
         else:
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
-                for stream in add_streams:
-                    self.log_info("Proposing %s stream" % stream.type)
-                    try:
-                       self.session.add_stream(stream)
-                       self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
-                    except IllegalStateError, e:
-                        self.inProposal = False
-                        self.log_info("IllegalStateError: %s" % e)
-                        log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=[stream])
-                        self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
-                        return False
+                self.log_info("Proposing %s streams" % ",".join(stream.type for stream in add_streams))
+                try:
+                   self.session.add_streams(add_streams)
+                   self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
+                except IllegalStateError, e:
+                    self.inProposal = False
+                    self.log_info("IllegalStateError: %s" % e)
+                    log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=add_streams)
+                    self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
+                    return False
             else:
                 self.log_info("A stream proposal is already in progress")
                 return False
@@ -1521,7 +1520,10 @@ class SessionController(NSObject):
 
     def addVideoToSession(self):
         if not self.hasStreamOfType("video"):
-            self.startSessionWithStreamOfType("video")
+            if not self.hasStreamOfType("audio"):
+                self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))
+            else:
+                self.startSessionWithStreamOfType("video")
 
     def removeVideoFromSession(self):
         if self.hasStreamOfType("video"):
