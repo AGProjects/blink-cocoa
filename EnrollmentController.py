@@ -220,6 +220,8 @@ class EnrollmentController(NSObject):
                 account.ldap.hostname = "ldap.sipthor.net"
                 account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
                 account.ldap.enabled = True
+                account.nat_traversal.use_ice = True
+                account.rtp.srtp_encryption = 'optional'
 
             account.save()
         except ValueError, e:
@@ -396,6 +398,8 @@ class EnrollmentController(NSObject):
 
         account.display_name = display_name
         account.auth.password = password
+        account.nat_traversal.use_ice = True
+        account.rtp.srtp_encryption = 'optional'
 
         if tls_path:
             account.tls.certificate = tls_path
