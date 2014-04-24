@@ -1283,7 +1283,8 @@ class ContactWindowController(NSWindowController):
             new_device = diff.pop()
             BlinkLogger().log_info(u"New audio device %s detected" % new_device.strip())
             in_devices = list(set(self.backend._app.engine.input_devices))
-            if new_device in in_devices:
+            out_devices = list(set(self.backend._app.engine.output_devices))
+            if new_device in in_devices and new_device in out_devices:
                 self.switchAudioDevice(new_device)
             else:
                 self.menuWillOpen_(self.devicesMenu)
