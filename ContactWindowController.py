@@ -4632,9 +4632,10 @@ class ContactWindowController(NSWindowController):
                             #aor_supports_chat = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
                             chat_item.setEnabled_(True)
 
-                        if self.sessionControllersManager.isMediaTypeSupported('video'):
-                            video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
+                    if self.sessionControllersManager.isMediaTypeSupported('video'):
+                        video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
 
+                    if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                         if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                             if has_fully_qualified_sip_uri:
                                 ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Menu item"), "sendFile:", "")
