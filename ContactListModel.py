@@ -2802,61 +2802,6 @@ class ContactListModel(CustomListModel):
 
         NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), panel_text , NSLocalizedString("OK", "Button title"), None, None)
 
-    def _migrateContacts(self):
-        """Used in version 1.2.0 when switched over to new contacts model in sip simple sdk 0.18.3"""
-        path = ApplicationData.get('contacts_')
-        if not os.path.exists(path):
-            return
-
-        BlinkLogger().log_info(u"Migrating old contacts to the new model...")
-
-        try:
-            with open(path, 'r') as f:
-                data = cPickle.load(f)
-        except (IOError, cPickle.UnpicklingError):
-            BlinkLogger().log_info(u"Couldn't load old contacts")
-            return
-
-        for group_item in data:
-            if type(group_item) == tuple:
-                if len(group_item) == 3:
-                    group_item = (group_item[0], group_item[-1])
-                group_item = {"name":group_item[0], "contacts":group_item[1], "expanded":True, "special": None}
-
-            # workaround because the special attribute wasn't saved
-            if "special" not in group_item:
-                group_item["special"] = None
-
-            if group_item["special"] is None:
-                try:
-                    group = Group()
-                    group.name = group_item["name"]
-                    group.expanded = group_item["expanded"]
-                    group.position = None
-                    group.save()
-                except DuplicateIDError:
-                    pass
-
-                if group:
-                    for pickled_contact in group_item["contacts"]:
-                        uri = unicode(pickled_contact["uri"].strip())
-                        contact = Contact(uri, group=group)
-                        try:
-                            contact.name = pickled_contact["display_name"]
-                        except KeyError:
-                            pass
-
-                        try:
-                            contact.preferred_media = pickled_contact["preferred_media"] if pickled_contact["preferred_media"] else None
-                        except KeyError:
-                            pass
-
-                        try:
-                            contact.save()
-                        except DuplicateIDError:
-                            pass
-        unlink(path)
-
     def renderPendingWatchersGroupIfNecessary(self, bring_in_focus=False):
         added = False
         if self.pending_watchers_group.contacts:
@@ -3061,7 +3006,6 @@ class ContactListModel(CustomListModel):
         with addressbook_manager.transaction():
             if NSApp.delegate().contactsWindowController.first_run:
                 self.createInitialGroupAndContacts()
-            self._migrateContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
