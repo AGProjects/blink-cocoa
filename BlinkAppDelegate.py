@@ -99,7 +99,7 @@ class BlinkAppDelegate(NSObject):
         self = super(BlinkAppDelegate, self).init()
         if self:
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
-            self.applicationNamePrint = self.applicationName
+            self.applicationNamePrint = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleName"))
             build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
 
