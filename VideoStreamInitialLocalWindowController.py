@@ -108,9 +108,18 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
     def windowShouldClose_(self, sender):
         if self.finished:
             return True
-        self.streamController.sessionController.end()
+
+        if not self.streamController:
+            return True
+
+        if self.streamController.status == STREAM_PROPOSING:
+            self.sessionController.cancelProposal(self.streamController)
+        else:
+            self.sessionController.end()
+
         if self.window:
             self.window.close()
+
         return True
 
     @run_in_gui_thread
