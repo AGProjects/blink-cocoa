@@ -501,8 +501,12 @@ class ChatWindowController(NSWindowController):
                         chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Connecting...", "Label"))
                         chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                     else:
+                        video_stream = session.streamHandlerOfType("video")
                         audio_stream = session.streamHandlerOfType("audio")
-                        if audio_stream and audio_stream.isConnecting:
+                        if video_stream and video_stream.isConnecting:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
+                            chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                        elif audio_stream and audio_stream.isConnecting:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
                             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                         elif chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
