@@ -154,13 +154,13 @@ class SessionInfoController(NSObject):
         self.video_rx_speed_graph.setLineSpacing_(0.0)
         self.video_rx_speed_graph.setLineColor_(NSColor.greenColor())
         self.video_rx_speed_graph.setMinimumHeigth_(100000)
-        self.video_rx_speed_graph.setAboveLimit_(1200000)
+        self.video_rx_speed_graph.setAboveLimit_(99999999)
 
         self.video_tx_speed_graph.setLineWidth_(1.0)
         self.video_tx_speed_graph.setLineSpacing_(0.0)
         self.video_tx_speed_graph.setLineColor_(NSColor.blueColor())
         self.video_tx_speed_graph.setMinimumHeigth_(100000)
-        self.video_tx_speed_graph.setAboveLimit_(1200000)
+        self.video_tx_speed_graph.setAboveLimit_(99999999)
 
         self.resetSession()
         self.updatePanelValues()
