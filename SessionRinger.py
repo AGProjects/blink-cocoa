@@ -50,6 +50,7 @@ class Ringer(object):
     incoming_audio_sessions = {}
     outgoing_ringing_sessions = set()
     chat_sessions = {}
+    video_sessions = {}
     ds_sessions = {}
     filesend_sessions = {}
     filerecv_sessions = {}
@@ -131,13 +132,13 @@ class Ringer(object):
 
             if self.incoming_audio_sessions:
                 should_play_audio_secondary_ringtone = True
-            if self.chat_sessions or self.filerecv_sessions or self.ds_sessions:
+            if self.chat_sessions or self.video_sessions or self.filerecv_sessions or self.ds_sessions:
                 should_play_chat_secondary_ringtone = True
         else:
             # play ringtone
             if self.incoming_audio_sessions:
                 should_play_audio_primary_ringtone = True
-            if self.chat_sessions or self.filerecv_sessions or self.ds_sessions:
+            if self.chat_sessions or self.video_sessions or self.filerecv_sessions or self.ds_sessions:
                 should_play_chat_primary_ringtone = True
 
         if self.outgoing_ringing_sessions:
@@ -300,6 +301,8 @@ class Ringer(object):
         else:
             if 'chat' in stream_types:
                 self.chat_sessions[session] = streams
+            if 'video' in stream_types:
+                self.video_sessions[session] = streams
             if 'file-transfer' in stream_types:
                 self.filerecv_sessions[session] = streams
         NotificationCenter().add_observer(self, sender=session)
@@ -312,6 +315,7 @@ class Ringer(object):
         self.outgoing_ringing_sessions.discard(session)
         self.incoming_audio_sessions.pop(session, None)
         self.chat_sessions.pop(session, None)
+        self.video_sessions.pop(session, None)
         self.ds_sessions.pop(session, None)
         self.filerecv_sessions.pop(session, None)
         self.update_playing_ringtones()
@@ -403,6 +407,8 @@ class Ringer(object):
             else:
                 self.incoming_audio_sessions[session] = data.proposed_streams
         elif 'chat' in stream_types:
+            self.chat_sessions[session] = data.proposed_streams
+        elif 'video' in stream_types:
             self.chat_sessions[session] = data.proposed_streams
         elif 'screen-sharing' in stream_types:
             self.ds_sessions[session] = data.proposed_streams
