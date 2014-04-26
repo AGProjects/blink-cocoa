@@ -1499,6 +1499,8 @@ class ContactWindowController(NSWindowController):
     @run_in_gui_thread
     def _NH_BlinkProposalDidFail(self, notification):
         media_type = notification.data.proposed_streams[0].type
+        if media_type == "video":
+            return
         target_uri = notification.sender.target_uri
         local_uri = notification.sender.account.id
         BlinkLogger().log_info(u"Starting new %s session to %s because adding stream failed" % (media_type, target_uri))
