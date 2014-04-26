@@ -11,6 +11,7 @@ from BlinkLogger import BlinkLogger
 
 from util import run_in_gui_thread
 from sipsimple.threading import run_in_twisted_thread
+from MediaStream import STREAM_PROPOSING
 
 ALPHA = 1.0
 

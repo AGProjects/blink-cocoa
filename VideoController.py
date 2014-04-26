@@ -306,9 +306,9 @@ class VideoController(MediaStream):
         else:
             self.sessionController.log_info(u"Video stream canceled")
 
-        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        if not self.started and self.sessionController.failureReason != "Session Cancelled":
+        if not self.started and self.sessionController.failureReason != "Session Cancelled" and self.status != STREAM_PROPOSING:
             self.videoWindowController.showDisconnectedPanel()
+        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.stopTimers()
