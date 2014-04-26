@@ -363,6 +363,7 @@ class VideoWindowController(NSWindowController):
             if self.window:
                 self.window.toggleFullScreen_(None)
                 self.show()
+                self.updateAspectRatio()
 
     @run_in_gui_thread
     def toggleFullScreen(self):
