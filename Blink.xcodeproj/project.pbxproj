@@ -9,9 +9,9 @@
 /* Begin PBXBuildFile section */
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
-		1F07D766138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoStreamLocalWindowController.py */; };
-		1F07D767138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoStreamLocalWindowController.py */; };
-		1F07D768138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoStreamLocalWindowController.py */; };
+		1F07D766138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
+		1F07D767138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
+		1F07D768138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F092DB412B2785E000CEE7F /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
 		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
@@ -407,7 +407,7 @@
 		1F35D01317894FFF00C6FE38 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
 		1F35D01517894FFF00C6FE38 /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F35D01617894FFF00C6FE38 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1F35D01817894FFF00C6FE38 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoStreamLocalWindowController.py */; };
+		1F35D01817894FFF00C6FE38 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F35D01917894FFF00C6FE38 /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1F35D01A17894FFF00C6FE38 /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
 		1F35D01B17894FFF00C6FE38 /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
@@ -1812,7 +1812,7 @@
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
-		1F07D765138BDFF200C91AD7 /* VideoStreamLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoStreamLocalWindowController.py; sourceTree = "<group>"; };
+		1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
@@ -2443,7 +2443,7 @@
 				1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */,
 				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
 				1F6EF7FE18E637E0008592D2 /* VideoStreamInitialLocalWindowController.py */,
-				1F07D765138BDFF200C91AD7 /* VideoStreamLocalWindowController.py */,
+				1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */,
 				1FDA2F5218F97EC50081B087 /* VideoNativeLocalWindowController.py */,
 				1FB3AE7118F1BFC4001C612B /* VideoNativeLocalWindow.xib */,
 			);
@@ -3296,7 +3296,7 @@
 				1F2747D31388FC5C0052C384 /* restore.png in Resources */,
 				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
-				1F07D767138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */,
+				1F07D767138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCF118F1390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11971390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119B1390EE08001D1CAF /* logs.png in Resources */,
@@ -3564,7 +3564,7 @@
 				1F35D01317894FFF00C6FE38 /* restore.png in Resources */,
 				1F35D01517894FFF00C6FE38 /* mirror.png in Resources */,
 				1F35D01617894FFF00C6FE38 /* mute-white.png in Resources */,
-				1F35D01817894FFF00C6FE38 /* VideoStreamLocalWindowController.py in Resources */,
+				1F35D01817894FFF00C6FE38 /* VideoSDLLocalWindowController.py in Resources */,
 				1F35D01917894FFF00C6FE38 /* chat.png in Resources */,
 				1FD0807F18C02DA800A3B313 /* available.png in Resources */,
 				1F35D01A17894FFF00C6FE38 /* alerts.png in Resources */,
@@ -3830,7 +3830,7 @@
 				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
 				1FD0808A18C02DA800A3B313 /* invisible.png in Resources */,
 				1F8A7632138A982E007E84C0 /* mute-white.png in Resources */,
-				1F07D768138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */,
+				1F07D768138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCF11901390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11981390EDFD001D1CAF /* alerts.png in Resources */,
 				1F29D0FF1906D55E0051B1BC /* video-paused.png in Resources */,
@@ -4099,7 +4099,7 @@
 				1FD0808818C02DA800A3B313 /* invisible.png in Resources */,
 				1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7630138A982E007E84C0 /* mute-white.png in Resources */,
-				1F07D766138BDFF200C91AD7 /* VideoStreamLocalWindowController.py in Resources */,
+				1F07D766138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCF11911390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11991390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119D1390EE08001D1CAF /* logs.png in Resources */,

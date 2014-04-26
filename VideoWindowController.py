@@ -186,6 +186,10 @@ class VideoWindowController(NSWindowController):
             return True
         return False
 
+    def rightMouseDown_(self, event):
+        print 'rightMouseDown_'
+
+
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
             self.window.contentView().removeTrackingArea_(self.tracking_area)
