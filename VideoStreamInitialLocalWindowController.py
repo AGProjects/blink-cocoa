@@ -13,7 +13,6 @@ from util import run_in_gui_thread
 from sipsimple.threading import run_in_twisted_thread
 from MediaStream import STREAM_PROPOSING
 
-ALPHA = 1.0
 
 class VideoStreamInitialLocalWindowController(NSWindowController):
     window = None
@@ -35,7 +34,6 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
             self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
             self.stream.video_windows.local.size = (self.initial_size[0]/2, self.initial_size[1]/2)
             self.window = NSWindow(cobject=self.sdl_window.native_handle)
-            self.window.setAlphaValue_(ALPHA)
             self.window.setDelegate_(self)
             self.window.setTitle_(self.videoWindowController.title)
             self.window.orderFront_(None)
