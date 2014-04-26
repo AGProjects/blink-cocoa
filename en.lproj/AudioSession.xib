@@ -225,68 +225,50 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="68"/>
-                <menuItem title="Video Call" enabled="NO" id="55">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="109"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Add Video" tag="14" indentationLevel="1" id="87">
+                <menuItem title="Add Video" tag="14" id="87">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Always On Top" tag="15" indentationLevel="1" id="aYc-EH-OI4">
+                <menuItem title="Always On Top" tag="15" id="aYc-EH-OI4">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="zCh-pD-PSX"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
-                <menuItem title="Screen Sharing" enabled="NO" id="fb4-p2-ArO">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="iAj-YG-4Nj"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Share Screen with Remote Party" tag="11" indentationLevel="1" id="173">
+                <menuItem title="Share Screen with Remote Party" tag="11" id="173">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="174"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Ask to Share Remote Screen" tag="12" indentationLevel="1" id="56">
+                <menuItem title="Ask to Share Remote Screen" tag="12" id="56">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="110"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Cancel Screen Sharing Proposal" tag="13" enabled="NO" indentationLevel="1" id="170">
+                <menuItem title="Cancel Screen Sharing Proposal" tag="13" enabled="NO" id="170">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="171"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="172"/>
-                <menuItem title="Other" enabled="NO" id="L9e-9T-Nxv">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="Vmw-cE-V7O"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Add to Contacts" tag="20" indentationLevel="1" id="69">
+                <menuItem title="Add to Contacts" tag="20" id="69">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="111"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Show Session Information" tag="30" enabled="NO" keyEquivalent="i" indentationLevel="1" id="160">
+                <menuItem title="Show Session Information" tag="30" enabled="NO" keyEquivalent="i" id="160">
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="161"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Do Not Disturb During This Call" tag="41" indentationLevel="1" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
+                <menuItem title="Do Not Disturb During This Call" tag="41" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="332"/>
