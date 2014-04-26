@@ -81,7 +81,6 @@ class VideoControlPanel(NSWindowController):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self,sender=self.videoWindowController)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
-        self.updateButtons()
 
     def updateButtons(self):
         for button in (self.holdButton, self.hangupButton, self.chatButton, self.infoButton, self.muteButton, self.aspectButton, self.contactsButton, self.fullscreenButton, self.myvideoButton, self.pauseButton):
@@ -225,6 +224,8 @@ class VideoControlPanel(NSWindowController):
                 self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
         else:
             self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+
+        self.updateButtons()
 
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
