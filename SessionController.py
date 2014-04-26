@@ -1767,6 +1767,8 @@ class SessionController(NSObject):
             self.failureReason = data.reason
         else:
             status = NSLocalizedString("Session Failed", "Label")
+            if data.code:
+                status += ' (%s)' % data.code
             self.failureReason = "failed"
 
         self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
