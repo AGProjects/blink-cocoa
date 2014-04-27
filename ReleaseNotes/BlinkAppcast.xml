@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
+   <channel>
+      <title>Blink's Updates</title>
+      <link>https://blink.sipthor.net/BlinkAppcast.xml</link>
+      <description>Most recent changes with links to updates</description>
+      <language>en</language>
+         <item>
+            <title>Version 4.0.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sat Apr 26 15:41:52 ART 2014</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-video-beta.phtml?update"
+                       sparkle:version="4.0.1" 
+                       type="application/octet-stream" 
+                       />
+         </item>
+         <item>
+            <title>Version 0.24.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri May 20 15:35:32 CEST 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.24.1" 
+                       length="26435584"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFDoga+a+1vpkwjq7P7ychCBV/Wv+AhQrP6FsBMQQR/z2q855ELq3R2Anxw==" />
+         </item>
+         <item>
+            <title>Version 0.24.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Thu Mar 24 12:28:39 CET 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.24.0" 
+                       length="32231424"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC4CFQCqBPYvaNu9fwDuJM7tdWo27dpUgQIVALdYFzy9PV+DmiouGCSgmI0rECV5" />
+         </item>
+         <item>
+            <title>Version 0.23.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Feb 15 20:05:16 CET 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.23.2" 
+                       length="31920128"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFGrMuyu7W9ySaesTlSyMBPE+CU3JAhRDQdYTaEusxs279hCk9nqwr3vzXQ==" />
+         </item>
+         <item>
+            <title>Version 0.23.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sat Jan 29 12:57:27 CET 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.23.1" 
+                       length="31903744"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDSrCXeVYsAaNwuJegDCzbl5FpDcAIUELhzV3VCQckgw9IWCnii+R2fFR0=" />
+         </item>
+         <item>
+            <title>Version 0.23.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Jan 28 20:16:11 CET 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.23.0" 
+                       length="31903744"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCA2G9GJQ52oi55UavQViSCpRRgggIUdU48AjSHQhjXMHXRfAbZ3LPc5jk=" />
+         </item>
+         <item>
+            <title>Version 0.22.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sun Jan  9 21:14:44 CET 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.22.2" 
+                       length="30732288"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC4CFQC46Onn51WeHPcnpbKgCUAhRA9cvQIVAMSZdLgy5EZRMZHpFQVnywTEQpb0" />
+         </item>
+         <item>
+            <title>Version 0.22.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Thu Jan  6 22:09:12 CET 2011</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.22.1" 
+                       length="30711808"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFG/Pi8ym/Xff8IksG7q7Rk19H9Y7AhUAp1+Cd2gevzIFDa1hLot72Eg5WDg=" />
+         </item>
+         <item>
+            <title>Version 0.21.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Dec 17 15:06:04 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.21.1" 
+                       length="30568448"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC4CFQDRKxPVNRpr7qlhik95DFM4vSi/UQIVAMv3fE7IyFKzKIffXOvHnHeMYFoS" />
+         </item>
+         <item>
+            <title>Version 0.21.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Dec 14 17:16:58 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.21.0" 
+                       length="30568448"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDGxO8L0Lr0JrsQV99O5zQ/56wpOwIUaCzVZjZanQ2hDjRDHcOj3ni9co8=" />
+         </item>
+         <item>
+            <title>Version 0.20.9</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Dec  3 00:31:27 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.9" 
+                       length="30543872"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC4CFQC2URYqinDwYb3z52vs54QeqSSoEQIVAKclNjm1TH7ur+K4M1Qgu/138wBB" />
+         </item>
+         <item>
+            <title>Version 0.20.8</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Dec  1 12:28:00 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.8" 
+                       length="30543872"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFHOuuFYLQDRdE6CY98z2N7Bu/8TLAhUAqlQipqyYM2/TSgsuyNb18n2QGEg=" />
+         </item>
+         <item>
+            <title>Version 0.20.7</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Nov 29 18:19:18 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.7" 
+                       length="30543872"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFH0/hKLsPRrlZmoK8lA/mWHap/ZYAhUAsEyZkXu+qHoHaQ03TV/B1WPDa3Q=" />
+         </item>
+         <item>
+            <title>Version 0.20.6</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Nov 26 17:25:17 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.6" 
+                       length="30519296"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFAWPXtorDEILbqlilDbgaWJ2Aa1VAhUAi4+18Db//mKKPaArdNHw4jXHIb0=" />
+         </item>
+         <item>
+            <title>Version 0.20.5</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Nov 22 12:12:22 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.5" 
+                       length="30494720"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCET4GrFxvm8g8u3uMNor939CjvDQIUDiOZYDFqUesTSi0CnGEvA7WsBiM=" />
+         </item>
+         <item>
+            <title>Version 0.20.4</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Nov 10 18:12:09 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.4" 
+                       length="30973952"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDXudc4EUJAZ2I5CeX5SK/9io1t9AIUIlDDvHc0w1ipGd7hHV756sj14fg=" />
+         </item>
+         <item>
+            <title>Version 0.20.3</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Nov  9 20:19:48 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.3" 
+                       length="30973952"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFAK86ZYd1wDI4tTJioTtO3f9JaNqAhRlndW1lBIN6wJpzOBg/eDl1yfDgQ==" />
+         </item>
+         <item>
+            <title>Version 0.20.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Sep 21 10:17:34 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.2" 
+                       length="30965760"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC4CFQDH9mfsGdDtWKsOeJTu5aKGB/hHVwIVANKDxNR/jbsK2j5vNEVePY6NGjGY" />
+         </item>
+         <item>
+            <title>Version 0.20.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Sep 14 12:58:29 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.1" 
+                       length="30810112"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFA2ikejHroynW7IMmSBuMc+HX/aLAhRNhAEhmbSwxPGutKAuSC5vN3rxmg==" />
+         </item>
+         <item>
+            <title>Version 0.20.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Sep  6 10:54:52 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.20.0" 
+                       length="30711808"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFErdaHkmIOj+CdJPbZxjioSk+Cn0AhRL76LhhONd/jKmBadJlWQAzm8zcg==" />
+         </item>
+         <item>
+            <title>Version 0.19.9</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Sep  3 21:21:52 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.9" 
+                       length="30711808"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFEcUlfaprACk2ygv5yRNSYfaoiB2AhRkajYmHazcM1vuJnmlT/1VdKTEIA==" />
+         </item>
+         <item>
+            <title>Version 0.19.8</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Sep  3 09:21:55 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.8" 
+                       length="30711808"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFGWr9lqZv+1wf46wXPVv7+JcTe0cAhQnskEoMABmiU+NRsWCwtvFh/oCFg==" />
+         </item>
+         <item>
+            <title>Version 0.19.7</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Sep  1 20:42:20 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.7" 
+                       length="30711808"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCNuBXZbWFNPXqW82BLX0rA45wVjgIULEoh8bAcyz/bpdxaLTfJEurSpUA=" />
+         </item>
+         <item>
+            <title>Version 0.19.6</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Sep  1 17:13:14 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.6" 
+                       length="30711808"
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCuhax1RBeJgf0xyYfORPB/UZ8bKAIUPVnHymCy7VhMwBN19G9bWiepa4c=" />
+         </item>
+         <item>
+            <title>Version 0.19.5</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Aug 20 11:13:03 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.5" 
+                       length="30445568" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFF+5qxqHHq2kx26gx3Ow20gszf1FAhRoEfm05LeoRaI+Iv7nkI/VgIso5Q==" />
+         </item>
+         <item>
+            <title>Version 0.19.4</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Aug 16 18:57:17 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.4" 
+                       length="30441472" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFC3UotlKDXSpuEgRSkn1FmiCyEz3AhRqtmyY/ZxwjevOo/FD3ppi1K0zvA==" />
+         </item>
+         <item>
+            <title>Version 0.19.3</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Jul 23 18:39:26 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.3" 
+                       length="30334976" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFBLiKdoIc7BKMsUz/m9/7ZItQztDAhUAk+XFohhracizcuHHsJarKSQVWkU=" />
+         </item>
+         <item>
+            <title>Version 0.19.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Jul 21 15:14:04 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.2" 
+                       length="30334976" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFDxun+K0c7s4VYE4ekkgJkDG9XQGAhRbHCecPRSUvmnDwRAbU5Bx0qRA+Q==" />
+         </item>
+         <item>
+            <title>Version 0.19.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Jul  6 01:23:59 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.1" 
+                       length="30330880" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFB0jxPqju2nF8BxFCUE3SDnmyDFbAhUAq0L3mI7NfcjtK53XwGMBC0sMCoQ=" />
+         </item>
+         <item>
+            <title>Version 0.19.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Thu Jun 24 09:45:45 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.19.0" 
+                       length="30326784" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFGcVLpr/VsqJFWneytko5vMvKXSxAhRuNztEM4hVbzIoWd75uqpt9CitGg==" />
+         </item>
+         <item>
+            <title>Version 0.18.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed May 12 17:38:55 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.18.2" 
+                       length="30285824" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDD9+SpbGsRgT/2tDMjDu0HsYhkIgIUZx7BSlT2IEyNCedWzqgB6G3mp9w=" />
+         </item>
+         <item>
+            <title>Version 0.18.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Apr 27 09:42:07 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.18.1" 
+                       length="33484800" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCJRFKsa2E4+uIBHw+oPUQpOxKbnAIUEmhF1BbUdFPY7/oF9OD8sFJyxyc=" />
+         </item>
+         <item>
+            <title>Version 0.18.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Apr 16 12:30:57 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.18.0" 
+                       length="33382400" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDDQboGIWIThZHgFOdaAFM0HuW7TgIUfBYWCNfWCgQFkx1zs6DAhBidfdc=" />
+         </item>
+         <item>
+            <title>Version 0.17.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Apr  9 08:36:17 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.17.1" 
+                       length="33742848" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFCBZ8OG1eK3628LCMFkMZUie5+LGAhQJTwk9CnKr/tV3RUUIzsZtNyBorA==" />
+         </item>
+         <item>
+            <title>Version 0.17.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Thu Apr  8 19:40:17 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.17.0" 
+                       length="33742848" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDXuEBCyV6EsifmY7FuiYC41ARKEQIUO4/9wu/TfbvzfBICr8IC9SbR72k=" />
+         </item>
+         <item>
+            <title>Version 0.16.3</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Mar 31 16:53:29 CEST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.16.3" 
+                       length="33116160" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFCwjN87cXihQt98mcjfvvGIPZX2IAhQGxuoeD8+TNwmdd2l05L96T74kew==" />
+         </item>
+         <item>
+            <title>Version 0.16.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Mar 23 14:44:35 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.16.2" 
+                       length="33128448" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCapevpvXWC0atwsEVLbAE9ZDPBRwIUPQEGzyukxNnTaUf1C/pEOwEV/Ek=" />
+         </item>
+         <item>
+            <title>Version 0.16.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Mar 17 17:36:13 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.16.1" 
+                       length="33050624" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFDqunCM7upxLBsNbn8+psIECOgySAhUAl9vzoyc//3vF8Au4pIXAKQrXEMo=" />
+         </item>
+         <item>
+            <title>Version 0.15.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sun Feb 28 10:34:23 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.15.2" 
+                       length="32641024" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCEFJn/iioAKhPREP0Th20167iUVAIUbYBJJ8adDkNPlaumg+EGg+FJeVo=" />
+         </item>
+         <item>
+            <title>Version 0.15.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Thu Feb 25 19:44:39 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.15.1" 
+                       length="32849920" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFCRycYrVvK5tleagLllP4zO05WfUAhUA1ax/Vtj2Eq7AyU2b5vW/zxaf2kw=" />
+         </item>
+         <item>
+            <title>Version 0.15.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Feb 12 17:36:02 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.15.0" 
+                       length="32890880" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFD72Og9rKh0QPOVozNrljuTfDtRTAhQBsqEq60qHhpMnP1ADo2QlIuLkQA==" />
+         </item>
+         <item>
+            <title>Version 0.14.6</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Jan 19 09:32:41 EST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.6" 
+                       length="33595392" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFAfCsIdXnWwTTe30GG/sboH2ODRPAhRDznKLBUCpL9s4JQMs8rW4qS8Vfg==" />
+         </item>
+         <item>
+            <title>Version 0.14.5</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Jan 18 11:22:47 EST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.5" 
+                       length="33632256" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDT1tmO3PuuScULzBIHZ7qI1Mu8ewIUFZlJ9TQoD7pIzT2fBU0lO6iIhbo=" />
+         </item>
+         <item>
+            <title>Version 0.14.4</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sun Jan 17 08:45:35 EST 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.4" 
+                       length="33718272" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFFe907uBzsNne9OfF0jQCSlfpAAnAhQn9hRLqVZRSMHewxwgyuRypZe9xw==" />
+         </item>
+         <item>
+            <title>Version 0.14.3</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Thu Jan 14 11:21:59 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.3" 
+                       length="33644544" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFEQ5GX4NFdr0qtWNygR270083KwyAhQEQXJNd2wS1djsonLT85dDeLpD2A==" />
+         </item>
+         <item>
+            <title>Version 0.14.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Jan 11 22:06:23 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.2" 
+                       length="33566720" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFG95Jz9afllmPD+Rp2ZH7LKnuGMgAhRAyZl4H95lTQ3wyrjhuR3FyWclQA==" />
+         </item>
+         <item>
+            <title>Version 0.14.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Jan  8 18:45:41 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.1" 
+                       length="33550336" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFEfokXUI9Cke+wzQQros66UeQJDkAhRAndq+3YZBNVcL/43rcgJSKHh9gg==" />
+         </item>
+         <item>
+            <title>Version 0.14.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Jan  6 13:52:26 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.14.0" 
+                       length="33984512" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFCe7m7IN0a/Rr9+R51j4BbPuF01kAhUAkDV5iT3Ek8cDbfATA1GFCx5b4lg=" />
+         </item>
+         <item>
+            <title>Version 0.12.2</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Jan  4 17:15:20 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.12.2" 
+                       length="34070528" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQDClcMz9uehdtJ23gHeTjN17TVPHwIUMbGu4EO1f55Etio6O4SOcoKCKuI=" />
+         </item>
+         <item>
+            <title>Version 0.12.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Jan  1 21:58:39 CET 2010</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.12.1" 
+                       length="34066432" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFA6QPg65MuIosLE4r9NYLcoLyPGSAhQU7mnILnbQ7n+SpMjaoX4ADk1AEQ==" />
+         </item>
+         <item>
+            <title>Version 0.12.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Dec 21 16:21:59 CET 2009</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.12.0" 
+                       length="33755136" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFCv1fecM6MmQFYZVVPXgnrME+7eAAhQIQS6U7P1HgTxT4jYhJTRWvaoDcw==" />
+         </item>
+         <item>
+            <title>Version 0.11.1</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sat Dec 12 12:24:45 CET 2009</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.11.1" 
+                       length="33681408" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MCwCFGd4SkNksc6bLlczHvq5xzLLLQ2AAhRUrXEPcqUPAB0v8iDjVWGzUJftiA==" />
+         </item>
+         <item>
+            <title>Version 0.11.0</title>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Dec  1 04:09:20 UTC 2009</pubDate>
+            <enclosure url="https://blink.sipthor.net/download.phtml?update"
+                       sparkle:version="0.11.0" 
+                       length="29892608" 
+                       type="application/octet-stream" 
+                       sparkle:dsaSignature="MC0CFQCC2kgsawlsrG43BdFWZM6GQH/8FgIURFAZpHXwSzjFryz+ZGQ3kkPkUG0=" />
+         </item>
+   </channel>
+</rss>
