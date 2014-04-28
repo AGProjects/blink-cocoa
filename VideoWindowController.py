@@ -5,6 +5,8 @@
 from AppKit import (NSApp,
                     NSWindow,
                     NSView,
+                    NSOnState,
+                    NSOffState,
                     NSWindowController,
                     NSEventTrackingRunLoopMode,
                     NSFloatingWindowLevel,
@@ -20,6 +22,7 @@ from AppKit import (NSApp,
                     )
 
 from Foundation import (NSBundle,
+                        NSObject,
                         NSArray,
                         NSImage,
                         NSRunLoop,
@@ -28,7 +31,9 @@ from Foundation import (NSBundle,
                         NSLocalizedString,
                         NSTrackingArea,
                         NSZeroRect,
-                        NSScreen
+                        NSScreen,
+                        NSMakeRect,
+                        NSPopUpButton
                         )
 
 from Foundation import mbFlipWindow
@@ -68,6 +73,7 @@ class VideoWindowController(NSWindowController):
     fliped = False
     aspect_ratio = None
     initial_aspect_ratio = None
+    titleBarView = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -141,6 +147,19 @@ class VideoWindowController(NSWindowController):
         self.window.setFrame_display_(frame, True)
         self.window.center()
         self.window.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
+
+        themeFrame = self.window.contentView().superview()
+        self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
+        topmenu_frame = self.titleBarView.view.frame()
+
+        newFrame = NSMakeRect(
+                             themeFrame.frame().size.width - topmenu_frame.size.width,
+                             themeFrame.frame().size.height - topmenu_frame.size.height,
+                             topmenu_frame.size.width,
+                             topmenu_frame.size.height
+                              )
+        self.titleBarView.view.setFrame_(newFrame)
+        themeFrame.addSubview_(self.titleBarView.view)
 
     def draggingEntered_(self, sender):
         if self.finished:
@@ -451,6 +470,8 @@ class VideoWindowController(NSWindowController):
 
         self.flipWnd = None
 
+        self.titleBarView.close()
+
         self.stopMouseOutTimer()
 
         self.videoControlPanel.close()
@@ -472,6 +493,7 @@ class VideoWindowController(NSWindowController):
     def toogleAlwaysOnTop(self):
         self.always_on_top  = not self.always_on_top
         self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
+        self.titleBarView.alwaysOnTop.setState_(self.always_on_top)
 
     def stopMouseOutTimer(self):
         if self.mouse_timer is not None:
@@ -495,5 +517,41 @@ class VideoWindowController(NSWindowController):
         except (StopIteration, KeyError):
             secondaryScreen = None
         return secondaryScreen
+
+
+class TitleBarView(NSObject):
+    view = objc.IBOutlet()
+    alwaysOnTop = objc.IBOutlet()
+
+    def initWithWindowController_(self, windowController):
+        self.windowController = windowController
+        self = super(TitleBarView, self).init()
+        if self:
+            NSBundle.loadNibNamed_owner_("VideoTitleBarView", self)
+
+        return self
+
+    def awakeFromNib(self):
+        self.alwaysOnTop.setState_(NSOnState if self.windowController.always_on_top else NSOffState)
+
+    def close(self):
+        self.view.removeFromSuperview()
+        self.release()
+
+    def dealloc(self):
+        self.windowController.sessionController.log_debug('Dealloc %s' % self)
+        self.windowController = None
+        super(TitleBarView, self).dealloc()
+
+    @objc.IBAction
+    def userClickedCheckbox_(self, sender):
+        if self.windowController.always_on_top and sender.state() == NSOffState:
+            self.windowController.toogleAlwaysOnTop()
+        elif not self.windowController.always_on_top and sender.state() == NSOnState:
+            self.windowController.toogleAlwaysOnTop()
+
+
+
+
 
 

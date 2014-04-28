@@ -655,6 +655,10 @@
 		1F69640417BF777D00985747 /* locked-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FC17BF777D00985747 /* locked-yellow.png */; };
 		1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
+		1F6C0DBE190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */; };
+		1F6C0DBF190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */; };
+		1F6C0DC0190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */; };
+		1F6C0DC1190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */; };
 		1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
@@ -1934,6 +1938,8 @@
 		1F6963F617BF771A00985747 /* unlocked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-red.png"; path = "icons/unlocked-red.png"; sourceTree = "<group>"; };
 		1F6963FB17BF777D00985747 /* locked-orange.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-orange.png"; path = "icons/locked-orange.png"; sourceTree = "<group>"; };
 		1F6963FC17BF777D00985747 /* locked-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-yellow.png"; path = "icons/locked-yellow.png"; sourceTree = "<group>"; };
+		1F6C0DC2190EBD8F00E79D90 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1F6C0DC4190EBD9300E79D90 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
 		1F6EE8F912BF73A2000C47DA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		1F6EF7F718E61CC8008592D2 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -2438,6 +2444,7 @@
 				1F6009CE18F74D22005517FA /* mbFlipWindow.m */,
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
 				1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */,
+				1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */,
 				1FC0184D18E0774D0009145A /* VideoControlPanel.xib */,
 				1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */,
 				1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */,
@@ -3293,6 +3300,7 @@
 				1FA6252113828E2500DFC8E3 /* editor.png in Resources */,
 				1F2746791388755F0052C384 /* fullscreen.png in Resources */,
 				1F29D0FE1906D55E0051B1BC /* video-paused.png in Resources */,
+				1F6C0DBF190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
 				1F2747D31388FC5C0052C384 /* restore.png in Resources */,
 				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
@@ -3579,6 +3587,7 @@
 				1F35D02217894FFF00C6FE38 /* contacts.png in Resources */,
 				1FF32B5417EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F35D02417894FFF00C6FE38 /* AudioSession.xib in Resources */,
+				1F6C0DC1190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
 				1F35D02517894FFF00C6FE38 /* zrtp-securemode.wav in Resources */,
 				1F35D02617894FFF00C6FE38 /* zrtp-security-failed.wav in Resources */,
 				1F6EF80218E637E0008592D2 /* VideoStreamInitialLocalWindowController.py in Resources */,
@@ -3907,6 +3916,7 @@
 				1F9A27D6179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
 				1F9A27DF1795452100672B73 /* AecSlider.xib in Resources */,
 				1F6963F417BF770900985747 /* locked-green.png in Resources */,
+				1F6C0DC0190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
 				1F6963F917BF771A00985747 /* unlocked-red.png in Resources */,
 				1F6963FF17BF777D00985747 /* locked-orange.png in Resources */,
 				1F69640317BF777D00985747 /* locked-yellow.png in Resources */,
@@ -4092,6 +4102,7 @@
 				1FD0809218C02F4C00A3B313 /* about.tiff in Resources */,
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1F29D0FD1906D55E0051B1BC /* video-paused.png in Resources */,
+				1F6C0DBE190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
 				1F6EF7FF18E637E0008592D2 /* VideoStreamInitialLocalWindowController.py in Resources */,
 				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
@@ -4343,6 +4354,15 @@
 				1F6460AE18BC926500AC41E0 /* ro */,
 			);
 			name = SessionInfoPanel.xib;
+			sourceTree = "<group>";
+		};
+		1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F6C0DC2190EBD8F00E79D90 /* en */,
+				1F6C0DC4190EBD9300E79D90 /* ro */,
+			);
+			name = VideoTitleBarView.xib;
 			sourceTree = "<group>";
 		};
 		1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */ = {
