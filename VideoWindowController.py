@@ -470,7 +470,8 @@ class VideoWindowController(NSWindowController):
 
         self.flipWnd = None
 
-        self.titleBarView.close()
+        if self.titleBarView is not None:
+            self.titleBarView.close()
 
         self.stopMouseOutTimer()
 
