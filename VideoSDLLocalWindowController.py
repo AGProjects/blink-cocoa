@@ -1,14 +1,22 @@
 from AppKit import (NSWindowController,
+                    NSBorderlessWindowMask,
+                    NSResizableWindowMask,
                     NSWindow,
                     NSView,
                     NSFloatingWindowLevel,
                     NSTrackingMouseEnteredAndExited,
                     NSTrackingActiveAlways,
-                    NSRightMouseUp
+                    NSRightMouseUp,
+                    NSOnState,
+                    NSToggleButton,
+                    NSImage,
+                    NSImageScaleProportionallyUpOrDown
                     )
 
 
 from Foundation import (NSMakeRect,
+                        NSColor,
+                        NSButton,
                         NSUserDefaults,
                         NSTimer,
                         NSEvent,
@@ -24,23 +32,12 @@ from Foundation import (NSMakeRect,
 from BlinkLogger import BlinkLogger
 from util import run_in_gui_thread
 
+from sipsimple.core import Engine
 from sipsimple.core import VideoWindow
 from sipsimple.application import SIPApplication
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.configuration.settings import SIPSimpleSettings
 
-class OverlayView(NSView):
-    initialLocation = None
-
-    def mouseDown_(self, event):
-        print 'mouseDown_'
-        self.initialLocation = event.locationInWindow()
-
-    def acceptsFirstMouse(self):
-        return True
-
-    def acceptsFirstResponder(self):
-        return True
 
 class VideoSDLLocalWindowController(NSWindowController):
 
@@ -50,6 +47,8 @@ class VideoSDLLocalWindowController(NSWindowController):
     initial_size = (0, 0)
     tracking_area = None
     initialLocation = None
+    closeButton = None
+    overlayView = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -63,8 +62,24 @@ class VideoSDLLocalWindowController(NSWindowController):
             BlinkLogger().log_debug('Init %s in %s' % (self.sdl_window, self))
             self.initial_size = self.sdl_window.size
             ns_window = NSWindow(cobject=self.sdl_window.native_handle)
-            BlinkLogger().log_debug('Init %s in %s' % (ns_window, self))
+            #ns_window.setStyleMask_(NSBorderlessWindowMask|NSResizableWindowMask)
+            BlinkLogger().log_info('Init %s in %s' % (ns_window, self))
             self.setWindow_(ns_window)
+
+            self.overlayView = VideoOverlayView.alloc().initWithFrame_(self.window().contentView().frame())
+
+            frame = self.window().contentView().frame()
+
+            self.closeButton = NSButton.alloc().initWithFrame_(NSMakeRect(10, 10 , 16, 16))
+            self.closeButton.setButtonType_(NSToggleButton)
+            self.closeButton.setBordered_(False)
+            self.closeButton.setImage_(NSImage.imageNamed_('close'))
+            self.closeButton.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+            self.overlayView.addSubview_(self.closeButton)
+
+            self.window().contentView().addSubview_(self.overlayView)
+            self.window().makeFirstResponder_(self.overlayView)
+
             self.window().setDelegate_(self)
             self.window().setTitle_(NSLocalizedString("My Video", "Window title"))
             self.window().setLevel_(NSFloatingWindowLevel)
@@ -105,19 +120,18 @@ class VideoSDLLocalWindowController(NSWindowController):
         return True
 
     def mouseEntered_(self, event):
-        print 'mouseEntered_'
+        self.closeButton.setHidden_(False)
 
     def mouseExited_(self, event):
-        print 'mouseExited_'
+        self.closeButton.setHidden_(True)
 
     def mouseDown_(self, event):
-        print 'mouseDown_'
         self.initialLocation = event.locationInWindow()
 
-    def mouseDragged_(self, event):
-        print 'mouseDragged_'
-        if self.initialLocation is None:
+    def mouseDraggedView_(self, event):
+        if not self.initialLocation:
             return
+
         screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
         windowFrame = self.window().frame()
         newOrigin = windowFrame.origin
@@ -133,7 +147,6 @@ class VideoSDLLocalWindowController(NSWindowController):
         self.window().setFrameOrigin_(newOrigin);
 
     def rightMouseDown_(self, event):
-        print 'rightMouseDown_'
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                 NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
@@ -152,7 +165,7 @@ class VideoSDLLocalWindowController(NSWindowController):
             if SIPApplication.video_device.real_name == item:
                 lastItem.setState_(NSOnState)
 
-        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self)
+        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self.window().contentView())
 
     def changeVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
@@ -174,6 +187,7 @@ class VideoSDLLocalWindowController(NSWindowController):
             self.sdl_window.size = (frame.size.width, frame.size.height - self.dif_y)
 
         self.updateTrackingAreas()
+        self.overlayView.setFrame_(self.window().contentView().frame())
 
     def windowDidMove_(self, notification):
         if self.window().frameAutosaveName():
@@ -203,6 +217,18 @@ class VideoSDLLocalWindowController(NSWindowController):
             self.window().performClose_(None)
 
     def close(self):
-        self.release()
+        self.overlayView.removeFromSuperview()
+        self.window().close()
+
+
+class VideoOverlayView(NSView):
+    def mouseDown_(self, event):
+        self.window().delegate().mouseDown_(event)
+
+    def rightMouseDown_(self, event):
+        self.window().delegate().rightMouseDown_(event)
+
+    def mouseDragged_(self, event):
+        self.window().delegate().mouseDraggedView_(event)
 
 
