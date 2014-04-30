@@ -2498,7 +2498,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				1F29D0EB1905BD670051B1BC /* sip2sip.icns */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -2585,9 +2584,10 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1FE50E59164D1B6200840B18 /* presence */,
+				1F29D0EB1905BD670051B1BC /* sip2sip.icns */,
 				1FAE0B1118FD7A2300038AA4 /* pencil_16.png */,
 				1FB3AE7318F1E73E001C612B /* close.png */,
-				1FE50E59164D1B6200840B18 /* presence */,
 				1F29D0FC1906D55E0051B1BC /* video-paused.png */,
 				1FD0809118C02F4C00A3B313 /* about.tiff */,
 				1F7E0484176DC43D0006FF31 /* hangup_16.png */,
