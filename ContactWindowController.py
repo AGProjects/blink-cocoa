@@ -5014,6 +5014,7 @@ class ContactWindowController(NSWindowController):
                     index += 1
 
         if menu == self.devicesMenu:
+            self.backend._app.engine.refresh_video_devices()
             in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
             if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and 'Built-in Output' in self.backend._app.engine.output_devices:
                 in_out_devices.append('Built-in Microphone and Output')
