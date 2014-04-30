@@ -441,8 +441,11 @@ class VideoWindowController(NSWindowController):
             self.show_window_after_full_screen_ends = None
         else:
             if self.window:
-                self.window.orderFront_(self)
-                self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
+                if self.streamController.ended:
+                    self.window.orderOut_(self)
+                else:
+                    self.window.orderFront_(self)
+                    self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
 
     def keyDown_(self, event):
         super(VideoWindowController, self).keyDown_(event)
