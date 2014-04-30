@@ -421,7 +421,7 @@ class VideoWindowController(NSWindowController):
         NSApp.delegate().contactsWindowController.showLocalVideoWindow()
         NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
-        if self.videoControlPanel:
+        if self.videoControlPanel is not None:
             self.videoControlPanel.show()
             self.videoControlPanel.window().makeKeyAndOrderFront_(None)
 

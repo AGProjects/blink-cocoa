@@ -207,6 +207,7 @@ class VideoControlPanel(NSWindowController):
 
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
+        self.videoWindowController.videoControlPanel = None
         self.videoWindowController = None
         super(VideoControlPanel, self).dealloc()
 
