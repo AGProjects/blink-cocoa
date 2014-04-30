@@ -176,19 +176,19 @@ class LocalNativeVideoView(NSView):
     initialLocation = None
     deviceView = objc.IBOutlet()
     parentWindow = objc.IBOutlet()
-    mirrorSession = None
+    captureSession = None
     aspect_ratio = None
 
     def close(self):
         BlinkLogger().log_debug('Close %s' % self)
-        if self.mirrorSession is not None:
-            if self.mirrorSession.isRunning():
-                self.mirrorSession.stopRunning()
-            self.mirrorSession = None
+        if self.captureSession is not None:
+            if self.captureSession.isRunning():
+                self.captureSession.stopRunning()
+            self.captureSession = None
         self.removeFromSuperview()
 
     def dealloc(self):
-        self.mirrorSession = None
+        self.captureSession = None
         BlinkLogger().log_debug('Dealloc %s' % self)
         super(LocalNativeVideoView, self).dealloc()
 
@@ -278,18 +278,18 @@ class LocalNativeVideoView(NSView):
                 break
 
     def refreshAfterCameraChanged(self):
-        if not self.mirrorSession:
+        if not self.captureSession:
             return
-        if self.mirrorSession.isRunning():
+        if self.captureSession.isRunning():
             self.hide()
-        self.mirrorSession = None
+        self.captureSession = None
         self.aspect_ratio = None
         self.show()
 
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
-        if self.mirrorSession is None:
-            self.mirrorSession = QTKit.QTCaptureSession.alloc().init()
+        if self.captureSession is None:
+            self.captureSession = QTKit.QTCaptureSession.alloc().init()
 
             # Find a video device
             device = self.getDevice()
@@ -303,27 +303,27 @@ class LocalNativeVideoView(NSView):
 
             # Add a device input for that device to the capture session
             captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
-            success, error = self.mirrorSession.addInput_error_(captureDeviceInput, None)
+            success, error = self.captureSession.addInput_error_(captureDeviceInput, None)
             if not success:
                 return
 
             # Add a decompressed video output that returns raw frames to the session
             captureDecompressedVideoOutput = QTKit.QTCaptureVideoPreviewOutput.alloc().init()
             captureDecompressedVideoOutput.setDelegate_(self)
-            success, error = self.mirrorSession.addOutput_error_(captureDecompressedVideoOutput, None)
+            success, error = self.captureSession.addOutput_error_(captureDecompressedVideoOutput, None)
             if not success:
                 return
 
-            self.deviceView.setCaptureSession_(self.mirrorSession)
+            self.deviceView.setCaptureSession_(self.captureSession)
 
         BlinkLogger().log_debug('Start aquire video %s' % self)
-        self.mirrorSession.startRunning()
+        self.captureSession.startRunning()
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
-        if self.mirrorSession is not None:
+        if self.captureSession is not None:
             BlinkLogger().log_debug('Stop aquire video %s' % self)
-            self.mirrorSession.stopRunning()
+            self.captureSession.stopRunning()
 
 
 class RoundWindow(NSPanel):
