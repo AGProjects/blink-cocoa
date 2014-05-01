@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <deployment defaultVersion="1070" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="VideoAVLocalWindowController">
+            <connections>
+                <outlet property="localVideoView" destination="EiT-Mj-1SZ" id="WzP-d9-hyy"/>
+                <outlet property="window" destination="QvC-M9-y7g" id="liw-g7-E4J"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <window title="My Video" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="AVRoundWindow">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="196" y="240" width="467" height="247"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <view key="contentView" id="EiT-Mj-1SZ" customClass="LocalAVVideoView">
+                <rect key="frame" x="0.0" y="0.0" width="467" height="247"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <customView id="6WE-Ek-cFR">
+                        <rect key="frame" x="-7" y="-5" width="492" height="252"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    </customView>
+                    <button hidden="YES" id="0vJ-dE-guV">
+                        <rect key="frame" x="5" y="226" width="16" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="circular" image="close" imagePosition="left" alignment="left" controlSize="small" imageScaling="proportionallyUpOrDown" inset="2" id="yUx-8P-oUi">
+                            <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="smallSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performClose:" target="QvC-M9-y7g" id="yq0-af-NQI"/>
+                        </connections>
+                    </button>
+                </subviews>
+                <connections>
+                    <outlet property="captureView" destination="6WE-Ek-cFR" id="2zM-Jb-Q7y"/>
+                    <outlet property="parentWindow" destination="QvC-M9-y7g" id="xSK-Qy-7dP"/>
+                </connections>
+            </view>
+            <connections>
+                <outlet property="closeButton" destination="0vJ-dE-guV" id="d16-lx-a5I"/>
+                <outlet property="delegate" destination="-2" id="ats-lE-ZPZ"/>
+            </connections>
+        </window>
+    </objects>
+    <resources>
+        <image name="close" width="204" height="204"/>
+    </resources>
+</document>

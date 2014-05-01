@@ -484,7 +484,7 @@ class VideoWindowController(NSWindowController):
             self.window.performClose_(None)
 
         if self.localVideoWindow:
-            self.localVideoWindow.close()
+            self.localVideoWindow.hide()
 
     def dealloc(self):
         self.sessionController.log_debug('Dealloc %s' % self)

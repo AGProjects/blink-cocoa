@@ -137,6 +137,7 @@ from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_ph
 from OfflineNoteController import OfflineNoteController
 from VideoSDLLocalWindowController import VideoSDLLocalWindowController
 from VideoNativeLocalWindowController import VideoNativeLocalWindowController
+from VideoAVLocalWindowController import VideoAVLocalWindowController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import (allocate_autorelease_pool,
@@ -2828,8 +2829,9 @@ class ContactWindowController(NSWindowController):
 
     def showLocalVideoWindow(self):
         if self.localVideoWindow is None:
-            self.localVideoWindow = VideoNativeLocalWindowController()
+            #self.localVideoWindow = VideoNativeLocalWindowController()
             #self.localVideoWindow = VideoSDLLocalWindowController()
+            self.localVideoWindow = VideoAVLocalWindowController()
 
         self.localVideoWindow.show()
 
