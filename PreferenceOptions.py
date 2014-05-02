@@ -941,7 +941,7 @@ class H264ResolutionOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("1280x720", "720x480", "720x576"):
+        for item in ("1920x1080", "1280x720", "720x480", "720x576"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -964,7 +964,19 @@ class H264LevelOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        self.popup.addItemWithTitle_("3.1")
+        for item in ("3.1", "4.0"):
+            self.popup.addItemWithTitle_(str(item))
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
+class VideoResolutionOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
+        self.addMissingOptions = True
+        for item in ('auto', '720p', '1080p', 'vga'):
+            self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
         self.popup.setFrame_(frame)
@@ -1841,6 +1853,7 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "video.device" : VideoDeviceOption,
+"video.resolution" : VideoResolutionOption,
 "video.paused" : HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.enable_encryption": OTRSettings,
@@ -2052,6 +2065,7 @@ GeneralSettingsOrder = {
                        'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
                        'chat': ['disabled'],
+                       'video': ['device', 'resolution'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
