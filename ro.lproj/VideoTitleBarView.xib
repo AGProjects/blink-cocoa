@@ -5,7 +5,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="TopViewMenu">
+        <customObject id="-2" userLabel="File's Owner" customClass="TitleBarView">
             <connections>
                 <outlet property="alwaysOnTop" destination="foI-NE-klu" id="FWT-JH-YLC"/>
                 <outlet property="view" destination="c22-O7-iKe" id="FxN-5j-g7r"/>
@@ -18,8 +18,8 @@
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
             <subviews>
                 <button id="foI-NE-klu">
-                    <rect key="frame" x="-3" y="2" width="164" height="18"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <rect key="frame" x="26" y="3" width="135" height="16"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="check" title="Always On Top" bezelStyle="regularSquare" imagePosition="right" alignment="right" controlSize="small" state="on" inset="2" id="ELG-Zr-ZGQ">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="smallSystem"/>
