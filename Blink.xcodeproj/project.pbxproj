@@ -4737,8 +4737,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4764,7 +4764,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "A2B690A4-9534-4ABA-BB3C-C875DDA17F97";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4777,8 +4777,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects (4DFEFUDLKZ)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application: AG Projects (4DFEFUDLKZ)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4803,7 +4803,7 @@
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "1DCDE86E-1E5A-4DCF-906D-1F4F84CDF04C";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4894,8 +4894,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4920,7 +4920,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "A2B690A4-9534-4ABA-BB3C-C875DDA17F97";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
@@ -4933,8 +4933,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: AG Projects (4DFEFUDLKZ)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application: AG Projects (4DFEFUDLKZ)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -4958,7 +4958,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "D3C2777B-4739-4624-8A3B-B66ABB9A41A7";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.7;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
