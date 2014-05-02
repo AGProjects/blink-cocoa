@@ -95,6 +95,28 @@ class BlinkAppDelegate(NSObject):
     wait_for_enrollment = False
     updater = None
 
+    # branding
+    about_version = "1.0"
+    about_slogan = "A state of the art, easy to use SIP client"
+    changelog_url = "http://icanblink.com/changelog-pro.phtml"
+    help_url = "http://help-pro.icanblink.com"
+    last_history_entries = 10
+    allowed_domains = []
+    icloud_enabled = False
+    answering_machine_enabled = True
+    history_enabled = True
+    call_recording_enabled = True
+    file_logging_enabled = True
+    advanced_options_enabled = True
+    hidden_account_preferences_sections = ()
+    chat_replication_password_hidden = True
+    web_alert_url_hidden = False
+    migrate_passwords_to_keychain = True
+    service_provider_help_url  = None
+    service_provider_name = None
+    maximum_accounts = None
+    account_extension = None
+
     def init(self):
         self = super(BlinkAppDelegate, self).init()
         if self:
@@ -102,6 +124,13 @@ class BlinkAppDelegate(NSObject):
             self.applicationNamePrint = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleName"))
             build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
+
+            try:
+                import branding
+            except ImportError:
+                branding = Null
+
+            branding.init(self)
 
             BlinkLogger().log_info(u"Starting %s build %s from %s" % (self.applicationNamePrint, build, date))
 
@@ -227,6 +256,13 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
+        try:
+            import branding
+        except ImportError:
+            branding = Null
+
+        branding.setup(self)
+
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 
         config_file = ApplicationData.get('config')
@@ -358,19 +394,8 @@ class BlinkAppDelegate(NSObject):
     def orderFrontAboutPanel_(self, sender):
         if not self.aboutPanel:
             NSBundle.loadNibNamed_owner_("About", self)
-            version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
-            build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
-            vdate = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
-
-            if self.applicationName == 'Blink Pro':
-                self.aboutVersion.setStringValue_("Version Pro %s build %s\n%s" % (version, build, vdate))
-            elif self.applicationName == 'Blink Lite':
-                self.aboutVersion.setStringValue_("Version Lite %s build %s\n%s" % (version, build, vdate))
-            else:
-                self.aboutVersion.setStringValue_("Version %s\n%s" % (version, vdate))
-
-        if self.applicationName == 'SIP2SIP':
-            self.aboutSlogan.setStringValue_(NSLocalizedString("Special edition of Blink SIP Client for SIP2SIP", "About panel label"))
+            self.aboutVersion.setStringValue_(self.about_version)
+            self.aboutSlogan.setStringValue_(self.about_slogan)
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 

@@ -85,14 +85,14 @@ class EnrollmentController(NSObject):
             if NSApp.delegate().contactsWindowController.first_run:
                 NotificationCenter().add_observer(self, name='SIPAccountManagerDidAddAccount')
 
-            if NSApp.delegate().applicationName == 'SIP2SIP':
-                self.allowed_domains = ['sip2sip.info']
+            if NSApp.delegate().allowed_domains:
+                self.allowed_domains = NSApp.delegate().allowed_domains
                 self.syncWithiCloudCheckbox.setHidden_(True)
                 self.syncWithiCloudCheckbox.setState_(NSOffState)
                 self.domainButton.setHidden_(True)
-                self.addressText.cell().setPlaceholderString_('user@sip2sip.info')
+                self.addressText.cell().setPlaceholderString_('user@' + self.allowed_domains[0])
 
-            if NSApp.delegate().applicationName == 'Blink':
+            if not NSApp.delegate().icloud_enabled:
                 self.syncWithiCloudCheckbox.setHidden_(True)
 
         return self

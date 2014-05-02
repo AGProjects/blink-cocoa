@@ -42,7 +42,7 @@ from sipsimple.threading.green import run_in_green_thread, Command
 
 from BlinkLogger import BlinkLogger, FileLogger
 
-from configuration.account import AccountExtension, BonjourAccountExtension, AccountExtensionSIP2SIP
+from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
@@ -86,7 +86,7 @@ class SIPManager(object):
         self._delegate = delegate
 
     def migratePasswordsToKeychain(self):
-        if NSApp.delegate().applicationName == 'SIP2SIP':
+        if not NSApp.delegate().migrate_passwords_to_keychain:
             return
 
         account_manager = AccountManager()
@@ -126,8 +126,8 @@ class SIPManager(object):
             configuration_manager.save()
 
     def init(self):
-        if NSApp.delegate().applicationName == 'SIP2SIP':
-            Account.register_extension(AccountExtensionSIP2SIP)
+        if NSApp.delegate().account_extension:
+            Account.register_extension(NSApp.delegate().account_extension)
         else:
             Account.register_extension(AccountExtension)
 
@@ -438,10 +438,14 @@ class SIPManager(object):
 
         # Set audio settings compatible with AEC and Noise Supressor
         settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled else 48000
-        if NSApp.delegate().applicationName == 'SIP2SIP':
-            settings.service_provider.help_url  = 'http://wiki.sip2sip.info'
-            settings.service_provider.name = 'SIP2SIP'
-        settings.save()
+        if NSApp.delegate().service_provider_help_url and settings.service_provider.help_url != NSApp.delegate().service_provider_help_url:
+            settings.service_provider.help_url = NSApp.delegate().service_provider_help_url
+            settings.save()
+
+        if NSApp.delegate().service_provider_name and settings.service_provider.name != NSApp.delegate().service_provider_name:
+            settings.service_provider.name = NSApp.delegate().service_provider_name
+            settings.save()
+
         BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
         BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
 
@@ -666,10 +670,8 @@ class SIPManager(object):
         BlinkLogger().log_debug(u"XCAP server capabilities: %s" % ", ".join(data.auids))
 
     def validateAddAccountAction(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) <= 2
-        elif NSApp.delegate().applicationName == 'SIP2SIP':
-            return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) < 1
+        if NSApp.delegate().maximum_accounts:
+            return len([account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount)]) <=  NSApp.delegate().maximum_accounts
         return True
 
 

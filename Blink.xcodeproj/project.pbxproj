@@ -223,6 +223,10 @@
 		1F2436861912B27000E71253 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
 		1F2436871912B27800E71253 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
 		1F2436881912B29000E71253 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
+		1F24368A1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
+		1F24368B1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
+		1F24368C1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
+		1F24368D1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
 		1F2489E013FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
 		1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
 		1F2489E213FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
@@ -1859,6 +1863,7 @@
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
 		1F2436831912B23700E71253 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoAVLocalWindow.xib; sourceTree = "<group>"; };
 		1F2436851912B23B00E71253 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoAVLocalWindow.xib; sourceTree = "<group>"; };
+		1F2436891913CD7C00E71253 /* branding.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = branding.py; sourceTree = "<group>"; };
 		1F2489DF13FE781F007CDFD5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1F2746781388755F0052C384 /* fullscreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = fullscreen.png; path = icons/fullscreen.png; sourceTree = "<group>"; };
 		1F2747D21388FC5C0052C384 /* restore.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = restore.png; path = icons/restore.png; sourceTree = "<group>"; };
@@ -2931,6 +2936,7 @@
 			isa = PBXGroup;
 			children = (
 				1F5BC30217E66DAC00D1D8BE /* Localizable.strings */,
+				1F2436891913CD7C00E71253 /* branding.py */,
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
@@ -3169,6 +3175,7 @@
 				1FB3AE6D18F1BFC4001C612B /* VideoNativeLocalWindow.xib in Resources */,
 				1F22729B12B554F50010A8B2 /* SessionController.py in Resources */,
 				1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */,
+				1F24368B1913CD7D00E71253 /* branding.py in Resources */,
 				1F22729D12B554F50010A8B2 /* Contact.xib in Resources */,
 				1FB3AE7518F1E73E001C612B /* close.png in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
@@ -3458,6 +3465,7 @@
 				1F35CF9317894FFF00C6FE38 /* file_sent.wav in Resources */,
 				1F35CF9417894FFF00C6FE38 /* message_received.wav in Resources */,
 				1F35CF9517894FFF00C6FE38 /* message_sent.wav in Resources */,
+				1F24368D1913CD7D00E71253 /* branding.py in Resources */,
 				1F35CF9617894FFF00C6FE38 /* ring_inbound.wav in Resources */,
 				1F35CF9717894FFF00C6FE38 /* ring_outbound.wav in Resources */,
 				1F35CF9817894FFF00C6FE38 /* VerticalBoxView.py in Resources */,
@@ -3792,6 +3800,7 @@
 				1F8DC37C135084FA0034815C /* dtmf_6_tone.wav in Resources */,
 				1F8DC37D135084FA0034815C /* dtmf_7_tone.wav in Resources */,
 				1F447E8018DF3522001EF4C9 /* VideoWindowController.py in Resources */,
+				1F24368C1913CD7D00E71253 /* branding.py in Resources */,
 				1F8DC37E135084FA0034815C /* dtmf_8_tone.wav in Resources */,
 				1F960C4918E0F83D00060690 /* pause-white.png in Resources */,
 				1F8DC37F135084FA0034815C /* dtmf_9_tone.wav in Resources */,
@@ -3977,6 +3986,7 @@
 				1FB3AE6C18F1BFC4001C612B /* VideoNativeLocalWindow.xib in Resources */,
 				2BEFC12E0FD0BE4700447EFB /* SessionController.py in Resources */,
 				2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */,
+				1F24368A1913CD7D00E71253 /* branding.py in Resources */,
 				2BAF381A0FE088C70040117A /* Contact.xib in Resources */,
 				1FB3AE7418F1E73E001C612B /* close.png in Resources */,
 				2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */,

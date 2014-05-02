@@ -187,29 +187,39 @@ class PreferencesController(NSWindowController, object):
 
         self.toolbar.setSelectedItemIdentifier_('accounts')
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if not NSApp.delegate().icloud_enabled:
+            self.sync_with_icloud_checkbox.setHidden_(True)
+        else:
+            major, minor = platform.mac_ver()[0].split('.')[0:2]
+            self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
+
+        if not NSApp.delegate().call_recording_enabled:
             PreferenceOptionTypes['audio.directory'] = HiddenOption
             PreferenceOptionTypes['audio.auto_recording'] = HiddenOption
+
+        if not NSApp.delegate().file_logging_enabled:
             PreferenceOptionTypes['logs.directory'] = HiddenOption
+
+        if not NSApp.delegate().history_enabled:
             PreferenceOptionTypes['contacts.enable_incoming_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_outgoing_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_missed_calls_group'] = HiddenOption
 
+        if not NSApp.delegate().advanced_options_enabled:
             for identifier in ('answering_machine', 'advanced'):
                 try:
                     item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
                     self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
                 except StopIteration:
                     pass
-            self.sync_with_icloud_checkbox.setHidden_(True)
-        elif NSApp.delegate().applicationName == 'SIP2SIP':
-            self.sync_with_icloud_checkbox.setHidden_(True)
 
-        elif NSApp.delegate().applicationName == 'Blink':
-            self.sync_with_icloud_checkbox.setHidden_(True)
-        else:
-            major, minor = platform.mac_ver()[0].split('.')[0:2]
-            self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
+        if not NSApp.delegate().answering_machine_enabled:
+            for identifier in ('answering_machine'):
+                try:
+                    item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
+                    self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
+                except StopIteration:
+                    pass
 
         self.userDefaultsDidChange_(None)
 
@@ -409,13 +419,10 @@ class PreferencesController(NSWindowController, object):
 
         frame = self.advancedTabView.frame()
         for section_name in (section_name for section_name in sections if section_name not in DisabledAccountPreferenceSections):
-            if NSApp.delegate().applicationName == 'Blink Lite' and section_name in ('audio', 'chat', 'pstn', 'ldap', 'web_alert'):
-                continue
+            if section_name in NSApp.delegate().hidden_account_preferences_sections:
+                return
 
-            if NSApp.delegate().applicationName == 'SIP2SIP' and section_name in ('auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui'):
-                continue
-
-            if NSApp.delegate().applicationName in ('Blink Lite', 'Blink Pro'):
+            if NSApp.delegate().chat_replication_password_hidden:
                 PreferenceOptionTypes['chat.replication_password'] = HiddenOption
 
             if section_name == 'tls':
@@ -466,7 +473,7 @@ class PreferencesController(NSWindowController, object):
         except KeyError:
             options = unordered_options
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if NSApp.delegate().web_alert_url_hidden:
             PreferenceOptionTypes['web_alert.alert_url'] = HiddenOption
 
         if not NSApp.delegate().debug:

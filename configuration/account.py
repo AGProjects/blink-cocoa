@@ -5,7 +5,7 @@
 Blink account settings extensions.
 """
 
-__all__ = ['AccountExtension', 'BonjourAccountExtension']
+__all__ = ['AccountExtension', 'BonjourAccountExtension', 'RTPSettingsExtension']
 
 
 from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
@@ -58,10 +58,6 @@ class NATTraversalSettingsExtension(NATTraversalSettings):
     use_ice = Setting(type=bool, default=False)
 
 
-class NATTraversalSettingsExtensionSIP2SIP(NATTraversalSettings):
-    use_ice = Setting(type=bool, default=True)
-
-
 class BonjourPresenceSettingsExtension(PresenceSettings):
     enabled = Setting(type=bool, default=True)
     enable_on_the_phone = Setting(type=bool, default=True)
@@ -88,10 +84,6 @@ class RTPSettingsExtension(RTPSettings):
     use_srtp_without_tls = Setting(type=bool, default=True)
     hangup_on_timeout = Setting(type=bool, default=True)
     srtp_encryption = Setting(type=SRTPEncryption, default='disabled')
-
-
-class RTPSettingsExtensionSIP2SIP(RTPSettingsExtension):
-    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
 
 
 class BonjourRTPSettingsExtension(RTPSettings):
@@ -179,11 +171,6 @@ class AccountExtension(SettingsObjectExtension):
     xcap = XCAPSettingsExtension
     web_alert = WebAlertSettings
     gui = GUISettings
-
-
-class AccountExtensionSIP2SIP(AccountExtension):
-    nat_traversal = NATTraversalSettingsExtensionSIP2SIP
-    rtp = RTPSettingsExtensionSIP2SIP
 
 
 class BonjourAccountExtension(SettingsObjectExtension):

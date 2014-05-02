@@ -44,10 +44,8 @@ class iCloudManager(NSObject):
     first_sync_completed = property(_get_first_sync_completed, _set_first_sync_completed)
 
     def __init__(self):
-        if NSApp.delegate().applicationName == 'Blink':
+        if not NSApp.delegate().icloud_enabled:
             NSUserDefaults.standardUserDefaults().setObject_forKey_("Disabled", "iCloudSyncEnabled")
-
-        if NSApp.delegate().applicationName not in ('Blink Pro'):
             return
 
         major, minor = platform.mac_ver()[0].split('.')[0:2]

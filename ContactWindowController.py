@@ -449,12 +449,13 @@ class ContactWindowController(NSWindowController):
 
         self.contactsMenu.itemWithTag_(42).setEnabled_(True) # Dialpad
 
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if not NSApp.delegate().answering_machine_enabled:
             # Answering machine
             item = self.statusBarMenu.itemWithTag_(50)
             item.setEnabled_(False)
             item.setHidden_(True)
 
+        if not NSApp.delegate().history_enabled:
             # History menu
             item = self.windowMenu.itemWithTag_(3)
             item.setHidden_(True)
@@ -747,14 +748,12 @@ class ContactWindowController(NSWindowController):
         NSNotificationCenter.defaultCenter().removeObserver_(self)
 
     def showWindow_(self, sender):
-        if NSApp.delegate().applicationName == 'SIP2SIP':
-            self.window().setTitle_('SIP2SIP')
+        settings = SIPSimpleSettings()
+        if settings.service_provider.name:
+            window_title =  "%s for %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
         else:
-            settings = SIPSimpleSettings()
-            if settings.service_provider.name:
-                window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
-                self.window().setTitle_(window_title)
-
+            window_title = NSApp.delegate().applicationNamePrint
+        self.window().setTitle_(window_title)
         super(ContactWindowController, self).showWindow_(sender)
 
     def copyToSearchBar_(self, sender):
@@ -879,12 +878,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChangelog_(self, sender):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-lite.phtml"))
-        elif NSApp.delegate().applicationName == 'SIP2SIP':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-sip2sip.phtml"))
-        else:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/changelog-pro.phtml"))
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(NSApp.delegate().changelog_url))
 
     @objc.IBAction
     def showDonate_(self, sender):
@@ -3293,12 +3287,7 @@ class ContactWindowController(NSWindowController):
         self.showHelp()
 
     def showHelp(self, append_url=''):
-        if NSApp.delegate().applicationName == 'SIP2SIP':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://projects.ag-projects.com/projects/blinkc/wiki/Help_For_SIP2SIP"+append_url))
-        elif NSApp.delegate().applicationName == 'Blink Lite':
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://help-lite.icanblink.com"+append_url))
-        else:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://help-pro.icanblink.com"+append_url))
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(NSApp.delegate().help_url+append_url))
 
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
@@ -3441,7 +3430,7 @@ class ContactWindowController(NSWindowController):
 
     @allocate_autorelease_pool
     def updateRecordingsMenu(self):
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if not NSApp.delegate().call_recording_enabled:
             return
 
         def format_item(name, when):
@@ -3588,7 +3577,7 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         chat_privacy = self.historyMenu.itemWithTag_(101)
         chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
-        self.get_session_history_entries(2 if NSApp.delegate().applicationName == 'Blink Lite' else 10)
+        self.get_session_history_entries(NSApp.delegate().last_history_entries)
 
     def getAccountWitDialPlan(self, uri):
         try:

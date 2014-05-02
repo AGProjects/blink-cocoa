@@ -3018,7 +3018,7 @@ class ContactListModel(CustomListModel):
 
     @run_in_green_thread
     def reload_history_groups(self, force_reload=False):
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if not NSApp.delegate().history_enabled:
             return
 
         settings = SIPSimpleSettings()

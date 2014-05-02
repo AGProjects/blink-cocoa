@@ -282,9 +282,6 @@ class SMSWindowController(NSWindowController):
 
     @objc.IBAction
     def printDocument_(self, sender):
-        if NSApp.delegate().applicationName == 'Blink Lite':
-            return
-
         printInfo = NSPrintInfo.sharedPrintInfo()
         printInfo.setTopMargin_(30)
         printInfo.setBottomMargin_(30)
