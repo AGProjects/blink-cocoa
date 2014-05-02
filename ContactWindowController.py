@@ -5183,6 +5183,7 @@ class ContactWindowController(NSWindowController):
 
     def selectVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
+        BlinkLogger().log_info('Switching to %s video camera' % sender.representedObject())
         settings.video.device = sender.representedObject()
         settings.save()
 
