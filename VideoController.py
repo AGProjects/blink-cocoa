@@ -261,7 +261,7 @@ class VideoController(MediaStream):
     def _NH_MediaStreamDidStart(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
         self.started = True
-        sample_rate = self.stream.clock_rate/1000
+        sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
         self.sessionController.log_info("Video stream established to %s:%s using %s %0.fkHz codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec, sample_rate))
 

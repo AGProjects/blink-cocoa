@@ -432,8 +432,8 @@ class DebugWindow(NSObject):
                                                                       video_stream.local_rtp_port,
                                                                       video_stream.remote_rtp_address,
                                                                       video_stream.remote_rtp_port)
-        if video_stream.codec and video_stream.clock_rate:
-            text += '%s Video call established using "%s" codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.clock_rate)
+        if video_stream.codec and video_stream.sample_rate:
+            text += '%s Video call established using "%s" codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.sample_rate)
         if video_stream.srtp_active:
             text += '%s RTP video stream is encrypted\n' % session.start_time
         if session.remote_user_agent is not None:

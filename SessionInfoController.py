@@ -430,12 +430,12 @@ class SessionInfoController(NSObject):
             self.video_rx_speed.setStringValue_('Rx %s/s' % format_size(self.video_stream.statistics['rx_bytes'], bits=True))
             self.video_tx_speed.setStringValue_('Tx %s/s' % format_size(self.video_stream.statistics['tx_bytes'], bits=True))
 
-            if self.video_stream.stream.codec and self.video_stream.stream.clock_rate:
+            if self.video_stream.stream.codec and self.video_stream.stream.sample_rate:
                 codec = beautify_video_codec(self.video_stream.stream.codec)
 
                 try:
                     settings = SIPSimpleSettings()
-                    sample_rate = self.video_stream.stream.clock_rate/1000
+                    sample_rate = self.video_stream.stream.sample_rate/1000
                     codec = codec + " %0.fkHz" % sample_rate
                 except TypeError:
                     pass
