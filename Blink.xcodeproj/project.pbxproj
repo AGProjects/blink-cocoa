@@ -224,9 +224,6 @@
 		1F2436871912B27800E71253 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
 		1F2436881912B29000E71253 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
 		1F24368A1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
-		1F24368B1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
-		1F24368C1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
-		1F24368D1913CD7D00E71253 /* branding.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436891913CD7C00E71253 /* branding.py */; };
 		1F2489E013FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
 		1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
 		1F2489E213FE781F007CDFD5 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
@@ -2413,6 +2410,21 @@
 			name = Conference;
 			sourceTree = "<group>";
 		};
+		1F485725191595FA002543C7 /* Branding */ = {
+			isa = PBXGroup;
+			children = (
+				8D1107310486CEB800E47090 /* Info.plist */,
+				1F8DC9111351D7460034815C /* Info-lite.plist */,
+				1FCF160812B5639F00F71BE5 /* Info-pro.plist */,
+				1FA0800918E4EB5A0051FBBE /* Info-sip2sip.plist */,
+				1F2436891913CD7C00E71253 /* branding.py */,
+				1F419C9519152F400051F3D9 /* branding-sip2sip.py */,
+				1F419C991915330B0051F3D9 /* branding-pro.py */,
+				1F419C97191530080051F3D9 /* branding-lite.py */,
+			);
+			name = Branding;
+			sourceTree = "<group>";
+		};
 		1F5308391486EE1200D01CA8 /* Keychain */ = {
 			isa = PBXGroup;
 			children = (
@@ -2519,6 +2531,7 @@
 			isa = PBXGroup;
 			children = (
 				1F922C461462B021001B7953 /* Sandbox */,
+				1F485725191595FA002543C7 /* Branding */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -2535,10 +2548,6 @@
 				2B5DE6760FFDADE300701821 /* Sounds */,
 				2B24517D0FCF8AA30023DBFB /* Icons */,
 				DE3A672E13A8A987006EEB0F /* TLS */,
-				8D1107310486CEB800E47090 /* Info.plist */,
-				1F8DC9111351D7460034815C /* Info-lite.plist */,
-				1FCF160812B5639F00F71BE5 /* Info-pro.plist */,
-				1FA0800918E4EB5A0051FBBE /* Info-sip2sip.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -2929,10 +2938,6 @@
 			isa = PBXGroup;
 			children = (
 				1F5BC30217E66DAC00D1D8BE /* Localizable.strings */,
-				1F2436891913CD7C00E71253 /* branding.py */,
-				1F419C9519152F400051F3D9 /* branding-sip2sip.py */,
-				1F419C991915330B0051F3D9 /* branding-pro.py */,
-				1F419C97191530080051F3D9 /* branding-lite.py */,
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
@@ -3175,7 +3180,6 @@
 				1F22729A12B554F50010A8B2 /* reconnect.png in Resources */,
 				1F22729B12B554F50010A8B2 /* SessionController.py in Resources */,
 				1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */,
-				1F24368B1913CD7D00E71253 /* branding.py in Resources */,
 				1F22729D12B554F50010A8B2 /* Contact.xib in Resources */,
 				1FB3AE7518F1E73E001C612B /* close.png in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
@@ -3465,7 +3469,6 @@
 				1F35CF9317894FFF00C6FE38 /* file_sent.wav in Resources */,
 				1F35CF9417894FFF00C6FE38 /* message_received.wav in Resources */,
 				1F35CF9517894FFF00C6FE38 /* message_sent.wav in Resources */,
-				1F24368D1913CD7D00E71253 /* branding.py in Resources */,
 				1F35CF9617894FFF00C6FE38 /* ring_inbound.wav in Resources */,
 				1F35CF9717894FFF00C6FE38 /* ring_outbound.wav in Resources */,
 				1F35CF9817894FFF00C6FE38 /* VerticalBoxView.py in Resources */,
@@ -3798,7 +3801,6 @@
 				1F8DC37C135084FA0034815C /* dtmf_6_tone.wav in Resources */,
 				1F8DC37D135084FA0034815C /* dtmf_7_tone.wav in Resources */,
 				1F447E8018DF3522001EF4C9 /* VideoWindowController.py in Resources */,
-				1F24368C1913CD7D00E71253 /* branding.py in Resources */,
 				1F8DC37E135084FA0034815C /* dtmf_8_tone.wav in Resources */,
 				1F960C4918E0F83D00060690 /* pause-white.png in Resources */,
 				1F8DC37F135084FA0034815C /* dtmf_9_tone.wav in Resources */,
