@@ -929,7 +929,7 @@ class H264ProfileOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = False
         self.popup.sizeToFit()
-        for item in H264Profile._valid_values:
+        for item in H264Profile.valid_values:
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
