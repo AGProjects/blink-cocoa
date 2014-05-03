@@ -136,7 +136,6 @@ from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
 from VideoSDLLocalWindowController import VideoSDLLocalWindowController
-from VideoNativeLocalWindowController import VideoNativeLocalWindowController
 from VideoAVLocalWindowController import VideoAVLocalWindowController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
@@ -2823,7 +2822,6 @@ class ContactWindowController(NSWindowController):
 
     def showLocalVideoWindow(self):
         if self.localVideoWindow is None:
-            #self.localVideoWindow = VideoNativeLocalWindowController()
             #self.localVideoWindow = VideoSDLLocalWindowController()
             self.localVideoWindow = VideoAVLocalWindowController()
 
