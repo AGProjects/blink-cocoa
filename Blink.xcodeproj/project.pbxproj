@@ -3122,6 +3122,11 @@
 					};
 					1F8DC324135084FA0034815C = {
 						DevelopmentTeam = 4DFEFUDLKZ;
+						SystemCapabilities = {
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
 					};
 					8D1107260486CEB800E47090 = {
 						DevelopmentTeam = 4DFEFUDLKZ;
