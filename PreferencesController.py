@@ -420,7 +420,7 @@ class PreferencesController(NSWindowController, object):
         frame = self.advancedTabView.frame()
         for section_name in (section_name for section_name in sections if section_name not in DisabledAccountPreferenceSections):
             if section_name in NSApp.delegate().hidden_account_preferences_sections:
-                return
+                continue
 
             if NSApp.delegate().chat_replication_password_hidden:
                 PreferenceOptionTypes['chat.replication_password'] = HiddenOption
@@ -566,10 +566,9 @@ class PreferencesController(NSWindowController, object):
 
         self.createAccountOptionsUI(account)
 
-        if section is not None:
-            if section < self.advancedPop.numberOfItems():
-                self.advancedPop.selectItemAtIndex_(section)
-                self.advancedTabView.selectTabViewItemAtIndex_(section)
+        if section is not None and section >=0 and section < self.advancedPop.numberOfItems():
+            self.advancedPop.selectItemAtIndex_(section)
+            self.advancedTabView.selectTabViewItemAtIndex_(section)
 
         self.updating = False
 
