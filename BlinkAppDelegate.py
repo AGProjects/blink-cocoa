@@ -13,7 +13,8 @@ from Foundation import (NSAppleEventManager,
                         NSThread,
                         NSObject,
                         NSUserDefaults,
-                        NSLocalizedString)
+                        NSLocalizedString,
+                        NSURL)
 
 from AppKit import (NSAlertDefaultReturn,
                     NSApp,
@@ -116,6 +117,7 @@ class BlinkAppDelegate(NSObject):
     service_provider_name = None
     maximum_accounts = None
     account_extension = None
+    sp_update_url = None
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -262,6 +264,10 @@ class BlinkAppDelegate(NSObject):
             branding = Null
 
         branding.setup(self)
+
+        if self.updater:
+            if self.sp_update_url is not None:
+                self.updater.sp.setFeedURL_(NSURL.URLWithString_(self.sp_update_url))
 
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 

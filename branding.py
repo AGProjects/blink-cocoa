@@ -83,3 +83,4 @@ def setup(delegate):
     if delegate.applicationName == 'SIP2SIP':
         delegate.account_extension = AccountExtensionSIP2SIP
 
+    delegate.sp_update_url = None

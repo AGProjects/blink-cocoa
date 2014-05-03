@@ -1,5 +1,8 @@
 
-from Foundation import NSBundle, NSObject
+from Foundation import (NSBundle,
+                        NSObject
+                        )
+
 import objc
 
 
