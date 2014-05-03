@@ -45,7 +45,7 @@ import unicodedata
 from application.notification import NotificationCenter
 from VideoControlPanel import VideoControlPanel
 from VideoDisconnectWindow import VideoDisconnectWindow
-from VideoStreamInitialLocalWindowController import VideoStreamInitialLocalWindowController
+from VideoStreamLocalWindowController import VideoStreamLocalWindowController
 from util import run_in_gui_thread
 
 
@@ -90,7 +90,7 @@ class VideoWindowController(NSWindowController):
         sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
         other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
         if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
-            self.localVideoWindow = VideoStreamInitialLocalWindowController(self)
+            self.localVideoWindow = VideoStreamLocalWindowController(self)
 
     @property
     def sessionController(self):

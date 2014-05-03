@@ -14,7 +14,7 @@ from sipsimple.threading import run_in_twisted_thread
 from MediaStream import STREAM_PROPOSING
 
 
-class VideoStreamInitialLocalWindowController(NSWindowController):
+class VideoStreamLocalWindowController(NSWindowController):
     window = None
     finished = False
     initial_size = None
@@ -75,7 +75,7 @@ class VideoStreamInitialLocalWindowController(NSWindowController):
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
         self.videoWindowController = None
-        super(VideoStreamInitialLocalWindowController, self).dealloc()
+        super(VideoStreamLocalWindowController, self).dealloc()
 
     def windowDidBecomeMain_(self, notification):
         if self.videoWindowController.window:
