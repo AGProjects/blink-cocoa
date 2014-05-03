@@ -51,5 +51,7 @@
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/BlinkAppcast.xml</string>
+        <key>BrandingFile</key>
+        <string>branding</string>
 </dict>
 </plist>

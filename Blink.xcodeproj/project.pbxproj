@@ -562,6 +562,9 @@
 		1F3C358515F522FA005356AE /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
 		1F3C358615F522FA005356AE /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
 		1F3C358715F522FA005356AE /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
+		1F419C9619152F400051F3D9 /* branding-sip2sip.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F419C9519152F400051F3D9 /* branding-sip2sip.py */; };
+		1F419C98191530080051F3D9 /* branding-lite.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F419C97191530080051F3D9 /* branding-lite.py */; };
+		1F419C9A1915330B0051F3D9 /* branding-pro.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F419C991915330B0051F3D9 /* branding-pro.py */; };
 		1F447E7E18DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
 		1F447E7F18DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
 		1F447E8018DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
@@ -1874,6 +1877,9 @@
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
 		1F3C358215F521A8005356AE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
 		1F3C358415F522FA005356AE /* PresenceInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresenceInfoController.py; sourceTree = "<group>"; };
+		1F419C9519152F400051F3D9 /* branding-sip2sip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-sip2sip.py"; sourceTree = "<group>"; };
+		1F419C97191530080051F3D9 /* branding-lite.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-lite.py"; sourceTree = "<group>"; };
+		1F419C991915330B0051F3D9 /* branding-pro.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-pro.py"; sourceTree = "<group>"; };
 		1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoWindowController.py; sourceTree = "<group>"; };
 		1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoControlPanel.py; sourceTree = "<group>"; };
 		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.55.dylib; path = Distribution/Frameworks/libavcodec.55.dylib; sourceTree = "<group>"; };
@@ -2924,6 +2930,9 @@
 			children = (
 				1F5BC30217E66DAC00D1D8BE /* Localizable.strings */,
 				1F2436891913CD7C00E71253 /* branding.py */,
+				1F419C9519152F400051F3D9 /* branding-sip2sip.py */,
+				1F419C991915330B0051F3D9 /* branding-pro.py */,
+				1F419C97191530080051F3D9 /* branding-lite.py */,
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
@@ -3308,6 +3317,7 @@
 				1F5677C21323DDDD00D087D1 /* transfer.png in Resources */,
 				1F2A32351328CEE00078F01D /* paused_16.png in Resources */,
 				1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */,
+				1F419C9A1915330B0051F3D9 /* branding-pro.py in Resources */,
 				1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */,
 				DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */,
 				1F17C25F137335D700DF4724 /* silence.wav in Resources */,
@@ -3652,6 +3662,7 @@
 				1F35D04F17894FFF00C6FE38 /* PresencePublisher.py in Resources */,
 				1F35D05017894FFF00C6FE38 /* OfflineNoteController.py in Resources */,
 				1FF63CD419128A1400A502FB /* VideoAVLocalWindowController.py in Resources */,
+				1F419C9619152F400051F3D9 /* branding-sip2sip.py in Resources */,
 				1F35D05117894FFF00C6FE38 /* PresenceInfoPanel.xib in Resources */,
 				1F35D05217894FFF00C6FE38 /* PresenceInfoController.py in Resources */,
 				1F35D05317894FFF00C6FE38 /* WorldMapView.py in Resources */,
@@ -3806,6 +3817,7 @@
 				1F8DC38F135084FA0034815C /* ScreenSharingController.py in Resources */,
 				1F8DC390135084FA0034815C /* SMSSession.xib in Resources */,
 				1F8DC391135084FA0034815C /* SMSView.xib in Resources */,
+				1F419C98191530080051F3D9 /* branding-lite.py in Resources */,
 				1F8DC392135084FA0034815C /* ChatViewController.py in Resources */,
 				1F8DC393135084FA0034815C /* ChatView.html in Resources */,
 				1F8DC394135084FA0034815C /* smiley_off.png in Resources */,

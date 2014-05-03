@@ -51,6 +51,8 @@
 	<string>NSApplication</string>
 	<key>NSUbiquitousDisplaySet</key>
 	<string>com.agprojects.SIP2SIP</string>
+	<key>BrandingFile</key>
+	<string>branding-sip2sip</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/SIP2SIPAppcast.xml</string>
 </dict>

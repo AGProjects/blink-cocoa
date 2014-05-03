@@ -127,10 +127,14 @@ class BlinkAppDelegate(NSObject):
             build = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleVersion"))
             date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
 
+            branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")
             try:
-                import branding
+                branding = __import__(branding_file)
             except ImportError:
-                branding = Null
+                try:
+                    import branding
+                except ImportError:
+                    branding = Null
 
             branding.init(self)
 
@@ -258,10 +262,14 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
+        branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")
         try:
-            import branding
+            branding = __import__(branding_file)
         except ImportError:
-            branding = Null
+            try:
+                import branding
+            except ImportError:
+                branding = Null
 
         branding.setup(self)
 
