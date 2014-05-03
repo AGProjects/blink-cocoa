@@ -78,7 +78,6 @@ class BlinkAppDelegate(NSObject):
     migrationText = objc.IBOutlet()
     migrationProgressWheel = objc.IBOutlet()
     aboutVersion = objc.IBOutlet()
-    aboutBundle = objc.IBOutlet()
     aboutSlogan = objc.IBOutlet()
     aboutCopyright = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
