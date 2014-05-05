@@ -3,7 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>April 23rd, 2014</string>
+	<string>May 5th, 2014</string>
+	<key>BrandingFile</key>
+	<string>branding-sip2sip</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -51,8 +53,6 @@
 	<string>NSApplication</string>
 	<key>NSUbiquitousDisplaySet</key>
 	<string>com.agprojects.SIP2SIP</string>
-	<key>BrandingFile</key>
-	<string>branding-sip2sip</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/SIP2SIPAppcast.xml</string>
 </dict>
