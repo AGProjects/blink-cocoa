@@ -117,6 +117,7 @@ class BlinkAppDelegate(NSObject):
     maximum_accounts = None
     account_extension = None
     sp_update_url = None
+    main_window_title = None
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()

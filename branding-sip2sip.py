@@ -46,6 +46,7 @@ def setup(delegate):
     delegate.migrate_passwords_to_keychain = False
     delegate.service_provider_help_url = 'http://wiki.sip2sip.info'
     delegate.service_provider_name = 'SIPThor Net'
+    delegate.main_window_title = NSLocalizedString("Blink for SIP2SIP", "Window Title")
     delegate.maximum_accounts = 1
     delegate.account_extension = AccountExtensionSIP2SIP
     delegate.sp_update_url = None

@@ -747,11 +747,10 @@ class ContactWindowController(NSWindowController):
 
     def showWindow_(self, sender):
         settings = SIPSimpleSettings()
-        if settings.service_provider.name:
-            window_title =  "%s for %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
+        if NSApp.delegate().main_window_title is not None:
+            self.window().setTitle_(NSApp.delegate().main_window_title)
         else:
-            window_title = NSApp.delegate().applicationNamePrint
-        self.window().setTitle_(window_title)
+            self.window().setTitle_(NSApp.delegate().applicationNamePrint)
         super(ContactWindowController, self).showWindow_(sender)
 
     def copyToSearchBar_(self, sender):
@@ -1416,12 +1415,6 @@ class ContactWindowController(NSWindowController):
             else:
                 self.silentButton.setImage_(NSImage.imageNamed_("bellon"))
                 self.silentButton.setState_(NSOffState)
-        if notification.data.modified.has_key("service_provider.name"):
-            if settings.service_provider.name:
-                window_title =  "%s by %s" % (NSApp.delegate().applicationNamePrint, settings.service_provider.name)
-                self.window().setTitle_(window_title)
-            else:
-                self.window().setTitle_(NSApp.delegate().applicationNamePrint)
 
         if notification.data.modified.has_key("ldap.enabled"):
             self.refreshLdapDirectory()
