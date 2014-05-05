@@ -37,7 +37,8 @@ from AVFoundation import (AVCaptureDeviceInput,
                           AVCaptureDevice,
                           AVCaptureSession,
                           AVCaptureVideoPreviewLayer,
-                          AVCaptureSessionPresetHigh
+                          AVCaptureSessionPresetHigh,
+                          AVLayerVideoGravityResizeAspectFill
                           )
 
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
@@ -331,13 +332,16 @@ class LocalNativeVideoView(NSView):
 
             videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
             videoPreviewLayer.setFrame_(self.captureView.layer().bounds())
+
             videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
             videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
+            videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
             self.captureView.layer().addSublayer_(videoPreviewLayer)
             self.getAspectRatio()
 
         BlinkLogger().log_debug('Start aquire video %s' % self)
         self.captureSession.startRunning()
+
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
