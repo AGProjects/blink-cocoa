@@ -365,7 +365,7 @@ class BorderlessRoundWindow(NSPanel):
     def setContentView_(self, view):
         view.setWantsLayer_(True)
         view.layer().setFrame_(view.frame())
-        view.layer().setCornerRadius_(12.0)
+        view.layer().setCornerRadius_(8.0)
         view.layer().setMasksToBounds_(True)
         super(BorderlessRoundWindow, self).setContentView_(view)
 
