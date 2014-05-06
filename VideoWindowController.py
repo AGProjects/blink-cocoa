@@ -70,7 +70,7 @@ class VideoWindowController(NSWindowController):
     show_window_after_full_screen_ends = None
     sdl_window = None
     tracking_area = None
-    fliped = False
+    flipped = False
     aspect_ratio = None
     initial_aspect_ratio = None
     titleBarView = None
@@ -311,11 +311,11 @@ class VideoWindowController(NSWindowController):
         self.flip2()
 
     def flip2(self):
-        if self.localVideoWindow and not self.fliped:
+        if self.localVideoWindow and not self.flipped:
             self.localVideoWindow.window.orderOut_(None)
             self.window.orderOut_(None)
             self.flipWnd.flip_to_(self.localVideoWindow.window, self.window)
-            self.fliped = True
+            self.flipped = True
         else:
             self.window.orderFront_(self)
 
