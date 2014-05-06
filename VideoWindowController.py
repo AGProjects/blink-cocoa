@@ -85,6 +85,7 @@ class VideoWindowController(NSWindowController):
         self.videoControlPanel = VideoControlPanel(self)
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
+        self.flipWnd.setDuration_(2.4)
 
     def initLocalVideoWindow(self):
         sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
@@ -132,6 +133,7 @@ class VideoWindowController(NSWindowController):
             self.valid_aspect_ratios.append(self.aspect_ratio)
 
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
+        self.window.orderOut_(None)
         self.window.setTitle_(self.title)
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
@@ -306,10 +308,12 @@ class VideoWindowController(NSWindowController):
         if self.videoControlPanel is not None:
             self.videoControlPanel.show()
 
-        self.flip1()
+        self.flip2()
 
     def flip2(self):
         if self.localVideoWindow and not self.fliped:
+            self.localVideoWindow.window.orderOut_(None)
+            self.window.orderOut_(None)
             self.flipWnd.flip_to_(self.localVideoWindow.window, self.window)
             self.fliped = True
         else:
