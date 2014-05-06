@@ -268,35 +268,6 @@ class LocalNativeVideoView(NSView):
         else:
             return device
 
-    def getAspectRatio(self):
-        # this can be optained only after capturing data from device
-        if self.aspect_ratio:
-            return
-
-        device = self.getDevice()
-        if not device:
-            return
-
-        max_resolution = (0, 0)
-        for desc in device.formats():
-            m = self.resolution_re.match(repr(desc))
-            if m:
-                data = m.groupdict()
-                width = int(data['width'])
-                height = int(data['height'])
-                BlinkLogger().log_debug("Supported resolution: %dx%d %.2f" % (width, height, width/float(height)))
-                if width > max_resolution[0]:
-                    max_resolution = (width, height)
-
-        width, height = max_resolution
-        if width == 0 or height == 0:
-            width = 1280
-            height = 720
-        self.aspect_ratio = width/float(height) if width > height else height/float(width)
-
-        BlinkLogger().log_info('Opened %s camera at %0.fx%0.f resolution' % (SIPApplication.video_device.real_name, width, height))
-        self.parentWindow.delegate()._show()
-
     def refreshAfterCameraChanged(self):
         if not self.captureSession:
             return
@@ -325,6 +296,28 @@ class LocalNativeVideoView(NSView):
             if not device:
                 return
 
+            max_resolution = (0, 0)
+            BlinkLogger().log_debug("%s camera provides %d formats" % (device.localizedName(), len(device.formats())))
+            for desc in device.formats():
+                m = self.resolution_re.match(repr(desc))
+                if m:
+                    data = m.groupdict()
+                    width = int(data['width'])
+                    height = int(data['height'])
+                    BlinkLogger().log_debug("Supported resolution: %dx%d %.2f" % (width, height, width/float(height)))
+                    if width > max_resolution[0]:
+                        max_resolution = (width, height)
+
+            width, height = max_resolution
+            if width == 0 or height == 0:
+                width = 1280
+                height = 720
+                BlinkLogger().log_info("Error: %s camera does not provide any supported video format" % device.localizedName())
+            else:
+                BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
+
+            self.aspect_ratio = width/float(height) if width > height else height/float(width)
+
             captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
             if captureDeviceInput:
                 self.captureSession.addInput_(captureDeviceInput)
@@ -339,11 +332,10 @@ class LocalNativeVideoView(NSView):
             videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
             videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
             self.captureView.layer().addSublayer_(videoPreviewLayer)
-            self.getAspectRatio()
 
         BlinkLogger().log_debug('Start aquire video %s' % self)
         self.captureSession.startRunning()
-
+        self.parentWindow.delegate()._show()
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
