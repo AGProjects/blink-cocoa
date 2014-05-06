@@ -38,7 +38,9 @@ from AVFoundation import (AVCaptureDeviceInput,
                           AVCaptureSession,
                           AVCaptureVideoPreviewLayer,
                           AVCaptureSessionPresetHigh,
-                          AVLayerVideoGravityResizeAspectFill
+                          AVLayerVideoGravityResizeAspectFill,
+                          AVMediaTypeVideo,
+                          AVMediaTypeMuxed
                           )
 
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
@@ -259,7 +261,7 @@ class LocalNativeVideoView(NSView):
     def getDevice(self):
         # Find a video device
         try:
-            device = (device for device in AVCaptureDevice.devices() if device.localizedName() == SIPApplication.video_device.real_name).next()
+            device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and  device.localizedName() == SIPApplication.video_device.real_name).next()
         except StopIteration:
             BlinkLogger().log_info('No camera found')
             return None
