@@ -1,16 +1,39 @@
 # Copyright (C) 2014 AG Projects. See LICENSE for details.
 #
 
-from AppKit import (NSWindowController, NSFloatingWindowLevel, NSWindow)
+from AppKit import (NSWindowController,
+                    NSFloatingWindowLevel,
+                    NSWindow,
+                    NSView,
+                    NSOnState,
+                    NSTrackingMouseEnteredAndExited,
+                    NSTrackingActiveAlways,
+                    NSRightMouseUp
+                    )
 
-from Foundation import NSBundle, NSTimer
+from Foundation import (NSBundle,
+                        NSTimer,
+                        NSEvent,
+                        NSScreen,
+                        NSDate,
+                        NSMenu,
+                        NSMenuItem,
+                        NSZeroRect,
+                        NSTrackingArea,
+                        NSLocalizedString
+                        )
+
 import objc
 import AppKit
 
 from BlinkLogger import BlinkLogger
 
 from util import run_in_gui_thread
+from sipsimple.core import Engine
 from sipsimple.threading import run_in_twisted_thread
+from sipsimple.application import SIPApplication
+from sipsimple.configuration.settings import SIPSimpleSettings
+
 from MediaStream import STREAM_PROPOSING
 
 
@@ -19,6 +42,9 @@ class VideoStreamLocalWindowController(NSWindowController):
     finished = False
     initial_size = None
     dif_y = 0
+    overlayView = None
+    tracking_area = None
+    initialLocation = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -28,7 +54,6 @@ class VideoStreamLocalWindowController(NSWindowController):
         self.videoWindowController = videoWindowController
         self.log_debug('Init %s' % self)
         if self.stream.video_windows is not None:
-            # Stream may have died in the mean time
             self.sdl_window = self.stream.video_windows.local
             self.initial_size = self.sdl_window.size
             self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
@@ -39,8 +64,26 @@ class VideoStreamLocalWindowController(NSWindowController):
             self.window.orderFront_(None)
             self.window.center()
             self.window.setLevel_(NSFloatingWindowLevel)
+
             # this hold the height of the Cocoa window title bar
             self.dif_y = self.window.frame().size.height - self.stream.video_windows.local.size[1]
+
+            # capture mouse events into a transparent view
+            self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
+            self.window.contentView().addSubview_(self.overlayView)
+            self.window.makeFirstResponder_(self.overlayView)
+            self.updateTrackingAreas()
+
+    def updateTrackingAreas(self):
+        if self.tracking_area is not None:
+            self.window.contentView().removeTrackingArea_(self.tracking_area)
+            self.tracking_area = None
+
+        rect = NSZeroRect
+        rect.size = self.window.contentView().frame().size
+        self.tracking_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
+                         NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
+        self.window.contentView().addTrackingArea_(self.tracking_area)
 
     @property
     def stream(self):
@@ -105,9 +148,18 @@ class VideoStreamLocalWindowController(NSWindowController):
         if frame.size.width != self.stream.video_windows.local.size[0]:
             self.stream.video_windows.local.size = (frame.size.width, frame.size.height - self.dif_y)
 
+        self.updateTrackingAreas()
+        self.overlayView.setFrame_(self.window.contentView().frame())
+
     def windowShouldClose_(self, sender):
         if self.finished:
             return True
+
+        if self.tracking_area is not None:
+            self.window.contentView().removeTrackingArea_(self.tracking_area)
+            self.tracking_area = None
+
+        self.overlayView.removeFromSuperview()
 
         if not self.streamController:
             return True
@@ -121,6 +173,27 @@ class VideoStreamLocalWindowController(NSWindowController):
             self.window.close()
 
         return True
+
+    def mouseDown_(self, event):
+        self.initialLocation = event.locationInWindow()
+
+    def mouseDraggedView_(self, event):
+        if not self.initialLocation:
+            return
+
+        screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
+        windowFrame = self.window.frame()
+        newOrigin = windowFrame.origin
+
+        currentLocation = event.locationInWindow()
+
+        newOrigin.x += (currentLocation.x - self.initialLocation.x)
+        newOrigin.y += (currentLocation.y - self.initialLocation.y)
+
+        if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
+            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
+
+        self.window.setFrameOrigin_(newOrigin);
 
     @run_in_gui_thread
     def windowWillClose_(self, sender):
@@ -143,3 +216,38 @@ class VideoStreamLocalWindowController(NSWindowController):
             self.window.close()
 
         self.release()
+
+    def rightMouseDown_(self, event):
+        point = self.window.convertScreenToBase_(NSEvent.mouseLocation())
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                  NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window.windowNumber(),
+                  self.window.graphicsContext(), 0, 1, 0)
+
+        videoDevicesMenu = NSMenu.alloc().init()
+        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
+        lastItem.setEnabled_(False)
+        videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+
+        for item in Engine().video_devices:
+          lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
+          lastItem.setRepresentedObject_(item)
+          if SIPApplication.video_device.real_name == item:
+              lastItem.setState_(NSOnState)
+
+        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self.window.contentView())
+
+    def changeVideoDevice_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.video.device = sender.representedObject()
+        settings.save()
+
+
+class VideoStreamOverlayView(NSView):
+    def mouseDown_(self, event):
+        self.window().delegate().mouseDown_(event)
+
+    def rightMouseDown_(self, event):
+        self.window().delegate().rightMouseDown_(event)
+
+    def mouseDragged_(self, event):
+        self.window().delegate().mouseDraggedView_(event)
