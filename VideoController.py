@@ -164,10 +164,12 @@ class VideoController(MediaStream):
             self.stream.pause()
 
     def show(self):
-        self.videoWindowController.show()
+        if self.videoWindowController:
+            self.videoWindowController.show()
 
     def hide(self):
-        self.videoWindowController.hide()
+        if self.videoWindowController:
+            self.videoWindowController.hide()
 
     def goToFullScreen(self):
         self.videoWindowController.goToFullScreen()

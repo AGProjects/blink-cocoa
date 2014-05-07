@@ -364,7 +364,7 @@ class VideoWindowController(NSWindowController):
         if self.window:
             self.window.orderOut_(self)
 
-        if self.videoControlPanel is not None:
+        if self.videoControlPanel:
             self.videoControlPanel.hide()
 
     @run_in_gui_thread
@@ -519,7 +519,8 @@ class VideoWindowController(NSWindowController):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.mouse_timer, NSEventTrackingRunLoopMode)
 
     def mouseOutTimer_(self, timer):
-        self.videoControlPanel.hide()
+        if self.videoControlPanel:
+            self.videoControlPanel.hide()
         self.mouse_timer = None
 
     def getSecondaryScreen(self):
