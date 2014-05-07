@@ -4949,8 +4949,6 @@ class ContactWindowController(NSWindowController):
 
             i = 1
             for dev in devices:
-                if dev == "Colorbar generator":
-                    continue
                 item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)

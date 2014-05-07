@@ -225,8 +225,6 @@ class LocalNativeVideoView(NSView):
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
         for item in Engine().video_devices:
-            if str(item) == "Colorbar generator":
-                continue
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
             lastItem.setRepresentedObject_(item)
             if SIPApplication.video_device.real_name == item:
