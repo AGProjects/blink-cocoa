@@ -273,9 +273,8 @@ class BlinkAppDelegate(NSObject):
 
         branding.setup(self)
 
-        if self.updater:
-            if self.sp_update_url is not None:
-                self.updater.sp.setFeedURL_(NSURL.URLWithString_(self.sp_update_url))
+        if self.updater and self.sp_update_url is not None:
+            self.updater.sp.setFeedURL_(NSURL.URLWithString_(self.sp_update_url))
 
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 
