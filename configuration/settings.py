@@ -52,6 +52,7 @@ class AudioSettingsExtension(AudioSettings):
 class VideoSettingsExtension(VideoSettings):
     enable_when_auto_answer = Setting(type=bool, default=False)
     full_screen_after_connect = Setting(type=bool, default=True)
+    keep_window_on_top = Setting(type=bool, default=True)
     h264 = H264SettingsExtension
 
 class ChatSettingsExtension(ChatSettings):

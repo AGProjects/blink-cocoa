@@ -43,6 +43,7 @@ import objc
 import unicodedata
 
 from application.notification import NotificationCenter
+from sipsimple.configuration.settings import SIPSimpleSettings
 from VideoControlPanel import VideoControlPanel
 from VideoDisconnectWindow import VideoDisconnectWindow
 from VideoStreamLocalWindowController import VideoStreamLocalWindowController
@@ -138,7 +139,6 @@ class VideoWindowController(NSWindowController):
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
-        #self.toogleAlwaysOnTop()
         self.updateTrackingAreas()
 
         frame = self.window.frame()
@@ -162,6 +162,9 @@ class VideoWindowController(NSWindowController):
                               )
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
+
+        if SIPSimpleSettings().video.keep_window_on_top:
+            self.toogleAlwaysOnTop()
 
     def draggingEntered_(self, sender):
         if self.finished:
