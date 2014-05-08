@@ -46,7 +46,7 @@ from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
 from VideoControlPanel import VideoControlPanel
 from VideoDisconnectWindow import VideoDisconnectWindow
-from VideoStreamLocalWindowController import VideoStreamLocalWindowController
+from VideoStreamLocalWindowController import VideoStreamLocalWindowController, VideoStreamOverlayView
 from util import run_in_gui_thread
 
 
@@ -75,6 +75,8 @@ class VideoWindowController(NSWindowController):
     aspect_ratio = None
     initial_aspect_ratio = None
     titleBarView = None
+    overlayView = None
+    initialLocation = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -139,6 +141,11 @@ class VideoWindowController(NSWindowController):
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
         self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
+
+        # capture mouse events into a transparent view
+        self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
+        self.window.contentView().addSubview_(self.overlayView)
+        self.window.makeFirstResponder_(self.overlayView)
         self.updateTrackingAreas()
 
         frame = self.window.frame()
@@ -210,9 +217,29 @@ class VideoWindowController(NSWindowController):
             return True
         return False
 
-    def rightMouseDown_(self, event):
-        print 'rightMouseDown_'
+    def mouseDown_(self, event):
+        self.initialLocation = event.locationInWindow()
 
+    def mouseDraggedView_(self, event):
+        if not self.initialLocation:
+            return
+
+        if self.full_screen or self.full_screen_in_progress:
+            return
+
+        screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
+        windowFrame = self.window.frame()
+        newOrigin = windowFrame.origin
+
+        currentLocation = event.locationInWindow()
+
+        newOrigin.x += (currentLocation.x - self.initialLocation.x)
+        newOrigin.y += (currentLocation.y - self.initialLocation.y)
+
+        if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
+            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
+
+        self.window.setFrameOrigin_(newOrigin)
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
@@ -459,6 +486,7 @@ class VideoWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
+        self.overlayView.removeFromSuperview()
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         self.sessionController.removeVideoFromSession()
         if not self.sessionController.hasStreamOfType("chat"):
