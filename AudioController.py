@@ -876,9 +876,9 @@ class AudioController(MediaStream):
             m = (elapsed.seconds / 60) % 60
             s = elapsed.seconds % 60
             text = u"%02i:%02i:%02i" % (h,m,s)
-            speed = self.statistics['rx_bytes']
-            speed_text = '   %s/s' % format_size(speed, bits=True) if speed else ''
-            text = text + speed_text
+            #speed = self.statistics['rx_bytes']
+            #speed_text = '   %s/s' % format_size(speed, bits=True) if speed else ''
+            #text = text + speed_text
             self.elapsed.setStringValue_(text)
         else:
             if self.status == STREAM_CONNECTING and self.sessionController.routes:
