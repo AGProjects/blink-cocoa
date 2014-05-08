@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment defaultVersion="1070" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="VideoControlPanel">
+            <connections>
+                <outlet property="aspectButton" destination="Uhc-Ev-Qzq" id="riB-xk-3Sv"/>
+                <outlet property="chatButton" destination="nwU-a9-8Ys" id="HXm-AY-t0Q"/>
+                <outlet property="contactsButton" destination="yhG-M6-u9I" id="tLI-oh-X7v"/>
+                <outlet property="fullscreenButton" destination="pCH-pn-Db0" id="cHQ-S0-rsw"/>
+                <outlet property="hangupButton" destination="6Zi-pi-Dt2" id="PBV-rs-Abv"/>
+                <outlet property="holdButton" destination="KjW-gV-lDX" id="B4B-BE-fUA"/>
+                <outlet property="infoButton" destination="vgp-oU-nmc" id="IvK-Cb-HaZ"/>
+                <outlet property="muteButton" destination="IGv-ve-yk1" id="7tA-sO-rN8"/>
+                <outlet property="myvideoButton" destination="1ln-DS-p7Y" id="vmb-UT-2No"/>
+                <outlet property="pauseButton" destination="Coo-lh-C1B" id="rLY-RP-5it"/>
+                <outlet property="toolbar" destination="gnF-kZ-Vhi" id="2Fq-RV-J2g"/>
+                <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
+                <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <window title="Video Controller" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
+            <windowPositionMask key="initialPositionMask" topStrut="YES"/>
+            <rect key="contentRect" x="579" y="75" width="355" height="1"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <value key="minSize" type="size" width="355" height="1"/>
+            <value key="maxSize" type="size" width="355" height="1"/>
+            <view key="contentView" id="ygh-EU-NlO">
+                <rect key="frame" x="0.0" y="0.0" width="355" height="1"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <connections>
+                    <outlet property="parentWindow" destination="WqC-T4-L8j" id="btW-Ya-cOD"/>
+                </connections>
+            </view>
+            <toolbar key="toolbar" implicitIdentifier="324D1955-E07A-4C7A-B5D7-99E3538D78D8" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="gnF-kZ-Vhi">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="97D92722-5076-4408-86C4-07E3EA4D9BE4" explicitItemIdentifier="mute" label="Silenciar" paletteLabel="Silenciar" toolTip="Silenciar Micrófono" image="mute-white" id="IGv-ve-yk1">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="fdY-gh-EeA"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="9DC01B42-067E-4F10-906E-035F5C335123" explicitItemIdentifier="hold" label="Retener" paletteLabel="Retener" toolTip="Retener Llamada" image="pause-white" id="KjW-gV-lDX">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="8h9-nT-3lW"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C447B062-5570-42DA-8D79-150D096FD211" explicitItemIdentifier="hangup" label="Colgar" paletteLabel="Colgar" toolTip="Colgar" image="hangup" id="6Zi-pi-Dt2">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="ai9-Gr-Bmq"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="B0EA0C23-F0B5-4BBE-8FB6-720593ED6FA4" explicitItemIdentifier="chat" label="Chat" paletteLabel="Chat" toolTip="Chat" image="pencil" id="nwU-a9-8Ys">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="TST-Ky-veK"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="565FF72E-B8A8-4A9D-8668-54869EBCFF4C" explicitItemIdentifier="info" label="Info" paletteLabel="Info" toolTip="Mostrar Información de la Sesión" image="NSInfo" id="vgp-oU-nmc">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="I6R-g1-j8B"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="341176F2-6018-4939-82CB-A964889A1730" explicitItemIdentifier="contacts" label="Contactos" paletteLabel="Contactos" toolTip="Mostrar Contactos" image="NSUser" id="yhG-M6-u9I">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="UPd-48-3gs"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="Pantalla Completa" paletteLabel="Pantalla Completa" toolTip="Pantalla Completa" image="fullscreen" id="pCH-pn-Db0">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="CXe-bY-CGH"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspecto" paletteLabel="Aspecto" toolTip="Relación de aspecto" image="aspect_ratio" id="Uhc-Ev-Qzq">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="BVL-yJ-hTg"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="75r-Mm-tLs"/>
+                    <toolbarItem implicitItemIdentifier="F76511DE-7F7B-4609-A6DA-EC3C468E1039" explicitItemIdentifier="mirror" label="Mi Video" paletteLabel="Mi Video" toolTip="Mi Video" image="mirror" id="1ln-DS-p7Y">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="N7V-OS-oQ1"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="DCC1DA56-9560-4E79-8B21-F0876EB9CE00" explicitItemIdentifier="pause" label="Pausar" paletteLabel="Pausar" toolTip="Mi Video" image="video" id="Coo-lh-C1B">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="bb3-2A-g2n"/>
+                        </connections>
+                    </toolbarItem>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="pCH-pn-Db0"/>
+                    <toolbarItem reference="Uhc-Ev-Qzq"/>
+                    <toolbarItem reference="IGv-ve-yk1"/>
+                    <toolbarItem reference="KjW-gV-lDX"/>
+                    <toolbarItem reference="6Zi-pi-Dt2"/>
+                    <toolbarItem reference="nwU-a9-8Ys"/>
+                    <toolbarItem reference="yhG-M6-u9I"/>
+                    <toolbarItem reference="vgp-oU-nmc"/>
+                    <toolbarItem reference="75r-Mm-tLs"/>
+                    <toolbarItem reference="Coo-lh-C1B"/>
+                    <toolbarItem reference="1ln-DS-p7Y"/>
+                </defaultToolbarItems>
+                <connections>
+                    <outlet property="delegate" destination="-2" id="8u6-2d-Cnk"/>
+                </connections>
+            </toolbar>
+            <connections>
+                <outlet property="delegate" destination="-2" id="dU7-CL-nr3"/>
+            </connections>
+        </window>
+    </objects>
+    <resources>
+        <image name="NSInfo" width="32" height="32"/>
+        <image name="NSUser" width="32" height="32"/>
+        <image name="aspect_ratio" width="79.680000305175781" height="79.680000305175781"/>
+        <image name="fullscreen" width="128" height="128"/>
+        <image name="hangup" width="240" height="240"/>
+        <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
+        <image name="mute-white" width="24" height="24"/>
+        <image name="pause-white" width="48" height="48"/>
+        <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
+        <image name="video" width="520" height="520"/>
+    </resources>
+</document>
