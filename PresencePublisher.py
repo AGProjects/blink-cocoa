@@ -40,7 +40,7 @@ bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.fra
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
 on_the_phone_activity = {'title': NSLocalizedString("Busy", "Menu item"),
-                         'note': "I am on the phone",
+                         'note': NSLocalizedString("On the Phone", "Label"),
                          'history_title' : 'Busy'}
 
 PresenceActivityList = (
