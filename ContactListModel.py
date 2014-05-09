@@ -670,7 +670,11 @@ class BlinkPresenceContactAttribute(object):
     def __get__(self, obj, objtype):
         if obj is None:
             return self
-        return getattr(obj.contact, self.name, None)
+        try:
+            return getattr(obj.contact, self.name, None)
+        except AttributeError:
+            return None
+
     def __set__(self, obj, value):
         if obj.contact is not None:
             setattr(obj.contact, self.name, value)
