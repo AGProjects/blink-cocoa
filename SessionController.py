@@ -1495,7 +1495,7 @@ class SessionController(NSObject):
         return self.startSessionWithStreamOfType("chat")
 
     def startVideoSession(self):
-        return self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))
+        return self.startCompositeSessionWithStreamsOfTypes(("video", "audio"))
 
     def offerFileTransfer(self, file_path, content_type=None):
         return self.startSessionWithStreamOfType("chat", {"file_path":file_path, "content_type":content_type})
@@ -1521,7 +1521,7 @@ class SessionController(NSObject):
     def addVideoToSession(self):
         if not self.hasStreamOfType("video"):
             if not self.hasStreamOfType("audio"):
-                self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))
+                self.startCompositeSessionWithStreamsOfTypes(("video", "audio"))
             else:
                 self.startSessionWithStreamOfType("video")
 
@@ -1724,13 +1724,6 @@ class SessionController(NSObject):
         if self.hasStreamOfType("audio"):
             audioStream = self.streamHandlerOfType("audio")
             audioStream.stream.mixer.reset_ec()
-
-        video_stream = self.streamHandlerOfType("video")
-        if video_stream:
-            video_accepted = any(stream for stream in data.streams if stream.type == "video")
-            if not video_accepted:
-                self.log_info("Video was not accepted by the remote party")
-                video_stream.videoWindowController.showDisconnectedPanel()
 
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 

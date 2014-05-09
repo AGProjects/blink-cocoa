@@ -2464,7 +2464,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startVideoSessionWithSIPURI_(self, sender):
-        self.startSessionWithTarget(sender.representedObject(), media_type=("audio", "video"))
+        self.startSessionWithTarget(sender.representedObject(), media_type=("video", "audio"))
 
     @objc.IBAction
     def startChatSessionWithSIPURI_(self, sender):
@@ -2476,7 +2476,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startVideoToSelected_(self, sender):
-        self.startSessionToSelectedContact(("audio", "video"), sender.representedObject())
+        self.startSessionToSelectedContact(("video", "audio"), sender.representedObject())
 
     @objc.IBAction
     def startChatToSelected_(self, sender):

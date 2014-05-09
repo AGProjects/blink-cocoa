@@ -308,8 +308,12 @@ class VideoController(MediaStream):
         else:
             self.sessionController.log_info(u"Video stream canceled")
 
-        if not self.started and self.sessionController.failureReason != "Session Cancelled" and self.status != STREAM_PROPOSING:
+        if not self.started and self.sessionController.failureReason != "Session Cancelled":
             self.videoWindowController.showDisconnectedPanel()
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream:
+                NSApp.delegate().contactsWindowController.showAudioDrawer()
+
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
