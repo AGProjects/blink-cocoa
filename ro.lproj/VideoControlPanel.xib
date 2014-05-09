@@ -45,7 +45,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="fdY-gh-EeA"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="9DC01B42-067E-4F10-906E-035F5C335123" explicitItemIdentifier="hold" label="Pauză" paletteLabel="Pauză" toolTip="Pune Pe Pauză Audio" image="pause-white" id="KjW-gV-lDX">
+                    <toolbarItem implicitItemIdentifier="9DC01B42-067E-4F10-906E-035F5C335123" explicitItemIdentifier="hold" label="Pauză" paletteLabel="Pauză" toolTip="Pauză Audio și Video" image="pause-white" id="KjW-gV-lDX">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="8h9-nT-3lW"/>
                         </connections>
@@ -55,38 +55,38 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="ai9-Gr-Bmq"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B0EA0C23-F0B5-4BBE-8FB6-720593ED6FA4" explicitItemIdentifier="chat" label="Text" paletteLabel="Text" toolTip="Text" image="pencil" id="nwU-a9-8Ys">
+                    <toolbarItem implicitItemIdentifier="B0EA0C23-F0B5-4BBE-8FB6-720593ED6FA4" explicitItemIdentifier="chat" label="Text" paletteLabel="Text" toolTip="Conversație Text" image="pencil" id="nwU-a9-8Ys">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="TST-Ky-veK"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="565FF72E-B8A8-4A9D-8668-54869EBCFF4C" explicitItemIdentifier="info" label="Info" paletteLabel="Info" toolTip="Chat" image="NSInfo" id="vgp-oU-nmc">
+                    <toolbarItem implicitItemIdentifier="565FF72E-B8A8-4A9D-8668-54869EBCFF4C" explicitItemIdentifier="info" label="Informație" paletteLabel="Informație" toolTip="Arată Informația Apelului" image="NSInfo" id="vgp-oU-nmc">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="I6R-g1-j8B"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="341176F2-6018-4939-82CB-A964889A1730" explicitItemIdentifier="contacts" label="Participanți" paletteLabel="Participanți" toolTip="Comută Participanții" image="NSUser" id="yhG-M6-u9I">
+                    <toolbarItem implicitItemIdentifier="341176F2-6018-4939-82CB-A964889A1730" explicitItemIdentifier="contacts" label="Contacte" paletteLabel="Participanți" toolTip="Arată Contactele" image="NSUser" id="yhG-M6-u9I">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="UPd-48-3gs"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="Pe tot ecranul" paletteLabel="Pe tot ecranul" toolTip="Pe tot ecranul" image="fullscreen" id="pCH-pn-Db0">
+                    <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="Pe tot ecranul" paletteLabel="Pe tot ecranul" toolTip="Comută Tot ecranul" image="fullscreen" id="pCH-pn-Db0">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="CXe-bY-CGH"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Toggle Full Screen" image="aspect_ratio" id="Uhc-Ev-Qzq">
+                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Schimbă Aspectul" image="aspect_ratio" id="Uhc-Ev-Qzq">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="BVL-yJ-hTg"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="75r-Mm-tLs"/>
-                    <toolbarItem implicitItemIdentifier="F76511DE-7F7B-4609-A6DA-EC3C468E1039" explicitItemIdentifier="mirror" label="Oglindă" paletteLabel="Oglindă" toolTip="Comută Video Local" image="mirror" id="1ln-DS-p7Y">
+                    <toolbarItem implicitItemIdentifier="F76511DE-7F7B-4609-A6DA-EC3C468E1039" explicitItemIdentifier="mirror" label="Video Local" paletteLabel="Video Local" toolTip="Video Local" image="mirror" id="1ln-DS-p7Y">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="N7V-OS-oQ1"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="DCC1DA56-9560-4E79-8B21-F0876EB9CE00" explicitItemIdentifier="pause" label="Pause" paletteLabel="Pause" toolTip="My Video" image="video" id="Coo-lh-C1B">
+                    <toolbarItem implicitItemIdentifier="DCC1DA56-9560-4E79-8B21-F0876EB9CE00" explicitItemIdentifier="pause" label="Pauză" paletteLabel="Pauză" toolTip="Video Local" image="video" id="Coo-lh-C1B">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="bb3-2A-g2n"/>
                         </connections>

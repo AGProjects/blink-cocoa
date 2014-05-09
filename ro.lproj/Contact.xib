@@ -303,16 +303,16 @@ Gw
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" autoenablesItems="NO" id="201">
                                 <items>
-                                    <menuItem title="Numai Audio" tag="1" id="208">
+                                    <menuItem title="Audio" tag="1" id="208">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
-                                    <menuItem title="Numai Convorbire Text" tag="2" id="203">
+                                    <menuItem title="Convorbire Text" tag="2" id="203">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem title="Audio și Text" tag="3" id="212">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
-                                    <menuItem title="Audio and Video" tag="4" id="cuH-m4-if2">
+                                    <menuItem title="Audio și Video" tag="4" id="cuH-m4-if2">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                 </items>

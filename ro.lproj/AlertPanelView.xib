@@ -120,7 +120,7 @@
                         <rect key="frame" x="415" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="video" id="4rF-Lm-PHA"/>
-                        <accessibility description="Screen Sharing"/>
+                        <accessibility description="Partajare Ecran"/>
                     </imageView>
                     <textField hidden="YES" verticalHuggingPriority="750" tag="15" id="54">
                         <rect key="frame" x="196" y="9" width="210" height="17"/>
