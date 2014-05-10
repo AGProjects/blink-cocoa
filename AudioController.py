@@ -269,7 +269,7 @@ class AudioController(MediaStream):
 
         if is_answering_machine:
             self.sessionController.accounting_for_answering_machine = True
-            self.sessionController.log_info("Sending session to answering machine")
+            self.sessionController.log_info("Session handled by answering machine")
             self.audioSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), 0)
             self.audioSegmented.setEnabled_forSegment_(False, 1)
             self.audioSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio call tooltip"), 0)
