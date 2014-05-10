@@ -520,6 +520,7 @@ class VideoWindowController(NSWindowController):
         self.stopMouseOutTimer()
 
         self.videoControlPanel.close()
+        self.videoControlPanel = None
 
         if self.window:
             self.window.performClose_(None)
@@ -530,7 +531,6 @@ class VideoWindowController(NSWindowController):
     def dealloc(self):
         self.sessionController.log_debug('Dealloc %s' % self)
         self.tracking_area = None
-        self.videoControlPanel = None
         self.localVideoWindow = None
         self.streamController = None
         super(VideoWindowController, self).dealloc()

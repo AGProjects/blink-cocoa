@@ -191,6 +191,7 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.videoWindowController.release()
         self.videoWindowController = None
         self.stream = None
         self.notification_center = None
