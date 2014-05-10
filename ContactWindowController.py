@@ -2606,11 +2606,11 @@ class ContactWindowController(NSWindowController):
                 elif contact.preferred_media in ("chat+audio", "audio+chat"):
                     media_type = ("chat", "audio")
                 elif contact.preferred_media == "video":
-                    media_type = ("audio", "video")
+                    media_type = ("video", "audio")
                 else:
                     media_type = "audio"
             elif sender.selectedSegment() == 1:
-                media_type=('audio', 'video')
+                media_type=("video", "audio")
             elif sender.selectedSegment() == 2:
                 # IM button
                 point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
