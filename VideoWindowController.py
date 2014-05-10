@@ -77,6 +77,7 @@ class VideoWindowController(NSWindowController):
     titleBarView = None
     overlayView = None
     initialLocation = None
+    local_video_visible_before_fullscreen = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -401,6 +402,8 @@ class VideoWindowController(NSWindowController):
         if self.finished:
             return
 
+        self.local_video_visible_before_fullscreen = NSApp.delegate().contactsWindowController.localVideoVisible()
+
         if self.localVideoWindow:
             self.localVideoWindow.hide()
 
@@ -467,7 +470,10 @@ class VideoWindowController(NSWindowController):
 
         self.full_screen_in_progress = False
         self.full_screen = False
-        NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
+
+        if not self.local_video_visible_before_fullscreen:
+            NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
+
         NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
         if self.show_window_after_full_screen_ends is not None:
