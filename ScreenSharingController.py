@@ -290,6 +290,10 @@ class ScreenSharingController(MediaStream):
         self.sessionController.log_info("Screen sharing started")
         self.changeStatus(STREAM_CONNECTED)
 
+        videoStream = self.sessionController.streamHandlerOfType("video")
+        if videoStream:
+            self.sessionController.removeVideoFromSession()
+
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_info("Screen sharing failed")
         self.changeStatus(STREAM_IDLE)
