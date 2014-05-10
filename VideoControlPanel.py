@@ -190,6 +190,7 @@ class VideoControlPanel(NSWindowController):
 
         if self.closed:
             return
+
         self.closed = True
 
         self.notification_center.remove_observer(self, sender=self.videoWindowController)
@@ -202,12 +203,12 @@ class VideoControlPanel(NSWindowController):
             self.window().close()
 
         self.notification_center = None
+        self.videoWindowController.videoControlPanel = None
 
         self.release()
 
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
-        self.videoWindowController.videoControlPanel = None
         self.videoWindowController = None
         super(VideoControlPanel, self).dealloc()
 
@@ -286,6 +287,9 @@ class VideoControlPanel(NSWindowController):
     @objc.IBAction
     def userClickedToolbarButton_(self, sender):
         self.log_debug('userClickedToolbarButton_ %s' % self)
+
+        if self.closed:
+            return
 
         if not self.videoWindowController:
             return
