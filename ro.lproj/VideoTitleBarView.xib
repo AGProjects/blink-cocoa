@@ -20,7 +20,7 @@
                 <button id="foI-NE-klu">
                     <rect key="frame" x="26" y="3" width="135" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="check" title="Always On Top" bezelStyle="regularSquare" imagePosition="right" alignment="right" controlSize="small" state="on" inset="2" id="ELG-Zr-ZGQ">
+                    <buttonCell key="cell" type="check" title="La Suprafață" bezelStyle="regularSquare" imagePosition="right" alignment="right" controlSize="small" state="on" inset="2" id="ELG-Zr-ZGQ">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="smallSystem"/>
                     </buttonCell>

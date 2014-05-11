@@ -7,17 +7,16 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoControlPanel">
             <connections>
-                <outlet property="aspectButton" destination="Uhc-Ev-Qzq" id="riB-xk-3Sv"/>
-                <outlet property="chatButton" destination="nwU-a9-8Ys" id="HXm-AY-t0Q"/>
-                <outlet property="contactsButton" destination="yhG-M6-u9I" id="tLI-oh-X7v"/>
-                <outlet property="fullscreenButton" destination="pCH-pn-Db0" id="cHQ-S0-rsw"/>
-                <outlet property="hangupButton" destination="6Zi-pi-Dt2" id="PBV-rs-Abv"/>
-                <outlet property="holdButton" destination="KjW-gV-lDX" id="B4B-BE-fUA"/>
-                <outlet property="infoButton" destination="vgp-oU-nmc" id="IvK-Cb-HaZ"/>
-                <outlet property="muteButton" destination="IGv-ve-yk1" id="7tA-sO-rN8"/>
-                <outlet property="myvideoButton" destination="1ln-DS-p7Y" id="vmb-UT-2No"/>
-                <outlet property="pauseButton" destination="Coo-lh-C1B" id="rLY-RP-5it"/>
-                <outlet property="toolbar" destination="gnF-kZ-Vhi" id="2Fq-RV-J2g"/>
+                <outlet property="aspectButton" destination="3xB-w0-OaQ" id="6I2-EK-SoA"/>
+                <outlet property="chatButton" destination="tgg-67-bfK" id="sEp-qR-sH9"/>
+                <outlet property="contactsButton" destination="2w4-F0-8Wm" id="GAP-uB-jVI"/>
+                <outlet property="fullscreenButton" destination="jc6-VB-mqF" id="Mc1-OC-PGh"/>
+                <outlet property="hangupButton" destination="cul-Sv-CSK" id="Uik-ZH-7BQ"/>
+                <outlet property="holdButton" destination="Mud-h2-QWx" id="V3m-hH-C6C"/>
+                <outlet property="infoButton" destination="Mtu-Zi-qLO" id="ZSM-w5-xkG"/>
+                <outlet property="muteButton" destination="qea-Sj-raU" id="WDT-Cf-hbW"/>
+                <outlet property="myvideoButton" destination="1k3-Y3-vUH" id="Uux-Yt-gSC"/>
+                <outlet property="pauseButton" destination="okS-f1-l3w" id="8ax-Pf-Ere"/>
                 <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
                 <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
             </connections>
@@ -27,88 +26,219 @@
         <window title="Control Video" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="579" y="75" width="491" height="1"/>
+            <rect key="contentRect" x="579" y="75" width="485" height="49"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
             <value key="minSize" type="size" width="491" height="1"/>
             <value key="maxSize" type="size" width="491" height="1"/>
-            <view key="contentView" id="ygh-EU-NlO">
-                <rect key="frame" x="0.0" y="0.0" width="491" height="1"/>
+            <view key="contentView" focusRingType="none" id="ygh-EU-NlO">
+                <rect key="frame" x="0.0" y="0.0" width="485" height="49"/>
                 <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jc6-VB-mqF">
+                        <rect key="frame" x="16" y="21" width="37" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" title="Tot Ecranul" bezelStyle="rounded" image="fullscreen" imagePosition="below" alignment="center" imageScaling="proportionallyDown" inset="2" id="VUv-vz-wnK">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedFullScreenButton:" target="-2" id="hsh-IQ-21b"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3xB-w0-OaQ">
+                        <rect key="frame" x="68" y="22" width="37" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="aspect_ratio" imagePosition="above" alignment="center" imageScaling="proportionallyDown" inset="2" id="Lf9-da-rny">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedAspectButton:" target="-2" id="ATK-25-xDM"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qea-Sj-raU">
+                        <rect key="frame" x="115" y="16" width="32" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mute-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="lcl-yW-1tr">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedMuteButton:" target="-2" id="uVe-Dd-0N8"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cul-Sv-CSK">
+                        <rect key="frame" x="196" y="20" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="K5N-Gg-58x">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedHangupButton:" target="-2" id="K2X-le-4k7"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Mud-h2-QWx">
+                        <rect key="frame" x="152" y="20" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pause-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="T9Q-kY-MLF">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedHoldButton:" target="-2" id="VxD-m7-jhk"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tgg-67-bfK">
+                        <rect key="frame" x="297" y="18" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pencil" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="VPc-LV-mVK">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedChatButton:" target="-2" id="wAN-fb-k0x"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2w4-F0-8Wm">
+                        <rect key="frame" x="247" y="22" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSUserGroup" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="UuZ-wC-Rw6">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedContactsButton:" target="-2" id="gdQ-Is-qt4"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Mtu-Zi-qLO">
+                        <rect key="frame" x="342" y="19" width="27" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSInfo" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="0R5-Zf-eFV">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedInfoButton:" target="-2" id="fS7-uO-uPD"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="okS-f1-l3w">
+                        <rect key="frame" x="388" y="21" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="video" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="XKh-4I-rS0">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedPauseButton:" target="-2" id="nr2-qw-kuu"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1k3-Y3-vUH">
+                        <rect key="frame" x="434" y="18" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="ED1-Vw-AHb">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedMyVideoButton:" target="-2" id="96o-7Z-WRP"/>
+                        </connections>
+                    </button>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N8p-OL-7cU">
+                        <rect key="frame" x="-6" y="0.0" width="80" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Tot Ecranul" id="xq3-9m-DZ5">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="byH-Sg-irh">
+                        <rect key="frame" x="59" y="0.0" width="54" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Aspect" id="bbf-Fn-JCY">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UWu-i6-J0E">
+                        <rect key="frame" x="104" y="0.0" width="54" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Mut" id="qB1-Mm-NxP">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IaQ-lC-QhG">
+                        <rect key="frame" x="140" y="0.0" width="54" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Pauză" id="wO4-0U-2Ig">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4b3-RF-Hb1">
+                        <rect key="frame" x="184" y="0.0" width="54" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Închide" id="aic-7M-A6b">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GwY-ln-kFL">
+                        <rect key="frame" x="235" y="0.0" width="55" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Contacte" id="RAe-gD-4ie">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LVX-Yf-uZH">
+                        <rect key="frame" x="285" y="0.0" width="55" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Text" id="xw4-zr-KEq">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ruw-KX-RZB">
+                        <rect key="frame" x="334" y="0.0" width="43" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Info" id="d1M-ZM-9B7">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BoO-xT-Qk4">
+                        <rect key="frame" x="375" y="0.0" width="55" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Pauză" id="MxA-nz-0bC">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Aox-Dj-HIJ">
+                        <rect key="frame" x="425" y="0.0" width="57" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Video Local" id="tvE-B3-zbz">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                </subviews>
                 <connections>
                     <outlet property="parentWindow" destination="WqC-T4-L8j" id="btW-Ya-cOD"/>
                 </connections>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="324D1955-E07A-4C7A-B5D7-99E3538D78D8" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="gnF-kZ-Vhi">
-                <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="97D92722-5076-4408-86C4-07E3EA4D9BE4" explicitItemIdentifier="mute" label="Oprește Microfonul" paletteLabel="Oprește Microfonul" toolTip="Oprește Microfonul" image="mute-white" id="IGv-ve-yk1">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="fdY-gh-EeA"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="9DC01B42-067E-4F10-906E-035F5C335123" explicitItemIdentifier="hold" label="Pauză" paletteLabel="Pauză" toolTip="Pauză Audio și Video" image="pause-white" id="KjW-gV-lDX">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="8h9-nT-3lW"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="C447B062-5570-42DA-8D79-150D096FD211" explicitItemIdentifier="hangup" label="Închide" paletteLabel="Închide" toolTip="Închide Apelul" image="hangup" id="6Zi-pi-Dt2">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="ai9-Gr-Bmq"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B0EA0C23-F0B5-4BBE-8FB6-720593ED6FA4" explicitItemIdentifier="chat" label="Text" paletteLabel="Text" toolTip="Conversație Text" image="pencil" id="nwU-a9-8Ys">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="TST-Ky-veK"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="565FF72E-B8A8-4A9D-8668-54869EBCFF4C" explicitItemIdentifier="info" label="Informație" paletteLabel="Informație" toolTip="Arată Informația Apelului" image="NSInfo" id="vgp-oU-nmc">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="I6R-g1-j8B"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="341176F2-6018-4939-82CB-A964889A1730" explicitItemIdentifier="contacts" label="Contacte" paletteLabel="Participanți" toolTip="Arată Contactele" image="NSUser" id="yhG-M6-u9I">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="UPd-48-3gs"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B426711B-B742-4C23-855D-2CC47C662C41" explicitItemIdentifier="fullscreen" label="Pe tot ecranul" paletteLabel="Pe tot ecranul" toolTip="Comută Tot ecranul" image="fullscreen" id="pCH-pn-Db0">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="CXe-bY-CGH"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="20F86B64-7269-4141-A469-8F68C9487D0A" explicitItemIdentifier="aspect" label="Aspect" paletteLabel="Aspect" toolTip="Schimbă Aspectul" image="aspect_ratio" id="Uhc-Ev-Qzq">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="BVL-yJ-hTg"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="75r-Mm-tLs"/>
-                    <toolbarItem implicitItemIdentifier="F76511DE-7F7B-4609-A6DA-EC3C468E1039" explicitItemIdentifier="mirror" label="Video Local" paletteLabel="Video Local" toolTip="Video Local" image="mirror" id="1ln-DS-p7Y">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="N7V-OS-oQ1"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="DCC1DA56-9560-4E79-8B21-F0876EB9CE00" explicitItemIdentifier="pause" label="Pauză" paletteLabel="Pauză" toolTip="Video Local" image="video" id="Coo-lh-C1B">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="bb3-2A-g2n"/>
-                        </connections>
-                    </toolbarItem>
-                </allowedToolbarItems>
-                <defaultToolbarItems>
-                    <toolbarItem reference="pCH-pn-Db0"/>
-                    <toolbarItem reference="Uhc-Ev-Qzq"/>
-                    <toolbarItem reference="IGv-ve-yk1"/>
-                    <toolbarItem reference="KjW-gV-lDX"/>
-                    <toolbarItem reference="6Zi-pi-Dt2"/>
-                    <toolbarItem reference="nwU-a9-8Ys"/>
-                    <toolbarItem reference="yhG-M6-u9I"/>
-                    <toolbarItem reference="vgp-oU-nmc"/>
-                    <toolbarItem reference="75r-Mm-tLs"/>
-                    <toolbarItem reference="Coo-lh-C1B"/>
-                    <toolbarItem reference="1ln-DS-p7Y"/>
-                </defaultToolbarItems>
-                <connections>
-                    <outlet property="delegate" destination="-2" id="8u6-2d-Cnk"/>
-                </connections>
-            </toolbar>
             <connections>
                 <outlet property="delegate" destination="-2" id="dU7-CL-nr3"/>
             </connections>
@@ -116,7 +246,7 @@
     </objects>
     <resources>
         <image name="NSInfo" width="32" height="32"/>
-        <image name="NSUser" width="32" height="32"/>
+        <image name="NSUserGroup" width="32" height="32"/>
         <image name="aspect_ratio" width="79.680000305175781" height="79.680000305175781"/>
         <image name="fullscreen" width="128" height="128"/>
         <image name="hangup" width="240" height="240"/>
