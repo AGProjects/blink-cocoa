@@ -35,6 +35,7 @@ from BlinkLogger import BlinkLogger
 from configuration.datatypes import UserIcon
 from util import allocate_autorelease_pool, run_in_gui_thread
 
+from Quartz import kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
@@ -278,8 +279,7 @@ class PresencePublisher(object):
             must_publish = True
             self.last_time_offset = last_time_offset
 
-        # secret sausage after taking the red pill = indigestion
-        last_idle_counter = CGEventSourceSecondsSinceLastEventType(0, int(4294967295))
+        last_idle_counter = CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateHIDSystemState, kCGEventMouseMoved)
         self.previous_idle_counter = last_idle_counter
         if self.previous_idle_counter > last_idle_counter:
             self.last_input = ISOTimestamp.now()
