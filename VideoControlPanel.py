@@ -26,6 +26,8 @@ from Foundation import (NSString,
                         NSDictionary
                         )
 
+from Quartz import kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
+
 
 import objc
 import time
@@ -61,6 +63,7 @@ class VideoControlPanel(NSWindowController):
     fullscreenButton = objc.IBOutlet()
     myvideoButton = objc.IBOutlet()
     pauseButton = objc.IBOutlet()
+    toolbarView = objc.IBOutlet()
 
     idle_timer = None
     fade_timer = None
@@ -68,6 +71,7 @@ class VideoControlPanel(NSWindowController):
     closed = False
     show_time = None
     mouse_in_window = False
+    is_key_window = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -82,11 +86,27 @@ class VideoControlPanel(NSWindowController):
         self.notification_center.add_observer(self,sender=self.videoWindowController)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
-    def updateButtons(self):
-        for button in (self.holdButton, self.hangupButton, self.chatButton, self.infoButton, self.muteButton, self.aspectButton, self.contactsButton, self.fullscreenButton, self.myvideoButton, self.pauseButton):
+    def awakeFromNib(self):
+        self.fullscreenButton.setImage_(NSImage.imageNamed_("restore" if self.videoWindowController.full_screen else "fullscreen"))
+        self.updateMuteButton()
+        audio_stream = self.sessionController.streamHandlerOfType("audio")
+        if audio_stream:
+            if audio_stream.status == STREAM_CONNECTED:
+                if audio_stream.holdByLocal or audio_stream.holdByRemote:
+                    self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
+                else:
+                    self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+            else:
+                self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+        else:
+            self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
 
-            lightGrayTitle = NSAttributedString.alloc().initWithString_attributes_(button.label(), NSDictionary.dictionaryWithObject_forKey_(NSColor.lightGrayColor(), NSForegroundColorAttributeName))
-            button.setLabel_(lightGrayTitle)
+        rect = NSZeroRect
+        rect.size = self.window().contentView().frame().size
+        tracking_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
+                NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
+        self.toolbarView.addTrackingArea_(tracking_area)
+        self.window().setInitialFirstResponder_(self.toolbarView)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -122,10 +142,13 @@ class VideoControlPanel(NSWindowController):
         else:
             BlinkLogger().log_info(log)
 
-    def mouseIn(self):
+    def mouseEntered_(self, event):
+        self.stopFadeTimer()
+        self.videoWindowController.stopMouseOutTimer()
+        self.window().setAlphaValue_(ALPHA)
         self.mouse_in_window = True
 
-    def mouseOut(self):
+    def mouseExited_(self, event):
         self.mouse_in_window = False
 
     @property
@@ -209,23 +232,6 @@ class VideoControlPanel(NSWindowController):
         self.videoWindowController = None
         super(VideoControlPanel, self).dealloc()
 
-    def awakeFromNib(self):
-        self.fullscreenButton.setImage_(NSImage.imageNamed_("restore" if self.videoWindowController.full_screen else "fullscreen"))
-        self.updateMuteButton()
-        audio_stream = self.sessionController.streamHandlerOfType("audio")
-        if audio_stream:
-            if audio_stream.status == STREAM_CONNECTED:
-                if audio_stream.holdByLocal or audio_stream.holdByRemote:
-                    self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
-                else:
-                    self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-            else:
-                self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-        else:
-            self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-
-        self.updateButtons()
-
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
 
@@ -234,17 +240,16 @@ class VideoControlPanel(NSWindowController):
         self.window().setAlphaValue_(ALPHA)
         self.visible = True
 
+    def windowDidResignKey_(self, notification):
+        self.is_key_window = False
+
     def windowDidBecomeKey_(self, notification):
+        self.is_key_window = True
         self.stopFadeTimer()
         self.window().setAlphaValue_(ALPHA)
         self.visible = True
         if self.videoWindowController and self.videoWindowController.window is not None:
             self.videoWindowController.window.orderFront_(None)
-
-    def windowDidBecomeMain_(self, notification):
-        self.stopFadeTimer()
-        self.window().setAlphaValue_(ALPHA)
-        self.visible = True
 
     def windowWillClose_(self, sender):
         self.stopFadeTimer()
@@ -252,7 +257,7 @@ class VideoControlPanel(NSWindowController):
     def updateIdleTimer_(self, timer):
         if not self.window():
             return
-        last_idle_counter = CGEventSourceSecondsSinceLastEventType(1, int(4294967295))
+        last_idle_counter = CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateHIDSystemState, kCGEventMouseMoved)
         chat_stream = self.sessionController.streamHandlerOfType("chat")
         if not chat_stream:
             if self.show_time is not None and time.time() - self.show_time < IDLE_TIME:
@@ -282,68 +287,71 @@ class VideoControlPanel(NSWindowController):
                 self.window().orderOut_(None)
 
     @objc.IBAction
-    def userClickedToolbarButton_(self, sender):
-        self.log_debug('userClickedToolbarButton_ %s' % self)
+    def userClickedFullScreenButton_(self, sender):
+        self.window().orderOut_(None)
+        self.videoWindowController.toggleFullScreen()
 
-        if self.closed:
-            return
+    @objc.IBAction
+    def userClickedAspectButton_(self, sender):
+        self.videoWindowController.changeAspectRatio()
 
-        if not self.videoWindowController:
-            return
+    @objc.IBAction
+    def userClickedMuteButton_(self, sender):
+        SIPManager().mute(not SIPManager().is_muted())
+        self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
 
-        if self.videoWindowController.full_screen_in_progress:
-            return
+    @objc.IBAction
+    def userClickedHoldButton_(self, sender):
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream and audio_stream.status == STREAM_CONNECTED and not self.sessionController.inProposal:
+                if audio_stream.holdByLocal:
+                    audio_stream.unhold()
+                    audio_stream.view.setSelected_(True)
+                    sender.setImage_(NSImage.imageNamed_("pause-white"))
+                else:
+                    sender.setImage_(NSImage.imageNamed_("paused-red"))
+                    audio_stream.hold()
 
-        self.stopFadeTimer()
+    @objc.IBAction
+    def userClickedHangupButton_(self, sender):
+        self.stopIdleTimer()
+        self.window().orderOut_(None)
+        self.sessionController.end()
 
-        if sender.itemIdentifier() == 'hangup':
-            self.stopIdleTimer()
-            self.window().orderOut_(None)
-            self.sessionController.end()
-        elif sender.itemIdentifier() == 'fullscreen':
-            self.window().orderOut_(None)
+    @objc.IBAction
+    def userClickedContactsButton_(self, sender):
+        if self.videoWindowController.full_screen:
             self.videoWindowController.toggleFullScreen()
-        elif sender.itemIdentifier() == 'aspect':
-            self.videoWindowController.changeAspectRatio()
-        elif sender.itemIdentifier() == 'pause':
-            self.pauseButton.setImage_(NSImage.imageNamed_("video-paused" if not self.streamController.paused else "video"))
-            self.streamController.togglePause()
-            print self.streamController.paused
-        elif sender.itemIdentifier() == 'chat':
-            if self.videoWindowController.always_on_top:
-                self.videoWindowController.toogleAlwaysOnTop()
-            chat_stream = self.sessionController.streamHandlerOfType("chat")
-            if chat_stream:
-                if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
-                    self.sessionController.startChatSession()
-            else:
-                self.sessionController.addChatToSession()
+        NSApp.delegate().contactsWindowController.focusSearchTextField()
 
-            if self.videoWindowController.full_screen:
-                NSApp.delegate().contactsWindowController.showChatWindow_(None)
-                self.videoWindowController.goToWindowMode(NSApp.delegate().contactsWindowController.chatWindowController.window())
+    @objc.IBAction
+    def userClickedChatButton_(self, sender):
+        if self.videoWindowController.always_on_top:
+            self.videoWindowController.toogleAlwaysOnTop()
+        chat_stream = self.sessionController.streamHandlerOfType("chat")
+        if chat_stream:
+            if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
+                self.sessionController.startChatSession()
+        else:
+            self.sessionController.addChatToSession()
 
-        elif sender.itemIdentifier() == 'info':
-            if self.sessionController.info_panel is not None:
-                self.sessionController.info_panel.toggle()
-        elif sender.itemIdentifier() == 'mirror':
-            NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
-        elif sender.itemIdentifier() == 'mute':
-            SIPManager().mute(not SIPManager().is_muted())
-            self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
-        elif sender.itemIdentifier() == 'contacts':
-            if self.videoWindowController.full_screen:
-                self.videoWindowController.toggleFullScreen()
-            NSApp.delegate().contactsWindowController.focusSearchTextField()
-        elif sender.itemIdentifier() == 'hold':
-            if self.sessionController.hasStreamOfType("audio"):
-                audio_stream = self.sessionController.streamHandlerOfType("audio")
-                if audio_stream and audio_stream.status == STREAM_CONNECTED and not self.sessionController.inProposal:
-                    if audio_stream.holdByLocal:
-                        audio_stream.unhold()
-                        audio_stream.view.setSelected_(True)
-                        sender.setImage_(NSImage.imageNamed_("pause-white"))
-                    else:
-                        sender.setImage_(NSImage.imageNamed_("paused-red"))
-                        audio_stream.hold()
+        if self.videoWindowController.full_screen:
+            NSApp.delegate().contactsWindowController.showChatWindow_(None)
+            self.videoWindowController.goToWindowMode(NSApp.delegate().contactsWindowController.chatWindowController.window())
+
+    @objc.IBAction
+    def userClickedInfoButton_(self, sender):
+        if self.sessionController.info_panel is not None:
+            self.sessionController.info_panel.toggle()
+
+    @objc.IBAction
+    def userClickedPauseButton_(self, sender):
+        self.pauseButton.setImage_(NSImage.imageNamed_("video-paused" if not self.streamController.paused else "video"))
+        self.streamController.togglePause()
+
+    @objc.IBAction
+    def userClickedMyVideoButton_(self, sender):
+        NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
+
 

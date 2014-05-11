@@ -78,6 +78,7 @@ class VideoWindowController(NSWindowController):
     overlayView = None
     initialLocation = None
     local_video_visible_before_fullscreen = False
+    is_key_window = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -265,6 +266,12 @@ class VideoWindowController(NSWindowController):
                 # TODO video: "Handle Escape"
         else:
             NSView.keyDown_(self, event)
+
+    def windowDidResignKey_(self, notification):
+        self.is_key_window = False
+
+    def windowDidBecomeKey_(self, notification):
+        self.is_key_window = True
 
     def mouseEntered_(self, event):
         self.mouse_in_window = True
