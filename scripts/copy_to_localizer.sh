@@ -1,3 +1,3 @@
-cp en.lproj/* ../blink-cocoa-localizations/Blink\ Translations/Source/blink/en.lproj/
-cp ro.lproj/* ../blink-cocoa-localizations/Blink\ Translations/Source/blink/ro.lproj/
-cp es.lproj/* ../blink-cocoa-localizations/Blink\ Translations/Source/blink/es.lproj/
+cp -r ../en.lproj ~/work/blink-languages-only/
+cp -r ../ro.lproj ~/work/blink-languages-only/
+cp -r ../es.lproj ~/work/blink-languages-only/
