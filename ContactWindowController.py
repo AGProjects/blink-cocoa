@@ -3334,8 +3334,8 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
 
-        while menu.numberOfItems() > 10:
-            menu.removeItemAtIndex_(10)
+        while menu.numberOfItems() > 9:
+            menu.removeItemAtIndex_(9)
 
         account = self.activeAccount()
         if account is None:

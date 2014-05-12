@@ -409,7 +409,6 @@ CA
                                     <action selector="redialLast:" target="389" id="1117"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="2" id="1129"/>
                             <menuItem title="Join Conference..." tag="44" keyEquivalent="j" id="1055">
                                 <connections>
                                     <action selector="joinConferenceClicked:" target="389" id="1126"/>
