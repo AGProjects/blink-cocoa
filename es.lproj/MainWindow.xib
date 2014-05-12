@@ -524,16 +524,26 @@ CA
                                     <action selector="performZoom:" target="-1" id="240"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="970"/>
                             <menuItem title="Close" keyEquivalent="w" id="968">
                                 <connections>
                                     <action selector="close:" target="-1" id="971"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="575"/>
                             <menuItem title="Always On Top" keyEquivalent="t" id="567">
                                 <connections>
                                     <action selector="setAlwaysOnTop:" target="389" id="1650"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="VGm-fz-ww9"/>
+                            <menuItem title="Changelog" tag="400" id="tWW-Mh-IJT">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showChangelog:" target="389" id="tAj-SZ-A4b"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Help" keyEquivalent="?" id="A8H-dU-aTx">
+                                <connections>
+                                    <action selector="showHelp:" target="389" id="6QG-Qg-07Z"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1652"/>
@@ -596,23 +606,7 @@ CA
                         </connections>
                     </menu>
                 </menuItem>
-                <menuItem title="Help" id="103" userLabel="1">
-                    <menu key="submenu" title="Help" id="106" userLabel="2">
-                        <items>
-                            <menuItem title="Changelog" tag="400" id="982">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="showChangelog:" target="389" id="1633"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Online Help" keyEquivalent="?" id="111">
-                                <connections>
-                                    <action selector="showHelp:" target="389" id="792"/>
-                                </connections>
-                            </menuItem>
-                        </items>
-                    </menu>
-                </menuItem>
+                <menuItem title="Help" id="103" userLabel="1"/>
             </items>
             <connections>
                 <outlet property="delegate" destination="389" id="762"/>
