@@ -483,28 +483,13 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="History" autoenablesItems="NO" id="798">
                         <items>
-                            <menuItem title="Privacy" enabled="NO" id="1862">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                            </menuItem>
-                            <menuItem title="Don't Log Chat Messages" tag="101" indentationLevel="1" id="1863">
+                            <menuItem title="Don't Log Chat Messages" tag="101" id="1863">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleChatPrivacy:" target="389" id="1867"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1865"/>
-                            <menuItem title="Viewer" tag="1" id="1104" userLabel="Menu Item (Chat Conversations...)">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="showHistoryViewer:" target="389" id="1105"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="File Transfers" tag="100" id="1106" userLabel="Menu Item (File Transfers..)">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="showFileTransfers:" target="389" id="hT3-ui-dJz"/>
-                                </connections>
-                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="389" id="800"/>

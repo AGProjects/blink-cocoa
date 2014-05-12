@@ -3550,14 +3550,16 @@ class ContactWindowController(NSWindowController):
         item.setState_(NSOnState if settings.contacts.enable_no_group else NSOffState)
 
     def updateHistoryMenu(self):
-        if self.historyMenu.numberOfItems() < 6:
-            if NSApp.delegate().applicationName != 'Blink Lite':
+        if NSApp.delegate().call_recording_enabled:
+            idx = self.historyMenu.indexOfItem_(self.recordingsSubMenu)
+            if idx < 0:
                 self.historyMenu.addItem_(self.recordingsSubMenu)
-            self.historyMenu.addItem_(NSMenuItem.separatorItem())
+                self.historyMenu.addItem_(NSMenuItem.separatorItem())
 
         settings = SIPSimpleSettings()
         chat_privacy = self.historyMenu.itemWithTag_(101)
         chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
+
         self.get_session_history_entries(NSApp.delegate().last_history_entries)
 
     def getAccountWitDialPlan(self, uri):
