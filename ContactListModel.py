@@ -3789,6 +3789,7 @@ class ContactListModel(CustomListModel):
             contact = Contact()
             contact.name = new_contact['name']
             contact.uris = new_contact['uris']
+            contact.auto_answer = new_contact['auto_answer']
             contact.uris.default = new_contact['default_uri']
             contact.preferred_media = new_contact['preferred_media']
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
@@ -3834,6 +3835,7 @@ class ContactListModel(CustomListModel):
             contact = item.contact
             contact.name = new_contact['name']
             contact.uris = new_contact['uris']
+            contact.auto_answer = new_contact['auto_answer']
             contact.uris.default = new_contact['default_uri']
             contact.preferred_media = new_contact['preferred_media']
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']

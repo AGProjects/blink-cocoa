@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -25,14 +25,14 @@
         <window title="Add Contact" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="add-contact" animationBehavior="default" id="3" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="229" width="486" height="345"/>
+            <rect key="contentRect" x="196" y="229" width="486" height="379"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <view key="contentView" id="4">
-                <rect key="frame" x="0.0" y="0.0" width="486" height="345"/>
+                <rect key="frame" x="0.0" y="0.0" width="486" height="379"/>
                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="5">
-                        <rect key="frame" x="14" y="274" width="110" height="17"/>
+                        <rect key="frame" x="14" y="308" width="110" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Default Address:" id="6">
                             <font key="font" metaFont="system"/>
@@ -42,7 +42,7 @@
                         <accessibility description="SIP Address"/>
                     </textField>
                     <button verticalHuggingPriority="750" tag="10" id="7">
-                        <rect key="frame" x="376" y="12" width="96" height="32"/>
+                        <rect key="frame" x="376" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Add" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="8">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -57,7 +57,7 @@ DQ
                         </connections>
                     </button>
                     <button toolTip="Set the icon for this contact to the default one" verticalHuggingPriority="750" tag="21" id="89">
-                        <rect key="frame" x="50" y="146" width="70" height="16"/>
+                        <rect key="frame" x="50" y="180" width="70" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="90">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -69,7 +69,7 @@ DQ
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" tag="11" id="9">
-                        <rect key="frame" x="280" y="12" width="96" height="32"/>
+                        <rect key="frame" x="280" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="10">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -83,7 +83,7 @@ Gw
                         </connections>
                     </button>
                     <textField verticalHuggingPriority="750" id="11">
-                        <rect key="frame" x="129" y="271" width="337" height="22"/>
+                        <rect key="frame" x="129" y="305" width="337" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" placeholderString="" drawsBackground="YES" id="12">
                             <font key="font" metaFont="system"/>
@@ -97,7 +97,7 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="11" y="306" width="110" height="17"/>
+                        <rect key="frame" x="11" y="340" width="110" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Display Name:" id="14">
                             <font key="font" metaFont="system"/>
@@ -107,7 +107,7 @@ Gw
                         <accessibility description="Display Name"/>
                     </textField>
                     <textField verticalHuggingPriority="750" id="15">
-                        <rect key="frame" x="129" y="303" width="337" height="22"/>
+                        <rect key="frame" x="129" y="337" width="337" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="16">
                             <font key="font" metaFont="system"/>
@@ -120,7 +120,7 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="25">
-                        <rect key="frame" x="17" y="113" width="108" height="17"/>
+                        <rect key="frame" x="17" y="147" width="108" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Groups:" id="26">
                             <font key="font" metaFont="system"/>
@@ -129,7 +129,7 @@ Gw
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="177">
-                        <rect key="frame" x="17" y="83" width="108" height="17"/>
+                        <rect key="frame" x="17" y="117" width="108" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Availability:" id="178">
                             <font key="font" metaFont="system"/>
@@ -138,7 +138,7 @@ Gw
                         </textFieldCell>
                     </textField>
                     <imageView toolTip="Click to set the icon to a picture from the file system" tag="20" id="61" customClass="MyImageThing">
-                        <rect key="frame" x="48" y="167" width="74" height="80"/>
+                        <rect key="frame" x="48" y="201" width="74" height="80"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" selectable="YES" editable="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="62"/>
                         <accessibility description="Contact Icon"/>
@@ -147,7 +147,7 @@ Gw
                         </connections>
                     </imageView>
                     <textField verticalHuggingPriority="750" id="37">
-                        <rect key="frame" x="17" y="50" width="108" height="17"/>
+                        <rect key="frame" x="17" y="84" width="108" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Preferred Media:" id="38">
                             <font key="font" metaFont="system"/>
@@ -156,7 +156,7 @@ Gw
                         </textFieldCell>
                     </textField>
                     <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="101">
-                        <rect key="frame" x="129" y="168" width="337" height="95"/>
+                        <rect key="frame" x="129" y="202" width="337" height="95"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="o1J-Of-P9O">
                             <rect key="frame" x="1" y="17" width="335" height="77"/>
@@ -233,7 +233,7 @@ Gw
                         </tableHeaderView>
                     </scrollView>
                     <segmentedControl verticalHuggingPriority="750" id="129">
-                        <rect key="frame" x="127" y="139" width="341" height="24"/>
+                        <rect key="frame" x="127" y="173" width="341" height="24"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="130">
                             <font key="font" metaFont="system"/>
@@ -248,7 +248,7 @@ Gw
                         </connections>
                     </segmentedControl>
                     <popUpButton verticalHuggingPriority="750" id="152">
-                        <rect key="frame" x="127" y="107" width="342" height="26"/>
+                        <rect key="frame" x="127" y="141" width="342" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="153">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -266,7 +266,7 @@ Gw
                         </connections>
                     </popUpButton>
                     <popUpButton verticalHuggingPriority="750" id="163">
-                        <rect key="frame" x="126" y="77" width="342" height="26"/>
+                        <rect key="frame" x="126" y="111" width="342" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="164">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -296,7 +296,7 @@ Gw
                         </connections>
                     </popUpButton>
                     <popUpButton verticalHuggingPriority="750" id="199">
-                        <rect key="frame" x="126" y="45" width="342" height="26"/>
+                        <rect key="frame" x="126" y="79" width="342" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="border" inset="2" autoenablesItems="NO" id="200">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -322,6 +322,14 @@ Gw
                             <action selector="preferredMediaPopUpClicked:" target="-2" id="214"/>
                         </connections>
                     </popUpButton>
+                    <button id="LX8-ek-Wr8">
+                        <rect key="frame" x="106" y="53" width="361" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Automatically Answer Calls" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="ILa-nz-eb3">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                    </button>
                 </subviews>
             </view>
             <connections>

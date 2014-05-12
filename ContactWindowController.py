@@ -4040,11 +4040,6 @@ class ContactWindowController(NSWindowController):
         contact.favorite = not contact.favorite
 
     @objc.IBAction
-    def setAutoAnswer_(self, sender):
-        contact = sender.representedObject()
-        contact.auto_answer = not contact.auto_answer
-
-    @objc.IBAction
     def goToBackupContactsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
@@ -4636,12 +4631,6 @@ class ContactWindowController(NSWindowController):
                             mitem.setEnabled_(True)
 
             if isinstance(item, BlinkPresenceContact):
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Automatically Answer Calls", "Menu item"), "setAutoAnswer:", "")
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
-                mitem.setState_(NSOnState if item.auto_answer else NSOffState)
-
-            if isinstance(item, BlinkPresenceContact):
                 if item not in self.model.bonjour_group.contacts:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                     all_uris = []
@@ -4800,19 +4789,18 @@ class ContactWindowController(NSWindowController):
                 mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
                 mitem.setRepresentedObject_(item.contact)
 
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show Availability Information...", "Menu item"), "showPresenceInfo:", "")
-                mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
-                mitem.setRepresentedObject_(item)
-
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Subscribe to Availability", "Menu item"),  "setSubscribeToPresence:", "")
                 mitem.setState_(item.contact.presence.subscribe)
                 mitem.setEnabled_(True)
                 mitem.setRepresentedObject_(item)
 
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block Contact", "Menu item"), "setPresencePolicy:", "")
                 mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
                 mitem.setEnabled_(True)
+                mitem.setRepresentedObject_(item)
+
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show Availability Information...", "Menu item"), "showPresenceInfo:", "")
+                mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
                 mitem.setRepresentedObject_(item)
 
         elif isinstance(item, BlinkGroup):

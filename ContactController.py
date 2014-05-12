@@ -64,6 +64,7 @@ class AddContactController(NSObject):
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = None
     media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3, 'video': 4}
+    autoanswerCheckbox = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         from ContactListModel import DefaultUserAvatar
@@ -150,6 +151,7 @@ class AddContactController(NSObject):
 
             contact = {'default_uri'     : self.default_uri,
                        'uris'            : self.uris,
+                       'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                        'name'            : unicode(self.nameText.stringValue()),
                        'groups'          : self.belonging_groups,
                        'icon'            : None if self.photoImage.image() == self.defaultPhotoImage else self.photoImage.image(),
@@ -472,6 +474,8 @@ class EditContactController(AddContactController):
 
         self.addButton.setEnabled_(True if blink_contact.contact.uris else False)
         self.default_uri = self.blink_contact.contact.uris.default
+        self.autoanswerCheckbox.setState_(NSOnState if blink_contact.auto_answer else NSOffState)
+
         self.uris = sorted(blink_contact.contact.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint)
         # TODO: how to handle xmmp: uris?
         #for uri in self.uris:
@@ -510,6 +514,7 @@ class EditContactController(AddContactController):
                     'uris'            : self.uris,
                     'name'            : unicode(self.nameText.stringValue()),
                     'groups'          : self.belonging_groups,
+                    'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                     'icon'            : None if self.photoImage.image() is self.defaultPhotoImage else self.photoImage.image(),
                     'preferred_media' : self.preferred_media,
                     'subscriptions'   : self.subscriptions
