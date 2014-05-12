@@ -15,7 +15,6 @@ def init(delegate):
     delegate.about_slogan = NSLocalizedString("A state of the art, easy to use SIP client", "Label")
 
 def setup(delegate):
-    delegate.changelog_url = "http://icanblink.com/changelog-lite.phtml"
     delegate.help_url = "http://help-lite.icanblink.com"
     delegate.last_history_entries = 2
     delegate.icloud_enabled = False

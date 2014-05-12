@@ -30,7 +30,6 @@ def init(delegate):
     delegate.about_slogan = NSLocalizedString("A state of the art, easy to use SIP client", "Label")
 
 def setup(delegate):
-    delegate.changelog_url = "http://icanblink.com/changelog-sip2sip.phtml"
     delegate.help_url = "http://projects.ag-projects.com/projects/blinkc/wiki/Help_For_SIP2SIP"
     delegate.last_history_entries = 10
     delegate.allowed_domains = ['sip2sip.info']

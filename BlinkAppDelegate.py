@@ -98,7 +98,6 @@ class BlinkAppDelegate(NSObject):
     # branding
     about_version = "1.0"
     about_slogan = "A state of the art, easy to use SIP client"
-    changelog_url = "http://icanblink.com/changelog-pro.phtml"
     help_url = "http://help-pro.icanblink.com"
     last_history_entries = 10
     allowed_domains = []

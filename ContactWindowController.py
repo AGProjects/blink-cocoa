@@ -873,10 +873,6 @@ class ContactWindowController(NSWindowController):
             SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
 
     @objc.IBAction
-    def showChangelog_(self, sender):
-        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(NSApp.delegate().changelog_url))
-
-    @objc.IBAction
     def showDonate_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
 
