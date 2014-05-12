@@ -518,13 +518,19 @@ CA
                                     <action selector="setAlwaysOnTop:" target="389" id="1650"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="VGm-fz-ww9"/>
+                            <menuItem isSeparatorItem="YES" id="1652"/>
                             <menuItem title="Help" keyEquivalent="?" id="A8H-dU-aTx">
                                 <connections>
                                     <action selector="showHelp:" target="389" id="6QG-Qg-07Z"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="1652"/>
+                            <menuItem title="Settings On Server" tag="40" id="oUk-LI-LNE">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showAccountSettings:" target="389" id="aGo-Ur-eMO"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="VGm-fz-ww9"/>
                             <menuItem title="Logs" keyEquivalent="0" id="1648">
                                 <connections>
                                     <action selector="showDebugWindow:" target="389" id="1649"/>
@@ -563,11 +569,6 @@ CA
                             <menuItem title="My Video" tag="50" keyEquivalent="7" id="3zb-2K-tHc">
                                 <connections>
                                     <action selector="toggleLocalVideoWindow:" target="389" id="QX9-kp-VaE"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Settings On Server" tag="40" keyEquivalent="8" id="oUk-LI-LNE">
-                                <connections>
-                                    <action selector="showAccountSettings:" target="389" id="aGo-Ur-eMO"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="92">
