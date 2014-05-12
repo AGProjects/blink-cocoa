@@ -332,11 +332,11 @@
                             </tabViewItem>
                             <tabViewItem label="Configuración" identifier="settings" id="201">
                                 <view key="view" id="202">
-                                    <rect key="frame" x="10" y="7" width="720" height="434"/>
+                                    <rect key="frame" x="10" y="7" width="720" height="434.00000288337469"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tabView drawsBackground="NO" id="181">
-                                            <rect key="frame" x="10" y="33" width="703" height="360"/>
+                                            <rect key="frame" x="10" y="33" width="703" height="360.00000323355198"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                             <font key="font" metaFont="system"/>
                                             <tabViewItems/>
@@ -346,7 +346,7 @@
                                             </connections>
                                         </tabView>
                                         <textField verticalHuggingPriority="750" id="278">
-                                            <rect key="frame" x="76" y="399" width="567" height="17"/>
+                                            <rect key="frame" x="76" y="399.00000288337469" width="567" height="17"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Descripición" id="279">
                                                 <font key="font" metaFont="system"/>

@@ -52,23 +52,15 @@
                     </connections>
                 </textField>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="71" userLabel="Session Control Buttons">
-                    <rect key="frame" x="173" y="2" width="89" height="20"/>
+                    <rect key="frame" x="173" y="3" width="89" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Mute" image="mute" width="20" tag="3">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Pausar" image="pause" width="20">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Grabar" image="record" width="20" tag="1">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Colgar" image="hangup" width="20" tag="2">
-                                <nil key="label"/>
-                            </segment>
+                            <segment toolTip="Mute" image="mute" width="20" tag="3"/>
+                            <segment toolTip="Pausar" image="pause" width="20"/>
+                            <segment toolTip="Grabar" image="record" width="20" tag="1"/>
+                            <segment toolTip="Colgar" image="hangup" width="20" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <accessibility description="Botones de Control de la Sesión"/>
@@ -77,7 +69,7 @@
                     </connections>
                 </segmentedControl>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="89" userLabel="Session Control Buttons">
-                    <rect key="frame" x="173" y="2" width="89" height="20"/>
+                    <rect key="frame" x="173" y="3" width="89" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="90">
                         <font key="font" metaFont="smallSystem"/>
@@ -102,7 +94,7 @@
                     </connections>
                 </segmentedControl>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="198" userLabel="Session Control Buttons">
-                    <rect key="frame" x="153" y="2" width="110" height="20"/>
+                    <rect key="frame" x="153" y="3" width="110" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
@@ -130,20 +122,14 @@
                     </connections>
                 </segmentedControl>
                 <segmentedControl verticalHuggingPriority="750" id="30" userLabel="Session Control Buttons">
-                    <rect key="frame" x="194" y="2" width="68" height="20"/>
+                    <rect key="frame" x="194" y="3" width="68" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" state="on" alignment="left" style="rounded" trackingMode="momentary" id="35">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Pausar" image="pause" width="20">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Grabar" image="record" width="20" tag="1">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Colgar" image="hangup_small" width="20" tag="2">
-                                <nil key="label"/>
-                            </segment>
+                            <segment toolTip="Pausar" image="pause" width="20"/>
+                            <segment toolTip="Grabar" image="record" width="20" tag="1"/>
+                            <segment toolTip="Colgar" image="hangup_small" width="20" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <accessibility description="Botones de Control de la Sesión"/>

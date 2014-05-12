@@ -56,23 +56,23 @@
         <window title="Información de la Sesión" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" frameAutosaveName="session-info-panel" animationBehavior="default" id="1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="1270" y="216" width="315" height="709"/>
+            <rect key="contentRect" x="1270" y="216" width="315" height="727"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
-            <value key="minSize" type="size" width="315" height="709"/>
-            <value key="maxSize" type="size" width="315" height="709"/>
+            <value key="minSize" type="size" width="315" height="727"/>
+            <value key="maxSize" type="size" width="315" height="727"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="315" height="709"/>
+                <rect key="frame" x="0.0" y="0.0" width="315" height="727"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <box autoresizesSubviews="NO" title="Sesión SIP" borderType="line" id="42">
-                        <rect key="frame" x="4" y="510" width="306" height="188"/>
+                        <rect key="frame" x="4" y="589" width="306" height="132"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <view key="contentView">
-                            <rect key="frame" x="1" y="1" width="304" height="172"/>
+                            <rect key="frame" x="1" y="1" width="304" height="116"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField verticalHuggingPriority="750" id="36">
-                                    <rect key="frame" x="9" y="114" width="107" height="14"/>
+                                    <rect key="frame" x="9" y="60" width="107" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Duración:" id="37">
                                         <font key="font" metaFont="smallSystem"/>
@@ -81,7 +81,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="202">
-                                    <rect key="frame" x="9" y="134" width="107" height="14"/>
+                                    <rect key="frame" x="9" y="78" width="107" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Cuenta:" id="203">
                                         <font key="font" metaFont="smallSystem"/>
@@ -90,7 +90,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="38">
-                                    <rect key="frame" x="118" y="114" width="102" height="14"/>
+                                    <rect key="frame" x="118" y="60" width="102" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="00:00" id="39">
                                         <font key="font" metaFont="smallSystem"/>
@@ -102,7 +102,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="40">
-                                    <rect key="frame" x="9" y="94" width="107" height="14"/>
+                                    <rect key="frame" x="9" y="42" width="107" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Estado:" id="41">
                                         <font key="font" metaFont="smallSystem"/>
@@ -111,7 +111,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="43">
-                                    <rect key="frame" x="118" y="94" width="163" height="14"/>
+                                    <rect key="frame" x="118" y="42" width="163" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Activo" id="44">
                                         <font key="font" metaFont="smallSystem"/>
@@ -123,7 +123,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="204">
-                                    <rect key="frame" x="119" y="134" width="183" height="14"/>
+                                    <rect key="frame" x="119" y="78" width="183" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="user@domain" id="205">
                                         <font key="font" metaFont="smallSystem"/>
@@ -132,7 +132,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="78">
-                                    <rect key="frame" x="9" y="74" width="107" height="14"/>
+                                    <rect key="frame" x="9" y="24" width="107" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Agente Remoto:" id="81">
                                         <font key="font" metaFont="smallSystem"/>
@@ -141,7 +141,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="79">
-                                    <rect key="frame" x="118" y="74" width="184" height="14"/>
+                                    <rect key="frame" x="118" y="24" width="184" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Desconocido" id="80">
                                         <font key="font" metaFont="smallSystem"/>
@@ -153,7 +153,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="137">
-                                    <rect key="frame" x="9" y="14" width="107" height="14"/>
+                                    <rect key="frame" x="9" y="6" width="107" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Próximo Nodo:" id="140">
                                         <font key="font" metaFont="smallSystem"/>
@@ -162,7 +162,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="138">
-                                    <rect key="frame" x="118" y="14" width="162" height="14"/>
+                                    <rect key="frame" x="118" y="6" width="162" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="127.0.0.1" id="139">
                                         <font key="font" metaFont="smallSystem"/>
@@ -174,13 +174,13 @@
                                     </connections>
                                 </textField>
                                 <imageView hidden="YES" id="162">
-                                    <rect key="frame" x="283" y="13" width="16" height="16"/>
+                                    <rect key="frame" x="283" y="6" width="16" height="16"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="bluelock" id="163"/>
                                     <accessibility description="Encriptación SIP"/>
                                 </imageView>
                                 <textField verticalHuggingPriority="750" id="34">
-                                    <rect key="frame" x="9" y="154" width="293" height="14"/>
+                                    <rect key="frame" x="9" y="98" width="293" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Nombre &lt;user@domain>" id="35">
                                         <font key="font" metaFont="smallSystem"/>
@@ -195,14 +195,14 @@
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </box>
                     <box autoresizesSubviews="NO" title="Audio" borderType="line" id="31">
-                        <rect key="frame" x="4" y="109" width="306" height="397"/>
+                        <rect key="frame" x="4" y="292" width="306" height="293"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <view key="contentView">
-                            <rect key="frame" x="1" y="1" width="304" height="381"/>
+                            <rect key="frame" x="1" y="1" width="304" height="277"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField verticalHuggingPriority="750" id="3">
-                                    <rect key="frame" x="10" y="343" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="242" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Codec:" id="4">
                                         <font key="font" metaFont="smallSystem"/>
@@ -211,7 +211,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="17">
-                                    <rect key="frame" x="118" y="343" width="131" height="14"/>
+                                    <rect key="frame" x="118" y="242" width="182" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="OPUS" id="18">
                                         <font key="font" metaFont="smallSystem"/>
@@ -223,7 +223,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="146">
-                                    <rect key="frame" x="10" y="363" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="260" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Estado:" id="149">
                                         <font key="font" metaFont="smallSystem"/>
@@ -232,7 +232,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="147">
-                                    <rect key="frame" x="118" y="363" width="131" height="14"/>
+                                    <rect key="frame" x="118" y="260" width="131" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Activo" id="148">
                                         <font key="font" metaFont="smallSystem"/>
@@ -244,7 +244,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="11">
-                                    <rect key="frame" x="118" y="263" width="157" height="14"/>
+                                    <rect key="frame" x="118" y="224" width="182" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="192.168.0.1:4000" id="12">
                                         <font key="font" metaFont="smallSystem"/>
@@ -256,7 +256,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="9">
-                                    <rect key="frame" x="10" y="263" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="224" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Dirección Remota:" id="10">
                                         <font key="font" metaFont="smallSystem"/>
@@ -265,7 +265,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="19">
-                                    <rect key="frame" x="10" y="223" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="188" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Candidato Local:" id="20">
                                         <font key="font" metaFont="smallSystem"/>
@@ -274,7 +274,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="21">
-                                    <rect key="frame" x="118" y="223" width="159" height="14"/>
+                                    <rect key="frame" x="118" y="188" width="182" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="relay" id="22">
                                         <font key="font" metaFont="smallSystem"/>
@@ -286,7 +286,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="68">
-                                    <rect key="frame" x="10" y="243" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="206" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Negociación ICE:" id="71">
                                         <font key="font" metaFont="smallSystem"/>
@@ -295,7 +295,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="69">
-                                    <rect key="frame" x="118" y="243" width="183" height="14"/>
+                                    <rect key="frame" x="118" y="206" width="183" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Deshabilitado" id="70">
                                         <font key="font" metaFont="smallSystem"/>
@@ -307,7 +307,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="58">
-                                    <rect key="frame" x="10" y="203" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="170" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Candidato Remoto:" id="61">
                                         <font key="font" metaFont="smallSystem"/>
@@ -316,7 +316,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="59">
-                                    <rect key="frame" x="118" y="203" width="159" height="14"/>
+                                    <rect key="frame" x="118" y="170" width="183" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="relay" id="60">
                                         <font key="font" metaFont="smallSystem"/>
@@ -328,7 +328,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="23">
-                                    <rect key="frame" x="10" y="181" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="152" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Latencia:" id="24">
                                         <font key="font" metaFont="smallSystem"/>
@@ -337,7 +337,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="Vgf-1e-9ba">
-                                    <rect key="frame" x="10" y="66" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="41" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Ancho de Banda:" id="803-Yp-wBS">
                                         <font key="font" metaFont="smallSystem"/>
@@ -346,7 +346,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="25">
-                                    <rect key="frame" x="10" y="124" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="95" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Paquetes Perdidos:" id="26">
                                         <font key="font" metaFont="smallSystem"/>
@@ -355,7 +355,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="29">
-                                    <rect key="frame" x="10" y="111" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="78" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="0%" id="30">
                                         <font key="font" metaFont="smallSystem"/>
@@ -367,7 +367,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="9sR-pG-xts">
-                                    <rect key="frame" x="121" y="8" width="87" height="14"/>
+                                    <rect key="frame" x="10" y="24" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="0 kbit/s" id="OAn-Lt-QGH">
                                         <font key="font" metaFont="smallSystem"/>
@@ -379,7 +379,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="27">
-                                    <rect key="frame" x="10" y="169" width="106" height="14"/>
+                                    <rect key="frame" x="10" y="132" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="0 ms" id="28">
                                         <font key="font" metaFont="smallSystem"/>
@@ -391,41 +391,41 @@
                                     </connections>
                                 </textField>
                                 <customView id="156" customClass="CBGraphView">
-                                    <rect key="frame" x="119" y="145" width="173" height="50"/>
+                                    <rect key="frame" x="119" y="115" width="173" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="23" id="193"/>
                                     </connections>
                                 </customView>
                                 <customView id="157" customClass="CBGraphView">
-                                    <rect key="frame" x="119" y="88" width="173" height="50"/>
+                                    <rect key="frame" x="119" y="61" width="173" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="194"/>
                                     </connections>
                                 </customView>
                                 <customView id="uWH-ck-ghj" customClass="CBGraphView">
-                                    <rect key="frame" x="120" y="30" width="86" height="50"/>
+                                    <rect key="frame" x="120" y="7" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="Qxm-kL-XgV"/>
                                     </connections>
                                 </customView>
                                 <customView id="WYs-VK-9e3" customClass="CBGraphView">
-                                    <rect key="frame" x="206" y="30" width="86" height="50"/>
+                                    <rect key="frame" x="206" y="7" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="cZt-ik-erM"/>
                                     </connections>
                                 </customView>
                                 <imageView hidden="YES" id="164">
-                                    <rect key="frame" x="284" y="363" width="14" height="14"/>
+                                    <rect key="frame" x="284" y="260" width="14" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="srtp" id="165"/>
                                     <accessibility description="Encriptación RTP"/>
                                 </imageView>
                                 <textField verticalHuggingPriority="750" id="4da-tG-Xxg">
-                                    <rect key="frame" x="212" y="8" width="82" height="14"/>
+                                    <rect key="frame" x="4" y="7" width="112" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="0 kbit/s" id="Poj-9W-zC9">
                                         <font key="font" metaFont="smallSystem"/>
@@ -442,14 +442,14 @@
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </box>
                     <box autoresizesSubviews="NO" title="Chat" borderType="line" id="92">
-                        <rect key="frame" x="4" y="16" width="306" height="89"/>
+                        <rect key="frame" x="4" y="16" width="306" height="84"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <view key="contentView">
-                            <rect key="frame" x="1" y="1" width="304" height="73"/>
+                            <rect key="frame" x="1" y="1" width="304" height="68"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField verticalHuggingPriority="750" id="93">
-                                    <rect key="frame" x="5" y="54" width="111" height="14"/>
+                                    <rect key="frame" x="5" y="50" width="111" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Dirección Local:" id="132">
                                         <font key="font" metaFont="smallSystem"/>
@@ -458,7 +458,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="94">
-                                    <rect key="frame" x="116" y="34" width="171" height="14"/>
+                                    <rect key="frame" x="116" y="32" width="171" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="192.168.0.1:4000" id="131">
                                         <font key="font" metaFont="smallSystem"/>
@@ -470,7 +470,7 @@
                                     </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="95">
-                                    <rect key="frame" x="5" y="34" width="111" height="14"/>
+                                    <rect key="frame" x="5" y="32" width="111" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Próximo Nodo:" id="130">
                                         <font key="font" metaFont="smallSystem"/>
@@ -500,7 +500,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="96">
-                                    <rect key="frame" x="116" y="54" width="171" height="14"/>
+                                    <rect key="frame" x="116" y="49" width="171" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="192.168.1.1:4000" id="129">
                                         <font key="font" metaFont="smallSystem"/>
@@ -512,7 +512,7 @@
                                     </connections>
                                 </textField>
                                 <imageView hidden="YES" id="168">
-                                    <rect key="frame" x="285" y="54" width="14" height="14"/>
+                                    <rect key="frame" x="285" y="49" width="14" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="srtp" id="169"/>
                                     <accessibility description="Encriptación MSRP"/>
@@ -523,7 +523,7 @@
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </box>
                     <box autoresizesSubviews="NO" title="Video" borderType="line" id="j4K-DZ-w3j">
-                        <rect key="frame" x="4" y="86" width="306" height="184"/>
+                        <rect key="frame" x="4" y="104" width="306" height="184"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <view key="contentView">
                             <rect key="frame" x="1" y="1" width="304" height="168"/>

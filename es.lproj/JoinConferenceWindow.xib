@@ -229,9 +229,7 @@ Gw
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="93">
                             <font key="font" metaFont="system"/>
                             <segments>
-                                <segment image="NSAddTemplate" width="25">
-                                    <nil key="label"/>
-                                </segment>
+                                <segment image="NSAddTemplate" width="25"/>
                                 <segment image="NSRemoveTemplate" width="24" tag="1">
                                     <nil key="label"/>
                                 </segment>
