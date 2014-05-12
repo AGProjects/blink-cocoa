@@ -292,7 +292,6 @@ class ContactWindowController(NSWindowController):
     recordingsMenu = objc.IBOutlet()
     contactsMenu = objc.IBOutlet()
     devicesMenu = objc.IBOutlet()
-    toolsMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
     presenceMenu = objc.IBOutlet()
     presenceWatchersMenu = objc.IBOutlet()
@@ -3320,20 +3319,6 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(5).setHidden_(True)
             self.blinkMenu.itemWithTag_(6).setHidden_(True)
 
-    def updateToolsMenu(self):
-        account = self.activeAccount()
-        if account is None:
-            return
-
-        item = self.toolsMenu.itemWithTag_(40) # Settings on SIP server
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
-
-        item = self.toolsMenu.itemWithTag_(43) # Buy PSTN access
-        item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
-
-        settings = SIPSimpleSettings()
-        self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
-
     @allocate_autorelease_pool
     def updateCallMenu(self):
         menu = self.callMenu
@@ -3350,8 +3335,11 @@ class ContactWindowController(NSWindowController):
         item.setState_(NSOnState if account is not None and account.audio.do_not_disturb else NSOffState)
         item.setEnabled_(True)
 
-        while menu.numberOfItems() > 7:
-            menu.removeItemAtIndex_(7)
+        settings = SIPSimpleSettings()
+        self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
+
+        while menu.numberOfItems() > 10:
+            menu.removeItemAtIndex_(10)
 
         account = self.activeAccount()
         if account is None:
@@ -3464,6 +3452,14 @@ class ContactWindowController(NSWindowController):
 
     def updateWindowMenu(self):
         settings = SIPSimpleSettings()
+
+        account = self.activeAccount()
+        item = self.windowMenu.itemWithTag_(40) # Settings on SIP server
+        if account:
+            item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
+        else:
+            item.setEnabled_(False)
+
         item = self.windowMenu.itemWithTag_(50)
         item.setState_(NSOnState if self.localVideoVisible() else NSOffState)
         item.setEnabled_(True if settings.video.device is not None else False)
@@ -5048,8 +5044,6 @@ class ContactWindowController(NSWindowController):
             self.updateCallMenu()
         elif menu == self.groupMenu:
             self.updateGroupMenu()
-        elif menu == self.toolsMenu:
-            self.updateToolsMenu()
         elif menu == self.chatMenu:
             self.updateChatMenu()
         elif menu == self.windowMenu:
