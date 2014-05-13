@@ -4,14 +4,19 @@
 from AppKit import (NSWindowController,
                     NSFloatingWindowLevel,
                     NSWindow,
+                    NSButton,
+                    NSToggleButton,
                     NSView,
                     NSOnState,
                     NSTrackingMouseEnteredAndExited,
                     NSTrackingActiveAlways,
-                    NSRightMouseUp
+                    NSRightMouseUp,
+                    NSImage,
+                    NSImageScaleProportionallyUpOrDown
                     )
 
 from Foundation import (NSBundle,
+                        NSMakeRect,
                         NSTimer,
                         NSEvent,
                         NSScreen,
@@ -70,8 +75,20 @@ class VideoStreamLocalWindowController(NSWindowController):
 
             # capture mouse events into a transparent view
             self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
+
+            # TODO: find a way to render the button -adi
+            self.infoButton = NSButton.alloc().initWithFrame_(NSMakeRect(10, 10 , 16, 16))
+            self.infoButton.setButtonType_(NSToggleButton)
+            self.infoButton.setBordered_(False)
+            self.infoButton.setImage_(NSImage.imageNamed_('panel-info'))
+            self.infoButton.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+            self.infoButton.setTarget_(self)
+            self.infoButton.setAction_("showInfoPanel:")
+            self.overlayView.addSubview_(self.infoButton)
+
             self.window.contentView().addSubview_(self.overlayView)
             self.window.makeFirstResponder_(self.overlayView)
+
             self.updateTrackingAreas()
 
     def updateTrackingAreas(self):
@@ -84,6 +101,9 @@ class VideoStreamLocalWindowController(NSWindowController):
         self.tracking_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
                          NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
         self.window.contentView().addTrackingArea_(self.tracking_area)
+
+    def showInfoPanel_(self, sender):
+        self.videoWindowController.sessionController.info_panel.toggle()
 
     @property
     def stream(self):
@@ -197,6 +217,7 @@ class VideoStreamLocalWindowController(NSWindowController):
 
     @run_in_gui_thread
     def windowWillClose_(self, sender):
+        self.infoButton.removeFromSuperview()
         self.finished = True
 
     def keyDown_(self, event):
