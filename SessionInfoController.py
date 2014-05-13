@@ -62,8 +62,6 @@ class SessionInfoController(NSObject):
     audio_codec = objc.IBOutlet()
     audio_remote_endpoint = objc.IBOutlet()
     audio_ice_negotiation = objc.IBOutlet()
-    audio_ice_local_candidate = objc.IBOutlet()
-    audio_ice_remote_candidate = objc.IBOutlet()
     audio_rtt = objc.IBOutlet()
     audio_packet_loss = objc.IBOutlet()
     audio_rtt_graph = objc.IBOutlet()
@@ -78,8 +76,6 @@ class SessionInfoController(NSObject):
     video_codec = objc.IBOutlet()
     video_remote_endpoint = objc.IBOutlet()
     video_ice_negotiation = objc.IBOutlet()
-    video_ice_local_candidate = objc.IBOutlet()
-    video_ice_remote_candidate = objc.IBOutlet()
     video_srtp_lock = objc.IBOutlet()
     video_rx_speed_graph = objc.IBOutlet()
     video_rx_speed = objc.IBOutlet()
@@ -259,8 +255,6 @@ class SessionInfoController(NSObject):
         self.audio_codec.setStringValue_('')
         self.audio_remote_endpoint.setStringValue_('')
         self.audio_ice_negotiation.setStringValue_('')
-        self.audio_ice_local_candidate.setStringValue_('')
-        self.audio_ice_remote_candidate.setStringValue_('')
         self.audio_rtt.setStringValue_('')
         self.audio_packet_loss.setStringValue_('')
         self.rx_speed.setStringValue_('')
@@ -271,8 +265,6 @@ class SessionInfoController(NSObject):
         self.video_codec.setStringValue_('')
         self.video_remote_endpoint.setStringValue_('')
         self.video_ice_negotiation.setStringValue_('')
-        self.video_ice_local_candidate.setStringValue_('')
-        self.video_ice_remote_candidate.setStringValue_('')
         self.video_rx_speed.setStringValue_('')
         self.video_tx_speed.setStringValue_('')
 
@@ -373,26 +365,6 @@ class SessionInfoController(NSObject):
             self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
 
             if self.audio_stream.stream.ice_active:
-                if self.audio_stream.stream.local_rtp_candidate is not None:
-                    try:
-                        candidate = ice_candidates[self.audio_stream.stream.local_rtp_candidate.type.lower()]
-                    except KeyError:
-                        candidate = self.audio_stream.stream.local_rtp_candidate.type.capitalize()
-                else:
-                    candidate = ''
-
-                self.audio_ice_local_candidate.setStringValue_(candidate)
-
-                if self.audio_stream.stream.remote_rtp_candidate is not None:
-                    try:
-                        candidate = ice_candidates[self.audio_stream.stream.remote_rtp_candidate.type.lower()]
-                    except KeyError:
-                        candidate = self.audio_stream.stream.remote_rtp_candidate.type.capitalize()
-                else:
-                    candidate = ''
-
-                self.audio_ice_remote_candidate.setStringValue_(candidate)
-
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
                 if self.audio_stream.stream.ice_active:
                     if self.audio_stream.stream.local_rtp_candidate and self.audio_stream.stream.remote_rtp_candidate:
@@ -402,9 +374,9 @@ class SessionInfoController(NSObject):
                             ice_status += ' ('+ NSLocalizedString("Server Relayed", "Label") + ')'
 
             else:
-                self.audio_ice_local_candidate.setStringValue_('')
-                self.audio_ice_remote_candidate.setStringValue_('')
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
+                if ice_status == "Remote answer doesn't support ICE":
+                    ice_status = NSLocalizedString("Not Supported", "Label")
 
             self.audio_ice_negotiation.setStringValue_(ice_status)
 
@@ -449,26 +421,6 @@ class SessionInfoController(NSObject):
             self.video_remote_endpoint.setStringValue_('%s:%s' % (self.video_stream.stream.remote_rtp_address, self.video_stream.stream.remote_rtp_port) if self.video_stream.stream.remote_rtp_address else '')
 
             if self.video_stream.stream.ice_active:
-                if self.video_stream.stream.local_rtp_candidate is not None:
-                    try:
-                        candidate = ice_candidates[self.video_stream.stream.local_rtp_candidate.type.lower()]
-                    except KeyError:
-                        candidate = self.video_stream.stream.local_rtp_candidate.type.capitalize()
-                else:
-                    candidate = ''
-
-                self.video_ice_local_candidate.setStringValue_(candidate)
-
-                if self.video_stream.stream.remote_rtp_candidate is not None:
-                    try:
-                        candidate = ice_candidates[self.video_stream.stream.remote_rtp_candidate.type.lower()]
-                    except KeyError:
-                        candidate = self.video_stream.stream.remote_rtp_candidate.type.capitalize()
-                else:
-                    candidate = ''
-
-                self.video_ice_remote_candidate.setStringValue_(candidate)
-
                 ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''
                 if self.video_stream.stream.ice_active:
                     if self.video_stream.stream.local_rtp_candidate and self.video_stream.stream.remote_rtp_candidate:
@@ -478,9 +430,9 @@ class SessionInfoController(NSObject):
                             ice_status += ' ('+ NSLocalizedString("Server Relayed", "Label") + ')'
 
             else:
-                self.video_ice_local_candidate.setStringValue_('')
-                self.video_ice_remote_candidate.setStringValue_('')
                 ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''
+                if ice_status == "Remote answer doesn't support ICE":
+                    ice_status = NSLocalizedString("Not Supported", "Label")
 
             self.video_ice_negotiation.setStringValue_(ice_status)
 
