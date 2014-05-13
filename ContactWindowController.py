@@ -4777,27 +4777,11 @@ class ContactWindowController(NSWindowController):
                 lastItem.setRepresentedObject_((item, group))
 
             if isinstance(item, BlinkPresenceContact):
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in Favorites", "Menu item"), "showInFavoritesGroup:", "")
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
-                mitem.setState_(NSOnState if item.favorite else NSOffState)
-
-            if isinstance(item, BlinkPresenceContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Tell Me When Contact Is Available", "Menu item"), "tellMeWhenContactBecomesAvailable:", "")
                 mitem.setEnabled_(item.contact.presence.subscribe and presence_status_for_contact(item) != 'available')
                 mitem.setState_(NSOnState if item.contact in self.tellMeWhenContactBecomesAvailableList else NSOffState)
                 mitem.setRepresentedObject_(item.contact)
-
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Subscribe to Availability", "Menu item"),  "setSubscribeToPresence:", "")
-                mitem.setState_(item.contact.presence.subscribe)
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
-
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block Contact", "Menu item"), "setPresencePolicy:", "")
-                mitem.setState_(NSOnState if item.contact.presence.policy == 'block' else NSOffState)
-                mitem.setEnabled_(True)
-                mitem.setRepresentedObject_(item)
 
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show Availability Information...", "Menu item"), "showPresenceInfo:", "")
                 mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
