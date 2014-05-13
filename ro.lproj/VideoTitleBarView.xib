@@ -7,7 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="TitleBarView">
             <connections>
-                <outlet property="alwaysOnTop" destination="foI-NE-klu" id="FWT-JH-YLC"/>
+                <outlet property="alwaysOnTop" destination="tMF-kV-QuI" id="o7a-vi-Tpl"/>
                 <outlet property="view" destination="c22-O7-iKe" id="FxN-5j-g7r"/>
             </connections>
         </customObject>
@@ -17,18 +17,21 @@
             <rect key="frame" x="0.0" y="0.0" width="188" height="22"/>
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
             <subviews>
-                <button id="foI-NE-klu">
-                    <rect key="frame" x="26" y="3" width="135" height="16"/>
+                <button toolTip="Always On Top" verticalHuggingPriority="750" id="tMF-kV-QuI">
+                    <rect key="frame" x="143" y="-2" width="25" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="check" title="La Suprafață" bezelStyle="regularSquare" imagePosition="right" alignment="right" controlSize="small" state="on" inset="2" id="ELG-Zr-ZGQ">
-                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                        <font key="font" metaFont="smallSystem"/>
+                    <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" image="layers" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="Uj9-rW-dVT">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                        <font key="font" metaFont="system"/>
                     </buttonCell>
                     <connections>
-                        <action selector="userClickedCheckbox:" target="-2" id="Agy-20-zRr"/>
+                        <action selector="userClickedCheckbox:" target="-2" id="D3v-a4-dHR"/>
                     </connections>
                 </button>
             </subviews>
         </customView>
     </objects>
+    <resources>
+        <image name="layers" width="20.803611755371094" height="20.803611755371094"/>
+    </resources>
 </document>

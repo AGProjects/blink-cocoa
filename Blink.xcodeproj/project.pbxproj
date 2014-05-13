@@ -1043,6 +1043,10 @@
 		1FC0184918E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
 		1FC0184A18E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
 		1FC0184B18E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
+		1FC38F02192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
+		1FC38F03192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
+		1FC38F04192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
+		1FC38F05192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
 		1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
 		1FC6343218F9D37F0098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
 		1FC6343318F9D38A0098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
@@ -2083,6 +2087,7 @@
 		1FBF2B4417915410002E110B /* Updater.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Updater.py; sourceTree = "<group>"; };
 		1FC0184C18E0774D0009145A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
 		1FC0184E18E077590009145A /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
+		1FC38F01192234E1007B0340 /* layers.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers.png; path = icons/layers.png; sourceTree = SOURCE_ROOT; };
 		1FC6342F18F9D3450098945F /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
@@ -2540,6 +2545,7 @@
 		1FE50E59164D1B6200840B18 /* presence */ = {
 			isa = PBXGroup;
 			children = (
+				1FC38F01192234E1007B0340 /* layers.png */,
 				1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */,
 				1F1425591905335300CFEC42 /* aspect_ratio.png */,
 				1F7EAC6018E0FA6500CA7B86 /* paused-red.png */,
@@ -3405,6 +3411,7 @@
 				1F5C06D914041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0763140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */,
+				1FC38F03192234E1007B0340 /* layers.png in Resources */,
 				1F689573140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A2140CE18E00DA5329 /* screenshot.png in Resources */,
 				1FF62302140E20C000E81891 /* help.png in Resources */,
@@ -3582,6 +3589,7 @@
 				1F35CFD417894FFF00C6FE38 /* dtmf_C_tone.wav in Resources */,
 				1F35CFD517894FFF00C6FE38 /* dtmf_D_tone.wav in Resources */,
 				1F35CFD617894FFF00C6FE38 /* dtmf_pound_tone.wav in Resources */,
+				1FC38F05192234E1007B0340 /* layers.png in Resources */,
 				1F35CFD717894FFF00C6FE38 /* dtmf_star_tone.wav in Resources */,
 				1F35CFD817894FFF00C6FE38 /* hangup_tone.wav in Resources */,
 				1F35CFD917894FFF00C6FE38 /* hold_tone.wav in Resources */,
@@ -3874,6 +3882,7 @@
 				1F8DC391135084FA0034815C /* SMSView.xib in Resources */,
 				1F419C98191530080051F3D9 /* branding-lite.py in Resources */,
 				1F8DC392135084FA0034815C /* ChatViewController.py in Resources */,
+				1FC38F04192234E1007B0340 /* layers.png in Resources */,
 				1F8DC393135084FA0034815C /* ChatView.html in Resources */,
 				1F8DC394135084FA0034815C /* smiley_off.png in Resources */,
 				1F8DC395135084FA0034815C /* smiley_on.png in Resources */,
@@ -4210,6 +4219,7 @@
 				1FA47A3113B246FF0081F90B /* contacts.png in Resources */,
 				1FF32B5117EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E113FE781F007CDFD5 /* AudioSession.xib in Resources */,
+				1FC38F02192234E1007B0340 /* layers.png in Resources */,
 				1F5C06D814041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */,
 				1FCE80B21408FDA2000C48A7 /* lock-zrtp.png in Resources */,
