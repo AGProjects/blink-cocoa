@@ -243,18 +243,18 @@ class LocalNativeVideoView(NSView):
 
     def mouseDragged_(self, event):
         screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
-        windowFrame = self.window().frame();
-        newOrigin = windowFrame.origin;
+        windowFrame = self.window().frame()
+        newOrigin = windowFrame.origin
 
         currentLocation = event.locationInWindow()
 
-        newOrigin.x += (currentLocation.x - self.initialLocation.x);
-        newOrigin.y += (currentLocation.y - self.initialLocation.y);
+        newOrigin.x += (currentLocation.x - self.initialLocation.x)
+        newOrigin.y += (currentLocation.y - self.initialLocation.y)
 
         if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
-            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height);
+            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
 
-        self.window().setFrameOrigin_(newOrigin);
+        self.window().setFrameOrigin_(newOrigin)
 
     def getDevice(self):
         # Find a video device
