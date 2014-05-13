@@ -436,9 +436,9 @@ class ChatViewController(NSObject):
             timestamp = ISOTimestamp.now()
         if isinstance(timestamp, datetime.datetime):
             if timestamp.date() != datetime.date.today():
-                timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+                timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
             else:
-                timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+                timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         is_error = 1 if is_error else "null"
         script = """renderSystemMessage('%s', "%s", "%s", %s)""" % (msgid, processHTMLText(text), timestamp, is_error)
@@ -471,9 +471,9 @@ class ChatViewController(NSObject):
         self.rendered_messages.append(rendered_message)
 
         if timestamp.date() != datetime.date.today():
-            displayed_timestamp = time.strftime("%F %T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+            displayed_timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
         else:
-            displayed_timestamp = time.strftime("%T", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+            displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         if is_html:
             # urlify links
