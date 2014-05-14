@@ -7,7 +7,6 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
             <connections>
-                <outlet property="audioSegmented" destination="30" id="47"/>
                 <outlet property="audioStatus" destination="31" id="44"/>
                 <outlet property="conferenceSegmented" destination="71" id="73"/>
                 <outlet property="elapsed" destination="6" id="43"/>
@@ -19,7 +18,6 @@
                 <outlet property="srtpIcon" destination="32" id="46"/>
                 <outlet property="tlsIcon" destination="23" id="42"/>
                 <outlet property="transferMenu" destination="93" id="106"/>
-                <outlet property="transferSegmented" destination="89" id="92"/>
                 <outlet property="view" destination="1" id="40"/>
                 <outlet property="zRTPConfirmButton" destination="325" id="328"/>
             </connections>
@@ -68,31 +66,6 @@
                         <action selector="userClickedAudioButton:" target="-2" id="74"/>
                     </connections>
                 </segmentedControl>
-                <segmentedControl hidden="YES" verticalHuggingPriority="750" id="89" userLabel="Session Control Buttons">
-                    <rect key="frame" x="173" y="3" width="89" height="20"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="90">
-                        <font key="font" metaFont="smallSystem"/>
-                        <segments>
-                            <segment toolTip="Transfer" image="transfer" width="20" tag="3">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Pauze" image="pause" width="20">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Record" image="record" width="20" tag="1">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Hangup" image="hangup" width="20" tag="2">
-                                <nil key="label"/>
-                            </segment>
-                        </segments>
-                    </segmentedCell>
-                    <accessibility description="Session Control Buttons"/>
-                    <connections>
-                        <action selector="userClickedAudioButton:" target="-2" id="91"/>
-                    </connections>
-                </segmentedControl>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="198" userLabel="Session Control Buttons">
                     <rect key="frame" x="153" y="3" width="110" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
@@ -119,22 +92,6 @@
                     <accessibility description="Session Control Buttons"/>
                     <connections>
                         <action selector="userClickedAudioButton:" target="-2" id="200"/>
-                    </connections>
-                </segmentedControl>
-                <segmentedControl verticalHuggingPriority="750" id="30" userLabel="Session Control Buttons">
-                    <rect key="frame" x="194" y="3" width="68" height="20"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" state="on" alignment="left" style="rounded" trackingMode="momentary" id="35">
-                        <font key="font" metaFont="smallSystem"/>
-                        <segments>
-                            <segment toolTip="Pause" image="pause" width="20"/>
-                            <segment toolTip="Record" image="record" width="20" tag="1"/>
-                            <segment toolTip="Hangup" image="hangup_small" width="20" tag="2"/>
-                        </segments>
-                    </segmentedCell>
-                    <accessibility description="Session Control Buttons"/>
-                    <connections>
-                        <action selector="userClickedAudioButton:" target="-2" id="48"/>
                     </connections>
                 </segmentedControl>
                 <textField verticalHuggingPriority="750" id="26">
@@ -410,7 +367,6 @@
         <image name="NSLockUnlockedTemplate" width="9" height="12"/>
         <image name="bluelock" width="15.359999656677246" height="14.880000114440918"/>
         <image name="hangup" width="240" height="240"/>
-        <image name="hangup_small" width="53.333332061767578" height="53.333332061767578"/>
         <image name="mute" width="24" height="24"/>
         <image name="panel-info" width="64" height="64"/>
         <image name="pause" width="48" height="48"/>
