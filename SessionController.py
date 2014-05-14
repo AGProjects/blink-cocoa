@@ -839,7 +839,7 @@ class SessionControllersManager(object):
     @run_in_gui_thread
     def show_web_alert_page(self, session):
         # open web page with caller information
-        if NSApp.delegate().web_alert_url_hidden:
+        if not NSApp.delegate().external_alert_enabled:
             return
 
         try:

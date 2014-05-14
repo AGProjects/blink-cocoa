@@ -428,6 +428,15 @@ class PreferencesController(NSWindowController, object):
             if section_name == 'tls':
                 continue
 
+            if section_name == 'pstn' and not NSApp.delegate().phone_numbers_enabled:
+                continue
+
+            if section_name == 'ldap' and not NSApp.delegate().ldap_directory_enabled:
+                continue
+
+            if section_name == 'web_alert' and not NSApp.delegate().external_alert_enabled:
+                continue
+
             view = self.createViewForSection(account, frame, section_name, getattr(account.__class__, section_name))
 
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section_name)
@@ -473,7 +482,7 @@ class PreferencesController(NSWindowController, object):
         except KeyError:
             options = unordered_options
 
-        if NSApp.delegate().web_alert_url_hidden:
+        if not NSApp.delegate().external_alert_enabled:
             PreferenceOptionTypes['web_alert.alert_url'] = HiddenOption
 
         if not NSApp.delegate().debug:

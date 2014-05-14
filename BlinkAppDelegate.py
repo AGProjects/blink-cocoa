@@ -109,7 +109,7 @@ class BlinkAppDelegate(NSObject):
     advanced_options_enabled = True
     hidden_account_preferences_sections = ()
     chat_replication_password_hidden = True
-    web_alert_url_hidden = False
+    external_alert_enabled = True
     migrate_passwords_to_keychain = True
     service_provider_help_url  = None
     service_provider_name = None
@@ -117,6 +117,9 @@ class BlinkAppDelegate(NSObject):
     account_extension = None
     sp_update_url = None
     main_window_title = None
+    call_transfer_enabled = True
+    phone_numbers_enabled = True
+    ldap_directory_enabled = True
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()

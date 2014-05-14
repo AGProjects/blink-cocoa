@@ -41,7 +41,7 @@ def setup(delegate):
     delegate.advanced_options_enabled = True
     delegate.hidden_account_preferences_sections = ('auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui')
     delegate.chat_replication_password_hidden = False
-    delegate.web_alert_url_hidden = False
+    delegate.external_alert_enabled = True
     delegate.migrate_passwords_to_keychain = False
     delegate.service_provider_help_url = 'http://wiki.sip2sip.info'
     delegate.service_provider_name = 'SIPThor Net'

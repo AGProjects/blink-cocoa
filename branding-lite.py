@@ -25,7 +25,7 @@ def setup(delegate):
     delegate.advanced_options_enabled = False
     delegate.hidden_account_preferences_sections = ('audio', 'chat', 'pstn', 'ldap', 'web_alert')
     delegate.chat_replication_password_hidden = True
-    delegate.web_alert_url_hidden = True
+    delegate.external_alert_enabled = FAlse
     delegate.migrate_passwords_to_keychain = True
     delegate.service_provider_help_url = None
     delegate.service_provider_name = None

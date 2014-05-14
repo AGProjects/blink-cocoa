@@ -24,7 +24,7 @@ def setup(delegate):
     delegate.file_logging_enabled = True
     delegate.advanced_options_enabled = True
     delegate.chat_replication_password_hidden = True
-    delegate.web_alert_url_hidden = False
+    delegate.external_alert_enabled = True
     delegate.migrate_passwords_to_keychain = True
     delegate.service_provider_help_url = None
     delegate.service_provider_name = None
