@@ -369,13 +369,17 @@ class SessionInfoController(NSObject):
                 if self.audio_stream.stream.ice_active:
                     if self.audio_stream.stream.local_rtp_candidate and self.audio_stream.stream.remote_rtp_candidate:
                         if self.audio_stream.stream.local_rtp_candidate.type.lower() != 'relay' and self.audio_stream.stream.remote_rtp_candidate.type.lower() != 'relay':
-                            ice_status += ' ('+ NSLocalizedString("Peer to Peer", "Label")+')'
+                            if self.audio_stream.stream.local_rtp_candidate.type.lower() == 'host' and self.audio_stream.stream.remote_rtp_candidate.type.lower() == 'host':
+                                ice_status = NSLocalizedString("Host to Host", "Label")
+                            else:
+                                ice_status = NSLocalizedString("Peer to Peer", "Label")
                         else:
-                            ice_status += ' ('+ NSLocalizedString("Server Relayed", "Label") + ')'
-
+                            ice_status = NSLocalizedString("Server Relayed", "Label")
             else:
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
-                if ice_status == "Remote answer doesn't support ICE":
+                if ice_status == "All ICE checklists failed (PJNATH_EICEFAILED)":
+                    ice_status = NSLocalizedString("Probing Failed", "Label")
+                elif ice_status == "Remote answer doesn't support ICE":
                     ice_status = NSLocalizedString("Not Supported", "Label")
 
             self.audio_ice_negotiation.setStringValue_(ice_status)
@@ -425,13 +429,18 @@ class SessionInfoController(NSObject):
                 if self.video_stream.stream.ice_active:
                     if self.video_stream.stream.local_rtp_candidate and self.video_stream.stream.remote_rtp_candidate:
                         if self.video_stream.stream.local_rtp_candidate.type.lower() != 'relay' and self.video_stream.stream.remote_rtp_candidate.type.lower() != 'relay':
-                            ice_status += ' ('+ NSLocalizedString("Peer to Peer", "Label")+')'
+                            if self.video_stream.stream.local_rtp_candidate.type.lower() == 'host' and self.video_stream.stream.remote_rtp_candidate.type.lower() == 'host':
+                                ice_status = NSLocalizedString("Host to Host", "Label")
+                            else:
+                                ice_status = NSLocalizedString("Peer to Peer", "Label")
                         else:
-                            ice_status += ' ('+ NSLocalizedString("Server Relayed", "Label") + ')'
+                            ice_status = NSLocalizedString("Server Relayed", "Label")
 
             else:
                 ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''
-                if ice_status == "Remote answer doesn't support ICE":
+                if ice_status == "All ICE checklists failed (PJNATH_EICEFAILED)":
+                    ice_status = NSLocalizedString("Probing Failed", "Label")
+                elif ice_status == "Remote answer doesn't support ICE":
                     ice_status = NSLocalizedString("Not Supported", "Label")
 
             self.video_ice_negotiation.setStringValue_(ice_status)
