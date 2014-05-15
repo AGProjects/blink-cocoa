@@ -28,7 +28,7 @@ def setup(delegate):
     delegate.migrate_passwords_to_keychain = True
     delegate.service_provider_help_url = None
     delegate.service_provider_name = None
-    delegate.sp_update_url = None
+    delegate.sp_update_url = "https://blink.sipthor.net/BlinkAppcast.xml"
     delegate.call_transfer_enabled = True
     delegate.phone_numbers_enabled = True
     delegate.ldap_directory_enabled = True
