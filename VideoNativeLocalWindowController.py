@@ -334,6 +334,8 @@ class LocalNativeVideoView(NSView):
             videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
             videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
             videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
+            videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
+            videoPreviewLayer.connection().setVideoMirrored_(True)
             self.captureView.layer().addSublayer_(videoPreviewLayer)
 
             # TODO: capture still images for photo picker
