@@ -8,12 +8,12 @@
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
             <connections>
                 <outlet property="audioStatus" destination="31" id="44"/>
-                <outlet property="conferenceSegmented" destination="71" id="73"/>
                 <outlet property="elapsed" destination="6" id="43"/>
                 <outlet property="encryptionMenu" destination="202" id="209"/>
-                <outlet property="encryptionSegmented" destination="198" id="201"/>
                 <outlet property="info" destination="26" id="45"/>
                 <outlet property="label" destination="2" id="41"/>
+                <outlet property="segmentedButtons" destination="198" id="201"/>
+                <outlet property="segmentedConferenceButtons" destination="71" id="73"/>
                 <outlet property="sessionInfoButton" destination="166" id="168"/>
                 <outlet property="srtpIcon" destination="32" id="46"/>
                 <outlet property="tlsIcon" destination="23" id="42"/>
@@ -63,7 +63,7 @@
                     </segmentedCell>
                     <accessibility description="Session Control Buttons"/>
                     <connections>
-                        <action selector="userClickedAudioButton:" target="-2" id="74"/>
+                        <action selector="userClickedSegmentButton:" target="-2" id="74"/>
                     </connections>
                 </segmentedControl>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="198" userLabel="Session Control Buttons">
@@ -91,7 +91,7 @@
                     </segmentedCell>
                     <accessibility description="Session Control Buttons"/>
                     <connections>
-                        <action selector="userClickedAudioButton:" target="-2" id="200"/>
+                        <action selector="userClickedSegmentButton:" target="-2" id="200"/>
                     </connections>
                 </segmentedControl>
                 <textField verticalHuggingPriority="750" id="26">

@@ -97,8 +97,8 @@ class AudioController(MediaStream):
     audioStatus = objc.IBOutlet()
     srtpIcon = objc.IBOutlet()
     tlsIcon = objc.IBOutlet()
-    encryptionSegmented = objc.IBOutlet()
-    conferenceSegmented = objc.IBOutlet()
+    segmentedButtons = objc.IBOutlet()
+    segmentedConferenceButtons = objc.IBOutlet()
 
     transferMenu = objc.IBOutlet()
     sessionMenu = objc.IBOutlet()
@@ -199,7 +199,7 @@ class AudioController(MediaStream):
         _label = format_identity_to_string(self.sessionController.remotePartyObject)
         self.view.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Session to %s", "Accesibility outlet description") % _label, NSAccessibilityTitleAttribute)
 
-        segmentChildren = NSAccessibilityUnignoredDescendant(self.encryptionSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
+        segmentChildren = NSAccessibilityUnignoredDescendant(self.segmentedButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Transfer Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hold Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Record Audio", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
@@ -209,7 +209,7 @@ class AudioController(MediaStream):
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Push button", "Accesibility outlet description"), NSAccessibilityRoleDescriptionAttribute)
 
-        segmentChildren = NSAccessibilityUnignoredDescendant(self.conferenceSegmented).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
+        segmentChildren = NSAccessibilityUnignoredDescendant(self.segmentedConferenceButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Mute Participant", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Hold Call", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Record Audio", "Accesibility outlet description"), NSAccessibilityDescriptionAttribute)
@@ -233,7 +233,7 @@ class AudioController(MediaStream):
         self.transferEnabled = NSApp.delegate().call_transfer_enabled
         self.recordingEnabled = NSApp.delegate().answering_machine_enabled
 
-        self.encryptionSegmented.setHidden_(False)
+        self.segmentedButtons.setHidden_(False)
         self.sessionInfoButton.setEnabled_(True)
         return self
 
@@ -268,10 +268,10 @@ class AudioController(MediaStream):
             self.sessionController.accounting_for_answering_machine = True
             self.sessionController.log_info("Session handled by answering machine")
 
-            self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("audio"), self.transfer_segment)
-            self.encryptionSegmented.setEnabled_forSegment_(False, self.hold_segment)
-            self.encryptionSegmented.setEnabled_forSegment_(False, self.record_segment)
-            self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio call tooltip"), self.transfer_segment)
+            self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("audio"), self.transfer_segment)
+            self.segmentedButtons.setEnabled_forSegment_(False, self.hold_segment)
+            self.segmentedButtons.setEnabled_forSegment_(False, self.record_segment)
+            self.segmentedButtons.cell().setToolTip_forSegment_(NSLocalizedString("Take over the call", "Audio call tooltip"), self.transfer_segment)
 
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
@@ -340,12 +340,15 @@ class AudioController(MediaStream):
     def answerCall(self):
         self.sessionController.log_info("Taking over call on answering machine...")
 
-        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("transfer"), self.transfer_segment)
-        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio call tooltip"), self.hold_segment)
-        self.encryptionSegmented.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio call tooltip"), self.hold_segment)
-        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), self.hold_segment)
-        self.encryptionSegmented.setEnabled_forSegment_(True and self.recordingEnabled, self.record_segment)
-        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
+        self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("transfer"), self.transfer_segment)
+        self.segmentedButtons.cell().setToolTip_forSegment_(NSLocalizedString("Call transfer", "Audio call tooltip"), self.transfer_segment)
+        self.segmentedButtons.setEnabled_forSegment_(self.transferEnabled, self.transfer_segment)
+
+        self.segmentedButtons.cell().setToolTip_forSegment_(NSLocalizedString("Put the call on hold", "Audio call tooltip"), self.hold_segment)
+        self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("pause"), self.hold_segment)
+
+        self.segmentedButtons.setEnabled_forSegment_(self.recordingEnabled, self.record_segment)
+        self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
 
         self.updateAudioStatusWithCodecInformation()
         self.answeringMachine.stop()
@@ -475,22 +478,22 @@ class AudioController(MediaStream):
             self.unhold()
         self.mutedInConference = False
         NSApp.delegate().contactsWindowController.addAudioSessionToConference(self)
-        self.encryptionSegmented.setHidden_(True)
-        self.conferenceSegmented.setHidden_(False)
+        self.segmentedButtons.setHidden_(True)
+        self.segmentedConferenceButtons.setHidden_(False)
         self.view.setConferencing_(True)
         self.updateLabelColor()
 
     def removeFromConference(self):
         NSApp.delegate().contactsWindowController.removeAudioSessionFromConference(self)
-        self.encryptionSegmented.setHidden_(False)
-        self.conferenceSegmented.setHidden_(True)
+        self.segmentedButtons.setHidden_(False)
+        self.segmentedConferenceButtons.setHidden_(True)
 
         if not self.isActive:
             self.hold()
         if self.mutedInConference:
             self.stream.muted = False
             self.mutedInConference = False
-            self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("mute"), self.conference_mute_segment)
+            self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("mute"), self.conference_mute_segment)
         self.updateLabelColor()
 
     def toggleHold(self):
@@ -524,9 +527,9 @@ class AudioController(MediaStream):
 
         if self.stream and self.stream.recorder is not None and self.stream.recorder.is_active:
             if self.isConferencing:
-                self.conferenceSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], self.conference_record_segment)
+                self.segmentedConferenceButtons.setImage_forSegment_(RecordingImages[self.recordingImage], self.conference_record_segment)
             else:
-                self.encryptionSegmented.setImage_forSegment_(RecordingImages[self.recordingImage], self.record_segment)
+                self.segmentedButtons.setImage_forSegment_(RecordingImages[self.recordingImage], self.record_segment)
 
             self.recordingImage += 1
             if self.recordingImage >= len(RecordingImages):
@@ -646,20 +649,20 @@ class AudioController(MediaStream):
         elif status == STREAM_CONNECTED:
             if not self.answeringMachine:
                 if self.holdByLocal:
-                    self.encryptionSegmented.setSelected_forSegment_(True, self.hold_segment)
-                    self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), self.hold_segment)
+                    self.segmentedButtons.setSelected_forSegment_(True, self.hold_segment)
+                    self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("paused"), self.hold_segment)
 
-                    self.conferenceSegmented.setSelected_forSegment_(True, self.conference_hold_segment)
-                    self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("paused"), self.conference_hold_segment)
+                    self.segmentedConferenceButtons.setSelected_forSegment_(True, self.conference_hold_segment)
+                    self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("paused"), self.conference_hold_segment)
                 else:
-                    self.encryptionSegmented.setSelected_forSegment_(False, self.hold_segment)
-                    self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), self.hold_segment)
+                    self.segmentedButtons.setSelected_forSegment_(False, self.hold_segment)
+                    self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("pause"), self.hold_segment)
 
-                    self.conferenceSegmented.setSelected_forSegment_(False, self.conference_hold_segment)
-                    self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("pause"), self.conference_hold_segment)
+                    self.segmentedConferenceButtons.setSelected_forSegment_(False, self.conference_hold_segment)
+                    self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("pause"), self.conference_hold_segment)
             else:
-                self.encryptionSegmented.setSelected_forSegment_(True, self.record_segment)
-                self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
+                self.segmentedButtons.setSelected_forSegment_(self.recordingEnabled, self.record_segment)
+                self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
 
             self.updateAudioStatusWithCodecInformation()
             self.updateLabelColor()
@@ -704,40 +707,38 @@ class AudioController(MediaStream):
                 self.updateAudioStatusWithSessionState(fail_reason[0:32].title() if fail_reason else NSLocalizedString("Error", "Audio status label"), True)
 
         if status == STREAM_CONNECTED:
-            self.encryptionSegmented.setEnabled_forSegment_(True, self.encryption_segment)
-            self.encryptionSegmented.setEnabled_forSegment_(self.transferEnabled, self.transfer_segment)
-            self.encryptionSegmented.setEnabled_forSegment_(True, self.hold_segment)
+            self.segmentedButtons.setEnabled_forSegment_(True, self.encryption_segment)
+            self.segmentedButtons.setEnabled_forSegment_(self.transferEnabled, self.transfer_segment)
+            self.segmentedButtons.setEnabled_forSegment_(True, self.hold_segment)
+            self.segmentedButtons.setEnabled_forSegment_(self.recordingEnabled, self.record_segment)
+            self.segmentedButtons.setEnabled_forSegment_(True, self.hangup_segment)
 
-            self.conferenceSegmented.setEnabled_forSegment_(True, self.conference_mute_segment)
-            self.conferenceSegmented.setEnabled_forSegment_(True, self.conference_hold_segment)
+            self.segmentedConferenceButtons.setEnabled_forSegment_(True, self.conference_mute_segment)
+            self.segmentedConferenceButtons.setEnabled_forSegment_(True, self.conference_hold_segment)
+            self.segmentedConferenceButtons.setEnabled_forSegment_(self.recordingEnabled, self.conference_record_segment)
+            self.segmentedConferenceButtons.setEnabled_forSegment_(True, self.conference_hangup_segment)
 
-            if not self.answeringMachine:
-                self.encryptionSegmented.setEnabled_forSegment_(True and self.recordingEnabled, self.record_segment)
-                self.conferenceSegmented.setEnabled_forSegment_(True and self.recordingEnabled, self.hold_segment)
-
-            self.encryptionSegmented.setEnabled_forSegment_(True, self.hangup_segment)
-            self.conferenceSegmented.setEnabled_forSegment_(True, self.record_segment)
         elif status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING):
 
             for i in range(len(self.normal_segments)):
-                self.encryptionSegmented.setEnabled_forSegment_(False, i)
-            self.encryptionSegmented.setEnabled_forSegment_(True, self.hangup_segment)
+                self.segmentedButtons.setEnabled_forSegment_(False, i)
+            self.segmentedButtons.setEnabled_forSegment_(True, self.hangup_segment)
 
             for i in range(len(self.conference_segments)):
-                self.conferenceSegmented.setEnabled_forSegment_(False, i)
-            self.conferenceSegmented.setEnabled_forSegment_(True, self.conference_hangup_segment)
+                self.segmentedConferenceButtons.setEnabled_forSegment_(False, i)
+            self.segmentedConferenceButtons.setEnabled_forSegment_(True, self.conference_hangup_segment)
 
         elif status == STREAM_FAILED:
             for i in range(len(self.normal_segments)):
-                self.encryptionSegmented.setEnabled_forSegment_(False, i)
+                self.segmentedButtons.setEnabled_forSegment_(False, i)
             for i in range(len(self.conference_segments)):
-                self.conferenceSegmented.setEnabled_forSegment_(False, i)
+                self.segmentedConferenceButtons.setEnabled_forSegment_(False, i)
         else:
             for i in range(len(self.normal_segments)):
-                self.encryptionSegmented.setEnabled_forSegment_(False, i)
+                self.segmentedButtons.setEnabled_forSegment_(False, i)
 
             for i in range(len(self.conference_segments)):
-                self.conferenceSegmented.setEnabled_forSegment_(False, i)
+                self.segmentedConferenceButtons.setEnabled_forSegment_(False, i)
 
         if status in (STREAM_IDLE, STREAM_FAILED):
             self.view.setDelegate_(None)
@@ -1140,7 +1141,7 @@ class AudioController(MediaStream):
                     image = 'NSLockLockedTemplate'
             else:
                 image = 'NSLockUnlockedTemplate'
-        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
+        self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
 
     @objc.IBAction
     def userClickedZRTPConfirmButton_(self, sender):
@@ -1191,65 +1192,69 @@ class AudioController(MediaStream):
 
 
     @objc.IBAction
-    def userClickedAudioButton_(self, sender):
-        seg = sender.selectedSegment()
-        if sender == self.encryptionSegmented and seg == self.encryption_segment:
-            action = 'zrtp'
-        elif sender == self.encryptionSegmented and seg == self.transfer_segment:
-            action = 'take_over_answering_machine' if self.answeringMachine else 'call_transfer'
-        elif sender == self.conferenceSegmented and seg == self.conference_mute_segment:
-            action = 'mute_conference'
-        else:
-            action = None
+    def userClickedSegmentButton_(self, sender):
+        segment = sender.selectedSegment()
+        action = None
 
-        if sender == self.conferenceSegmented:
-            hold_segment = self.conference_hold_segment
-            record_segment = self.conference_record_segment
-            hangup_segment = self.conference_hangup_segment
-        else:
-            hold_segment = self.hold_segment
-            record_segment = self.record_segment
-            hangup_segment = self.hangup_segment
+        if sender == self.segmentedConferenceButtons:
+            if segment == self.conference_hold_segment:
+                action = 'hold'
+            elif segment == self.conference_record_segment:
+                action = 'record'
+            elif segment == self.conference_hangup_segment:
+                action = 'hangup'
+            elif segment == self.conference_mute_segment:
+                action = 'mute_conference'
+        elif sender == self.segmentedButtons:
+            if segment == self.encryption_segment:
+                action = 'zrtp'
+            elif segment == self.hold_segment:
+                action = 'hold'
+            elif segment == self.transfer_segment:
+                action = 'take_over_answering_machine' if self.answeringMachine else 'call_transfer'
+            elif segment == self.record_segment:
+                action = 'record'
+            elif segment == self.hangup_segment:
+                action = 'hangup'
 
-        if seg == hold_segment: # hold / take call (if in answering machine mode)
+        if action == 'hold':
             if self.holdByLocal:
                 self.view.setSelected_(True)
                 self.unhold()
             else:
                 self.hold()
-        elif seg == record_segment:
+        elif action == 'record':
             if self.stream.recorder is not None:
                 self.stream.stop_recording()
             else:
                 self.startAudioRecording()
-        elif seg == hangup_segment:
+        elif action == 'hangup':
             self.end()
-            sender.setSelected_forSegment_(False, hangup_segment)
-        elif action:
-            if action == 'mute_conference':
-                # mute (in conference)
-                self.mutedInConference = not self.mutedInConference
-                self.stream.muted = self.mutedInConference
-                sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), self.conference_mute_segment)
-            elif action == 'call_transfer':
-                point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
-                point.y -= NSHeight(sender.frame())
-                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                        NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                        sender.window().graphicsContext(), 0, 1, 0)
-                NSMenu.popUpContextMenu_withEvent_forView_(self.transferMenu, event, sender)
-            elif action == 'zrtp':
-                point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
-                point.y -= NSHeight(sender.frame())
-                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                          NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                          sender.window().graphicsContext(), 0, 1, 0)
-                NSMenu.popUpContextMenu_withEvent_forView_(self.encryptionMenu, event, sender)
-            elif action == 'take_over_answering_machine':
-                if self.holdByLocal:
-                    self.view.setSelected_(True)
-                    self.unhold()
-                self.answerCall()
+            sender.setSelected_forSegment_(False, self.hangup_segment)
+        elif action == 'mute_conference':
+            # mute (in conference)
+            self.mutedInConference = not self.mutedInConference
+            self.stream.muted = self.mutedInConference
+            sender.setImage_forSegment_(NSImage.imageNamed_("muted" if self.mutedInConference else "mute"), self.conference_mute_segment)
+        elif action == 'call_transfer':
+            point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
+            point.y -= NSHeight(sender.frame())
+            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                    NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                    sender.window().graphicsContext(), 0, 1, 0)
+            NSMenu.popUpContextMenu_withEvent_forView_(self.transferMenu, event, sender)
+        elif action == 'zrtp':
+            point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
+            point.y -= NSHeight(sender.frame())
+            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                      NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                      sender.window().graphicsContext(), 0, 1, 0)
+            NSMenu.popUpContextMenu_withEvent_forView_(self.encryptionMenu, event, sender)
+        elif action == 'take_over_answering_machine':
+            if self.holdByLocal:
+                self.view.setSelected_(True)
+                self.unhold()
+            self.answerCall()
 
     def startAudioRecording(self):
         settings = SIPSimpleSettings()
@@ -1333,13 +1338,13 @@ class AudioController(MediaStream):
 
     def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
-        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
-        self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.conference_record_segment)
+        self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
+        self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.conference_record_segment)
 
     def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
-        self.encryptionSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
-        self.conferenceSegmented.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
+        self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
+        self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
         self.addRecordingToHistory(data.filename)
         growl_data = NotificationData()
         growl_data.remote_party = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact')
@@ -1363,7 +1368,7 @@ class AudioController(MediaStream):
                 tip = "Activate"
             else:
                 tip = "Hold"
-            self.encryptionSegmented.cell().setToolTip_forSegment_(tip, self.hold_segment)
+            self.segmentedButtons.cell().setToolTip_forSegment_(tip, self.hold_segment)
             if data.on_hold and not self.holdByLocal:
                 self.hold()
 
@@ -1401,7 +1406,7 @@ class AudioController(MediaStream):
         if self.sessionController.postdial_string is not None:
             call_in_thread('dtmf-io', self.send_postdial_string_as_dtmf)
 
-        if NSApp.delegate().call_recording_enabled and self.sessionController.account.audio.auto_recording:
+        if NSApp.delegate().recording_enabled and self.sessionController.account.audio.auto_recording:
             self.startAudioRecording()
 
 
