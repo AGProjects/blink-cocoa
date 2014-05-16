@@ -17,6 +17,7 @@ from AppKit import (NSSize,
                     )
 
 from Foundation import (NSBundle,
+                        NSDictionary,
                         NSColor,
                         NSDate,
                         NSEvent,
@@ -30,17 +31,21 @@ from Foundation import (NSBundle,
                         NSMenuItem,
                         NSScreen,
                         NSTrackingArea,
-                        NSZeroRect
+                        NSZeroRect,
+                        NSCIImageRep
                         )
 
 from AVFoundation import (AVCaptureDeviceInput,
                           AVCaptureDevice,
                           AVCaptureSession,
                           AVCaptureVideoPreviewLayer,
+                          AVCaptureStillImageOutput,
                           AVCaptureSessionPresetHigh,
                           AVLayerVideoGravityResizeAspectFill,
                           AVMediaTypeVideo,
-                          AVMediaTypeMuxed
+                          AVMediaTypeMuxed,
+                          AVVideoCodecJPEG,
+                          AVVideoCodecKey
                           )
 
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
@@ -331,9 +336,16 @@ class LocalNativeVideoView(NSView):
             videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
             self.captureView.layer().addSublayer_(videoPreviewLayer)
 
+            # TODO: capture still images for photo picker
+            #stillImageOutput = AVCaptureStillImageOutput.alloc().init()
+            #outputSettings = NSDictionary.alloc().initWithObjectsAndKeys_(AVVideoCodecJPEG, AVVideoCodecKey, None)
+            #stillImageOutput.setOutputSettings_(outputSettings)
+            #self.captureSession.addOutput_(stillImageOutput)
+
         BlinkLogger().log_debug('Start aquire video %s' % self)
         self.captureSession.startRunning()
         self.parentWindow.delegate()._show()
+
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
