@@ -4311,6 +4311,56 @@ class ContactWindowController(NSWindowController):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
+                if self.sessionControllersManager.isMediaTypeSupported('video'):
+                    video_submenu = NSMenu.alloc().init()
+                    video_submenu.setAutoenablesItems_(False)
+
+                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
+                        if uri.type is not None and uri.type.lower() == 'url':
+                            continue
+
+                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
+                        target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
+                        video_item.setRepresentedObject_(target_uri)
+
+                        #aor_supports_video = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'video' in device['caps'])
+                        video_item.setEnabled_(True)
+
+                        if isinstance(item, BlinkPresenceContact):
+                            status = presence_status_for_contact(item, uri.uri) or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            video_item.setImage_(icon)
+
+                    if gruu_devices:
+                        video_submenu.addItem_(NSMenuItem.separatorItem())
+                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Menu item"), "", "")
+                        video_item.setEnabled_(False)
+
+                        for device in gruu_devices:
+                            if device['user_agent'] and device['local_time']:
+                                title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
+                            else:
+                                title = unicode(device['description'])
+                            title += ' in %s' % unicode(device['location']) if device['location'] else ''
+                            video_item = video_submenu.addItemWithTitle_action_keyEquivalent_(title, "startVideoSessionWithSIPURI:", "")
+                            video_item.setRepresentedObject_(device['contact'])
+
+                            status = device['status'] or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            video_item.setImage_(icon)
+
+                            video_item.setIndentationLevel_(1)
+                            if device['caps'] is not None and 'video' not in device['caps']:
+                                video_item.setEnabled_(False)
+
+                    if video_submenu.itemArray():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
+
                 sms_submenu = NSMenu.alloc().init()
                 sms_submenu.setAutoenablesItems_(False)
                 for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
@@ -4378,56 +4428,6 @@ class ContactWindowController(NSWindowController):
                     if chat_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
-
-                if self.sessionControllersManager.isMediaTypeSupported('video'):
-                    video_submenu = NSMenu.alloc().init()
-                    video_submenu.setAutoenablesItems_(False)
-
-                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
-                        if uri.type is not None and uri.type.lower() == 'url':
-                            continue
-
-                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
-                        target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
-                        video_item.setRepresentedObject_(target_uri)
-
-                        #aor_supports_video = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'video' in device['caps'])
-                        video_item.setEnabled_(True)
-
-                        if isinstance(item, BlinkPresenceContact):
-                            status = presence_status_for_contact(item, uri.uri) or 'offline'
-                            icon = self.presence_dots[status]
-                            icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(15,15))
-                            video_item.setImage_(icon)
-
-                    if gruu_devices:
-                        video_submenu.addItem_(NSMenuItem.separatorItem())
-                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Menu item"), "", "")
-                        video_item.setEnabled_(False)
-
-                        for device in gruu_devices:
-                            if device['user_agent'] and device['local_time']:
-                                title = '%s @ %s %s' % (unicode(device['user_agent']), unicode(device['description']), device['local_time'])
-                            else:
-                                title = unicode(device['description'])
-                            title += ' in %s' % unicode(device['location']) if device['location'] else ''
-                            video_item = video_submenu.addItemWithTitle_action_keyEquivalent_(title, "startVideoSessionWithSIPURI:", "")
-                            video_item.setRepresentedObject_(device['contact'])
-
-                            status = device['status'] or 'offline'
-                            icon = self.presence_dots[status]
-                            icon.setScalesWhenResized_(True)
-                            icon.setSize_(NSMakeSize(15,15))
-                            video_item.setImage_(icon)
-
-                            video_item.setIndentationLevel_(1)
-                            if device['caps'] is not None and 'video' not in device['caps']:
-                                video_item.setEnabled_(False)
-
-                    if video_submenu.itemArray():
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "", "")
-                        self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
 
@@ -4593,6 +4593,9 @@ class ContactWindowController(NSWindowController):
 
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
+                    if self.sessionControllersManager.isMediaTypeSupported('video'):
+                        video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
+
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if item not in self.model.bonjour_group.contacts:
                             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "sendSMSToSelected:", "")
@@ -4602,9 +4605,6 @@ class ContactWindowController(NSWindowController):
                             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
                             #aor_supports_chat = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
                             chat_item.setEnabled_(True)
-
-                    if self.sessionControllersManager.isMediaTypeSupported('video'):
-                        video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
 
                     if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                         if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
