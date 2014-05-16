@@ -276,7 +276,7 @@ class SMSWindowController(NSWindowController):
             chatViewController.expandSmileys = not chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
-        elif sender.itemIdentifier() == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
+        elif sender.itemIdentifier() == 'history' and NSApp.delegate().history_enabled:
             contactWindow.showHistoryViewer_(None)
             contactWindow.historyViewer.filterByURIs((format_identity_to_string(session.target_uri),))
 

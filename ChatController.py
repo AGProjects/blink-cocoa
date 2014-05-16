@@ -989,7 +989,7 @@ class ChatController(MediaStream):
 
         if hasattr(item, 'itemIdentifier'):
             identifier = item.itemIdentifier()
-            if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().applicationName != 'Blink Lite':
+            if identifier == NSToolbarPrintItemIdentifier and not NSApp.delegate().chat_print_enabled:
                 return True
 
             if identifier == 'encryption':
@@ -1006,7 +1006,7 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
                     return True
             elif identifier == 'record':
-                return True if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and NSApp.delegate().applicationName != 'Blink Lite' else False
+                return True if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and NSApp.delegate().recording_enabled else False
             elif identifier == 'video':
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
@@ -1025,7 +1025,7 @@ class ChatController(MediaStream):
                 settings = SIPSimpleSettings()
                 if not settings.chat.disable_collaboration_editor:
                     return True
-            elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
+            elif identifier == 'history' and NSApp.delegate().history_enabled:
                 return True
             elif identifier == 'screen':
                 if self.sessionController.remote_focus:
@@ -1092,7 +1092,7 @@ class ChatController(MediaStream):
                     sender.setToolTip_(NSLocalizedString("Cancel Audio", "Tooltip"))
                     sender.setImage_(NSImage.imageNamed_("hangup"))
 
-            elif identifier == 'record' and NSApp.delegate().applicationName != 'Blink Lite':
+            elif identifier == 'record' and NSApp.delegate().recording_enabled:
                 if audio_stream and audio_stream.stream.recorder is not None and audio_stream.stream.recorder.is_active:
                     audio_stream.stream.stop_recording()
                     sender.setImage_(NSImage.imageNamed_("record"))
@@ -1131,7 +1131,7 @@ class ChatController(MediaStream):
                 self.toggleEditor()
                 sender.setImage_(NSImage.imageNamed_("editor"))
                 sender.setToolTip_(NSLocalizedString("Switch back to chat session", "Tooltip") if self.chatViewController.editorVisible else NSLocalizedString("Show collaborative editor", "Tooltip"))
-            elif identifier == 'history' and NSApp.delegate().applicationName != 'Blink Lite':
+            elif identifier == 'history' and NSApp.delegate().history_enabled:
                 contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():

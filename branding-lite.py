@@ -16,18 +16,21 @@ def init(delegate):
 
 def setup(delegate):
     delegate.help_url = "http://help-lite.icanblink.com"
+    delegate.hidden_account_preferences_sections = ('audio', 'chat', 'pstn', 'ldap', 'web_alert', 'tls')
+    delegate.maximum_accounts = 2
     delegate.last_history_entries = 2
     delegate.icloud_enabled = False
     delegate.history_enabled = False
     delegate.answering_machine_enabled = False
-    delegate.call_recording_enabled = False
+    delegate.recording_enabled = False
     delegate.file_logging_enabled = False
     delegate.advanced_options_enabled = False
-    delegate.hidden_account_preferences_sections = ('audio', 'chat', 'pstn', 'ldap', 'web_alert')
     delegate.chat_replication_password_hidden = True
-    delegate.external_alert_enabled = FAlse
+    delegate.external_alert_enabled = False
     delegate.migrate_passwords_to_keychain = True
     delegate.service_provider_help_url = None
     delegate.service_provider_name = None
-    delegate.maximum_accounts = 2
+    delegate.call_transfer_enabled = False
+    delegate.ldap_directory_enabled = False
+    delegate.chat_print_enabled = False
 

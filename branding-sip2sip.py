@@ -30,22 +30,22 @@ def init(delegate):
     delegate.about_slogan = NSLocalizedString("A state of the art, easy to use SIP client", "Label")
 
 def setup(delegate):
+    delegate.main_window_title = NSLocalizedString("Blink for SIP2SIP", "Window Title")
     delegate.help_url = "http://projects.ag-projects.com/projects/blinkc/wiki/Help_For_SIP2SIP"
+    delegate.service_provider_help_url = 'http://wiki.sip2sip.info'
+    delegate.service_provider_name = 'SIPThor Net'
+    delegate.hidden_account_preferences_sections = ('tls', 'auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui')
     delegate.last_history_entries = 10
     delegate.allowed_domains = ['sip2sip.info']
     delegate.icloud_enabled = False
     delegate.history_enabled = True
     delegate.answering_machine_enabled = True
-    delegate.call_recording_enabled = True
+    delegate.recording_enabled = True
     delegate.file_logging_enabled = True
     delegate.advanced_options_enabled = True
-    delegate.hidden_account_preferences_sections = ('auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui')
     delegate.chat_replication_password_hidden = False
     delegate.external_alert_enabled = True
     delegate.migrate_passwords_to_keychain = False
-    delegate.service_provider_help_url = 'http://wiki.sip2sip.info'
-    delegate.service_provider_name = 'SIPThor Net'
-    delegate.main_window_title = NSLocalizedString("Blink for SIP2SIP", "Window Title")
     delegate.maximum_accounts = 1
     delegate.account_extension = AccountExtensionSIP2SIP
     delegate.sp_update_url = None

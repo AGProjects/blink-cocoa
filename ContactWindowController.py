@@ -1368,9 +1368,7 @@ class ContactWindowController(NSWindowController):
             account = notification.sender
 
             if account is not BonjourAccount() and not account.chat.replication_password:
-                if NSApp.delegate().applicationName == 'Blink Lite':
-                    pass
-                elif NSApp.delegate().applicationName == 'Blink Pro':
+                if NSApp.delegate().icloud_enabled:
                     # Blink Pro is using iCloud for password sync so is safe to create it on any Blink instance
                     account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
                     account.save()
@@ -2678,7 +2676,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showHistoryViewer_(self, sender):
-        if NSApp.delegate().applicationName != 'Blink Lite':
+        if NSApp.delegate().history_enabled:
             if not self.historyViewer:
                 self.historyViewer = HistoryViewer()
                 self.historyViewer.refreshViewer()
@@ -3403,7 +3401,7 @@ class ContactWindowController(NSWindowController):
 
     @allocate_autorelease_pool
     def updateRecordingsMenu(self):
-        if not NSApp.delegate().call_recording_enabled:
+        if not NSApp.delegate().recording_enabled:
             return
 
         def format_item(name, when):
@@ -3513,7 +3511,7 @@ class ContactWindowController(NSWindowController):
         item.setEnabled_(False)
 
         settings = SIPSimpleSettings()
-        if NSApp.delegate().applicationName != 'Blink Lite':
+        if NSApp.delegate().history_enabled:
             item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.missed_calls_group.name, "toggleGroupVisibility:", "")
             item.setIndentationLevel_(1)
             item.setRepresentedObject_(self.model.missed_calls_group)
@@ -3550,7 +3548,7 @@ class ContactWindowController(NSWindowController):
         item.setState_(NSOnState if settings.contacts.enable_no_group else NSOffState)
 
     def updateHistoryMenu(self):
-        if NSApp.delegate().call_recording_enabled:
+        if NSApp.delegate().recording_enabled:
             idx = self.historyMenu.indexOfItem_(self.recordingsSubMenu)
             if idx < 0:
                 self.historyMenu.addItem_(self.recordingsSubMenu)
@@ -3803,7 +3801,7 @@ class ContactWindowController(NSWindowController):
                 image = 'outgoing_file' if direction == 'outgoing' else 'incoming_file'
             return image
 
-        i = 6 if NSApp.delegate().applicationName == 'Blink Lite' else 7
+        i = 6 if not NSApp.delegate().history_enabled else 7
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
 
@@ -4638,7 +4636,7 @@ class ContactWindowController(NSWindowController):
                         all_uris.append(unicode(uri.uri))
                     history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
                     history_item.setRepresentedObject_(all_uris)
-                    history_item.setEnabled_(NSApp.delegate().applicationName != 'Blink Lite')
+                    history_item.setEnabled_(NSApp.delegate().history_enabled)
 
                     recordings = self.backend.get_audio_recordings(all_uris)[-10:]
 
@@ -4675,7 +4673,7 @@ class ContactWindowController(NSWindowController):
                     mitem.setRepresentedObject_(history_contact.session_ids)
 
             elif history_contact is not None:
-                if NSApp.delegate().applicationName != 'Blink Lite':
+                if NSApp.delegate().history_enabled:
                     if history_contact not in self.model.bonjour_group.contacts:
                         if not is_anonymous(history_contact.uris[0].uri):
                             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())

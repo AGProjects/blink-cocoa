@@ -193,7 +193,7 @@ class PreferencesController(NSWindowController, object):
             major, minor = platform.mac_ver()[0].split('.')[0:2]
             self.sync_with_icloud_checkbox.setHidden_(False if ((int(major) == 10 and int(minor) >= 7) or int(major) > 10) else True)
 
-        if not NSApp.delegate().call_recording_enabled:
+        if not NSApp.delegate().recording_enabled:
             PreferenceOptionTypes['audio.directory'] = HiddenOption
             PreferenceOptionTypes['audio.auto_recording'] = HiddenOption
 
@@ -424,18 +424,6 @@ class PreferencesController(NSWindowController, object):
 
             if NSApp.delegate().chat_replication_password_hidden:
                 PreferenceOptionTypes['chat.replication_password'] = HiddenOption
-
-            if section_name == 'tls':
-                continue
-
-            if section_name == 'pstn' and not NSApp.delegate().phone_numbers_enabled:
-                continue
-
-            if section_name == 'ldap' and not NSApp.delegate().ldap_directory_enabled:
-                continue
-
-            if section_name == 'web_alert' and not NSApp.delegate().external_alert_enabled:
-                continue
 
             view = self.createViewForSection(account, frame, section_name, getattr(account.__class__, section_name))
 

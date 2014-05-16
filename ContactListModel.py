@@ -3036,7 +3036,7 @@ class ContactListModel(CustomListModel):
             self.incoming_calls_group.load_history(force_reload)
 
     def _NH_AudioCallLoggedToHistory(self, notification):
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if NSApp.delegate().history_enabled:
             return
 
         settings = SIPSimpleSettings()
@@ -3528,7 +3528,6 @@ class ContactListModel(CustomListModel):
     def _NH_VirtualGroupWasActivated(self, notification):
         group = notification.sender
         settings = SIPSimpleSettings()
-        is_lite = NSApp.delegate().applicationName == 'Blink Lite'
 
         positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
         positions.sort()
@@ -3575,7 +3574,7 @@ class ContactListModel(CustomListModel):
             else:
                 return
         elif group.id == "missed":
-            if not is_lite and settings.contacts.enable_missed_calls_group:
+            if NSApp.delegate().history_enabled and settings.contacts.enable_missed_calls_group:
                 if not group.position:
                     group.position = max(len(self.groupsList)-1, 0)
                     group.save()
@@ -3584,7 +3583,7 @@ class ContactListModel(CustomListModel):
             else:
                 return
         elif group.id == "outgoing":
-            if not is_lite and settings.contacts.enable_outgoing_calls_group:
+            if NSApp.delegate().history_enabled and settings.contacts.enable_outgoing_calls_group:
                 if not group.position:
                     group.position = max(len(self.groupsList)-1, 0)
                     group.save()
@@ -3593,7 +3592,7 @@ class ContactListModel(CustomListModel):
             else:
                 return
         elif group.id == "incoming":
-            if not is_lite and settings.contacts.enable_incoming_calls_group:
+            if NSApp.delegate().history_enabled and settings.contacts.enable_incoming_calls_group:
                 if not group.position:
                     group.position = max(len(self.groupsList)-1, 0)
                     group.save()

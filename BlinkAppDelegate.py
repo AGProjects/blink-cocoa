@@ -104,7 +104,7 @@ class BlinkAppDelegate(NSObject):
     icloud_enabled = False
     answering_machine_enabled = True
     history_enabled = True
-    call_recording_enabled = True
+    recording_enabled = True
     file_logging_enabled = True
     advanced_options_enabled = True
     hidden_account_preferences_sections = ()
@@ -120,6 +120,8 @@ class BlinkAppDelegate(NSObject):
     call_transfer_enabled = True
     phone_numbers_enabled = True
     ldap_directory_enabled = True
+    chat_print_enabled = True
+    pause_music_enabled = True
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()

@@ -1004,7 +1004,7 @@ class SessionHistoryReplicator(object):
 
     @run_in_gui_thread
     def __init__(self):
-        if NSApp.delegate().applicationName != 'Blink Lite':
+        if NSApp.delegate().history_enabled:
             BlinkLogger().log_debug('Starting Sessions History Replicator')
             NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
             NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')

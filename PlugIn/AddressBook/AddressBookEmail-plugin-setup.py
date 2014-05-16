@@ -12,7 +12,7 @@ import py2app
 
 infoPlist = dict(
     CFBundleName='BlinkProEmailAddressDialer',
-    CFBundleGetInfoString='Call SIP Address With Blink Pro',
+    CFBundleGetInfoString='Call SIP Address With Blink',
     CFBundleVersion='1.0',
     CFBundleShortVersionString = '1.0',
     NSPrincipalClass='BlinkProEmailAddressDialerDelegate',

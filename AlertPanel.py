@@ -476,10 +476,13 @@ class AlertPanel(NSObject, object):
                     btn = v.viewWithTag_(i)
                     btn.setHidden_(len(btn.attributedTitle()) == 0)
 
-        if not has_audio_streams or is_update_proposal:
+        if not NSApp.delegate().answering_machine_enabled:
             self.answeringMachineButton.setHidden_(True)
         else:
-            self.answeringMachineButton.setHidden_(not settings.answering_machine.show_in_alert_panel)
+            if not has_audio_streams or is_update_proposal:
+                self.answeringMachineButton.setHidden_(True)
+            else:
+                self.answeringMachineButton.setHidden_(not settings.answering_machine.show_in_alert_panel)
 
         if not self.isConferencing:
             self.conferenceButton.setHidden_(True)

@@ -15,21 +15,29 @@ def init(delegate):
     delegate.about_slogan = NSLocalizedString("A state of the art, easy to use SIP client", "Label")
 
 def setup(delegate):
+    delegate.sp_update_url = "https://blink.sipthor.net/BlinkAppcast.xml"
     delegate.help_url = "http://help-pro.icanblink.com"
+    delegate.allowed_domains = []
+    delegate.sp_update_url = None
+    delegate.service_provider_help_url = None
+    delegate.service_provider_name = None
+    delegate.hidden_account_preferences_sections = ('tls')
     delegate.last_history_entries = 10
     delegate.icloud_enabled = False
     delegate.history_enabled = True
     delegate.answering_machine_enabled = True
-    delegate.call_recording_enabled = True
+    delegate.recording_enabled = True
     delegate.file_logging_enabled = True
     delegate.advanced_options_enabled = True
     delegate.chat_replication_password_hidden = False
     delegate.external_alert_enabled = True
     delegate.migrate_passwords_to_keychain = True
-    delegate.service_provider_help_url = None
-    delegate.service_provider_name = None
-    delegate.sp_update_url = "https://blink.sipthor.net/BlinkAppcast.xml"
     delegate.call_transfer_enabled = True
     delegate.phone_numbers_enabled = True
     delegate.ldap_directory_enabled = True
+    delegate.chat_print_enabled = True
+    delegate.pause_music_enabled = True
+    delegate.account_extension = None
+
+
 

@@ -121,7 +121,7 @@ class SessionControllersManager(object):
 
     @property
     def pause_music(self):
-        return SIPSimpleSettings().audio.pause_music and NSApp.delegate().applicationName != 'Blink Lite'
+        return SIPSimpleSettings().audio.pause_music and NSApp.delegate().pause_music_enabled
 
     @property
     def alertPanel(self):
