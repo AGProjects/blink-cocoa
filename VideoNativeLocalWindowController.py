@@ -21,6 +21,7 @@ from Foundation import (NSBundle,
                         NSColor,
                         NSDate,
                         NSEvent,
+                        NSImage,
                         NSSize,
                         NSLocalizedString,
                         NSMakeRect,
@@ -31,11 +32,11 @@ from Foundation import (NSBundle,
                         NSMenuItem,
                         NSScreen,
                         NSTrackingArea,
-                        NSZeroRect,
-                        NSCIImageRep
+                        NSZeroRect
                         )
 
 from AVFoundation import (AVCaptureDeviceInput,
+                          AVCaptureVideoDataOutput,
                           AVCaptureDevice,
                           AVCaptureSession,
                           AVCaptureVideoPreviewLayer,
@@ -50,6 +51,7 @@ from AVFoundation import (AVCaptureDeviceInput,
 
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
 from Quartz.CoreGraphics import kCGColorBlack, CGColorGetConstantColor
+from Quartz import CVBufferRetain, NSCIImageRep, CIImage, CVBufferRelease
 
 import objc
 import re
@@ -95,7 +97,6 @@ class VideoNativeLocalWindowController(NSWindowController):
             self.window().setAlphaValue_(ALPHA)
             self.window().setLevel_(NSFloatingWindowLevel)
             self.window().closeButton.setHidden_(True)
-            self.window().makeFirstResponder_(self.localVideoView)
             self.updateTrackingAreas()
             self.notification_center =  NotificationCenter()
             self.notification_center.add_observer(self, name="VideoDeviceDidChangeCamera")
@@ -159,19 +160,16 @@ class VideoNativeLocalWindowController(NSWindowController):
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.localVideoView.reloadCamera()
 
+    @run_in_gui_thread
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
         self.visible = True
         self.localVideoView.show()
+
         if self.close_timer is not None and self.close_timer.isValid():
             self.close_timer.invalidate()
             self.close_timer = None
 
-        if self.localVideoView.aspect_ratio is not None:
-            self._show()
-
-    @run_in_gui_thread
-    def _show(self):
         self.window().setAlphaValue_(ALPHA)
         frame = self.window().frame()
         currentSize = frame.size
@@ -205,11 +203,12 @@ class VideoNativeLocalWindowController(NSWindowController):
             self.window().setAlphaValue_(ALPHA) # make the window fully opaque again for next time
 
 
-class LocalNativeVideoView(NSView):
+class LocalVideoView(NSView):
     initialLocation = None
-    captureView = objc.IBOutlet()
-    parentWindow = objc.IBOutlet()
     captureSession = None
+    stillImageOutput = None
+    videoOutput = None
+
     aspect_ratio = None
     resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
 
@@ -218,23 +217,33 @@ class LocalNativeVideoView(NSView):
         if self.captureSession is not None:
             if self.captureSession.isRunning():
                 self.captureSession.stopRunning()
+
+            self.captureSession.removeOutput_(self.stillImageOutput)
+            self.stillImageOutput.release()
+            self.stillImageOutput = None
+
+            #self.captureSession.removeOutput_(self.videoOutput)
+            #self.videoOutput.release()
+            #self.videoOutput = None
+
             self.captureSession = None
+
         self.removeFromSuperview()
 
     def dealloc(self):
         self.captureSession = None
         BlinkLogger().log_debug('Dealloc %s' % self)
-        super(LocalNativeVideoView, self).dealloc()
+        super(LocalVideoView, self).dealloc()
 
     def keyDown_(self, event):
         if event.keyCode() == 53:
-            self.parentWindow.hide()
+            self.window().hide()
 
     def rightMouseDown_(self, event):
-        point = self.parentWindow.convertScreenToBase_(NSEvent.mouseLocation())
+        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-            NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.parentWindow.windowNumber(),
-            self.parentWindow.graphicsContext(), 0, 1, 0)
+            NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
+            self.window().graphicsContext(), 0, 1, 0)
 
         videoDevicesMenu = NSMenu.alloc().init()
         lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
@@ -355,25 +364,57 @@ class LocalNativeVideoView(NSView):
                 return
 
             videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
-            videoPreviewLayer.setFrame_(self.captureView.layer().bounds())
+            videoPreviewLayer.setFrame_(self.layer().bounds())
+
+
 
             videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
             videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
             videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
             videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
             videoPreviewLayer.connection().setVideoMirrored_(True)
-            self.captureView.layer().addSublayer_(videoPreviewLayer)
+            self.layer().addSublayer_(videoPreviewLayer)
 
-            # TODO: capture still images for photo picker
-            #stillImageOutput = AVCaptureStillImageOutput.alloc().init()
-            #outputSettings = NSDictionary.alloc().initWithObjectsAndKeys_(AVVideoCodecJPEG, AVVideoCodecKey, None)
-            #stillImageOutput.setOutputSettings_(outputSettings)
-            #self.captureSession.addOutput_(stillImageOutput)
+            self.stillImageOutput = AVCaptureStillImageOutput.new()
+            self.captureSession.addOutput_(self.stillImageOutput)
+            # call self.getSnapshot() to get the image
+
+            # self.videoOutput = AVCaptureVideoDataOutput.new()
+            # no idea how to create a CDQ in Python
+            # https://developer.apple.com/library/ios/documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html
+            # q = dispatch_queue_create(None, None) !!!!???
+            # self.videoOutput.setSampleBufferDelegate_queue_(self, q)
+            # self.captureSession.addOutput_(self.videoOutput)
 
         BlinkLogger().log_debug('Start aquire video %s' % self)
         self.captureSession.startRunning()
-        self.parentWindow.delegate()._show()
 
+    # AVCaptureVideoDataOutput delegate method
+    def captureOutput_didOutputSampleBuffer_fromConnection_(self, captureOutput, sampleBuffer, connection):
+        pass
+
+    # AVCaptureVideoDataOutput delegate method
+    def captureOutput_didDropSampleBuffer_fromConnection_(self, captureOutput, sampleBuffer, connection):
+        pass
+
+    def getSnapshot(self):
+        connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
+        # http://stackoverflow.com/questions/23048230/capturing-isight-image-using-avfoundation-on-mac
+        # handler = ^(CMSampleBufferRef sampleBuffer, NSError* error)
+        handler = (sampleBuffer, error)
+        #handler = None
+        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, handler)
+        imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+
+        if imageBuffer:
+            CVBufferRetain(imageBuffer)
+            imageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(imageBuffer))
+            image = NSImage.alloc().initWithSize_(imageRep.size())
+            image.addRepresentation_(imageRep)
+            CVBufferRelease(imageBuffer)
+            return image
+        else:
+            return None
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
