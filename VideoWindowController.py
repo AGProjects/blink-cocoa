@@ -41,6 +41,7 @@ from Foundation import mbFlipWindow
 import os
 import objc
 import unicodedata
+from math import floor
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -118,8 +119,8 @@ class VideoWindowController(NSWindowController):
         self.sdl_window = self.streamController.stream.video_windows.remote
 
         self.initial_size = self.streamController.stream.video_windows.remote.size
-        self.aspect_ratio = float(self.initial_size[0]) / self.initial_size[1]
-        self.sessionController.log_debug('Remote aspect ratio is %.2f' % self.aspect_ratio)
+        self.aspect_ratio = floor((float(self.initial_size[0]) / self.initial_size[1]) * 100)/100
+        self.sessionController.log_debug('Remote aspect ratio is %s' % self.aspect_ratio)
 
         self.initial_aspect_ratio = self.aspect_ratio
 
