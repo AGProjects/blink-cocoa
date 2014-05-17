@@ -88,6 +88,7 @@ class VideoNativeLocalWindowController(NSWindowController):
             self.window().setAlphaValue_(ALPHA)
             self.window().setLevel_(NSFloatingWindowLevel)
             self.window().closeButton.setHidden_(True)
+            self.window().makeFirstResponder_(self.localVideoView)
             self.updateTrackingAreas()
 
         return self
@@ -211,18 +212,14 @@ class LocalNativeVideoView(NSView):
         super(LocalNativeVideoView, self).dealloc()
 
     def keyDown_(self, event):
-        s = event.characters()
-        key = s[0].upper()
-        if key == chr(27):
-            self.parentWindow.delegate().hide()
-        else:
-            NSView.keyDown_(self, event)
+        if event.keyCode() == 53:
+            self.parentWindow.hide()
 
     def rightMouseDown_(self, event):
         point = self.parentWindow.convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                                                                                                    NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.parentWindow.windowNumber(),
-                                                                            self.parentWindow.graphicsContext(), 0, 1, 0)
+            NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.parentWindow.windowNumber(),
+            self.parentWindow.graphicsContext(), 0, 1, 0)
 
         videoDevicesMenu = NSMenu.alloc().init()
         lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")

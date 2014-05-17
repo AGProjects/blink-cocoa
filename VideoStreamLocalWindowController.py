@@ -286,5 +286,8 @@ class VideoStreamOverlayView(NSView):
     def rightMouseDown_(self, event):
         self.window().delegate().rightMouseDown_(event)
 
+    def keyDown_(self, event):
+        self.window().delegate().keyDown_(event)
+
     def mouseDragged_(self, event):
         self.window().delegate().mouseDraggedView_(event)

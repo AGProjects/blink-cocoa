@@ -259,20 +259,18 @@ class VideoWindowController(NSWindowController):
     def sessionController(self):
         return self.streamController.sessionController
 
-    def keyDown_(self, event):
-        s = event.characters()
-        key = s[0].upper()
-        if key == chr(27):
-            pass
-                # TODO video: "Handle Escape"
-        else:
-            NSView.keyDown_(self, event)
-
     def windowDidResignKey_(self, notification):
         self.is_key_window = False
 
     def windowDidBecomeKey_(self, notification):
         self.is_key_window = True
+
+    def keyDown_(self, event):
+        if event.keyCode() == 53:
+            if self.full_screen:
+                self.toggleFullScreen()
+            else:
+                self.sessionController.end()
 
     def mouseEntered_(self, event):
         self.mouse_in_window = True
@@ -494,9 +492,6 @@ class VideoWindowController(NSWindowController):
                 else:
                     self.window.orderFront_(self)
                     self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
-
-    def keyDown_(self, event):
-        super(VideoWindowController, self).keyDown_(event)
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
