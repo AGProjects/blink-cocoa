@@ -510,6 +510,10 @@ class ContactWindowController(NSWindowController):
         self.statusBarItem.setToolTip_(NSApp.delegate().applicationName)
         self.statusBarItem.setMenu_(self.statusBarMenu)
 
+        self.rotateCameraTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "rotateCamera:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSDefaultRunLoopMode)
+
         self.audioLevelTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "updateAudioLevels:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.audioLevelTimer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.audioLevelTimer, NSDefaultRunLoopMode)
@@ -596,6 +600,23 @@ class ContactWindowController(NSWindowController):
             self.audioDeviceInputForLevelMeter = None
             selectedAudioDevice.close()
             return
+
+    def rotateCamera_(self, timer):
+        settings = SIPSimpleSettings()
+        if settings.video.auto_rotate_cameras and self.sessionControllersManager.connectedVideoSessions:
+            devices = list(device for device in self.backend._app.engine.video_devices if device not in ('system_default', None))
+            try:
+                idx = devices.index(self.backend._app.video_device.real_name)
+            except ValueError:
+                return
+            else:
+                try:
+                    new_device = devices[idx + 1]
+                except IndexError:
+                    new_device = devices[0]
+
+                settings.video.device = new_device
+                settings.save()
 
     def updateAudioLevels_(self, timer):
         if self.audioDeviceInputForLevelMeter is None:
@@ -1379,9 +1400,8 @@ class ContactWindowController(NSWindowController):
                         account.save()
                     else:
                         NSApp.activateIgnoringOtherApps_(True)
-                        panel = NSGetInformationalAlertPanel(NSLocalizedString("New Account Added", "Window title"),
-                                                             NSLocalizedString("To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.", "Label"),
-                                                             NSLocalizedString("OK", "Button title"), None, None)
+                        panel = NSGetInformationalAlertPanel(NSLocalizedString("New Account Added", "Window title"), NSLocalizedString("To enable replication of Chat messages between multiple clients, you must copy your Chat replication password from another instance where the password has already been set. You can find the Chat replication password in the Advanced section of your account.", "Label"),
+                             NSLocalizedString("OK", "Button title"), None, None)
                         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(20, self, "newAccountHasBeenAddedNotice:", panel, False)
                         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
                         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)

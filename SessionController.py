@@ -136,6 +136,10 @@ class SessionControllersManager(object):
         return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("video"))
 
     @property
+    def connectedVideoSessions(self):
+        return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("video") and sess.state == STATE_CONNECTED)
+
+    @property
     def dndSessions(self):
         return any(sess.session for sess in self.sessionControllers if sess.do_not_disturb_until_end)
 

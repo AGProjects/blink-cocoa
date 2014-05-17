@@ -8,6 +8,7 @@ from AppKit import (NSWindowController,
                     NSToggleButton,
                     NSView,
                     NSOnState,
+                    NSOffState,
                     NSTrackingMouseEnteredAndExited,
                     NSTrackingActiveAlways,
                     NSRightMouseUp,
@@ -249,17 +250,32 @@ class VideoStreamLocalWindowController(NSWindowController):
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
+        i = 0
         for item in Engine().video_devices:
-          lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
-          lastItem.setRepresentedObject_(item)
-          if SIPApplication.video_device.real_name == item:
-              lastItem.setState_(NSOnState)
+            if item not in (None, 'system_default'):
+                i += 1
+
+            lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
+            lastItem.setRepresentedObject_(item)
+            if SIPApplication.video_device.real_name == item:
+                lastItem.setState_(NSOnState)
+
+        if i > 1:
+              videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+              settings = SIPSimpleSettings()
+              lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Auto Rotate Cameras", "Menu item"), "toggleAutoRotate:", "")
+              lastItem.setState_(NSOnState if settings.video.auto_rotate_cameras else NSOffState)
 
         NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self.window.contentView())
 
     def changeVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
         settings.video.device = sender.representedObject()
+        settings.save()
+
+    def toggleAutoRotate_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.video.auto_rotate_cameras = not settings.video.auto_rotate_cameras
         settings.save()
 
 

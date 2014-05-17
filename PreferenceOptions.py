@@ -2018,6 +2018,7 @@ SettingDescription = {
                       'tls.veriy_server': NSLocalizedString("Verify Server", "Label"),
                       'video.enable_when_auto_answer': NSLocalizedString("Enabled When Automatic Answering Calls", "Label"),
                       'video.keep_window_on_top': NSLocalizedString("Keep Window on Top", "Label"),
+                      'video.auto_rotate_cameras': NSLocalizedString("Auto Rotate Cameras", "Label"),
                       'video.full_screen_after_connect': NSLocalizedString("Full Screen After Connect", "Label"),
                       'xcap.enabled' : NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root' : NSLocalizedString("Root URI", "Label")

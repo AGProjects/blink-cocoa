@@ -54,6 +54,7 @@ class VideoSettingsExtension(VideoSettings):
     full_screen_after_connect = Setting(type=bool, default=True)
     keep_window_on_top = Setting(type=bool, default=True)
     h264 = H264SettingsExtension
+    auto_rotate_cameras = Setting(type=bool, default=True)
 
 class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
