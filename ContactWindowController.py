@@ -423,7 +423,6 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="VirtualGroupWasDeleted")
         nc.add_observer(self, name="VirtualGroupDidChange")
         nc.add_observer(self, name="SIPSessionLoggedToHistory")
-        nc.add_observer(self, name="VideoDeviceDidChangeCamera")
 
         nc.add_observer(self, sender=AccountManager())
 
@@ -1413,11 +1412,6 @@ class ContactWindowController(NSWindowController):
                         NSApp.endModalSession_(session)
                         panel.close()
                         NSReleaseAlertPanel(panel)
-
-    def _NH_VideoDeviceDidChangeCamera(self, notification):
-        BlinkLogger().log_info(u"Switched to %s video camera" % self.backend._app.video_device.real_name)
-        if self.localVideoWindow:
-            self.localVideoWindow.refreshAfterCameraChanged()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()

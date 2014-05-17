@@ -60,10 +60,17 @@ from sipsimple.core import Engine
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 
+from application.notification import NotificationCenter, IObserver
+from application.python import Null
+from zope.interface import implements
+from util import run_in_gui_thread
+
 
 ALPHA = 1.0
 
 class VideoNativeLocalWindowController(NSWindowController):
+    implements(IObserver)
+
     localVideoView = objc.IBOutlet()
 
     visible = False
@@ -90,6 +97,8 @@ class VideoNativeLocalWindowController(NSWindowController):
             self.window().closeButton.setHidden_(True)
             self.window().makeFirstResponder_(self.localVideoView)
             self.updateTrackingAreas()
+            self.notification_center =  NotificationCenter()
+            self.notification_center.add_observer(self, name="VideoDeviceDidChangeCamera")
 
         return self
 
@@ -138,11 +147,17 @@ class VideoNativeLocalWindowController(NSWindowController):
         BlinkLogger().log_debug('Close %s' % self)
         self.localVideoView.close()
         self.localVideoView = None
+        self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
+        self.notification_center = None
         self.window().close()
 
     @run_in_gui_thread
-    def refreshAfterCameraChanged(self):
-        self.localVideoView.refreshAfterCameraChanged()
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_VideoDeviceDidChangeCamera(self, notification):
+        self.localVideoView.reloadCamera()
 
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
@@ -282,7 +297,7 @@ class LocalNativeVideoView(NSView):
         else:
             return device
 
-    def refreshAfterCameraChanged(self):
+    def reloadCamera(self):
         if not self.captureSession:
             return
 
