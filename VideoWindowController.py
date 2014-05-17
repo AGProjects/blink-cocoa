@@ -285,8 +285,8 @@ class VideoWindowController(NSWindowController):
         self.mouse_in_window = False
         self.startMouseOutTimer()
 
-    def showDisconnectedPanel(self):
-        self.disconnectedPanel = VideoDisconnectWindow()
+    def showDisconnectedPanel(self, label=None):
+        self.disconnectedPanel = VideoDisconnectWindow(label)
         self.disconnectedPanel.window.setTitle_(self.title)
 
     def changeAspectRatio(self):

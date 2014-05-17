@@ -2,7 +2,7 @@
 #
 
 from AppKit import NSApp, NSEventTrackingRunLoopMode
-from Foundation import NSRunLoop, NSRunLoopCommonModes, NSTimer
+from Foundation import NSRunLoop, NSRunLoopCommonModes, NSTimer, NSLocalizedString
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
@@ -13,7 +13,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading.green import run_in_green_thread
 
 from MediaStream import MediaStream, STREAM_IDLE, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_FAILED, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_CONNECTED, STREAM_CONNECTING
-from MediaStream import STATE_CONNECTING, STATE_FAILED, STATE_DNS_FAILED, STATE_FINISHED
+from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_FAILED, STATE_DNS_FAILED, STATE_FINISHED
 from SessionInfoController import ice_candidates
 
 from VideoWindowController import VideoWindowController
@@ -199,6 +199,8 @@ class VideoController(MediaStream):
         super(VideoController, self).dealloc()
 
     def deallocTimer_(self, timer):
+        self.notification_center.discard_observer(self, sender=self.sessionController)
+        self.notification_center.discard_observer(self, sender=self.stream)
         self.release()
 
     def end(self):
@@ -222,7 +224,6 @@ class VideoController(MediaStream):
 
         self.removeFromSession()
         self.videoWindowController.close()
-        self.notification_center.discard_observer(self, sender=self.sessionController)
 
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
@@ -309,19 +310,29 @@ class VideoController(MediaStream):
         else:
             self.sessionController.log_info(u"Video stream canceled")
 
-        if not self.started and self.sessionController.failureReason != "Session Cancelled":
-            self.videoWindowController.showDisconnectedPanel()
-            audio_stream = self.sessionController.streamHandlerOfType("audio")
-            if audio_stream:
-                NSApp.delegate().contactsWindowController.showAudioDrawer()
-
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
+    def _NH_BlinkProposalGotRejected(self, sender, data):
+        if self.stream in data.proposed_streams:
+            self.videoWindowController.showDisconnectedPanel()
+
+    def _NH_BlinkSessionDidStart(self, sender, data):
+        if self.status != STREAM_CONNECTED:
+            self.videoWindowController.showDisconnectedPanel()
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED):
+                NSApp.delegate().contactsWindowController.showAudioDrawer()
+
     def _NH_BlinkSessionDidFail(self, sender, data):
+        if data.failure_reason == 'Decline':
+            self.videoWindowController.showDisconnectedPanel()
+        else:
+            self.videoWindowController.showDisconnectedPanel(data.failure_reason)
+
         self.stopTimers()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
-        pass
+        self.videoWindowController.showDisconnectedPanel(NSLocalizedString("Session Ended", "Label"))
 
     def stopTimers(self):
         if self.statistics_timer is not None:
