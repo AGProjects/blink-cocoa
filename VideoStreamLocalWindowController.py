@@ -51,12 +51,16 @@ class VideoStreamLocalWindowController(NSWindowController):
     overlayView = None
     tracking_area = None
     initialLocation = None
+    titleBarView = None
+    alwaysOnTop = True
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
     @run_in_twisted_thread
     def __init__(self, videoWindowController):
+        from VideoWindowController import TitleBarView
+
         self.videoWindowController = videoWindowController
         self.log_debug('Init %s' % self)
         if self.stream.video_windows is not None:
@@ -90,6 +94,21 @@ class VideoStreamLocalWindowController(NSWindowController):
             self.window.contentView().addSubview_(self.overlayView)
             self.window.makeFirstResponder_(self.overlayView)
 
+            themeFrame = self.window.contentView().superview()
+            self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
+            topmenu_frame = self.titleBarView.view.frame()
+
+            newFrame = NSMakeRect(
+                                  themeFrame.frame().size.width - topmenu_frame.size.width,
+                                  themeFrame.frame().size.height - topmenu_frame.size.height,
+                                  topmenu_frame.size.width,
+                                  topmenu_frame.size.height
+                                  )
+            self.titleBarView.view.setFrame_(newFrame)
+            themeFrame.addSubview_(self.titleBarView.view)
+            self.titleBarView.textLabel.setHidden_(False)
+            self.titleBarView.alwaysOnTop.setHidden_(True)
+            self.videoWindowController.streamController.updateStatusLabel()
             self.updateTrackingAreas()
 
     def updateTrackingAreas(self):
@@ -234,6 +253,9 @@ class VideoStreamLocalWindowController(NSWindowController):
     @run_in_twisted_thread
     def close(self):
         self.log_debug('Close %s' % self)
+        if self.titleBarView is not None:
+            self.titleBarView.close()
+
         if self.window:
             self.window.close()
 

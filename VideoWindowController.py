@@ -345,22 +345,14 @@ class VideoWindowController(NSWindowController):
         if self.videoControlPanel is not None:
             self.videoControlPanel.show()
 
-        self.flip2()
-
-    def flip2(self):
         if self.localVideoWindow and not self.flipped:
             self.localVideoWindow.window.orderOut_(None)
             self.window.orderOut_(None)
             self.flipWnd.flip_to_(self.localVideoWindow.window, self.window)
             self.flipped = True
+            self.streamController.updateStatusLabelAfterConnect()
         else:
             self.window.orderFront_(self)
-
-    def flip1(self):
-        # simpler alternative to flip
-        if self.localVideoWindow:
-            self.localVideoWindow.hide()
-        self.window.orderFront_(self)
 
     def windowWillResize_toSize_(self, window, frameSize):
         if self.aspect_ratio is not None:
@@ -571,6 +563,7 @@ class VideoWindowController(NSWindowController):
 class TitleBarView(NSObject):
     view = objc.IBOutlet()
     alwaysOnTop = objc.IBOutlet()
+    textLabel = objc.IBOutlet()
 
     def initWithWindowController_(self, windowController):
         self.windowController = windowController
@@ -580,8 +573,8 @@ class TitleBarView(NSObject):
 
         return self
 
-    def awakeFromNib(self):
         self.alwaysOnTop.setState_(NSOnState if self.windowController.always_on_top else NSOffState)
+        self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
 
     def close(self):
         self.view.removeFromSuperview()
@@ -598,6 +591,8 @@ class TitleBarView(NSObject):
             self.windowController.toogleAlwaysOnTop()
         elif not self.windowController.always_on_top and sender.state() == NSOnState:
             self.windowController.toogleAlwaysOnTop()
+        self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
+
 
 
 

@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
+		1F065AFD1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
+		1F065AFE1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
+		1F065AFF1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
+		1F065B001929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
 		1F07D766138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F07D767138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F07D768138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
@@ -1828,6 +1832,7 @@
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
+		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
 		1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
@@ -2546,6 +2551,7 @@
 			isa = PBXGroup;
 			children = (
 				1FC38F01192234E1007B0340 /* layers.png */,
+				1F065AFC1929175100E22651 /* layers2.png */,
 				1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */,
 				1F1425591905335300CFEC42 /* aspect_ratio.png */,
 				1F7EAC6018E0FA6500CA7B86 /* paused-red.png */,
@@ -3318,6 +3324,7 @@
 				1F2272F112B554F50010A8B2 /* dtmf_7_tone.wav in Resources */,
 				1F2272F212B554F50010A8B2 /* dtmf_8_tone.wav in Resources */,
 				1F2272F312B554F50010A8B2 /* dtmf_9_tone.wav in Resources */,
+				1F065AFE1929175100E22651 /* layers2.png in Resources */,
 				1F7EAC6718E0FA6E00CA7B86 /* pause-white.png in Resources */,
 				1F2272F412B554F50010A8B2 /* dtmf_A_tone.wav in Resources */,
 				1F2272F512B554F50010A8B2 /* dtmf_B_tone.wav in Resources */,
@@ -3647,6 +3654,7 @@
 				1F35D00317894FFF00C6FE38 /* HistoryManager.py in Resources */,
 				1F35D00417894FFF00C6FE38 /* trash.png in Resources */,
 				1F35D00517894FFF00C6FE38 /* outgoing_file.png in Resources */,
+				1F065B001929175100E22651 /* layers2.png in Resources */,
 				1F35D00617894FFF00C6FE38 /* end_arrow.png in Resources */,
 				1F35D00717894FFF00C6FE38 /* begin_arrow.png in Resources */,
 				1F35D00817894FFF00C6FE38 /* transfer.png in Resources */,
@@ -3829,6 +3837,7 @@
 				1F8DC362135084FA0034815C /* FileTransferWindow.xib in Resources */,
 				1F8DC363135084FA0034815C /* FileTransferItemView.xib in Resources */,
 				1F8DC364135084FA0034815C /* FileTransferItemView.py in Resources */,
+				1F065AFF1929175100E22651 /* layers2.png in Resources */,
 				1F8DC365135084FA0034815C /* ListView.py in Resources */,
 				1F8DC366135084FA0034815C /* FileTransferWindowController.py in Resources */,
 				1F8DC367135084FA0034815C /* SmileyManager.py in Resources */,
@@ -4126,6 +4135,7 @@
 				1FB9B11F1095BFF500284E18 /* dtmf_5_tone.wav in Resources */,
 				1FB9B1201095BFF500284E18 /* dtmf_6_tone.wav in Resources */,
 				1FB9B1211095BFF500284E18 /* dtmf_7_tone.wav in Resources */,
+				1F065AFD1929175100E22651 /* layers2.png in Resources */,
 				1F447E7E18DF3522001EF4C9 /* VideoWindowController.py in Resources */,
 				1FB9B1221095BFF500284E18 /* dtmf_8_tone.wav in Resources */,
 				1F960C4718E0F83D00060690 /* pause-white.png in Resources */,
