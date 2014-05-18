@@ -324,15 +324,29 @@ class VideoController(MediaStream):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        if data.failure_reason == 'Decline':
-            self.videoWindowController.showDisconnectedPanel()
-        else:
-            self.videoWindowController.showDisconnectedPanel(data.failure_reason)
+        reason = "%s (%s)" % (data.failure_reason.title, data.code)
+        if data.code is not None:
+            if data.code == 486:
+                reason = NSLocalizedString("Busy Here", "Label")
+            elif data.code == 487:
+                reason = NSLocalizedString("Call Cancelled", "Label")
+            elif data.code == 603:
+                reason = NSLocalizedString("Call Declined", "Label")
+            elif data.code == 408:
+                if data.originator == 'local':
+                    reason = NSLocalizedString("Network Timeout", "Label")
+                else:
+                    reason = NSLocalizedString("User Unreachable", "Label")
+            elif data.code == 480:
+                reason = NSLocalizedString("User Not Online", "Label")
+            elif data.code >= 500 and data.code < 600:
+                reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
 
+        self.videoWindowController.showDisconnectedPanel(reason)
         self.stopTimers()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
-        self.videoWindowController.showDisconnectedPanel(NSLocalizedString("Session Ended", "Label"))
+        self.videoWindowController.showDisconnectedPanel(NSLocalizedString("Video Ended", "Label"))
 
     def stopTimers(self):
         if self.statistics_timer is not None:
