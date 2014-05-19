@@ -97,7 +97,7 @@ class VideoController(MediaStream):
                 else:
                     self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Server Relayed" % codec, "Label"))
             else:
-                self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed" % codec, "Label"))
+                self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"))
 
     def updateStatisticsTimer_(self, timer):
         if not self.stream:
@@ -289,9 +289,9 @@ class VideoController(MediaStream):
             self.videoWindowController.initLocalVideoWindow()
 
     def _NH_VideoStreamICENegotiationDidFail(self, sender, data):
-        remote_window = self.videoWindowController.window
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
-        remote_window.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed" % codec, "Label"))
+        if self.videoWindowController.window is not None:
+            self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"))
         self.ice_negotiation_status = data.reason
         self.stopTimers()
 
