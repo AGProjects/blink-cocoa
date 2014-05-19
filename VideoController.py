@@ -418,7 +418,7 @@ class VideoController(MediaStream):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-        reason = "%s (%s)" % (data.failure_reason.title, data.code)
+        reason = "%s (%s)" % (data.failure_reason.title(), data.code)
         if data.code is not None:
             if data.code == 486:
                 reason = NSLocalizedString("Busy Here", "Label")
