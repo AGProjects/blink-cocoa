@@ -406,6 +406,10 @@ class VideoController(MediaStream):
         if self.stream in data.proposed_streams:
             self.videoWindowController.showDisconnectedPanel()
 
+    def _NH_BlinkProposalAccepted(self, sender, data):
+        if self.stream in data.accepted_streams:
+            self.updateStatusLabelAfterConnect()
+
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
             self.videoWindowController.showDisconnectedPanel()

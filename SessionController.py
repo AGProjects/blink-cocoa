@@ -1986,6 +1986,8 @@ class SessionController(NSObject):
                     self.log_info("IllegalStateError: %s" % e)
         # notify by Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
+        log_data = NotificationData(timestamp=datetime.now(), accepted_streams=data.accepted_streams)
+        self.notification_center.post_notification("BlinkProposalAccepted", sender=self, data=log_data)
 
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
