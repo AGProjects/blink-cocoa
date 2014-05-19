@@ -356,6 +356,8 @@ class VideoController(MediaStream):
 
         if not self.sessionController.account.nat_traversal.use_ice:
             self.videoWindowController.titleBarView.textLabel.setStringValue_(codec)
+        else:
+            self.updateStatusLabelAfterConnect()
 
         self.changeStatus(STREAM_CONNECTED)
 
