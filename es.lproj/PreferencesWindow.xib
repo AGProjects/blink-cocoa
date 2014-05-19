@@ -159,9 +159,9 @@
                                             </tableHeaderView>
                                         </scrollView>
                                         <textField verticalHuggingPriority="750" tag="20" id="43">
-                                            <rect key="frame" x="352" y="392" width="82" height="17"/>
+                                            <rect key="frame" x="313" y="392" width="121" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="justified" title=":" id="44">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title=":" id="44">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -205,9 +205,9 @@
                                             </connections>
                                         </textField>
                                         <textField verticalHuggingPriority="750" tag="21" id="70">
-                                            <rect key="frame" x="368" y="364" width="68" height="17"/>
+                                            <rect key="frame" x="314" y="364" width="122" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="justified" title="Contraseña:" id="71">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Contraseña:" id="71">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -255,9 +255,9 @@
                                             </connections>
                                         </textField>
                                         <textField verticalHuggingPriority="750" id="112">
-                                            <rect key="frame" x="340" y="336" width="95" height="17"/>
+                                            <rect key="frame" x="313" y="336" width="122" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="justified" title="Nombre:" id="113">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nombre:" id="113">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -336,7 +336,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tabView drawsBackground="NO" id="181">
-                                            <rect key="frame" x="10" y="33" width="703" height="360.00000323355198"/>
+                                            <rect key="frame" x="10" y="33.000003233551965" width="703" height="360"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                             <font key="font" metaFont="system"/>
                                             <tabViewItems/>

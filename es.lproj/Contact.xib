@@ -33,7 +33,7 @@
                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="5">
-                        <rect key="frame" x="18" y="308" width="134" height="17"/>
+                        <rect key="frame" x="6" y="308" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Dirección por Defecto:" id="6">
                             <font key="font" metaFont="system"/>
@@ -45,10 +45,8 @@
                     <button verticalHuggingPriority="750" tag="10" id="7">
                         <rect key="frame" x="404" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="8">
+                        <buttonCell key="cell" type="push" title="Agregar" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="8">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <string key="title">Agregar
-</string>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
 DQ
@@ -74,10 +72,8 @@ DQ
                     <button verticalHuggingPriority="750" tag="11" id="9">
                         <rect key="frame" x="308" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="10">
+                        <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="10">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <string key="title">Cancelar
-</string>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
 Gw
@@ -102,7 +98,7 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="18" y="340" width="131" height="17"/>
+                        <rect key="frame" x="6" y="340" width="143" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nombre:" id="14">
                             <font key="font" metaFont="system"/>
