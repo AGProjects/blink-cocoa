@@ -106,6 +106,7 @@ class EditImageView(NSImageView):
     def getCropped(self):
         image = self.image()
 
+
         cropped = NSImage.alloc().initWithSize_(self.cropRectangle.size)
         cropped.lockFocus()
 
@@ -193,7 +194,7 @@ class PhotoPicker(NSObject):
     contentArrayController = objc.IBOutlet()
     captured_image = None
 
-    countdown_counter = 10
+    countdown_counter = 5
     timer = None
     previous_auto_rotate_cameras = False
 
@@ -312,6 +313,7 @@ class PhotoPicker(NSObject):
         if item.identifier() == "recent":
             self.captureView.hide()
             self.cameraLabel.setHidden_(True)
+            self.useButton.setEnabled_(True)
         else:
             self.captureView.show()
             self.cameraLabel.setHidden_(False)
@@ -335,7 +337,7 @@ class PhotoPicker(NSObject):
     @objc.IBAction
     def captureButtonClicked_(self, sender):
         if self.countdownCheckbox.state() == NSOnState:
-            self.countdown_counter = 10
+            self.countdown_counter = 5
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(True)
             self.countdownCheckbox.setHidden_(True)
