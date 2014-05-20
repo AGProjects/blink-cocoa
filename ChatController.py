@@ -974,7 +974,7 @@ class ChatController(MediaStream):
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount() and not settings.chat.disable_collaboration_editor:
                 item.setImage_(NSImage.imageNamed_("editor-changed" if not self.chatViewController.editorVisible and self.chatViewController.editorIsComposing else "editor"))
             elif identifier == 'screenshot':
-                item.setEnabled_(True if self.status == STREAM_CONNECTED and self.sessionControllersManager.isMediaTypeSupported('file-transfer') else False)
+                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
             elif identifier == 'sendfile':
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
 
@@ -1037,7 +1037,7 @@ class ChatController(MediaStream):
                     self.chatWindowController.conferenceScreenSharingMenu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red" if self.sessionController.hasStreamOfType("screen-sharing") else "display"))
                     return True
             elif identifier == 'screenshot':
-                return self.status == STREAM_CONNECTED
+                return True
 
         return False
 
