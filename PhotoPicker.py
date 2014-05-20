@@ -7,6 +7,8 @@ from AppKit import (NSApp,
                     NSEvenOddWindingRule,
                     NSFrameRect,
                     NSPNGFileType,
+                    NSImageCompressionFactor,
+                    NSJPEGFileType,
                     NSRunAlertPanel,
                     NSModalPanelRunLoopMode,
                     NSOKButton,
@@ -28,7 +30,6 @@ from Foundation import (CIImage,
                         NSImage,
                         NSImageView,
                         NSIndexSet,
-                        NSLock,
                         NSMakeRect,
                         NSMakeSize,
                         NSMaxX,
@@ -44,7 +45,6 @@ from Foundation import (CIImage,
                         NSWidth,
                         NSZeroRect)
 import objc
-import QTKit
 
 import os
 import datetime
@@ -53,6 +53,12 @@ import unicodedata
 
 from application.system import makedirs
 from sipsimple.configuration.settings import SIPSimpleSettings
+
+from application.notification import NotificationCenter, IObserver, NotificationData
+from application.python import Null
+from zope.interface import implements
+from util import run_in_gui_thread
+
 
 from resources import ApplicationData
 
@@ -161,8 +167,7 @@ class EditImageView(NSImageView):
 
 
 class PhotoPicker(NSObject):
-    latestImageRep = None
-    lock = None
+    implements(IObserver)
 
     window = objc.IBOutlet()
     tabView = objc.IBOutlet()
@@ -176,6 +181,7 @@ class PhotoPicker(NSObject):
     historyTabView = objc.IBOutlet()
     countdownCheckbox = objc.IBOutlet()
     countdownProgress = objc.IBOutlet()
+    cameraLabel = objc.IBOutlet()
 
     browseView = objc.IBOutlet()
     cropWindow = objc.IBOutlet()
@@ -185,13 +191,11 @@ class PhotoPicker(NSObject):
 
     libraryCollectionView = objc.IBOutlet()
     contentArrayController = objc.IBOutlet()
+    captured_image = None
 
-    captureDecompressedVideoOutput = None
-    captureSession = None
-    captureDeviceInput = None
-    capture_session_initialized = False
     countdown_counter = 10
     timer = None
+    previous_auto_rotate_cameras = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -199,12 +203,17 @@ class PhotoPicker(NSObject):
     def __init__(self, storage_folder=ApplicationData.get('photos'), high_res=False, history=True):
         self.history = history
         NSBundle.loadNibNamed_owner_("PhotoPicker", self)
-        self.lock = NSLock.alloc().init()
         self.captureButton.setHidden_(True)
         self.previewButton.setHidden_(False)
         self.countdownCheckbox.setHidden_(True)
         self.storage_folder = storage_folder
         self.high_res = high_res
+
+        settings = SIPSimpleSettings()
+        self.previous_auto_rotate_cameras = settings.video.auto_rotate_cameras
+        settings.video.auto_rotate_cameras = False
+        settings.save()
+
         if self.high_res:
             self.photoView.setCropSize_()
 
@@ -214,56 +223,39 @@ class PhotoPicker(NSObject):
             self.countdownCheckbox.setHidden_(False)
             self.captureButton.setHidden_(False)
 
+        self.notification_center =  NotificationCenter()
+        self.notification_center.add_observer(self, name="VideoDeviceDidChangeCamera")
+        self.notification_center.add_observer(self, name="CameraSnapshotDidSucceed")
+
     def awakeFromNib(self):
         if not self.history:
             self.tabView.removeTabViewItem_(self.historyTabView)
+        self.captureView.auto_rotate_menu_enabled = False
+        self.captureView.mirrored = False
 
-    def initAquisition(self):
-        if self.capture_session_initialized:
-            return
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
 
-        if self.captureSession is None:
-            self.captureSession = QTKit.QTCaptureSession.alloc().init()
+    def _NH_CameraSnapshotDidSucceed(self, notification):
+        self.photoView.setHidden_(False)
+        self.captureView.setHidden_(True)
+        self.previewButton.setHidden_(False)
+        self.countdownCheckbox.setHidden_(True)
+        self.captureButton.setHidden_(True)
+        self.useButton.setEnabled_(True)
 
-        # Find a video device
-        device = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeVideo)
-        if not device:
-            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("Camera device cannot be started", "Label"), NSLocalizedString("OK", "Button title"), "", "")
-            self.captureSession = None
-            return
+        self.captured_image = notification.data.image
+        image = notification.data.image
+        image.setScalesWhenResized_(True)
+        h = self.photoView.frame().size.height
+        w = h * self.captured_image.size().width/self.captured_image.size().height
+        image.setSize_(NSMakeSize(w, h))
+        self.photoView.setImage_(image)
 
-        success, error = device.open_(None)
-        if not success:
-            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), error, NSLocalizedString("OK", "Button title"), "", "")
-            self.captureSession = None
-            return
-
-        # Add a device input for that device to the capture session
-        if self.captureDeviceInput is None:
-            self.captureDeviceInput = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(device)
-            success, error = self.captureSession.addInput_error_(self.captureDeviceInput, None)
-
-            if not success:
-                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), error, NSLocalizedString("OK", "Button title"), "", "")
-                self.captureSession = None
-                self.captureDeviceInput = None
-                return
-
-        # Add a decompressed video output that returns raw frames to the session
-        if self.captureDecompressedVideoOutput is None:
-            self.captureDecompressedVideoOutput = QTKit.QTCaptureDecompressedVideoOutput.alloc().init()
-            self.captureDecompressedVideoOutput.setDelegate_(self)
-            success, error = self.captureSession.addOutput_error_(self.captureDecompressedVideoOutput, None)
-            if not success:
-                NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), error, NSLocalizedString("OK", "Button title"), "", "")
-                self.captureSession = None
-                self.captureDeviceInput = None
-                self.captureDecompressedVideoOutput = None
-                return
-
-        # Preview the video from the session in the document window
-        self.captureView.setCaptureSession_(self.captureSession)
-        self.capture_session_initialized = True
+    def _NH_VideoDeviceDidChangeCamera(self, notification):
+        self.captureView.reloadCamera()
 
     def refreshLibrary(self):
         if not self.history:
@@ -318,13 +310,11 @@ class PhotoPicker(NSObject):
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         if item.identifier() == "recent":
-            if self.captureSession is not None:
-                self.captureSession.stopRunning()
+            self.captureView.hide()
+            self.cameraLabel.setHidden_(True)
         else:
-            self.initAquisition()
-            if self.captureSession is not None:
-                self.captureSession.startRunning()
-
+            self.captureView.show()
+            self.cameraLabel.setHidden_(False)
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
             self.previewButton.setHidden_(True)
@@ -332,20 +322,15 @@ class PhotoPicker(NSObject):
             self.captureButton.setHidden_(False)
             self.useButton.setEnabled_(False)
 
-    def captureOutput_didOutputVideoFrame_withSampleBuffer_fromConnection_(self, captureOutput, videoFrame, sampleBuffer, connection):
-        self.latestImageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(videoFrame))
-
     @objc.IBAction
     def previewButtonClicked_(self, sender):
         self.photoView.setHidden_(True)
         self.captureView.setHidden_(False)
-        if self.captureSession is not None:
-            self.captureSession.startRunning()
+        self.captureView.show()
         self.previewButton.setHidden_(True)
         self.countdownCheckbox.setHidden_(False)
         self.captureButton.setHidden_(False)
         self.useButton.setEnabled_(False)
-
 
     @objc.IBAction
     def captureButtonClicked_(self, sender):
@@ -381,16 +366,8 @@ class PhotoPicker(NSObject):
             self.countdownProgress.setDoubleValue_(self.countdown_counter)
 
     def executeCapture(self):
-        self.photoView.setHidden_(False)
-        self.captureView.setHidden_(True)
-        self.previewButton.setHidden_(False)
-        self.countdownCheckbox.setHidden_(True)
-        self.captureButton.setHidden_(True)
-        self.useButton.setEnabled_(True)
-        if self.captureSession is not None:
-            self.captureImage()
-            NSSound.soundNamed_("Grab").play()
-            self.captureSession.stopRunning()
+        self.captureView.getSnapshot()
+        NSSound.soundNamed_("Grab").play()
 
 
     @objc.IBAction
@@ -414,36 +391,21 @@ class PhotoPicker(NSObject):
         frame.size = size
         self.cropWindowImage.setFrame_(frame)
 
-    def captureImage(self):
-        if self.latestImageRep:
-            imageRep = self.latestImageRep
-            image = NSImage.alloc().initWithSize_(imageRep.size())
-            image.addRepresentation_(imageRep)
-            image.setScalesWhenResized_(True)
-            h = self.photoView.frame().size.height
-            w = h * imageRep.size().width/imageRep.size().height
-            image.setSize_(NSMakeSize(w, h))
-            self.photoView.setImage_(image)
-
     def storeCaptured(self):
         makedirs(self.storage_folder)
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
-        if not self.photoView.image():
-            self.captureImage()
+        if not self.captured_image:
+            return
 
         if self.high_res:
-            imageRep = self.latestImageRep
-            image = NSImage.alloc().initWithSize_(imageRep.size())
-            image.addRepresentation_(imageRep)
+            image = self.captured_image
         else:
             image = self.photoView.getCropped()
 
-        tiff_data = image.TIFFRepresentation()
-        path = self.storage_folder + "/photo%s.png" % dt
-        bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
-        png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-        data = png_data.bytes().tobytes()
+        path = self.storage_folder + "/photo%s.jpg" % dt
+        jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
+        data = jpg_data.bytes().tobytes()
         with open(path, 'w') as f:
             f.write(data)
 
@@ -469,15 +431,9 @@ class PhotoPicker(NSObject):
             dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             image = self.cropWindowImage.getCropped()
 
-            tiff_data = image.TIFFRepresentation()
-
-            #path = self.storage_folder + "/photo%s.tiff" % dt
-            #tiff_data.writeToFile_atomically_(path, False)
-
             path = self.storage_folder + "/photo%s.png" % dt
-            bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
-            png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-            data = png_data.bytes().tobytes()
+            jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
+            data = jpg_data.bytes().tobytes()
             with open(path, 'w') as f:
                 f.write(data)
 
@@ -536,21 +492,12 @@ class PhotoPicker(NSObject):
         NSApp.stopModalWithCode_(0)
 
     def windowWillClose_(self, notification):
-        if self.captureDecompressedVideoOutput != None:
-            self.captureDecompressedVideoOutput.setDelegate_(None)
-            self.captureDecompressedVideoOutput = None
-
-        if self.captureSession is not None:
-            self.captureSession.stopRunning()
-            self.captureSession = None
-
-        if self.captureDeviceInput:
-            device = self.captureDeviceInput.device()
-            if device.isOpen():
-                device.close()
-            self.captureDeviceInput = None
-
+        self.captureView.hide()
         NSApp.stopModalWithCode_(0)
+
+        settings = SIPSimpleSettings()
+        settings.video.auto_rotate_cameras = self.previous_auto_rotate_cameras
+        settings.save()
 
     def runModal(self):
         self.window.makeKeyAndOrderFront_(None)

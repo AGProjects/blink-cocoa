@@ -3,14 +3,14 @@
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
-        <plugIn identifier="com.apple.QTKitIBPlugin" version="5056"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PhotoPicker">
             <connections>
+                <outlet property="cameraLabel" destination="hUZ-Wd-vg2" id="tMr-OR-EB4"/>
                 <outlet property="cameraTabView" destination="9" id="158"/>
                 <outlet property="captureButton" destination="62" id="65"/>
-                <outlet property="captureView" destination="13" id="40"/>
+                <outlet property="captureView" destination="RSh-u7-reo" id="NYj-PE-deQ"/>
                 <outlet property="contentArrayController" destination="85" id="88"/>
                 <outlet property="countdownCheckbox" destination="gr8-i3-9SQ" id="ccz-jC-ZO6"/>
                 <outlet property="countdownProgress" destination="NeG-y4-YZ2" id="SYj-Fg-724"/>
@@ -31,15 +31,15 @@
         <window title="Panel de Selección de Fotografía" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="own-avatar-panel" animationBehavior="default" id="1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="515" y="309" width="516" height="399"/>
+            <rect key="contentRect" x="515" y="309" width="516" height="419"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <value key="minSize" type="size" width="357" height="312"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="516" height="399"/>
+                <rect key="frame" x="0.0" y="0.0" width="516" height="419"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <tabView id="8">
-                        <rect key="frame" x="13" y="41" width="490" height="352"/>
+                        <rect key="frame" x="13" y="61" width="490" height="352"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
@@ -96,11 +96,10 @@
                                     <rect key="frame" x="10" y="33" width="470" height="306"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <qtCaptureView id="13">
-                                            <rect key="frame" x="-3" y="37.500000079178527" width="476" height="265"/>
-                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
-                                            <color key="fillColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                        </qtCaptureView>
+                                        <customView id="RSh-u7-reo" customClass="LocalVideoView">
+                                            <rect key="frame" x="-3" y="37.5" width="476" height="265.5"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        </customView>
                                         <button hidden="YES" verticalHuggingPriority="750" tag="7" id="62">
                                             <rect key="frame" x="160" y="-1" width="150" height="32"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -113,7 +112,7 @@
                                             </connections>
                                         </button>
                                         <imageView hidden="YES" id="70" customClass="EditImageView">
-                                            <rect key="frame" x="-3" y="37.500000079178527" width="476" height="265"/>
+                                            <rect key="frame" x="-3" y="37.5" width="476" height="265"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                             <imageCell key="cell" selectable="YES" editable="YES" alignment="left" imageScaling="proportionallyDown" id="71"/>
                                         </imageView>
@@ -178,6 +177,15 @@ Gw
                             <action selector="CancelButtonClicked:" target="-2" id="152"/>
                         </connections>
                     </button>
+                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="hUZ-Wd-vg2">
+                        <rect key="frame" x="18" y="49" width="480" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Right click on the preview image to change cameras" id="5Lj-eS-8EY">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
             <connections>
@@ -300,6 +308,14 @@ Gw
                 </subviews>
             </view>
         </window>
+        <button verticalHuggingPriority="750" id="RCl-Nd-JNc">
+            <rect key="frame" x="0.0" y="0.0" width="82" height="32"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <buttonCell key="cell" type="push" title="Button" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="aW9-Lk-14o">
+                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                <font key="font" metaFont="system"/>
+            </buttonCell>
+        </button>
     </objects>
     <resources>
         <image name="NSInfo" width="32" height="32"/>

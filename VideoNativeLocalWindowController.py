@@ -17,6 +17,7 @@ from AppKit import (NSSize,
                     )
 
 from Foundation import (NSBundle,
+                        NSNumber,
                         NSDictionary,
                         NSColor,
                         NSDate,
@@ -49,11 +50,18 @@ from AVFoundation import (AVCaptureDeviceInput,
                           AVVideoCodecKey
                           )
 
+import objc
+
+
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
 from Quartz.CoreGraphics import kCGColorBlack, CGColorGetConstantColor
 from Quartz import CVBufferRetain, NSCIImageRep, CIImage, CVBufferRelease
+from Quartz.CoreVideo import kCVPixelBufferPixelFormatTypeKey
+from Quartz.CoreVideo import kCVPixelFormatType_32BGRA
+bundle = NSBundle.bundleWithPath_(objc.pathForFramework('CoreMedia.framework'))
+objc.loadBundleFunctions(bundle, globals(), [('CMSampleBufferGetImageBuffer', '@@')])
 
-import objc
+
 import re
 
 from BlinkLogger import BlinkLogger
@@ -62,7 +70,7 @@ from sipsimple.core import Engine
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from zope.interface import implements
 from util import run_in_gui_thread
@@ -208,6 +216,8 @@ class LocalVideoView(NSView):
     captureSession = None
     stillImageOutput = None
     videoOutput = None
+    auto_rotate_menu_enabled = True
+    mirrored = True
 
     aspect_ratio = None
     resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
@@ -215,16 +225,12 @@ class LocalVideoView(NSView):
     def close(self):
         BlinkLogger().log_debug('Close %s' % self)
         if self.captureSession is not None:
+            if self.stillImageOutput is not None:
+                self.captureSession.removeOutput_(self.stillImageOutput)
+                self.stillImageOutput = None
+
             if self.captureSession.isRunning():
                 self.captureSession.stopRunning()
-
-            self.captureSession.removeOutput_(self.stillImageOutput)
-            self.stillImageOutput.release()
-            self.stillImageOutput = None
-
-            #self.captureSession.removeOutput_(self.videoOutput)
-            #self.videoOutput.release()
-            #self.videoOutput = None
 
             self.captureSession = None
 
@@ -259,7 +265,7 @@ class LocalVideoView(NSView):
             if SIPApplication.video_device.real_name == item:
                 lastItem.setState_(NSOnState)
 
-        if i > 1:
+        if i > 1 and self.auto_rotate_menu_enabled:
             videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
             settings = SIPSimpleSettings()
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Auto Rotate Cameras", "Menu item"), "toggleAutoRotate:", "")
@@ -363,64 +369,54 @@ class LocalVideoView(NSView):
                 BlinkLogger().log_debug('Failed to aquire input %s' % self)
                 return
 
+            self.setWantsLayer_(True)
             videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
             videoPreviewLayer.setFrame_(self.layer().bounds())
-
-
-
             videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
             videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
             videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
-            videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
-            videoPreviewLayer.connection().setVideoMirrored_(True)
+            if self.mirrored:
+                videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
+                videoPreviewLayer.connection().setVideoMirrored_(True)
             self.layer().addSublayer_(videoPreviewLayer)
 
             self.stillImageOutput = AVCaptureStillImageOutput.new()
-            self.captureSession.addOutput_(self.stillImageOutput)
-            # call self.getSnapshot() to get the image
+            pixelFormat = NSNumber.numberWithInt_(kCVPixelFormatType_32BGRA)
+            self.stillImageOutput.setOutputSettings_(NSDictionary.dictionaryWithObject_forKey_(pixelFormat, kCVPixelBufferPixelFormatTypeKey))
 
-            # self.videoOutput = AVCaptureVideoDataOutput.new()
-            # no idea how to create a CDQ in Python
-            # https://developer.apple.com/library/ios/documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html
-            # q = dispatch_queue_create(None, None) !!!!???
-            # self.videoOutput.setSampleBufferDelegate_queue_(self, q)
-            # self.captureSession.addOutput_(self.videoOutput)
+            self.captureSession.addOutput_(self.stillImageOutput)
 
         BlinkLogger().log_debug('Start aquire video %s' % self)
         self.captureSession.startRunning()
 
-    # AVCaptureVideoDataOutput delegate method
-    def captureOutput_didOutputSampleBuffer_fromConnection_(self, captureOutput, sampleBuffer, connection):
-        pass
-
-    # AVCaptureVideoDataOutput delegate method
-    def captureOutput_didDropSampleBuffer_fromConnection_(self, captureOutput, sampleBuffer, connection):
-        pass
-
     def getSnapshot(self):
-        connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
-        # http://stackoverflow.com/questions/23048230/capturing-isight-image-using-avfoundation-on-mac
-        # handler = ^(CMSampleBufferRef sampleBuffer, NSError* error)
-        handler = (sampleBuffer, error)
-        #handler = None
-        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, handler)
-        imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+        def capture_handler(sampleBuffer):
+            if not sampleBuffer:
+                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
+                return
 
-        if imageBuffer:
+            imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+            if not imageBuffer:
+                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
+                return
+
             CVBufferRetain(imageBuffer)
             imageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(imageBuffer))
             image = NSImage.alloc().initWithSize_(imageRep.size())
             image.addRepresentation_(imageRep)
             CVBufferRelease(imageBuffer)
-            return image
-        else:
-            return None
+
+            NotificationCenter().post_notification('CameraSnapshotDidSucceed', sender=self, data=NotificationData(image=image))
+
+        connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
+        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, capture_handler)
 
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
         if self.captureSession is not None:
             BlinkLogger().log_debug('Stop aquire video %s' % self)
             self.captureSession.stopRunning()
+            self.captureSession = None
 
 
 class BorderlessRoundWindow(NSPanel):
