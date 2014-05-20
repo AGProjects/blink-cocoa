@@ -33,7 +33,7 @@
                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="5">
-                        <rect key="frame" x="18" y="308" width="134" height="17"/>
+                        <rect key="frame" x="6" y="308" width="146" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Adresă Implicită:" id="6">
                             <font key="font" metaFont="system"/>
@@ -98,7 +98,7 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="18" y="340" width="131" height="17"/>
+                        <rect key="frame" x="6" y="340" width="143" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nume Afișat:" id="14">
                             <font key="font" metaFont="system"/>
