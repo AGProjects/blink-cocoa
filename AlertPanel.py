@@ -712,12 +712,10 @@ class AlertPanel(NSObject, object):
         if notification.data.modified.has_key("answering_machine.enabled"):
             if settings.answering_machine.enabled:
                 for session, view in self.sessions.items():
-                    if session.account is not BonjourAccount():
-                        self.enableAnsweringMachine(view, session, True)
+                    self.enableAnsweringMachine(view, session, True)
             else:
                 for session, view in self.sessions.items():
-                    if session.account is not BonjourAccount():
-                        self.disableAnsweringMachine(view, session)
+                    self.disableAnsweringMachine(view, session)
 
         elif notification.data.modified.has_key("audio.auto_accept"):
             bonjour_account = BonjourAccount()
@@ -894,8 +892,7 @@ class AlertPanel(NSObject, object):
 
         elif action == ANSWERING_MACHINE:
             for session, view in self.sessions.items():
-                if session.account is not BonjourAccount():
-                    self.enableAnsweringMachine(view, session, True)
+                self.enableAnsweringMachine(view, session, True)
         elif action == BUSY:
             for session in self.sessions.keys():
                 sessionController = self.sessionControllersManager.sessionControllerForSession(session)
