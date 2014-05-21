@@ -72,7 +72,7 @@ from util import audio_codecs, video_codecs, allocate_autorelease_pool, osx_vers
 
 
 def makeLabel(label):
-    text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 130, 17))
+    text = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 135, 17))
     text.setStringValue_(label)
     text.setBordered_(False)
     text.setDrawsBackground_(False)
