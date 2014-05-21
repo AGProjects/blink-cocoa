@@ -328,7 +328,7 @@ Gw
                     <button id="LX8-ek-Wr8">
                         <rect key="frame" x="134" y="53" width="361" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Automatically Answer Calls" bezelStyle="regularSquare" imagePosition="left" inset="2" id="ILa-nz-eb3">
+                        <buttonCell key="cell" type="check" title="Responder Llamadas Automáticamente" bezelStyle="regularSquare" imagePosition="left" inset="2" id="ILa-nz-eb3">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>

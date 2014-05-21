@@ -2009,6 +2009,7 @@ SettingDescription = {
                       'sounds.audio_outbound': NSLocalizedString("Outbound Ringtone", "Label"),
                       'sounds.night_volume': NSLocalizedString(" ", "Label"),
                       'sounds.enable_speech_synthesizer': NSLocalizedString("Say Incoming Caller Name", "Label"),
+                      'sounds.use_speech_recognition': NSLocalizedString("Use Speech Recognition", "Label"),
                       'web_alert.alert_url': NSLocalizedString("Alert URL", "Label"),
                       'web_alert.show_alert_page_after_connect': NSLocalizedString("Open Alert URL After Connect", "Label"),
                       'server.settings_url': NSLocalizedString("Account Web Page", "Label"),

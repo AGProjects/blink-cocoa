@@ -18,7 +18,7 @@
             <rect key="frame" x="0.0" y="0.0" width="255" height="22"/>
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
             <subviews>
-                <button toolTip="Always On Top" verticalHuggingPriority="750" id="tMF-kV-QuI">
+                <button toolTip="Siempre Ariba" verticalHuggingPriority="750" id="tMF-kV-QuI">
                     <rect key="frame" x="215" y="0.0" width="15" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="layers" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="Uj9-rW-dVT">

@@ -135,7 +135,7 @@
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
                                         </button>
-                                        <progressIndicator hidden="YES" maxValue="10" indeterminate="YES" style="bar" id="NeG-y4-YZ2">
+                                        <progressIndicator hidden="YES" maxValue="5" indeterminate="YES" style="bar" id="NeG-y4-YZ2">
                                             <rect key="frame" x="2" y="7" width="466" height="20"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                         </progressIndicator>
@@ -164,10 +164,8 @@ DQ
                     <button verticalHuggingPriority="750" id="28">
                         <rect key="frame" x="162" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="29">
+                        <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="29">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <string key="title">Cancelar
-</string>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
 Gw
@@ -180,7 +178,7 @@ Gw
                     <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="hUZ-Wd-vg2">
                         <rect key="frame" x="18" y="49" width="480" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Right click on the preview image to change cameras" id="5Lj-eS-8EY">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Haga clic derecho sobre la imagen de vista previa para cambiar cámaras" id="5Lj-eS-8EY">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -253,10 +251,8 @@ Gw
                     <button verticalHuggingPriority="750" tag="1" id="133">
                         <rect key="frame" x="195" y="12" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="134">
+                        <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="134">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <string key="title">Cancelar
-</string>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
