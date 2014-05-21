@@ -31,7 +31,9 @@ from Foundation import (NSArray,
                         NSPointFromString,
                         NSString,
                         NSTextField,
-                        NSView)
+                        NSView,
+                        NSLocalizedString
+                        )
 
 from ContactListModel import presence_status_icons
 from util import allocate_autorelease_pool
@@ -509,7 +511,7 @@ class MapView(NSView):
             self.icons = {}
 
             labelView = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, frame.size.width, 14))
-            labelView.setStringValue_('Click on the device icons to start a session')
+            labelView.setStringValue_(NSLocalizedString("Click on the device icons to start a session", "Label"))
             labelView.cell().setFont_(NSFont.systemFontOfSize_(10))
             labelView.setBordered_(False)
             labelView.setEditable_(False)

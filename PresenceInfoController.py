@@ -90,9 +90,9 @@ class PresenceInfoController(NSObject):
             has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             count = len(self.contact.presence_state['devices'])
             if count == 1:
-                status_label = 'One device available'
+                status_label = NSLocalizedString("One device available", "Label")
             elif count > 1:
-                status_label = '%d devices available' % count
+                status_label = NSLocalizedString("%d devices available" % count, "Label")
 
         splitViewFrame = self.splitView.frame()
         mapViewFrame = self.mapViewSplitView.frame()
@@ -107,9 +107,9 @@ class PresenceInfoController(NSObject):
             self.mapView.setContact(self.contact)
             nr_countries = len(self.mapView.selectedCountries)
             if nr_countries == 1:
-                status_label += ' in one country'
+                status_label += status_label(" in one country", "Label")
             elif nr_countries > 1:
-                status_label += ' in %d countries' % nr_countries
+                status_label +=  NSLocalizedString(" in %d countries" % nr_countries, "Label")
         else:
             mapViewFrame.size.height = 0
             self.mapViewSplitView.setFrame_(mapViewFrame)
