@@ -156,7 +156,7 @@
                                             </tableHeaderView>
                                         </scrollView>
                                         <textField verticalHuggingPriority="750" tag="20" id="43">
-                                            <rect key="frame" x="314" y="392" width="121" height="17"/>
+                                            <rect key="frame" x="302" y="392" width="133" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="SIP Address:" id="44">
                                                 <font key="font" metaFont="system"/>
