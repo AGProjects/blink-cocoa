@@ -297,11 +297,11 @@ class AddContactController(NSObject):
 
         else:
             menu_item = self.groupPopUp.itemAtIndex_(index)
-            if menu_item.title() == "Select All":
+            if menu_item.title() == NSLocalizedString("Select All", "Menu item"):
                 self.belonging_groups = self.all_groups
-            elif menu_item.title() == "Deselect All":
+            elif menu_item.title() == NSLocalizedString("Deselect All", "Menu item"):
                 self.belonging_groups = []
-            elif menu_item.title() == "Add Group...":
+            elif menu_item.title() == NSLocalizedString("Add Group...", "Menu item"):
                 self.model.addGroup()
 
         self.loadGroupNames()
