@@ -267,7 +267,7 @@ CA
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="s0l-sF-xRK"/>
-                            <menuItem title="Dispositivos Video" tag="500" enabled="NO" id="mbW-k8-Lkd">
+                            <menuItem title="Dispositivos Vídeo" tag="500" enabled="NO" id="mbW-k8-Lkd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                         </items>
@@ -474,7 +474,7 @@ CA
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Mi Video" tag="50" keyEquivalent="7" id="3zb-2K-tHc">
+                            <menuItem title="Mi Vídeo" tag="50" keyEquivalent="7" id="3zb-2K-tHc">
                                 <connections>
                                     <action selector="toggleLocalVideoWindow:" target="389" id="QX9-kp-VaE"/>
                                 </connections>
@@ -994,7 +994,7 @@ ABC</string>
                                 <segment toolTip="Comenzar Llamada de Audio" image="audio" width="30">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Comenzar Videollamada" image="video" width="30" tag="1">
+                                <segment toolTip="Comenzar Vídeollamada" image="video" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Chat" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
@@ -1735,7 +1735,7 @@ ABC</string>
                         <action selector="userClickedParticipantMenu:" target="389" id="1588"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Comenzar Sesión de Video" tag="322" enabled="NO" indentationLevel="1" id="1574">
+                <menuItem title="Comenzar Sesión de Vídeo" tag="322" enabled="NO" indentationLevel="1" id="1574">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1589"/>

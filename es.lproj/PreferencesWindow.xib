@@ -423,7 +423,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="273"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Video" paletteLabel="Video" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
+                    <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>

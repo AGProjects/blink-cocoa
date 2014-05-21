@@ -315,7 +315,7 @@ Gw
                                     <menuItem title="Audio y Chat" tag="3" id="212">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
-                                    <menuItem title="Audio y Video" tag="4" id="cuH-m4-if2">
+                                    <menuItem title="Audio y Vídeo" tag="4" id="cuH-m4-if2">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                 </items>

@@ -182,7 +182,7 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="68"/>
-                <menuItem title="Agregar Video" tag="14" id="87">
+                <menuItem title="Agregar Vídeo" tag="14" id="87">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>

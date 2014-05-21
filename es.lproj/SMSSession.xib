@@ -52,7 +52,7 @@
                             <action selector="toolbarButtonClicked:" target="-2" id="134"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="9725AFF5-E990-41FC-A7FF-F45EEF5EAA99" explicitItemIdentifier="video" label="Video" paletteLabel="Video" tag="2" image="video" autovalidates="NO" id="E90-Cd-Ned">
+                    <toolbarItem implicitItemIdentifier="9725AFF5-E990-41FC-A7FF-F45EEF5EAA99" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" tag="2" image="video" autovalidates="NO" id="E90-Cd-Ned">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="mZ2-7b-jdj"/>
                         </connections>
