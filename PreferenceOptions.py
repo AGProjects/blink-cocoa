@@ -1690,7 +1690,7 @@ class ObjectTupleOption(Option):
 
 class STUNServerAddressListOption(ObjectTupleOption):
     def __init__(self, object, name, option, description=None):
-        ObjectTupleOption.__init__(self, object, name, option, [("Hostname or IP Address", 172), ("Port",50)], description)
+        ObjectTupleOption.__init__(self, object, name, option, [(NSLocalizedString("Hostname or IP Address", "Label"), 172), (NSLocalizedString("Port", "Label"),50)], description)
 
         self.table.tableColumnWithIdentifier_("0").dataCell().setPlaceholderString_(NSLocalizedString("Click to add", "Text placeholder"))
 
