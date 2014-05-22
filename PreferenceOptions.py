@@ -848,6 +848,13 @@ class PopUpMenuOption(Option):
               self.popup.addItemWithTitle_(value)
             self.popup.selectItemWithTitle_(value)
 
+class LanguagesOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, description=description, useRepresented=True)
+        for key in NSApp.delegate().supported_languages.keys():
+            self.popup.addItemWithTitle_(NSApp.delegate().supported_languages[key])
+            self.popup.lastItem().setRepresentedObject_(key)
+
 class SRTPEncryptionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, description=description)
@@ -1863,6 +1870,7 @@ PreferenceOptionTypes = {
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
 "file_transfer.render_incoming_video_in_chat_window": HiddenOption,
 "ldap.dn": NullableStringOption,
+"gui.language": LanguagesOption,
 "ldap.username": NullableStringOption,
 "logs.directory": HiddenOption,
 "logs.trace_xcap": HiddenOption,
@@ -1953,6 +1961,7 @@ SettingDescription = {
                       'screen_sharing_server.disabled': NSLocalizedString("Deny Requests for Sharing My Screen", "Label"),
                       'file_transfer.auto_accept': NSLocalizedString("Automatically Accept Files from Known Contacts", "Label"),
                       'file_transfer.disabled': NSLocalizedString("Disabled", "Label"),
+                      'gui.language': NSLocalizedString("Language", "Label"),
                       'gui.sync_with_icloud': NSLocalizedString("Sync with iCloud", "Label"),
                       'gui.extended_debug': NSLocalizedString("Extended Debug", "Label"),
                       'gui.use_default_web_browser_for_alerts': NSLocalizedString("Use Default Web Browser For Alerts", "Label"),

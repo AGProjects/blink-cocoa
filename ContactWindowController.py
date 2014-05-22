@@ -1464,6 +1464,12 @@ class ContactWindowController(NSWindowController):
             self.setSelectedInputAudioDeviceForLevelMeter()
             self.updateAudioDeviceLabel()
 
+        if notification.data.modified.has_key("gui.language"):
+            lang = None if settings.gui.language == "system_default" else settings.gui.language
+            NSUserDefaults.standardUserDefaults().setObject_forKey_(NSArray.arrayWithObjects_(lang), "AppleLanguages")
+            NSUserDefaults.standardUserDefaults().synchronize()
+            NSRunAlertPanel(NSLocalizedString("Restart Required", "Window title"), NSLocalizedString("You must restart the software to apply this change", "Label"), NSLocalizedString("OK", "Button title"), None, None)
+
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         if notification.sender == self.ldap_search:
             for type, uri in notification.data.uris:

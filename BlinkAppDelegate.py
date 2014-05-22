@@ -125,6 +125,12 @@ class BlinkAppDelegate(NSObject):
     chat_print_enabled = True
     pause_music_enabled = True
     about_image = 'about'
+    supported_languages = {
+                           "system_default": NSLocalizedString("System Default", "Menu item"),
+                           "en": NSLocalizedString("English", "Menu item"),
+                           "es": NSLocalizedString("Spanish", "Menu item"),
+                           "ro": NSLocalizedString("Romanian", "Menu item")
+                           }
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()

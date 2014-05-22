@@ -110,11 +110,13 @@ class GUISettings(SettingsGroup):
     idle_threshold = Setting(type=NonNegativeInteger, default=600)
     extended_debug = Setting(type=bool, default=False)
     rtt_threshold = Setting(type=NonNegativeInteger, default=200)
+    language = Setting(type=str, default='system_default', nillable=False)
 
 
 class RTPSettingsExtension(RTPSettings):
     audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
     video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264',)))
+
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
