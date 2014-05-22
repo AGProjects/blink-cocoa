@@ -131,6 +131,7 @@ class BlinkAppDelegate(NSObject):
                            "es": NSLocalizedString("Spanish", "Menu item"),
                            "ro": NSLocalizedString("Romanian", "Menu item")
                            }
+    statusbar_menu_icon = 'invisible'
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
