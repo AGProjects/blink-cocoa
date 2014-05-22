@@ -8,6 +8,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="BlinkAppDelegate">
             <connections>
                 <outlet property="aboutCopyright" destination="5" id="35"/>
+                <outlet property="aboutIcon" destination="22" id="e5z-hj-WvY"/>
                 <outlet property="aboutPanel" destination="1" id="12"/>
                 <outlet property="aboutSlogan" destination="26" id="33"/>
                 <outlet property="aboutVersion" destination="3" id="19"/>
@@ -48,7 +49,7 @@ January 6-th, 2010</string>
                     </textField>
                     <imageView id="22">
                         <rect key="frame" x="92" y="143" width="152" height="60"/>
-                        <autoresizingMask key="autoresizingMask"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="about" id="23"/>
                     </imageView>
                     <textField verticalHuggingPriority="750" id="26">

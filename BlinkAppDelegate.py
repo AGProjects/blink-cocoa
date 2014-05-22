@@ -5,6 +5,7 @@ from __future__ import with_statement
 
 from Foundation import (NSAppleEventManager,
                         NSBundle,
+                        NSArray,
                         NSDistributedNotificationCenter,
                         NSImage,
                         NSImageView,
@@ -80,6 +81,7 @@ class BlinkAppDelegate(NSObject):
     aboutVersion = objc.IBOutlet()
     aboutSlogan = objc.IBOutlet()
     aboutCopyright = objc.IBOutlet()
+    aboutIcon = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
     ui_notification_center = None
     application_will_end = False
@@ -122,6 +124,7 @@ class BlinkAppDelegate(NSObject):
     ldap_directory_enabled = True
     chat_print_enabled = True
     pause_music_enabled = True
+    about_image = 'about'
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -132,6 +135,7 @@ class BlinkAppDelegate(NSObject):
             date = str(NSBundle.mainBundle().infoDictionary().objectForKey_("BlinkVersionDate"))
 
             branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")
+
             try:
                 branding = __import__(branding_file)
             except ImportError:
@@ -413,6 +417,7 @@ class BlinkAppDelegate(NSObject):
             NSBundle.loadNibNamed_owner_("About", self)
             self.aboutVersion.setStringValue_(self.about_version)
             self.aboutSlogan.setStringValue_(self.about_slogan)
+            self.aboutIcon.setImage_(NSImage.imageNamed_(self.about_image))
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
