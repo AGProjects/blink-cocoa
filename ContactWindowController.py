@@ -2863,7 +2863,7 @@ class ContactWindowController(NSWindowController):
 
         note = settings.presence_state.note
         if note:
-            self.presenceNoteText.setStringValue_(note if note != on_the_phone_activity['note'] else '')
+            self.presenceNoteText.setStringValue_(note if note.lower() != on_the_phone_activity['note'] else '')
 
     def setLastPresenceActivity(self):
         settings = SIPSimpleSettings()
@@ -2904,7 +2904,10 @@ class ContactWindowController(NSWindowController):
         settings.presence_state.status = status
 
         note = object['note']
-        self.presenceNoteText.setStringValue_(note)
+        if note.lower() == on_the_phone_activity['note'].lower():
+            self.presenceNoteText.setStringValue_(on_the_phone_activity['localized_note'])
+        else:
+            self.presenceNoteText.setStringValue_(note)
         settings.presence_state.note = note
 
         settings.save()
@@ -2979,7 +2982,11 @@ class ContactWindowController(NSWindowController):
                     self.my_device_is_active = False
 
             if note != settings.presence_state.note:
-                self.presenceNoteText.setStringValue_(note)
+                if note.lower() == on_the_phone_activity['note'].lower():
+                    self.presenceNoteText.setStringValue_(on_the_phone_activity['localized_note'])
+                else:
+                    self.presenceNoteText.setStringValue_(note)
+
                 settings.presence_state.note = note
                 change = True
 
@@ -3022,6 +3029,9 @@ class ContactWindowController(NSWindowController):
     def presenceNoteChanged_(self, sender):
         settings = SIPSimpleSettings()
         presence_note = unicode(self.presenceNoteText.stringValue())
+
+        if presence_note == on_the_phone_activity['localized_note']:
+            presence_note = on_the_phone_activity['note']
 
         if settings.presence_state.note != presence_note:
             settings.presence_state.note = presence_note
@@ -3080,7 +3090,13 @@ class ContactWindowController(NSWindowController):
             settings.presence_state.status = status
 
         if presence_note is not None and settings.presence_state.note != presence_note:
-            self.presenceNoteText.setStringValue_(presence_note or '')
+            if presence_note:
+                if presence_note.lower() == on_the_phone_activity['note'].lower():
+                    self.presenceNoteText.setStringValue_(on_the_phone_activity['localized_note'])
+                else:
+                    self.presenceNoteText.setStringValue_(presence_note or '')
+            else:
+                self.presenceNoteText.setStringValue_('')
             settings.presence_state.note = presence_note
 
         settings.save()
@@ -3093,7 +3109,7 @@ class ContactWindowController(NSWindowController):
         if not object['note']:
             return
 
-        if object['note'] == on_the_phone_activity['note'] and object['title'] == on_the_phone_activity['history_title']:
+        if object['note'].lower() == on_the_phone_activity['note'].lower() and object['title'] == on_the_phone_activity['history_title']:
             return
         try:
             item = (item for item in PresenceActivityList if item['type'] == 'menu_item' and item['action'] == 'presenceActivityChanged:' and item['represented_object']['title'] == object['title'] and item['represented_object']['note'] == object['note']).next()
@@ -3135,7 +3151,7 @@ class ContactWindowController(NSWindowController):
             if hasAudio and current_presence_activity['extended_status'] == 'available':
                 i = self.presenceActivityPopUp.indexOfItemWithTitle_(on_the_phone_activity['title'])
                 self.presenceActivityPopUp.selectItemAtIndex_(i)
-                self.presenceNoteText.setStringValue_(on_the_phone_activity['note'])
+                self.presenceNoteText.setStringValue_(on_the_phone_activity['localized_note'])
                 self.presenceNoteChanged_(None)
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
                 self.setStatusBarIcon('busy')

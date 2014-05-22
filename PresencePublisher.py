@@ -41,7 +41,8 @@ bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.fra
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
 
 on_the_phone_activity = {'title': NSLocalizedString("Busy", "Menu item"),
-                         'note': NSLocalizedString("On the Phone", "Label"),
+                         'note': "On the Phone",
+                         'localized_note': NSLocalizedString("On the Phone", "Label"),
                          'history_title' : 'Busy'}
 
 PresenceActivityList = (
@@ -305,7 +306,7 @@ class PresencePublisher(object):
                     i = self.owner.presenceActivityPopUp.indexOfItemWithTitle_('Away')
                     self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
                     self.presenceStateBeforeIdle = activity_object
-                    self.presenceStateBeforeIdle['note'] = unicode(self.owner.presenceNoteText.stringValue())
+                    self.presenceStateBeforeIdle['note'] = unicode(settings.presence_state.note)
                 self.idle_mode = True
                 must_publish = True
         else:
@@ -381,7 +382,7 @@ class PresencePublisher(object):
         if account.presence.homepage is not None:
             service.homepage = cipid.Homepage(account.presence.homepage)
 
-        service.notes.add(unicode(self.owner.presenceNoteText.stringValue()))
+        service.notes.add(unicode(settings.presence_state.note))
         service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
             service.device_info.time_offset = pidf.TimeOffset()
@@ -466,7 +467,8 @@ class PresencePublisher(object):
             return
 
         status = None
-        note = self.owner.presenceNoteText.stringValue()
+        settings = SIPSimpleSettings()
+        note = settings.presence_state.note
         selected_item = self.owner.presenceActivityPopUp.selectedItem()
         if selected_item is not None:
             activity_object = selected_item.representedObject()

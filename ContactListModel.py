@@ -109,6 +109,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
+from PresencePublisher import on_the_phone_activity
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local
 
@@ -1390,6 +1391,9 @@ class BlinkPresenceContact(BlinkContact):
                 continue
 
             for note in device['notes']:
+                if note.lower() == on_the_phone_activity['note'].lower():
+                    note = on_the_phone_activity['localized_note']
+
                 presence_notes.append('%s %s' % (note, device['local_time']) if device['local_time'] is not None else note)
 
         local_times = []
@@ -1411,6 +1415,7 @@ class BlinkPresenceContact(BlinkContact):
                         self.presence_note = presence_notes[index+1]
                     except IndexError:
                         self.presence_note = presence_notes[0]
+
             detail = self.presence_note if self.presence_note else '%s (%s)' % (self.uri, self.uri_type)
         elif local_times:
             detail = '%s %s' % (self.uri, ",".join(local_times))
