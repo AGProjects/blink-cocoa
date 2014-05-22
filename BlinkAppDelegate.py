@@ -132,6 +132,7 @@ class BlinkAppDelegate(NSObject):
                            "ro": NSLocalizedString("Romanian", "Menu item")
                            }
     statusbar_menu_icon = 'invisible'
+    about_copyright = "Copyright 2009-2014 AG Projects B.V."
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -425,6 +426,7 @@ class BlinkAppDelegate(NSObject):
             self.aboutVersion.setStringValue_(self.about_version)
             self.aboutSlogan.setStringValue_(self.about_slogan)
             self.aboutIcon.setImage_(NSImage.imageNamed_(self.about_image))
+            self.aboutCopyright.setStringValue_(self.about_copyright)
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
