@@ -121,7 +121,7 @@
 							<object class="NSButtonCell" key="NSCell" id="1049385173">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">134217728</int>
-								<string type="base64-UTF8" key="NSContents">Q2FuY2VsYXIKA</string>
+								<string key="NSContents">Cancelar</string>
 								<reference key="NSSupport" ref="822251742"/>
 								<reference key="NSControlView" ref="639365092"/>
 								<int key="NSButtonFlags">-2038284288</int>
