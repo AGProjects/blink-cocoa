@@ -395,7 +395,7 @@
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </box>
-                    <box autoresizesSubviews="NO" title="Canel de Chat" borderType="line" id="92">
+                    <box autoresizesSubviews="NO" title="Canal de Chat" borderType="line" id="92">
                         <rect key="frame" x="4" y="6" width="306" height="84"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <view key="contentView">

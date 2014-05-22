@@ -38,6 +38,14 @@ def setup(delegate):
     delegate.chat_print_enabled = True
     delegate.pause_music_enabled = True
     delegate.account_extension = None
+    delegate.about_image = 'about'
+    delegate.supported_languages = {
+            "system_default": NSLocalizedString("System Default", "Menu item"),
+            "en": NSLocalizedString("English", "Menu item"),
+            "es": NSLocalizedString("Spanish", "Menu item"),
+            "ro": NSLocalizedString("Romanian", "Menu item")
+        }
+    delegate.statusbar_menu_icon = 'invisible'
 
 
 
