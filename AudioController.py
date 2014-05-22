@@ -186,7 +186,7 @@ class AudioController(MediaStream):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, sender=self.sessionController)
 
-        self.ice_negotiation_status = u'Disabled' if not self.sessionController.account.nat_traversal.use_ice else None
+        self.ice_negotiation_status = NSLocalizedString("Disabled", "Label") if not self.sessionController.account.nat_traversal.use_ice else None
 
         NSBundle.loadNibNamed_owner_("AudioSession", self)
 
