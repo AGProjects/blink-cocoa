@@ -178,7 +178,7 @@ Gw
                     <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="hUZ-Wd-vg2">
                         <rect key="frame" x="18" y="49" width="480" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Right click on the preview image to change cameras" id="5Lj-eS-8EY">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Clic dreapta pe imagine pentru a schimba camera" id="5Lj-eS-8EY">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
