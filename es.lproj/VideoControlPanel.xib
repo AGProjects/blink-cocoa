@@ -28,8 +28,8 @@
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
             <rect key="contentRect" x="579" y="75" width="526" height="49"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <value key="minSize" type="size" width="510" height="1"/>
-            <value key="maxSize" type="size" width="510" height="1"/>
+            <value key="minSize" type="size" width="526" height="49"/>
+            <value key="maxSize" type="size" width="526" height="49"/>
             <view key="contentView" focusRingType="none" id="ygh-EU-NlO">
                 <rect key="frame" x="0.0" y="0.0" width="526" height="49"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -134,7 +134,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1k3-Y3-vUH">
-                        <rect key="frame" x="460" y="18" width="31" height="27"/>
+                        <rect key="frame" x="460" y="18" width="46" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="ED1-Vw-AHb">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>

@@ -29,8 +29,8 @@
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="154" width="539" height="423"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
-            <value key="minSize" type="size" width="511" height="424"/>
-            <value key="maxSize" type="size" width="511" height="424"/>
+            <value key="minSize" type="size" width="539" height="424"/>
+            <value key="maxSize" type="size" width="539" height="424"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="539" height="423"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -141,7 +141,7 @@ Gw
                         </connections>
                     </button>
                     <button id="44">
-                        <rect key="frame" x="222" y="88" width="63" height="18"/>
+                        <rect key="frame" x="274" y="88" width="105" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Audio " bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="45">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -150,7 +150,7 @@ Gw
                         <accessibility description="Propune Audio"/>
                     </button>
                     <button id="46">
-                        <rect key="frame" x="162" y="88" width="56" height="18"/>
+                        <rect key="frame" x="162" y="88" width="108" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Text" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="47">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
