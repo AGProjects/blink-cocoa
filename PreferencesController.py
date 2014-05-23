@@ -640,9 +640,10 @@ class PreferencesController(NSWindowController, object):
                     self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Label") + " " + selected_account.failure_reason)
                     self.registration_status.setHidden_(False)
                 else:
-                    if selected_account.registration_state and selected_account.registration_state != 'ended':
-                        if selected_account.registrar and selected_account.registration_state == 'succeeded':
-                            self.registration_status.setStringValue_(NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s", "Network address follows") % selected_account.registrar)
+                    if selected_account.registration_state and selected_account.registration_state != NSLocalizedString("ended", "Label"):
+                        if selected_account.registrar and selected_account.registration_state == NSLocalizedString("succeeded", "Label"):
+                            label = NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s", "Network address follows") % selected_account.registrar
+                            self.registration_status.setStringValue_(label)
                             self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
                             if selected_account.registrar.startswith('tls:'):
                                 frame.origin.x = 312
@@ -889,13 +890,13 @@ class PreferencesController(NSWindowController, object):
             if not account_info.account.enabled:
                 cell.setImage_(None)
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration disabled", "Accesibility text"), NSAccessibilityTitleAttribute)
-            elif account_info.registration_state == 'succeeded':
+            elif account_info.registration_state == NSLocalizedString("succeeded", "Label"):
                 cell.setImage_(self.dots["green"])
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration succeeded", "Accesibility text"), NSAccessibilityTitleAttribute)
-            elif account_info.registration_state == 'started':
+            elif account_info.registration_state == NSLocalizedString("started", "Label"):
                 cell.setImage_(self.dots["yellow"])
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration started", "Accesibility text"), NSAccessibilityTitleAttribute)
-            elif account_info.registration_state == 'failed':
+            elif account_info.registration_state == NSLocalizedString("failed", "Label"):
                 cell.setImage_(self.dots["red"])
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration failed", "Accesibility text"), NSAccessibilityTitleAttribute)
             else:
