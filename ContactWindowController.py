@@ -3296,7 +3296,6 @@ class ContactWindowController(NSWindowController):
             status = 'busy'
 
         #icon = NSImage.imageNamed_(status)
-        print NSApp.delegate().statusbar_menu_icon
         icon = NSImage.imageNamed_(NSApp.delegate().statusbar_menu_icon)
         icon.setScalesWhenResized_(True)
         icon.setSize_(NSMakeSize(18,18))
