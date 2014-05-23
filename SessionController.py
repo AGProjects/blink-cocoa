@@ -137,7 +137,7 @@ class SessionControllersManager(object):
 
     @property
     def connectedVideoSessions(self):
-        return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("video") and sess.state == STATE_CONNECTED)
+        return list(sess.session for sess in self.sessionControllers if sess.hasStreamOfType("video") and sess.state == STATE_CONNECTED)
 
     @property
     def dndSessions(self):

@@ -602,7 +602,7 @@ class ContactWindowController(NSWindowController):
 
     def rotateCamera_(self, timer):
         settings = SIPSimpleSettings()
-        if settings.video.auto_rotate_cameras and self.sessionControllersManager.connectedVideoSessions:
+        if settings.video.auto_rotate_cameras and len(self.sessionControllersManager.connectedVideoSessions):
             devices = list(device for device in self.backend._app.engine.video_devices if device not in ('system_default', None))
             try:
                 idx = devices.index(self.backend._app.video_device.real_name)
