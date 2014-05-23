@@ -107,7 +107,7 @@ class PresenceInfoController(NSObject):
             self.mapView.setContact(self.contact)
             nr_countries = len(self.mapView.selectedCountries)
             if nr_countries == 1:
-                status_label += status_label(" in one country", "Label")
+                status_label += NSLocalizedString(" in one country", "Label")
             elif nr_countries > 1:
                 status_label +=  NSLocalizedString(" in %d countries" % nr_countries, "Label")
         else:
