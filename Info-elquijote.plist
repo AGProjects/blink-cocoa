@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>May 21st, 2014</string>
+	<string>24 de mayo 2014</string>
 	<key>BrandingFile</key>
 	<string>branding-elquijote</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -44,7 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>13553</string>
+	<string>13667</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>NSMainNibFile</key>
