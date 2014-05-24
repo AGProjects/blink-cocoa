@@ -7,6 +7,8 @@ from AppKit import (NSApp,
                     NSView,
                     NSOnState,
                     NSOffState,
+                    NSMenu,
+                    NSMenuItem,
                     NSWindowController,
                     NSEventTrackingRunLoopMode,
                     NSFloatingWindowLevel,
@@ -18,13 +20,16 @@ from AppKit import (NSApp,
                     NSDragOperationNone,
                     NSDragOperationCopy,
                     NSDeviceIsScreen,
-                    NSZeroPoint
+                    NSZeroPoint,
+                    NSRightMouseUp
                     )
 
 from Foundation import (NSBundle,
                         NSObject,
                         NSArray,
                         NSImage,
+                        NSDate,
+                        NSEvent,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSTimer,
@@ -219,6 +224,24 @@ class VideoWindowController(NSWindowController):
             self.sessionController.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
             return True
         return False
+
+    def rightMouseDown_(self, event):
+        point = self.window.convertScreenToBase_(NSEvent.mouseLocation())
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+          NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window.windowNumber(),
+          self.window.graphicsContext(), 0, 1, 0)
+
+        menu = NSMenu.alloc().init()
+        menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "removeVideo:", "")
+        menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hangup", "Menu item"), "hangup:", "")
+
+        NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window.contentView())
+
+    def removeVideo_(self, sender):
+        self.streamController.sessionController.removeVideoFromSession()
+
+    def hangup_(self, sender):
+        self.streamController.sessionController.end()
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
@@ -592,10 +615,5 @@ class TitleBarView(NSObject):
         elif not self.windowController.always_on_top and sender.state() == NSOnState:
             self.windowController.toogleAlwaysOnTop()
         self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
-
-
-
-
-
 
 
