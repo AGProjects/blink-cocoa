@@ -239,7 +239,6 @@
 		1F2747D51388FC5C0052C384 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
 		1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
-		1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F27973815D24F6200FB33D9 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
 		1F27973A15D24F8800FB33D9 /* libgnutls-extra.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
@@ -251,7 +250,6 @@
 		1F27974015D2996200FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
 		1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
-		1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F29D0EC1905BD670051B1BC /* sip2sip.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0EB1905BD670051B1BC /* sip2sip.icns */; };
 		1F29D0FD1906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
 		1F29D0FE1906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
@@ -492,7 +490,6 @@
 		1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
-		1F35D06D17894FFF00C6FE38 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F35D06F17894FFF00C6FE38 /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
 		1F35D07017894FFF00C6FE38 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
 		1F35D07117894FFF00C6FE38 /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
@@ -723,7 +720,6 @@
 		1F8A7630138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7631138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8A7632138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
@@ -1326,7 +1322,6 @@
 		1FC80F1E192E3E1F00BD62F4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1FC80F1F192E3E1F00BD62F4 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
 		1FC80F20192E3E1F00BD62F4 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
-		1FC80F21192E3E1F00BD62F4 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8AD21E1387E18B009DF787 /* QTKit.framework */; };
 		1FC80F23192E3E1F00BD62F4 /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
 		1FC80F24192E3E1F00BD62F4 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
 		1FC80F25192E3E1F00BD62F4 /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
@@ -2481,7 +2476,6 @@
 		1F87B6EE1477D57000BDF25A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
 		1F88639815D6F62B00373743 /* PresencePublisher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePublisher.py; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
-		1F8AD21E1387E18B009DF787 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
@@ -2767,7 +2761,6 @@
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
-				1F8AD21F1387E18B009DF787 /* QTKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2784,7 +2777,6 @@
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
-				1F35D06D17894FFF00C6FE38 /* QTKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2798,7 +2790,6 @@
 				1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
-				1F27974315D2997F00FB33D9 /* QTKit.framework in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2815,7 +2806,6 @@
 				1FC80F1E192E3E1F00BD62F4 /* Cocoa.framework in Frameworks */,
 				1FC80F1F192E3E1F00BD62F4 /* Security.framework in Frameworks */,
 				1FC80F20192E3E1F00BD62F4 /* Carbon.framework in Frameworks */,
-				1FC80F21192E3E1F00BD62F4 /* QTKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2829,7 +2819,6 @@
 				1F6EF80E18E64FEB008592D2 /* OpenGL.framework in Frameworks */,
 				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
 				1FD066BA17537FF600957876 /* libpython2.7.dylib in Frameworks */,
-				1F27973715D24ED000FB33D9 /* QTKit.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
@@ -3103,7 +3092,6 @@
 				1F0F2AA215456DAD00ECB98E /* CoreData.framework */,
 				1F27973315D24E3500FB33D9 /* Carbon.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
-				1F8AD21E1387E18B009DF787 /* QTKit.framework */,
 				DE3AC1CA174F7F57009A6CE3 /* Python.framework */,
 				1F27973115D24E2C00FB33D9 /* Security.framework */,
 			);

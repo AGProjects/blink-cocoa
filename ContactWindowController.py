@@ -75,7 +75,6 @@ from Foundation import (NSArray,
                         NSZeroPoint,
                         NSZeroRect)
 import objc
-import QTKit
 
 import cPickle
 import datetime
@@ -513,15 +512,6 @@ class ContactWindowController(NSWindowController):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSDefaultRunLoopMode)
 
-        self.audioLevelTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "updateAudioLevels:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.audioLevelTimer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.audioLevelTimer, NSDefaultRunLoopMode)
-        self.audioInputSessionForLevelMeter = QTKit.QTCaptureSession.alloc().init()
-        self.audioDeviceInputForLevelMeter = None
-        self.audioPreviewOutputForLevelMeter = QTKit.QTCaptureAudioPreviewOutput.alloc().init()
-        self.audioPreviewOutputForLevelMeter.setVolume_(0.0)
-        self.audioInputSessionForLevelMeter.addOutput_error_(self.audioPreviewOutputForLevelMeter, None)
-
         self.last_calls_submenu = NSMenu.alloc().init()
         self.last_calls_submenu.setAutoenablesItems_(False)
 
@@ -559,47 +549,6 @@ class ContactWindowController(NSWindowController):
                 break
         return has_audio
 
-    def closeAudioInputDeviceForLevelMeter(self):
-        if self.audioDeviceInputForLevelMeter:
-            self.audioInputSessionForLevelMeter.removeInput_(self.audioDeviceInputForLevelMeter)
-            self.audioDeviceInputForLevelMeter.device().close()
-            self.audioDeviceInputForLevelMeter = None
-
-    @run_in_gui_thread
-    def setSelectedInputAudioDeviceForLevelMeter(self):
-        if self.audioInputSessionForLevelMeter.isRunning():
-            self.audioInputSessionForLevelMeter.stopRunning()
-
-        self.closeAudioInputDeviceForLevelMeter()
-
-        settings = SIPSimpleSettings()
-        input_device = settings.audio.input_device
-        if input_device is None:
-            return
-
-        audioDevices = NSArray.alloc().initWithArray_(QTKit.QTCaptureDevice.inputDevicesWithMediaType_(QTKit.QTMediaTypeSound))
-        if input_device == 'system_default':
-            selectedAudioDevice = QTKit.QTCaptureDevice.defaultInputDeviceWithMediaType_(QTKit.QTMediaTypeSound)
-        else:
-            try:
-                selectedAudioDevice = (device for device in audioDevices if unicode(device).startswith(input_device)).next()
-            except StopIteration:
-                selectedAudioDevice = None
-
-        if selectedAudioDevice is None:
-            return
-
-        success, error = selectedAudioDevice.open_(None)
-        if not success:
-            return
-
-        self.audioDeviceInputForLevelMeter = QTKit.QTCaptureDeviceInput.alloc().initWithDevice_(selectedAudioDevice)
-        success, error = self.audioInputSessionForLevelMeter.addInput_error_(self.audioDeviceInputForLevelMeter, None)
-        if not success:
-            self.audioDeviceInputForLevelMeter = None
-            selectedAudioDevice.close()
-            return
-
     def rotateCamera_(self, timer):
         settings = SIPSimpleSettings()
         if settings.video.auto_rotate_cameras and len(self.sessionControllersManager.connectedVideoSessions):
@@ -616,41 +565,6 @@ class ContactWindowController(NSWindowController):
 
                 settings.video.device = new_device
                 settings.save()
-
-    def updateAudioLevels_(self, timer):
-        if self.audioDeviceInputForLevelMeter is None:
-            return
-
-        if self.has_audio:
-            if not self.audioInputSessionForLevelMeter.isRunning():
-                self.audioInputSessionForLevelMeter.startRunning()
-        else:
-            if self.audioInputSessionForLevelMeter.isRunning():
-                self.audioInputSessionForLevelMeter.stopRunning()
-
-        totalDecibels = 0.0
-        numberOfPowerLevels = 0
-
-        connection = self.audioPreviewOutputForLevelMeter.connections()[0]
-        powerLevels = connection.attributeForKey_(QTKit.QTCaptureConnectionAudioAveragePowerLevelsAttribute)
-
-        j = 0
-        while j < powerLevels.count():
-            decibels = powerLevels.objectAtIndex_(j)
-            totalDecibels += decibels.floatValue()
-            numberOfPowerLevels += 1
-            j += 1
-
-        if numberOfPowerLevels > 0:
-            self.micLevelIndicator.setFloatValue_(pow(10.0, 0.05 * (totalDecibels / numberOfPowerLevels)) * 20.0)
-            if self.chatWindowController is not None:
-                self.chatWindowController.micLevelIndicator.setFloatValue_(pow(10.0, 0.05 * (totalDecibels / numberOfPowerLevels)) * 20.0)
-
-        else:
-            self.micLevelIndicator.setFloatValue_(0)
-            if self.chatWindowController is not None:
-                self.chatWindowController.micLevelIndicator.setFloatValue_(0)
-
 
     def fillPresenceMenu(self, presenceMenu):
         if presenceMenu == self.presenceMenu:
@@ -1298,11 +1212,8 @@ class ContactWindowController(NSWindowController):
         else:
             self.menuWillOpen_(self.devicesMenu)
 
-        self.setSelectedInputAudioDeviceForLevelMeter()
-
     def _NH_DefaultAudioDeviceDidChange(self, notification):
         self.menuWillOpen_(self.devicesMenu)
-        self.setSelectedInputAudioDeviceForLevelMeter()
 
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
@@ -1313,15 +1224,6 @@ class ContactWindowController(NSWindowController):
             self.updateAudioButtons()
 
     def _NH_SIPApplicationWillEnd(self, notification):
-        self.closeAudioInputDeviceForLevelMeter()
-        self.audioInputSessionForLevelMeter.removeOutput_(self.audioPreviewOutputForLevelMeter)
-        self.audioPreviewOutputForLevelMeter = None
-
-        if self.audioInputSessionForLevelMeter.isRunning():
-            self.audioInputSessionForLevelMeter.stopRunning()
-            self.audioInputSessionForLevelMeter = None
-
-        self.audioLevelTimer.invalidate()
         self.conference_timer.invalidate()
         if self.localVideoWindow:
             self.localVideoWindow.close()
@@ -1342,7 +1244,6 @@ class ContactWindowController(NSWindowController):
         self.callPendingURIs()
         self.refreshLdapDirectory()
         self.updateHistoryMenu()
-        self.setSelectedInputAudioDeviceForLevelMeter()
         self.updateAudioDeviceLabel()
         self.removePresenceContactForOurselves()
         self.fileTransfersWindow = FileTransferWindowController()
@@ -1457,11 +1358,9 @@ class ContactWindowController(NSWindowController):
             self.loadUserIcon()
 
         if notification.data.modified.has_key("audio.input_device"):
-            self.setSelectedInputAudioDeviceForLevelMeter()
             self.updateAudioDeviceLabel()
 
         if notification.data.modified.has_key("audio.output_device"):
-            self.setSelectedInputAudioDeviceForLevelMeter()
             self.updateAudioDeviceLabel()
 
         if notification.data.modified.has_key("gui.language"):
