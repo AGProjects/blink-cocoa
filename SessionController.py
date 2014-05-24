@@ -1856,6 +1856,9 @@ class SessionController(NSObject):
             log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 
+    def _NH_SIPSessionDidChangeHoldState(self, session, data):
+        self.notification_center.post_notification("BlinkSessionDidChangeHoldState", sender=self, data=data)
+
     def _NH_SIPSessionNewProposal(self, session, data):
         self.inProposal = True
         self.proposalOriginator = data.originator

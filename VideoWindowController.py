@@ -87,7 +87,7 @@ class VideoWindowController(NSWindowController):
     def __init__(self, streamController):
         self.streamController = streamController
         self.sessionController.log_debug('Init %s' % self)
-        self.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.getTitleShort()
+        self.title = self.sessionController.getTitleShort()
         self.videoControlPanel = VideoControlPanel(self)
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)

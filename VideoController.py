@@ -345,6 +345,13 @@ class VideoController(MediaStream):
             elif data.state == 'FAILED':
                 label.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"), True)
 
+    @run_in_gui_thread
+    def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
+        if data.on_hold:
+            self.videoWindowController.window.setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
+        else:
+            self.videoWindowController.window.setTitle_(self.videoWindowController.title)
+
     def _NH_MediaStreamDidStart(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
         self.started = True
