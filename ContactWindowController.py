@@ -4627,7 +4627,6 @@ class ContactWindowController(NSWindowController):
 
             else:
                 # Contact has a single URI
-
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
                     if self.sessionControllersManager.isMediaTypeSupported('video'):
@@ -4637,33 +4636,33 @@ class ContactWindowController(NSWindowController):
                         if item not in self.model.bonjour_group.contacts:
                             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "sendSMSToSelected:", "")
                             sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
-                    if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
+
                         if has_fully_qualified_sip_uri:
                             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
                             #aor_supports_chat = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
                             chat_item.setEnabled_(True)
 
-                    if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
-                        if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
-                            if has_fully_qualified_sip_uri:
-                                ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Menu item"), "sendFile:", "")
-                                #aor_supports_ft = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
-                                ft_item.setEnabled_(True)
+                    if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+                        if has_fully_qualified_sip_uri:
+                            ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Menu item"), "sendFile:", "")
+                            #aor_supports_ft = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])
+                            ft_item.setEnabled_(True)
 
-                        if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
-                            contact = item.name
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "startScreenSharing:", "")
-                            mitem.setTag_(1)
-                            mitem.setEnabled_(has_fully_qualified_sip_uri)
-                            mitem.setRepresentedObject_(item.uri)
-                            #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
-                            mitem.setEnabled_(True)
-                        if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "startScreenSharing:", "")
-                            mitem.setTag_(2)
-                            mitem.setRepresentedObject_(item.uri)
-                            #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
-                            mitem.setEnabled_(True)
+                    if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
+                        contact = item.name
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "startScreenSharing:", "")
+                        mitem.setTag_(1)
+                        mitem.setEnabled_(has_fully_qualified_sip_uri)
+                        mitem.setRepresentedObject_(item.uri)
+                        #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
+                        mitem.setEnabled_(True)
+
+                    if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "startScreenSharing:", "")
+                        mitem.setTag_(2)
+                        mitem.setRepresentedObject_(item.uri)
+                        #aor_supports_ds = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
+                        mitem.setEnabled_(True)
 
             if isinstance(item, BlinkPresenceContact):
                 if item not in self.model.bonjour_group.contacts:
@@ -4785,6 +4784,10 @@ class ContactWindowController(NSWindowController):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Edit in Address Book...", "Menu item"), "editContact:", "")
                 lastItem.setRepresentedObject_(item)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Menu item"), "createPresenceContactFromOtherContact:", "")
+                lastItem.setRepresentedObject_(item)
+            elif isinstance(item, SearchResultContact):
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Menu item"), "createPresenceContactFromOtherContact:", "")
                 lastItem.setRepresentedObject_(item)
             elif isinstance(item, LdapSearchResultContact):
@@ -5061,12 +5064,13 @@ class ContactWindowController(NSWindowController):
             except IndexError:
                 pass
             else:
-                aor_supports_screen_sharing_client = False
-                aor_supports_screen_sharing_server = False
+                # TODO: use presence for this ?
+                aor_supports_screen_sharing_client = is_sip_aor_format(contact.uri)
+                aor_supports_screen_sharing_server = is_sip_aor_format(contact.uri)
                 if isinstance(contact, BlinkPresenceContact):
                     settings = SIPSimpleSettings()
-                    aor_supports_screen_sharing_server = any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
-                    aor_supports_screen_sharing_client =  any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
+                    #aor_supports_screen_sharing_server = any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
+                    #aor_supports_screen_sharing_client =  any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % contact.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
                 elif isinstance(contact, BonjourBlinkContact):
                     aor_supports_screen_sharing_client = True
                     aor_supports_screen_sharing_server = True
