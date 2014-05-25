@@ -341,7 +341,7 @@ class BlinkAppDelegate(NSObject):
 
     def killSelfAfterTimeout_(self, arg):
         time.sleep(5)
-        BlinkLogger().log_info(u"Forcing termination of apparently hanged Blink process")
+        BlinkLogger().log_info(u"Forcing termination of apparently hanged process")
         os._exit(1)
 
     def applicationShouldTerminate_(self, sender):

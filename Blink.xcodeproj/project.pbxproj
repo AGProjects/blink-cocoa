@@ -614,6 +614,10 @@
 		1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
 		1F5677C11323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
 		1F5677C21323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
+		1F58A9CF19321E5000460853 /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
+		1F58A9D019321E8500460853 /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
+		1F58A9D119321ECB00460853 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
+		1F58A9D219321F4F00460853 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1F5BC16717E5FE7300D1D8BE /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
 		1F5BC25D17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
 		1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
@@ -2142,6 +2146,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F58A9D119321ECB00460853 /* Sparkle.framework in Copy Frameworks */,
 				1FC80F5A192E3E1F00BD62F4 /* libavcodec.55.dylib in Copy Frameworks */,
 				1FC80F5B192E3E1F00BD62F4 /* libavformat.55.dylib in Copy Frameworks */,
 				1FC80F5C192E3E1F00BD62F4 /* libavutil.52.dylib in Copy Frameworks */,
@@ -2805,6 +2810,7 @@
 				1FC80F1D192E3E1F00BD62F4 /* libpython2.7.dylib in Frameworks */,
 				1FC80F1E192E3E1F00BD62F4 /* Cocoa.framework in Frameworks */,
 				1FC80F1F192E3E1F00BD62F4 /* Security.framework in Frameworks */,
+				1F58A9D219321F4F00460853 /* Sparkle.framework in Frameworks */,
 				1FC80F20192E3E1F00BD62F4 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3687,8 +3693,11 @@
 					1FC80E0C192E3E1F00BD62F4 = {
 						DevelopmentTeam = JWAQD9C3CU;
 						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
 							com.apple.iCloud = {
-								enabled = 1;
+								enabled = 0;
 							};
 						};
 					};
@@ -4545,6 +4554,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F58A9CF19321E5000460853 /* Updater.py in Resources */,
 				1FC80E0E192E3E1F00BD62F4 /* ContactWindowController.py in Resources */,
 				1FC80F6F192E406B00BD62F4 /* ElQuijote.entitlements in Resources */,
 				1FC80E0F192E3E1F00BD62F4 /* ContactCell.py in Resources */,
@@ -4569,6 +4579,7 @@
 				1FC80E22192E3E1F00BD62F4 /* pause.png in Resources */,
 				1FC80E23192E3E1F00BD62F4 /* BlinkLogger.py in Resources */,
 				1FC80E24192E3E1F00BD62F4 /* mute.png in Resources */,
+				1F58A9D019321E8500460853 /* Updater.xib in Resources */,
 				1FC80E25192E3E1F00BD62F4 /* paused.png in Resources */,
 				1FC80E26192E3E1F00BD62F4 /* PreferencesController.py in Resources */,
 				1FC80E27192E3E1F00BD62F4 /* file_received.wav in Resources */,
@@ -5709,7 +5720,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = "";
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -5749,7 +5760,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -5863,17 +5874,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = ElQuijote.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"/System/Library/Frameworks\"",
+					/System/Library/Frameworks,
 					"$(inherited)",
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -5891,8 +5902,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "El Quijote";
-				PROVISIONING_PROFILE = "B832E9E3-0533-4629-BB25-B6F22635450A";
-				SDKROOT = macosx10.7;
+				PROVISIONING_PROFILE = "";
+				SDKROOT = macosx10.8;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -5903,17 +5914,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CODE_SIGN_ENTITLEMENTS = ElQuijote.entitlements;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: Aspery Corporation S.A. (JWAQD9C3CU)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application: Aspery Corporation S.A. (JWAQD9C3CU)";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"/System/Library/Frameworks\"",
+					/System/Library/Frameworks,
 					"$(inherited)",
-					"\"$(SRCROOT)\"",
+					"$(SRCROOT)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				GCC_MODEL_TUNING = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -5930,8 +5941,8 @@
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "El Quijote";
-				PROVISIONING_PROFILE = "63ADE081-D763-45A8-83CD-8A806C01E2E7";
-				SDKROOT = macosx10.7;
+				PROVISIONING_PROFILE = "";
+				SDKROOT = macosx10.8;
 				VALID_ARCHS = "i386 x86_64";
 				WRAPPER_EXTENSION = app;
 			};

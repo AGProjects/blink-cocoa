@@ -44,7 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>13667</string>
+	<string>1.0.0</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>NSMainNibFile</key>
@@ -53,5 +53,7 @@
 	<string>NSApplication</string>
 	<key>NSUbiquitousDisplaySet</key>
 	<string>org.aspery.elquijote</string>
+	<key>SUFeedURL</key>
+	<string>https://blink.sipthor.net/ElQuijoteAppcast.xml</string>
 </dict>
 </plist>

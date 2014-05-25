@@ -47,5 +47,3 @@ def setup(delegate):
         }
     delegate.statusbar_menu_icon = 'invisible'
 
-
-
