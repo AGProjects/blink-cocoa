@@ -432,6 +432,7 @@ class SIPManager(object):
         _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, _version)
         BlinkLogger().log_info(u"SIP User Agent: %s" % settings.user_agent)
+        settings.save()
 
         self.migratePasswordsToKeychain()
         self.cleanupIcons()
