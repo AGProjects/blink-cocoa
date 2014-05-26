@@ -1949,6 +1949,7 @@ SettingDescription = {
                       'chat.replication_password': NSLocalizedString("Replication Password", "Label"),
                       'chat.disabled': NSLocalizedString("Disabled", "Label"),
                       'chat.disable_history': NSLocalizedString("Disable History", "Label"),
+                      'chat.enable_sms': NSLocalizedString("Enable SMS", "Label"),
                       'contacts.enable_address_book': NSLocalizedString("Show Address Book", "Label"),
                       'contacts.enable_incoming_calls_group': NSLocalizedString("Show Incoming Calls", "Label"),
                       'contacts.enable_missed_calls_group': NSLocalizedString("Show Missed Calls", "Label"),
@@ -2078,7 +2079,7 @@ SectionNames = {
 GeneralSettingsOrder = {
                        'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
-                       'chat': ['disabled'],
+                       'chat': ['disabled', 'enable_sms'],
                        'video': ['device', 'resolution'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],

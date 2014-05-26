@@ -1625,7 +1625,7 @@ class ContactWindowController(NSWindowController):
 
         self.actionButtons.setEnabled_forSegment_(audioOk, 0)
         self.actionButtons.setEnabled_forSegment_(videoOk and self.sessionControllersManager.isMediaTypeSupported('video'), 1)
-        self.actionButtons.setEnabled_forSegment_(chatOk and self.sessionControllersManager.isMediaTypeSupported('chat'), 2)
+        self.actionButtons.setEnabled_forSegment_(chatOk, 2)
         self.actionButtons.setEnabled_forSegment_(screenOk, 3)
 
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
@@ -2397,6 +2397,9 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def sendSMSToSelected_(self, sender):
         uri = sender.representedObject()
+        self.sendSMSToURI(uri)
+
+    def sendSMSToURI(self, uri=None):
         account = self.activeAccount()
         if not account:
             NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
@@ -2525,12 +2528,21 @@ class ContactWindowController(NSWindowController):
                 media_type=("video", "audio")
             elif sender.selectedSegment() == 2:
                 # IM button
-                point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
-                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                                sender.window().graphicsContext(), 0, 1, 0)
-                NSMenu.popUpContextMenu_withEvent_forView_(self.chatMenu, event, sender)
+                if self.sessionControllersManager.isMediaTypeSupported('chat') and self.sessionControllersManager.isMediaTypeSupported('sms'):
+                    point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
+                    event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                                    NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                                    sender.window().graphicsContext(), 0, 1, 0)
+                    NSMenu.popUpContextMenu_withEvent_forView_(self.chatMenu, event, sender)
+                    return
+                elif self.sessionControllersManager.isMediaTypeSupported('chat'):
+                    self.startSessionToSelectedContact("chat")
+                elif self.sessionControllersManager.isMediaTypeSupported('sms'):
+                    no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
+                    if not no_contact_selected:
+                        self.sendSMSToURI(None)
                 return
+
             elif sender.selectedSegment() == 3:
                 # DS button
                 point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
@@ -3417,7 +3429,7 @@ class ContactWindowController(NSWindowController):
                 item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "sendSMSToSelected:", "")
-            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('chat'))
+            item.setEnabled_(not (isinstance(account, BonjourAccount) or contact in self.model.bonjour_group.contacts) and self.sessionControllersManager.isMediaTypeSupported('sms'))
 
     def updateGroupMenu(self):
         while self.groupMenu.numberOfItems() > 0:
@@ -4297,23 +4309,24 @@ class ContactWindowController(NSWindowController):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
 
-                sms_submenu = NSMenu.alloc().init()
-                sms_submenu.setAutoenablesItems_(False)
-                for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
-                    if uri.type is not None and uri.type.lower() == 'url':
-                        continue
+                if self.sessionControllersManager.isMediaTypeSupported('sms'):
+                    sms_submenu = NSMenu.alloc().init()
+                    sms_submenu.setAutoenablesItems_(False)
+                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
+                        if uri.type is not None and uri.type.lower() == 'url':
+                            continue
 
-                    sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
-                    target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
-                    sms_item.setRepresentedObject_(target_uri)
-                    if isinstance(item, BlinkPresenceContact):
-                        status = presence_status_for_contact(item, uri.uri) or 'offline'
-                        icon = self.presence_dots[status]
-                        icon.setScalesWhenResized_(True)
-                        icon.setSize_(NSMakeSize(15,15))
-                        sms_item.setImage_(icon)
-                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "", "")
-                self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
+                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
+                        target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
+                        sms_item.setRepresentedObject_(target_uri)
+                        if isinstance(item, BlinkPresenceContact):
+                            status = presence_status_for_contact(item, uri.uri) or 'offline'
+                            icon = self.presence_dots[status]
+                            icon.setScalesWhenResized_(True)
+                            icon.setSize_(NSMakeSize(15,15))
+                            sms_item.setImage_(icon)
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
                     chat_submenu = NSMenu.alloc().init()
@@ -4531,11 +4544,12 @@ class ContactWindowController(NSWindowController):
                     if self.sessionControllersManager.isMediaTypeSupported('video'):
                         video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
 
-                    if self.sessionControllersManager.isMediaTypeSupported('chat'):
+                    if self.sessionControllersManager.isMediaTypeSupported('sms'):
                         if item not in self.model.bonjour_group.contacts:
                             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "sendSMSToSelected:", "")
                             sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
 
+                    if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_fully_qualified_sip_uri:
                             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
                             #aor_supports_chat = isinstance(item, BonjourBlinkContact) or any(device for device in item.presence_state['devices'].values() if 'sip:%s' % item.uri in device['aor'] and 'chat' in device['caps'])

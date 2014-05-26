@@ -587,6 +587,9 @@ class SessionControllersManager(object):
             BlinkLogger().log_info(u"Chat sessions are disabled")
             return False
 
+        if type == 'sms':
+            return settings.chat.enable_sms
+
         if type == 'video':
             return bool(settings.video.device)
 

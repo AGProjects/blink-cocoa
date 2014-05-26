@@ -56,6 +56,7 @@ class VideoSettingsExtension(VideoSettings):
     h264 = H264SettingsExtension
     auto_rotate_cameras = Setting(type=bool, default=True)
 
+
 class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
     disabled = Setting(type=bool, default=False)
@@ -63,6 +64,7 @@ class ChatSettingsExtension(ChatSettings):
     disable_history = Setting(type=bool, default=False)
     enable_encryption = Setting(type=bool, default=True)
     font_size = Setting(type=int, default=0)
+    enable_sms = Setting(type=bool, default=False)
 
 
 class ScreenSharingSettingsExtension(ScreenSharingSettings):
