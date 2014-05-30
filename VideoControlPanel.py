@@ -23,14 +23,21 @@ from Foundation import (NSString,
                         NSView,
                         NSTrackingArea,
                         NSZeroRect,
-                        NSDictionary
+                        NSDictionary,
+                        NSTask,
+                        NSDownloadsDirectory,
+                        NSSearchPathForDirectoriesInDomains,
+                        NSUserDomainMask
                         )
+
 
 from Quartz import kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
 
 
 import objc
 import time
+import unicodedata
+import os
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
@@ -61,6 +68,7 @@ class VideoControlPanel(NSWindowController):
     aspectButton = objc.IBOutlet()
     contactsButton = objc.IBOutlet()
     fullscreenButton = objc.IBOutlet()
+    screenshotButton = objc.IBOutlet()
     myvideoButton = objc.IBOutlet()
     pauseButton = objc.IBOutlet()
     toolbarView = objc.IBOutlet()
@@ -354,4 +362,20 @@ class VideoControlPanel(NSWindowController):
     def userClickedMyVideoButton_(self, sender):
         NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
 
+    @objc.IBAction
+    def userClickedScreenshotButton_(self, sender):
+        download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
+        filename = '%s/Screencapture.png' % download_folder
+        basename, ext = os.path.splitext(filename)
+        i = 1
+        while os.path.exists(filename):
+            filename = '%s_%d%s' % (basename, i, ext)
+            i += 1
+
+        screenshot_task = NSTask.alloc().init()
+        screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+        screenshot_task.setArguments_(['-tpng', filename])
+        screenshot_task.launch()
+
+        BlinkLogger().log_debug("Screenshot saved in %s" % filename)
 

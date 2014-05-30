@@ -17,6 +17,7 @@
                 <outlet property="muteButton" destination="qea-Sj-raU" id="WDT-Cf-hbW"/>
                 <outlet property="myvideoButton" destination="1k3-Y3-vUH" id="Uux-Yt-gSC"/>
                 <outlet property="pauseButton" destination="okS-f1-l3w" id="8ax-Pf-Ere"/>
+                <outlet property="screenshotButton" destination="ywC-Bt-Osm" id="Eqv-ot-1Nn"/>
                 <outlet property="toolbarView" destination="ygh-EU-NlO" id="vWx-Y9-UJi"/>
                 <outlet property="window" destination="WqC-T4-L8j" id="QCO-Bw-BYN"/>
             </connections>
@@ -26,12 +27,12 @@
         <window title="Vídeo Controller" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="579" y="75" width="526" height="49"/>
+            <rect key="contentRect" x="579" y="75" width="577" height="49"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <value key="minSize" type="size" width="526" height="49"/>
-            <value key="maxSize" type="size" width="526" height="49"/>
+            <value key="minSize" type="size" width="577" height="49"/>
+            <value key="maxSize" type="size" width="577" height="49"/>
             <view key="contentView" focusRingType="none" id="ygh-EU-NlO">
-                <rect key="frame" x="0.0" y="0.0" width="526" height="49"/>
+                <rect key="frame" x="0.0" y="0.0" width="577" height="49"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jc6-VB-mqF">
@@ -144,6 +145,17 @@
                             <action selector="userClickedMyVideoButton:" target="-2" id="96o-7Z-WRP"/>
                         </connections>
                     </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ywC-Bt-Osm">
+                        <rect key="frame" x="511" y="18" width="46" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="screenshot" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="L8o-59-GNn">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedScreenshotButton:" target="-2" id="sG9-Nn-COV"/>
+                        </connections>
+                    </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N8p-OL-7cU">
                         <rect key="frame" x="0.0" y="0.0" width="80" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -226,9 +238,18 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Aox-Dj-HIJ">
-                        <rect key="frame" x="451" y="0.0" width="69" height="17"/>
+                        <rect key="frame" x="451" y="0.0" width="59" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Mi Vídeo" id="tvE-B3-zbz">
+                            <font key="font" metaFont="system" size="10"/>
+                            <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96n-FJ-z1t">
+                        <rect key="frame" x="500" y="0.0" width="69" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Snapshot" id="UQf-lh-F1j">
                             <font key="font" metaFont="system" size="10"/>
                             <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -254,6 +275,7 @@
         <image name="mute-white" width="24" height="24"/>
         <image name="pause-white" width="48" height="48"/>
         <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
+        <image name="screenshot" width="128" height="128"/>
         <image name="video" width="520" height="520"/>
     </resources>
 </document>
