@@ -6,6 +6,18 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 1.1.0</title>
+            <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-elquijote.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri May 30 15:29:42 ART 2014</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-elquijote.phtml?update"
+                       sparkle:version="1.1.0"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 1.0.0</title>
             <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
