@@ -41,10 +41,10 @@
 			<string>com.spotify.client.playback</string>
 		</array>
 	</dict>
-	<key>com.apple.security.temporary-exception.sbpl</key>
-	<string>
-            (begin
-                (allow ipc-posix-sem))
-        </string>
+        <key>com.apple.security.application-groups</key>
+        <array>
+           <string>4DFEFUDLKZ.pjsip</string>
+        </array>
+
 </dict>
 </plist>
