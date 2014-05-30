@@ -113,6 +113,7 @@ class GUISettings(SettingsGroup):
     extended_debug = Setting(type=bool, default=False)
     rtt_threshold = Setting(type=NonNegativeInteger, default=200)
     language = Setting(type=str, default='system_default', nillable=False)
+    media_support_detection = Setting(type=bool, default=False)
 
 
 class RTPSettingsExtension(RTPSettings):

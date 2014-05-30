@@ -1969,6 +1969,7 @@ SettingDescription = {
                       'gui.rtt_threshold': NSLocalizedString("RTT Threshold", "Label"),
                       'gui.idle_threshold': NSLocalizedString("Idle Threshold", "Label"),
                       'gui.account_label': NSLocalizedString("Account Label", "Label"),
+                      'gui.media_support_detection': NSLocalizedString("Media Support Detection", "Label"),
                       'ldap.hostname': NSLocalizedString("Server Address", "Label"),
                       'ldap.dn': NSLocalizedString("Search Base", "Label"),
                       'ldap.enabled': NSLocalizedString("Enabled", "Label"),
@@ -2085,7 +2086,7 @@ GeneralSettingsOrder = {
                        'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
                        'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'enable_speech_synthesizer', 'night_volume'],
-                       'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'idle_threshold', 'rtt_threshold'],
+                       'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'media_support_detection', 'idle_threshold', 'rtt_threshold'],
                        'logs': ['trace_sip_to_file', 'trace_msrp_to_file', 'trace_xcap_to_file', 'trace_notifications_to_file', 'trace_pjsip_to_file', 'pjsip_level'],
                        'h264': ['profile', 'level', 'max_resolution', 'max_framerate']
                        }
