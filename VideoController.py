@@ -254,33 +254,24 @@ class VideoController(MediaStream):
             self.end()
 
     def updateStatusLabel(self):
+        labels = []
+
         local_window = self.videoWindowController.localVideoWindow
-        status = self.status
-        if local_window is not None:
-            label = local_window.titleBarView.textLabel
-            if status == STREAM_WAITING_DNS_LOOKUP:
-                label.setStringValue_(NSLocalizedString("Finding Destination...", "Label"))
-            elif status == STREAM_RINGING:
-                label.setStringValue_(NSLocalizedString("Ringing...", "Label"))
-            elif status == STREAM_CONNECTING:
-                label.setStringValue_(NSLocalizedString("Connecting...", "Label"))
-            elif status == STREAM_PROPOSING:
-                label.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
-            elif status == STREAM_FAILED:
-                label.setStringValue_(NSLocalizedString("Call Failed", "Label"))
+        if local_window is not None and local_window.titleBarView is not None:
+            labels.append(local_window.titleBarView.textLabel)
 
         remote_window = self.videoWindowController.window
-        if remote_window is not None:
-            label = self.videoWindowController.titleBarView.textLabel
-            if status == STREAM_WAITING_DNS_LOOKUP:
+        if remote_window is not None and self.videoWindowController.titleBarView is not None:
+            labels.append(self.videoWindowController.titleBarView.textLabel)
+
+        for label in labels:
+            if self.status == STREAM_WAITING_DNS_LOOKUP:
                 label.setStringValue_(NSLocalizedString("Finding Destination...", "Label"))
-            elif status == STREAM_RINGING:
-                label.setStringValue_(NSLocalizedString("Ringing...", "Label"))
-            elif status == STREAM_CONNECTING:
+            elif self.status in (STREAM_CONNECTING, STREAM_PROPOSING):
                 label.setStringValue_(NSLocalizedString("Connecting...", "Label"))
-            elif status == STREAM_PROPOSING:
-                label.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
-            elif status == STREAM_FAILED:
+            elif self.status == STREAM_RINGING:
+                label.setStringValue_(NSLocalizedString("Ringing...", "Label"))
+            elif self.status == STREAM_FAILED:
                 label.setStringValue_(NSLocalizedString("Call Failed", "Label"))
 
     @run_in_gui_thread
