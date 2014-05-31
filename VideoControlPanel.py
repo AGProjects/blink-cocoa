@@ -376,6 +376,5 @@ class VideoControlPanel(NSWindowController):
         screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
         screenshot_task.setArguments_(['-tpng', filename])
         screenshot_task.launch()
-
-        BlinkLogger().log_debug("Screenshot saved in %s" % filename)
+        BlinkLogger().log_info("Screenshot saved in %s" % filename)
 
