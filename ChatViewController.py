@@ -19,7 +19,6 @@ from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotifi
 from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
 from application.notification import NotificationCenter
-from bs4 import BeautifulSoup
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import ISOTimestamp
 from resources import Resources
@@ -54,13 +53,7 @@ class ChatMessageObject(object):
 
 
 def processHTMLText(text='', usesmileys=True, is_html=False):
-    def suball(pat, repl, html):
-        ohtml = ""
-        while ohtml != html:
-            html = pat.sub(repl, html)
-            ohtml = html
-        return html
-
+    text = urlify(text)
     if is_html:
         text = text.replace('\n', '')
 
@@ -475,26 +468,6 @@ class ChatViewController(NSObject):
         else:
             displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
-        if is_html:
-            # urlify links
-            soup = BeautifulSoup(text)
-            ps = soup.find_all('p')
-            for p in ps:
-                if not p.string:
-                    continue
-                ptext = p.string.strip()
-                p.clear()
-                tokens = _url_pattern.split(ptext)
-                for token in tokens:
-                    if _url_pattern.match(token):
-                        new_tag = soup.new_tag("a", href=token)
-                        new_tag.string = token
-                        p.append(new_tag)
-                    else:
-                        p.append(token)
-
-            text = soup.prettify()
-
         text = processHTMLText(text, self.expandSmileys, is_html)
         private = 1 if is_private else "null"
 
@@ -697,3 +670,58 @@ class ChatViewController(NSObject):
             self.scrollingTimer = None
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         super(ChatViewController, self).dealloc()
+
+
+class Transform(object):
+    """Abstraction for a regular expression transform.
+
+        http://google-app-engine-samples.googlecode.com/svn/trunk/cccwiki/wiki.py
+
+        Transform subclasses have two properties:
+        regexp: the regular expression defining what will be replaced
+        replace(MatchObject): returns a string replacement for a regexp match
+
+        We iterate over all matches for that regular expression, calling replace()
+        on the match to determine what text should replace the matched text.
+
+        The Transform class is more expressive than regular expression replacement
+        because the replace() method can execute arbitrary code to, e.g., look
+        up a WikiWord to see if the page exists before determining if the WikiWord
+        should be a link.
+        """
+    def run(self, content):
+        """Runs this transform over the given content.
+
+            Args:
+            content: The string data to apply a transformation to.
+
+            Returns:
+            A new string that is the result of this transform.
+            """
+        parts = []
+        offset = 0
+        for match in self.regexp.finditer(content):
+            parts.append(content[offset:match.start(0)])
+            parts.append(self.replace(match))
+            offset = match.end(0)
+        parts.append(content[offset:])
+        return ''.join(parts)
+
+
+class AutoLink(Transform):
+    """A transform that auto-links URLs."""
+    def __init__(self):
+        self.regexp = re.compile(r'([^"])\b((http|https)://[^ \t\n\r<>\(\)&"]+' \
+                                 r'[^ \t\n\r<>\(\)&"\.])')
+
+    def replace(self, match):
+        url = match.group(2)
+        return match.group(1) + '<a href="%s">%s</a>' % (url, url)
+
+def urlify(content=''):
+    transforms = [
+                  AutoLink()
+                  ]
+    for transform in transforms:
+      content = transform.run(content)
+    return content
