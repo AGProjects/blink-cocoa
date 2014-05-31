@@ -56,6 +56,7 @@ def processHTMLText(text='', usesmileys=True, is_html=False):
     text = urlify(text)
     if is_html:
         text = text.replace('\n', '')
+        text = text.replace('\\', '&#92;')
 
     result = []
     tokens = _url_pattern.split(text)
