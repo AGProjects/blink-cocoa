@@ -592,7 +592,7 @@ class SIPManager(object):
 
     @run_in_gui_thread
     def _NH_SIPAccountGotMessageSummary(self, account, data):
-        BlinkLogger().log_info(u"Received voicemail notification for account %s" % account.id)
+        BlinkLogger().log_debug(u"Received voicemail notification for account %s" % account.id)
         summary = data.message_summary
         if summary.summaries.get('voice-message') is None:
             return
