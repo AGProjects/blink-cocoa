@@ -229,12 +229,16 @@ class StringOption(Option):
         self.store()
 
     def _store(self):
-        current = self.get()
-        nvalue = str(self.text.stringValue())
-        if self.emptyIsNone and not nvalue:
-            nvalue = None
-        if current != nvalue:
-            self.set(nvalue)
+        try:
+            current = self.get()
+            nvalue = str(self.text.stringValue())
+            if self.emptyIsNone and not nvalue:
+                nvalue = None
+            if current != nvalue:
+                self.set(nvalue)
+        except Exception, e:
+            NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Invalid value: %s" %e, NSLocalizedString("OK", "Button title"), None, None)
+            self.restore()
 
     def restore(self):
         value = self.get()
@@ -1955,6 +1959,7 @@ SettingDescription = {
                       'contacts.enable_missed_calls_group': NSLocalizedString("Show Missed Calls", "Label"),
                       'contacts.enable_outgoing_calls_group': NSLocalizedString("Show Outgoing Calls", "Label"),
                       'contacts.enable_blocked_group': NSLocalizedString("Show Blocked Contacts", "Label"),
+                      'contacts.enable_voicemail_group': NSLocalizedString("Show Voicemail Group", "Label"),
                       'contacts.enable_no_group': NSLocalizedString("Show Contacts Without Group", "Label"),
                       'contacts.enable_online_group': NSLocalizedString("Show Online Group", "Label"),
                       'conference.nickname': NSLocalizedString("Nickname", "Label"),

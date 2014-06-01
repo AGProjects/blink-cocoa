@@ -123,7 +123,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
-from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
+from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
@@ -2246,7 +2246,11 @@ class ContactWindowController(NSWindowController):
                     uri_type = (contact_uri.type for contact_uri in contact.uris if contact_uri.uri.startswith(uri)).next()
                 except StopIteration:
                     pass
-            if uri_type == 'XMPP' and isinstance(selected_contact, BlinkPresenceContact):
+
+            if isinstance(selected_contact, VoicemailBlinkContact):
+                account = AccountManager().get_account(selected_contact.name)
+                BlinkLogger().log_info('Auto-selecting voicemail account %s' % account.id)
+            elif uri_type == 'XMPP' and isinstance(selected_contact, BlinkPresenceContact):
                 try:
                     matched_accounts = selected_contact.pidfs_map['sip:%s' % str(uri)].keys()
                 except KeyError:
@@ -2270,7 +2274,11 @@ class ContactWindowController(NSWindowController):
         NSApp.activateIgnoringOtherApps_(True)
 
         if not target:
-            BlinkLogger().log_error(u"Missing target")
+            if isinstance(selected_contact, VoicemailBlinkContact):
+                BlinkLogger().log_error(u"Missing voicemail URI for %s" % selected_contact.name)
+                NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("No voicemail URI set", "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            else:
+                BlinkLogger().log_error(u"Missing target for %s" % selected_contact.name)
             return None
 
         account = None
@@ -2285,7 +2293,11 @@ class ContactWindowController(NSWindowController):
             contact = (contact for contact in self.model.bonjour_group.contacts if contact.uri == target).next()
         except StopIteration:
             if account is None:
-                account = self.activeAccount()
+                if isinstance(selected_contact, VoicemailBlinkContact):
+                    account = AccountManager().get_account(selected_contact.name)
+                    BlinkLogger().log_info('Auto-selecting voicemail account %s' % account.id)
+                else:
+                    account = self.activeAccount()
             if selected_contact:
                 display_name = selected_contact.name
             else:
@@ -4557,8 +4569,14 @@ class ContactWindowController(NSWindowController):
 
             else:
                 # Contact has a single URI
+                if isinstance(item, VoicemailBlinkContact):
+                    audio_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
+                    audio_item.setEnabled_(bool(item.uri))
+                    return
+
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
                     self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
+
                     if self.sessionControllersManager.isMediaTypeSupported('video'):
                         aor_supports_video = True
                         if settings.gui.media_support_detection:

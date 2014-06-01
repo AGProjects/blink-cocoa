@@ -620,6 +620,39 @@ class SessionControllersManager(object):
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
+    def log_incoming_session_voicemail(self, controller, data):
+        account = controller.account
+        if account is BonjourAccount():
+            return
+
+        media_type = ",".join(data.streams)
+        participants = ",".join(data.participants)
+        local_uri = format_identity_to_string(account)
+        remote_uri = format_identity_to_string(controller.target_uri).lower()
+        focus = "1" if data.focus else "0"
+        failure_reason = ''
+        duration = 0
+        call_id = data.call_id if data.call_id is not None else ''
+        from_tag = data.from_tag if data.from_tag is not None else ''
+        to_tag = data.to_tag if data.to_tag is not None else ''
+
+        self.add_to_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename)
+
+        if 'audio' in data.streams:
+            message = '<h3>Missed Incoming Audio Call</h3>'
+            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+            media_type = 'missed-call'
+            direction = 'incoming'
+            status = 'delivered'
+            cpim_from = data.target_uri
+            cpim_to = local_uri
+            timestamp = str(ISOTimestamp.now())
+
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour', check_contact=True))
+        NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
+
+
     def log_incoming_session_ended(self, controller, data):
         account = controller.account
         session = controller.session

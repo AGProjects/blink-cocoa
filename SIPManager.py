@@ -609,6 +609,8 @@ class SIPManager(object):
                 nc_body = NSLocalizedString("You have %d new voicemail messages", "System notification body") % new_messages
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
+        self.notification_center.post_notification('BlinkAccountGotMessageSummary', sender=account, data=data)
+
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'message_summary.enabled' in data.modified:

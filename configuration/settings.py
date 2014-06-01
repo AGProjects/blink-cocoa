@@ -152,6 +152,7 @@ class ContactsSettings(SettingsGroup):
     enable_no_group = Setting(type=bool, default=False)
     enable_blocked_group = Setting(type=bool, default=False)
     enable_online_group = Setting(type=bool, default=False)
+    enable_voicemail_group = Setting(type=bool, default=True)
     missed_calls_period = Setting(type=NonNegativeInteger, default=7)
     incoming_calls_period = Setting(type=NonNegativeInteger, default=7)
     outgoing_calls_period = Setting(type=NonNegativeInteger, default=7)
