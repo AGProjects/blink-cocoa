@@ -21,7 +21,6 @@
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
-		1F0FD67B10E627310032B310 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255C1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
@@ -148,7 +147,6 @@
 		1F22730812B554F50010A8B2 /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
 		1F22730912B554F50010A8B2 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
-		1F22730B12B554F50010A8B2 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1F22730D12B554F50010A8B2 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		1F22730E12B554F50010A8B2 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
@@ -373,7 +371,6 @@
 		1F35CFE517894FFF00C6FE38 /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
 		1F35CFE617894FFF00C6FE38 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		1F35CFE717894FFF00C6FE38 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
-		1F35CFE817894FFF00C6FE38 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F35CFE917894FFF00C6FE38 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1F35CFEA17894FFF00C6FE38 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		1F35CFEB17894FFF00C6FE38 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
@@ -831,7 +828,6 @@
 		1F8DC393135084FA0034815C /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
 		1F8DC394135084FA0034815C /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		1F8DC395135084FA0034815C /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
-		1F8DC396135084FA0034815C /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1F8DC397135084FA0034815C /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1F8DC398135084FA0034815C /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		1F8DC399135084FA0034815C /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
@@ -1174,7 +1170,6 @@
 		1FC80E80192E3E1F00BD62F4 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1FC80E81192E3E1F00BD62F4 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		1FC80E82192E3E1F00BD62F4 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
-		1FC80E83192E3E1F00BD62F4 /* growl.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0FD67A10E627310032B310 /* growl.py */; };
 		1FC80E84192E3E1F00BD62F4 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FC80E85192E3E1F00BD62F4 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		1FC80E86192E3E1F00BD62F4 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
@@ -2298,7 +2293,6 @@
 		1F0F2AAA15456DAD00ECB98E /* BlinkPlugin-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlinkPlugin-Prefix.pch"; sourceTree = "<group>"; };
 		1F0F2AAB15456DAD00ECB98E /* BlinkPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlinkPlugin.h; sourceTree = "<group>"; };
 		1F0F2AAC15456DAD00ECB98E /* BlinkPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlinkPlugin.m; sourceTree = "<group>"; };
-		1F0FD67A10E627310032B310 /* growl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = growl.py; path = ../growl.py; sourceTree = "<group>"; };
 		1F1425591905335300CFEC42 /* aspect_ratio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = aspect_ratio.png; path = icons/aspect_ratio.png; sourceTree = SOURCE_ROOT; };
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F17D30F17F9825D00CB74EC /* database-local-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-local-off.png"; path = "icons/database-local-off.png"; sourceTree = SOURCE_ROOT; };
@@ -3517,7 +3511,6 @@
 				1F5308391486EE1200D01CA8 /* Keychain */,
 				8547A6C6114EB6E200AD84BF /* __init__.py */,
 				8547A6C7114EB6E200AD84BF /* itunes.py */,
-				1F0FD67A10E627310032B310 /* growl.py */,
 			);
 			path = interfaces;
 			sourceTree = "<group>";
@@ -3860,7 +3853,6 @@
 				1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				1F22730912B554F50010A8B2 /* smiley_off.png in Resources */,
 				1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */,
-				1F22730B12B554F50010A8B2 /* growl.py in Resources */,
 				1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */,
 				1F22730D12B554F50010A8B2 /* HistoryViewer.py in Resources */,
 				1F22730E12B554F50010A8B2 /* HistoryViewer.xib in Resources */,
@@ -4124,7 +4116,6 @@
 				1F35CFE517894FFF00C6FE38 /* ChatView.html in Resources */,
 				1F35CFE617894FFF00C6FE38 /* smiley_off.png in Resources */,
 				1F35CFE717894FFF00C6FE38 /* smiley_on.png in Resources */,
-				1F35CFE817894FFF00C6FE38 /* growl.py in Resources */,
 				1FE5F5D718EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */,
 				1F35CFE917894FFF00C6FE38 /* SMSWindowManager.py in Resources */,
 				1F35CFEA17894FFF00C6FE38 /* HistoryViewer.py in Resources */,
@@ -4404,7 +4395,6 @@
 				1F8DC393135084FA0034815C /* ChatView.html in Resources */,
 				1F8DC394135084FA0034815C /* smiley_off.png in Resources */,
 				1F8DC395135084FA0034815C /* smiley_on.png in Resources */,
-				1F8DC396135084FA0034815C /* growl.py in Resources */,
 				1FF63CD319128A1400A502FB /* VideoNativeLocalWindowController.py in Resources */,
 				1F8DC397135084FA0034815C /* SMSWindowManager.py in Resources */,
 				1F8DC398135084FA0034815C /* HistoryViewer.py in Resources */,
@@ -4675,7 +4665,6 @@
 				1FC80E80192E3E1F00BD62F4 /* aspect_ratio.png in Resources */,
 				1FC80E81192E3E1F00BD62F4 /* smiley_off.png in Resources */,
 				1FC80E82192E3E1F00BD62F4 /* smiley_on.png in Resources */,
-				1FC80E83192E3E1F00BD62F4 /* growl.py in Resources */,
 				1FC80E84192E3E1F00BD62F4 /* SMSWindowManager.py in Resources */,
 				1FC80E85192E3E1F00BD62F4 /* HistoryViewer.py in Resources */,
 				1FC80E86192E3E1F00BD62F4 /* HistoryViewer.xib in Resources */,
@@ -4945,7 +4934,6 @@
 				2BD011E210D8198400D27A92 /* ChatView.html in Resources */,
 				2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */,
 				2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */,
-				1F0FD67B10E627310032B310 /* growl.py in Resources */,
 				1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */,
 				2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */,
 				2BB36D3710FE504600DA4577 /* HistoryViewer.xib in Resources */,

@@ -1139,7 +1139,6 @@ class SessionHistoryReplicator(object):
             return
 
         notification_center = NotificationCenter()
-        growl_notifications = {}
         try:
             if calls['received']:
                 for call in calls['received']:
@@ -1207,23 +1206,15 @@ class SessionHistoryReplicator(object):
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                             notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=bool(media_type =='missed-call')))
 
-                        if 'audio' in call['media'] and success == 'missed' and remote_uri not in growl_notifications.keys():
+                        if 'audio' in call['media'] and success == 'missed':
                             elapsed = end_time - start_time
                             elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
                             if elapsed_hours < 48:
-                                growl_data = NotificationData()
                                 try:
                                     uri = SIPURI.parse('sip:'+str(remote_uri))
                                 except Exception:
                                     pass
                                 else:
-                                    growl_data.caller = format_identity_to_string(uri, check_contact=True, format='compact')
-                                    growl_data.timestamp = start_time
-                                    growl_data.streams = media_type
-                                    growl_data.account = str(account.id)
-                                    notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-                                    growl_notifications[remote_uri] = True
-
                                     nc_title = 'Missed Call (' + media_type  + ')'
                                     nc_subtitle = 'From %s' % format_identity_to_string(uri, check_contact=True, format='full')
                                     nc_body = 'Missed call at %s' % start_time.strftime("%Y-%m-%d %H:%M")

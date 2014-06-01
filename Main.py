@@ -61,7 +61,6 @@ if memory_stick_mode():
 # import modules containing classes required to start application and load MainMenu.nib
 import BlinkAppDelegate
 import ContactWindowController
-import growl
 
 import signal
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)

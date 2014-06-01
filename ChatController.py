@@ -1402,14 +1402,8 @@ class ChatController(MediaStream):
 
             # FancyTabViewSwitcher will set unfocused tab item views as Hidden
             if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
-                # notify growl
                 try:
-                    growl_data = NotificationData()
-                    growl_data.sender = format_identity_to_string(sender, format='compact')
-                    growl_data.content = html2txt(text.decode('utf-8'))[0:400] if message.content_type == 'text/html' else text[0:400]
-                    NotificationCenter().post_notification("GrowlGotChatMessage", sender=self, data=growl_data)
                     NSApp.requestUserAttention_(NSInformationalRequest)
-
                     nc_title = NSLocalizedString("Chat Message Received", "Window title")
                     nc_subtitle = format_identity_to_string(sender, format='full')
                     nc_body = html2txt(text.decode('utf-8'))[0:400] if message.content_type == 'text/html' else text[0:400]

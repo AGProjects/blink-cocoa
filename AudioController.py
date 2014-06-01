@@ -1346,10 +1346,6 @@ class AudioController(MediaStream):
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
         self.addRecordingToHistory(data.filename)
-        growl_data = NotificationData()
-        growl_data.remote_party = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact')
-        growl_data.timestamp = ISOTimestamp.now()
-        self.notification_center.post_notification("GrowlAudioSessionRecorded", sender=self, data=growl_data)
 
         nc_title = NSLocalizedString("Audio Call Recorded", "System notification title")
         nc_subtitle = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='full')

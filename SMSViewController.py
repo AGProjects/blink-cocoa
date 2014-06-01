@@ -456,16 +456,10 @@ class SMSViewController(NSObject):
             return
 
         if not is_replication_message and not window.isKeyWindow():
-            # notify growl
             if is_html:
                 nc_body = html2txt(text.decode('utf-8'))
             else:
                 nc_body = text.decode('utf-8')
-
-            growl_data = NotificationData()
-            growl_data.content = nc_body
-            growl_data.sender = format_identity_to_string(sender, format='compact')
-            self.notification_center.post_notification("GrowlGotSMS", sender=self, data=growl_data)
 
             nc_title = NSLocalizedString("SMS Message Received", "Label")
             nc_subtitle = format_identity_to_string(sender, format='full')

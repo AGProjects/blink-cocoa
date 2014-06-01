@@ -2912,7 +2912,7 @@ class ContactListModel(CustomListModel):
             self.active_watchers_map[notification.sender.id] = tmp_active_watchers
             all_pending_watchers = {}
             [all_pending_watchers.update(d) for d in self.pending_watchers_map.values()]
-            growl_sent = False
+            notification_sent = False
             for watcher in all_pending_watchers.itervalues():
                 if not self.presencePolicyExistsForURI_(watcher.sipuri):
                     uri = sip_prefix_pattern.sub('', watcher.sipuri)
@@ -2923,12 +2923,8 @@ class ContactListModel(CustomListModel):
                     gui_watcher = BlinkPendingWatcher(watcher)
                     self.pending_watchers_group.contacts.append(gui_watcher)
 
-                    if not growl_sent:
-                        growl_data = NotificationData()
-                        growl_data.timestamp = notification.datetime
-                        growl_data.watcher = gui_watcher.name
-                        self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
-                        growl_sent = True
+                    if not notification_sent:
+                        notification_sent = True
 
                         nc_title = NSLocalizedString("New Contact Request", "System notification title")
                         nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
@@ -2941,7 +2937,7 @@ class ContactListModel(CustomListModel):
 
         elif notification.data.state == 'partial':
             BlinkLogger().log_debug('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
-            growl_sent = False
+            notification_sent = False
             for watcher in tmp_pending_watchers.itervalues():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
                 try:
@@ -2956,12 +2952,8 @@ class ContactListModel(CustomListModel):
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
-                        if not growl_sent:
-                            growl_data = NotificationData()
-                            growl_data.timestamp = notification.datetime
-                            growl_data.watcher = gui_watcher.name
-                            self.nc.post_notification("GrowlContactRequest", sender=self, data=growl_data)
-                            growl_sent = True
+                        if not notification_sent:
+                            notification_sent = True
 
                             nc_title = NSLocalizedString("New Contact Request", "System notification title")
                             nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name

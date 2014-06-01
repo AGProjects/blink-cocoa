@@ -597,15 +597,10 @@ class SIPManager(object):
         if summary.summaries.get('voice-message') is None:
             return
         voice_messages = summary.summaries['voice-message']
-        growl_data = NotificationData()
         new_messages = int(voice_messages['new_messages'])
         old_messages = int(voice_messages['old_messages'])
-        growl_data.new_messages = new_messages
-        growl_data.old_messages = old_messages
         MWIData.store(account, summary)
-        if summary.messages_waiting and growl_data.new_messages > 0:
-            self.notification_center.post_notification("GrowlGotMWI", sender=self, data=growl_data)
-
+        if summary.messages_waiting and new_messages > 0:
             nc_title = NSLocalizedString("New Voicemail Message", "System notification title") if new_messages == 1 else NSLocalizedString("New Voicemail Messages", "System notification title")
             nc_subtitle = NSLocalizedString("On Voicemail Server", "System notification subtitle")
             if old_messages > 0:

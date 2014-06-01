@@ -429,13 +429,6 @@ class SessionControllersManager(object):
                 if 'audio' in data.streams:
                     NSApp.delegate().noteMissedCall()
 
-                growl_data = NotificationData()
-                growl_data.caller = format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
-                growl_data.timestamp = data.timestamp
-                growl_data.streams = ",".join(data.streams)
-                growl_data.account = session.account.id.username + '@' + session.account.id.domain
-                self.notification_center.post_notification("GrowlMissedCall", sender=self, data=growl_data)
-
                 nc_title = 'Missed Call (' + ",".join(data.streams)  + ')'
                 nc_subtitle = 'From %s' % format_identity_to_string(session.remote_identity, check_contact=True, format='full')
                 nc_body = 'Missed call at %s' % data.timestamp.strftime("%Y-%m-%d %H:%M")
