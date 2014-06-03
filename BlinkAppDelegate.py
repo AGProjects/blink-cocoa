@@ -359,7 +359,32 @@ class BlinkAppDelegate(NSObject):
         handler(notification)
 
     def _NH_SIPEngineTransportDidDisconnect(self, notification):
-        BlinkLogger().log_info(u"%s connection %s <-> %s disconnected: %s" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address, notification.data.reason))
+        BlinkLogger().log_info(u"%s connection %s <-> %s lost: %s" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address, notification.data.reason))
+
+        if notification.data.reason in ("Network is down"):
+            return
+
+        registrar = '%s:%s' % (notification.data.transport.lower(), notification.data.remote_address)
+
+        for account_info in self.contactsWindowController.accounts:
+            account = account_info.account
+
+            if account is BonjourAccount():
+                continue
+
+            if not account.enabled:
+                continue
+
+            if account_info.registrar != registrar:
+                continue
+
+            BlinkLogger().log_info('Reconnecting account %s in state' % (account.id, account_info.register_state))
+
+            if account.sip.register:
+                account._registrar.reregister()
+
+            if account.presence.enabled:
+                account._presence_subscriber.resubscribe()
 
     def _NH_SIPEngineTransportDidConnect(self, notification):
         BlinkLogger().log_info(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
