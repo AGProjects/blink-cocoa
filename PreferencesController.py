@@ -633,15 +633,15 @@ class PreferencesController(NSWindowController, object):
             self.registration_tls_icon.setHidden_(True)
 
             if selected_account:
-                if selected_account.failure_code and selected_account.failure_reason:
-                    self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Label") + " %s (%s)" % (selected_account.failure_reason, selected_account.failure_code))
+                if selected_account.register_failure_code and selected_account.register_failure_reason:
+                    self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Label") + " %s (%s)" % (selected_account.register_failure_reason, selected_account.register_failure_code))
                     self.registration_status.setHidden_(False)
-                elif selected_account.failure_reason:
-                    self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Label") + " " + selected_account.failure_reason)
+                elif selected_account.register_failure_reason:
+                    self.registration_status.setStringValue_(NSLocalizedString("Registration failed:", "Label") + " " + selected_account.register_failure_reason)
                     self.registration_status.setHidden_(False)
                 else:
-                    if selected_account.registration_state and selected_account.registration_state != NSLocalizedString("ended", "Label"):
-                        if selected_account.registrar and selected_account.registration_state == NSLocalizedString("succeeded", "Label"):
+                    if selected_account.register_state and selected_account.register_state != NSLocalizedString("ended", "Label"):
+                        if selected_account.registrar and selected_account.register_state == NSLocalizedString("succeeded", "Label"):
                             label = NSLocalizedString("Registration succeeded", "Label") + NSLocalizedString(" at %s", "Network address follows") % selected_account.registrar
                             self.registration_status.setStringValue_(label)
                             self.registration_tls_icon.setHidden_(False if selected_account.registrar.startswith('tls:') else True)
@@ -649,7 +649,7 @@ class PreferencesController(NSWindowController, object):
                                 frame.origin.x = 312
                                 self.registration_status.setFrame_(frame)
                         else:
-                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s", "Label") % selected_account.registration_state)
+                            self.registration_status.setStringValue_(NSLocalizedString("Registration %s", "Label") % selected_account.register_state)
                         self.registration_status.setHidden_(False)
 
     @allocate_autorelease_pool
@@ -689,9 +689,9 @@ class PreferencesController(NSWindowController, object):
         except ValueError:
             return
 
-        self.accounts[position].registration_state = ''
-        self.accounts[position].failure_code = None
-        self.accounts[position].failure_reason = None
+        self.accounts[position].register_state = ''
+        self.accounts[position].register_failure_code = None
+        self.accounts[position].register_failure_reason = None
         self.updateRegistrationStatus()
 
     def _NH_SIPAccountWillRegister(self, notification):
@@ -699,7 +699,7 @@ class PreferencesController(NSWindowController, object):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = NSLocalizedString("started", "Label")
+        self.accounts[position].register_state = NSLocalizedString("started", "Label")
         self.refresh_account_table()
         self.updateRegistrationStatus()
 
@@ -708,9 +708,9 @@ class PreferencesController(NSWindowController, object):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = NSLocalizedString("succeeded", "Label")
-        self.accounts[position].failure_code = None
-        self.accounts[position].failure_reason = None
+        self.accounts[position].register_state = NSLocalizedString("succeeded", "Label")
+        self.accounts[position].register_failure_code = None
+        self.accounts[position].register_failure_reason = None
 
         self.refresh_account_table()
         self.updateRegistrationStatus()
@@ -722,12 +722,12 @@ class PreferencesController(NSWindowController, object):
             return
 
         if notification.data.code > 200:
-            self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].register_failure_code = notification.data.code
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
-            self.accounts[position].failure_code = None
-            self.accounts[position].failure_reason = None
-        self.accounts[position].registrar = '%s:%s:%d' % (notification.data.registrar.transport, notification.data.registrar.address, notification.data.registrar.port)
+            self.accounts[position].register_failure_code = None
+            self.accounts[position].register_failure_reason = None
+            self.accounts[position].registrar = '%s:%s:%d' % (notification.data.registrar.transport, notification.data.registrar.address, notification.data.registrar.port)
 
         self.updateRegistrationStatus()
 
@@ -736,10 +736,11 @@ class PreferencesController(NSWindowController, object):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = NSLocalizedString("failed", "Label")
+        self.accounts[position].register_state = NSLocalizedString("failed", "Label")
+        self.accounts[position].registrar = None
 
-        if self.accounts[position].failure_reason is None and hasattr(notification.data, 'error'):
-            self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error
+        if self.accounts[position].register_failure_reason is None and hasattr(notification.data, 'error'):
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error
 
         self.refresh_account_table()
         self.updateRegistrationStatus()
@@ -749,7 +750,7 @@ class PreferencesController(NSWindowController, object):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = NSLocalizedString("ended", "Label")
+        self.accounts[position].register_state = NSLocalizedString("ended", "Label")
         self.refresh_account_table()
         self.updateRegistrationStatus()
 
@@ -890,13 +891,13 @@ class PreferencesController(NSWindowController, object):
             if not account_info.account.enabled:
                 cell.setImage_(None)
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration disabled", "Accesibility text"), NSAccessibilityTitleAttribute)
-            elif account_info.registration_state == NSLocalizedString("succeeded", "Label"):
+            elif account_info.register_state == NSLocalizedString("succeeded", "Label"):
                 cell.setImage_(self.dots["green"])
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration succeeded", "Accesibility text"), NSAccessibilityTitleAttribute)
-            elif account_info.registration_state == NSLocalizedString("started", "Label"):
+            elif account_info.register_state == NSLocalizedString("started", "Label"):
                 cell.setImage_(self.dots["yellow"])
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration started", "Accesibility text"), NSAccessibilityTitleAttribute)
-            elif account_info.registration_state == NSLocalizedString("failed", "Label"):
+            elif account_info.register_state == NSLocalizedString("failed", "Label"):
                 cell.setImage_(self.dots["red"])
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration failed", "Accesibility text"), NSAccessibilityTitleAttribute)
             else:

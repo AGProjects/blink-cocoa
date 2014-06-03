@@ -716,6 +716,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().add_observer(self, name="SystemWillSleep")
+        NotificationCenter().add_observer(self, name="BlinkPresenceFailed")
 
     @property
     def pidfs(self):
@@ -783,6 +784,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().remove_observer(self, name="SIPAccountDidDeactivate")
         NotificationCenter().remove_observer(self, name="CFGSettingsObjectDidChange")
         NotificationCenter().remove_observer(self, name="SIPApplicationWillEnd")
+        NotificationCenter().remove_observer(self, name="BlinkPresenceFailed")
         NotificationCenter().remove_observer(self, name="SystemWillSleep")
         self.contact = None
         if self.timer:
@@ -817,6 +819,11 @@ class BlinkPresenceContact(BlinkContact):
         if self.application_will_end:
             return
         self.purge_pidfs_for_account(notification.sender.id)
+
+    def _NH_BlinkPresenceFailed(self, notification):
+        if self.application_will_end:
+            return
+        self.purge_pidfs_for_account(notification.sender)
 
     def purge_pidfs_for_account(self, account):
         changes = False

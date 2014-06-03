@@ -432,10 +432,15 @@ def format_date(dt):
 class AccountInfo(object):
     def __init__(self, account):
         self.account = account
-        self.registration_state = None
-        self.failure_code = None
-        self.failure_reason = None
+        self.subscribe_presence_timestamp = None
+        self.subscribe_presence_purged = False
+        self.subscribe_presence_state = None
         self.registrar = None
+        self.register_expires = None
+        self.register_timestamp = None
+        self.register_state = None
+        self.register_failure_code = None
+        self.register_failure_reason = None
 
     @property
     def name(self):

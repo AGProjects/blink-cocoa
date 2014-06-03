@@ -87,6 +87,8 @@ import string
 import sys
 import ldap
 import uuid
+import time
+
 
 from collections import deque
 from dateutil.tz import tzlocal
@@ -341,6 +343,7 @@ class ContactWindowController(NSWindowController):
     new_audio_sample_rate = None
     last_status_per_device =  {}
     created_accounts = set()
+    purge_presence_timer = None
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -422,6 +425,9 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="VirtualGroupWasDeleted")
         nc.add_observer(self, name="VirtualGroupDidChange")
         nc.add_observer(self, name="SIPSessionLoggedToHistory")
+        nc.add_observer(self, name="SIPSessionLoggedToHistory")
+        nc.add_observer(self, name="PresenceSubscriptionDidFail")
+        nc.add_observer(self, name="PresenceSubscriptionDidEnd")
 
         nc.add_observer(self, sender=AccountManager())
 
@@ -534,7 +540,35 @@ class ContactWindowController(NSWindowController):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
         self.speech_synthesizer.setDelegate_(self)
 
+        self.purge_presence_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10, self, "purgePresenceTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.purge_presence_timer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.purge_presence_timer, NSDefaultRunLoopMode)
+
         self.loaded = True
+
+    def purgePresenceTimer_(self, timer):
+        for account in AccountManager().get_accounts():
+            try:
+                position = self.accounts.index(account)
+            except ValueError:
+                return
+
+            account_info = self.accounts[position]
+            if account_info.subscribe_presence_state != 'failed':
+                return
+
+            if account_info.subscribe_presence_purged:
+                return
+
+            if account_info.subscribe_presence_timestamp is None:
+                return
+
+            if time.time() - account_info.subscribe_presence_timestamp < 180:
+                return
+
+            BlinkLogger().log_info("Presence subscriptions for account %s purged" % account.id)
+            NotificationCenter().post_notification("BlinkPresenceFailed", sender=account.id)
+            account_info.subscribe_presence_purged = True
 
     @property
     def has_audio(self):
@@ -848,20 +882,20 @@ class ContactWindowController(NSWindowController):
                 image.setScalesWhenResized_(True)
                 image.setSize_(NSMakeSize(12,12))
                 item.setImage_(image)
-                if account_info.account.enabled and not account_info.registration_state == 'succeeded':
-                    if account_info.failure_reason:
-                        name = '%s (%s)' % (account_info.name, account_info.failure_reason)
+                if account_info.account.enabled and not account_info.register_state == 'succeeded':
+                    if account_info.register_failure_reason:
+                        name = '%s (%s)' % (account_info.name, account_info.register_failure_reason)
                     else:
                         name = account_info.name
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
                     item.setAttributedTitle_(title)
             else:
-                if not account_info.registration_state == 'succeeded':
+                if not account_info.register_state == 'succeeded':
                     if account_info.account.sip.register:
-                        if account_info.failure_reason and account_info.failure_code:
-                            name = '%s (%s %s)' % (account_info.name, account_info.failure_code, account_info.failure_reason)
-                        elif account_info.failure_reason:
-                            name = '%s (%s)' % (account_info.name, account_info.failure_reason)
+                        if account_info.register_failure_reason and account_info.register_failure_code:
+                            name = '%s (%s %s)' % (account_info.name, account_info.register_failure_code, account_info.register_failure_reason)
+                        elif account_info.register_failure_reason:
+                            name = '%s (%s)' % (account_info.name, account_info.register_failure_reason)
                         else:
                             name = account_info.name
                     else:
@@ -1036,7 +1070,51 @@ class ContactWindowController(NSWindowController):
             self.speech_synthesizer.startSpeakingString_(text)
 
     @allocate_autorelease_pool
+    def _NH_PresenceSubscriptionDidFail(self, notification):
+        try:
+            account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account._presence_subscriber == notification.sender).next()
+        except StopIteration:
+            return
+
+        try:
+            position = self.accounts.index(account)
+        except ValueError:
+            return
+
+        if self.accounts[position].subscribe_presence_state != 'failed':
+            BlinkLogger().log_info("Presence subscriptions for account %s failed" % account.id)
+        self.accounts[position].subscribe_presence_state = 'failed'
+
+    @allocate_autorelease_pool
+    def _NH_PresenceSubscriptionDidEnd(self, notification):
+        try:
+            account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account._presence_subscriber == notification.sender).next()
+        except StopIteration:
+            return
+
+        try:
+            position = self.accounts.index(account)
+        except ValueError:
+            return
+
+        if self.accounts[position].subscribe_presence_state != 'ended':
+            BlinkLogger().log_info("Presence subscriptions for account %s ended" % account.id)
+        self.accounts[position].subscribe_presence_state = 'ended'
+
+    @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
+        try:
+            position = self.accounts.index(notification.sender)
+        except ValueError:
+            pass
+        else:
+            if self.accounts[position].subscribe_presence_state != 'active':
+                BlinkLogger().log_info("Presence subscriptions for account %s are active" % notification.sender.id)
+
+            self.accounts[position].subscribe_presence_timestamp = time.time()
+            self.accounts[position].subscribe_presence_state = 'active'
+            self.accounts[position].subscribe_presence_purged = False
+
         resource_map = notification.data.resource_map
         BlinkLogger().log_debug('Account %s got availability %s for %d SIP URIs: %s' % (notification.sender.id, 'full state' if notification.data.full_state else 'update', len(resource_map.keys()), resource_map.keys()))
 
@@ -1131,7 +1209,7 @@ class ContactWindowController(NSWindowController):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = 'started'
+        self.accounts[position].register_state = 'started'
         self.refreshAccountList()
 
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
@@ -1139,36 +1217,49 @@ class ContactWindowController(NSWindowController):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = 'succeeded'
+        self.accounts[position].register_state = 'succeeded'
         self.refreshAccountList()
 
+        if notification.sender is not BonjourAccount():
+            self.accounts[position].registrar
+            registrar = '%s:%s:%s' % (notification.data.registrar.transport, notification.data.registrar.address, notification.data.registrar.port)
+            self.accounts[position].registrar = registrar
+            self.accounts[position].register_expires = notification.data.expires
+            self.accounts[position].register_timestamp = time.time()
+            #print 'SIP account %s registration succeeded to %s for ' % (notification.sender.id, registrar)
+
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
+        if notification.data.code > 200:
+            reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            BlinkLogger().log_debug(u"Account %s failed to register at %s: %s (%s)" % (notification.sender.id, notification.data.registrar, reason, notification.data.code))
+
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
 
         if notification.data.code > 200:
-            self.accounts[position].failure_code = notification.data.code
-            self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].register_failure_code = notification.data.code
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
         else:
-            self.accounts[position].failure_code = None
-            self.accounts[position].failure_reason = None
+            self.accounts[position].register_failure_code = None
+            self.accounts[position].register_failure_reason = None
 
     def _NH_SIPAccountRegistrationDidFail(self, notification):
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = 'failed'
-        if self.accounts[position].failure_reason is None:
+
+        self.accounts[position].register_state = 'failed'
+        if self.accounts[position].register_failure_reason is None:
             if host is None or host.default_ip is None:
-                self.accounts[position].failure_reason = NSLocalizedString("No IP Address", "Label")
+                self.accounts[position].register_failure_reason = NSLocalizedString("No IP Address", "Label")
             elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
-                    self.accounts[position].failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
+                    self.accounts[position].register_failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
                 else:
-                    self.accounts[position].failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error else notification.data.error
+                    self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error else notification.data.error
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
@@ -1186,7 +1277,7 @@ class ContactWindowController(NSWindowController):
             position = self.accounts.index(notification.sender)
         except ValueError:
             return
-        self.accounts[position].registration_state = 'ended'
+        self.accounts[position].register_state = 'ended'
         self.refreshAccountList()
 
     _NH_BonjourAccountWillRegister = _NH_SIPAccountWillRegister
@@ -1223,6 +1314,8 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SIPApplicationWillEnd(self, notification):
         self.conference_timer.invalidate()
+        self.purge_presence_timer.invalidate()
+
         if self.localVideoWindow:
             self.localVideoWindow.close()
             self.localVideoWindow = None

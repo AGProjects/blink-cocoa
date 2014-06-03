@@ -86,6 +86,7 @@ class VideoNativeLocalWindowController(NSWindowController):
     visible = False
     close_timer = None
     tracking_area = None
+    closed_by_user = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -130,6 +131,7 @@ class VideoNativeLocalWindowController(NSWindowController):
 
     def windowShouldClose_(self, sender):
         self.visible = False
+        self.closed_by_user = False
         if self.close_timer is None:
             self.close_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.05, self, "fade:", None, True)
         return False

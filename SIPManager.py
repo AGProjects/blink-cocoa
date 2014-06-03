@@ -73,8 +73,6 @@ class SIPManager(object):
         self.notification_center.add_observer(self, name='SIPAccountDidDeactivate')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed')
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidEnd')
-        self.notification_center.add_observer(self, name='SIPAccountRegistrationDidFail')
-        self.notification_center.add_observer(self, name='SIPAccountRegistrationGotAnswer')
         self.notification_center.add_observer(self, name='SIPAccountGotMessageSummary')
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
         self.notification_center.add_observer(self, name='SystemWillSleep')
@@ -550,13 +548,13 @@ class SIPManager(object):
                 contact_changed = True
 
         if contact_changed and registrar_changed:
-            message = u'Account %s registered SIP contact address %s at SIP registrar %s:%d;transport=%s and will refresh every %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+            message = u'Account %s registered contact %s at %s:%d;transport=%s for %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
             BlinkLogger().log_info(message)
         elif contact_changed:
-            message = u'Account %s changed SIP contact to %s' % (account.id, data.contact_header.uri)
+            message = u'Account %s changed contact to %s' % (account.id, data.contact_header.uri)
             BlinkLogger().log_info(message)
         elif registrar_changed:
-            message = u'Account %s changed SIP registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
+            message = u'Account %s changed registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
             BlinkLogger().log_info(message)
 
         self.registrar_addresses[account.id] = _address
@@ -580,15 +578,6 @@ class SIPManager(object):
             del self.contact_addresses[account.id]
         except KeyError:
             pass
-
-    def _NH_SIPAccountRegistrationGotAnswer(self, account, data):
-        if data.code > 200:
-            reason = NSLocalizedString("Connection failed", "Label") if data.reason == 'Unknown error 61' else data.reason
-            BlinkLogger().log_debug(u"Account %s failed to register at %s: %s (%s)" % (account.id, data.registrar, reason, data.code))
-
-    def _NH_SIPAccountRegistrationDidFail(self, account, data):
-        reason = NSLocalizedString("Connection failed", "Label") if data.error == 'Unknown error 61' else data.error
-        BlinkLogger().log_debug(u"Account %s failed to register: %s (retrying in %.2f seconds)" % (account.id, reason, data.retry_after))
 
     @run_in_gui_thread
     def _NH_SIPAccountGotMessageSummary(self, account, data):
