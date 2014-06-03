@@ -1030,6 +1030,8 @@ class BlinkPresenceContact(BlinkContact):
                     if service.capabilities is not None:
                         if service.capabilities.audio:
                             caps.add("audio")
+                        if service.capabilities.video:
+                            caps.add("video")
                         if service.capabilities.message:
                             caps.add("chat")
                         if service.capabilities.file_transfer:
