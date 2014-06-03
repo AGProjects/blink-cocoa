@@ -65,7 +65,7 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="72">
+            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Connect" paletteLabel="Connect" toolTip="Start chat session" tag="100" image="start_chat" id="81">
                         <connections>
@@ -94,7 +94,7 @@
                         <popUpButton key="view" id="WLQ-qX-0Kq">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="video" alignment="left" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="Zt8-cr-V6X" id="fM7-lv-qBF">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="Zt8-cr-V6X" id="fM7-lv-qBF">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="gOf-lM-IGj">
@@ -156,7 +156,7 @@
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
@@ -175,7 +175,7 @@
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">

@@ -65,7 +65,7 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="72">
+            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectează" paletteLabel="Conectează" toolTip="Convorbire Text" tag="100" image="start_chat" id="81">
                         <connections>
