@@ -4605,7 +4605,7 @@ class ContactWindowController(NSWindowController):
                                     ds_item.setEnabled_(False)
                         contact_supports_ds = True
                         if settings.gui.media_support_detection:
-                            contact_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('screen-sharing-server' in device['caps'] or not device['caps']))
+                            contact_supports_ds = any(device for device in item.presence_state['devices'].values() if ('screen-sharing-server' in device['caps'] or not device['caps']))
 
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "", "")
@@ -4660,7 +4660,7 @@ class ContactWindowController(NSWindowController):
 
                         contact_supports_ds = True
                         if settings.gui.media_support_detection:
-                            contact_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('screen-sharing-client' in device['caps'] or not device['caps']))
+                            contact_supports_ds = any(device for device in item.presence_state['devices'].values() if ('screen-sharing-client' in device['caps'] or not device['caps']))
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
