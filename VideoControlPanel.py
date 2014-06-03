@@ -8,7 +8,8 @@ from AppKit import (NSApp,
                     NSTrackingActiveAlways,
                     NSFloatingWindowLevel,
                     NSFontAttributeName,
-                    NSForegroundColorAttributeName
+                    NSForegroundColorAttributeName,
+                    NSSound
                     )
 
 from Foundation import (NSString,
@@ -376,5 +377,6 @@ class VideoControlPanel(NSWindowController):
         screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
         screenshot_task.setArguments_(['-tpng', filename])
         screenshot_task.launch()
+        NSSound.soundNamed_("Grab").play()
         BlinkLogger().log_info("Screenshot saved in %s" % filename)
 
