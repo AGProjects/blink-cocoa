@@ -45,7 +45,8 @@ from AppKit import (NSAlertDefaultReturn,
                         NSOutlineViewItemDidExpandNotification,
                         NSPNGFileType,
                         NSRunAlertPanel,
-                        NSTIFFCompressionLZW)
+                        NSTIFFCompressionLZW,
+                        NSSound)
 
 from Foundation import (NSArray,
                         NSBitmapImageRep,
@@ -1195,6 +1196,10 @@ class BlinkPresenceContact(BlinkContact):
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name
                             nc_body = NSLocalizedString("%s is now ", "System notification body %s is a a person name") % self.name + status_localized[status]
+                            if status == "available":
+                                NSSound.soundNamed_("online").play()
+                            elif status == "offline":
+                                NSSound.soundNamed_("offline").play()
                             NSApp.delegate().gui_notify(nc_title, nc_body)
 
                     if log and status == 'available':

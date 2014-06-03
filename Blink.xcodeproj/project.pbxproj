@@ -16,6 +16,16 @@
 		1F07D766138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F07D767138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F07D768138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
+		1F08DB16193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
+		1F08DB17193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
+		1F08DB18193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
+		1F08DB19193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
+		1F08DB1A193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
+		1F08DB1B193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
+		1F08DB1C193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
+		1F08DB1D193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
+		1F08DB1E193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
+		1F08DB1F193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F092DB412B2785E000CEE7F /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
 		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
@@ -2291,6 +2301,8 @@
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
 		1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
+		1F08DB14193DEDB200187373 /* offline.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = offline.aif; path = sounds/offline.aif; sourceTree = "<group>"; };
+		1F08DB15193DEDB200187373 /* online.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = online.aif; path = sounds/online.aif; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
@@ -3352,6 +3364,8 @@
 		2B5DE6760FFDADE300701821 /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
+				1F08DB14193DEDB200187373 /* offline.aif */,
+				1F08DB15193DEDB200187373 /* online.aif */,
 				1FAD022C18C8010C00FBE7EE /* Grab.aif */,
 				1FB22A09140308950024F921 /* zrtp-securemode.wav */,
 				1FB22A0A140308950024F921 /* zrtp-security-failed.wav */,
@@ -3783,6 +3797,7 @@
 				1F2272B512B554F50010A8B2 /* ring_outbound.wav in Resources */,
 				1F2272B612B554F50010A8B2 /* VerticalBoxView.py in Resources */,
 				1F2272B712B554F50010A8B2 /* PreferenceOptions.py in Resources */,
+				1F08DB1C193DEDB200187373 /* online.aif in Resources */,
 				1F2272B812B554F50010A8B2 /* TableView.py in Resources */,
 				1F2272B912B554F50010A8B2 /* AudioSession.py in Resources */,
 				1F2272BA12B554F50010A8B2 /* muted.png in Resources */,
@@ -3866,6 +3881,7 @@
 				1F22730812B554F50010A8B2 /* ChatView.html in Resources */,
 				1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				1F22730912B554F50010A8B2 /* smiley_off.png in Resources */,
+				1F08DB17193DEDB200187373 /* offline.aif in Resources */,
 				1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */,
 				1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */,
 				1F22730D12B554F50010A8B2 /* HistoryViewer.py in Resources */,
@@ -4076,6 +4092,7 @@
 				1F35CFAE17894FFF00C6FE38 /* recording3.png in Resources */,
 				1F35CFAF17894FFF00C6FE38 /* mic.png in Resources */,
 				1F35CFB017894FFF00C6FE38 /* speaker.png in Resources */,
+				1F08DB19193DEDB200187373 /* offline.aif in Resources */,
 				1F35CFB117894FFF00C6FE38 /* bell.png in Resources */,
 				1F35CFB217894FFF00C6FE38 /* bluelock.png in Resources */,
 				1F35CFB317894FFF00C6FE38 /* greenlock.png in Resources */,
@@ -4188,6 +4205,7 @@
 				1F35D01517894FFF00C6FE38 /* mirror.png in Resources */,
 				1F35D01617894FFF00C6FE38 /* mute-white.png in Resources */,
 				1F35D01817894FFF00C6FE38 /* VideoSDLLocalWindowController.py in Resources */,
+				1F08DB1E193DEDB200187373 /* online.aif in Resources */,
 				1F35D01917894FFF00C6FE38 /* chat.png in Resources */,
 				1FD0807F18C02DA800A3B313 /* available.png in Resources */,
 				1F35D01A17894FFF00C6FE38 /* alerts.png in Resources */,
@@ -4524,6 +4542,7 @@
 				1F88639B15D6F62B00373743 /* PresencePublisher.py in Resources */,
 				1FB247E315D99AEB00703D24 /* OfflineNoteController.py in Resources */,
 				1F3C358115F521A8005356AE /* PresenceInfoPanel.xib in Resources */,
+				1F08DB1D193DEDB200187373 /* online.aif in Resources */,
 				1F3C358715F522FA005356AE /* PresenceInfoController.py in Resources */,
 				1F3BF8C01611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BBB161621BB00CD7B21 /* location.png in Resources */,
@@ -4551,6 +4570,7 @@
 				1F5BC26517E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1F5BC2FF17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 				1F331DC7193B5CB600831F31 /* voicemail.png in Resources */,
+				1F08DB18193DEDB200187373 /* offline.aif in Resources */,
 				1FF32B7117ED0D8D00E63A20 /* silence.wav in Resources */,
 				1FF32B7817ED0DB000E63A20 /* blink-crypto.icns in Resources */,
 				1FF32B7B17ED0DDC00E63A20 /* Info-lite.plist in Resources */,
@@ -4696,6 +4716,7 @@
 				1FC80E8A192E3E1F00BD62F4 /* AnsweringMachineSetting.xib in Resources */,
 				1FC80E8B192E3E1F00BD62F4 /* audio_small.png in Resources */,
 				1FC80E8C192E3E1F00BD62F4 /* SMSViewController.py in Resources */,
+				1F08DB1A193DEDB200187373 /* offline.aif in Resources */,
 				1FC80E8D192E3E1F00BD62F4 /* 3333@sip2sip.info.tiff in Resources */,
 				1FC80E8E192E3E1F00BD62F4 /* PresenceOfflineWindow.xib in Resources */,
 				1FC80E8F192E3E1F00BD62F4 /* 4444@sip2sip.info.tiff in Resources */,
@@ -4726,6 +4747,7 @@
 				1FC80EA9192E3E1F00BD62F4 /* resources.py in Resources */,
 				1FC80EAA192E3E1F00BD62F4 /* silence.wav in Resources */,
 				1FC80EAB192E3E1F00BD62F4 /* ConferenceFileCell.py in Resources */,
+				1F08DB1F193DEDB200187373 /* online.aif in Resources */,
 				1FC80F71192E414C00BD62F4 /* branding-elquijote.py in Resources */,
 				1FC80EAC192E3E1F00BD62F4 /* editor.png in Resources */,
 				1FC80EAD192E3E1F00BD62F4 /* fullscreen.png in Resources */,
@@ -4869,6 +4891,7 @@
 				2B5DE6820FFDAE1400701821 /* ring_inbound.wav in Resources */,
 				2B5DE6830FFDAE1400701821 /* ring_outbound.wav in Resources */,
 				2B5DE9EB100447D700701821 /* VerticalBoxView.py in Resources */,
+				1F08DB1B193DEDB200187373 /* online.aif in Resources */,
 				2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */,
 				2B7B9C661008D67500BFDAF7 /* TableView.py in Resources */,
 				2B103E371015721E00002158 /* AudioSession.py in Resources */,
@@ -4952,6 +4975,7 @@
 				2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */,
 				2B0CE73510CDE8CE00325F30 /* SMSView.xib in Resources */,
 				1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */,
+				1F08DB16193DEDB200187373 /* offline.aif in Resources */,
 				2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */,
 				2BD011E210D8198400D27A92 /* ChatView.html in Resources */,
 				2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */,
