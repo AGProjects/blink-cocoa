@@ -135,6 +135,7 @@ class SoundsSettings(SettingsGroup):
     message_received = Setting(type=SoundFile, default=SoundFile("message_received.wav", volume=10), nillable=True)
     message_sent = Setting(type=SoundFile, default=SoundFile("message_sent.wav", volume=10), nillable=True)
     night_volume = Setting(type=NightVolume, default=NightVolume(start_hour=22, end_hour=8, volume=10), nillable=True)
+    play_presence_sounds = Setting(type=bool, default=True)
     enable_speech_synthesizer = Setting(type=bool, default=True)
     use_speech_recognition = Setting(type=bool, default=False)
 

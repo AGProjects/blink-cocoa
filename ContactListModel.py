@@ -1186,7 +1186,7 @@ class BlinkPresenceContact(BlinkContact):
 
                             NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
 
-                    if status == 'available' and self.name:
+                    if status in ('available', 'offline') and self.name:
                         notify = False
                         if NSApp.delegate().wake_up_timestamp is not None:
                             now = int(time.time())
@@ -1204,12 +1204,14 @@ class BlinkPresenceContact(BlinkContact):
 
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name
-                            nc_body = NSLocalizedString("%s is now ", "System notification body %s is a a person name") % self.name + status_localized[status]
-                            if status == "available":
-                                NSSound.soundNamed_("online").play()
-                            elif status == "offline":
-                                NSSound.soundNamed_("offline").play()
+                            nc_body = NSLocalizedString("%s is now ", "Person name") % self.name + status_localized[status]
                             NSApp.delegate().gui_notify(nc_title, nc_body)
+                            settings = SIPSimpleSettings()
+                            if settings.sounds.play_presence_sounds:
+                                if status == "available":
+                                    NSSound.soundNamed_("online").play()
+                                elif status == "offline":
+                                    NSSound.soundNamed_("offline").play()
 
                     if log and status == 'available':
                         NotificationCenter().post_notification("BlinkContactBecameAvailable", sender=self.contact)
