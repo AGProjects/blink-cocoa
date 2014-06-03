@@ -24,6 +24,7 @@ from sipsimple.util import ISOTimestamp
 from resources import Resources
 from SmileyManager import SmileyManager
 from util import escape_html
+from bs4 import BeautifulSoup
 
 
 MSG_STATE_SENDING = "sending" # middleware told us the message is being sent
@@ -468,6 +469,10 @@ class ChatViewController(NSObject):
             displayed_timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
         else:
             displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+
+        if is_html:
+            soup = BeautifulSoup(text)
+            text = soup.prettify()
 
         text = processHTMLText(text, self.expandSmileys, is_html)
         private = 1 if is_private else "null"
