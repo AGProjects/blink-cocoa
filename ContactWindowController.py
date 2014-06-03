@@ -4370,18 +4370,18 @@ class ContactWindowController(NSWindowController):
                 if self.sessionControllersManager.isMediaTypeSupported('video'):
                     video_submenu = NSMenu.alloc().init()
                     video_submenu.setAutoenablesItems_(False)
-                    aor_supports_video = True
-                    if settings.gui.media_support_detection:
-                        aor_supports_video = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'video' in device['caps'])
 
                     for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                         if uri.type is not None and uri.type.lower() == 'url':
                             continue
 
+                        aor_supports_video = True
+                        if settings.gui.media_support_detection:
+                            aor_supports_video = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('video' in device['caps'] or not device['caps']))
+
                         video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         video_item.setRepresentedObject_(target_uri)
-
                         video_item.setEnabled_(aor_supports_video)
 
                         if isinstance(item, BlinkPresenceContact):
@@ -4415,10 +4415,14 @@ class ContactWindowController(NSWindowController):
                             if device['caps'] is not None and 'video' not in device['caps']:
                                 video_item.setEnabled_(False)
 
+                    contact_supports_video = True
+                    if settings.gui.media_support_detection:
+                        contact_supports_video = any(device for device in item.presence_state['devices'].values() if ('video' in device['caps'] or not device['caps']))
+
                     if video_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
-                        mitem.setEnabled_(aor_supports_video)
+                        mitem.setEnabled_(contact_supports_video)
 
                 if self.sessionControllersManager.isMediaTypeSupported('sms'):
                     sms_submenu = NSMenu.alloc().init()
@@ -4442,18 +4446,18 @@ class ContactWindowController(NSWindowController):
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
                     chat_submenu = NSMenu.alloc().init()
                     chat_submenu.setAutoenablesItems_(False)
-                    aor_supports_chat = True
-                    if settings.gui.media_support_detection:
-                        aor_supports_chat = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'chat' in device['caps'])
 
                     for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                         if uri.type is not None and uri.type.lower() == 'url':
                             continue
 
+                        aor_supports_chat = True
+                        if settings.gui.media_support_detection:
+                            aor_supports_chat = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('chat' in device['caps'] or not device['caps']))
+
                         chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         chat_item.setRepresentedObject_(target_uri)
-
                         chat_item.setEnabled_(aor_supports_chat)
 
                         if isinstance(item, BlinkPresenceContact):
@@ -4487,22 +4491,27 @@ class ContactWindowController(NSWindowController):
                             if device['caps'] is not None and 'chat' not in device['caps']:
                                 chat_item.setEnabled_(False)
 
+                    contact_supports_chat = True
+                    if settings.gui.media_support_detection:
+                        contact_supports_chat = any(device for device in item.presence_state['devices'].values() if ('chat' in device['caps'] or not device['caps']))
+
                     if chat_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(chat_submenu, mitem)
-                        mitem.setEnabled_(aor_supports_chat)
+                        mitem.setEnabled_(contact_supports_chat)
 
                 if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
-
                     if self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                         ft_submenu = NSMenu.alloc().init()
                         ft_submenu.setAutoenablesItems_(False)
-                        aor_supports_ft = True
-                        if settings.gui.media_support_detection:
-                            aor_supports_ft = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'file-transfer' in device['caps'])
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
+
+                            aor_supports_ft = True
+                            if settings.gui.media_support_detection:
+                                aor_supports_ft = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('file-transfer' in device['caps'] or not device['caps']))
+
                             ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
                             target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                             ft_item.setRepresentedObject_(target_uri)
@@ -4540,20 +4549,25 @@ class ContactWindowController(NSWindowController):
                                 if device['caps'] is not None and 'file-transfer' not in device['caps']:
                                     ft_item.setEnabled_(False)
 
+                        contact_supports_ft = True
+                        if settings.gui.media_support_detection:
+                            contact_supports_ft = any(device for device in item.presence_state['devices'].values() if ('file-transfer' in device['caps'] or not device['caps']))
+
                         if ft_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
-                            mitem.setEnabled_(aor_supports_ft)
+                            mitem.setEnabled_(contact_supports_ft)
 
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
-                        aor_supports_ds = True
-                        if settings.gui.media_support_detection:
-                            aor_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'screen-sharing-server' in device['caps'])
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
+                            aor_supports_ds = True
+                            if settings.gui.media_support_detection:
+                                aor_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('screen-sharing-server' in device['caps'] or not device['caps']))
+
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(1)
@@ -4589,21 +4603,24 @@ class ContactWindowController(NSWindowController):
                                 ds_item.setIndentationLevel_(1)
                                 if device['caps'] is not None and 'screen-sharing-server' not in device['caps']:
                                     ds_item.setEnabled_(False)
+                        contact_supports_ds = True
+                        if settings.gui.media_support_detection:
+                            contact_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('screen-sharing-server' in device['caps'] or not device['caps']))
 
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-                            mitem.setEnabled_(aor_supports_ds)
+                            mitem.setEnabled_(contact_supports_ds)
 
                     if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
-                        aor_supports_ds = True
-                        if settings.gui.media_support_detection:
-                            aor_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and 'screen-sharing-client' in device['caps'])
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
+                            aor_supports_ds = True
+                            if settings.gui.media_support_detection:
+                                aor_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('screen-sharing-client' in device['caps'] or not device['caps']))
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(2)
@@ -4641,10 +4658,13 @@ class ContactWindowController(NSWindowController):
                                 if device['caps'] is not None and 'screen-sharing-client' not in device['caps']:
                                     ds_item.setEnabled_(False)
 
+                        contact_supports_ds = True
+                        if settings.gui.media_support_detection:
+                            contact_supports_ds = any(device for device in item.presence_state['devices'].values() if 'sip:%s' % uri.uri in device['aor'] and ('screen-sharing-client' in device['caps'] or not device['caps']))
                         if ds_submenu.itemArray():
                             mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "", "")
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-                            mitem.setEnabled_(aor_supports_ds)
+                            mitem.setEnabled_(contact_supports_ds)
 
                 urls = list(uri.uri for uri in item.uris if uri.type is not None and uri.type.lower() == 'url')
                 if isinstance(item, BlinkPresenceContact):
