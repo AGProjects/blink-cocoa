@@ -732,15 +732,27 @@ class ContactWindowController(NSWindowController):
         if not settings.gui.media_support_detection:
             return True
 
+        if uri is not None:
+            uri_devices = list(device for device in contact.presence_state['devices'].values() if 'sip:%s' % uri in device['aor'])
+            if not uri_devices:
+                return True
+
+            has_caps = any(device for device in uri_devices if device['caps'])
+            if not has_caps:
+                return True
+
+            return any(device for device in uri_devices if media in device['caps'])
+
         devices = contact.presence_state['devices'].values()
 
         if not devices:
             return True
 
-        if uri is not None:
-            return any(device for device in contact.presence_state['devices'].values() if 'sip:%s' % uri in device['aor'] and media in device['caps'])
+        has_caps = any(device for device in devices if device['caps'])
+        if not has_caps:
+            return True
 
-        return any(device for device in contact.presence_state['devices'].values() if media in device['caps'])
+        return any(device for device in devices if media in device['caps'])
 
     @run_in_green_thread
     def hideHistoryEntries_(self, sender):
