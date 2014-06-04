@@ -68,7 +68,6 @@ class ConferenceScreenSharing(NSObject):
         handler(notification)
 
     def _NH_SIPSessionGotConferenceInfo(self, notification):
-        BlinkLogger().log_info(u"Received conference-info update in web view")
         screen_sharing_urls = list(unquote(user.screen_image_url.value) for user in notification.data.conference_info.users if user.screen_image_url is not None)
 
         if self.screensharing_url not in screen_sharing_urls and self.loading:
