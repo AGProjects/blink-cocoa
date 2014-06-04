@@ -1004,6 +1004,7 @@ class SessionController(NSObject):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='MusicPauseDidExecute')
+        self.notification_center.add_observer(self, name='BlinkTransportFailed')
         self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
         self.selected_contact = None
@@ -1051,6 +1052,7 @@ class SessionController(NSObject):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='MusicPauseDidExecute')
+        self.notification_center.add_observer(self, name='BlinkTransportFailed')
         self.notification_center.add_observer(self, sender=self)
         self.notification_center.add_observer(self, sender=self.session)
         self.selected_contact = None
