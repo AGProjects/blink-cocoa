@@ -1738,9 +1738,8 @@ class SessionController(NSObject):
             self.conference_shared_files = []
 
     def _NH_SIPSessionDidStart(self, sender, data):
-        self.transport = '%s:%s' % (self.sessionController.session.transport, str(self.sessionController.session.peer_address))
-        self.sessionController.log_info("Next SIP hop is %s" % self.transport)
-
+        self.transport = '%s:%s' % (self.session.transport, str(self.session.peer_address))
+        self.log_info("Next SIP hop is %s" % self.transport)
         self.notification_center.add_observer(self, sender=self.session._invitation)
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
         self.mustShowDrawer = True
