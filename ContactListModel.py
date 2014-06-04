@@ -1192,6 +1192,14 @@ class BlinkPresenceContact(BlinkContact):
                             now = int(time.time())
                             if now - NSApp.delegate().wake_up_timestamp > 60:
                                 notify = True
+                        elif NSApp.delegate().ip_change_timestamp is not None:
+                            now = int(time.time())
+                            if now - NSApp.delegate().ip_change_timestamp > 60:
+                                notify = True
+                        elif NSApp.delegate().transport_lost_timestamp is not None:
+                            now = int(time.time())
+                            if now - NSApp.delegate().transport_lost_timestamp > 60:
+                                notify = True
                         else:
                             notify = True
 

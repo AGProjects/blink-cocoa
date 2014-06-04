@@ -86,6 +86,8 @@ class BlinkAppDelegate(NSObject):
     ui_notification_center = None
     application_will_end = False
     wake_up_timestamp = None
+    ip_change_timestamp = None
+    transport_lost_timestamp = None
 
     debug = False
 
@@ -360,6 +362,7 @@ class BlinkAppDelegate(NSObject):
         handler(notification)
 
     def _NH_SIPEngineTransportDidDisconnect(self, notification):
+        self.transport_lost_timestamp = int(time.time())
 
         transport = '%s:%s' % (notification.data.transport.lower(), notification.data.remote_address)
         try:
@@ -405,6 +408,7 @@ class BlinkAppDelegate(NSObject):
         BlinkLogger().log_info(u"Network conditions changed")
 
     def _NH_SystemIPAddressDidChange(self, notification):
+        self.ip_change_timestamp = int(time.time())
         BlinkLogger().log_info(u"IP address changed to %s" % notification.data.new_ip_address)
         if notification.data.new_ip_address is not None:
             settings = SIPSimpleSettings()
