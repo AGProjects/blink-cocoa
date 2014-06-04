@@ -37,7 +37,7 @@ import platform
 import shutil
 import struct
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application import log
 from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
@@ -133,6 +133,7 @@ class BlinkAppDelegate(NSObject):
                            }
     statusbar_menu_icon = 'invisible'
     about_copyright = "Copyright 2009-2014 AG Projects B.V."
+    active_tranports = set()
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -359,12 +360,17 @@ class BlinkAppDelegate(NSObject):
         handler(notification)
 
     def _NH_SIPEngineTransportDidDisconnect(self, notification):
-        BlinkLogger().log_info(u"%s connection %s <-> %s lost: %s" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address, notification.data.reason))
 
-        if notification.data.reason in ("Network is down"):
+        transport = '%s:%s' % (notification.data.transport.lower(), notification.data.remote_address)
+        try:
+            self.active_tranports.remove(transport)
+        except KeyError:
             return
 
-        registrar = '%s:%s' % (notification.data.transport.lower(), notification.data.remote_address)
+        if notification.data.reason != 'Success':
+            BlinkLogger().log_info(u"%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+        else:
+            NotificationCenter().post_notification("BlinkTransportFailed", data=NotificationData(transport=transport))
 
         for account_info in self.contactsWindowController.accounts:
             account = account_info.account
@@ -375,10 +381,10 @@ class BlinkAppDelegate(NSObject):
             if not account.enabled:
                 continue
 
-            if account_info.registrar != registrar:
+            if account_info.registrar != transport:
                 continue
 
-            BlinkLogger().log_info('Reconnecting account %s in state' % (account.id, account_info.register_state))
+            BlinkLogger().log_debug('Reconnecting account %s' % account.id)
 
             if account.sip.register:
                 account._registrar.reregister()
@@ -387,7 +393,10 @@ class BlinkAppDelegate(NSObject):
                 account._presence_subscriber.resubscribe()
 
     def _NH_SIPEngineTransportDidConnect(self, notification):
-        BlinkLogger().log_info(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+        transport = "%s:%s" %(notification.data.transport, notification.data.remote_address)
+        if transport not in self.active_tranports:
+            BlinkLogger().log_info(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+            self.active_tranports.add(transport)
 
     def _NH_DNSNameserversDidChange(self, notification):
         BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))

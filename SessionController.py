@@ -936,6 +936,7 @@ class SessionController(NSObject):
     do_not_disturb_until_end = False
     previous_conference_users = None
     notify_when_participants_changed = False
+    transport = None
 
     @property
     def sessionControllersManager(self):
@@ -959,6 +960,7 @@ class SessionController(NSObject):
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='MusicPauseDidExecute')
+        self.notification_center.add_observer(self, name='BlinkTransportFailed')
         self.notification_center.add_observer(self, sender=self)
         self.selected_contact = None
         self.cancelledStream = None
@@ -1089,6 +1091,8 @@ class SessionController(NSObject):
         self.notification_center.remove_observer(self, sender=self)
         self.notification_center.remove_observer(self, name='SystemWillSleep')
         self.notification_center.remove_observer(self, name='MusicPauseDidExecute')
+        self.notification_center.remove_observer(self, name='BlinkTransportFailed')
+
         self.destroyInfoPanel()
         self.contact = None
 
@@ -1732,6 +1736,9 @@ class SessionController(NSObject):
             self.conference_shared_files = []
 
     def _NH_SIPSessionDidStart(self, sender, data):
+        self.transport = '%s:%s' % (self.sessionController.session.transport, str(self.sessionController.session.peer_address))
+        self.sessionController.log_info("Next SIP hop is %s" % self.transport)
+
         self.notification_center.add_observer(self, sender=self.session._invitation)
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
         self.mustShowDrawer = True
@@ -1856,6 +1863,7 @@ class SessionController(NSObject):
         self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
 
     def _NH_SIPSessionDidEnd(self, sender, data):
+        self.transport = None
         self.call_id = sender._invitation.call_id
         try:
             self.to_tag = sender._invitation.to_header.parameters['tag']
@@ -2067,7 +2075,7 @@ class SessionController(NSObject):
         if self.state == STATE_FINISHED:
             return
 
-        self.log_info(u"Received conference-info update")
+        self.log_debug(u"Received conference-info update")
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.conference_shared_files = []
@@ -2208,6 +2216,13 @@ class SessionController(NSObject):
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.startDeallocTimer()
+
+    def _NH_BlinkTransportFailed(self, sender, data):
+        if self.session is None:
+            return
+
+        if data.transport == self.transport:
+            self.log_info("Connection lost to %s" % data.transport)
 
     def _NH_AnsweringMachineRecordingDidEnd(self, sender, data):
         self.answering_machine_filename = data.filename
