@@ -38,6 +38,11 @@ from MediaStream import (MediaStream,
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 
+class BlinkScreenSharingStream(ScreenSharingStream):
+    ServerHandler = ExternalVNCServerHandler
+    ViewerHandler = ExternalVNCViewerHandler
+
+
 class StatusItem(NSObject):
     items = []
     menu = None
@@ -98,7 +103,6 @@ class ScreenSharingController(MediaStream):
     implements(IObserver)
 
     viewer = None
-    vncServerPort = 5900
     exhanged_bytes = 0
     must_reset_trace_msrp = False
 
@@ -119,13 +123,10 @@ class ScreenSharingController(MediaStream):
         return self
 
     def startIncoming(self, is_update):
-        if self.direction == "active": # viewer
-            # open viewer
-            self.sessionController.log_info("Preparing to view remote screen")
-            self.stream.handler = ExternalVNCViewerHandler()
+        if self.direction == "active":
+            self.sessionController.log_info("Requesting remote screen...")
         else:
-            self.sessionController.log_info("Sharing local screen...")
-            self.stream.handler = ExternalVNCServerHandler(("localhost", self.vncServerPort))
+            self.sessionController.log_info("Offering local screen...")
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.getTitleShort())
@@ -142,11 +143,10 @@ class ScreenSharingController(MediaStream):
         self.changeStatus(STREAM_INCOMING)
 
     def startOutgoing(self, is_update):
-        if self.direction == "active": # viewer
-            # open viewer
-            self.sessionController.log_info("Requesting access to remote screen")
+        if self.direction == "active":
+            self.sessionController.log_info("Requesting remote screen...")
         else:
-            self.sessionController.log_info("Sharing local screen...")
+            self.sessionController.log_info("Offering local screen...")
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.getTitleShort())
@@ -344,14 +344,15 @@ class ScreenSharingController(MediaStream):
         self.sessionController = None
         super(ScreenSharingController, self).dealloc()
 
+
 class ScreenSharingViewerController(ScreenSharingController):
     @classmethod
     def createStream(cls):
-        return ScreenSharingStream(ExternalVNCViewerHandler())
+        return BlinkScreenSharingStream("viewer")
 
 
 class ScreenSharingServerController(ScreenSharingController):
     @classmethod
     def createStream(cls):
-        return ScreenSharingStream(ExternalVNCServerHandler(("localhost", cls.vncServerPort)))
+        return BlinkScreenSharingStream("server")
 
