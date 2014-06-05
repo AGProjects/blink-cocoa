@@ -172,15 +172,15 @@ class ScreenSharingController(MediaStream):
                 self.statusWindow.close()
                 self.statusWindow = None
         elif self.status == STREAM_PROPOSING:
-            self.sessionController.log_info("Cancelling screen sharing session as per user request")
+            self.sessionController.log_info("Cancelling screen sharing...")
             self.sessionController.cancelProposal(self.stream)
             self.changeStatus(STREAM_CANCELLING)
         elif self.status in (STREAM_CONNECTED, STREAM_INCOMING):
-            self.sessionController.log_info("Removing Screen Stream from Session")
+            self.sessionController.log_info("Removing screen sharing...")
             self.sessionController.endStream(self)
             self.changeStatus(STREAM_DISCONNECTING)
         else:
-            self.sessionController.log_info("Cancelling screen sharing session as per user request")
+            self.sessionController.log_info("Cancelling screen sharing...")
             self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
 
@@ -217,7 +217,7 @@ class ScreenSharingController(MediaStream):
         if self.direction == "active":
             if newstate == STREAM_CONNECTED:
                 ip, port = self.stream.handler.address
-                self.sessionController.log_info("Connecting viewer to vnc://127.0.0.1:%s" % port)
+                self.sessionController.log_info("Connecting screen sharing viewer to vnc://127.0.0.1:%s" % port)
                 url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
                 NSWorkspace.sharedWorkspace().openURL_(url)
         else:
