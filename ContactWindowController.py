@@ -566,7 +566,7 @@ class ContactWindowController(NSWindowController):
             if time.time() - account_info.subscribe_presence_timestamp < 180:
                 return
 
-            BlinkLogger().log_info("Presence subscriptions for account %s purged" % account.id)
+            BlinkLogger().log_debug("Presence subscriptions for account %s purged" % account.id)
             NotificationCenter().post_notification("BlinkPresenceFailed", sender=account.id)
             account_info.subscribe_presence_purged = True
 
@@ -1112,7 +1112,7 @@ class ContactWindowController(NSWindowController):
             return
 
         if self.accounts[position].subscribe_presence_state != 'failed':
-            BlinkLogger().log_info("Presence subscriptions for account %s failed" % account.id)
+            BlinkLogger().log_debug("Presence subscriptions for account %s failed" % account.id)
         self.accounts[position].subscribe_presence_state = 'failed'
 
     @allocate_autorelease_pool
@@ -1128,7 +1128,7 @@ class ContactWindowController(NSWindowController):
             return
 
         if self.accounts[position].subscribe_presence_state != 'ended':
-            BlinkLogger().log_info("Presence subscriptions for account %s ended" % account.id)
+            BlinkLogger().log_debug("Presence subscriptions for account %s ended" % account.id)
         self.accounts[position].subscribe_presence_state = 'ended'
 
     @allocate_autorelease_pool
@@ -1139,7 +1139,7 @@ class ContactWindowController(NSWindowController):
             pass
         else:
             if self.accounts[position].subscribe_presence_state != 'active':
-                BlinkLogger().log_info("Presence subscriptions for account %s are active" % notification.sender.id)
+                BlinkLogger().log_debug("Presence subscriptions for account %s are active" % notification.sender.id)
 
             self.accounts[position].subscribe_presence_timestamp = time.time()
             self.accounts[position].subscribe_presence_state = 'active'
@@ -1357,11 +1357,11 @@ class ContactWindowController(NSWindowController):
         self.setSpeechSynthesis()
 
         if not NSApp.delegate().wait_for_enrollment:
-            BlinkLogger().log_info('Starting main user interface')
+            BlinkLogger().log_debug('Starting main user interface')
             self.showWindow_(None)
 
     def _NH_SIPApplicationDidStart(self, notification):
-        BlinkLogger().log_info('Application is ready')
+        BlinkLogger().log_debug('Application is ready')
         self.callPendingURIs()
         self.refreshLdapDirectory()
         self.updateHistoryMenu()

@@ -57,7 +57,7 @@ class SIPManager(object):
     def __init__(self):
 
         BlinkLogger().log_info(u"Loading SIP SIMPLE Client SDK %s" % sdk_version)
-        BlinkLogger().log_info(u"Starting core version %s" % core_version)
+        BlinkLogger().log_debug(u"Starting core version %s" % core_version)
 
         self._app = SIPApplication()
         self._delegate = None
@@ -429,7 +429,7 @@ class SIPManager(object):
         settings = SIPSimpleSettings()
         _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, _version)
-        BlinkLogger().log_info(u"SIP User Agent: %s" % settings.user_agent)
+        BlinkLogger().log_debug(u"SIP User Agent: %s" % settings.user_agent)
         settings.save()
 
         self.migratePasswordsToKeychain()
@@ -445,8 +445,8 @@ class SIPManager(object):
             settings.service_provider.name = NSApp.delegate().service_provider_name
             settings.save()
 
-        BlinkLogger().log_info(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
-        BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
+        BlinkLogger().log_debug(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
+        BlinkLogger().log_debug(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
 
         # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
@@ -473,19 +473,19 @@ class SIPManager(object):
 
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info(u"Core started")
-        BlinkLogger().log_info(u"SIP device ID: %s" % settings.instance_id)
+        BlinkLogger().log_debug(u"Core started")
+        BlinkLogger().log_debug(u"SIP device ID: %s" % settings.instance_id)
         codecs_print = []
         for codec in settings.rtp.audio_codec_list:
             codecs_print.append(beautify_audio_codec(codec))
-        BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_debug(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
 
         codecs_print = []
         for codec in settings.rtp.video_codec_list:
             codecs_print.append(beautify_video_codec(codec))
-        BlinkLogger().log_info(u"Enabled video codecs: %s" % ", ".join(codecs_print))
-        BlinkLogger().log_info(u"Available video cameras: %s" % ", ".join((camera for camera in self._app.engine.video_devices)))
-        BlinkLogger().log_info(u"Using video camera: %s" % self._app.video_device.real_name)
+        BlinkLogger().log_debug(u"Enabled video codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_debug(u"Available video cameras: %s" % ", ".join((camera for camera in self._app.engine.video_devices)))
+        BlinkLogger().log_debug(u"Using video camera: %s" % self._app.video_device.real_name)
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
             for transport in settings.sip.transport_list:
@@ -555,7 +555,7 @@ class SIPManager(object):
             BlinkLogger().log_info(message)
         elif registrar_changed:
             message = u'Account %s changed registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
 
         self.registrar_addresses[account.id] = _address
         self.contact_addresses[account.id] = data.contact_header.uri
@@ -611,9 +611,9 @@ class SIPManager(object):
             settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
             BlinkLogger().log_info(u"Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum))
-            BlinkLogger().log_info(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
+            BlinkLogger().log_debug(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
             if spectrum >=20:
-                BlinkLogger().log_info(u"For studio quality disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section.")
+                BlinkLogger().log_debug(u"For studio quality disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section.")
             settings.save()
         elif 'audio.sample_rate' in data.modified:
             settings = SIPSimpleSettings()

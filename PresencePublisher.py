@@ -449,11 +449,11 @@ class PresencePublisher(object):
             return None
 
         if not self.first_start_logged:
-            BlinkLogger().log_info('My device has started and is active')
+            BlinkLogger().log_debug('My device has started and is active')
             self.first_start_logged = True
 
         if self.last_logged_status != activity_object['extended_status']:
-            BlinkLogger().log_info(u"My availability changed to %s" % activity_object['extended_status'])
+            BlinkLogger().log_debug(u"My availability changed to %s" % activity_object['extended_status'])
             self.last_logged_status = activity_object['extended_status']
 
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
