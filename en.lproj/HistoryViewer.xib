@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -190,7 +190,9 @@
                                     <webView focusRingType="none" id="5">
                                         <rect key="frame" x="0.0" y="176" width="567" height="328"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12"/>
+                                        <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
+                                            <nil key="identifier"/>
+                                        </webPreferences>
                                         <connections>
                                             <outlet property="UIDelegate" destination="19" id="25"/>
                                             <outlet property="downloadDelegate" destination="19" id="21"/>
@@ -315,9 +317,9 @@
                     <toolbarItem implicitItemIdentifier="2B4E8F2E-3342-434C-A85E-8083D0CE95E6" label="Search by Media" paletteLabel="Search by Media" id="106">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="135" height="26"/>
+                        <size key="maxSize" width="162" height="26"/>
                         <popUpButton key="view" toolTip="Filter by Media" verticalHuggingPriority="750" id="100">
-                            <rect key="frame" x="0.0" y="14" width="135" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="push" title="Any Media" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="103" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -345,9 +347,9 @@
                     <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Search by Date" paletteLabel="Search by Date" id="121">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="149" height="26"/>
+                        <size key="maxSize" width="172" height="26"/>
                         <popUpButton key="view" toolTip="Filter by Date" verticalHuggingPriority="750" id="122">
-                            <rect key="frame" x="0.0" y="14" width="149" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="172" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="push" title="Last Day" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" preferredEdge="minX" selectedItem="128" id="123">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
