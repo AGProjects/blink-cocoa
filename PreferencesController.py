@@ -381,6 +381,7 @@ class PreferencesController(NSWindowController, object):
 
                 if section_names:
                     subsectionsTabView = NSTabView.alloc().init()
+                    subsectionsTabView.setDelegate_(self)
                     tabItem.setView_(subsectionsTabView)
                     self.generalTabView.addTabViewItem_(tabItem)
                     tabItem = NSTabViewItem.alloc().initWithIdentifier_('General')
