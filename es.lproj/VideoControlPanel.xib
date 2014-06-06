@@ -27,12 +27,12 @@
         <window title="Vídeo Controller" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="WqC-T4-L8j" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="579" y="75" width="577" height="49"/>
+            <rect key="contentRect" x="579" y="75" width="526" height="49"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
-            <value key="minSize" type="size" width="577" height="49"/>
-            <value key="maxSize" type="size" width="577" height="49"/>
+            <value key="minSize" type="size" width="526" height="49"/>
+            <value key="maxSize" type="size" width="526" height="49"/>
             <view key="contentView" focusRingType="none" id="ygh-EU-NlO">
-                <rect key="frame" x="0.0" y="0.0" width="577" height="49"/>
+                <rect key="frame" x="0.0" y="0.0" width="526" height="49"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jc6-VB-mqF">
@@ -124,7 +124,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="okS-f1-l3w">
-                        <rect key="frame" x="467" y="22" width="31" height="27"/>
+                        <rect key="frame" x="414" y="21" width="31" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="video" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="XKh-4I-rS0">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -135,7 +135,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1k3-Y3-vUH">
-                        <rect key="frame" x="513" y="18" width="46" height="27"/>
+                        <rect key="frame" x="460" y="18" width="46" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="ED1-Vw-AHb">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -220,7 +220,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ruw-KX-RZB">
-                        <rect key="frame" x="354" y="0.0" width="52" height="17"/>
+                        <rect key="frame" x="360" y="0.0" width="43" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Info" id="d1M-ZM-9B7">
                             <font key="font" metaFont="system" size="10"/>
@@ -229,7 +229,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BoO-xT-Qk4">
-                        <rect key="frame" x="456" y="0.0" width="55" height="17"/>
+                        <rect key="frame" x="401" y="0.0" width="55" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Pausar" id="MxA-nz-0bC">
                             <font key="font" metaFont="system" size="10"/>
@@ -238,7 +238,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Aox-Dj-HIJ">
-                        <rect key="frame" x="504" y="0.0" width="72" height="17"/>
+                        <rect key="frame" x="451" y="0.0" width="69" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Mi Vídeo" id="tvE-B3-zbz">
                             <font key="font" metaFont="system" size="10"/>
@@ -249,7 +249,7 @@
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="96n-FJ-z1t">
                         <rect key="frame" x="399" y="0.0" width="69" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Snapshot" id="UQf-lh-F1j">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Instantánea" id="UQf-lh-F1j">
                             <font key="font" metaFont="system" size="10"/>
                             <color key="textColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

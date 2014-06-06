@@ -317,9 +317,9 @@
                     <toolbarItem implicitItemIdentifier="2B4E8F2E-3342-434C-A85E-8083D0CE95E6" label="Buscar por Medio" paletteLabel="Buscar por Medio" id="106">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="162" height="26"/>
+                        <size key="maxSize" width="135" height="26"/>
                         <popUpButton key="view" toolTip="Filtrar por Medio" verticalHuggingPriority="750" id="100">
-                            <rect key="frame" x="0.0" y="14" width="158" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="135" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="push" title="Cualquier Medio" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="103" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -350,9 +350,9 @@
                     <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Buscar por Fecha" paletteLabel="Buscar por Fecha" id="121">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="172" height="26"/>
+                        <size key="maxSize" width="149" height="26"/>
                         <popUpButton key="view" toolTip="Filtrar por Fecha" verticalHuggingPriority="750" id="122">
-                            <rect key="frame" x="0.0" y="14" width="172" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="149" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="push" title="Ultimo Día" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" preferredEdge="minX" selectedItem="128" id="123">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
