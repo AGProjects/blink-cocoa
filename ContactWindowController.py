@@ -728,6 +728,9 @@ class ContactWindowController(NSWindowController):
         if isinstance(contact, BonjourBlinkContact):
             return media != 'sms'
 
+        if not isinstance(contact, BlinkPresenceContact):
+            return True
+
         settings = SIPSimpleSettings()
         if not settings.gui.media_support_detection:
             return True
