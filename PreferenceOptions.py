@@ -952,7 +952,7 @@ class H264ResolutionOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("1920x1080", "1280x720", "720x480", "720x576"):
+        for item in ("1280x720", "1920x1080", "720x480", "720x576"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -963,7 +963,7 @@ class H264FramerateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
-        for item in ("15", "30", "60", "90"):
+        for item in ("30", "15", "60", "90"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -986,7 +986,7 @@ class VideoResolutionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
-        for item in ('auto', '720p', '1080p', 'vga'):
+        for item in ('720p', '1080p', 'vga', 'auto'):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150

@@ -942,7 +942,6 @@ class PreferencesController(NSWindowController, object):
 
         self.purgeLogsButton.setHidden_(True)
         self.openLogsFolderButton.setHidden_(True)
-
         if item.identifier() == 'logs':
             self._update_logs_size_label()
             self.purgeLogsButton.setHidden_(False)
