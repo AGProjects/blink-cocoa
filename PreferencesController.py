@@ -950,6 +950,8 @@ class PreferencesController(NSWindowController, object):
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Set port to 0 for automatic allocation", "Label"))
         elif item.identifier() == 'tls':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("These settings apply only for SIP signalling", "Label"))
+        elif item.identifier() == 'h264':
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("To revert to the standard values, chose the first option", "Label"))
         else:
             self.sectionHelpPlaceholder.setStringValue_('')
 
