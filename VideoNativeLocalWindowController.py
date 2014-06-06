@@ -358,9 +358,9 @@ class LocalVideoView(NSView):
             if width == 0 or height == 0:
                 width = 1280
                 height = 720
-                BlinkLogger().log_info("Error: %s camera does not provide any supported video format" % device.localizedName())
+                BlinkLogger().log_debug("Error: %s camera does not provide any supported video format" % device.localizedName())
             else:
-                BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
+                BlinkLogger().log_debug("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 

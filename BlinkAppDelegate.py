@@ -157,7 +157,7 @@ class BlinkAppDelegate(NSObject):
 
             branding.init(self)
 
-            BlinkLogger().log_info(u"Starting %s build %s from %s" % (self.applicationNamePrint, build, date))
+            BlinkLogger().log_info(u"Starting %s %s" % (self.applicationNamePrint, build))
 
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
@@ -281,6 +281,8 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
+        BlinkLogger().log_debug(u"Application launched")
+
         branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")
         try:
             branding = __import__(branding_file)

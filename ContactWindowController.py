@@ -3070,10 +3070,10 @@ class ContactWindowController(NSWindowController):
         try:
             my_last_status = self.last_status_per_device[own_service_id]
         except KeyError:
-            BlinkLogger().log_info('My device is now %s' % ('active' if self.my_device_is_active else 'passive'))
+            BlinkLogger().log_debug('My device is now %s' % ('active' if self.my_device_is_active else 'passive'))
         else:
             if my_last_status != self.my_device_is_active:
-                BlinkLogger().log_info('My device is now %s' % ('active' if self.my_device_is_active else 'passive'))
+                BlinkLogger().log_debug('My device is now %s' % ('active' if self.my_device_is_active else 'passive'))
         self.last_status_per_device[own_service_id] = self.my_device_is_active
 
     @objc.IBAction

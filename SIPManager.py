@@ -56,7 +56,7 @@ class SIPManager(object):
 
     def __init__(self):
 
-        BlinkLogger().log_info(u"Loading SIP SIMPLE Client SDK %s" % sdk_version)
+        BlinkLogger().log_info(u"Using SIP SIMPLE Client SDK %s" % sdk_version)
         BlinkLogger().log_debug(u"Starting core version %s" % core_version)
 
         self._app = SIPApplication()
@@ -473,7 +473,7 @@ class SIPManager(object):
 
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_debug(u"Core started")
+        BlinkLogger().log_debug(u"SDK loaded")
         BlinkLogger().log_debug(u"SIP device ID: %s" % settings.instance_id)
         codecs_print = []
         for codec in settings.rtp.audio_codec_list:
@@ -549,10 +549,10 @@ class SIPManager(object):
 
         if contact_changed and registrar_changed:
             message = u'Account %s registered contact %s at %s:%d;transport=%s for %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
         elif contact_changed:
             message = u'Account %s changed contact to %s' % (account.id, data.contact_header.uri)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
         elif registrar_changed:
             message = u'Account %s changed registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
             BlinkLogger().log_debug(message)
