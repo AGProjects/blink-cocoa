@@ -119,7 +119,6 @@ class AddContactController(NSObject):
         self.uris = None
         self.subscriptions = None
         self.defaultPhotoImage = None
-        NotificationCenter().remove_observer(self, name="BlinkGroupsHaveChanged")
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -141,6 +140,7 @@ class AddContactController(NSObject):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
+            NotificationCenter().remove_observer(self, name="BlinkGroupsHaveChanged")
             # TODO: how to handle xmmp: uris?
             #for uri in self.uris:
             #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
@@ -199,6 +199,9 @@ class AddContactController(NSObject):
         return True
 
     def loadGroupNames(self):
+        if self.belonging_groups is None:
+            return
+
         self.groupPopUp.removeAllItems()
         nr_groups = len(self.belonging_groups)
         if nr_groups == 0:
@@ -503,6 +506,8 @@ class EditContactController(AddContactController):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
+            NotificationCenter().remove_observer(self, name="BlinkGroupsHaveChanged")
+
             # TODO: how to handle xmmp: uris?
             #for uri in self.uris:
             #    if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' not in uri.uri:
