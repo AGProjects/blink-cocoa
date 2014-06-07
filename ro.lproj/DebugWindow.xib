@@ -203,14 +203,14 @@
                                         <popUpButton verticalHuggingPriority="750" id="281">
                                             <rect key="frame" x="293" y="277" width="121" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <popUpButtonCell key="cell" type="push" title="Apeluri" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" imageScaling="proportionallyDown" inset="2" selectedItem="285" id="282">
+                                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="282">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <menu key="menu" title="OtherViews" id="283">
                                                     <items>
                                                         <menuItem title="Toate Aplicațiile" id="284"/>
                                                         <menuItem isSeparatorItem="YES" id="290"/>
-                                                        <menuItem title="Apeluri" state="on" tag="1" id="285"/>
+                                                        <menuItem title="Apeluri" tag="1" id="285"/>
                                                         <menuItem title="Abonări" tag="2" id="286"/>
                                                         <menuItem title="Înregistrare SIP" tag="3" id="293"/>
                                                         <menuItem title="Mesaje" tag="4" id="295"/>
