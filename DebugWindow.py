@@ -111,7 +111,7 @@ class DebugWindow(NSObject):
     _siptrace_start_time = None
     _siptrace_packet_count = 0
 
-    filter_sip_application = 'sessions'
+    filter_sip_application = None
     filter_sip_methods = {
                           'PUBLISH': ['subscriptions'],
                           'NOTIFY': ['subscriptions'],
@@ -168,7 +168,7 @@ class DebugWindow(NSObject):
         if settings.logs.trace_notifications_in_gui:
             notification_center.add_observer(self)
 
-        self.sipRadio.selectCellWithTag_(settings.logs.trace_sip_in_gui or Disabled)
+        self.syncSIPtrace(settings.logs.trace_sip_in_gui)
         self.msrpRadio.selectCellWithTag_(settings.logs.trace_msrp_in_gui or Disabled)
         self.xcapRadio.selectCellWithTag_(settings.logs.trace_xcap_in_gui or Disabled)
         self.pjsipCheckBox.setState_(NSOnState if settings.logs.trace_pjsip_in_gui  else NSOffState)
@@ -214,10 +214,14 @@ class DebugWindow(NSObject):
 
     @objc.IBAction
     def sipRadioClicked_(self, sender):
-        notification_center = NotificationCenter()
-        trace = sender.selectedCell().tag()
+        self.syncSIPtrace(sender.selectedCell().tag())
+
+    def syncSIPtrace(self, trace):
         settings = SIPSimpleSettings()
+        notification_center = NotificationCenter()
         settings.logs.trace_sip_in_gui = trace
+        self.sipRadio.selectCellWithTag_(settings.logs.trace_sip_in_gui)
+
         if trace == Disabled:
             notification_center.discard_observer(self, name="DNSLookupTrace")
             settings.logs.trace_sip = settings.logs.trace_sip_to_file

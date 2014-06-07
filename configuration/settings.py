@@ -82,7 +82,7 @@ class LogsSettingsExtension(LogsSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('logs'))
 
     #trace_sip is defined in middleware
-    trace_sip_in_gui = Setting(type=NonNegativeInteger, default=1)
+    trace_sip_in_gui = Setting(type=NonNegativeInteger, default=3)
     trace_sip_to_file = Setting(type=bool, default=False)
 
     #trace_pjsip is defined in middleware
