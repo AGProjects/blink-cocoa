@@ -59,7 +59,7 @@ DQ
                         </connections>
                     </button>
                     <button toolTip="Set the icon for this contact to the default one" verticalHuggingPriority="750" tag="21" id="89">
-                        <rect key="frame" x="74" y="180" width="86" height="16"/>
+                        <rect key="frame" x="74" y="177" width="86" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="90">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
