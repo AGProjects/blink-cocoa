@@ -694,6 +694,7 @@ class BlinkPresenceContact(BlinkContact):
     auto_answer = BlinkPresenceContactAttribute('auto_answer')
     name = BlinkPresenceContactAttribute('name')
     uris = BlinkPresenceContactAttribute('uris')
+    organization = BlinkPresenceContactAttribute('organization')
 
     def __init__(self, contact, log_presence_transitions=False):
         self.log_presence_transitions = log_presence_transitions
@@ -3929,6 +3930,7 @@ class ContactListModel(CustomListModel):
         with addressbook_manager.transaction():
             contact = Contact()
             contact.name = new_contact['name']
+            contact.organization = new_contact['organization']
             contact.uris = new_contact['uris']
             contact.auto_answer = new_contact['auto_answer']
             contact.uris.default = new_contact['default_uri']
@@ -3975,6 +3977,7 @@ class ContactListModel(CustomListModel):
         with addressbook_manager.transaction():
             contact = item.contact
             contact.name = new_contact['name']
+            contact.organization = new_contact['organization']
             contact.uris = new_contact['uris']
             contact.auto_answer = new_contact['auto_answer']
             contact.uris.default = new_contact['default_uri']

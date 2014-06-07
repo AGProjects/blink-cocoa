@@ -15,6 +15,7 @@
                 <outlet property="defaultButton" destination="129" id="133"/>
                 <outlet property="groupPopUp" destination="152" id="161"/>
                 <outlet property="nameText" destination="15" id="19"/>
+                <outlet property="organizationText" destination="DDa-EM-8ae" id="xJ4-8B-CND"/>
                 <outlet property="photoImage" destination="61" id="65"/>
                 <outlet property="preferredMediaPopUpButton" destination="199" id="213"/>
                 <outlet property="subscribePopUp" destination="163" id="187"/>
@@ -26,10 +27,10 @@
         <window title="Agregar Contacto" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="add-contact" animationBehavior="default" id="3" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="229" width="526" height="379"/>
+            <rect key="contentRect" x="196" y="229" width="526" height="407"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <view key="contentView" id="4">
-                <rect key="frame" x="0.0" y="0.0" width="526" height="379"/>
+                <rect key="frame" x="0.0" y="0.0" width="526" height="407"/>
                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="5">
@@ -98,17 +99,27 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="18" y="340" width="143" height="17"/>
+                        <rect key="frame" x="21" y="337" width="143" height="20"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nombre:" id="14">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Organización:" id="14">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <accessibility description="Nombre:"/>
                     </textField>
+                    <textField verticalHuggingPriority="750" id="dWF-qo-934">
+                        <rect key="frame" x="22" y="372" width="143" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nombre:" id="kNi-8e-b5m">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Display Name"/>
+                    </textField>
                     <textField verticalHuggingPriority="750" id="15">
-                        <rect key="frame" x="169" y="337" width="337" height="22"/>
+                        <rect key="frame" x="169" y="369" width="337" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="16">
                             <font key="font" metaFont="system"/>
@@ -118,6 +129,19 @@ Gw
                         <accessibility description="Nombre:"/>
                         <connections>
                             <accessibilityConnection property="title" destination="13" id="97"/>
+                        </connections>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="DDa-EM-8ae">
+                        <rect key="frame" x="169" y="337" width="337" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="xLW-ve-LfY">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Display Name"/>
+                        <connections>
+                            <accessibilityConnection property="title" destination="13" id="2n1-Xb-14k"/>
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="25">
@@ -234,12 +258,12 @@ Gw
                         </tableHeaderView>
                     </scrollView>
                     <segmentedControl verticalHuggingPriority="750" id="129">
-                        <rect key="frame" x="167" y="173" width="341" height="24"/>
+                        <rect key="frame" x="184" y="173" width="308" height="24"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="130">
                             <font key="font" metaFont="system"/>
                             <segments>
-                                <segment label="Por Defecto"/>
+                                <segment label="Dirección Por Defecto"/>
                                 <segment label="Borrar Seleccionada" tag="1"/>
                             </segments>
                         </segmentedCell>

@@ -53,6 +53,7 @@ class AddContactController(NSObject):
     window = objc.IBOutlet()
     addButton = objc.IBOutlet()
     addressText = objc.IBOutlet()
+    organizationText = objc.IBOutlet()
     nameText = objc.IBOutlet()
     groupPopUp = objc.IBOutlet()
     defaultButton = objc.IBOutlet()
@@ -153,6 +154,7 @@ class AddContactController(NSObject):
                        'uris'            : self.uris,
                        'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                        'name'            : unicode(self.nameText.stringValue()),
+                       'organization'    : unicode(self.organizationText.stringValue()),
                        'groups'          : self.belonging_groups,
                        'icon'            : None if self.photoImage.image() == self.defaultPhotoImage else self.photoImage.image(),
                        'preferred_media' : self.preferred_media,
@@ -464,6 +466,7 @@ class EditContactController(AddContactController):
         self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
 
         self.nameText.setStringValue_(blink_contact.name or "")
+        self.organizationText.setStringValue_(blink_contact.organization or "")
         self.photoImage.setImage_(blink_contact.icon)
         self.preferred_media = blink_contact.preferred_media
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
@@ -513,6 +516,7 @@ class EditContactController(AddContactController):
                     'default_uri'     : self.default_uri,
                     'uris'            : self.uris,
                     'name'            : unicode(self.nameText.stringValue()),
+                    'organization'    : unicode(self.organizationText.stringValue()),
                     'groups'          : self.belonging_groups,
                     'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                     'icon'            : None if self.photoImage.image() is self.defaultPhotoImage else self.photoImage.image(),

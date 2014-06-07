@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -15,6 +15,7 @@
                 <outlet property="defaultButton" destination="129" id="133"/>
                 <outlet property="groupPopUp" destination="152" id="161"/>
                 <outlet property="nameText" destination="15" id="19"/>
+                <outlet property="organizationText" destination="DDa-EM-8ae" id="xJ4-8B-CND"/>
                 <outlet property="photoImage" destination="61" id="65"/>
                 <outlet property="preferredMediaPopUpButton" destination="199" id="213"/>
                 <outlet property="subscribePopUp" destination="163" id="187"/>
@@ -26,10 +27,10 @@
         <window title="Add Contact" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="add-contact" animationBehavior="default" id="3" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="229" width="526" height="379"/>
+            <rect key="contentRect" x="196" y="229" width="526" height="407"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <view key="contentView" id="4">
-                <rect key="frame" x="0.0" y="0.0" width="526" height="379"/>
+                <rect key="frame" x="0.0" y="0.0" width="526" height="407"/>
                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="5">
@@ -98,7 +99,7 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="18" y="340" width="143" height="17"/>
+                        <rect key="frame" x="22" y="372" width="143" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Display Name:" id="14">
                             <font key="font" metaFont="system"/>
@@ -107,8 +108,18 @@ Gw
                         </textFieldCell>
                         <accessibility description="Display Name"/>
                     </textField>
+                    <textField verticalHuggingPriority="750" id="dWF-qo-934">
+                        <rect key="frame" x="22" y="340" width="143" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Organization:" id="kNi-8e-b5m">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Display Name"/>
+                    </textField>
                     <textField verticalHuggingPriority="750" id="15">
-                        <rect key="frame" x="169" y="337" width="337" height="22"/>
+                        <rect key="frame" x="169" y="369" width="337" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="16">
                             <font key="font" metaFont="system"/>
@@ -118,6 +129,19 @@ Gw
                         <accessibility description="Display Name"/>
                         <connections>
                             <accessibilityConnection property="title" destination="13" id="97"/>
+                        </connections>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="DDa-EM-8ae">
+                        <rect key="frame" x="169" y="337" width="337" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="xLW-ve-LfY">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Display Name"/>
+                        <connections>
+                            <accessibilityConnection property="title" destination="13" id="2n1-Xb-14k"/>
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="25">

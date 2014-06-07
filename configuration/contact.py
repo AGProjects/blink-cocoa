@@ -22,6 +22,7 @@ class IconSettings(SettingsGroup):
 
 
 class BlinkContactExtension(ContactExtension):
+    organization = SharedSetting(type=unicode, default='')
     auto_answer = SharedSetting(type=Boolean, default=False)
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)

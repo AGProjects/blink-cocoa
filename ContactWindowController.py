@@ -4329,13 +4329,24 @@ class ContactWindowController(NSWindowController):
                 item = item.contact
 
         if isinstance(item, BlinkContact):
-            if isinstance(item, SystemAddressBookBlinkContact):
-                if item.job_title and item.organization:
+            if hasattr(item, 'job_title') and hasattr(item, 'organization'):
+                if item.name and item.job_title and item.organization:
                     _name = "%s, %s" % (unicode(item.name), unicode(item.job_title)) + NSLocalizedString(" at %s", "Organization name follows") % unicode(item.organization)
-                elif item.organization:
+                elif item.name and item.job_title:
+                    _name = "%s, %s" % (unicode(item.name), unicode(item.job_title))
+                elif item.name and item.organization:
                     _name = unicode(item.name) + NSLocalizedString(" at %s", "Organization name follows") % unicode(item.organization)
+                elif item.organization:
+                    _name = unicode(item.organization)
                 else:
                     _name = unicode(item.name)
+            elif hasattr(item, 'organization'):
+                if item.name and item.organization:
+                    _name = unicode(item.name) + NSLocalizedString(" at %s", "Organization name follows") % unicode(item.organization)
+                elif item.name:
+                    _name = unicode(item.name)
+                else:
+                    _name = unicode(item.organization)
             else:
                 _name = unicode(item.name)
 
