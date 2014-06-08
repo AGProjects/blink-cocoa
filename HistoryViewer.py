@@ -169,7 +169,7 @@ class HistoryViewer(NSWindowController):
 
             self.chat_history = ChatHistory()
             self.session_history = SessionHistory()
-            self.setPeriod(1)
+            self.setPeriod(2)
 
             self.selectedTableView = self.contactTable
 
