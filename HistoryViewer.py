@@ -108,7 +108,7 @@ class HistoryViewer(NSWindowController):
     refresh_contacts_counter = 1
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
-    media_type_array = {0: None, 1: 'audio', 2: 'chat', 3: 'sms', 4: 'file-transfer', 5: 'audio-recording', 6: 'availability', 7: 'voicemail', 8: 'missed-call'}
+    media_type_array = {0: None, 1: ('audio', 'video'), 2: ('chat', 'sms'), 3: 'file-transfer', 4: 'audio-recording', 5: 'availability', 6: 'voicemail'}
     period_array = {0: None,
                     1: datetime.datetime.now()-datetime.timedelta(days=1),
                     2: datetime.datetime.now()-datetime.timedelta(days=7),

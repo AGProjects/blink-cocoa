@@ -321,20 +321,18 @@
                         <popUpButton key="view" toolTip="Filter by Media" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Any Media" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="103" id="101">
+                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                                 <menu key="menu" title="OtherViews" id="102">
                                     <items>
-                                        <menuItem title="Any Media" state="on" id="103"/>
+                                        <menuItem title="Any Media" id="103"/>
                                         <menuItem title="Audio Calls" tag="1" id="104"/>
-                                        <menuItem title="Chat Sessions" tag="2" id="105"/>
-                                        <menuItem title="Instant Messages" tag="3" id="108"/>
-                                        <menuItem title="File Transfers" tag="4" id="109"/>
-                                        <menuItem title="Audio Recordings" tag="5" id="135"/>
-                                        <menuItem title="Availability" tag="6" id="136"/>
-                                        <menuItem title="Voicemail" tag="7" id="137"/>
-                                        <menuItem title="Missed Calls" tag="8" id="138"/>
+                                        <menuItem title="Text Conversations" tag="2" id="105"/>
+                                        <menuItem title="File Transfers" tag="3" id="109"/>
+                                        <menuItem title="Audio Recordings" tag="4" id="135"/>
+                                        <menuItem title="Availability" tag="5" id="136"/>
+                                        <menuItem title="Voicemail" tag="6" id="137"/>
                                     </items>
                                 </menu>
                             </popUpButtonCell>

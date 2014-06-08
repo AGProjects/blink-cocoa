@@ -683,7 +683,14 @@ class ChatHistory(object):
             remote_uri_sql = remote_uri_sql.lstrip("(")
             query += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
-            query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+            if media_type is not tuple:
+                media_type = (media_type,)
+            media_type_sql = ""
+            for media in media_type:
+                media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+            media_type_sql = media_type_sql.rstrip(",)")
+            media_type_sql = media_type_sql.lstrip("(")
+            query += " and media_type in (%s)" % media_type_sql
         if search_text:
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         if after_date:
@@ -709,7 +716,14 @@ class ChatHistory(object):
             remote_uri_sql = remote_uri_sql.rstrip(",")
             query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri in (%s)" % remote_uri_sql
             if media_type:
-                query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+                if media_type is not tuple:
+                    media_type = (media_type,)
+                media_type_sql = ""
+                for media in media_type:
+                    media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+                media_type_sql = media_type_sql.rstrip(",)")
+                media_type_sql = media_type_sql.lstrip("(")
+                query += " and media_type in (%s)" % media_type_sql
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
             if after_date:
@@ -723,7 +737,14 @@ class ChatHistory(object):
             query = "select date, local_uri, remote_uri, media_type from chat_messages"
             query += " where local_uri = %s" % ChatMessage.sqlrepr(local_uri)
             if media_type:
-                query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+                if media_type is not tuple:
+                    media_type = (media_type,)
+                media_type_sql = ""
+                for media in media_type:
+                    media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+                media_type_sql = media_type_sql.rstrip(",)")
+                media_type_sql = media_type_sql.lstrip("(")
+                query += " and media_type in (%s)" % media_type_sql
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
             if after_date:
@@ -741,7 +762,14 @@ class ChatHistory(object):
         else:
             query = "select date, local_uri, remote_uri, media_type from chat_messages where 1=1"
             if media_type:
-                query += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+                if media_type is not tuple:
+                    media_type = (media_type,)
+                media_type_sql = ""
+                for media in media_type:
+                    media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+                media_type_sql = media_type_sql.rstrip(",)")
+                media_type_sql = media_type_sql.lstrip("(")
+                query += " and media_type in (%s)" % media_type_sql
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
             if after_date:
@@ -842,9 +870,16 @@ class ChatHistory(object):
             remote_uri_sql = remote_uri_sql.lstrip("(")
             where += " and remote_uri in (%s)" % remote_uri_sql
         if media_type:
-             where += " and media_type = %s" % ChatMessage.sqlrepr(media_type)
+            if media_type is not tuple:
+                media_type = (media_type,)
+            media_type_sql = ""
+            for media in media_type:
+                media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+            media_type_sql = media_type_sql.rstrip(",)")
+            media_type_sql = media_type_sql.lstrip("(")
+            where += " and media_type in (%s)" % media_type_sql
         if date:
-             where += " and date = %s" % ChatMessage.sqlrepr(date)
+            where += " and date = %s" % ChatMessage.sqlrepr(date)
         if after_date:
             where += " and date >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
