@@ -126,15 +126,23 @@ class HistoryViewer(NSWindowController):
 
     def format_media_type(self, media_type):
         if media_type == 'sms':
-            return NSLocalizedString("Short Messages", "Label")
+            media_type_formated = NSLocalizedString("Short Messages", "Label")
         elif media_type == 'chat':
-            return NSLocalizedString("Chat Sessions", "Label")
+            media_type_formated = NSLocalizedString("Chat Sessions", "Label")
         elif media_type == 'audio':
-            return NSLocalizedString("Audio Calls", "Label")
+            media_type_formated = NSLocalizedString("Audio Calls", "Label")
         elif media_type == 'file-transfer':
-            return NSLocalizedString("File Transfers", "Label")
+            media_type_formated = NSLocalizedString("File Transfers", "Label")
+        elif media_type == 'availability':
+            media_type_formated = NSLocalizedString("Availability", "Label")
+        elif media_type == 'missed-call':
+            media_type_formated = NSLocalizedString("Missed Call", "Label")
+        elif media_type == 'voicemail':
+            media_type_formated = NSLocalizedString("Voicemail", "Label")
         else:
-            return media_type.title()
+            media_type_formated = media_type.title()
+
+        return media_type_formated
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
