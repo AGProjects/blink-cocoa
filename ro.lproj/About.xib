@@ -28,10 +28,8 @@
                     <textField verticalHuggingPriority="750" id="5">
                         <rect key="frame" x="17" y="35" width="310" height="14"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" id="8">
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Drepturi de autor © 2009-2014 AG Projects" id="8">
                             <font key="font" metaFont="smallSystem"/>
-                            <string key="title">Drepturi de autor © 2009-2014 AG Projects 
-Toate drepturile rezervate.</string>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
@@ -39,7 +37,7 @@ Toate drepturile rezervate.</string>
                     <textField verticalHuggingPriority="750" id="Cd0-8k-KBE">
                         <rect key="frame" x="51" y="18" width="243" height="14"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="All Rights Reserved." id="Veb-0l-blm">
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Toate drepturile rezervate." id="Veb-0l-blm">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

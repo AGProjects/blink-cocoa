@@ -59,7 +59,7 @@ DQ
                         </connections>
                     </button>
                     <button toolTip="Setează Icoana pentru acest contact la cea implicită" verticalHuggingPriority="750" tag="21" id="89">
-                        <rect key="frame" x="74" y="180" width="86" height="16"/>
+                        <rect key="frame" x="74" y="177" width="86" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Șterge" bezelStyle="rounded" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="90">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -99,9 +99,9 @@ Gw
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="13">
-                        <rect key="frame" x="21" y="340" width="143" height="17"/>
+                        <rect key="frame" x="22" y="372" width="143" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Organizație:" id="14">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nume Afișat:" id="14">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -109,14 +109,14 @@ Gw
                         <accessibility description="Nume Afișat"/>
                     </textField>
                     <textField verticalHuggingPriority="750" id="dWF-qo-934">
-                        <rect key="frame" x="22" y="372" width="143" height="17"/>
+                        <rect key="frame" x="22" y="340" width="143" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nume Afișat:" id="kNi-8e-b5m">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Organizație:" id="kNi-8e-b5m">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                        <accessibility description="Display Name"/>
+                        <accessibility description="Nume Afișat"/>
                     </textField>
                     <textField verticalHuggingPriority="750" id="15">
                         <rect key="frame" x="169" y="369" width="337" height="22"/>
@@ -139,7 +139,7 @@ Gw
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                        <accessibility description="Display Name"/>
+                        <accessibility description="Nume Afișat"/>
                         <connections>
                             <accessibilityConnection property="title" destination="13" id="2n1-Xb-14k"/>
                         </connections>
@@ -258,7 +258,7 @@ Gw
                         </tableHeaderView>
                     </scrollView>
                     <segmentedControl verticalHuggingPriority="750" id="129">
-                        <rect key="frame" x="164" y="173" width="348" height="24"/>
+                        <rect key="frame" x="167" y="173" width="341" height="24"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="130">
                             <font key="font" metaFont="system"/>
