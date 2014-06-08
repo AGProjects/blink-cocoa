@@ -861,9 +861,13 @@ class LanguagesOption(PopUpMenuOption):
 
 class SRTPEncryptionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description=description)
-        for item in option.type.available_values:
-            self.popup.addItemWithTitle_(item)
+        PopUpMenuOption.__init__(self, object, name, option, description=description, useRepresented=True)
+        self.popup.addItemWithTitle_(NSLocalizedString("Optional", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('optional')
+        self.popup.addItemWithTitle_(NSLocalizedString("Mandatory", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('mandatory')
+        self.popup.addItemWithTitle_(NSLocalizedString("Disabled", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('disabled')
 
 class SampleRateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
@@ -2018,6 +2022,7 @@ SettingDescription = {
                       'sip.alternative_proxy': NSLocalizedString("Alternate Proxy", "Label"),
                       'sip.register': NSLocalizedString("Receive Incoming Calls", "Label"),
                       'sip.transport_list': NSLocalizedString("Protocols", "Label"),
+                      'msrp.transport': NSLocalizedString("Transport", "Label"),
                       'sip.do_not_disturb_code': NSLocalizedString("Do Not Disturb Code", "Label"),
                       'sip.register_interval': NSLocalizedString("register Interval", "Label"),
                       'sip.subscribe_interval': NSLocalizedString("Subscribe Interval", "Label"),

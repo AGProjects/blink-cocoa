@@ -3949,7 +3949,7 @@ class ContactWindowController(NSWindowController):
         a.appendAttributedString_(n)
         text = "%(start_time)s"%item
         if (item["duration"].seconds > 0):
-            text += " for "
+            text += NSLocalizedString(" for ", "Menu item")
             dur = item["duration"]
             if dur.days > 0 or dur.seconds > 60*60:
                 text += "%i hours, "%(dur.days*60*60*24 + int(dur.seconds/(60*60)))
@@ -3957,7 +3957,7 @@ class ContactWindowController(NSWindowController):
             text += "%02i:%02i"%(int(s/60), s%60)
         else:
             if item['status'] == 'failed':
-                text += " %s" % item['failure_reason'].capitalize()
+                text += " (%s)" % item['failure_reason'].capitalize()
             elif item['status'] not in ('completed', 'missed'):
                 text += " %s" % session_status_localized[item['status']]
 
