@@ -1959,7 +1959,7 @@ SettingDescription = {
                       'chat.replication_password': NSLocalizedString("Replication Password", "Label"),
                       'chat.disabled': NSLocalizedString("Disabled", "Label"),
                       'chat.disable_history': NSLocalizedString("Disable History", "Label"),
-                      'chat.enable_sms': NSLocalizedString("Enable SMS", "Label"),
+                      'chat.enable_sms': NSLocalizedString("Enable Short Messages", "Label"),
                       'contacts.enable_address_book': NSLocalizedString("Show Address Book", "Label"),
                       'contacts.enable_incoming_calls_group': NSLocalizedString("Show Incoming Calls", "Label"),
                       'contacts.enable_missed_calls_group': NSLocalizedString("Show Missed Calls", "Label"),

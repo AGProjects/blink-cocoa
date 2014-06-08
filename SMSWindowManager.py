@@ -60,11 +60,11 @@ class SMSWindowController(NSWindowController):
             display_name = session.display_name
             sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
             if display_name and display_name != sip_address:
-                title = NSLocalizedString("Instant Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
+                title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
             else:
-                title = NSLocalizedString("Instant Messages with %s", "Window Title") %  format_identity_to_string(session.target_uri)
+                title = NSLocalizedString("Short Messages with %s", "Window Title") %  format_identity_to_string(session.target_uri)
         else:
-            title = NSLocalizedString("Instant Messages", "Window Title")
+            title = NSLocalizedString("Short Messages", "Window Title")
         return title
 
     @allocate_autorelease_pool

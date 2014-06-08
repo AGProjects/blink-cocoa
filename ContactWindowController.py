@@ -3565,7 +3565,7 @@ class ContactWindowController(NSWindowController):
             else:
                 item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
             # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "sendSMSToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
             item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
 
     def updateGroupMenu(self):
@@ -4473,7 +4473,7 @@ class ContactWindowController(NSWindowController):
                             icon.setScalesWhenResized_(True)
                             icon.setSize_(NSMakeSize(15,15))
                             sms_item.setImage_(icon)
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "", "")
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
                 if self.sessionControllersManager.isMediaTypeSupported('chat'):
