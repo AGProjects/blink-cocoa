@@ -182,10 +182,8 @@
                 <button verticalHuggingPriority="750" tag="1" id="158">
                     <rect key="frame" x="399" y="4" width="40" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="roundRect" bezelStyle="roundedRect" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="159">
+                    <buttonCell key="cell" type="roundRect" title="Agregar" bezelStyle="roundedRect" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="159">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <string key="title">Agregar
-</string>
                         <font key="font" metaFont="miniSystem"/>
                     </buttonCell>
                     <connections>

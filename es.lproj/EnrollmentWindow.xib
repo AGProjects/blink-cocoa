@@ -135,7 +135,7 @@ Gw
                         </textFieldCell>
                     </textField>
                     <textField hidden="YES" verticalHuggingPriority="750" tag="101" id="136">
-                        <rect key="frame" x="43" y="10" width="402" height="14"/>
+                        <rect key="frame" x="18" y="10" width="426" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Adquiera Blink Pro para más cuentas" id="137">
                             <font key="font" metaFont="smallSystem"/>

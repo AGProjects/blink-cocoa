@@ -97,7 +97,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <customView id="RSh-u7-reo" customClass="LocalVideoView">
-                                            <rect key="frame" x="-3" y="37.5" width="476" height="265.5"/>
+                                            <rect key="frame" x="-3" y="37.5" width="476" height="266"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         </customView>
                                         <button hidden="YES" verticalHuggingPriority="750" tag="7" id="62">

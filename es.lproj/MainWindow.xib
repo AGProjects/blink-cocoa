@@ -152,7 +152,7 @@
                                     <action selector="addContact:" target="389" id="1599"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Agregar Cuenta Bloqueada..." id="1804">
+                            <menuItem title="Agregar Contacto Bloqueado..." id="1804">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="blockContact:" target="389" id="1806"/>
@@ -309,7 +309,7 @@ CA
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1Vn-Km-SS7"/>
-                            <menuItem title="Utilizar el habla para aceptar o rechazar llamadas" tag="50" id="Ked-li-VeB" userLabel="Menu Item - Use Speech to Accept or Reject Calls">
+                            <menuItem title="Utilizar El Habla Para Aceptar o Rechazar Llamadas" tag="50" id="Ked-li-VeB" userLabel="Menu Item - Use Speech to Accept or Reject Calls">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setUseSpeechRecognition:" target="389" id="e3k-rE-29X"/>
@@ -447,9 +447,7 @@ CA
                                     <action selector="showWindow:" target="389" id="670"/>
                                 </connections>
                             </menuItem>
-                            <menuItem tag="2" keyEquivalent="2" id="1110">
-                                <string key="title">Llamadas de Audio
-</string>
+                            <menuItem title="Llamadas de Audio" tag="2" keyEquivalent="2" id="1110">
                                 <connections>
                                     <action selector="toggleAudioSessionsDrawer:" target="389" id="1111"/>
                                 </connections>
@@ -1038,10 +1036,8 @@ ABC</string>
                 <textField verticalHuggingPriority="750" id="643" userLabel="Drawer Title Bar">
                     <rect key="frame" x="-23" y="381" width="327" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" id="644">
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Llamadas de Audio" id="644">
                         <font key="font" metaFont="smallSystemBold"/>
-                        <string key="title">Llamadas de Audio
-</string>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         <allowedInputSourceLocales>
@@ -1391,7 +1387,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <button toolTip="Colgar Todo" verticalHuggingPriority="750" tag="10" id="512">
-                            <rect key="frame" x="9" y="0.0" width="90.5" height="25"/>
+                            <rect key="frame" x="9" y="0.0" width="91" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Colgar Todos" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -1403,7 +1399,7 @@ ABC</string>
                             </connections>
                         </button>
                         <button verticalHuggingPriority="750" tag="11" id="587">
-                            <rect key="frame" x="107.5" y="0.0" width="94.5" height="25"/>
+                            <rect key="frame" x="107.5" y="0.0" width="95" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <string key="toolTip">Comenzar y detener una sesión de varios participantes. Una vez comenzada, podrás arrastrar y soltar para agregar o quitar contactos de la conferencia.</string>
                             <buttonCell key="cell" type="roundTextured" title="Conferencia" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
@@ -1416,7 +1412,7 @@ ABC</string>
                             </connections>
                         </button>
                         <levelIndicator toolTip="Señal de Entrada de MIcrófono" verticalHuggingPriority="750" id="1820">
-                            <rect key="frame" x="214" y="8" width="27.5" height="12"/>
+                            <rect key="frame" x="214" y="8" width="28" height="12"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="1821">
                                 <font key="font" metaFont="miniSystem"/>
@@ -1506,7 +1502,7 @@ ABC</string>
                         <action selector="dndClicked:" target="389" id="1780"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Habilitar Máquina Contestadora" tag="50" id="1098">
+                <menuItem title="Habilitar El Contestador" tag="50" id="1098">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="toggleAnsweringMachine:" target="389" id="1099"/>
@@ -1741,7 +1737,7 @@ ABC</string>
                         <action selector="userClickedParticipantMenu:" target="389" id="1589"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Enviar Archivo(s)....." tag="323" enabled="NO" indentationLevel="1" id="1575">
+                <menuItem title="Enviar Archivo(s)..." tag="323" enabled="NO" indentationLevel="1" id="1575">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1590"/>

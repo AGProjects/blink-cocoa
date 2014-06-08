@@ -56,7 +56,7 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="smallSystem"/>
                     </buttonCell>
-                    <accessibility description="Grabar Mensaje de Contestador Automático"/>
+                    <accessibility description="Grabar Mensaje de Contestador"/>
                     <connections>
                         <action selector="record:" target="-2" id="29"/>
                     </connections>
