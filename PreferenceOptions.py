@@ -2014,6 +2014,7 @@ SettingDescription = {
                       'rtp.video_codec_list': NSLocalizedString("Video Codecs", "Label"),
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Label"),
                       'rtp.hangup_on_timeout': NSLocalizedString("Hangup On Timeout", "Label"),
+                      'rtp.timeout': NSLocalizedString("Timeout", "Label"),
                       'rtp.srtp_encryption': NSLocalizedString("sRTP Encryption", "Label"),
                       'sip.invite_timeout': NSLocalizedString("INVITE Timeout", "Label"),
                       'sip.always_use_my_proxy': NSLocalizedString("Always Use My Proxy", "Label"),
