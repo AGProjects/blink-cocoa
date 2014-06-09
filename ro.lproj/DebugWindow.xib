@@ -203,12 +203,12 @@
                                         <popUpButton verticalHuggingPriority="750" id="281">
                                             <rect key="frame" x="293" y="277" width="121" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="282">
+                                            <popUpButtonCell key="cell" type="push" title="Toate Aplicațiile" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="284" id="282">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <menu key="menu" title="OtherViews" id="283">
                                                     <items>
-                                                        <menuItem title="Toate Aplicațiile" id="284"/>
+                                                        <menuItem title="Toate Aplicațiile" state="on" id="284"/>
                                                         <menuItem isSeparatorItem="YES" id="290"/>
                                                         <menuItem title="Apeluri" tag="1" id="285"/>
                                                         <menuItem title="Abonări" tag="2" id="286"/>
@@ -240,10 +240,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -299,10 +299,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>

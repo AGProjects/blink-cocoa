@@ -201,15 +201,15 @@
                                             </textFieldCell>
                                         </textField>
                                         <popUpButton verticalHuggingPriority="750" id="281">
-                                            <rect key="frame" x="293" y="277" width="121" height="22"/>
+                                            <rect key="frame" x="293" y="277" width="152" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="290" id="282">
+                                            <popUpButtonCell key="cell" type="push" title="Todas las Aplicaciones" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="284" id="282">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <menu key="menu" title="Other views" id="283">
                                                     <items>
-                                                        <menuItem title="Todas las Aplicaciones" id="284"/>
-                                                        <menuItem isSeparatorItem="YES" state="on" id="290"/>
+                                                        <menuItem title="Todas las Aplicaciones" state="on" id="284"/>
+                                                        <menuItem isSeparatorItem="YES" id="290"/>
                                                         <menuItem title="Sesiones" tag="1" id="285"/>
                                                         <menuItem title="Suscripciones" tag="2" id="286"/>
                                                         <menuItem title="Registro" tag="3" id="293"/>
