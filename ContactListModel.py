@@ -1211,6 +1211,8 @@ class BlinkPresenceContact(BlinkContact):
                                     notify = False
                                     break
 
+                        # TODO don't send notifications if transports are dead -adi
+
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name
                             nc_body = NSLocalizedString("%s is now ", "Person name") % self.name + status_localized[status]

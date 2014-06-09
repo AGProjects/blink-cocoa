@@ -548,27 +548,36 @@ class ContactWindowController(NSWindowController):
 
     def purgePresenceTimer_(self, timer):
         for account in AccountManager().get_accounts():
+            if account is BonjourAccount():
+                continue
+
+            if not account.enabled or not account.presence.enabled:
+                continue
             try:
                 position = self.accounts.index(account)
             except ValueError:
-                return
+                continue
 
             account_info = self.accounts[position]
+
             if account_info.subscribe_presence_state != 'failed':
-                return
+                continue
 
             if account_info.subscribe_presence_purged:
-                return
+                continue
 
             if account_info.subscribe_presence_timestamp is None:
-                return
+                continue
 
-            if time.time() - account_info.subscribe_presence_timestamp < 180:
-                return
+            if account_info.register_failure_reason != NSLocalizedString("No IP Address", "Label"):
+                delta = time.time() - account_info.subscribe_presence_timestamp
+                if delta < 90:
+                    continue
 
+            account_info.subscribe_presence_timestamp = None
+            account_info.subscribe_presence_purged = True
             BlinkLogger().log_debug("Presence subscriptions for account %s purged" % account.id)
             NotificationCenter().post_notification("BlinkPresenceFailed", sender=account.id)
-            account_info.subscribe_presence_purged = True
 
     @property
     def has_audio(self):
@@ -1133,6 +1142,8 @@ class ContactWindowController(NSWindowController):
         if self.accounts[position].subscribe_presence_state != 'ended':
             BlinkLogger().log_debug("Presence subscriptions for account %s ended" % account.id)
         self.accounts[position].subscribe_presence_state = 'ended'
+        self.accounts[position].subscribe_presence_timestamp = None
+
 
     @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
