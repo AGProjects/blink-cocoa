@@ -12,6 +12,7 @@ from AppKit import (NSApp,
                     NSInformationalRequest,
                     NSJPEGFileType,
                     NSPNGFileType,
+                    NSOffState,
                     NSUTF8StringEncoding,
                     NSString,
                     NSSplitViewDidResizeSubviewsNotification,
@@ -19,6 +20,7 @@ from AppKit import (NSApp,
                     NSSplitViewDividerStyleThin,
                     NSToolbarPrintItemIdentifier,
                     NSWindowBelow)
+
 from Foundation import (NSAttributedString,
                         NSBitmapImageRep,
                         NSBundle,
@@ -75,6 +77,7 @@ from itertools import chain
 from zope.interface import implements
 
 from sipsimple.account import BonjourAccount
+from sipsimple.core import SDPAttribute
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
 from sipsimple.streams.applications.chat import CPIMIdentity
@@ -133,6 +136,13 @@ kCGNullWindowID = 0
 kCGWindowImageDefault = 0
 
 
+class BlinkChatStream(ChatStream):
+    def _create_local_media(self, uri_path):
+        local_media = super(BlinkChatStream, self)._create_local_media(uri_path)
+        local_media.attributes.append(SDPAttribute('features', 'history-control icon'))
+        return local_media
+
+
 class ChatController(MediaStream):
     type = "chat"
     implements(IObserver)
@@ -185,12 +195,14 @@ class ChatController(MediaStream):
 
     @classmethod
     def createStream(self):
-        return ChatStream()
+        return BlinkChatStream()
 
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
-        self.stream = ChatStream()
+        self.stream = BlinkChatStream()
+        self.databaseLoggingButton.setHidden_(True)
+        self.databaseLoggingButton.setState_(NSOffState)
 
     def initWithOwner_stream_(self, sessionController, stream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
@@ -344,6 +356,20 @@ class ChatController(MediaStream):
             return False
 
     @property
+    def send_icon_allowed(self):
+        try:
+            return 'icon' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('features')))
+        except AttributeError:
+            return False
+
+    @property
+    def history_control_allowed(self):
+        try:
+            return 'history-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('features')))
+        except AttributeError:
+            return False
+
+    @property
     def control_allowed(self):
         try:
             return 'com.ag-projects.sylkserver-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
@@ -460,11 +486,17 @@ class ChatController(MediaStream):
         return False
 
     def sendOwnIcon(self):
+        if not self.send_icon_allowed:
+            return
+
         if self.stream and not self.sessionController.session.remote_focus:
             base64icon = encode_icon(self.chatWindowController.own_icon)
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=ISOTimestamp.now())
 
     def sendLoggingState(self):
+        if not self.history_control_allowed:
+            return
+
         if self.status == STREAM_CONNECTED:
             text = 'enabled' if not self.disable_chat_history else 'disabled'
             self.stream.send_message(text, content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
@@ -1536,6 +1568,7 @@ class ChatController(MediaStream):
         if self.stream is None or self.stream.msrp is None: # stream may have ended in the mean time
             return
         self.changeStatus(STREAM_CONNECTED)
+        self.databaseLoggingButton.setHidden_(not self.history_control_allowed)
 
         self.init_otr(disable_encryption=self.sessionController.remote_focus)
 
@@ -1556,7 +1589,6 @@ class ChatController(MediaStream):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
         self.sendOwnIcon()
-
         self.sendLoggingState()
 
 
