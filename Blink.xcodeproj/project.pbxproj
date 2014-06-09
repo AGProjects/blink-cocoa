@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F045F841946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
+		1F045F851946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
+		1F045F861946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
+		1F045F871946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
+		1F045F881946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F065AFD1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
@@ -2298,6 +2303,7 @@
 
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1F045F831946233400301F91 /* colac.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = colac.tiff; path = icons/colac.tiff; sourceTree = "<group>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
 		1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
@@ -3164,6 +3170,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F045F831946233400301F91 /* colac.tiff */,
 				1F331DCA193B655800831F31 /* voicemail-red.png */,
 				1F331DC4193B5CB600831F31 /* voicemail.png */,
 				1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */,
@@ -3827,6 +3834,7 @@
 				1FD0808118C02DA800A3B313 /* away.png in Resources */,
 				1F2272D412B554F50010A8B2 /* FileTransferWindow.xib in Resources */,
 				1F2272D512B554F50010A8B2 /* FileTransferItemView.xib in Resources */,
+				1F045F851946233400301F91 /* colac.tiff in Resources */,
 				1F2272D612B554F50010A8B2 /* FileTransferItemView.py in Resources */,
 				1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */,
 				1F2272D712B554F50010A8B2 /* ListView.py in Resources */,
@@ -4175,6 +4183,7 @@
 				1F35CFF917894FFF00C6FE38 /* AddParticipantsWindow.xib in Resources */,
 				1F35CFFA17894FFF00C6FE38 /* FileTransferController.py in Resources */,
 				1F35CFFB17894FFF00C6FE38 /* ParticipantsTableView.py in Resources */,
+				1F045F871946233400301F91 /* colac.tiff in Resources */,
 				1FAE0B1518FD7A2300038AA4 /* pencil_16.png in Resources */,
 				1FC0184B18E0774D0009145A /* VideoControlPanel.xib in Resources */,
 				1F35CFFC17894FFF00C6FE38 /* hangup_small.png in Resources */,
@@ -4363,6 +4372,7 @@
 				1F8DC35A135084FA0034815C /* recording2.png in Resources */,
 				1F8DC35B135084FA0034815C /* recording3.png in Resources */,
 				1F8DC35C135084FA0034815C /* mic.png in Resources */,
+				1F045F861946233400301F91 /* colac.tiff in Resources */,
 				1F8DC35D135084FA0034815C /* speaker.png in Resources */,
 				1FF6C40B1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				1FD0807E18C02DA800A3B313 /* available.png in Resources */,
@@ -4659,6 +4669,7 @@
 				1FC80E51192E3E1F00BD62F4 /* AnsweringMachine.py in Resources */,
 				1FC80E52192E3E1F00BD62F4 /* FileTransferSession.py in Resources */,
 				1FC80E53192E3E1F00BD62F4 /* About.xib in Resources */,
+				1F045F881946233400301F91 /* colac.tiff in Resources */,
 				1F331DC9193B5CB600831F31 /* voicemail.png in Resources */,
 				1FC80E54192E3E1F00BD62F4 /* incoming_file.png in Resources */,
 				1FC80E55192E3E1F00BD62F4 /* upfile.png in Resources */,
@@ -4921,6 +4932,7 @@
 				2B2DF3C81059F27C00F267F9 /* ContactOutlineView.py in Resources */,
 				2B2DF5E0105CBFCA00F267F9 /* FileTransferWindow.xib in Resources */,
 				2B2DF5E4105CC03400F267F9 /* FileTransferItemView.xib in Resources */,
+				1F045F841946233400301F91 /* colac.tiff in Resources */,
 				1FF6C4091498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				2B2DF5EA105D3CDD00F267F9 /* FileTransferItemView.py in Resources */,
 				2B2DF5ED105D467000F267F9 /* ListView.py in Resources */,

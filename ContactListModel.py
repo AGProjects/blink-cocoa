@@ -3817,6 +3817,7 @@ class ContactListModel(CustomListModel):
 
         test_contacts = {
                         "echo@conference.sip2sip.info": { 'name': "Test Call", 'preferred_media': "audio+chat", 'id': 'test_microphone' }
+                        "support@conference.sip2sip.info": { 'name': "Support Room", 'preferred_media': "chat", 'id': 'blink_support' }
                         }
 
         for uri, data in test_contacts.iteritems():
