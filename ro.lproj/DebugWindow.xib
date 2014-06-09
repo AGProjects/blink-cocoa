@@ -240,10 +240,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -299,10 +299,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -620,7 +620,7 @@
                                     </subviews>
                                 </view>
                             </tabViewItem>
-                            <tabViewItem label="Motor de Bază" identifier="pjsip" id="5">
+                            <tabViewItem label="Nucleu" identifier="pjsip" id="5">
                                 <view key="view" id="6">
                                     <rect key="frame" x="10" y="33" width="576" height="300"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -943,7 +943,7 @@
                                                 <rect key="frame" x="559" y="1" width="16" height="260"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <accessibility description="Loguri Motor de Bază"/>
+                                            <accessibility description="Loguri Nucleu"/>
                                         </scrollView>
                                         <button id="31">
                                             <rect key="frame" x="6" y="281" width="72" height="18"/>
@@ -952,7 +952,7 @@
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Activeză Loguri Motor de Bază"/>
+                                            <accessibility description="Activeză Logurile Nucelului"/>
                                             <connections>
                                                 <action selector="engineCheckboxClicked:" target="-2" id="303"/>
                                             </connections>

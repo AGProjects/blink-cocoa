@@ -61,7 +61,7 @@
                         <action selector="record:" target="-2" id="29"/>
                     </connections>
                 </button>
-                <button toolTip="Ascultă Mesajul Mașinii" verticalHuggingPriority="750" id="14">
+                <button toolTip="Ascultă Mesajul De Răspuns" verticalHuggingPriority="750" id="14">
                     <rect key="frame" x="117" y="10" width="34" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundRect" bezelStyle="roundedRect" image="NSRightFacingTriangleTemplate" imagePosition="only" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="15">

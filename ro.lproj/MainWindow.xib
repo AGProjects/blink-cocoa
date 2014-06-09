@@ -158,7 +158,7 @@
                                     <action selector="blockContact:" target="389" id="1806"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Găsește Contact " keyEquivalent="f" id="1682">
+                            <menuItem title="Caută Contact" keyEquivalent="f" id="1682">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
                                     <action selector="focusSearchTextField:" target="389" id="1684"/>
@@ -184,7 +184,7 @@ CA
                                     <action selector="showPresenceInfo:" target="389" id="1734"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Arată Cererile Indecise" tag="51" id="1813">
+                            <menuItem title="Arată Cererile Noi" tag="51" id="1813">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showPendingRequests:" target="389" id="1815"/>
@@ -1499,7 +1499,7 @@ ABC</string>
                         <action selector="dndClicked:" target="389" id="1780"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Activează Mașina de Mesage" tag="50" id="1098">
+                <menuItem title="Activează Robotul de Mesage" tag="50" id="1098">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="toggleAnsweringMachine:" target="389" id="1099"/>

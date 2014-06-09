@@ -405,7 +405,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="271"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Mașină" paletteLabel="Mașină" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
+                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Robot Mesaje" paletteLabel="Robot Mesaje" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="283"/>
                         </connections>
