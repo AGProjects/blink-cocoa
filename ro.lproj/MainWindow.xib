@@ -253,7 +253,7 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Dispozitive" autoenablesItems="NO" id="751">
                         <items>
-                            <menuItem title="Dispozitive Audio Intrare/Ieșire" tag="404" enabled="NO" keyEquivalent="s" id="1132" userLabel="Menu Item (Quick Settings)"/>
+                            <menuItem title="Dispozitive Audio de Intrare și Ieșire" tag="404" enabled="NO" keyEquivalent="s" id="1132" userLabel="Menu Item (Quick Settings)"/>
                             <menuItem isSeparatorItem="YES" tag="405" id="1131"/>
                             <menuItem title="Dispozitiv Audio de Ieșire" image="speaker" tag="401" enabled="NO" id="755">
                                 <modifierMask key="keyEquivalentModifierMask"/>

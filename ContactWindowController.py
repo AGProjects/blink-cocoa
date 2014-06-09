@@ -978,16 +978,13 @@ class ContactWindowController(NSWindowController):
         outdev = outdev.strip() if outdev is not None else 'None'
         indev = indev.strip() if indev is not None else 'None'
 
-        if indev and indev.startswith('Built-in Microp'):
-            indev = 'Built-in Microphone'
-
         if outdev == u"system_default":
             outdev = self.backend._app.engine.default_output_device
         if indev == u"system_default":
             indev = self.backend._app.engine.default_input_device
 
         if outdev != indev:
-            if indev.startswith('Built-in Mic') and outdev.startswith(u'Built-in Out'):
+            if indev == NSLocalizedString("Built-in Microphone", "Label") and outdev == NSLocalizedString("Built-in Output", "Label"):
                 self.selectedAudioDeviceLabel.setStringValue_(NSLocalizedString("Built-in Microphone and Output", "Label"))
             else:
                 self.selectedAudioDeviceLabel.setStringValue_(u"%s/%s" % (outdev, indev))
@@ -4990,7 +4987,7 @@ class ContactWindowController(NSWindowController):
 
             i = 2
             for dev in devices:
-                dev_title = NSLocalizedString("Built-in Microphone", "Label") if dev.startswith('Built-in Microp') else dev.strip()
+                dev_title = dev.strip()
                 item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev_title, selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)
@@ -5057,7 +5054,7 @@ class ContactWindowController(NSWindowController):
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), selector, "", index)
                     if settings.audio.input_device == dev and settings.audio.output_device == dev:
                         state = NSOnState
-                    elif dev == 'Built-in Microphone and Output' and (settings.audio.input_device is not None and settings.audio.input_device.startswith('Built-in Mic')) and settings.audio.output_device == 'Built-in Output':
+                    elif dev == NSLocalizedString("Built-in Microphone and Output", "Label") and settings.audio.input_device == NSLocalizedString("Built-in Microphone", "Label") and settings.audio.output_device == NSLocalizedString("Built-in Output", "Label"):
                         state = NSOnState
                     else:
                         state = NSOffState
@@ -5072,8 +5069,8 @@ class ContactWindowController(NSWindowController):
         if menu == self.devicesMenu:
             self.backend._app.engine.refresh_video_devices()
             in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
-            if any(input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))) and 'Built-in Output' in self.backend._app.engine.output_devices:
-                in_out_devices.append('Built-in Microphone and Output')
+            if  NSLocalizedString("Built-in Microphone", "Label") in self.backend._app.engine.input_devices and NSLocalizedString("Built-in Output", "Label") in self.backend._app.engine.output_devices:
+                in_out_devices.append(NSLocalizedString("Built-in Microphone and Output", "Label"))
             setupAudioInputOutputDeviceMenu(menu, 404, in_out_devices, "selectInputOutputDevice:")
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices,  "input_device",  "selectInputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
@@ -5217,14 +5214,11 @@ class ContactWindowController(NSWindowController):
     def selectInputOutputDevice_(self, sender):
         settings = SIPSimpleSettings()
         dev = sender.representedObject()
-        if dev == 'Built-in Microphone and Output':
-            try:
-                input_device = (input_device for input_device in self.backend._app.engine.input_devices if (input_device is not None and input_device.startswith('Built-in Mic'))).next()
-            except StopIteration:
-                pass
-            else:
-                settings.audio.input_device = input_device
-                settings.audio.output_device = unicode('Built-in Output')
+        if dev == NSLocalizedString("Built-in Microphone and Output", "Label"):
+            if NSLocalizedString("Built-in Microphone", "Label") in self.backend._app.engine.input_devices:
+                settings.audio.input_device = unicode(NSLocalizedString("Built-in Microphone", "Label"))
+            if NSLocalizedString("Built-in Output", "Label") in self.backend._app.engine.output_devices:
+                settings.audio.output_device = unicode(NSLocalizedString("Built-in Output", "Label"))
         else:
             settings.audio.output_device = dev
             settings.audio.input_device = dev
