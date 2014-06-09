@@ -430,7 +430,7 @@ CA
                                     <action selector="showHelp:" target="389" id="6QG-Qg-07Z"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Configuración de la cuenta del servidor" tag="40" id="oUk-LI-LNE">
+                            <menuItem title="Configuración de la Cuenta del Servidor" tag="40" id="oUk-LI-LNE">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showAccountSettings:" target="389" id="aGo-Ur-eMO"/>

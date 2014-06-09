@@ -172,7 +172,7 @@ Gw
                     <button hidden="YES" id="52">
                         <rect key="frame" x="162" y="48" width="360" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Comenzar cuando los Participantes esten Disponibles" bezelStyle="regularSquare" imagePosition="left" inset="2" id="53">
+                        <buttonCell key="cell" type="check" title="Comenzar Cuando los Participantes esten Disponibles" bezelStyle="regularSquare" imagePosition="left" inset="2" id="53">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -183,7 +183,9 @@ Gw
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="16">
                             <font key="font" metaFont="system"/>
                             <segments>
-                                <segment image="NSAddTemplate" width="25"/>
+                                <segment image="NSAddTemplate" width="25">
+                                    <nil key="label"/>
+                                </segment>
                                 <segment image="NSRemoveTemplate" width="24" tag="1">
                                     <nil key="label"/>
                                 </segment>

@@ -156,7 +156,7 @@ Gw
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Utiliza Chat"/>
+                        <accessibility description="Proponer Chat"/>
                     </button>
                     <textField verticalHuggingPriority="750" id="57">
                         <rect key="frame" x="164" y="256" width="307" height="22"/>
