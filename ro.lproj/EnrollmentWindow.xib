@@ -71,7 +71,7 @@
                                         <action selector="selectRadio:" target="-2" id="106"/>
                                     </connections>
                                 </buttonCell>
-                                <buttonCell type="radio" title="Crează un cont SIP gratuit" imagePosition="left" alignment="left" tag="2" inset="2" id="7">
+                                <buttonCell type="radio" title="Crează un Cont SIP Gratuit" imagePosition="left" alignment="left" tag="2" inset="2" id="7">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
@@ -117,7 +117,7 @@ Gw
                     <button verticalHuggingPriority="750" id="155">
                         <rect key="frame" x="188" y="58" width="255" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="recessed" title="Cum pot să-mi folosec propriul domeniu?" bezelStyle="recessed" alignment="right" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="156">
+                        <buttonCell key="cell" type="recessed" title="Cum pot să folosesc propriul domeniu?" bezelStyle="recessed" alignment="right" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="156">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystemBold"/>
                         </buttonCell>

@@ -67,7 +67,7 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectează" paletteLabel="Conectează" toolTip="Convorbire Text" tag="100" image="start_chat" id="81">
+                    <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectează" paletteLabel="Conectează" toolTip="Începe convorbire text" tag="100" image="start_chat" id="81">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="83"/>
                         </connections>
@@ -82,7 +82,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Înregistrează" paletteLabel="Înregistrează" toolTip="Înregistrează Convorbirea Audio" tag="103" image="record" autovalidates="NO" id="244">
+                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Înregistrează" paletteLabel="Înregistrează" toolTip="Înregistrează Apelul Audio" tag="103" image="record" autovalidates="NO" id="244">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
@@ -568,13 +568,13 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="333"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Pornește Audio" tag="320" enabled="NO" indentationLevel="1" id="261">
+                <menuItem title="Pornește Apel Audio" tag="320" enabled="NO" indentationLevel="1" id="261">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="262"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Invită la Convorbire Text..." tag="321" enabled="NO" indentationLevel="1" id="263">
+                <menuItem title="Cere Convorbire Text..." tag="321" enabled="NO" indentationLevel="1" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="264"/>

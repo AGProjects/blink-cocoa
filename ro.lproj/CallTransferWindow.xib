@@ -172,7 +172,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="734316545">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">272891904</int>
-								<string key="NSContents">Cerere Transferare Convorbire</string>
+								<string key="NSContents">Cerere Transferare Apel</string>
 								<object class="NSFont" key="NSSupport">
 									<string key="NSName">.LucidaGrandeUI</string>
 									<double key="NSSize">14</double>

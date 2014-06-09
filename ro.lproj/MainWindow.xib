@@ -263,7 +263,7 @@ CA
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="863"/>
-                            <menuItem title="Dispozitiv Audio Pentru Sonerie" image="bell" tag="403" enabled="NO" id="860">
+                            <menuItem title="Dispozitiv Audio Pentru Alerte" image="bell" tag="403" enabled="NO" id="860">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="s0l-sF-xRK"/>
@@ -583,15 +583,15 @@ CA
                             <action selector="presenceActivityChanged:" target="389" id="1713"/>
                         </connections>
                     </popUpButton>
-                    <textField toolTip="Publică o Notă Către Contactele Abonate La Disponbilitatea Mea " focusRingType="none" verticalHuggingPriority="750" id="691" userLabel="Presence Note">
+                    <textField toolTip="Publică o Notă Pentru Contactele Abonate La Disponbilitatea Mea " focusRingType="none" verticalHuggingPriority="750" id="691" userLabel="Presence Note">
                         <rect key="frame" x="45" y="390" width="224" height="16"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Publică o notă către contactele mele" usesSingleLineMode="YES" id="692">
+                        <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Publică o notă pentru contactele mele" usesSingleLineMode="YES" id="692">
                             <font key="font" metaFont="cellTitle"/>
                             <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                         </textFieldCell>
-                        <accessibility description="Notă De Disponibilitate"/>
+                        <accessibility description="Nota Disponibilității"/>
                         <connections>
                             <action selector="presenceNoteChanged:" target="389" id="1711"/>
                             <outlet property="delegate" destination="389" id="737"/>

@@ -242,9 +242,9 @@
                 <outlet property="delegate" destination="-2" id="61"/>
             </connections>
         </menu>
-        <menu title="Transfer Convorbire" autoenablesItems="NO" id="93">
+        <menu title="Transfer Apel" autoenablesItems="NO" id="93">
             <items>
-                <menuItem title="Transferă Convorbirea Către" enabled="NO" id="99">
+                <menuItem title="Transferă Apelul Către" enabled="NO" id="99">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>

@@ -307,7 +307,7 @@ Gw
         <button verticalHuggingPriority="750" id="RCl-Nd-JNc">
             <rect key="frame" x="0.0" y="0.0" width="82" height="32"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <buttonCell key="cell" type="push" title="Button" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="aW9-Lk-14o">
+            <buttonCell key="cell" type="push" title="Buton" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="aW9-Lk-14o">
                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                 <font key="font" metaFont="system"/>
             </buttonCell>

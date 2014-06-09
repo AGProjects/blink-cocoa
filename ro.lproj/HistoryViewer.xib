@@ -327,7 +327,7 @@
                                 <menu key="menu" title="OtherViews" id="102">
                                     <items>
                                         <menuItem title="Orice Canal" id="103"/>
-                                        <menuItem title="Convorbiri Audio" tag="1" id="104"/>
+                                        <menuItem title="Apeluri Audio" tag="1" id="104"/>
                                         <menuItem title="Conversații Text" tag="2" id="105"/>
                                         <menuItem title="Transfer Fișiere" tag="3" id="109"/>
                                         <menuItem title="Înregistrări Audio" tag="4" id="135"/>
