@@ -920,7 +920,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
 
 class AudioOutputDeviceOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=None)
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = False
         self.refresh()
         self.popup.sizeToFit()
@@ -999,7 +999,7 @@ class VideoResolutionOption(PopUpMenuOption):
 
 class VideoDeviceOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=None)
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = False
         self.refresh()
         frame = self.popup.frame()
