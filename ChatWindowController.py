@@ -345,8 +345,9 @@ class ChatWindowController(NSWindowController):
                 chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
         self.updateTitle()
-        if session.mustShowDrawer:
+        if session.remote_focus:
             self.drawer.open()
+        if session.mustCloseAudioDrawer:
             NSApp.delegate().contactsWindowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
@@ -1886,12 +1887,12 @@ class ChatWindowController(NSWindowController):
     def drawerDidOpen_(self, notification):
         session = self.selectedSessionController()
         if session:
-            session.mustShowDrawer = True
+            session.mustCloseAudioDrawer = True
 
     def drawerDidClose_(self, notification):
         session = self.selectedSessionController()
         if session:
-            session.mustShowDrawer = False
+            session.mustCloseAudioDrawer = False
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0 and not self.closing:
@@ -1911,8 +1912,11 @@ class ChatWindowController(NSWindowController):
                 chat_stream.updateDatabaseRecordingButton()
 
             self.refreshDrawer()
-            if session.mustShowDrawer:
+            if session.remote_focus:
                 self.drawer.open()
+            else:
+                self.drawer.close()
+            if session.mustCloseAudioDrawer:
                 NSApp.delegate().contactsWindowController.drawer.close()
                 self.participantsTableView.deselectAll_(self)
                 self.conferenceFilesTableView.deselectAll_(self)

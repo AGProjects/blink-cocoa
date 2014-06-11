@@ -972,7 +972,7 @@ class SessionController(NSObject):
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
-        self.mustShowDrawer = True
+        self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
@@ -1017,7 +1017,7 @@ class SessionController(NSObject):
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
-        self.mustShowDrawer = True
+        self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.call_id = session._invitation.call_id
@@ -1065,7 +1065,7 @@ class SessionController(NSObject):
         self.conference_shared_files = []
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
-        self.mustShowDrawer = True
+        self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.initInfoPanel()
@@ -1742,7 +1742,7 @@ class SessionController(NSObject):
         self.log_info("Next SIP hop is %s" % self.transport)
         self.notification_center.add_observer(self, sender=self.session._invitation)
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
-        self.mustShowDrawer = True
+        self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         self.log_info("Session started with %s" % ",".join(stream.type for stream in data.streams))
         for contact in self.invited_participants:

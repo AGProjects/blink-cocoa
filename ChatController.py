@@ -1522,7 +1522,7 @@ class ChatController(MediaStream):
         self.screensharing_handler.setDisconnected()
 
         self.reset()
-
+        self.chatWindowController.drawer.close()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         reason = data.failure_reason or data.reason
@@ -1550,6 +1550,9 @@ class ChatController(MediaStream):
             self.toggleEditor()
             self.toggleEditor()
 
+        if self.sessionController.remote_focus:
+            self.chatWindowController.drawer.open()
+
     def _NH_BlinkProposalDidFail(self, sender, data):
         if self.last_failure_reason != data.failure_reason:
             message = NSLocalizedString("Proposal failed", "Label")
@@ -1571,6 +1574,8 @@ class ChatController(MediaStream):
         self.databaseLoggingButton.setHidden_(not self.history_control_allowed)
 
         self.init_otr(disable_encryption=self.sessionController.remote_focus)
+        if self.sessionController.remote_focus:
+            self.chatWindowController.drawer.open()
 
         self.mediastream_started = True
         self.last_failure_reason = None
