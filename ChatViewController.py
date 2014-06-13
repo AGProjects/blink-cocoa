@@ -54,8 +54,8 @@ class ChatMessageObject(object):
 
 
 def processHTMLText(text='', usesmileys=True, is_html=False):
-    text = urlify(text)
     if is_html:
+        text = urlify(text)
         text = text.replace('\n', '')
         text = text.replace('\\', '&#92;')
 
@@ -74,7 +74,9 @@ def processHTMLText(text='', usesmileys=True, is_html=False):
             if usesmileys:
                 token = SmileyManager().subst_smileys_html(token)
         result.append(token)
-    return "".join(result)
+        text = "".join(result)
+
+    return text
 
 
 class ChatInputTextView(NSTextView):
