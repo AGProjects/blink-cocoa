@@ -1548,7 +1548,7 @@ class ChatWindowController(NSWindowController):
             remoteScreen.show(display_name, uri, unquote(url))
             self.remoteScreens[uri] = remoteScreen
 
-    def startScreenSharingWithUrl(self, url):
+    def showConferenceSharedScreen(self, url):
         session = self.selectedSessionController()
         if session and session.conference_info is not None:
             try:
@@ -1790,6 +1790,14 @@ class ChatWindowController(NSWindowController):
                     if user.screen_image_url is not None:
                         active_media.append('screen')
                         contact.screensharing_url = user.screen_image_url.value
+                        session.screensharing_urls[uri] = user.screen_image_url.value
+                    else:
+                        try:
+                            session.screensharing_urls[uri]
+                        except KeyError:
+                            pass
+                        else:
+                            del session.screensharing_urls[uri]
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)

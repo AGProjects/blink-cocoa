@@ -576,15 +576,19 @@ class ChatViewController(NSObject):
 
         if self.delegate and hasattr(self.delegate, 'getWindow'):
             window = self.delegate.getWindow()
-            if window and window.startScreenSharingWithUrl(theURL.absoluteString()):
+            if window and window.showConferenceSharedScreen(theURL.absoluteString()):
                 return
 
         if theURL.scheme() == "file":
             listener.use()
         else:
             # use system wide web browser
-            listener.ignore()
-            NSWorkspace.sharedWorkspace().openURL_(theURL)
+            if theURL.absoluteString() in self.delegate.sessionController.screensharing_urls.values():
+                self.delegate.chatWindowController.showConferenceSharedScreen(theURL.absoluteString())
+            else:
+                listener.ignore()
+                NSWorkspace.sharedWorkspace().openURL_(theURL)
+
 
     # capture java-script functions
     def isSelectorExcludedFromWebScript_(self, sel):

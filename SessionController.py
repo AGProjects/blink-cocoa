@@ -937,6 +937,7 @@ class SessionController(NSObject):
     previous_conference_users = None
     notify_when_participants_changed = False
     transport = None
+    screensharing_urls = {}
 
     @property
     def sessionControllersManager(self):
@@ -1335,6 +1336,7 @@ class SessionController(NSObject):
         self.to_tag = None
         self.previous_conference_users = None
         self.notify_when_participants_changed = False
+        self.screensharing_urls = {}
 
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
         for item in self.invited_participants:
