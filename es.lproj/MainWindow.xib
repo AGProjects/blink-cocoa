@@ -285,7 +285,7 @@ CA
                                     <action selector="redialLast:" target="389" id="1117"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Abrir Conferencia..." tag="44" keyEquivalent="j" id="1055">
+                            <menuItem title="Initiar Conferencia..." tag="44" keyEquivalent="j" id="1055">
                                 <connections>
                                     <action selector="joinConferenceClicked:" target="389" id="1126"/>
                                 </connections>
@@ -419,7 +419,7 @@ CA
                                     <action selector="close:" target="-1" id="971"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Siempre Ariba" keyEquivalent="t" id="567">
+                            <menuItem title="Siempre Arriba" keyEquivalent="t" id="567">
                                 <connections>
                                     <action selector="setAlwaysOnTop:" target="389" id="1650"/>
                                 </connections>
@@ -457,7 +457,7 @@ CA
                                     <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Mensajes Rápidos" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
+                            <menuItem title="Mensajes SMS" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
                                 <connections>
                                     <action selector="showSMSWindow:" target="389" id="zvH-Hr-KwH"/>
                                 </connections>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
@@ -425,7 +424,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Pantalla" paletteLabel="Pantalla" image="display" autovalidates="NO" selectable="YES" id="276">
+                    <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Compartir Pantalla" paletteLabel="Compartir Pantalla" image="display" autovalidates="NO" selectable="YES" id="276">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>

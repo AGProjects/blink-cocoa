@@ -118,7 +118,7 @@
                                                 <action selector="userClickedVideoMenu:" target="-2" id="yF2-lL-zRN"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Siempre Ariba" tag="6" indentationLevel="1" id="DT8-3W-CmS">
+                                        <menuItem title="Siempre Arriba" tag="6" indentationLevel="1" id="DT8-3W-CmS">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedVideoMenu:" target="-2" id="Owd-Lt-DHK"/>

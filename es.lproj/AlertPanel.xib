@@ -32,7 +32,7 @@
                     <button verticalHuggingPriority="750" tag="10" id="30">
                         <rect key="frame" x="615" y="13" width="120" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Aceptar Todas" bezelStyle="rounded" image="8515A7BC-FBDC-4162-9F21-E14F62A0DA06" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
+                        <buttonCell key="cell" type="push" title="Aceptar Todas" bezelStyle="rounded" image="30411D3C-C2A2-4836-ACDF-59518AC42869" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -140,7 +140,7 @@ Gw
         </window>
     </objects>
     <resources>
-        <image name="8515A7BC-FBDC-4162-9F21-E14F62A0DA06" width="1" height="1">
+        <image name="30411D3C-C2A2-4836-ACDF-59518AC42869" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
