@@ -251,7 +251,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     </progressIndicator>
                     <textField hidden="YES" verticalHuggingPriority="750" id="145">
-                        <rect key="frame" x="31" y="5" width="116" height="11"/>
+                        <rect key="frame" x="31" y="5" width="147" height="11"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Querying database..." id="146">
                             <font key="font" metaFont="miniSystem"/>
@@ -321,14 +321,14 @@
                         <popUpButton key="view" toolTip="Filter by Media" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" id="101">
+                            <popUpButtonCell key="cell" type="push" title="Text Conversations" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="2" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="105" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                                 <menu key="menu" title="OtherViews" id="102">
                                     <items>
                                         <menuItem title="Any Media" id="103"/>
                                         <menuItem title="Audio Calls" tag="1" id="104"/>
-                                        <menuItem title="Text Conversations" tag="2" id="105"/>
+                                        <menuItem title="Text Conversations" state="on" tag="2" id="105"/>
                                         <menuItem title="File Transfers" tag="3" id="109"/>
                                         <menuItem title="Audio Recordings" tag="4" id="135"/>
                                         <menuItem title="Availability" tag="5" id="136"/>
