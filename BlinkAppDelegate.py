@@ -373,11 +373,6 @@ class BlinkAppDelegate(NSObject):
         except KeyError:
             return
 
-        if notification.data.reason != 'Success':
-            BlinkLogger().log_info(u"%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
-        else:
-            NotificationCenter().post_notification("BlinkTransportFailed", data=NotificationData(transport=transport))
-
         for account_info in self.contactsWindowController.accounts:
             account = account_info.account
 
@@ -405,6 +400,11 @@ class BlinkAppDelegate(NSObject):
 
             if account.presence.enabled:
                 account._presence_subscriber.resubscribe()
+
+        if notification.data.reason != 'Success':
+            BlinkLogger().log_info(u"%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+        else:
+            NotificationCenter().post_notification("BlinkTransportFailed", data=NotificationData(transport=transport))
 
     def _NH_SIPEngineTransportDidConnect(self, notification):
         transport = "%s:%s" %(notification.data.transport, notification.data.remote_address)

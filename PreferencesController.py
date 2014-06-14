@@ -105,6 +105,7 @@ class PreferencesController(NSWindowController, object):
         if self:
             notification_center = NotificationCenter()
             notification_center.add_observer(self, name="BlinkShouldTerminate")
+            notification_center.add_observer(self, name="BlinkTransportFailed")
             notification_center.add_observer(self, name="BonjourAccountWillRegister")
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidSucceed")
             notification_center.add_observer(self, name="BonjourAccountRegistrationDidFail")
@@ -872,6 +873,10 @@ class PreferencesController(NSWindowController, object):
         if isinstance(sender, Account):
             self.refresh_account_table()
             self.updateRegistrationStatus()
+
+    def _NH_BlinkTransportFailed(self, notification):
+        self.refresh_account_table()
+        self.updateRegistrationStatus()
 
     def _NH_AudioDevicesDidChange(self, notification):
         self.updateAudioDevices_(None)
