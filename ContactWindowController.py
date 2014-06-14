@@ -1307,10 +1307,15 @@ class ContactWindowController(NSWindowController):
             if not self.authFailPopupShown:
                 self.authFailPopupShown = True
                 if notification.data.error == 'Authentication failed':
-                    pass
+                    nc_title = NSLocalizedString("Account", "Label") + " " + notification.sender.id
+                    nc_body = NSLocalizedString("Authentication failed", "Label")
+                    NSApp.delegate().gui_notify(nc_title, nc_body)
                     #NSRunAlertPanel(u"SIP Registration Error", u"The account %s could not be registered because of an authentication error. Please check if your account credentials are correctly entered. \n\nFor help on this matter you should contact your SIP service provider." % notification.sender.id, u"OK", None, None)
-                #else:
-                #    NSRunAlertPanel(u"SIP Registration Error", u"The account %s could not be registered at this time: %s" % (notification.sender.id, notification.data.error),  u"OK", None, None)
+                else:
+                    nc_title = NSLocalizedString("Account", "Label") + " " + notification.sender.id
+                    nc_body = NSLocalizedString("Registration failed", "Label") + " (%s)" % notification.data.error
+                    NSApp.delegate().gui_notify(nc_title, nc_body)
+                    #NSRunAlertPanel(u"SIP Registration Error", u"The account %s could not be registered at this time: %s" % (notification.sender.id, notification.data.error),  u"OK", None, None)
                 self.authFailPopupShown = False
 
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
