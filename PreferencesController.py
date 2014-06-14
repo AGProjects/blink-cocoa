@@ -619,6 +619,7 @@ class PreferencesController(NSWindowController, object):
 
     def getAccountForRow(self, row):
         return self.accounts[row]
+
     def refresh_account_table(self):
         if self.accountTable:
             self.accountTable.reloadData()
@@ -801,6 +802,16 @@ class PreferencesController(NSWindowController, object):
                 sender.sip.outbound_proxy = sender.sip.primary_proxy
                 sender.save()
 
+        if 'sip.register' in notification.data.modified and sender.sip.register is False:
+            try:
+                position = self.accounts.index(sender)
+            except ValueError:
+                pass
+            else:
+                self.accounts[position].register_state = ''
+                self.accounts[position].register_failure_code = None
+                self.accounts[position].register_failure_reason = None
+
         if 'sip.alternative_proxy' in notification.data.modified:
             account_info = self.selectedAccount()
             if account_info:
@@ -858,7 +869,9 @@ class PreferencesController(NSWindowController, object):
             else:
                 NSApp.delegate().contactsWindowController.new_audio_sample_rate = new_sample_rate
 
-        self.updateRegistrationStatus()
+        if isinstance(sender, Account):
+            self.refresh_account_table()
+            self.updateRegistrationStatus()
 
     def _NH_AudioDevicesDidChange(self, notification):
         self.updateAudioDevices_(None)
