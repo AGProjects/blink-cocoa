@@ -128,6 +128,9 @@ class BlinkAppDelegate(NSObject):
     chat_print_enabled = True
     pause_music_enabled = True
     about_image = 'about'
+    account_extension = None
+    general_extension = None
+
     supported_languages = {
                            "system_default": NSLocalizedString("System Default", "Menu item"),
                            "en": NSLocalizedString("English", "Menu item"),

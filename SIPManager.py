@@ -133,7 +133,10 @@ class SIPManager(object):
         Contact.register_extension(BlinkContactExtension)
         Group.register_extension(BlinkGroupExtension)
         ContactURI.register_extension(BlinkContactURIExtension)
-        SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
+        if NSApp.delegate().general_extension:
+            SIPSimpleSettings.register_extension(NSApp.delegate().general_extension)
+        else:
+            SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         app = AppKit.NSApplication.sharedApplication()
         self._app.start(FileStorage(ApplicationData.directory))
