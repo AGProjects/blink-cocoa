@@ -6,6 +6,7 @@ from AppKit import (NSCompositeSourceOver,
                     NSForegroundColorAttributeName,
                     NSLineBreakByTruncatingTail,
                     NSParagraphStyleAttributeName)
+
 from Foundation import (NSBezierPath,
                         NSColor,
                         NSDictionary,
@@ -16,10 +17,13 @@ from Foundation import (NSBezierPath,
                         NSMakeSize,
                         NSParagraphStyle,
                         NSTextFieldCell)
+
+import datetime
+
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import BonjourAccount
 
-from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, BlinkHistoryViewerContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
+from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkOnlineContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, BlinkHistoryViewerContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
 from util import allocate_autorelease_pool
 
 
@@ -33,6 +37,7 @@ class ContactCell(NSTextFieldCell):
     chatIcon = NSImage.imageNamed_("pencil_16")
     screenIcon = NSImage.imageNamed_("display_16")
     locationIcon = NSImage.imageNamed_("location")
+    nightIcon = NSImage.imageNamed_("moon")
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
@@ -172,7 +177,7 @@ class ContactCell(NSTextFieldCell):
             pass
 
         has_locations = None
-        if type(self.contact) is BlinkPresenceContact:
+        if type(self.contact) in (BlinkOnlineContact, BlinkPresenceContact):
             try:
                 has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             except KeyError:
@@ -180,9 +185,9 @@ class ContactCell(NSTextFieldCell):
 
         frame = self.frame
         frame.origin.y -= 17
-        if has_locations:
-            left = self.view.frame().size.width - 22
-            self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
+        #if has_locations:
+        #    left = self.view.frame().size.width - 22
+        #    self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
 
         # presence bar
         frame.size.width = 5
@@ -207,6 +212,15 @@ class ContactCell(NSTextFieldCell):
         border.fill()
         NSColor.blackColor().set()
         border.stroke()
+
+        # sleep icon
+        if type(self.contact) in (BlinkOnlineContact, BlinkPresenceContact):
+            if self.contact.presence_state['time_offset'] is not None:
+                ctime = datetime.datetime.utcnow() + self.contact.presence_state['time_offset']
+                hour = int(ctime.strftime("%H"))
+                if hour > 21 or hour < 7:
+                    left = self.view.frame().size.width - 26
+                    self.drawIcon(self.nightIcon, left, self.frame.origin.y +14, 16, 16)
 
     @allocate_autorelease_pool
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):

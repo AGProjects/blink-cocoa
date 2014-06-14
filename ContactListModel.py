@@ -757,7 +757,8 @@ class BlinkPresenceContact(BlinkContact):
                                             'offline':       False
                                           },
                                 'devices': {},
-                                'urls': []
+                                'urls': [],
+                                'time_offset': None
         }
 
     def presenceNoteTimer_(self, timer):
@@ -947,6 +948,8 @@ class BlinkPresenceContact(BlinkContact):
         self.init_presence_state()
         has_notes = 0
 
+        _time_offset = None
+
         devices = {}
         urls = []
         if self.pidfs:
@@ -1053,7 +1056,8 @@ class BlinkPresenceContact(BlinkContact):
 
                     if service.device_info is not None:
                         if service.device_info.time_offset is not None:
-                            ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
+                            _time_offset = datetime.timedelta(minutes=int(service.device_info.time_offset))
+                            ctime = datetime.datetime.utcnow() + _time_offset
                             time_offset = int(service.device_info.time_offset)/60.0
                             sign = "+" if time_offset <= 12 else ""
                             time_offset = time_offset - 24 if time_offset > 12 else time_offset
@@ -1119,6 +1123,7 @@ class BlinkPresenceContact(BlinkContact):
 
             self.presence_state['devices'] = devices
             self.presence_state['urls'] = urls
+            self.presence_state['time_offset'] = _time_offset
 
             if self.log_presence_transitions:
                 self.old_devices = self.presence_state['devices'].values()

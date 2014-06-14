@@ -291,6 +291,11 @@
 		1F331DCD193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
 		1F331DCE193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
 		1F331DCF193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
+		1F337A55194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
+		1F337A56194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
+		1F337A57194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
+		1F337A58194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
+		1F337A59194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F35CF7D17894FFF00C6FE38 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -2354,6 +2359,7 @@
 		1F32884E17DB8192003A7F12 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
 		1F331DC4193B5CB600831F31 /* voicemail.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = voicemail.png; path = icons/voicemail.png; sourceTree = "<group>"; };
 		1F331DCA193B655800831F31 /* voicemail-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "voicemail-red.png"; path = "icons/voicemail-red.png"; sourceTree = "<group>"; };
+		1F337A54194C95E000DB726B /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = moon.png; path = icons/moon.png; sourceTree = "<group>"; };
 		1F35D0B017894FFF00C6FE38 /* SIP2SIP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SIP2SIP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
@@ -3170,6 +3176,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F337A54194C95E000DB726B /* moon.png */,
 				1F045F831946233400301F91 /* colac.tiff */,
 				1F331DCA193B655800831F31 /* voicemail-red.png */,
 				1F331DC4193B5CB600831F31 /* voicemail.png */,
@@ -3953,6 +3960,7 @@
 				1FF32B5217EC841500E63A20 /* CallTransferWindow.xib in Resources */,
 				1F2489E213FE781F007CDFD5 /* AudioSession.xib in Resources */,
 				1FB22A0D140308950024F921 /* zrtp-securemode.wav in Resources */,
+				1F337A56194C95E000DB726B /* moon.png in Resources */,
 				1FB22A0E140308950024F921 /* zrtp-security-failed.wav in Resources */,
 				1F5C06D914041B9E001DA3EF /* SessionInfoPanel.xib in Resources */,
 				1F5C0763140436E4001DA3EF /* SessionInfoController.py in Resources */,
@@ -4100,6 +4108,7 @@
 				1F35CFAE17894FFF00C6FE38 /* recording3.png in Resources */,
 				1F35CFAF17894FFF00C6FE38 /* mic.png in Resources */,
 				1F35CFB017894FFF00C6FE38 /* speaker.png in Resources */,
+				1F337A58194C95E000DB726B /* moon.png in Resources */,
 				1F08DB19193DEDB200187373 /* offline.aif in Resources */,
 				1F35CFB117894FFF00C6FE38 /* bell.png in Resources */,
 				1F35CFB217894FFF00C6FE38 /* bluelock.png in Resources */,
@@ -4492,6 +4501,7 @@
 				1FCF11901390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11981390EDFD001D1CAF /* alerts.png in Resources */,
 				1F29D0FF1906D55E0051B1BC /* video-paused.png in Resources */,
+				1F337A57194C95E000DB726B /* moon.png in Resources */,
 				1FCF119C1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */,
 				1FB3AE7618F1E73E001C612B /* close.png in Resources */,
@@ -4801,6 +4811,7 @@
 				1FC80ED2192E3E1F00BD62F4 /* ConferenceScreenSharing.py in Resources */,
 				1FC80ED3192E3E1F00BD62F4 /* pencil_16.png in Resources */,
 				1FC80ED4192E3E1F00BD62F4 /* ConferenceScreenSharing.xib in Resources */,
+				1F337A59194C95E000DB726B /* moon.png in Resources */,
 				1FC80ED6192E3E1F00BD62F4 /* container-migration.plist in Resources */,
 				1FC80ED7192E3E1F00BD62F4 /* JoinConferenceWindow.xib in Resources */,
 				1FC80ED8192E3E1F00BD62F4 /* mime.types in Resources */,
@@ -5051,6 +5062,7 @@
 				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673113A8A987006EEB0F /* default.crt in Resources */,
 				1FF2F5B313AB406A00502BDB /* contact.py in Resources */,
+				1F337A55194C95E000DB726B /* moon.png in Resources */,
 				1FD0808018C02DA800A3B313 /* away.png in Resources */,
 				1FA47A3113B246FF0081F90B /* contacts.png in Resources */,
 				1FF32B5117EC841500E63A20 /* CallTransferWindow.xib in Resources */,
