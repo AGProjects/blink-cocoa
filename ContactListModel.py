@@ -1055,10 +1055,12 @@ class BlinkPresenceContact(BlinkContact):
                         if service.device_info.time_offset is not None:
                             ctime = datetime.datetime.utcnow() + datetime.timedelta(minutes=int(service.device_info.time_offset))
                             time_offset = int(service.device_info.time_offset)/60.0
+                            sign = "+" if time_offset <= 12 else ""
+                            time_offset = time_offset - 24 if time_offset > 12 else time_offset
                             if time_offset == int(time_offset):
-                                offset_info = '(UTC+%d%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                                offset_info = '(UTC%s%d%s)' % (sign, time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
                             else:
-                                offset_info = '(UTC+%.1f%s)' % (time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
+                                offset_info = '(UTC%s%.1f%s)' % (sign, time_offset, (service.device_info.time_offset.description is not None and (' (%s)' % service.device_info.time_offset.description) or ''))
                             offset_info_text = "%s %s" % (ctime.strftime("%H:%M"), offset_info)
                         else:
                             offset_info = None
