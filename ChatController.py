@@ -1021,7 +1021,7 @@ class ChatController(MediaStream):
 
         if hasattr(item, 'itemIdentifier'):
             identifier = item.itemIdentifier()
-            if identifier == NSToolbarPrintItemIdentifier and not NSApp.delegate().chat_print_enabled:
+            if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().chat_print_enabled:
                 return True
 
             if identifier == 'encryption':
