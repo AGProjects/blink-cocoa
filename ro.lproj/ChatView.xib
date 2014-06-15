@@ -126,7 +126,7 @@
                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         <size key="minSize" width="462" height="71"/>
                                         <size key="maxSize" width="1000" height="10000000"/>
-                                        <accessibility description="Introduce text pentru a trimite celuilalt"/>
+                                        <accessibility description="Tasetează text pentru a trimite celuilalt"/>
                                         <connections>
                                             <outlet property="delegate" destination="-2" id="177"/>
                                         </connections>

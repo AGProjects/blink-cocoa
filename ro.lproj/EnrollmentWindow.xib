@@ -186,7 +186,7 @@ Gw
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                 </textField>
-                                                <textField toolTip="Introduce adresa SIP in formatul utilizator@domeniu" verticalHuggingPriority="750" tag="13" id="11">
+                                                <textField toolTip="Introduce adresa SIP în formatul utilizator@domeniu" verticalHuggingPriority="750" tag="13" id="11">
                                                     <rect key="frame" x="155" y="175" width="262" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="user@domain.com" drawsBackground="YES" id="12">

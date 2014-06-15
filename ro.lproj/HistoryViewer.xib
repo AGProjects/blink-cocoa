@@ -276,13 +276,13 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="48BE55B7-C662-4483-91B1-686E4E16A638" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="34">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Resultate Contacte Filtrate" paletteLabel="Resultate Contacte Filtrate" toolTip="Introduce Text și Apasă Enter" id="112">
+                    <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Resultate Contacte Filtrate" paletteLabel="Resultate Contacte Filtrate" toolTip="Tastează Text și Apasă Enter" id="112">
                         <size key="minSize" width="97" height="22"/>
                         <size key="maxSize" width="217" height="22"/>
                         <searchField key="view" verticalHuggingPriority="750" id="113">
                             <rect key="frame" x="0.0" y="14" width="127" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduce Adresă" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduce o Adresă" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
                                 <font key="font" metaFont="system"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -378,13 +378,13 @@
                             <action selector="filterByPeriodChanged:" target="-2" id="132"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Caută conținut" paletteLabel="Caută conținut" toolTip="Introduce Text și Apasă Enter" id="45">
+                    <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Caută conținut" paletteLabel="Caută conținut" toolTip="Tastează Text și Apasă Enter" id="45">
                         <size key="minSize" width="191" height="22"/>
                         <size key="maxSize" width="217" height="26"/>
                         <searchField key="view" verticalHuggingPriority="750" id="43">
                             <rect key="frame" x="0.0" y="14" width="205" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduce Text și Apasă Enter" bezelStyle="round" sendsWholeSearchString="YES" id="44">
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Tastează Text și Apasă Enter" bezelStyle="round" sendsWholeSearchString="YES" id="44">
                                 <font key="font" metaFont="system"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
@@ -405,29 +404,14 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="271"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Robot Mesaje" paletteLabel="Robot Mesaje" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="283"/>
-                        </connections>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Text" paletteLabel="Text" image="pencil" autovalidates="NO" selectable="YES" id="269">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Fișiere" paletteLabel="Fișiere" image="upfile" autovalidates="NO" selectable="YES" id="264">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="273"/>
-                        </connections>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Video" paletteLabel="Video" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Ecran" paletteLabel="Ecran" image="display" autovalidates="NO" selectable="YES" id="276">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3842C6BF-5A9E-47A3-BAFB-78A5081C34C5" explicitItemIdentifier="alerts" label="Alerte" paletteLabel="Alerte" image="alerts" autovalidates="NO" selectable="YES" id="265">
@@ -438,6 +422,21 @@
                     <toolbarItem implicitItemIdentifier="7F6CEF6E-EA19-49AD-9637-E43C55808FD8" explicitItemIdentifier="contacts" label="Contacte" paletteLabel="Contacte" image="contacts" autovalidates="NO" selectable="YES" id="286">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="287"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Robot Telefonic" paletteLabel="Robot Telefonic" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="283"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Transfer Fișiere" paletteLabel="Transfer Fișiere" image="upfile" autovalidates="NO" selectable="YES" id="264">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="273"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Partajare Ecran" paletteLabel="Partajare Ecran" image="display" autovalidates="NO" selectable="YES" id="276">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Avansat" paletteLabel="Avansat" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
@@ -456,13 +455,13 @@
                     <toolbarItem reference="251"/>
                     <toolbarItem reference="259"/>
                     <toolbarItem reference="263"/>
-                    <toolbarItem reference="VXd-Rw-cDk"/>
-                    <toolbarItem reference="282"/>
                     <toolbarItem reference="269"/>
-                    <toolbarItem reference="264"/>
-                    <toolbarItem reference="276"/>
+                    <toolbarItem reference="VXd-Rw-cDk"/>
                     <toolbarItem reference="265"/>
                     <toolbarItem reference="286"/>
+                    <toolbarItem reference="282"/>
+                    <toolbarItem reference="264"/>
+                    <toolbarItem reference="276"/>
                     <toolbarItem reference="252"/>
                     <toolbarItem reference="290"/>
                     <toolbarItem reference="288"/>
