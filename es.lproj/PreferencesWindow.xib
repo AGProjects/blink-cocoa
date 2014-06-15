@@ -414,7 +414,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Archivos" paletteLabel="Archivos" image="upfile" autovalidates="NO" selectable="YES" id="264">
+                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Enviar Archivos" paletteLabel="Enviar Archivos" image="upfile" autovalidates="NO" selectable="YES" id="264">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="273"/>
                         </connections>
@@ -454,16 +454,16 @@
                 <defaultToolbarItems>
                     <toolbarItem reference="251"/>
                     <toolbarItem reference="259"/>
-                    <toolbarItem reference="263"/>
-                    <toolbarItem reference="VXd-Rw-cDk"/>
-                    <toolbarItem reference="282"/>
-                    <toolbarItem reference="269"/>
-                    <toolbarItem reference="264"/>
-                    <toolbarItem reference="276"/>
                     <toolbarItem reference="265"/>
                     <toolbarItem reference="286"/>
-                    <toolbarItem reference="252"/>
+                    <toolbarItem reference="263"/>
+                    <toolbarItem reference="269"/>
+                    <toolbarItem reference="VXd-Rw-cDk"/>
+                    <toolbarItem reference="282"/>
+                    <toolbarItem reference="264"/>
+                    <toolbarItem reference="276"/>
                     <toolbarItem reference="290"/>
+                    <toolbarItem reference="252"/>
                     <toolbarItem reference="288"/>
                 </defaultToolbarItems>
                 <connections>
