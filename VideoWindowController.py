@@ -124,8 +124,11 @@ class VideoWindowController(NSWindowController):
         self.sdl_window = self.streamController.stream.video_windows.remote
 
         self.initial_size = self.streamController.stream.video_windows.remote.size
-        self.aspect_ratio = floor((float(self.initial_size[0]) / self.initial_size[1]) * 100)/100
-        self.sessionController.log_debug('Remote aspect ratio is %s' % self.aspect_ratio)
+        try:
+            self.aspect_ratio = floor((float(self.initial_size[0]) / self.initial_size[1]) * 100)/100
+            self.sessionController.log_debug('Remote aspect ratio is %s' % self.aspect_ratio)
+        except TypeError:
+            return
 
         self.initial_aspect_ratio = self.aspect_ratio
 
@@ -159,7 +162,10 @@ class VideoWindowController(NSWindowController):
         frame = self.window.frame()
         self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (frame.size.width, frame.size.height-self.dif_y))
         frame.size.width = 640
-        frame.size.height = frame.size.width / self.aspect_ratio
+        try:
+            frame.size.height = frame.size.width / self.aspect_ratio
+        except TypeError:
+            return
         frame.size.height += self.dif_y
         self.window.setFrame_display_(frame, True)
         self.window.center()
