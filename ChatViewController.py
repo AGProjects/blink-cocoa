@@ -723,7 +723,7 @@ class Transform(object):
 class AutoLink(Transform):
     """A transform that auto-links URLs."""
     def __init__(self):
-        self.regexp = re.compile(r'([^"])\b((http|https)://[^ \t\n\r<>\(\)&"]+' \
+        self.regexp = re.compile(r'([^"])\b((http|https)://[^ \t\n\r<>\(\)"]+' \
                                  r'[^ \t\n\r<>\(\)&"\.])')
 
     def replace(self, match):
