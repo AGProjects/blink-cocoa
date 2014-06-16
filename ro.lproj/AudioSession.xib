@@ -135,7 +135,7 @@
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Adresa Celuilalt"/>
+                    <accessibility description="Adresă Depărtare"/>
                     <connections>
                         <outlet property="menu" destination="53" id="62"/>
                     </connections>
