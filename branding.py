@@ -43,7 +43,9 @@ def setup(delegate):
             "system_default": NSLocalizedString("System Default", "Menu item"),
             "en": NSLocalizedString("English", "Menu item"),
             "es": NSLocalizedString("Spanish", "Menu item"),
-            "ro": NSLocalizedString("Romanian", "Menu item")
+            "ro": NSLocalizedString("Romanian", "Menu item"),
+            "pt": NSLocalizedString("Portuguese", "Menu item")
+
         }
     delegate.statusbar_menu_icon = 'invisible'
 

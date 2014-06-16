@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="AddContactController">
+            <connections>
+                <outlet property="addButton" destination="7" id="32"/>
+                <outlet property="addressTable" destination="104" id="118"/>
+                <outlet property="addressText" destination="11" id="18"/>
+                <outlet property="addressTypesPopUpButton" destination="108" id="193"/>
+                <outlet property="autoanswerCheckbox" destination="LX8-ek-Wr8" id="CeW-ez-orn"/>
+                <outlet property="defaultButton" destination="129" id="133"/>
+                <outlet property="groupPopUp" destination="152" id="161"/>
+                <outlet property="nameText" destination="15" id="19"/>
+                <outlet property="organizationText" destination="DDa-EM-8ae" id="xJ4-8B-CND"/>
+                <outlet property="photoImage" destination="61" id="65"/>
+                <outlet property="preferredMediaPopUpButton" destination="199" id="213"/>
+                <outlet property="subscribePopUp" destination="163" id="187"/>
+                <outlet property="window" destination="3" id="23"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application"/>
+        <window title="Inserir Contato" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="add-contact" animationBehavior="default" id="3" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="196" y="229" width="526" height="407"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <view key="contentView" id="4">
+                <rect key="frame" x="0.0" y="0.0" width="526" height="407"/>
+                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
+                <subviews>
+                    <textField verticalHuggingPriority="750" id="5">
+                        <rect key="frame" x="18" y="308" width="146" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Endereço Padrão:" id="6">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Endereço SIP"/>
+                    </textField>
+                    <button verticalHuggingPriority="750" tag="10" id="7">
+                        <rect key="frame" x="416" y="13" width="96" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Inserir" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="8">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <accessibility description="Inserir Contato"/>
+                        <connections>
+                            <action selector="buttonClicked:" target="-2" id="20"/>
+                        </connections>
+                    </button>
+                    <button toolTip="Alterar o ícone deste contato para o padrão" verticalHuggingPriority="750" tag="21" id="89">
+                        <rect key="frame" x="74" y="178" width="86" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Limpar" bezelStyle="rounded" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="90">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                        <accessibility description="Deletar Ícone"/>
+                        <connections>
+                            <action selector="buttonClicked:" target="-2" id="92"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" tag="11" id="9">
+                        <rect key="frame" x="320" y="13" width="96" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="10">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="buttonClicked:" target="-2" id="21"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="11">
+                        <rect key="frame" x="169" y="305" width="337" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" placeholderString="" drawsBackground="YES" id="12">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Endereço SIP"/>
+                        <connections>
+                            <accessibilityConnection property="title" destination="5" id="95"/>
+                            <outlet property="delegate" destination="-2" id="22"/>
+                        </connections>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="13">
+                        <rect key="frame" x="22" y="372" width="143" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nome Exibido:" id="14">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Nome Exibido"/>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="dWF-qo-934">
+                        <rect key="frame" x="22" y="340" width="143" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Organização:" id="kNi-8e-b5m">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Nome Exibido"/>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="15">
+                        <rect key="frame" x="169" y="369" width="337" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="16">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Nome Exibido"/>
+                        <connections>
+                            <accessibilityConnection property="title" destination="13" id="97"/>
+                        </connections>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="DDa-EM-8ae">
+                        <rect key="frame" x="169" y="337" width="337" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="xLW-ve-LfY">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Nome Exibido"/>
+                        <connections>
+                            <accessibilityConnection property="title" destination="13" id="2n1-Xb-14k"/>
+                        </connections>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="25">
+                        <rect key="frame" x="18" y="146" width="147" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Grupos:" id="26">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="177">
+                        <rect key="frame" x="18" y="116" width="147" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Disponibilidade:" id="178">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView toolTip="Clique para alterar o ícone para um foto do sistema de arquivos" tag="20" id="61" customClass="MyImageThing">
+                        <rect key="frame" x="72" y="201" width="90" height="97"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <imageCell key="cell" selectable="YES" editable="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="62"/>
+                        <accessibility description="Ícone de Contato"/>
+                        <connections>
+                            <action selector="buttonClicked:" target="-2" id="93"/>
+                        </connections>
+                    </imageView>
+                    <textField verticalHuggingPriority="750" id="37">
+                        <rect key="frame" x="18" y="84" width="147" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Mídia Preferida:" id="38">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="101">
+                        <rect key="frame" x="169" y="202" width="337" height="95"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <clipView key="contentView" id="o1J-Of-P9O">
+                            <rect key="frame" x="1" y="17" width="335" height="77"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" headerView="105" id="104" customClass="ParticipantsTableView">
+                                    <rect key="frame" x="0.0" y="0.0" width="335" height="77"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <size key="intercellSpacing" width="3" height="2"/>
+                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                    <tableColumns>
+                                        <tableColumn identifier="0" width="229" minWidth="40" maxWidth="1000" id="106">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Endereço">
+                                                <font key="font" metaFont="smallSystem"/>
+                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
+                                            </tableHeaderCell>
+                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Mensagem Celular" id="114">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
+                                        </tableColumn>
+                                        <tableColumn identifier="1" width="100" minWidth="100" maxWidth="100" id="107">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Tipo">
+                                                <font key="font" metaFont="smallSystem"/>
+                                                <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
+                                            </tableHeaderCell>
+                                            <popUpButtonCell key="dataCell" type="bevel" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" id="108">
+                                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="menu"/>
+                                                <menu key="menu" title="Outras Visões" id="109">
+                                                    <items>
+                                                        <menuItem id="110">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                        <menuItem title="SIP" id="194">
+                                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                                        </menuItem>
+                                                        <menuItem title="XMPP" id="190" userLabel="Menu Item - XMPP"/>
+                                                        <menuItem title="Celular" id="111"/>
+                                                        <menuItem title="Trabalho" id="112"/>
+                                                        <menuItem title="Casa" id="113"/>
+                                                        <menuItem title="URL" id="197"/>
+                                                        <menuItem title="Outro" id="191"/>
+                                                    </items>
+                                                </menu>
+                                            </popUpButtonCell>
+                                            <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
+                                        </tableColumn>
+                                    </tableColumns>
+                                    <connections>
+                                        <outlet property="dataSource" destination="-2" id="119"/>
+                                        <outlet property="delegate" destination="-2" id="120"/>
+                                    </connections>
+                                </tableView>
+                            </subviews>
+                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </clipView>
+                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="103">
+                            <rect key="frame" x="-100" y="-100" width="457" height="15"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="102">
+                            <rect key="frame" x="458" y="17" width="15" height="228"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                        <tableHeaderView key="headerView" id="105">
+                            <rect key="frame" x="0.0" y="0.0" width="335" height="17"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </tableHeaderView>
+                    </scrollView>
+                    <segmentedControl verticalHuggingPriority="750" id="129">
+                        <rect key="frame" x="193" y="174" width="289" height="24"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="130">
+                            <font key="font" metaFont="system"/>
+                            <segments>
+                                <segment label="Setar como Padrão"/>
+                                <segment label="Apagar Selecionado" tag="1"/>
+                            </segments>
+                        </segmentedCell>
+                        <accessibility description="Inserir ou Remover Participantes"/>
+                        <connections>
+                            <action selector="defaultClicked:" target="-2" id="132"/>
+                        </connections>
+                    </segmentedControl>
+                    <popUpButton verticalHuggingPriority="750" id="152">
+                        <rect key="frame" x="167" y="141" width="342" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="153">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="Outras Visões" id="154">
+                                <items>
+                                    <menuItem title="Item 1" id="155"/>
+                                    <menuItem title="Item 2" id="156"/>
+                                    <menuItem title="Item 3" id="157"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="groupPopUpButtonClicked:" target="-2" id="160"/>
+                        </connections>
+                    </popUpButton>
+                    <popUpButton verticalHuggingPriority="750" id="163">
+                        <rect key="frame" x="166" y="111" width="342" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="164">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="Outras Visões" autoenablesItems="NO" id="165">
+                                <items>
+                                    <menuItem title="Clique para Gerenciar Política" id="168">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem isSeparatorItem="YES" id="196"/>
+                                    <menuItem title="Informação de Disponibilidade (Presença)" enabled="NO" id="195">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Assinar para Informações de Disponibilidade do Contato" tag="1" indentationLevel="2" id="167"/>
+                                    <menuItem title="Permitir Contatos visualizar informações de Disponibilidade" tag="2" indentationLevel="2" id="166"/>
+                                    <menuItem isSeparatorItem="YES" hidden="YES" id="185"/>
+                                    <menuItem title="Chamadas Ativas" tag="3" hidden="YES" enabled="NO" id="184">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Assinar para Chamadas Ativas do Assinante" tag="4" hidden="YES" indentationLevel="2" id="181"/>
+                                    <menuItem title="Permitir Contato ver minhas Chamadas Ativas" tag="5" hidden="YES" indentationLevel="2" id="182"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="subscribePopUpClicked:" target="-2" id="189"/>
+                        </connections>
+                    </popUpButton>
+                    <popUpButton verticalHuggingPriority="750" id="199">
+                        <rect key="frame" x="166" y="79" width="342" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="border" inset="2" autoenablesItems="NO" id="200">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="Outras Visões" autoenablesItems="NO" id="201">
+                                <items>
+                                    <menuItem title="Áudio" tag="1" id="208">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Chat" tag="2" id="203">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Áudio e Chat" tag="3" id="212">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Áudio e Vídeo" tag="4" id="cuH-m4-if2">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="preferredMediaPopUpClicked:" target="-2" id="214"/>
+                        </connections>
+                    </popUpButton>
+                    <button id="LX8-ek-Wr8">
+                        <rect key="frame" x="146" y="53" width="361" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Atender Chamadas Automaticamente" bezelStyle="regularSquare" imagePosition="left" inset="2" id="ILa-nz-eb3">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                    </button>
+                </subviews>
+            </view>
+            <connections>
+                <outlet property="delegate" destination="-2" id="24"/>
+            </connections>
+        </window>
+    </objects>
+</document>

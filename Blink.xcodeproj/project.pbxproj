@@ -2501,6 +2501,54 @@
 		1F73B312191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
 		1F73B313191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
 		1F73B314191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
+		1F762B44194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Subject.xib; sourceTree = "<group>"; };
+		1F762B45194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSSession.xib; sourceTree = "<group>"; };
+		1F762B46194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSView.xib; sourceTree = "<group>"; };
+		1F762B47194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
+		1F762B48194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
+		1F762B49194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
+		1F762B4A194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
+		1F762B4B194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
+		1F762B4C194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AccountSettings.xib; sourceTree = "<group>"; };
+		1F762B4D194B34B4002D998E /* pt */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1F762B4E194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Updater.xib; sourceTree = "<group>"; };
+		1F762B4F194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		1F762B50194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/About.xib; sourceTree = "<group>"; };
+		1F762B51194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
+		1F762B52194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/DebugWindow.xib; sourceTree = "<group>"; };
+		1F762B53194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AnsweringMachineSetting.xib; sourceTree = "<group>"; };
+		1F762B54194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SoundRecorder.xib; sourceTree = "<group>"; };
+		1F762B55194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SoundSetting.xib; sourceTree = "<group>"; };
+		1F762B56194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/OTRSettings.xib; sourceTree = "<group>"; };
+		1F762B57194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/PreferencesWindow.xib; sourceTree = "<group>"; };
+		1F762B58194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
+		1F762B59194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AecSlider.xib; sourceTree = "<group>"; };
+		1F762B5A194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
+		1F762B5B194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Contact.xib; sourceTree = "<group>"; };
+		1F762B5C194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/BlockedContact.xib; sourceTree = "<group>"; };
+		1F762B5D194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Group.xib; sourceTree = "<group>"; };
+		1F762B5E194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/MergeContacts.xib; sourceTree = "<group>"; };
+		1F762B5F194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
+		1F762B60194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/HistoryViewer.xib; sourceTree = "<group>"; };
+		1F762B61194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SessionInfoPanel.xib; sourceTree = "<group>"; };
+		1F762B62194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AlertPanel.xib; sourceTree = "<group>"; };
+		1F762B63194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AlertPanelView.xib; sourceTree = "<group>"; };
+		1F762B64194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
+		1F762B65194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
+		1F762B66194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
+		1F762B67194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
+		1F762B68194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
+		1F762B69194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AudioSession.xib; sourceTree = "<group>"; };
+		1F762B6A194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
+		1F762B6B194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1F762B6C194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
+		1F762B6D194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
+		1F762B6E194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoNativeLocalWindow.xib; sourceTree = "<group>"; };
+		1F762B6F194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatWindow.xib; sourceTree = "<group>"; };
+		1F762B70194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatView.xib; sourceTree = "<group>"; };
+		1F762B71194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
+		1F762B72194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1F762B73194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Nickname.xib; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
@@ -3759,6 +3807,7 @@
 				ro,
 				es,
 				nl,
+				pt,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* MacSip */;
 			projectDirPath = "";
@@ -5212,6 +5261,7 @@
 				1F0D0EC1132D231C00614205 /* en */,
 				1F6460B318BC926500AC41E0 /* ro */,
 				1F73B30D191BCBB500213DC5 /* es */,
+				1F762B66194B34B5002D998E /* pt */,
 			);
 			name = ConferenceConfigurationPanel.xib;
 			sourceTree = "<group>";
@@ -5230,6 +5280,7 @@
 				1F2436831912B23700E71253 /* en */,
 				1F2436851912B23B00E71253 /* ro */,
 				1F73B2E5191BCBB400213DC5 /* es */,
+				1F762B6E194B34B5002D998E /* pt */,
 			);
 			name = VideoNativeLocalWindow.xib;
 			sourceTree = "<group>";
@@ -5240,6 +5291,7 @@
 				1F2489DF13FE781F007CDFD5 /* en */,
 				1F6460B618BC926500AC41E0 /* ro */,
 				1F73B310191BCBB500213DC5 /* es */,
+				1F762B69194B34B5002D998E /* pt */,
 			);
 			name = AudioSession.xib;
 			sourceTree = "<group>";
@@ -5250,6 +5302,7 @@
 				1F32884E17DB8192003A7F12 /* en */,
 				1F6460BB18BC926500AC41E0 /* ro */,
 				1F73B2E8191BCBB400213DC5 /* es */,
+				1F762B71194B34B5002D998E /* pt */,
 			);
 			name = ChatOtrSmp.xib;
 			sourceTree = "<group>";
@@ -5260,6 +5313,7 @@
 				1F3C358215F521A8005356AE /* en */,
 				1F64609718BC926300AC41E0 /* ro */,
 				1F73B2F2191BCBB400213DC5 /* es */,
+				1F762B4B194B34B4002D998E /* pt */,
 			);
 			name = PresenceInfoPanel.xib;
 			sourceTree = "<group>";
@@ -5270,6 +5324,7 @@
 				1F536AAF1591BCE500A0FE51 /* en */,
 				1F64609018BC926300AC41E0 /* ro */,
 				1F73B2EB191BCBB400213DC5 /* es */,
+				1F762B44194B34B4002D998E /* pt */,
 			);
 			name = Subject.xib;
 			sourceTree = "<group>";
@@ -5280,6 +5335,7 @@
 				1F546259158B34D0005628D9 /* en */,
 				1F6460BE18BC926500AC41E0 /* ro */,
 				1F73B2EA191BCBB400213DC5 /* es */,
+				1F762B73194B34B5002D998E /* pt */,
 			);
 			name = Nickname.xib;
 			sourceTree = "<group>";
@@ -5290,6 +5346,7 @@
 				1F5BC16817E5FE7300D1D8BE /* en */,
 				1F64609B18BC926500AC41E0 /* ro */,
 				1F73B2F5191BCBB400213DC5 /* es */,
+				1F762B4E194B34B4002D998E /* pt */,
 			);
 			name = Updater.xib;
 			sourceTree = "<group>";
@@ -5300,6 +5357,7 @@
 				1F5BC26117E6114200D1D8BE /* en */,
 				1F6460AF18BC926500AC41E0 /* ro */,
 				1F73B309191BCBB500213DC5 /* es */,
+				1F762B62194B34B5002D998E /* pt */,
 			);
 			name = AlertPanel.xib;
 			sourceTree = "<group>";
@@ -5310,6 +5368,7 @@
 				1F5BC26717E6114700D1D8BE /* en */,
 				1F6460B018BC926500AC41E0 /* ro */,
 				1F73B30A191BCBB500213DC5 /* es */,
+				1F762B63194B34B5002D998E /* pt */,
 			);
 			name = AlertPanelView.xib;
 			sourceTree = "<group>";
@@ -5320,6 +5379,7 @@
 				1F5BC30117E66DAC00D1D8BE /* en */,
 				1F64609A18BC926500AC41E0 /* ro */,
 				1F73B2F4191BCBB400213DC5 /* es */,
+				1F762B4D194B34B4002D998E /* pt */,
 			);
 			name = Localizable.strings;
 			sourceTree = SOURCE_ROOT;
@@ -5330,6 +5390,7 @@
 				1F5C06D214041B98001DA3EF /* en */,
 				1F6460AE18BC926500AC41E0 /* ro */,
 				1F73B308191BCBB500213DC5 /* es */,
+				1F762B61194B34B5002D998E /* pt */,
 			);
 			name = SessionInfoPanel.xib;
 			sourceTree = "<group>";
@@ -5340,6 +5401,7 @@
 				1F6C0DC2190EBD8F00E79D90 /* en */,
 				1F6C0DC4190EBD9300E79D90 /* ro */,
 				1F73B312191BCBB500213DC5 /* es */,
+				1F762B6B194B34B5002D998E /* pt */,
 			);
 			name = VideoTitleBarView.xib;
 			sourceTree = "<group>";
@@ -5350,6 +5412,7 @@
 				1F6EE8F912BF73A2000C47DA /* en */,
 				1F6460B218BC926500AC41E0 /* ro */,
 				1F73B30C191BCBB500213DC5 /* es */,
+				1F762B65194B34B5002D998E /* pt */,
 			);
 			name = AddParticipantsWindow.xib;
 			sourceTree = "<group>";
@@ -5360,6 +5423,7 @@
 				1F72E54216A02B3600837311 /* en */,
 				1F6460AB18BC926500AC41E0 /* ro */,
 				1F73B305191BCBB500213DC5 /* es */,
+				1F762B5E194B34B4002D998E /* pt */,
 			);
 			name = MergeContacts.xib;
 			sourceTree = "<group>";
@@ -5370,6 +5434,7 @@
 				1F87B6EE1477D57000BDF25A /* en */,
 				1F6460A518BC926500AC41E0 /* ro */,
 				1F73B2FF191BCBB500213DC5 /* es */,
+				1F762B58194B34B4002D998E /* pt */,
 			);
 			name = NightVolumeSetting.xib;
 			sourceTree = "<group>";
@@ -5380,6 +5445,7 @@
 				1F946C9B17CB60D50056ADB4 /* en */,
 				1F6460A318BC926500AC41E0 /* ro */,
 				1F73B2FD191BCBB500213DC5 /* es */,
+				1F762B56194B34B4002D998E /* pt */,
 			);
 			name = OTRSettings.xib;
 			sourceTree = "<group>";
@@ -5390,6 +5456,7 @@
 				1F9A27E11795452100672B73 /* en */,
 				1F6460A618BC926500AC41E0 /* ro */,
 				1F73B300191BCBB500213DC5 /* es */,
+				1F762B59194B34B4002D998E /* pt */,
 			);
 			name = AecSlider.xib;
 			sourceTree = "<group>";
@@ -5400,6 +5467,7 @@
 				1FAA83A81656745500C4C212 /* en */,
 				1F6460A918BC926500AC41E0 /* ro */,
 				1F73B303191BCBB500213DC5 /* es */,
+				1F762B5C194B34B4002D998E /* pt */,
 			);
 			name = BlockedContact.xib;
 			sourceTree = "<group>";
@@ -5410,6 +5478,7 @@
 				1FB30807146D540C001430B5 /* en */,
 				1F6460B118BC926500AC41E0 /* ro */,
 				1F73B30B191BCBB500213DC5 /* es */,
+				1F762B64194B34B5002D998E /* pt */,
 			);
 			name = JoinConferenceWindow.xib;
 			sourceTree = "<group>";
@@ -5420,6 +5489,7 @@
 				1FC0184C18E0774D0009145A /* en */,
 				1FC0184E18E077590009145A /* ro */,
 				1F73B313191BCBB500213DC5 /* es */,
+				1F762B6C194B34B5002D998E /* pt */,
 			);
 			name = VideoControlPanel.xib;
 			sourceTree = "<group>";
@@ -5430,6 +5500,7 @@
 				1FC66DE7139E17D600D03D71 /* en */,
 				1F64609E18BC926500AC41E0 /* ro */,
 				1F73B2F8191BCBB400213DC5 /* es */,
+				1F762B51194B34B4002D998E /* pt */,
 			);
 			name = MigrationPanel.xib;
 			sourceTree = "<group>";
@@ -5440,6 +5511,7 @@
 				1FD2EF951439CCC300DFBB2A /* en */,
 				1F6460B418BC926500AC41E0 /* ro */,
 				1F73B30E191BCBB500213DC5 /* es */,
+				1F762B67194B34B5002D998E /* pt */,
 			);
 			name = ConferenceScreenSharing.xib;
 			sourceTree = "<group>";
@@ -5450,6 +5522,7 @@
 				1FDFA9B412DF4689005BA20F /* en */,
 				1F6460BC18BC926500AC41E0 /* ro */,
 				1F73B2E9191BCBB400213DC5 /* es */,
+				1F762B72194B34B5002D998E /* pt */,
 			);
 			name = ChatPrivateMessage.xib;
 			sourceTree = "<group>";
@@ -5460,6 +5533,7 @@
 				1FE5F5DC18EF3ED300EDEE20 /* en */,
 				1FE5F5DE18EF3ED900EDEE20 /* ro */,
 				1F73B314191BCBB500213DC5 /* es */,
+				1F762B6D194B34B5002D998E /* pt */,
 			);
 			name = VideoDisconnectWindow.xib;
 			sourceTree = "<group>";
@@ -5470,6 +5544,7 @@
 				1FF32B4C17EC83F000E63A20 /* en */,
 				1F64609F18BC926500AC41E0 /* ro */,
 				1F73B2F9191BCBB400213DC5 /* es */,
+				1F762B52194B34B4002D998E /* pt */,
 			);
 			name = DebugWindow.xib;
 			sourceTree = "<group>";
@@ -5480,6 +5555,7 @@
 				1FF32B5517EC841500E63A20 /* en */,
 				1F6460B718BC926500AC41E0 /* ro */,
 				1F73B311191BCBB500213DC5 /* es */,
+				1F762B6A194B34B5002D998E /* pt */,
 			);
 			name = CallTransferWindow.xib;
 			sourceTree = "<group>";
@@ -5490,6 +5566,7 @@
 				1FF32B5E17EC842B00E63A20 /* en */,
 				1F6460AC18BC926500AC41E0 /* ro */,
 				1F73B306191BCBB500213DC5 /* es */,
+				1F762B5F194B34B5002D998E /* pt */,
 			);
 			name = PhotoPicker.xib;
 			sourceTree = "<group>";
@@ -5500,6 +5577,7 @@
 				1FF6C4021498C06A0019F668 /* en */,
 				1F6460B518BC926500AC41E0 /* ro */,
 				1F73B30F191BCBB500213DC5 /* es */,
+				1F762B68194B34B5002D998E /* pt */,
 			);
 			name = ScreensharingPreviewPanel.xib;
 			sourceTree = "<group>";
@@ -5510,6 +5588,7 @@
 				2B01284D10939236009B2112 /* en */,
 				1F64609818BC926300AC41E0 /* ro */,
 				1F73B2F3191BCBB400213DC5 /* es */,
+				1F762B4C194B34B4002D998E /* pt */,
 			);
 			name = AccountSettings.xib;
 			sourceTree = "<group>";
@@ -5520,6 +5599,7 @@
 				2B0CE72A10CD824400325F30 /* en */,
 				1F64609118BC926300AC41E0 /* ro */,
 				1F73B2EC191BCBB400213DC5 /* es */,
+				1F762B45194B34B4002D998E /* pt */,
 			);
 			name = SMSSession.xib;
 			sourceTree = "<group>";
@@ -5530,6 +5610,7 @@
 				2B0CE73410CDE8CE00325F30 /* en */,
 				1F64609218BC926300AC41E0 /* ro */,
 				1F73B2ED191BCBB400213DC5 /* es */,
+				1F762B46194B34B4002D998E /* pt */,
 			);
 			name = SMSView.xib;
 			sourceTree = "<group>";
@@ -5540,6 +5621,7 @@
 				2B2392AE1039E69C00D9023B /* en */,
 				1F6460A218BC926500AC41E0 /* ro */,
 				1F73B2FC191BCBB400213DC5 /* es */,
+				1F762B55194B34B4002D998E /* pt */,
 			);
 			name = SoundSetting.xib;
 			sourceTree = "<group>";
@@ -5550,6 +5632,7 @@
 				2B24D070110FD522003A18DE /* en */,
 				1F6460A018BC926500AC41E0 /* ro */,
 				1F73B2FA191BCBB400213DC5 /* es */,
+				1F762B53194B34B4002D998E /* pt */,
 			);
 			name = AnsweringMachineSetting.xib;
 			sourceTree = "<group>";
@@ -5560,6 +5643,7 @@
 				2B29EF3711382F65009DA9B0 /* en */,
 				1F64609618BC926300AC41E0 /* ro */,
 				1F73B2F1191BCBB400213DC5 /* es */,
+				1F762B4A194B34B4002D998E /* pt */,
 			);
 			name = PresenceOfflineWindow.xib;
 			sourceTree = "<group>";
@@ -5570,6 +5654,7 @@
 				2B2DF5DF105CBFCA00F267F9 /* en */,
 				1F64609418BC926300AC41E0 /* ro */,
 				1F73B2EF191BCBB400213DC5 /* es */,
+				1F762B48194B34B4002D998E /* pt */,
 			);
 			name = FileTransferWindow.xib;
 			sourceTree = "<group>";
@@ -5580,6 +5665,7 @@
 				2B2DF5E3105CC03400F267F9 /* en */,
 				1F64609518BC926300AC41E0 /* ro */,
 				1F73B2F0191BCBB400213DC5 /* es */,
+				1F762B49194B34B4002D998E /* pt */,
 			);
 			name = FileTransferItemView.xib;
 			sourceTree = "<group>";
@@ -5590,6 +5676,7 @@
 				2B4CA92E10AA5F2F00D5F19E /* en */,
 				1F6460AA18BC926500AC41E0 /* ro */,
 				1F73B304191BCBB500213DC5 /* es */,
+				1F762B5D194B34B4002D998E /* pt */,
 			);
 			name = Group.xib;
 			sourceTree = "<group>";
@@ -5600,6 +5687,7 @@
 				2B87529F10B5C29B002FD271 /* en */,
 				1F64609318BC926300AC41E0 /* ro */,
 				1F73B2EE191BCBB400213DC5 /* es */,
+				1F762B47194B34B4002D998E /* pt */,
 			);
 			name = ScreenServerWindow.xib;
 			sourceTree = "<group>";
@@ -5610,6 +5698,7 @@
 				2BAF38090FE088C70040117A /* en */,
 				1F6460A818BC926500AC41E0 /* ro */,
 				1F73B302191BCBB500213DC5 /* es */,
+				1F762B5B194B34B4002D998E /* pt */,
 			);
 			name = Contact.xib;
 			sourceTree = "<group>";
@@ -5620,6 +5709,7 @@
 				2BAF380B0FE088C70040117A /* en */,
 				1F6460A718BC926500AC41E0 /* ro */,
 				1F73B301191BCBB500213DC5 /* es */,
+				1F762B5A194B34B4002D998E /* pt */,
 			);
 			name = EnrollmentWindow.xib;
 			sourceTree = "<group>";
@@ -5630,6 +5720,7 @@
 				2BAF380D0FE088C70040117A /* en */,
 				1F64609C18BC926500AC41E0 /* ro */,
 				1F73B2F6191BCBB400213DC5 /* es */,
+				1F762B4F194B34B4002D998E /* pt */,
 			);
 			name = MainWindow.xib;
 			sourceTree = "<group>";
@@ -5640,6 +5731,7 @@
 				2BAF38110FE088C70040117A /* en */,
 				1F6460A418BC926500AC41E0 /* ro */,
 				1F73B2FE191BCBB500213DC5 /* es */,
+				1F762B57194B34B4002D998E /* pt */,
 			);
 			name = PreferencesWindow.xib;
 			sourceTree = "<group>";
@@ -5650,6 +5742,7 @@
 				2BAF38130FE088C70040117A /* en */,
 				1F6460B918BC926500AC41E0 /* ro */,
 				1F73B2E6191BCBB400213DC5 /* es */,
+				1F762B6F194B34B5002D998E /* pt */,
 			);
 			name = ChatWindow.xib;
 			sourceTree = "<group>";
@@ -5660,6 +5753,7 @@
 				2BAF38170FE088C70040117A /* en */,
 				1F6460BA18BC926500AC41E0 /* ro */,
 				1F73B2E7191BCBB400213DC5 /* es */,
+				1F762B70194B34B5002D998E /* pt */,
 			);
 			name = ChatView.xib;
 			sourceTree = "<group>";
@@ -5670,6 +5764,7 @@
 				2BB36D3610FE504600DA4577 /* en */,
 				1F6460AD18BC926500AC41E0 /* ro */,
 				1F73B307191BCBB500213DC5 /* es */,
+				1F762B60194B34B5002D998E /* pt */,
 			);
 			name = HistoryViewer.xib;
 			sourceTree = "<group>";
@@ -5680,6 +5775,7 @@
 				2BB376421103C98300DA4577 /* en */,
 				1F6460A118BC926500AC41E0 /* ro */,
 				1F73B2FB191BCBB400213DC5 /* es */,
+				1F762B54194B34B4002D998E /* pt */,
 			);
 			name = SoundRecorder.xib;
 			sourceTree = "<group>";
@@ -5690,6 +5786,7 @@
 				2BE7632A10732DC000A1DF24 /* en */,
 				1F64609D18BC926500AC41E0 /* ro */,
 				1F73B2F7191BCBB400213DC5 /* es */,
+				1F762B50194B34B4002D998E /* pt */,
 			);
 			name = About.xib;
 			sourceTree = "<group>";

@@ -135,7 +135,8 @@ class BlinkAppDelegate(NSObject):
                            "system_default": NSLocalizedString("System Default", "Menu item"),
                            "en": NSLocalizedString("English", "Menu item"),
                            "es": NSLocalizedString("Spanish", "Menu item"),
-                           "ro": NSLocalizedString("Romanian", "Menu item")
+                           "ro": NSLocalizedString("Romanian", "Menu item"),
+                           "pt": NSLocalizedString("Portuguese", "Menu item")
                            }
     statusbar_menu_icon = 'invisible'
     about_copyright = "Copyright 2009-2014 AG Projects"

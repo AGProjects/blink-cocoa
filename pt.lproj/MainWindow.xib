@@ -1,0 +1,1789 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application">
+            <connections>
+                <outlet property="delegate" destination="373" id="374"/>
+            </connections>
+        </customObject>
+        <menu title="AMenuPrincipal" systemMenu="main" id="29" userLabel="Blink Main Menu">
+            <items>
+                <menuItem title="Blink" id="56">
+                    <menu key="submenu" title="Blink" systemMenu="apple" autoenablesItems="NO" id="57">
+                        <items>
+                            <menuItem title="Sobre o Blink" tag="1" id="58">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="orderFrontAboutPanel:" target="373" id="877"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Verificar por Atualizações..." tag="2" id="945">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="checkForUpdates:" target="389" id="1868"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Doe se você gosta do Software" tag="3" id="983">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showDonate:" target="389" id="1637"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" tag="8" hidden="YES" id="1089">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Adquirir Blink Pro..." tag="7" id="1087">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showBlinkPro:" target="389" id="1634"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Pegar SylkServer..." tag="9" id="1807">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showSylkServer:" target="389" id="1809"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" tag="4" hidden="YES" id="143">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Sobre Provedor de Serviço..." tag="5" hidden="YES" id="1049">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showServiceProvider:" target="389" id="1635"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Página de Suporte do Provedor de Serviço..." tag="6" hidden="YES" id="1051">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showServiceProvider:" target="389" id="1636"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1048">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Preferências…" keyEquivalent="," id="129" userLabel="121">
+                                <connections>
+                                    <action selector="showWindow:" target="638" id="639"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1044">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Serviços" id="131">
+                                <menu key="submenu" title="Serviços" systemMenu="services" id="130"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="144">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Esconder" tag="10" keyEquivalent="h" id="134">
+                                <connections>
+                                    <action selector="hide:" target="-1" id="367"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Esconder Outros" keyEquivalent="h" id="145">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="hideOtherApplications:" target="-1" id="368"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Exibir Todos" id="150">
+                                <connections>
+                                    <action selector="unhideAllApplications:" target="-1" id="370"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="149">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Sair" tag="11" keyEquivalent="q" id="136" userLabel="1111">
+                                <connections>
+                                    <action selector="terminate:" target="-1" id="369"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="1046"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Editar" id="217">
+                    <menu key="submenu" title="Editar" id="205">
+                        <items>
+                            <menuItem title="Copiar" keyEquivalent="c" id="197">
+                                <connections>
+                                    <action selector="copy:" target="-1" id="224"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Cortar" keyEquivalent="x" id="1810">
+                                <connections>
+                                    <action selector="cut:" target="-1" id="1812"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Colar" keyEquivalent="v" id="203">
+                                <connections>
+                                    <action selector="paste:" target="-1" id="226"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Deletar" id="202">
+                                <connections>
+                                    <action selector="delete:" target="-1" id="235"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Selecionar Todos" keyEquivalent="a" id="198">
+                                <connections>
+                                    <action selector="selectAll:" target="-1" id="232"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
+                <menuItem title="Contatos" id="584">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Contatos" autoenablesItems="NO" id="894">
+                        <items>
+                            <menuItem title="Inserir Contato..." tag="30" keyEquivalent="n" id="1598">
+                                <connections>
+                                    <action selector="addContact:" target="389" id="1599"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Inserir Contato Bloqueado..." id="1804">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="blockContact:" target="389" id="1806"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Procurar Contato" keyEquivalent="f" id="1682">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="focusSearchTextField:" target="389" id="1684"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Editar Contato" tag="31" enabled="NO" keyEquivalent="e" id="898">
+                                <connections>
+                                    <action selector="editContact:" target="-1" id="966"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Deletar Contato" tag="32" enabled="NO" id="899">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="deleteItem:" target="-1" id="1708"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Exibir Disponibilidade do Contato" tag="50" id="1731">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showPresenceInfo:" target="389" id="1734"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Exibir Solicitações Pendentes" tag="51" id="1813">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showPendingRequests:" target="389" id="1815"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1733"/>
+                            <menuItem title="Inserir Grupo..." tag="33" keyEquivalent="g" id="896">
+                                <connections>
+                                    <action selector="addGroup:" target="389" id="926"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Renomear Grupo..." tag="34" enabled="NO" keyEquivalent="e" id="925">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="renameGroup:" target="-1" id="964"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Deletar Grupo" tag="35" enabled="NO" id="895">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="deleteGroup:" target="-1" id="965"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Expandir/Recolher Grupo" tag="36" enabled="NO" keyEquivalent="l" id="1685">
+                                <connections>
+                                    <action selector="toogleExpand:" target="389" id="1687"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="897"/>
+                            <menuItem title="Exibir Teclado" tag="42" keyEquivalent="d" id="1221">
+                                <connections>
+                                    <action selector="toggleDialPadClicked:" target="389" id="1225"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1601"/>
+                            <menuItem title="Cópia de Contatos e Grupos" tag="60" id="1638">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="backupContacts:" target="389" id="1639"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Restaurar" tag="61" id="1602" userLabel="Menu Item (Restore Contacts)">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Restaurar" autoenablesItems="NO" id="1603">
+                                    <items>
+                                        <menuItem isSeparatorItem="YES" id="1611"/>
+                                        <menuItem title="Abrir Pasta de Backup" id="1612">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="goToBackupContactsFolderClicked:" target="389" id="1614"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                    <connections>
+                                        <outlet property="delegate" destination="389" id="1607"/>
+                                    </connections>
+                                </menu>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="967"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Dispositivos" id="750">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Dispositivos" autoenablesItems="NO" id="751">
+                        <items>
+                            <menuItem title="Dispositivos de Entrada/Saída de Áudio" tag="404" enabled="NO" keyEquivalent="s" id="1132" userLabel="Menu Item (Quick Settings)"/>
+                            <menuItem isSeparatorItem="YES" tag="405" id="1131"/>
+                            <menuItem title="Dispositivo de Saída de Áudio" image="speaker" tag="401" enabled="NO" id="755">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="862"/>
+                            <menuItem title="Dispositivo de Entrada de Áudio" image="mic" tag="402" enabled="NO" id="859">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="863"/>
+                            <menuItem title="Dispositivo de Alerta de Áudio" image="bell" tag="403" enabled="NO" id="860">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="s0l-sF-xRK"/>
+                            <menuItem title="Dispositivos de Vídeo" tag="500" enabled="NO" id="mbW-k8-Lkd">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="768"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Chamar" id="1053">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Chamar" autoenablesItems="NO" id="1054">
+                        <items>
+                            <menuItem title="Rediscar" tag="1" keyEquivalent="r" id="1116">
+                                <connections>
+                                    <action selector="redialLast:" target="389" id="1117"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Iniciar Conferencia..." tag="44" keyEquivalent="j" id="1055">
+                                <connections>
+                                    <action selector="joinConferenceClicked:" target="389" id="1126"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1128"/>
+                            <menuItem title="Emudecer" tag="300" keyEquivalent="m" id="1118">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="muteClicked:" target="389" id="1119"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Silenciar Alertas" tag="301" keyEquivalent="s" id="1120">
+                                <connections>
+                                    <action selector="silentClicked:" target="389" id="1121"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Não Incomodar" tag="302" id="1671">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="dndClicked:" target="389" id="1674"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1Vn-Km-SS7"/>
+                            <menuItem title="Usar Voz para Aceitar ou Recusar Chamadas" tag="50" id="Ked-li-VeB" userLabel="Menu Item - Use Speech to Accept or Reject Calls">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="setUseSpeechRecognition:" target="389" id="e3k-rE-29X"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Dizer Nome do Remetente Ligando" tag="51" id="mk1-bq-3CO">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="setSpeechSyntezis:" target="389" id="exC-BT-8IQ"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="1076"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Chat" id="pT2-7P-zvs">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Chat" systemMenu="font" id="2xy-I0-QyA">
+                        <items>
+                            <menuItem title="Exibir Fontes" keyEquivalent="t" id="Mvm-YO-2EP">
+                                <connections>
+                                    <action selector="orderFrontFontPanel:" target="lcu-W9-Fta" id="nid-Nt-g9T"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Negrito" tag="2" keyEquivalent="b" id="1N1-mu-OXx">
+                                <connections>
+                                    <action selector="addFontTrait:" target="lcu-W9-Fta" id="dVu-0J-HDt"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Itálico" tag="1" keyEquivalent="i" id="29y-LM-NaW">
+                                <connections>
+                                    <action selector="addFontTrait:" target="lcu-W9-Fta" id="Tef-2G-42K"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Sublinhar" keyEquivalent="u" id="CeN-fG-zwl">
+                                <connections>
+                                    <action selector="underline:" target="-1" id="BXJ-ug-8bt"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="2rd-Uo-PSE"/>
+                            <menuItem title="Maior" tag="3" keyEquivalent="+" id="vfs-mx-2mL">
+                                <connections>
+                                    <action selector="modifyFont:" target="lcu-W9-Fta" id="bwf-AY-fJV"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Menor" tag="4" keyEquivalent="-" id="O6k-8z-4ji">
+                                <connections>
+                                    <action selector="modifyFont:" target="lcu-W9-Fta" id="CLB-jt-x8t"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="MKp-Xg-T08"/>
+                            <menuItem title="Exibir Cores" keyEquivalent="C" id="ie4-kc-9Vl">
+                                <connections>
+                                    <action selector="orderFrontColorPanel:" target="-1" id="EJ4-9k-0UP"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="K7L-60-Aqj"/>
+                            <menuItem title="Copiar Estilo" keyEquivalent="c" id="FmN-5y-g9J">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="copyFont:" target="-1" id="3TI-MC-QTf"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Colar Estilo" keyEquivalent="v" id="1uB-UP-mdJ">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <connections>
+                                    <action selector="pasteFont:" target="-1" id="fz2-Uz-fgd"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
+                <menuItem title="Histórico" id="797">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Histórico" autoenablesItems="NO" id="798">
+                        <items>
+                            <menuItem title="Não Gravar Log de Mensagens de Chat" tag="101" id="1863">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleChatPrivacy:" target="389" id="1867"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1865"/>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="800"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Janela" tag="300" id="19">
+                    <menu key="submenu" title="Janela" systemMenu="window" autoenablesItems="NO" id="24">
+                        <items>
+                            <menuItem title="Minimizar" keyEquivalent="m" id="23">
+                                <connections>
+                                    <action selector="performMiniaturize:" target="-1" id="37"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Zoom" keyEquivalent="z" id="239">
+                                <connections>
+                                    <action selector="performZoom:" target="-1" id="240"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Fechar" keyEquivalent="w" id="968">
+                                <connections>
+                                    <action selector="close:" target="-1" id="971"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Sempre em Primeiro Plano" keyEquivalent="t" id="567">
+                                <connections>
+                                    <action selector="setAlwaysOnTop:" target="389" id="1650"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="1652"/>
+                            <menuItem title="Ajuda" keyEquivalent="?" id="A8H-dU-aTx">
+                                <connections>
+                                    <action selector="showHelp:" target="389" id="6QG-Qg-07Z"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Configurações da Conta do Servidor" tag="40" id="oUk-LI-LNE">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showAccountSettings:" target="389" id="aGo-Ur-eMO"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="VGm-fz-ww9"/>
+                            <menuItem title="Logs" keyEquivalent="0" id="1648">
+                                <connections>
+                                    <action selector="showDebugWindow:" target="389" id="1649"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Contatos" tag="1" keyEquivalent="1" id="669">
+                                <connections>
+                                    <action selector="showWindow:" target="389" id="670"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Chamadas de Áudio" tag="2" keyEquivalent="2" id="1110">
+                                <connections>
+                                    <action selector="toggleAudioSessionsDrawer:" target="389" id="1111"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Conversas de Chat" tag="5" keyEquivalent="3" id="1675">
+                                <connections>
+                                    <action selector="showChatWindow:" target="389" id="1677"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Mensagens Instantâneas" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
+                                <connections>
+                                    <action selector="showSMSWindow:" target="389" id="zvH-Hr-KwH"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Tranferências de Arquivos" tag="4" keyEquivalent="5" id="1114">
+                                <connections>
+                                    <action selector="showFileTransfers:" target="389" id="Kv8-9N-sC1"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Visualizador do Histórico" tag="3" keyEquivalent="6" id="1112">
+                                <connections>
+                                    <action selector="showHistoryViewer:" target="389" id="1113"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Meu Vídeo" tag="50" keyEquivalent="7" id="3zb-2K-tHc">
+                                <connections>
+                                    <action selector="toggleLocalVideoWindow:" target="389" id="QX9-kp-VaE"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="92">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Trazer Tudo para Frente" id="5">
+                                <connections>
+                                    <action selector="arrangeInFront:" target="-1" id="39"/>
+                                </connections>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="1678"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Ajuda" id="103" userLabel="1"/>
+            </items>
+            <connections>
+                <outlet property="delegate" destination="389" id="762"/>
+            </connections>
+        </menu>
+        <window title="Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="ContactWindow" animationBehavior="default" id="371" userLabel="Blink Contacts Window" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="335" y="311" width="274" height="480"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <value key="minSize" type="size" width="274" height="132"/>
+            <view key="contentView" id="372">
+                <rect key="frame" x="0.0" y="0.0" width="274" height="480"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                <subviews>
+                    <popUpButton toolTip="Selecione a Conta Usada Para Sessões de Saída" id="446" userLabel="Active Account Popup button">
+                        <rect key="frame" x="5" y="452" width="264" height="26"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="bevel" title="Conta Ativa" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" selectedItem="449" id="447">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="smallSystemBold"/>
+                            <menu key="menu" title="OutrasVisões" id="448">
+                                <items>
+                                    <menuItem title="Conta Ativa" state="on" id="449"/>
+                                    <menuItem isSeparatorItem="YES" id="452"/>
+                                    <menuItem title="Inserir Conta..." id="451"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <accessibility description="Conta usada para sessões de saída"/>
+                        <connections>
+                            <action selector="accountSelectionChanged:" target="389" id="667"/>
+                        </connections>
+                    </popUpButton>
+                    <searchField verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
+                        <rect key="frame" x="8" y="430" width="258" height="22"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <string key="toolTip">Você pode digitar o texto para pesquida de contatos ou pressionar enter para iniciar uma chamada com um endereço arbitrário ou número de telefone.</string>
+                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Buscar Contatos ou Informe Endereço" bezelStyle="round" recentsAutosaveName="" id="464">
+                            <font key="font" metaFont="cellTitle"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </searchFieldCell>
+                        <connections>
+                            <action selector="searchContacts:" target="389" id="634"/>
+                            <outlet property="delegate" destination="389" id="591"/>
+                            <outlet property="nextKeyView" destination="504" id="741"/>
+                        </connections>
+                    </searchField>
+                    <imageView toolTip="Clique para mudar a miniatura visível para quem assinar para receber sua disponibilidade" id="656" userLabel="My Photo View" customClass="PhotoView">
+                        <rect key="frame" x="8" y="390" width="32" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="photo" image="NSUser" id="657"/>
+                        <accessibility description="Miniatura do Usuário"/>
+                    </imageView>
+                    <textField toolTip="Meu Nome Exibido" focusRingType="none" verticalHuggingPriority="750" id="731" userLabel="Display Name">
+                        <rect key="frame" x="45" y="407" width="116" height="14"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" state="on" focusRingType="none" placeholderString="Nome Exibido" id="732">
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Nome Exibido" help="Meu Nome Exibido"/>
+                        <connections>
+                            <action selector="displayNameChanged:" target="389" id="1712"/>
+                            <outlet property="delegate" destination="389" id="736"/>
+                            <outlet property="nextKeyView" destination="691" id="740"/>
+                        </connections>
+                    </textField>
+                    <popUpButton toolTip="Set Minha Disponibilidade" id="551" userLabel="Presence Activity Button">
+                        <rect key="frame" x="155" y="407" width="112" height="15"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="right" controlSize="small" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="554">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="smallSystem"/>
+                            <menu key="menu" title="OutrasVisões" autoenablesItems="NO" id="555">
+                                <items>
+                                    <menuItem title="Disponibilidade" id="556"/>
+                                    <menuItem title="Item 2" id="557"/>
+                                    <menuItem title="Item 3" id="558"/>
+                                </items>
+                                <connections>
+                                    <outlet property="delegate" destination="389" id="1727"/>
+                                </connections>
+                            </menu>
+                        </popUpButtonCell>
+                        <accessibility description="Minha disponibilidade"/>
+                        <connections>
+                            <action selector="presenceActivityChanged:" target="389" id="1713"/>
+                        </connections>
+                    </popUpButton>
+                    <textField toolTip="Publicar a Nota para Contatos Que Assinaram para receber sua disponibilidade" focusRingType="none" verticalHuggingPriority="750" id="691" userLabel="Presence Note">
+                        <rect key="frame" x="45" y="390" width="224" height="16"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Publicar a nota para meus contatos" usesSingleLineMode="YES" id="692">
+                            <font key="font" metaFont="cellTitle"/>
+                            <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        </textFieldCell>
+                        <accessibility description="Note de Disponibilidade"/>
+                        <connections>
+                            <action selector="presenceNoteChanged:" target="389" id="1711"/>
+                            <outlet property="delegate" destination="389" id="737"/>
+                            <outlet property="nextKeyView" destination="504" id="742"/>
+                        </connections>
+                    </textField>
+                    <tabView type="noTabsNoBorder" initialItem="499" id="498" userLabel="Main View">
+                        <rect key="frame" x="0.0" y="32" width="274" height="350"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <font key="font" metaFont="system"/>
+                        <tabViewItems>
+                            <tabViewItem label="Contatos" identifier="contacts" id="499" userLabel="Contacts View">
+                                <view key="view" id="502">
+                                    <rect key="frame" x="0.0" y="0.0" width="274" height="350"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="503">
+                                            <rect key="frame" x="0.0" y="0.0" width="274" height="348"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <clipView key="contentView" id="7tk-Pf-Fob">
+                                                <rect key="frame" x="1" y="1" width="272" height="346"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" autosaveName="contactList" indentationPerLevel="14" indentationMarkerFollowsCell="NO" autoresizesOutlineColumn="YES" outlineTableColumn="507" id="504" customClass="ContactOutlineView">
+                                                        <rect key="frame" x="0.0" y="0.0" width="272" height="346"/>
+                                                        <autoresizingMask key="autoresizingMask"/>
+                                                        <size key="intercellSpacing" width="3" height="2"/>
+                                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                        <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                                        <tableColumns>
+                                                            <tableColumn identifier="stuff" width="269" minWidth="16" maxWidth="1000" id="507">
+                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
+                                                                    <font key="font" metaFont="smallSystem"/>
+                                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                                    <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
+                                                                </tableHeaderCell>
+                                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Texto da Célula" id="508" customClass="ContactCell">
+                                                                    <font key="font" metaFont="system" size="10"/>
+                                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                </textFieldCell>
+                                                                <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
+                                                            </tableColumn>
+                                                        </tableColumns>
+                                                        <accessibility description="Lista de Contatos"/>
+                                                        <connections>
+                                                            <outlet property="dataSource" destination="831" id="833"/>
+                                                            <outlet property="delegate" destination="831" id="834"/>
+                                                            <outlet property="menu" destination="817" id="838"/>
+                                                        </connections>
+                                                    </outlineView>
+                                                </subviews>
+                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </clipView>
+                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="505">
+                                                <rect key="frame" x="1" y="282" width="229" height="15"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="506">
+                                                <rect key="frame" x="230" y="1" width="15" height="281"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                            <accessibility description="Lista de Contatos"/>
+                                        </scrollView>
+                                        <customView hidden="YES" id="1629">
+                                            <rect key="frame" x="0.0" y="288" width="274" height="60"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                        </customView>
+                                    </subviews>
+                                    <accessibility description="Lista de Contatos"/>
+                                </view>
+                                <accessibility description="Lista de Contatos"/>
+                            </tabViewItem>
+                            <tabViewItem label="Buscar" identifier="search" id="500" userLabel="Search Contacts View">
+                                <view key="view" id="501">
+                                    <rect key="frame" x="0.0" y="0.0" width="274" height="350"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <textField verticalHuggingPriority="750" id="631">
+                                            <rect key="frame" x="24" y="139" width="230" height="68"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                            <textFieldCell key="cell" lineBreakMode="truncatingMiddle" sendsActionOnEndEditing="YES" alignment="center" id="632">
+                                                <font key="font" metaFont="system"/>
+                                                <string key="title">Nenhum contato encontrado.
+Pressione Return e inicie uma chamada ou 
+use os botões abaixo
+para iniciar a sessão.</string>
+                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <button verticalHuggingPriority="750" id="607">
+                                            <rect key="frame" x="55" y="308" width="154" height="17"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="roundRect" title="Inserir Contato" bezelStyle="roundedRect" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="608">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="smallSystem"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="addContact:" target="389" id="636"/>
+                                            </connections>
+                                        </button>
+                                        <button verticalHuggingPriority="750" id="891">
+                                            <rect key="frame" x="55" y="331" width="154" height="17"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="roundRect" title="Voltar para Contatos" bezelStyle="roundedRect" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="892">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="smallSystem"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="backToContacts:" target="389" id="1511"/>
+                                            </connections>
+                                        </button>
+                                        <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="618">
+                                            <rect key="frame" x="0.0" y="0.0" width="274" height="302"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <clipView key="contentView" id="BXG-1e-ihR">
+                                                <rect key="frame" x="1" y="1" width="272" height="300"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <subviews>
+                                                    <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveName="SearchResultTable" rowHeight="34" id="621" customClass="ContactOutlineView">
+                                                        <rect key="frame" x="0.0" y="0.0" width="272" height="300"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                        <size key="intercellSpacing" width="3" height="2"/>
+                                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                        <tableViewGridLines key="gridStyleMask" horizontal="YES"/>
+                                                        <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                                        <tableColumns>
+                                                            <tableColumn identifier="name" width="269" minWidth="40" maxWidth="1000" id="623">
+                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Contato">
+                                                                    <font key="font" metaFont="smallSystem"/>
+                                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                                    <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
+                                                                </tableHeaderCell>
+                                                                <textFieldCell key="dataCell" scrollable="YES" lineBreakMode="clipping" truncatesLastVisibleLine="YES" alignment="left" drawsBackground="YES" id="626" customClass="ContactCell">
+                                                                    <font key="font" metaFont="system"/>
+                                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                </textFieldCell>
+                                                                <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                                            </tableColumn>
+                                                        </tableColumns>
+                                                        <connections>
+                                                            <outlet property="dataSource" destination="920" id="922"/>
+                                                            <outlet property="delegate" destination="920" id="923"/>
+                                                            <outlet property="menu" destination="817" id="915"/>
+                                                        </connections>
+                                                    </tableView>
+                                                </subviews>
+                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </clipView>
+                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="620">
+                                                <rect key="frame" x="1" y="173" width="251" height="15"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="619">
+                                                <rect key="frame" x="237" y="1" width="15" height="172"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                        </scrollView>
+                                    </subviews>
+                                    <accessibility description="Buscar Resultados dos Contatos"/>
+                                </view>
+                                <accessibility description="Buscar Resultados dos Contatos"/>
+                            </tabViewItem>
+                            <tabViewItem label="Teclado" identifier="dialpad" id="1435" userLabel="Dialpad View">
+                                <view key="view" id="1436">
+                                    <rect key="frame" x="0.0" y="0.0" width="274" height="350"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <customView id="1457" userLabel="DialPadView">
+                                            <rect key="frame" x="0.0" y="6" width="274" height="345"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <button verticalHuggingPriority="750" tag="11" id="1461">
+                                                    <rect key="frame" x="174" y="6" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" title="#" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1482">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1493"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" id="1468">
+                                                    <rect key="frame" x="104" y="6" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" title="0" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1475">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1487"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="10" id="1467">
+                                                    <rect key="frame" x="34" y="6" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" title="*" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1476">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1498"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="9" id="1463">
+                                                    <rect key="frame" x="174" y="76" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1480">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">9
+WXYZ</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1499"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="8" id="1469">
+                                                    <rect key="frame" x="104" y="76" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1474">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">8
+TUV</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1489"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="7" id="1466">
+                                                    <rect key="frame" x="34" y="76" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1477">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">7
+PQRS</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1495"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="5" id="1470">
+                                                    <rect key="frame" x="104" y="146" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1473">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">5
+JKL</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1491"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="4" id="1465">
+                                                    <rect key="frame" x="34" y="146" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1478">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">4
+GHI</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1497"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="6" id="1462">
+                                                    <rect key="frame" x="174" y="146" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1481">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">6
+MNO</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1496"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="3" id="1471">
+                                                    <rect key="frame" x="174" y="216" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1472">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">3
+DEF</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1486"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="2" id="1460">
+                                                    <rect key="frame" x="104" y="216" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1483">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">2
+ABC</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1492"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="1" id="1464">
+                                                    <rect key="frame" x="34" y="216" width="70" height="70"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="1479">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <string key="title">1
+</string>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="dialPadButtonClicked:" target="389" id="1494"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" id="1459">
+                                                    <rect key="frame" x="62" y="319" width="154" height="17"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="roundRect" title="Inserir Contato" bezelStyle="roundedRect" alignment="center" controlSize="small" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1484">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="addContact:" target="389" id="1490"/>
+                                                    </connections>
+                                                </button>
+                                                <button verticalHuggingPriority="750" tag="40" id="1458">
+                                                    <rect key="frame" x="62" y="296" width="154" height="17"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="roundRect" title="Inserir na Conferência" bezelStyle="roundedRect" alignment="center" controlSize="small" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1485">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                        <connections>
+                                                            <action selector="addContactToConference:" target="389" id="1488"/>
+                                                        </connections>
+                                                    </buttonCell>
+                                                </button>
+                                                <box autoresizesSubviews="NO" borderType="bezel" titlePosition="noTitle" id="1505">
+                                                    <rect key="frame" x="-3" y="-4" width="280" height="351"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <view key="contentView">
+                                                        <rect key="frame" x="3" y="3" width="274" height="345"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                    </view>
+                                                    <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                                                    <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                                </box>
+                                            </subviews>
+                                        </customView>
+                                    </subviews>
+                                </view>
+                                <accessibility description="Ver Teclado"/>
+                            </tabViewItem>
+                        </tabViewItems>
+                    </tabView>
+                    <button hidden="YES" toolTip="Inserir um novo Contato" verticalHuggingPriority="750" id="459" userLabel="Add Contact Button ">
+                        <rect key="frame" x="13" y="6" width="29" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Inserir Contato" bezelStyle="texturedRounded" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="460">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <accessibility description="Inserir Novo Contato"/>
+                        <connections>
+                            <accessibilityConnection property="link" destination="1598" id="1646"/>
+                            <action selector="addContact:" target="389" id="635"/>
+                        </connections>
+                    </button>
+                    <button toolTip="Click para rolar para um grupo ou inserir um contato" verticalHuggingPriority="750" id="1689" userLabel="Navigate to Group Button">
+                        <rect key="frame" x="13" y="6" width="29" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Click para rolar para um grupo ou inserir um contato" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <accessibility description="Inserir navegação de contato e grupo"/>
+                        <connections>
+                            <accessibilityConnection property="link" destination="1598" id="1692"/>
+                            <action selector="groupButtonClicked:" target="389" id="1698"/>
+                        </connections>
+                    </button>
+                    <segmentedControl verticalHuggingPriority="750" id="457" userLabel="Start Session Buttons">
+                        <rect key="frame" x="75" y="6" width="125" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <segmentedCell key="cell" state="on" alignment="left" style="texturedSquare" trackingMode="momentary" id="458" userLabel="Session Types ">
+                            <font key="font" metaFont="system"/>
+                            <segments>
+                                <segment toolTip="Iniciar Chamada de Áudio" image="audio" width="30">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Iniciar Chamada de Vídeo" image="video" width="30" tag="1">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Sessões de Chat" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Compartilhamento de Tela" image="display" width="30" tag="3">
+                                    <nil key="label"/>
+                                </segment>
+                            </segments>
+                            <accessibility description="Iniciar Sessões"/>
+                        </segmentedCell>
+                        <accessibility description="Botões para iniciar a Sessão"/>
+                        <connections>
+                            <action selector="actionButtonClicked:" target="389" id="497"/>
+                        </connections>
+                    </segmentedControl>
+                    <button toolTip="Desabilitar Tons de Chamada(Modo Silencioso)" verticalHuggingPriority="750" id="589" userLabel="Silence Alerts Button">
+                        <rect key="frame" x="232" y="6" width="29" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Modo Silencioso" bezelStyle="texturedRounded" image="bellon" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" inset="2" id="590">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <accessibility description="Modo Silencioso"/>
+                        <connections>
+                            <accessibilityConnection property="link" destination="1120" id="1645"/>
+                            <action selector="silentClicked:" target="389" id="882"/>
+                        </connections>
+                    </button>
+                </subviews>
+            </view>
+            <connections>
+                <outlet property="delegate" destination="389" id="391"/>
+                <outlet property="initialFirstResponder" destination="463" id="660"/>
+            </connections>
+        </window>
+        <customView id="474" userLabel="Audio Sessions Drawer View">
+            <rect key="frame" x="0.0" y="0.0" width="280" height="395"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+            <subviews>
+                <textField verticalHuggingPriority="750" id="643" userLabel="Drawer Title Bar">
+                    <rect key="frame" x="-23" y="381" width="327" height="14"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Chamadas de Áudio" id="644">
+                        <font key="font" metaFont="smallSystemBold"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        <allowedInputSourceLocales>
+                            <string>ti_ER</string>
+                            <string>ar_LY</string>
+                            <string>kok_IN</string>
+                            <string>mk_MK</string>
+                            <string>eo</string>
+                            <string>fr_CH</string>
+                            <string>sw</string>
+                            <string>so_ET</string>
+                            <string>gv</string>
+                            <string>ar_BH</string>
+                            <string>hy_AM_REVISED</string>
+                            <string>it_IT</string>
+                            <string>bg_BG</string>
+                            <string>ro</string>
+                            <string>es_HN</string>
+                            <string>en_BE</string>
+                            <string>is</string>
+                            <string>kw_GB</string>
+                            <string>kl</string>
+                            <string>ga_IE</string>
+                            <string>nl_NL</string>
+                            <string>uk</string>
+                            <string>fr_CA</string>
+                            <string>sk_SK</string>
+                            <string>es_AR</string>
+                            <string>en_MT</string>
+                            <string>fr_BE</string>
+                            <string>ca</string>
+                            <string>cs_CZ</string>
+                            <string>fr_FR</string>
+                            <string>en_ZA</string>
+                            <string>sl</string>
+                            <string>fa</string>
+                            <string>so</string>
+                            <string>pt</string>
+                            <string>et_EE</string>
+                            <string>eu_ES</string>
+                            <string>fi</string>
+                            <string>de_CH</string>
+                            <string>or</string>
+                            <string>gu_IN</string>
+                            <string>mt_MT</string>
+                            <string>nb</string>
+                            <string>ms</string>
+                            <string>es_CR</string>
+                            <string>as_IN</string>
+                            <string>ar_SA</string>
+                            <string>am</string>
+                            <string>pl</string>
+                            <string>hu</string>
+                            <string>lv</string>
+                            <string>ar_DZ</string>
+                            <string>ur</string>
+                            <string>pt_PT</string>
+                            <string>eu</string>
+                            <string>so_DJ</string>
+                            <string>de</string>
+                            <string>en_IN</string>
+                            <string>hr_HR</string>
+                            <string>ar_AE</string>
+                            <string>gu</string>
+                            <string>lt</string>
+                            <string>te_IN</string>
+                            <string>ar_KW</string>
+                            <string>sr_Latn</string>
+                            <string>de_AT</string>
+                            <string>en_US</string>
+                            <string>es_PR</string>
+                            <string>pl_PL</string>
+                            <string>uz_Cyrl_UZ</string>
+                            <string>ar_EG</string>
+                            <string>it_CH</string>
+                            <string>nl</string>
+                            <string>haw_US</string>
+                            <string>is_IS</string>
+                            <string>en_IE</string>
+                            <string>kl_GL</string>
+                            <string>ps</string>
+                            <string>zh_Hans_CN</string>
+                            <string>ar</string>
+                            <string>ru_UA</string>
+                            <string>th_TH</string>
+                            <string>fr_LU</string>
+                            <string>uz_Latn_UZ</string>
+                            <string>az</string>
+                            <string>bn_IN</string>
+                            <string>es_MX</string>
+                            <string>kk_KZ</string>
+                            <string>en_US_POSIX</string>
+                            <string>el_GR</string>
+                            <string>he</string>
+                            <string>es_UY</string>
+                            <string>nn_NO</string>
+                            <string>sr</string>
+                            <string>sk</string>
+                            <string>ur_PK</string>
+                            <string>es_PA</string>
+                            <string>sv_FI</string>
+                            <string>zh</string>
+                            <string>es_DO</string>
+                            <string>en_CA</string>
+                            <string>en_BW</string>
+                            <string>de_DE</string>
+                            <string>haw</string>
+                            <string>pa_IN</string>
+                            <string>sq</string>
+                            <string>kw</string>
+                            <string>ga</string>
+                            <string>ml</string>
+                            <string>mt</string>
+                            <string>af_ZA</string>
+                            <string>az_Latn</string>
+                            <string>ko_KR</string>
+                            <string>fa_AF</string>
+                            <string>ps_AF</string>
+                            <string>be_BY</string>
+                            <string>bn</string>
+                            <string>it</string>
+                            <string>sr_Latn_CS</string>
+                            <string>zh_Hans</string>
+                            <string>as</string>
+                            <string>ms_MY</string>
+                            <string>be</string>
+                            <string>sl_SI</string>
+                            <string>fa_IR</string>
+                            <string>es_EC</string>
+                            <string>kok</string>
+                            <string>es_PY</string>
+                            <string>ta_IN</string>
+                            <string>am_ET</string>
+                            <string>es_CO</string>
+                            <string>uz_Latn</string>
+                            <string>el</string>
+                            <string>zh_Hant_MO</string>
+                            <string>kk</string>
+                            <string>kn</string>
+                            <string>zh_Hant</string>
+                            <string>en</string>
+                            <string>es_PE</string>
+                            <string>pt_BR</string>
+                            <string>ar_LB</string>
+                            <string>en_NZ</string>
+                            <string>es_ES</string>
+                            <string>en_HK</string>
+                            <string>es_BO</string>
+                            <string>hu_HU</string>
+                            <string>sr_Cyrl</string>
+                            <string>nb_NO</string>
+                            <string>sv</string>
+                            <string>vi</string>
+                            <string>ti_ET</string>
+                            <string>bg</string>
+                            <string>om</string>
+                            <string>de_LU</string>
+                            <string>en_SG</string>
+                            <string>id_ID</string>
+                            <string>ur_IN</string>
+                            <string>uz</string>
+                            <string>da</string>
+                            <string>ru_RU</string>
+                            <string>es_US</string>
+                            <string>es_VE</string>
+                            <string>ko</string>
+                            <string>ja</string>
+                            <string>af</string>
+                            <string>ar_YE</string>
+                            <string>lt_LT</string>
+                            <string>om_KE</string>
+                            <string>zh_Hans_SG</string>
+                            <string>es_NI</string>
+                            <string>he_IL</string>
+                            <string>en_PK</string>
+                            <string>en_PH</string>
+                            <string>az_Cyrl_AZ</string>
+                            <string>en_AU</string>
+                            <string>az_Cyrl</string>
+                            <string>ta</string>
+                            <string>ar_MA</string>
+                            <string>sw_KE</string>
+                            <string>tr_TR</string>
+                            <string>zh_Hant_HK</string>
+                            <string>en_ZW</string>
+                            <string>de_BE</string>
+                            <string>mk</string>
+                            <string>pa</string>
+                            <string>da_DK</string>
+                            <string>es_GT</string>
+                            <string>es</string>
+                            <string>ar_IQ</string>
+                            <string>az_Latn_AZ</string>
+                            <string>so_SO</string>
+                            <string>lv_LV</string>
+                            <string>mr</string>
+                            <string>te</string>
+                            <string>sq_AL</string>
+                            <string>ml_IN</string>
+                            <string>uk_UA</string>
+                            <string>hi_IN</string>
+                            <string>ca_ES</string>
+                            <string>ar_TN</string>
+                            <string>id</string>
+                            <string>om_ET</string>
+                            <string>cs</string>
+                            <string>fo_FO</string>
+                            <string>hy_AM</string>
+                            <string>en_GB</string>
+                            <string>sr_Cyrl_CS</string>
+                            <string>gl_ES</string>
+                            <string>sw_TZ</string>
+                            <string>ro_RO</string>
+                            <string>cy</string>
+                            <string>fr</string>
+                            <string>ms_BN</string>
+                            <string>so_KE</string>
+                            <string>tr</string>
+                            <string>gl</string>
+                            <string>cy_GB</string>
+                            <string>ar_OM</string>
+                            <string>fo</string>
+                            <string>es_CL</string>
+                            <string>sv_SE</string>
+                            <string>ar_JO</string>
+                            <string>uz_Cyrl</string>
+                            <string>zh_Hant_TW</string>
+                            <string>et</string>
+                            <string>hi</string>
+                            <string>fi_FI</string>
+                            <string>nn</string>
+                            <string>th</string>
+                            <string>ar_SY</string>
+                            <string>ja_JP</string>
+                            <string>gv_GB</string>
+                            <string>hy</string>
+                            <string>en_VI</string>
+                            <string>kn_IN</string>
+                            <string>ti</string>
+                            <string>ar_QA</string>
+                            <string>es_SV</string>
+                            <string>hr</string>
+                            <string>ru</string>
+                            <string>ar_SD</string>
+                            <string>mr_IN</string>
+                            <string>vi_VN</string>
+                            <string>nl_BE</string>
+                            <string>or_IN</string>
+                        </allowedInputSourceLocales>
+                    </textFieldCell>
+                </textField>
+                <splitView dividerStyle="thin" id="1524" userLabel="Drawer Main View">
+                    <rect key="frame" x="0.0" y="25" width="280" height="357"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    <subviews>
+                        <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="356"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
+                                <rect key="frame" x="1" y="1" width="278" height="354"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <customView id="547" userLabel="Audio Sessions List View" customClass="ListView">
+                                        <rect key="frame" x="0.0" y="0.0" width="259" height="16"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+                                        <accessibility description="Lista de Sessões de Áudio"/>
+                                        <connections>
+                                            <accessibilityConnection property="title" destination="643" id="1642"/>
+                                        </connections>
+                                    </customView>
+                                </subviews>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="546">
+                                <rect key="frame" x="-100" y="-100" width="199" height="15"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="545">
+                                <rect key="frame" x="203" y="1" width="15" height="251.5"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <accessibility description="Lista de Sessões de Áudio"/>
+                        </scrollView>
+                        <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1534" userLabel="Conference Participants Section View">
+                            <rect key="frame" x="0.0" y="357" width="280" height="0.0"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <clipView key="contentView" id="Atq-KM-J9c">
+                                <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
+                                        <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <size key="intercellSpacing" width="3" height="2"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                        <tableColumns>
+                                            <tableColumn identifier="participant" width="275" minWidth="40" maxWidth="1000" id="1539">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participantes da Conferência Remota">
+                                                    <font key="font" metaFont="smallSystem"/>
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" allowsUndo="NO" alignment="left" title="Texto da Célula" id="1540" customClass="ContactCell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                                <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
+                                            </tableColumn>
+                                        </tableColumns>
+                                        <accessibility description="Participantes Atuais"/>
+                                        <connections>
+                                            <outlet property="dataSource" destination="389" id="1546"/>
+                                            <outlet property="delegate" destination="389" id="1547"/>
+                                            <outlet property="menu" destination="1563" id="1578"/>
+                                        </connections>
+                                    </tableView>
+                                </subviews>
+                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="1536">
+                                <rect key="frame" x="-100" y="-100" width="223" height="15"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="1535">
+                                <rect key="frame" x="263" y="0.0" width="16" height="0.0"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <tableHeaderView key="headerView" id="1538">
+                                <rect key="frame" x="0.0" y="0.0" width="278" height="17"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </tableHeaderView>
+                        </scrollView>
+                    </subviews>
+                    <holdingPriorities>
+                        <real value="250"/>
+                        <real value="250"/>
+                    </holdingPriorities>
+                    <accessibility description="Lista de Sessões de Áudio"/>
+                    <connections>
+                        <outlet property="delegate" destination="389" id="1541"/>
+                    </connections>
+                </splitView>
+                <customView id="642" userLabel="Buttons View">
+                    <rect key="frame" x="0.0" y="0.0" width="280" height="25"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <subviews>
+                        <button toolTip="Desligar Todas Sessões de Áudio" verticalHuggingPriority="750" tag="10" id="512">
+                            <rect key="frame" x="9" y="0.0" width="90.5" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" title="Desligar Tudo" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="smallSystem"/>
+                            </buttonCell>
+                            <accessibility description="Desligar Todas Chamadas"/>
+                            <connections>
+                                <action selector="hangupAllClicked:" target="389" id="665"/>
+                            </connections>
+                        </button>
+                        <button toolTip="Iniciar e parar uma conferência. Assim que iniciado, voce pode arrastar para adicionar ou remover contatos da conferência." verticalHuggingPriority="750" tag="11" id="587">
+                            <rect key="frame" x="107.5" y="0.0" width="94.5" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" title="Conferência" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                                <font key="font" metaFont="smallSystem"/>
+                            </buttonCell>
+                            <accessibility description="Conferência"/>
+                            <connections>
+                                <action selector="conferenceClicked:" target="389" id="980"/>
+                            </connections>
+                        </button>
+                        <levelIndicator toolTip="Sinal de Entrada do Microfone" verticalHuggingPriority="750" id="1820">
+                            <rect key="frame" x="214" y="8" width="27.5" height="12"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                            <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="1821">
+                                <font key="font" metaFont="miniSystem"/>
+                            </levelIndicatorCell>
+                            <accessibility description="Sinal de Entrada do Microfone"/>
+                        </levelIndicator>
+                    </subviews>
+                </customView>
+                <button toolTip="Emudecer Microfone" verticalHuggingPriority="750" id="878" userLabel="Mute Button">
+                    <rect key="frame" x="246" y="0.0" width="28" height="25"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    <buttonCell key="cell" type="roundTextured" alternateTitle="Emudecer Microfone" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <accessibility description="Emudecer Microfone"/>
+                    <connections>
+                        <accessibilityConnection property="link" destination="1118" id="1643"/>
+                        <accessibilityConnection property="title" destination="1118" id="1644"/>
+                        <action selector="muteClicked:" target="389" id="880"/>
+                    </connections>
+                </button>
+                <textField verticalHuggingPriority="750" id="1827">
+                    <rect key="frame" x="7" y="27" width="270" height="14"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                    <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="center" placeholderString="Dispositivos de Áudio Escolhidos" id="1828">
+                        <font key="font" metaFont="smallSystem"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+        </customView>
+        <menu title="MenuBarraStatus" id="1745">
+            <items>
+                <menuItem title="Minha Disponibilidade" tag="1" id="1766">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Pessoas Assistindo Minha Disponibilidade" autoenablesItems="NO" id="1795">
+                        <items>
+                            <menuItem title="Item" id="1796">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="1797"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem title="Assinantes Para Minha Disponibilidade" id="1738">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Assinantes Para Minha Disponibilidade" autoenablesItems="NO" id="1739">
+                        <items>
+                            <menuItem title="Item" id="1740">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                        </items>
+                        <connections>
+                            <outlet property="delegate" destination="389" id="1742"/>
+                        </connections>
+                    </menu>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="1781"/>
+                <menuItem title="Rediscar" tag="25" keyEquivalent="r" id="1799">
+                    <connections>
+                        <action selector="redialLast:" target="389" id="1800"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="1801"/>
+                <menuItem title="Chamadas Perdidas" tag="1000" enabled="NO" id="1803">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="1802"/>
+                <menuItem title="Emudecer" tag="300" keyEquivalent="m" id="1775">
+                    <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                    <connections>
+                        <action selector="muteClicked:" target="389" id="1779"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Silenciar Alertas" tag="301" keyEquivalent="s" id="1776">
+                    <connections>
+                        <action selector="silentClicked:" target="389" id="1778"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Não Incomodar" tag="302" id="1777">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="dndClicked:" target="389" id="1780"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Habilitar Secretária Eletrônica" tag="50" id="1098">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="toggleAnsweringMachine:" target="389" id="1099"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="1782"/>
+                <menuItem title="Preferências" keyEquivalent="," id="1750">
+                    <connections>
+                        <action selector="showWindow:" target="638" id="1774"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Exibir Lista de Contatos" keyEquivalent="1" id="1772">
+                    <connections>
+                        <action selector="focusSearchTextField:" target="389" id="1773"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="1791"/>
+                <menuItem title="Sair" id="1787" userLabel="1111">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="terminate:" target="-1" id="1788"/>
+                    </connections>
+                </menuItem>
+            </items>
+            <connections>
+                <outlet property="delegate" destination="389" id="1792"/>
+            </connections>
+        </menu>
+        <customObject id="373" userLabel="Blink Application Delegate" customClass="BlinkAppDelegate">
+            <connections>
+                <outlet property="blinkMenu" destination="57" id="1047"/>
+                <outlet property="contactsWindowController" destination="389" id="454"/>
+            </connections>
+        </customObject>
+        <customObject id="389" userLabel="Contact Window Controller" customClass="ContactWindowController">
+            <connections>
+                <outlet property="accountPopUp" destination="446" id="468"/>
+                <outlet property="actionButtons" destination="457" id="467"/>
+                <outlet property="addContactButton" destination="459" id="471"/>
+                <outlet property="addContactButtonDialPad" destination="1459" id="1501"/>
+                <outlet property="addContactButtonSearch" destination="607" id="659"/>
+                <outlet property="addContactToConferenceDialPad" destination="1458" id="1502"/>
+                <outlet property="alwaysOnTopMenuItem" destination="567" id="1651"/>
+                <outlet property="audioSessionsListView" destination="547" id="548"/>
+                <outlet property="blinkMenu" destination="57" id="1045"/>
+                <outlet property="callMenu" destination="1054" id="1130"/>
+                <outlet property="chatMenu" destination="951" id="956"/>
+                <outlet property="conferenceButton" destination="587" id="981"/>
+                <outlet property="contactContextMenu" destination="817" id="839"/>
+                <outlet property="contactOutline" destination="504" id="510"/>
+                <outlet property="contactsAdsView" destination="1629" id="1631"/>
+                <outlet property="contactsMenu" destination="894" id="907"/>
+                <outlet property="contactsScrollView" destination="503" id="1630"/>
+                <outlet property="devicesMenu" destination="751" id="1127"/>
+                <outlet property="dialPadView" destination="1457" id="1500"/>
+                <outlet property="drawer" destination="475" id="495"/>
+                <outlet property="drawerSplitView" destination="1524" id="1542"/>
+                <outlet property="groupButton" destination="1689" id="1707"/>
+                <outlet property="groupMenu" destination="1693" id="1697"/>
+                <outlet property="historyMenu" destination="798" id="801"/>
+                <outlet property="mainTabView" destination="498" id="613"/>
+                <outlet property="micLevelIndicator" destination="1820" id="1822"/>
+                <outlet property="model" destination="831" id="837"/>
+                <outlet property="muteButton" destination="878" id="881"/>
+                <outlet property="myvideoMenuItem" destination="3zb-2K-tHc" id="S6h-Nf-ccU"/>
+                <outlet property="nameText" destination="731" id="733"/>
+                <outlet property="notFoundText" destination="631" id="633"/>
+                <outlet property="participantMenu" destination="1563" id="1580"/>
+                <outlet property="participantsTableView" destination="1537" id="1545"/>
+                <outlet property="participantsView" destination="1534" id="1543"/>
+                <outlet property="photoImage" destination="656" id="694"/>
+                <outlet property="presenceActivityPopUp" destination="551" id="1709"/>
+                <outlet property="presenceMenu" destination="1795" id="1798"/>
+                <outlet property="presenceNoteText" destination="691" id="1710"/>
+                <outlet property="presencePopUpMenu" destination="555" id="1730"/>
+                <outlet property="presenceWatchersMenu" destination="1739" id="1741"/>
+                <outlet property="recordingsMenu" destination="1091" id="1593"/>
+                <outlet property="recordingsSubMenu" destination="1090" id="1594"/>
+                <outlet property="restoreContactsMenu" destination="1603" id="1610"/>
+                <outlet property="screenShareMenu" destination="928" id="955"/>
+                <outlet property="searchBox" destination="463" id="470"/>
+                <outlet property="searchOutline" destination="621" id="924"/>
+                <outlet property="searchResultsModel" destination="920" id="921"/>
+                <outlet property="selectedAudioDeviceLabel" destination="1827" id="1829"/>
+                <outlet property="sessionsView" destination="544" id="1544"/>
+                <outlet property="silentButton" destination="589" id="887"/>
+                <outlet property="statusBarMenu" destination="1745" id="1762"/>
+                <outlet property="useSpeechRecognitionMenuItem" destination="Ked-li-VeB" id="yGP-TV-FPu"/>
+                <outlet property="useSpeechSynthesisMenuItem" destination="mk1-bq-3CO" id="AYH-dK-kdp"/>
+                <outlet property="window" destination="371" id="406"/>
+                <outlet property="windowMenu" destination="24" id="1595"/>
+            </connections>
+        </customObject>
+        <drawer trailingOffset="15" id="475" userLabel="Audio Sessions Drawer">
+            <size key="contentSize" width="267" height="100"/>
+            <size key="minContentSize" width="267" height="0.0"/>
+            <size key="maxContentSize" width="10000" height="10000"/>
+            <connections>
+                <outlet property="contentView" destination="474" id="478"/>
+                <outlet property="delegate" destination="389" id="663"/>
+                <outlet property="parentWindow" destination="371" id="479"/>
+            </connections>
+        </drawer>
+        <customObject id="638" userLabel="Preferences Controller" customClass="PreferencesController"/>
+        <customObject id="831" userLabel="Contacts Model" customClass="ContactListModel">
+            <connections>
+                <outlet property="contactOutline" destination="504" id="1597"/>
+            </connections>
+        </customObject>
+        <customObject id="920" userLabel="Search Model" customClass="SearchContactListModel"/>
+        <menu autoenablesItems="NO" id="928" userLabel="Screen Sharing Button Menu">
+            <items>
+                <menuItem title="Solicitar para Compartilhar Tela Remota" tag="1" id="929">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="startScreenSharing:" target="389" id="1743"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Compartilhar Minha Tela" tag="2" id="930">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="startScreenSharing:" target="389" id="1744"/>
+                    </connections>
+                </menuItem>
+            </items>
+            <connections>
+                <outlet property="delegate" destination="389" id="938"/>
+            </connections>
+        </menu>
+        <menu id="951" userLabel="Start Chat Button Menu">
+            <items>
+                <menuItem title="Iniciar Sessão de Chat" id="952">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Enviar SMS" id="953">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+            </items>
+            <connections>
+                <outlet property="delegate" destination="389" id="957"/>
+            </connections>
+        </menu>
+        <menu autoenablesItems="NO" id="817" userLabel="Contacts Menu">
+            <items>
+                <menuItem title="Editar" id="818">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Deletar" id="819">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+            </items>
+            <connections>
+                <outlet property="delegate" destination="389" id="836"/>
+            </connections>
+        </menu>
+        <menu autoenablesItems="NO" id="1693" userLabel="Group Menu">
+            <items>
+                <menuItem title="Item 1" id="1694">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Item 2" id="1695">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Item 3" id="1696">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+            </items>
+            <connections>
+                <outlet property="delegate" destination="389" id="1700"/>
+            </connections>
+        </menu>
+        <menu title="Participante" autoenablesItems="NO" id="1563" userLabel="Conference Participant Contextual Menu">
+            <items>
+                <menuItem title="Sala de Conferência" enabled="NO" id="1849" userLabel="Menu Item (Conference)">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Convidar Participantes..." tag="312" indentationLevel="1" id="1851" userLabel="Menu Item (Invite Participants...)">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1861"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Ir para Website..." tag="313" enabled="NO" indentationLevel="1" id="1853">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1860"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Adicionar aos Contatos..." tag="314" enabled="NO" indentationLevel="1" id="1856">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1859"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="1850"/>
+                <menuItem title="Participante" enabled="NO" id="1852" userLabel="Menu Item (Participant)">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem title="Remover da Conferência..." tag="310" enabled="NO" indentationLevel="1" id="1854">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1858"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Emudecer..." tag="315" enabled="NO" indentationLevel="1" id="1564">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1585"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Adicionar aos Contatos..." tag="301" enabled="NO" indentationLevel="1" id="1566">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1586"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Iniciar Sessão de Áudio" tag="320" enabled="NO" indentationLevel="1" id="1577">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1587"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Iniciar Sessão de Chat" tag="321" enabled="NO" indentationLevel="1" id="1576">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1588"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Iniciar Sessão de Vídeo" tag="322" enabled="NO" indentationLevel="1" id="1574">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1589"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Enviar Arquivo(s)..." tag="323" enabled="NO" indentationLevel="1" id="1575">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="389" id="1590"/>
+                    </connections>
+                </menuItem>
+            </items>
+        </menu>
+        <menuItem title="Gravações de Áudio" id="1090">
+            <modifierMask key="keyEquivalentModifierMask"/>
+            <menu key="submenu" title="Gravações" autoenablesItems="NO" id="1091">
+                <items>
+                    <menuItem isSeparatorItem="YES" id="1092"/>
+                    <menuItem title="Abrir Pasta de Gravações" id="1093">
+                        <modifierMask key="keyEquivalentModifierMask"/>
+                        <connections>
+                            <action selector="recordingClicked:" target="389" id="1095"/>
+                        </connections>
+                    </menuItem>
+                </items>
+                <connections>
+                    <outlet property="delegate" destination="389" id="1094"/>
+                </connections>
+            </menu>
+        </menuItem>
+        <menuItem title="Menu" id="1752">
+            <modifierMask key="keyEquivalentModifierMask"/>
+            <menu key="submenu" title="Menu" id="1753">
+                <items>
+                    <menuItem title="Item" id="1754">
+                        <modifierMask key="keyEquivalentModifierMask"/>
+                    </menuItem>
+                </items>
+            </menu>
+        </menuItem>
+        <customObject id="lcu-W9-Fta" customClass="NSFontManager"/>
+    </objects>
+    <resources>
+        <image name="NSAddTemplate" width="8" height="8"/>
+        <image name="NSUser" width="32" height="32"/>
+        <image name="audio" width="240" height="240"/>
+        <image name="bell" width="14" height="12"/>
+        <image name="belloff" width="18" height="18"/>
+        <image name="bellon" width="18" height="18"/>
+        <image name="display" width="32" height="32"/>
+        <image name="mic" width="15" height="19"/>
+        <image name="mute" width="24" height="24"/>
+        <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
+        <image name="speaker" width="14" height="12"/>
+        <image name="video" width="520" height="520"/>
+    </resources>
+</document>
