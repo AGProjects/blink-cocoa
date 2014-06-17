@@ -82,7 +82,7 @@
                     <textField verticalHuggingPriority="750" id="17">
                         <rect key="frame" x="163" y="315" width="355" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Informe a sala ou deixe vazio para criar uma aleatoriamente" drawsBackground="YES" id="18">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Deixe vazio para criar uma aleatoriamente" drawsBackground="YES" id="18">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -289,7 +289,7 @@ Gw
                     <button id="170">
                         <rect key="frame" x="160" y="47" width="351" height="39"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="check" title="Iniciar Conferência Quando Participantes Estiverem Disponíveis" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
+                        <buttonCell key="cell" type="check" title="Iniciar Quando Participantes Estiverem Disponíveis" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
