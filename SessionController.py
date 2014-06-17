@@ -1921,16 +1921,12 @@ class SessionController(NSObject):
                     accepted_streams = [s for s in streams if s.type not in ("video")]
                 else:
                     accepted_streams = streams
+
                 if accepted_streams:
                     stream_type_list = list(set(stream.type for stream in accepted_streams))
                     self.log_info(u"Automatically accepting addition of %s streams for established session from %s" % (",".join(stream_type_list), format_identity_to_string(session.remote_identity)))
                     self.acceptIncomingProposal(accepted_streams)
                     return
-
-            if stream_type_list == ['screen-sharing'] and 'audio' in (s.type for s in session.streams):
-                self.log_info(u"Automatically accepting chat for established audio call from %s" % format_identity_to_string(session.remote_identity))
-                self.acceptIncomingProposal(streams)
-                return
 
             if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
                 self.log_info(u"Automatically accepting chat for established audio call from %s" % format_identity_to_string(session.remote_identity))
