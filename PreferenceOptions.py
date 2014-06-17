@@ -1567,7 +1567,7 @@ class AccountSoundFileOption(SoundFileOption):
     def __init__(self, object, name, option, description=None):
         SoundFileOption.__init__(self, object, name, option, description)
 
-        self.popup.insertItemWithTitle_atIndex_("Default", 0)
+        self.popup.insertItemWithTitle_atIndex_(NSLocalizedString("Default", "Menu item"), 0)
         self.popup.itemAtIndex_(0).setRepresentedObject_("DEFAULT")
 
 
