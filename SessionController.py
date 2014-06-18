@@ -63,7 +63,11 @@ from MediaStream import STREAM_IDLE, STREAM_FAILED
 from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
-from VideoController import VideoController
+try:
+    from VideoController import VideoController
+    video_support = True
+except ImportError:
+    video_support = False
 from interfaces.itunes import MusicApplications
 from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc
 
@@ -74,13 +78,14 @@ OUTBOUND_AUDIO_CALLS = 0
 StreamHandlerForType = {
     "chat" : ChatController,
     "audio" : AudioController,
-    "video" : VideoController,
     "file-transfer" : FileTransferController,
     "screen-sharing" : ScreenSharingController,
     "screen-sharing-server" : ScreenSharingServerController,
     "screen-sharing-client" : ScreenSharingViewerController
 }
 
+if video_support:
+    StreamHandlerForType['video'] = VideoController
 
 class SessionControllersManager(object):
     __metaclass__ = Singleton
@@ -584,7 +589,10 @@ class SessionControllersManager(object):
             return settings.chat.enable_sms
 
         if type == 'video':
-            return bool(settings.video.device)
+            try:
+                return bool(settings.video.device)
+            except AttributeError:
+                return False
 
         return True
 
@@ -1917,7 +1925,8 @@ class SessionController(NSObject):
                 return
 
             if self.contact and self.contact.auto_answer:
-                if "video" in stream_type_list and not settings.video.enable_when_auto_answer:
+                accepted_streams = streams
+                if video_support and "video" in stream_type_list and not settings.video.enable_when_auto_answer:
                     accepted_streams = [s for s in streams if s.type not in ("video")]
                 else:
                     accepted_streams = streams
@@ -1992,7 +2001,7 @@ class SessionController(NSObject):
                 handler = self.streamHandlerForStream(stream)
                 if handler:
                     handler.changeStatus(STREAM_FAILED, data.reason)
-            elif stream.type == "video":
+            elif video_support and stream.type == "video":
                 self.log_info("Removing video stream")
                 handler = self.streamHandlerForStream(stream)
                 if handler:

@@ -511,7 +511,6 @@ class ContactWindowController(NSWindowController):
         self.statusBarItem.setHighlightMode_(1)
         self.statusBarItem.setToolTip_(NSApp.delegate().applicationName)
         self.statusBarItem.setMenu_(self.statusBarMenu)
-
         self.rotateCameraTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "rotateCamera:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSDefaultRunLoopMode)
@@ -591,6 +590,9 @@ class ContactWindowController(NSWindowController):
         return has_audio
 
     def rotateCamera_(self, timer):
+        if not self.sessionControllersManager.isMediaTypeSupported('video'):
+            return
+
         settings = SIPSimpleSettings()
         if settings.video.auto_rotate_cameras and len(self.sessionControllersManager.connectedVideoSessions):
             devices = list(device for device in self.backend._app.engine.video_devices if device not in ('system_default', None))
@@ -3553,8 +3555,11 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(False)
 
         item = self.windowMenu.itemWithTag_(50)
-        item.setState_(NSOnState if self.localVideoVisible() else NSOffState)
-        item.setEnabled_(True if settings.video.device is not None else False)
+        if self.sessionControllersManager.isMediaTypeSupported('video'):
+            item.setState_(NSOnState if self.localVideoVisible() else NSOffState)
+            item.setEnabled_(True if settings.video.device is not None else False)
+        else:
+            item.setHidden_(True)
 
     def updateChatMenu(self):
         settings = SIPSimpleSettings()
@@ -5072,7 +5077,6 @@ class ContactWindowController(NSWindowController):
                     index += 1
 
         if menu == self.devicesMenu:
-            self.backend._app.engine.refresh_video_devices()
             in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
             if  NSLocalizedString("Built-in Microphone", "Label") in self.backend._app.engine.input_devices and NSLocalizedString("Built-in Output", "Label") in self.backend._app.engine.output_devices:
                 in_out_devices.append(NSLocalizedString("Built-in Microphone and Output", "Label"))
@@ -5080,7 +5084,9 @@ class ContactWindowController(NSWindowController):
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices,  "input_device",  "selectInputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device",  "selectAlertDevice:")
-            setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
+            if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+                self.backend._app.engine.refresh_video_devices()
+                setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
 
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()

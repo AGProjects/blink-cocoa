@@ -57,7 +57,15 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
-from sipsimple.configuration.datatypes import AudioCodecList, VideoCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress,H264Profile
+from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress
+try:
+    from sipsimple.configuration.datatypes import VideoCodecList, H264Profile
+    video_support = True
+except ImportError:
+    VideoCodecList = None
+    video_support = False
+    pass
+
 from sipsimple.configuration.settings import SIPSimpleSettings
 from configuration.settings import EchoCancellerSettingsExtension
 from zope.interface import implements
@@ -667,12 +675,13 @@ class AudioCodecListOption(MultipleSelectionOption):
                 options.append(opt)
         self.options = options
 
-
-class VideoCodecListOption(AudioCodecListOption):
-    available_codec_list = VideoCodecList
-    beautified_codecs = video_codecs
-    type = 'video'
-
+if video_support:
+    class VideoCodecListOption(AudioCodecListOption):
+        available_codec_list = VideoCodecList
+        beautified_codecs = video_codecs
+        type = 'video'
+else:
+    VideoCodecListOption = None
 
 class AccountAudioCodecListOption(AudioCodecListOption):
     def __init__(self, object, name, option, description=None):
@@ -730,62 +739,64 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         else:
             cell.setEnabled_(True)
 
+if video_support:
+    class AccountVideoCodecListOption(VideoCodecListOption):
+        def __init__(self, object, name, option, description=None):
+            VideoCodecListOption.__init__(self, object, name, option, description)
 
-class AccountVideoCodecListOption(VideoCodecListOption):
-    def __init__(self, object, name, option, description=None):
-        VideoCodecListOption.__init__(self, object, name, option, description)
+            self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 110, 20))
+            self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
+            self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
+            self.check.setButtonType_(NSSwitchButton)
+            self.check.setTarget_(self)
+            self.check.setAction_("customizeCodecs:")
+            self.sideView.addSubview_(self.check)
 
-        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 110, 20))
-        self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
-        self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
-        self.check.setButtonType_(NSSwitchButton)
-        self.check.setTarget_(self)
-        self.check.setAction_("customizeCodecs:")
-        self.sideView.addSubview_(self.check)
+        def loadGlobalSettings(self):
+            value = SIPSimpleSettings().rtp.video_codec_list or []
+            options = []
+            for val in list(value):
+                try:
+                    v = (v for k, v in video_codecs.iteritems() if val == k).next()
+                except StopIteration:
+                    options.append(val)
+                else:
+                    options.append(v)
 
-    def loadGlobalSettings(self):
-        value = SIPSimpleSettings().rtp.video_codec_list or []
-        options = []
-        for val in list(value):
-            try:
-                v = (v for k, v in video_codecs.iteritems() if val == k).next()
-            except StopIteration:
-                options.append(val)
+            self.selection = set(options)
+            for opt in self.options:
+                if opt not in options:
+                    options.append(opt)
+            self.options = options
+
+        def customizeCodecs_(self, sender):
+            if sender.state() == NSOffState:
+                self.loadGlobalSettings()
+
+            self.table.reloadData()
+            self.store()
+
+        def _store(self):
+            if self.check.state() == NSOnState:
+                VideoCodecListOption._store(self)
             else:
-                options.append(v)
+                self.set(None)
 
-        self.selection = set(options)
-        for opt in self.options:
-            if opt not in options:
-                options.append(opt)
-        self.options = options
+        def restore(self):
+            if self.get() is None:
+                self.check.setState_(NSOffState)
+                self.loadGlobalSettings()
+            else:
+                self.check.setState_(NSOnState)
+                VideoCodecListOption.restore(self)
 
-    def customizeCodecs_(self, sender):
-        if sender.state() == NSOffState:
-            self.loadGlobalSettings()
-
-        self.table.reloadData()
-        self.store()
-
-    def _store(self):
-        if self.check.state() == NSOnState:
-            VideoCodecListOption._store(self)
-        else:
-            self.set(None)
-
-    def restore(self):
-        if self.get() is None:
-            self.check.setState_(NSOffState)
-            self.loadGlobalSettings()
-        else:
-            self.check.setState_(NSOnState)
-            VideoCodecListOption.restore(self)
-
-    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
-        if self.check.state() == NSOffState:
-            cell.setEnabled_(False)
-        else:
-            cell.setEnabled_(True)
+        def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
+            if self.check.state() == NSOffState:
+                cell.setEnabled_(False)
+            else:
+                cell.setEnabled_(True)
+else:
+    AccountVideoCodecListOption = None
 
 
 class PopUpMenuOption(Option):

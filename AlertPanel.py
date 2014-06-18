@@ -42,7 +42,14 @@ from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import SessionManager, IllegalStateError
-from sipsimple.streams import AudioStream, VideoStream, ChatStream, FileTransferStream, ScreenSharingStream
+from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, ScreenSharingStream
+try:
+    from sipsimple.streams import VideoStream
+    video_support = True
+except ImportError:
+    VideoStream = None
+    video_support = False
+
 from zope.interface import implements
 
 

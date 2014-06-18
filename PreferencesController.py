@@ -206,6 +206,15 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['contacts.enable_outgoing_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_missed_calls_group'] = HiddenOption
 
+        try:
+            from sipsimple.configuration.settings import H264Settings
+        except ImportError:
+            try:
+                item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'video').next()
+                self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
+            except StopIteration:
+                pass
+    
         if not NSApp.delegate().advanced_options_enabled:
             for identifier in ('answering_machine', 'advanced'):
                 try:

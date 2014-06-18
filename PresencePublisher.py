@@ -1,7 +1,8 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSEventTrackingRunLoopMode
+from AppKit import NSEventTrackingRunLoopMode, NSApp
+
 from Foundation import (NSBundle,
                         NSLocalizedString,
                         NSRunLoop,
@@ -388,7 +389,10 @@ class PresencePublisher(object):
             service.device_info.time_offset = pidf.TimeOffset()
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
         service.capabilities.message = not settings.chat.disabled
-        service.capabilities.video = (settings.video.device != "None")
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+            service.capabilities.video = (settings.video.device != "None")
+        else:
+            service.capabilities.video = False
         service.capabilities.file_transfer = not settings.file_transfer.disabled
         service.capabilities.screen_sharing_server = not settings.screen_sharing_server.disabled
         service.capabilities.screen_sharing_client = True

@@ -1,7 +1,8 @@
 # Copyright (C) 2014 AG Projects. See LICENSE for details.
 #
 
-from AppKit import (NSSize,
+from AppKit import (NSApp,
+                    NSSize,
                     NSBorderlessWindowMask,
                     NSResizableWindowMask,
                     NSWindowController,
@@ -248,6 +249,8 @@ class LocalVideoView(NSView):
             self.window().hide()
 
     def rightMouseDown_(self, event):
+        if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+            return
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
             NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
@@ -306,13 +309,16 @@ class LocalVideoView(NSView):
 
     def getDevice(self):
         # Find a video device
-        try:
-            device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and  device.localizedName() == SIPApplication.video_device.real_name).next()
-        except StopIteration:
-            BlinkLogger().log_info('No camera found')
-            return None
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+            try:
+                device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and  device.localizedName() == SIPApplication.video_device.real_name).next()
+            except StopIteration:
+                BlinkLogger().log_info('No camera found')
+                return None
+            else:
+                return device
         else:
-            return device
+            return AVCaptureDevice.defaultDeviceWithMediaType_(AVMediaTypeVideo)
 
     def reloadCamera(self):
         if not self.captureSession:
@@ -360,7 +366,8 @@ class LocalVideoView(NSView):
                 height = 720
                 BlinkLogger().log_debug("Error: %s camera does not provide any supported video format" % device.localizedName())
             else:
-                BlinkLogger().log_debug("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
+                if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+                    BlinkLogger().log_debug("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 

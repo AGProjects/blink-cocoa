@@ -211,9 +211,12 @@ class PhotoPicker(NSObject):
         self.high_res = high_res
 
         settings = SIPSimpleSettings()
-        self.previous_auto_rotate_cameras = settings.video.auto_rotate_cameras
-        settings.video.auto_rotate_cameras = False
-        settings.save()
+        try:
+            self.previous_auto_rotate_cameras = settings.video.auto_rotate_cameras
+            settings.video.auto_rotate_cameras = False
+            settings.save()
+        except AttributeError:
+            pass
 
         if self.high_res:
             self.photoView.setCropSize_()
@@ -498,8 +501,11 @@ class PhotoPicker(NSObject):
         NSApp.stopModalWithCode_(0)
 
         settings = SIPSimpleSettings()
-        settings.video.auto_rotate_cameras = self.previous_auto_rotate_cameras
-        settings.save()
+        try:
+            settings.video.auto_rotate_cameras = self.previous_auto_rotate_cameras
+            settings.save()
+        except AttributeError:
+            pass
 
     def runModal(self):
         self.window.makeKeyAndOrderFront_(None)

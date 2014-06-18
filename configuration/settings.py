@@ -8,8 +8,16 @@ Blink settings extensions.
 __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
-from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate, H264Profile, VideoResolution
-from sipsimple.configuration.settings import H264Settings, AudioSettings, VideoSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings, VideoCodecList
+from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
+try:
+    from sipsimple.configuration.datatypes import H264Profile, VideoResolution
+    from sipsimple.configuration.settings import H264Settings, VideoSettings, VideoCodecList
+    video_support = True
+except ImportError:
+    video_support = False
+    pass
+
+from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
@@ -22,14 +30,20 @@ class AnsweringMachineSettings(SettingsGroup):
     max_recording_duration = Setting(type=NonNegativeInteger, default=120)
     unavailable_message = Setting(type=AnsweringMachineSoundFile, default=AnsweringMachineSoundFile(AnsweringMachineSoundFile.DefaultSoundFile('unavailable_message.wav')), nillable=True)
 
-
-class H264SettingsExtension(H264Settings):
-    profile = Setting(type=H264Profile, default='baseline')
-    level = Setting(type=float, default=3.1)
-    max_resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
-    max_framerate = Setting(type=int, default=30)
-    avg_bitrate = Setting(type=int, default=0)
-    max_bitrate = Setting(type=int, default=0)
+if video_support:
+    class H264SettingsExtension(H264Settings):
+        profile = Setting(type=H264Profile, default='baseline')
+        level = Setting(type=float, default=3.1)
+        max_resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
+        max_framerate = Setting(type=int, default=30)
+        avg_bitrate = Setting(type=int, default=0)
+        max_bitrate = Setting(type=int, default=0)
+    class VideoSettingsExtension(VideoSettings):
+        enable_when_auto_answer = Setting(type=bool, default=False)
+        full_screen_after_connect = Setting(type=bool, default=True)
+        keep_window_on_top = Setting(type=bool, default=True)
+        h264 = H264SettingsExtension
+        auto_rotate_cameras = Setting(type=bool, default=True)
 
 
 class EchoCancellerSettingsExtension(EchoCancellerSettings):
@@ -47,14 +61,6 @@ class AudioSettingsExtension(AudioSettings):
     sound_card_delay = RuntimeSetting(type=NonNegativeInteger, default=2)
     automatic_device_switch = Setting(type=bool, default=True)
     pause_music = Setting(type=bool, default=True)
-
-
-class VideoSettingsExtension(VideoSettings):
-    enable_when_auto_answer = Setting(type=bool, default=False)
-    full_screen_after_connect = Setting(type=bool, default=True)
-    keep_window_on_top = Setting(type=bool, default=True)
-    h264 = H264SettingsExtension
-    auto_rotate_cameras = Setting(type=bool, default=True)
 
 
 class ChatSettingsExtension(ChatSettings):
@@ -116,10 +122,13 @@ class GUISettings(SettingsGroup):
     media_support_detection = Setting(type=bool, default=False)
 
 
-class RTPSettingsExtension(RTPSettings):
-    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
-    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264',)))
-
+if video_support:
+    class RTPSettingsExtension(RTPSettings):
+        audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
+        video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264',)))
+else:
+    class RTPSettingsExtension(RTPSettings):
+        audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
@@ -170,7 +179,8 @@ class PresenceStateSettings(SettingsGroup):
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
-    video = VideoSettingsExtension
+    if video_support:
+        video = VideoSettingsExtension
     chat = ChatSettingsExtension
     screen_sharing_server = ScreenSharingSettingsExtension
     file_transfer = FileTransferSettingsExtension
