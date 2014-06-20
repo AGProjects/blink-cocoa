@@ -7,11 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1F045F841946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
-		1F045F851946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
-		1F045F861946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
-		1F045F871946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
-		1F045F881946233400301F91 /* colac.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F045F831946233400301F91 /* colac.tiff */; };
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F065AFD1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
@@ -1425,6 +1420,11 @@
 		1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
 		1FC9FEF514379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
 		1FC9FEF614379AC50056B3A8 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
+		1FCA7D5C195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
+		1FCA7D5D195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
+		1FCA7D5E195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
+		1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
+		1FCA7D60195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCE2BDF166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1FCE2BE0166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1FCE2BE1166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
@@ -2308,7 +2308,6 @@
 
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		1F045F831946233400301F91 /* colac.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = colac.tiff; path = icons/colac.tiff; sourceTree = "<group>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
 		1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
@@ -2632,6 +2631,7 @@
 		1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ElQuijote-logo.png"; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
+		1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "support@conference.sip2sip.info.tiff"; path = "icons/support@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1FCE2BDE166BABBC00090A86 /* time.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = time.png; path = icons/time.png; sourceTree = "<group>"; };
 		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
 		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
@@ -3225,7 +3225,7 @@
 			isa = PBXGroup;
 			children = (
 				1F337A54194C95E000DB726B /* moon.png */,
-				1F045F831946233400301F91 /* colac.tiff */,
+				1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */,
 				1F331DCA193B655800831F31 /* voicemail-red.png */,
 				1F331DC4193B5CB600831F31 /* voicemail.png */,
 				1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */,
@@ -3890,7 +3890,6 @@
 				1FD0808118C02DA800A3B313 /* away.png in Resources */,
 				1F2272D412B554F50010A8B2 /* FileTransferWindow.xib in Resources */,
 				1F2272D512B554F50010A8B2 /* FileTransferItemView.xib in Resources */,
-				1F045F851946233400301F91 /* colac.tiff in Resources */,
 				1F2272D612B554F50010A8B2 /* FileTransferItemView.py in Resources */,
 				1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */,
 				1F2272D712B554F50010A8B2 /* ListView.py in Resources */,
@@ -3965,6 +3964,7 @@
 				1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */,
 				1F71724812BE201200CBA476 /* ChatWindowController.py in Resources */,
 				1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */,
+				1FCA7D5D195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1F8760B512C026840090846C /* FileTransferController.py in Resources */,
 				1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */,
 				1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */,
@@ -4241,8 +4241,8 @@
 				1F35CFF917894FFF00C6FE38 /* AddParticipantsWindow.xib in Resources */,
 				1F35CFFA17894FFF00C6FE38 /* FileTransferController.py in Resources */,
 				1F35CFFB17894FFF00C6FE38 /* ParticipantsTableView.py in Resources */,
-				1F045F871946233400301F91 /* colac.tiff in Resources */,
 				1FAE0B1518FD7A2300038AA4 /* pencil_16.png in Resources */,
+				1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1FC0184B18E0774D0009145A /* VideoControlPanel.xib in Resources */,
 				1F35CFFC17894FFF00C6FE38 /* hangup_small.png in Resources */,
 				1F35CFFD17894FFF00C6FE38 /* audio_16.png in Resources */,
@@ -4430,7 +4430,6 @@
 				1F8DC35A135084FA0034815C /* recording2.png in Resources */,
 				1F8DC35B135084FA0034815C /* recording3.png in Resources */,
 				1F8DC35C135084FA0034815C /* mic.png in Resources */,
-				1F045F861946233400301F91 /* colac.tiff in Resources */,
 				1F8DC35D135084FA0034815C /* speaker.png in Resources */,
 				1FF6C40B1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				1FD0807E18C02DA800A3B313 /* available.png in Resources */,
@@ -4519,6 +4518,7 @@
 				1F8DC3AB135084FA0034815C /* AddParticipantsWindow.xib in Resources */,
 				1F8DC3AC135084FA0034815C /* FileTransferController.py in Resources */,
 				1F8DC3AD135084FA0034815C /* ParticipantsTableView.py in Resources */,
+				1FCA7D5E195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1F8DC3AE135084FA0034815C /* hangup_small.png in Resources */,
 				1F8DC3AF135084FA0034815C /* audio_16.png in Resources */,
 				1F8DC3B0135084FA0034815C /* video.png in Resources */,
@@ -4728,7 +4728,6 @@
 				1FC80E51192E3E1F00BD62F4 /* AnsweringMachine.py in Resources */,
 				1FC80E52192E3E1F00BD62F4 /* FileTransferSession.py in Resources */,
 				1FC80E53192E3E1F00BD62F4 /* About.xib in Resources */,
-				1F045F881946233400301F91 /* colac.tiff in Resources */,
 				1F331DC9193B5CB600831F31 /* voicemail.png in Resources */,
 				1FC80E54192E3E1F00BD62F4 /* incoming_file.png in Resources */,
 				1FC80E55192E3E1F00BD62F4 /* upfile.png in Resources */,
@@ -4885,6 +4884,7 @@
 				1FC80EEC192E3E1F00BD62F4 /* VideoNativeLocalWindowController.py in Resources */,
 				1FC80EED192E3E1F00BD62F4 /* ContactController.py in Resources */,
 				1FC80EEE192E3E1F00BD62F4 /* VirtualGroups.py in Resources */,
+				1FCA7D60195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1FC80EEF192E3E1F00BD62F4 /* pending_watcher.tiff in Resources */,
 				1FC80EF0192E3E1F00BD62F4 /* blocked.png in Resources */,
 				1FC80EF1192E3E1F00BD62F4 /* PresencePublisher.py in Resources */,
@@ -4992,7 +4992,6 @@
 				2B2DF3C81059F27C00F267F9 /* ContactOutlineView.py in Resources */,
 				2B2DF5E0105CBFCA00F267F9 /* FileTransferWindow.xib in Resources */,
 				2B2DF5E4105CC03400F267F9 /* FileTransferItemView.xib in Resources */,
-				1F045F841946233400301F91 /* colac.tiff in Resources */,
 				1FF6C4091498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */,
 				2B2DF5EA105D3CDD00F267F9 /* FileTransferItemView.py in Resources */,
 				2B2DF5ED105D467000F267F9 /* ListView.py in Resources */,
@@ -5067,6 +5066,7 @@
 				1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */,
 				1F092DB412B2785E000CEE7F /* ConferenceController.py in Resources */,
 				1F5615C312BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */,
+				1FCA7D5C195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */,
 				1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */,
 				1F8760B612C026840090846C /* FileTransferController.py in Resources */,
