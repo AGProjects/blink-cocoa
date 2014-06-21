@@ -590,12 +590,6 @@
 		1F447E8D18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1F447E8E18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1F447E8F18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
-		1F48BF3318E51484004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
-		1F48BF3418E51484004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
-		1F48BF3518E51484004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
-		1F48BF3618E51484004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
-		1F48BF3718E51484004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
-		1F48BF3818E51484004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
@@ -2159,12 +2153,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1F48BF3318E51484004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
-				1F48BF3418E51484004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
-				1F48BF3518E51484004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
-				1F48BF3618E51484004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
-				1F48BF3718E51484004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
-				1F48BF3818E51484004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F22737112B5558A0010A8B2 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F22737212B5558A0010A8B2 /* libgnutls-extra.26.dylib in Copy Frameworks */,

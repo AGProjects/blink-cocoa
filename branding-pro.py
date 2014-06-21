@@ -29,4 +29,9 @@ def setup(delegate):
     delegate.migrate_passwords_to_keychain = True
     delegate.service_provider_help_url = None
     delegate.service_provider_name = None
+    delegate.supported_languages = {
+        "system_default": NSLocalizedString("System Default", "Menu item"),
+        "en": NSLocalizedString("English", "Menu item"),
+        "ro": NSLocalizedString("Romanian", "Menu item")
+}
 
