@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
@@ -36,9 +35,9 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jc6-VB-mqF">
-                        <rect key="frame" x="20" y="21" width="37" height="27"/>
+                        <rect key="frame" x="20" y="20" width="37" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="bevel" title="Tot Ecranul" bezelStyle="rounded" image="fullscreen" imagePosition="below" alignment="center" imageScaling="proportionallyDown" inset="2" id="VUv-vz-wnK">
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="fullscreen" imagePosition="below" alignment="center" imageScaling="proportionallyDown" inset="2" id="VUv-vz-wnK">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -47,7 +46,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3xB-w0-OaQ">
-                        <rect key="frame" x="70" y="21" width="37" height="27"/>
+                        <rect key="frame" x="70" y="20" width="37" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="aspect_ratio" imagePosition="above" alignment="center" imageScaling="proportionallyDown" inset="2" id="Lf9-da-rny">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -58,7 +57,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qea-Sj-raU">
-                        <rect key="frame" x="120" y="18" width="32" height="27"/>
+                        <rect key="frame" x="120" y="20" width="32" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mute-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="lcl-yW-1tr">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -69,7 +68,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cul-Sv-CSK">
-                        <rect key="frame" x="222" y="20" width="31" height="27"/>
+                        <rect key="frame" x="221" y="20" width="31" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="K5N-Gg-58x">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -102,7 +101,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2w4-F0-8Wm">
-                        <rect key="frame" x="273" y="22" width="31" height="27"/>
+                        <rect key="frame" x="273" y="20" width="31" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSUserGroup" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="UuZ-wC-Rw6">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -124,7 +123,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="okS-f1-l3w">
-                        <rect key="frame" x="467" y="22" width="31" height="27"/>
+                        <rect key="frame" x="467" y="19" width="31" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="video" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="XKh-4I-rS0">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -135,7 +134,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1k3-Y3-vUH">
-                        <rect key="frame" x="513" y="18" width="46" height="27"/>
+                        <rect key="frame" x="513" y="19" width="46" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="ED1-Vw-AHb">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -146,7 +145,7 @@
                         </connections>
                     </button>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ywC-Bt-Osm">
-                        <rect key="frame" x="410" y="20" width="46" height="27"/>
+                        <rect key="frame" x="410" y="19" width="46" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="screenshot" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="L8o-59-GNn">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>

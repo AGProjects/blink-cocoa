@@ -439,7 +439,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Avansat" paletteLabel="Avansat" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
+                    <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Avansate" paletteLabel="Avansate" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
@@ -454,16 +454,16 @@
                 <defaultToolbarItems>
                     <toolbarItem reference="251"/>
                     <toolbarItem reference="259"/>
+                    <toolbarItem reference="265"/>
+                    <toolbarItem reference="286"/>
                     <toolbarItem reference="263"/>
                     <toolbarItem reference="269"/>
                     <toolbarItem reference="VXd-Rw-cDk"/>
-                    <toolbarItem reference="265"/>
-                    <toolbarItem reference="286"/>
                     <toolbarItem reference="282"/>
                     <toolbarItem reference="264"/>
                     <toolbarItem reference="276"/>
-                    <toolbarItem reference="252"/>
                     <toolbarItem reference="290"/>
+                    <toolbarItem reference="252"/>
                     <toolbarItem reference="288"/>
                 </defaultToolbarItems>
                 <connections>
