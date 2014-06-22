@@ -200,7 +200,7 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="174"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Cere Partajarea Ecranului de la Distantă" tag="12" id="56">
+                <menuItem title="Cere Partajarea Ecranului Distant" tag="12" id="56">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="110"/>

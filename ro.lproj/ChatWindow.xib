@@ -685,7 +685,7 @@
                 <menuItem title="Calitate" enabled="NO" id="521">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Înalta - Rezoluția nativă a ecranului" tag="401" indentationLevel="2" id="534">
+                <menuItem title="Înaltă - Rezoluția nativă a ecranului" tag="401" indentationLevel="2" id="534">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="561"/>

@@ -1334,7 +1334,7 @@ ABC</string>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
                                             <tableColumn identifier="participant" width="275" minWidth="40" maxWidth="1000" id="1539">
-                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participanții De la Distanță">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participanții Distanți">
                                                     <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>

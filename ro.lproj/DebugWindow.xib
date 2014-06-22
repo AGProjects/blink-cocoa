@@ -593,7 +593,7 @@
                                             </tableHeaderView>
                                             <accessibility description="Loguri Notificări"/>
                                         </scrollView>
-                                        <searchField toolTip="Introduce text pentru a filtra notificările dupa nume" verticalHuggingPriority="750" id="251">
+                                        <searchField toolTip="Tastează text pentru a filtra notificările dupa nume" verticalHuggingPriority="750" id="251">
                                             <rect key="frame" x="89" y="281" width="138" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" borderStyle="bezel" placeholderString="Filtru dupa Nume" usesSingleLineMode="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="252">
