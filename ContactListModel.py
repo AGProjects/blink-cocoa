@@ -2487,7 +2487,7 @@ class CustomListModel(NSObject):
                     if (sourceContact.name == targetContact.name):
                         message = NSLocalizedString("Would you like to consolidate the two contacts into %s", "Label") % targetContact.name + ' (%s)?' % targetContact.uri
                     else:
-                        message = NSLocalizedString("Would you like to merge %s ", "Label") % sourceContact.name + NSLocalizedString("and", "Label") + targetContact.name + NSLocalizedString(" contacts into %s", "Label") % targetContact.name + " (%s)?" % targetContact.uri
+                        message = NSLocalizedString("Would you like to merge %s ", "Label") % sourceContact.name + " " + NSLocalizedString("and", "Label") + targetContact.name + NSLocalizedString(" contacts into %s", "Label") % targetContact.name + " (%s)?" % targetContact.uri
 
                     merge_controller = MergeContactController(message)
                     ret = merge_controller.runModal_(message)
