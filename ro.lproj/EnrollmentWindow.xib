@@ -84,7 +84,7 @@
                     <button verticalHuggingPriority="750" tag="111" id="25">
                         <rect key="frame" x="353" y="23" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Mai departe" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="26">
+                        <buttonCell key="cell" type="push" title="Continuă" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="26">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">

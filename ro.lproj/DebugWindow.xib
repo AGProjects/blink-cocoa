@@ -952,7 +952,7 @@
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Activeză Logurile Nucelului"/>
+                                            <accessibility description="Activează Logurile Nucelului"/>
                                             <connections>
                                                 <action selector="engineCheckboxClicked:" target="-2" id="303"/>
                                             </connections>

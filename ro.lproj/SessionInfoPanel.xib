@@ -183,7 +183,7 @@
                                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
-                                    <accessibility description="Adresă Depărtare"/>
+                                    <accessibility description="Adresă Corespondentă"/>
                                 </textField>
                             </subviews>
                         </view>
@@ -254,7 +254,7 @@
                                 <textField verticalHuggingPriority="750" id="9">
                                     <rect key="frame" x="10" y="196" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Adresă Depărtare:" id="10">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Adresă Corespondentă:" id="10">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -572,7 +572,7 @@
                                 <textField verticalHuggingPriority="750" id="hOI-m3-9tU">
                                     <rect key="frame" x="10" y="84" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Adresă Depărtare:" id="plb-Sz-Jm0">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Adresă Corespondentă:" id="plb-Sz-Jm0">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
