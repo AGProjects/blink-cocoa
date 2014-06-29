@@ -61,14 +61,14 @@
                         <action selector="record:" target="-2" id="29"/>
                     </connections>
                 </button>
-                <button toolTip="Escutar Mensagem da Secretária Eletrônica" verticalHuggingPriority="750" id="14">
+                <button toolTip="Tocar Mensagem da Secretária Eletrônica" verticalHuggingPriority="750" id="14">
                     <rect key="frame" x="117" y="10" width="34" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundRect" bezelStyle="roundedRect" image="NSRightFacingTriangleTemplate" imagePosition="only" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="15">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="smallSystem"/>
                     </buttonCell>
-                    <accessibility description="Escutar mensagem de voz"/>
+                    <accessibility description="Tocar mensagem de voz"/>
                     <connections>
                         <action selector="play:" target="-2" id="40"/>
                     </connections>

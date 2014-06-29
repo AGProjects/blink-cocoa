@@ -64,7 +64,7 @@ DQ
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
-                        <accessibility description="Deletar Ícone"/>
+                        <accessibility description="Apagar Ícone"/>
                         <connections>
                             <action selector="buttonClicked:" target="-2" id="92"/>
                         </connections>
@@ -262,7 +262,7 @@ Gw
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="130">
                             <font key="font" metaFont="system"/>
                             <segments>
-                                <segment label="Setar como Padrão"/>
+                                <segment label="Definir como Padrão"/>
                                 <segment label="Apagar Selecionado" tag="1"/>
                             </segments>
                         </segmentedCell>

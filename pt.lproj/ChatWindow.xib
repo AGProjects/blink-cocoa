@@ -77,7 +77,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Segurar" paletteLabel="Segurar" toolTip="Segurar/Retomar áudio" tag="102" image="pause" id="224">
+                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Espera" paletteLabel="Espera" toolTip="Espera/Retomar áudio" tag="102" image="pause" id="224">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
@@ -169,7 +169,7 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Apanhar" paletteLabel="Apanhar" toolTip="Enviar captura de tela" image="screenshot" id="573">
+                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Capturar" paletteLabel="Capturar" toolTip="Enviar captura de tela" image="screenshot" id="573">
                         <size key="minSize" width="48" height="42"/>
                         <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
@@ -531,7 +531,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="583"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Me Avisa Quando Participantes Mudarem" tag="326" enabled="NO" indentationLevel="1" id="3Hf-hK-Tfp">
+                <menuItem title="Avisar Quando Participantes Mudarem" tag="326" enabled="NO" indentationLevel="1" id="3Hf-hK-Tfp">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="Wl4-Su-Uxa"/>
@@ -611,13 +611,13 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="ipS-DQ-x4I"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Aumentat Tamanho da Letra" tag="501" indentationLevel="1" id="XTF-Bu-H74">
+                <menuItem title="Aumentar" tag="501" indentationLevel="1" id="XTF-Bu-H74">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="zRI-Lt-paf"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Reduzir Tamanho da Fonte" tag="502" indentationLevel="1" id="2Wj-FV-0Gx">
+                <menuItem title="Reduzir" tag="502" indentationLevel="1" id="2Wj-FV-0Gx">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="tAU-7A-2I0"/>

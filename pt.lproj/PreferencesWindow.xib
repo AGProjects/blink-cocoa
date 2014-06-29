@@ -228,7 +228,7 @@
                                                 <menu key="menu" title="OutrasVisões" id="87">
                                                     <items>
                                                         <menuItem title="Áudio" state="on" id="88"/>
-                                                        <menuItem title="raiz xcap" id="89"/>
+                                                        <menuItem title="xcap root" id="89"/>
                                                         <menuItem title="diálogo" id="90"/>
                                                     </items>
                                                 </menu>
@@ -415,7 +415,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Arquivos" paletteLabel="Arquivos" image="upfile" autovalidates="NO" selectable="YES" id="264">
+                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Transferências" paletteLabel="Transferências" image="upfile" autovalidates="NO" selectable="YES" id="264">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="273"/>
                         </connections>

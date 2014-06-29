@@ -308,7 +308,7 @@
                             <action selector="userClickedToolbarItem:" target="-2" id="63"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="8C097A50-0FB6-4D94-A38F-75AA87F9C79F" explicitItemIdentifier="delete" label="Deletar" paletteLabel="Deletar" toolTip="Limpar Mensagens" tag="101" image="trash" id="78">
+                    <toolbarItem implicitItemIdentifier="8C097A50-0FB6-4D94-A38F-75AA87F9C79F" explicitItemIdentifier="delete" label="Apagar" paletteLabel="Apagar" toolTip="Limpar Mensagens" tag="101" image="trash" id="78">
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="79"/>
                         </connections>
@@ -331,7 +331,7 @@
                                         <menuItem title="Transferências de Arquivos" tag="3" id="109"/>
                                         <menuItem title="Gravações de Áudio" tag="4" id="135"/>
                                         <menuItem title="Disponibilidade" tag="5" id="136"/>
-                                        <menuItem title="Secretária Eletrônica" tag="6" id="137"/>
+                                        <menuItem title="Caixa Postal" tag="6" id="137"/>
                                     </items>
                                 </menu>
                             </popUpButtonCell>
@@ -419,7 +419,7 @@
         </customObject>
         <menu title="Contato" autoenablesItems="NO" id="148">
             <items>
-                <menuItem title="Deletar Histórico..." tag="1" id="165">
+                <menuItem title="Apagar Histórico..." tag="1" id="165">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedContactMenu:" target="-2" id="166"/>

@@ -16,7 +16,7 @@
                 <menuItem title="Blink" id="56">
                     <menu key="submenu" title="Blink" systemMenu="apple" autoenablesItems="NO" id="57">
                         <items>
-                            <menuItem title="Sobre o Blink" tag="1" id="58">
+                            <menuItem title="Sobre Blink" tag="1" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontAboutPanel:" target="373" id="877"/>
@@ -119,7 +119,7 @@
                                     <action selector="copy:" target="-1" id="224"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Cortar" keyEquivalent="x" id="1810">
+                            <menuItem title="Recortar" keyEquivalent="x" id="1810">
                                 <connections>
                                     <action selector="cut:" target="-1" id="1812"/>
                                 </connections>
@@ -129,7 +129,7 @@
                                     <action selector="paste:" target="-1" id="226"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Deletar" id="202">
+                            <menuItem title="Apagar" id="202">
                                 <connections>
                                     <action selector="delete:" target="-1" id="235"/>
                                 </connections>
@@ -168,7 +168,7 @@
                                     <action selector="editContact:" target="-1" id="966"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Deletar Contato" tag="32" enabled="NO" id="899">
+                            <menuItem title="Apagar Contato" tag="32" enabled="NO" id="899">
                                 <string key="keyEquivalent" base64-UTF8="YES">
 CA
 </string>
@@ -201,7 +201,7 @@ CA
                                     <action selector="renameGroup:" target="-1" id="964"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Deletar Grupo" tag="35" enabled="NO" id="895">
+                            <menuItem title="Apagar Grupo" tag="35" enabled="NO" id="895">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="deleteGroup:" target="-1" id="965"/>
@@ -230,7 +230,7 @@ CA
                                 <menu key="submenu" title="Restaurar" autoenablesItems="NO" id="1603">
                                     <items>
                                         <menuItem isSeparatorItem="YES" id="1611"/>
-                                        <menuItem title="Abrir Pasta de Backup" id="1612">
+                                        <menuItem title="Abrir Pasta de Cópias" id="1612">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="goToBackupContactsFolderClicked:" target="389" id="1614"/>
@@ -284,7 +284,7 @@ CA
                                     <action selector="redialLast:" target="389" id="1117"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Iniciar Conferencia..." tag="44" keyEquivalent="j" id="1055">
+                            <menuItem title="Entrar Em Conferencia..." tag="44" keyEquivalent="j" id="1055">
                                 <connections>
                                     <action selector="joinConferenceClicked:" target="389" id="1126"/>
                                 </connections>
@@ -314,7 +314,7 @@ CA
                                     <action selector="setUseSpeechRecognition:" target="389" id="e3k-rE-29X"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Dizer Nome do Remetente Ligando" tag="51" id="mk1-bq-3CO">
+                            <menuItem title="Dizer Nome de Quem Está Ligando" tag="51" id="mk1-bq-3CO">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="setSpeechSyntezis:" target="389" id="exC-BT-8IQ"/>
@@ -387,7 +387,7 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Histórico" autoenablesItems="NO" id="798">
                         <items>
-                            <menuItem title="Não Gravar Log de Mensagens de Chat" tag="101" id="1863">
+                            <menuItem title="Não Gravar Mensagens de Chat" tag="101" id="1863">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleChatPrivacy:" target="389" id="1867"/>
@@ -429,7 +429,7 @@ CA
                                     <action selector="showHelp:" target="389" id="6QG-Qg-07Z"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Configurações da Conta do Servidor" tag="40" id="oUk-LI-LNE">
+                            <menuItem title="Configurações da Conta no Servidor" tag="40" id="oUk-LI-LNE">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showAccountSettings:" target="389" id="aGo-Ur-eMO"/>
@@ -969,10 +969,10 @@ ABC</string>
                             <action selector="addContact:" target="389" id="635"/>
                         </connections>
                     </button>
-                    <button toolTip="Click para rolar para um grupo ou inserir um contato" verticalHuggingPriority="750" id="1689" userLabel="Navigate to Group Button">
+                    <button toolTip="Ir para um grupo ou inserir um contato" verticalHuggingPriority="750" id="1689" userLabel="Navigate to Group Button">
                         <rect key="frame" x="13" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="roundTextured" alternateTitle="Click para rolar para um grupo ou inserir um contato" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Ir para um grupo ou inserir um contato" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -1648,7 +1648,7 @@ ABC</string>
                 <menuItem title="Editar" id="818">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Deletar" id="819">
+                <menuItem title="Apagar" id="819">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>

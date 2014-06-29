@@ -528,7 +528,7 @@
                                                                 <accessibility description="Nome de Notificação"/>
                                                             </tableColumn>
                                                             <tableColumn identifier="1" width="120" minWidth="40" maxWidth="1000" id="184">
-                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Remetente">
+                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Origem">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -539,7 +539,7 @@
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                                                <accessibility description="Notificação do Remetente"/>
+                                                                <accessibility description="Notificação da Origem"/>
                                                             </tableColumn>
                                                             <tableColumn identifier="2" width="200" minWidth="10" maxWidth="2000" id="187">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Dados">
