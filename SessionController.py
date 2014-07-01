@@ -44,6 +44,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
+from sipsimple.streams import AudioStream
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
@@ -247,7 +248,7 @@ class SessionControllersManager(object):
         stream_type_list = list(set(stream.type for stream in streams))
         caller_name = match_contact.name if match_contact else format_identity_to_string(session.remote_identity)
 
-        if not streams:
+        if data.streams and not streams:
             BlinkLogger().log_info(u"Rejecting session for unsupported media type")
             nc_title = 'Incompatible Media'
             nc_body = 'Call from %s refused' % match_contact.name
@@ -257,6 +258,9 @@ class SessionControllersManager(object):
             except IllegalStateError, e:
                 print e
             return
+        elif not streams:
+            # Handle initial INVITE with no SDP, offer audio
+            streams = [AudioStream()]
 
         if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
             BlinkLogger().log_info(u"Blocked contact rejected")
