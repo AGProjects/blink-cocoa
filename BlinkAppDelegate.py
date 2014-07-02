@@ -407,9 +407,9 @@ class BlinkAppDelegate(NSObject):
 
         if notification.data.reason != 'Success':
             BlinkLogger().log_info(u"%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
-            nc_title = NSLocalizedString("Connection failed", "Label")
-            nc_body = NSLocalizedString("Remote Address", "Label") + " %s:%s" % (notification.data.transport, notification.data.remote_address)
-            self.gui_notify(nc_title, nc_body)
+            #nc_title = NSLocalizedString("Connection failed", "Label")
+            #nc_body = NSLocalizedString("Remote Address", "Label") + " %s:%s" % (notification.data.transport, notification.data.remote_address)
+            #self.gui_notify(nc_title, nc_body)
 
         else:
             NotificationCenter().post_notification("BlinkTransportFailed", data=NotificationData(transport=transport))
