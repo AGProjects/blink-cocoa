@@ -10,7 +10,7 @@ from collections import deque
 from zope.interface import implements
 from sipsimple.streams import VideoStream
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.threading.green import run_in_green_thread
+from sipsimple.threading import run_in_thread
 
 from MediaStream import MediaStream, STREAM_IDLE, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_FAILED, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_CONNECTED, STREAM_CONNECTING
 from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_FAILED, STATE_DNS_FAILED, STATE_FINISHED
@@ -99,6 +99,7 @@ class VideoController(MediaStream):
             else:
                 self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"))
 
+    @run_in_thread('video-io')
     def updateStatisticsTimer_(self, timer):
         if not self.stream:
             return
@@ -160,7 +161,6 @@ class VideoController(MediaStream):
                 self.initial_full_screen = True
                 self.videoWindowController.goToFullScreen()
 
-    @run_in_green_thread
     def togglePause(self):
         if self.stream is None:
             return
@@ -237,7 +237,6 @@ class VideoController(MediaStream):
             self.changeStatus(STREAM_IDLE)
 
         self.removeFromSession()
-        self.videoWindowController.close()
 
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
@@ -398,6 +397,7 @@ class VideoController(MediaStream):
             self.sessionController.log_info(u"Video stream canceled")
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
+        self.videoWindowController.close()
 
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
         self.changeStatus(STREAM_RINGING)

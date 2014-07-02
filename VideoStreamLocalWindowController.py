@@ -34,9 +34,8 @@ import AppKit
 
 from BlinkLogger import BlinkLogger
 
-from util import run_in_gui_thread
 from sipsimple.core import Engine
-from sipsimple.threading import run_in_twisted_thread
+from sipsimple.threading import run_in_thread
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 
@@ -57,59 +56,58 @@ class VideoStreamLocalWindowController(NSWindowController):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    @run_in_twisted_thread
     def __init__(self, videoWindowController):
         from VideoWindowController import TitleBarView
 
         self.videoWindowController = videoWindowController
         self.log_debug('Init %s' % self)
-        if self.stream.video_windows is not None:
-            self.sdl_window = self.stream.video_windows.local
-            self.initial_size = self.sdl_window.size
-            self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
-            self.stream.video_windows.local.size = (self.initial_size[0]/2, self.initial_size[1]/2)
-            self.window = NSWindow(cobject=self.sdl_window.native_handle)
-            self.window.setDelegate_(self)
-            self.window.setTitle_(self.videoWindowController.title)
-            self.window.orderFront_(None)
-            self.window.center()
-            self.window.setLevel_(NSFloatingWindowLevel)
 
-            # this hold the height of the Cocoa window title bar
-            self.dif_y = self.window.frame().size.height - self.stream.video_windows.local.size[1]
+        self.sdl_window = SIPApplication.video_device.get_preview_window()
+        self.initial_size = self.sdl_window.size
+        self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
+        self.sdl_window.size = (self.initial_size[0]/2, self.initial_size[1]/2)
+        self.window = NSWindow(cobject=self.sdl_window.native_handle)
+        self.window.setDelegate_(self)
+        self.window.setTitle_(self.videoWindowController.title)
+        self.window.orderFront_(None)
+        self.window.center()
+        self.window.setLevel_(NSFloatingWindowLevel)
 
-            # capture mouse events into a transparent view
-            self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
+        # this hold the height of the Cocoa window title bar
+        self.dif_y = self.window.frame().size.height - self.sdl_window.size[1]
 
-            # TODO: find a way to render the button -adi
-            self.infoButton = NSButton.alloc().initWithFrame_(NSMakeRect(10, 10 , 16, 16))
-            self.infoButton.setButtonType_(NSToggleButton)
-            self.infoButton.setBordered_(False)
-            self.infoButton.setImage_(NSImage.imageNamed_('panel-info'))
-            self.infoButton.setImageScaling_(NSImageScaleProportionallyUpOrDown)
-            self.infoButton.setTarget_(self)
-            self.infoButton.setAction_("showInfoPanel:")
-            self.overlayView.addSubview_(self.infoButton)
+        # capture mouse events into a transparent view
+        self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
 
-            self.window.contentView().addSubview_(self.overlayView)
-            self.window.makeFirstResponder_(self.overlayView)
+        # TODO: find a way to render the button -adi
+        self.infoButton = NSButton.alloc().initWithFrame_(NSMakeRect(10, 10 , 16, 16))
+        self.infoButton.setButtonType_(NSToggleButton)
+        self.infoButton.setBordered_(False)
+        self.infoButton.setImage_(NSImage.imageNamed_('panel-info'))
+        self.infoButton.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+        self.infoButton.setTarget_(self)
+        self.infoButton.setAction_("showInfoPanel:")
+        self.overlayView.addSubview_(self.infoButton)
 
-            themeFrame = self.window.contentView().superview()
-            self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
-            topmenu_frame = self.titleBarView.view.frame()
+        self.window.contentView().addSubview_(self.overlayView)
+        self.window.makeFirstResponder_(self.overlayView)
 
-            newFrame = NSMakeRect(
-                                  themeFrame.frame().size.width - topmenu_frame.size.width,
-                                  themeFrame.frame().size.height - topmenu_frame.size.height,
-                                  topmenu_frame.size.width,
-                                  topmenu_frame.size.height
-                                  )
-            self.titleBarView.view.setFrame_(newFrame)
-            themeFrame.addSubview_(self.titleBarView.view)
-            self.titleBarView.textLabel.setHidden_(False)
-            self.titleBarView.alwaysOnTop.setHidden_(True)
-            self.videoWindowController.streamController.updateStatusLabel()
-            self.updateTrackingAreas()
+        themeFrame = self.window.contentView().superview()
+        self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
+        topmenu_frame = self.titleBarView.view.frame()
+
+        newFrame = NSMakeRect(
+                                themeFrame.frame().size.width - topmenu_frame.size.width,
+                                themeFrame.frame().size.height - topmenu_frame.size.height,
+                                topmenu_frame.size.width,
+                                topmenu_frame.size.height
+                                )
+        self.titleBarView.view.setFrame_(newFrame)
+        themeFrame.addSubview_(self.titleBarView.view)
+        self.titleBarView.textLabel.setHidden_(False)
+        self.titleBarView.alwaysOnTop.setHidden_(True)
+        self.videoWindowController.streamController.updateStatusLabel()
+        self.updateTrackingAreas()
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
@@ -185,8 +183,8 @@ class VideoStreamLocalWindowController(NSWindowController):
             return
 
         frame = self.window.frame()
-        if frame.size.width != self.stream.video_windows.local.size[0]:
-            self.stream.video_windows.local.size = (frame.size.width, frame.size.height - self.dif_y)
+        if frame.size.width != self.sdl_window.size[0]:
+            self.sdl_window.size = (frame.size.width, frame.size.height - self.dif_y)
 
         self.updateTrackingAreas()
         self.overlayView.setFrame_(self.window.contentView().frame())
@@ -235,7 +233,6 @@ class VideoStreamLocalWindowController(NSWindowController):
 
         self.window.setFrameOrigin_(newOrigin);
 
-    @run_in_gui_thread
     def windowWillClose_(self, sender):
         self.infoButton.removeFromSuperview()
         self.finished = True
@@ -245,16 +242,18 @@ class VideoStreamLocalWindowController(NSWindowController):
             self.streamController.sessionController.end()
         self.hide()
 
-    @run_in_gui_thread
     def hide(self):
         if self.window:
             self.window.close()
 
-    @run_in_twisted_thread
+    @run_in_thread('video-io')
     def close(self):
         self.log_debug('Close %s' % self)
         if self.titleBarView is not None:
             self.titleBarView.close()
+
+        if self.sdl_window:
+            self.sdl_window.close()
 
         if self.window:
             self.window.close()

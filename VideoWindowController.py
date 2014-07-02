@@ -50,6 +50,7 @@ from math import floor
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading import run_in_thread
 from VideoControlPanel import VideoControlPanel
 from VideoDisconnectWindow import VideoDisconnectWindow
 from VideoStreamLocalWindowController import VideoStreamLocalWindowController, VideoStreamOverlayView
@@ -85,6 +86,7 @@ class VideoWindowController(NSWindowController):
     initialLocation = None
     local_video_visible_before_fullscreen = False
     is_key_window = False
+    updating_aspect_ratio = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -108,7 +110,6 @@ class VideoWindowController(NSWindowController):
     def sessionController(self):
         return self.streamController.sessionController
 
-    @run_in_gui_thread
     def init_sdl_window(self):
         if self.sdl_window:
             return
@@ -116,14 +117,11 @@ class VideoWindowController(NSWindowController):
             return
         if self.streamController.stream is None:
             return
-        if self.streamController.stream.video_windows is None:
-            return
-        if self.streamController.stream.video_windows.remote is None:
+        if self.streamController.stream.video_window is None:
             return
 
-        self.sdl_window = self.streamController.stream.video_windows.remote
-
-        self.initial_size = self.streamController.stream.video_windows.remote.size
+        self.sdl_window = self.streamController.stream.video_window
+        self.initial_size = self.sdl_window.size
         try:
             self.aspect_ratio = floor((float(self.initial_size[0]) / self.initial_size[1]) * 100)/100
             self.sessionController.log_debug('Remote aspect ratio is %s' % self.aspect_ratio)
@@ -151,7 +149,7 @@ class VideoWindowController(NSWindowController):
         self.window.setTitle_(self.title)
         self.window.setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window, self))
-        self.dif_y = self.window.frame().size.height - self.streamController.stream.video_windows.remote.size[1]
+        self.dif_y = self.window.frame().size.height - self.sdl_window.size[1]
 
         # capture mouse events into a transparent view
         self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
@@ -338,6 +336,7 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
 
+    @run_in_thread('video-io')
     def updateAspectRatio(self):
         if not self.window:
             return
@@ -345,6 +344,10 @@ class VideoWindowController(NSWindowController):
         if not self.sdl_window:
             return
 
+        if self.finished:
+            return
+
+        self.updating_aspect_ratio = True
         if self.aspect_ratio is not None:
             frame = self.window.frame()
             currentSize = frame.size
@@ -361,6 +364,7 @@ class VideoWindowController(NSWindowController):
             frame.size = scaledSize
             self.window.setFrame_display_animate_(frame, True, False)
             self.sdl_window.size = (frame.size.width, frame.size.height)
+        self.updating_aspect_ratio = False
 
     @run_in_gui_thread
     def show(self):
@@ -394,20 +398,24 @@ class VideoWindowController(NSWindowController):
         else:
             return frameSize
 
+    @run_in_thread('video-io')
     def windowDidResize_(self, notification):
         if not self.streamController.stream:
             return
 
-        if not self.streamController.stream.video_windows:
+        if not self.streamController.stream.video_window:
             return
 
-        if not self.streamController.stream.video_windows.remote:
+        if self.updating_aspect_ratio:
+            return
+
+        if self.finished:
             return
 
         # update underlying SDL window
         frame = self.window.frame()
-        if frame.size.width != self.streamController.stream.video_windows.remote.size[0]:
-            self.streamController.stream.video_windows.remote.size = (frame.size.width, frame.size.height - self.dif_y)
+        if frame.size.width != self.streamController.stream.video_window.size[0]:
+            self.streamController.stream.video_window.size = (frame.size.width, frame.size.height - self.dif_y)
 
         self.updateTrackingAreas()
 
@@ -550,7 +558,7 @@ class VideoWindowController(NSWindowController):
             self.window.performClose_(None)
 
         if self.localVideoWindow:
-            self.localVideoWindow.hide()
+            self.localVideoWindow.close()
 
     def dealloc(self):
         self.sessionController.log_debug('Dealloc %s' % self)
