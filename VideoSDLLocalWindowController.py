@@ -43,7 +43,7 @@ from MediaStream import STREAM_PROPOSING
 from util import run_in_gui_thread
 
 
-class VideoStreamLocalWindowController(NSWindowController):
+class VideoSDLLocalWindowController(NSWindowController):
     window = None
     finished = False
     initial_size = None
@@ -174,7 +174,7 @@ class VideoStreamLocalWindowController(NSWindowController):
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
         self.videoWindowController = None
-        super(VideoStreamLocalWindowController, self).dealloc()
+        super(VideoSDLLocalWindowController, self).dealloc()
 
     def windowDidBecomeMain_(self, notification):
         if self.videoWindowController.window:

@@ -688,10 +688,10 @@
 		1F6EE95012BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
 		1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
 		1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
-		1F6EF7FF18E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */; };
-		1F6EF80018E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */; };
-		1F6EF80118E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */; };
-		1F6EF80218E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */; };
+		1F6EF7FF18E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */; };
+		1F6EF80018E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */; };
+		1F6EF80118E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */; };
+		1F6EF80218E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */; };
 		1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
 		1F6EF80B18E64FD7008592D2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
 		1F6EF80C18E64FDF008592D2 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
@@ -1076,7 +1076,7 @@
 		1FC80E15192E3E1F00BD62F4 /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FC80E16192E3E1F00BD62F4 /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		1FC80E17192E3E1F00BD62F4 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		1FC80E18192E3E1F00BD62F4 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */; };
+		1FC80E18192E3E1F00BD62F4 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */; };
 		1FC80E19192E3E1F00BD62F4 /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
 		1FC80E1A192E3E1F00BD62F4 /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		1FC80E1B192E3E1F00BD62F4 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
@@ -1422,7 +1422,7 @@
 		1FCA7D6C19546B0B00765366 /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FCA7D6D19546B0B00765366 /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
 		1FCA7D6E19546B0B00765366 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		1FCA7D6F19546B0B00765366 /* VideoStreamLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */; };
+		1FCA7D6F19546B0B00765366 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */; };
 		1FCA7D7019546B0B00765366 /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
 		1FCA7D7119546B0B00765366 /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
 		1FCA7D7219546B0B00765366 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
@@ -2866,7 +2866,7 @@
 		1F6EE8F912BF73A2000C47DA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AddParticipantsWindow.xib; sourceTree = "<group>"; };
 		1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		1F6EF7F718E61CC8008592D2 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoStreamLocalWindowController.py; sourceTree = "<group>"; };
+		1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
 		1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkPro.entitlements; sourceTree = "<group>"; };
 		1F71724712BE201200CBA476 /* ChatWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatWindowController.py; sourceTree = "<group>"; };
 		1F72E53916A027F600837311 /* MergeContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MergeContactController.py; sourceTree = "<group>"; };
@@ -3525,7 +3525,7 @@
 				1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */,
 				1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */,
 				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
-				1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */,
+				1F6EF7FE18E637E0008592D2 /* VideoSDLLocalWindowController.py */,
 				1FF63CD019128A1400A502FB /* VideoNativeLocalWindowController.py */,
 				1F2436841912B23700E71253 /* VideoNativeLocalWindow.xib */,
 			);
@@ -4306,7 +4306,7 @@
 				1FB3AE7518F1E73E001C612B /* close.png in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
-				1F6EF80018E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */,
+				1F6EF80018E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */,
 				1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */,
 				1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
@@ -4757,7 +4757,7 @@
 				1F35D02517894FFF00C6FE38 /* zrtp-securemode.wav in Resources */,
 				1F35D02617894FFF00C6FE38 /* zrtp-security-failed.wav in Resources */,
 				1F331DC8193B5CB600831F31 /* voicemail.png in Resources */,
-				1F6EF80218E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */,
+				1F6EF80218E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */,
 				1F35D02717894FFF00C6FE38 /* SessionInfoPanel.xib in Resources */,
 				1F35D02817894FFF00C6FE38 /* SessionInfoController.py in Resources */,
 				1F35D02917894FFF00C6FE38 /* lock-zrtp.png in Resources */,
@@ -5006,7 +5006,7 @@
 				1FD0809418C02F4C00A3B313 /* about.tiff in Resources */,
 				1FA6252213828E2500DFC8E3 /* editor.png in Resources */,
 				1F27467A1388755F0052C384 /* fullscreen.png in Resources */,
-				1F6EF80118E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */,
+				1F6EF80118E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */,
 				1F2747D41388FC5C0052C384 /* restore.png in Resources */,
 				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
 				1FD0808A18C02DA800A3B313 /* invisible.png in Resources */,
@@ -5128,7 +5128,7 @@
 				1FC80E15192E3E1F00BD62F4 /* close.png in Resources */,
 				1FC80E16192E3E1F00BD62F4 /* EnrollmentWindow.xib in Resources */,
 				1FC80E17192E3E1F00BD62F4 /* MainWindow.xib in Resources */,
-				1FC80E18192E3E1F00BD62F4 /* VideoStreamLocalWindowController.py in Resources */,
+				1FC80E18192E3E1F00BD62F4 /* VideoSDLLocalWindowController.py in Resources */,
 				1FC80E19192E3E1F00BD62F4 /* PreferencesWindow.xib in Resources */,
 				1FC80E1A192E3E1F00BD62F4 /* ChatWindow.xib in Resources */,
 				1FC80E1B192E3E1F00BD62F4 /* ChatView.xib in Resources */,
@@ -5401,7 +5401,7 @@
 				1FCA7D6C19546B0B00765366 /* close.png in Resources */,
 				1FCA7D6D19546B0B00765366 /* EnrollmentWindow.xib in Resources */,
 				1FCA7D6E19546B0B00765366 /* MainWindow.xib in Resources */,
-				1FCA7D6F19546B0B00765366 /* VideoStreamLocalWindowController.py in Resources */,
+				1FCA7D6F19546B0B00765366 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCA7D7019546B0B00765366 /* PreferencesWindow.xib in Resources */,
 				1FCA7D7119546B0B00765366 /* ChatWindow.xib in Resources */,
 				1FCA7D7219546B0B00765366 /* ChatView.xib in Resources */,
@@ -5827,7 +5827,7 @@
 				1F29D0FD1906D55E0051B1BC /* video-paused.png in Resources */,
 				1F6C0DBE190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
-				1F6EF7FF18E637E0008592D2 /* VideoStreamLocalWindowController.py in Resources */,
+				1F6EF7FF18E637E0008592D2 /* VideoSDLLocalWindowController.py in Resources */,
 				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
 				1F2747D51388FC5C0052C384 /* restore.png in Resources */,
 				1FD0808818C02DA800A3B313 /* invisible.png in Resources */,

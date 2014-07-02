@@ -53,7 +53,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 from VideoControlPanel import VideoControlPanel
 from VideoDisconnectWindow import VideoDisconnectWindow
-from VideoStreamLocalWindowController import VideoStreamLocalWindowController, VideoStreamOverlayView
+from VideoSDLLocalWindowController import VideoSDLLocalWindowController, VideoStreamOverlayView
 from util import run_in_gui_thread
 
 
@@ -104,7 +104,7 @@ class VideoWindowController(NSWindowController):
         sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
         other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
         if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
-            self.localVideoWindow = VideoStreamLocalWindowController(self)
+            self.localVideoWindow = VideoSDLLocalWindowController(self)
 
     @property
     def sessionController(self):
