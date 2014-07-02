@@ -7,6 +7,7 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSAlertAlternateReturn,
                     NSAlertDefaultReturn,
                     NSApp,
+                    NSStringPboardType,
                     NSCompositeSourceOver,
                     NSDragOperationMove,
                     NSDragOperationCopy,
@@ -1051,8 +1052,8 @@ class ContactWindowController(NSWindowController):
 
     def copyURI_(self, sender):
         pboard = NSPasteboard.generalPasteboard()
-        pboard.declareTypes_owner_(["x-blink-sip-uri"], self)
-        pboard.setString_forType_(sender.representedObject().uri, "x-blink-sip-uri")
+        pboard.declareTypes_owner_([NSStringPboardType], self)
+        pboard.setString_forType_(str(sender.representedObject().uri), NSStringPboardType)
 
     def pasteURI_(self, sender):
         blink_contact = sender.representedObject()['contact']
