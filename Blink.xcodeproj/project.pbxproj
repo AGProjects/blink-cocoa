@@ -13,9 +13,6 @@
 		1F065AFE1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
 		1F065AFF1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
 		1F065B001929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
-		1F07D766138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
-		1F07D767138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
-		1F07D768138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F08DB16193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
 		1F08DB17193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
 		1F08DB18193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
@@ -437,7 +434,6 @@
 		1F35D01317894FFF00C6FE38 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
 		1F35D01517894FFF00C6FE38 /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F35D01617894FFF00C6FE38 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1F35D01817894FFF00C6FE38 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1F35D01917894FFF00C6FE38 /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1F35D01A17894FFF00C6FE38 /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
 		1F35D01B17894FFF00C6FE38 /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
@@ -1233,7 +1229,6 @@
 		1FC80EB0192E3E1F00BD62F4 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
 		1FC80EB1192E3E1F00BD62F4 /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1FC80EB2192E3E1F00BD62F4 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1FC80EB3192E3E1F00BD62F4 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1FC80EB4192E3E1F00BD62F4 /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FC80EB5192E3E1F00BD62F4 /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
 		1FC80EB6192E3E1F00BD62F4 /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
@@ -1585,7 +1580,6 @@
 		1FCA7E0C19546B0B00765366 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
 		1FCA7E0D19546B0B00765366 /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1FCA7E0E19546B0B00765366 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1FCA7E0F19546B0B00765366 /* VideoSDLLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */; };
 		1FCA7E1019546B0B00765366 /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
 		1FCA7E1119546B0B00765366 /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
 		1FCA7E1219546B0B00765366 /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
@@ -2737,7 +2731,6 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
-		1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoSDLLocalWindowController.py; sourceTree = "<group>"; };
 		1F08DB14193DEDB200187373 /* offline.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = offline.aif; path = sounds/offline.aif; sourceTree = "<group>"; };
 		1F08DB15193DEDB200187373 /* online.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = online.aif; path = sounds/online.aif; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
@@ -3533,7 +3526,6 @@
 				1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */,
 				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
 				1F6EF7FE18E637E0008592D2 /* VideoStreamLocalWindowController.py */,
-				1F07D765138BDFF200C91AD7 /* VideoSDLLocalWindowController.py */,
 				1FF63CD019128A1400A502FB /* VideoNativeLocalWindowController.py */,
 				1F2436841912B23700E71253 /* VideoNativeLocalWindow.xib */,
 			);
@@ -4471,7 +4463,6 @@
 				1F2747D31388FC5C0052C384 /* restore.png in Resources */,
 				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
-				1F07D767138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCF118F1390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11971390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119B1390EE08001D1CAF /* logs.png in Resources */,
@@ -4747,7 +4738,6 @@
 				1F35D01317894FFF00C6FE38 /* restore.png in Resources */,
 				1F35D01517894FFF00C6FE38 /* mirror.png in Resources */,
 				1F35D01617894FFF00C6FE38 /* mute-white.png in Resources */,
-				1F35D01817894FFF00C6FE38 /* VideoSDLLocalWindowController.py in Resources */,
 				1F08DB1E193DEDB200187373 /* online.aif in Resources */,
 				1F35D01917894FFF00C6FE38 /* chat.png in Resources */,
 				1FD0807F18C02DA800A3B313 /* available.png in Resources */,
@@ -5021,7 +5011,6 @@
 				1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */,
 				1FD0808A18C02DA800A3B313 /* invisible.png in Resources */,
 				1F8A7632138A982E007E84C0 /* mute-white.png in Resources */,
-				1F07D768138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCF11901390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11981390EDFD001D1CAF /* alerts.png in Resources */,
 				1F29D0FF1906D55E0051B1BC /* video-paused.png in Resources */,
@@ -5299,7 +5288,6 @@
 				1FC80EB0192E3E1F00BD62F4 /* restore.png in Resources */,
 				1FC80EB1192E3E1F00BD62F4 /* mirror.png in Resources */,
 				1FC80EB2192E3E1F00BD62F4 /* mute-white.png in Resources */,
-				1FC80EB3192E3E1F00BD62F4 /* VideoSDLLocalWindowController.py in Resources */,
 				1FC80EB4192E3E1F00BD62F4 /* chat.png in Resources */,
 				1FC80EB5192E3E1F00BD62F4 /* alerts.png in Resources */,
 				1FC80EB6192E3E1F00BD62F4 /* logs.png in Resources */,
@@ -5571,7 +5559,6 @@
 				1FCA7E0C19546B0B00765366 /* restore.png in Resources */,
 				1FCA7E0D19546B0B00765366 /* mirror.png in Resources */,
 				1FCA7E0E19546B0B00765366 /* mute-white.png in Resources */,
-				1FCA7E0F19546B0B00765366 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCA7E1019546B0B00765366 /* chat.png in Resources */,
 				1FCA7E1119546B0B00765366 /* alerts.png in Resources */,
 				1FCA7E1219546B0B00765366 /* logs.png in Resources */,
@@ -5846,7 +5833,6 @@
 				1FD0808818C02DA800A3B313 /* invisible.png in Resources */,
 				1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7630138A982E007E84C0 /* mute-white.png in Resources */,
-				1F07D766138BDFF200C91AD7 /* VideoSDLLocalWindowController.py in Resources */,
 				1FCF11911390EDE7001D1CAF /* chat.png in Resources */,
 				1FCF11991390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119D1390EE08001D1CAF /* logs.png in Resources */,
