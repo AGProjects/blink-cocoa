@@ -273,7 +273,6 @@ class VideoController(MediaStream):
             elif self.status == STREAM_FAILED:
                 label.setStringValue_(NSLocalizedString("Call Failed", "Label"))
 
-    @run_in_gui_thread
     def _NH_MediaStreamDidInitialize(self, sender, data):
         if self.sessionController.session.direction == 'outgoing':
             self.videoWindowController.initLocalVideoWindow()
@@ -302,7 +301,6 @@ class VideoController(MediaStream):
 
         self.ice_negotiation_status = 'Success'
 
-    @run_in_gui_thread
     def _NH_VideoStreamICENegotiationStateDidChange(self, sender, data):
         local_window = self.videoWindowController.localVideoWindow
         if local_window is not None and local_window.titleBarView is not None:

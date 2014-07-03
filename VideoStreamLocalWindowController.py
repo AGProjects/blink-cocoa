@@ -40,6 +40,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 from MediaStream import STREAM_PROPOSING
+from util import run_in_gui_thread
 
 
 class VideoStreamLocalWindowController(NSWindowController):
@@ -52,20 +53,36 @@ class VideoStreamLocalWindowController(NSWindowController):
     initialLocation = None
     titleBarView = None
     alwaysOnTop = True
+    initialized = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
     def __init__(self, videoWindowController):
-        from VideoWindowController import TitleBarView
-
         self.videoWindowController = videoWindowController
         self.log_debug('Init %s' % self)
+        self._init_sdl_window()
 
+    @run_in_thread('video-io')
+    def _init_sdl_window(self):
+        if self.finished:
+            self._finish_close()
+            return
         self.sdl_window = SIPApplication.video_device.get_preview_window()
         self.initial_size = self.sdl_window.size
         self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
         self.sdl_window.size = (self.initial_size[0]/2, self.initial_size[1]/2)
+
+        self._init_window()
+
+    @run_in_gui_thread
+    def _init_window(self):
+        from VideoWindowController import TitleBarView
+
+        if self.finished:
+            self._finish_close()
+            return
+
         self.window = NSWindow(cobject=self.sdl_window.native_handle)
         self.window.setDelegate_(self)
         self.window.setTitle_(self.videoWindowController.title)
@@ -74,7 +91,7 @@ class VideoStreamLocalWindowController(NSWindowController):
         self.window.setLevel_(NSFloatingWindowLevel)
 
         # this hold the height of the Cocoa window title bar
-        self.dif_y = self.window.frame().size.height - self.sdl_window.size[1]
+        self.dif_y = self.window.frame().size.height - self.initial_size[1]/2
 
         # capture mouse events into a transparent view
         self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
@@ -108,6 +125,7 @@ class VideoStreamLocalWindowController(NSWindowController):
         self.titleBarView.alwaysOnTop.setHidden_(True)
         self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
+        self.initialized = True
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
@@ -246,17 +264,21 @@ class VideoStreamLocalWindowController(NSWindowController):
         if self.window:
             self.window.close()
 
-    @run_in_thread('video-io')
     def close(self):
         self.log_debug('Close %s' % self)
+        if not self.initialized:
+            self.finished = True
+            return
         if self.titleBarView is not None:
             self.titleBarView.close()
-
-        if self.sdl_window:
-            self.sdl_window.close()
-
         if self.window:
             self.window.close()
+        self._finish_close()
+
+    @run_in_thread('video-io')
+    def _finish_close(self):
+        if self.sdl_window:
+            self.sdl_window.close()
 
         self.release()
 
