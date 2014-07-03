@@ -214,7 +214,7 @@ class PreferencesController(NSWindowController, object):
                 self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
             except StopIteration:
                 pass
-    
+
         if not NSApp.delegate().advanced_options_enabled:
             for identifier in ('answering_machine', 'advanced'):
                 try:
@@ -435,6 +435,9 @@ class PreferencesController(NSWindowController, object):
 
             if NSApp.delegate().chat_replication_password_hidden:
                 PreferenceOptionTypes['chat.replication_password'] = HiddenOption
+
+            if not NSApp.delegate().icloud_enabled:
+                PreferenceOptionTypes['gui.sync_with_icloud'] = HiddenOption
 
             view = self.createViewForSection(account, frame, section_name, getattr(account.__class__, section_name))
 
