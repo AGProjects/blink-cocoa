@@ -21,8 +21,6 @@ from AppKit import (NSAlertDefaultReturn,
                     NSApp,
                     NSInformationalRequest,
                     NSRunAlertPanel,
-                    NSTerminateLater,
-                    NSTerminateNow,
                     NSWorkspace,
                     NSWorkspaceWillSleepNotification,
                     NSWorkspaceDidWakeNotification)
@@ -141,6 +139,7 @@ class BlinkAppDelegate(NSObject):
     statusbar_menu_icon = 'invisible'
     about_copyright = "Copyright 2009-2014 AG Projects"
     active_transports = set()
+    terminating = False
 
     def init(self):
         self = super(BlinkAppDelegate, self).init()
@@ -355,13 +354,18 @@ class BlinkAppDelegate(NSObject):
         os._exit(1)
 
     def applicationShouldTerminate_(self, sender):
+        if self.terminating:
+            return True
+
+        self.terminating = True
         BlinkLogger().log_info('Application will terminate')
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
         NotificationCenter().post_notification("BlinkShouldTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
-        SIPApplication().stop()
+        app = SIPApplication()
+        app.stop()
 
-        return NSTerminateLater
+        return False
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -452,7 +456,7 @@ class BlinkAppDelegate(NSObject):
         call_in_thread('file-io', self.purge_temporary_files)
 
     def _NH_SIPApplicationDidEnd(self, notification):
-        call_in_gui_thread(NSApp.replyToApplicationShouldTerminate_, NSTerminateNow)
+        call_in_gui_thread(NSApp.terminate_, self)
 
     def applicationWillTerminate_(self, notification):
         NotificationCenter().post_notification("BlinkWillTerminate", None)
