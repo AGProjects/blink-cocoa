@@ -685,7 +685,7 @@ class ChatWindowController(NSWindowController):
         self.removeContactTimer()
 
     def windowShouldClose_(self, sender):
-        active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
+        active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat") and s.state == STATE_CONNECTED])
         if active > 1:
             ret = NSRunAlertPanel(NSLocalizedString("Close Chat Window", "Window Title"),
                                   NSLocalizedString("There are %i Chat sessions, click Close to terminate them all.", "Label") % active,
