@@ -352,7 +352,11 @@ class VideoWindowController(NSWindowController):
             frame = self.window.frame()
             currentSize = frame.size
             scaledSize = currentSize
-            scaledSize.height = scaledSize.width / self.aspect_ratio
+            try:
+                scaledSize.height = scaledSize.width / self.aspect_ratio
+            except TypeError:
+                self.updating_aspect_ratio = False
+                return
             frame.size = scaledSize
             self.window.setFrame_display_animate_(frame, True, False)
             self.sdl_window.size = (frame.size.width, frame.size.height)
@@ -360,7 +364,11 @@ class VideoWindowController(NSWindowController):
             frame = self.window.frame()
             currentSize = frame.size
             scaledSize = currentSize
-            scaledSize.height = scaledSize.width / self.initial_aspect_ratio
+            try:
+                scaledSize.height = scaledSize.width / self.initial_aspect_ratio
+            except TypeError:
+                self.updating_aspect_ratio = False
+                return
             frame.size = scaledSize
             self.window.setFrame_display_animate_(frame, True, False)
             self.sdl_window.size = (frame.size.width, frame.size.height)
@@ -392,7 +400,11 @@ class VideoWindowController(NSWindowController):
             currentSize = self.window.frame().size
             scaledSize = frameSize
             scaledSize.width = frameSize.width
-            scaledSize.height = scaledSize.width / self.aspect_ratio
+            try:
+                scaledSize.height = scaledSize.width / self.aspect_ratio
+            except TypeError:
+                return frameSize
+
             scaledSize.height += self.dif_y
             return scaledSize
         else:
@@ -476,7 +488,10 @@ class VideoWindowController(NSWindowController):
         currentSize = self.window.frame().size
         scaledSize = frameSize
         scaledSize.width = frameSize.width
-        scaledSize.height = scaledSize.width / self.aspect_ratio
+        try:
+            scaledSize.height = scaledSize.width / self.aspect_ratio
+        except TypeError:
+            return frameSize
         return scaledSize
 
     def windowDidEnterFullScreen_(self, notification):
