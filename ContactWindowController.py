@@ -1307,7 +1307,7 @@ class ContactWindowController(NSWindowController):
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
-            if not self.authFailPopupShown:
+            if not self.authFailPopupShown and self.accounts[position].register_state != 'failed':
                 self.authFailPopupShown = True
                 if notification.data.error == 'Authentication failed':
                     nc_title = NSLocalizedString("Account", "Label") + " " + notification.sender.id
