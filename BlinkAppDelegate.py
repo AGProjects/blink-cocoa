@@ -421,18 +421,18 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPEngineTransportDidConnect(self, notification):
         transport = "%s:%s" %(notification.data.transport, notification.data.remote_address)
         if transport not in self.active_transports:
-            BlinkLogger().log_debug(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+            BlinkLogger().log_info(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
             self.active_transports.add(transport)
 
     def _NH_DNSNameserversDidChange(self, notification):
-        BlinkLogger().log_debug(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
+        BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
 
     def _NH_NetworkConditionsDidChange(self, notification):
-        BlinkLogger().log_debug(u"Network conditions changed")
+        BlinkLogger().log_info(u"Network conditions changed")
 
     def _NH_SystemIPAddressDidChange(self, notification):
         self.ip_change_timestamp = int(time.time())
-        BlinkLogger().log_debug(u"IP address changed to %s" % notification.data.new_ip_address)
+        BlinkLogger().log_info(u"IP address changed to %s" % notification.data.new_ip_address)
         if notification.data.new_ip_address is not None:
             settings = SIPSimpleSettings()
             app = SIPApplication()
