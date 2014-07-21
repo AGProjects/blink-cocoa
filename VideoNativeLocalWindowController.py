@@ -138,13 +138,14 @@ class VideoNativeLocalWindowController(NSWindowController):
         return False
 
     def windowWillResize_toSize_(self, window, frameSize):
-        if self.localVideoView.aspect_ratio is None:
+        aspect_ratio = self.localVideoView.aspect_ratio
+        if aspect_ratio is None:
             return frameSize
 
         currentSize = self.window().frame().size
         scaledSize = frameSize
         scaledSize.width = frameSize.width
-        scaledSize.height = scaledSize.width / self.localVideoView.aspect_ratio
+        scaledSize.height = scaledSize.width / aspect_ratio
         return scaledSize
 
     def windowDidResize_(self, notification):
@@ -174,6 +175,7 @@ class VideoNativeLocalWindowController(NSWindowController):
     @run_in_gui_thread
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
+        aspect_ratio = self.localVideoView.aspect_ratio
         self.visible = True
         self.localVideoView.show()
 
@@ -185,9 +187,11 @@ class VideoNativeLocalWindowController(NSWindowController):
         frame = self.window().frame()
         currentSize = frame.size
         scaledSize = currentSize
-        scaledSize.height = scaledSize.width / self.localVideoView.aspect_ratio
-        frame.size = scaledSize
-        self.window().setFrame_display_animate_(frame, True, False)
+
+        if aspect_ratio is not None:
+            scaledSize.height = scaledSize.width / aspect_ratio
+            frame.size = scaledSize
+            self.window().setFrame_display_animate_(frame, True, False)
         self.window().orderFront_(None)
 
     def dealloc(self):
