@@ -280,7 +280,7 @@ class PreferencesController(NSWindowController, object):
             self.generalTabView.setTabViewType_(NSTopTabsBezelBorder)
             self.createGeneralOptionsUI('advanced')
             self.sectionHelpPlaceholder.setHidden_(False)
-        else:
+        elif section_name != 'help':
             self.createGeneralOptionsUI('basic')
             self.generalTabView.setTabViewType_(NSNoTabsBezelBorder)
 
