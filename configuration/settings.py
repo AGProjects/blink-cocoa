@@ -61,6 +61,7 @@ class AudioSettingsExtension(AudioSettings):
     sound_card_delay = RuntimeSetting(type=NonNegativeInteger, default=2)
     automatic_device_switch = Setting(type=bool, default=True)
     pause_music = Setting(type=bool, default=True)
+    per_device_aec = Setting(type=unicode, default=None, nillable=True)
 
 
 class ChatSettingsExtension(ChatSettings):

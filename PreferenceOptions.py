@@ -1876,6 +1876,7 @@ PreferenceOptionTypes = {
 "audio.directory" : HiddenOption,
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
+"audio.per_device_aec": HiddenOption,
 "video.device" : VideoDeviceOption,
 "video.resolution" : VideoResolutionOption,
 "video.paused" : HiddenOption,

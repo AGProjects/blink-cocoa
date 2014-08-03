@@ -4,6 +4,7 @@
 import re
 import os
 import platform
+import cjson
 
 from AppKit import (NSAccessibilityTitleAttribute,
                     NSAlertDefaultReturn,
@@ -872,6 +873,12 @@ class PreferencesController(NSWindowController, object):
                 help_line += ".\n" + NSLocalizedString("For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
 
+        if notification.data.modified.has_key("audio.input_device"):
+            self.update_per_device_aec()
+
+        if notification.data.modified.has_key("audio.output_device"):
+            self.update_per_device_aec()
+
         if 'audio.enable_aec' in notification.data.modified:
             settings = SIPSimpleSettings()
             settings.audio.echo_canceller.enabled = settings.audio.enable_aec
@@ -882,9 +889,56 @@ class PreferencesController(NSWindowController, object):
             else:
                 NSApp.delegate().contactsWindowController.new_audio_sample_rate = new_sample_rate
 
+            combined_audio_device = (settings.audio.input_device or "") + " " + (settings.audio.output_device or "")
+
+            data = {}
+            if settings.audio.per_device_aec is not None:
+                try:
+                    data = cjson.decode(settings.audio.per_device_aec)
+                except (TypeError, cjson.DecodeError), e:
+                    pass
+
+            data[combined_audio_device] = settings.audio.enable_aec
+
+            try:
+                encoded_data = cjson.encode(data)
+            except (TypeError, cjson.EncodeError), e:
+                pass
+            else:
+                settings.audio.per_device_aec = encoded_data
+                settings.save()
+
         if isinstance(sender, Account):
             self.refresh_account_table()
             self.updateRegistrationStatus()
+
+    def update_per_device_aec(self):
+        settings = SIPSimpleSettings()
+        combined_audio_device = (settings.audio.input_device or "") + " " + (settings.audio.output_device or "")
+        data = {}
+        if settings.audio.per_device_aec is not None:
+            try:
+                data = cjson.decode(settings.audio.per_device_aec)
+            except (TypeError, cjson.DecodeError), e:
+                pass
+
+        try:
+            per_device_aec = data[combined_audio_device]
+        except KeyError:
+            data[combined_audio_device] = settings.audio.enable_aec
+            try:
+                encoded_data = cjson.encode(data)
+            except (TypeError, cjson.EncodeError), e:
+                pass
+            else:
+                settings.audio.per_device_aec = encoded_data
+                settings.save()
+
+        else:
+            if per_device_aec != settings.audio.enable_aec:
+                print "Changing AEC to %s" % per_device_aec
+                settings.audio.enable_aec = per_device_aec
+                settings.save()
 
     def _NH_BlinkTransportFailed(self, notification):
         self.refresh_account_table()
