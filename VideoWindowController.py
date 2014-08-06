@@ -559,8 +559,6 @@ class VideoWindowController(NSWindowController):
 
         self.goToWindowMode()
 
-        self.flipWnd = None
-
         if self.titleBarView is not None:
             self.titleBarView.close()
 
@@ -576,7 +574,8 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.close()
 
     def dealloc(self):
-        self.sessionController.log_debug('Dealloc %s' % self)
+        self.sessionController.log_info('Dealloc %s' % self)
+        self.flipWnd = None
         self.tracking_area = None
         self.localVideoWindow = None
         self.streamController = None
