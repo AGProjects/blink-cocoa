@@ -574,7 +574,7 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.close()
 
     def dealloc(self):
-        self.sessionController.log_info('Dealloc %s' % self)
+        self.sessionController.log_debug('Dealloc %s' % self)
         self.flipWnd = None
         self.tracking_area = None
         self.localVideoWindow = None
