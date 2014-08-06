@@ -3905,7 +3905,7 @@ class ContactWindowController(NSWindowController):
                 image = 'outgoing_file' if direction == 'outgoing' else 'incoming_file'
             return image
 
-        i = 6 if not NSApp.delegate().history_enabled else 7
+        i = 3 if not NSApp.delegate().history_enabled else 4
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
 
