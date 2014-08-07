@@ -395,7 +395,7 @@ class ChatWindowController(NSWindowController):
             if session:
                 try:
                     if session.session.transport == "tls":
-                        icon = NSImage.imageNamed_("bluelock")
+                        icon = NSImage.imageNamed_("locked-green")
                         icon.setSize_(NSMakeSize(12, 12))
                 except AttributeError:
                     pass

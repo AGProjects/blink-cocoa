@@ -947,6 +947,7 @@ class ContactWindowController(NSWindowController):
                         name = account_info.name
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
                     item.setAttributedTitle_(title)
+                    item.setImage_(None)
                 else:
                     if account_info.account.audio.do_not_disturb:
                         title = NSAttributedString.alloc().initWithString_attributes_(account_info.name, redAttrs)
@@ -955,6 +956,17 @@ class ContactWindowController(NSWindowController):
                         image.setScalesWhenResized_(True)
                         image.setSize_(NSMakeSize(12,12))
                         item.setImage_(image)
+                    else:
+                        if account_info.registrar is not None:
+                            if account_info.registrar.startswith("tls"):
+                                image = NSImage.imageNamed_("locked-green")
+                            else:
+                                image = NSImage.imageNamed_("unlocked-darkgray")
+                            image.setScalesWhenResized_(True)
+                            image.setSize_(NSMakeSize(16,16))
+                            item.setImage_(image)
+                        else:
+                            item.setImage_(None)
 
             if account_info.account is account_manager.default_account:
                 self.accountPopUp.selectItem_(item)
