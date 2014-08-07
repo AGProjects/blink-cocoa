@@ -413,6 +413,8 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPAccountDidDeactivate")
         nc.add_observer(self, name="SIPAccountGotPresenceState")
         nc.add_observer(self, name="SIPAccountWillRegister")
+        nc.add_observer(self, name="SystemWillSleep")
+        nc.add_observer(self, name="SystemDidWakeUpFromSleep")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
         nc.add_observer(self, name="SIPAccountRegistrationGotAnswer")
@@ -1332,6 +1334,20 @@ class ContactWindowController(NSWindowController):
                     NSApp.delegate().gui_notify(nc_title, nc_body)
                     #NSRunAlertPanel(u"SIP Registration Error", u"The account %s could not be registered at this time: %s" % (notification.sender.id, notification.data.error),  u"OK", None, None)
                 self.authFailPopupShown = False
+
+    def _NH_SystemWillSleep(self, notification):
+        for account in self.accounts:
+            account.register_state = 'ended'
+            account.register_failure_code = None
+            account.register_failure_reason = None
+        self.refreshAccountList()
+
+    def _NH_SystemDidWakeUpFromSleep(self, notification):
+        for account in self.accounts:
+            account.register_state = 'ended'
+            account.register_failure_code = None
+            account.register_failure_reason = None
+        self.refreshAccountList()
 
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
         try:
