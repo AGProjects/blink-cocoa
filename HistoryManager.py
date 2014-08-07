@@ -1205,7 +1205,7 @@ class SessionHistoryReplicator(object):
                             continue
 
                         try:
-                            _timezone = timezone(call['timezone'])
+                            _timezone = timezone(call['timezone'].replace('\\/', '/'))
                         except KeyError:
                             _timezone = timezone('Europe/Amsterdam') #default used by CDRTool app
 
@@ -1298,7 +1298,7 @@ class SessionHistoryReplicator(object):
                             end_time = start_time
 
                         try:
-                            _timezone = timezone(call['timezone'])
+                            _timezone = timezone(call['timezone'].replace('\\/', '/'))
                         except KeyError:
                             _timezone = timezone('Europe/Amsterdam') #default used by CDRTool app
 
