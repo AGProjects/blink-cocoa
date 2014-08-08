@@ -403,11 +403,11 @@ class BlinkAppDelegate(NSObject):
             self.contactsWindowController.refreshAccountList()
             BlinkLogger().log_info('Reconnecting account %s' % account.id)
 
-            if account.sip.register:
-                account._registrar.reregister()
-
-            if account.presence.enabled:
-                account._presence_subscriber.resubscribe()
+            account.reregister()
+            account.resubscribe()
+            presence_state = account.presence_state
+            account.presence_state = None
+            account.presence_state = presence_state
 
         if notification.data.reason != 'Success':
             BlinkLogger().log_info(u"%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
