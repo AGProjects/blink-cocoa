@@ -173,7 +173,6 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
             NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
-            NotificationCenter().add_observer(self, name="SystemIPAddressDidChange")
             NotificationCenter().add_observer(self, name="NetworkConditionsDidChange")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidConnect")
@@ -428,12 +427,11 @@ class BlinkAppDelegate(NSObject):
         BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
 
     def _NH_NetworkConditionsDidChange(self, notification):
-        BlinkLogger().log_info(u"Network conditions changed")
-
-    def _NH_SystemIPAddressDidChange(self, notification):
         self.ip_change_timestamp = int(time.time())
-        BlinkLogger().log_info(u"IP address changed to %s" % notification.data.new_ip_address)
-        if notification.data.new_ip_address is not None:
+        new_ip_address = host.default_ip
+        BlinkLogger().log_info(u"Network conditions changed")
+        BlinkLogger().log_info(u"IP address changed to %s" % new_ip_address)
+        if new_ip_address is not None:
             settings = SIPSimpleSettings()
             app = SIPApplication()
             app._initialize_tls()
