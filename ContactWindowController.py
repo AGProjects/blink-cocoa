@@ -5115,7 +5115,8 @@ class ContactWindowController(NSWindowController):
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices,  "input_device",  "selectInputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device",  "selectAlertDevice:")
-            setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
+            if hasattr(self.backend._app.engine, "video_devices"):
+                setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
 
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()
