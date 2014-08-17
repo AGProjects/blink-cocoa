@@ -1264,7 +1264,7 @@ class SessionController(NSObject):
                             self.log_info("Ending session with %s stream" % streamHandler.stream.type)
                             self.end()
                         else:
-                            handler.changeStatus(STREAM_FAILED, 'Illegal State Error')
+                            streamHandler.changeStatus(STREAM_FAILED, 'Illegal State Error')
 
                     return True
                 else:
