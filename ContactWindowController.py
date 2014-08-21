@@ -910,6 +910,7 @@ class ContactWindowController(NSWindowController):
         url = sender.representedObject()
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(unicode(url)))
 
+    @run_in_gui_thread
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         style.setLineBreakMode_(NSLineBreakByTruncatingTail)
