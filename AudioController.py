@@ -154,6 +154,7 @@ class AudioController(MediaStream):
     conference_record_segment = 2
     conference_hangup_segment = 3
     conference_segments  = (conference_mute_segment, conference_hold_segment, conference_record_segment, conference_hangup_segment)
+    timestamp = time.time()
 
     @classmethod
     def createStream(self):
@@ -166,6 +167,7 @@ class AudioController(MediaStream):
         self.notification_center.add_observer(self, sender=self.stream)
         self.previous_rx_bytes = 0
         self.previous_tx_bytes = 0
+        self.timestamp = time.time()
 
     def reset(self):
         self.early_media = False
@@ -808,11 +810,17 @@ class AudioController(MediaStream):
             self.elapsed.setStringValue_(text)
         else:
             if self.status == STREAM_CONNECTING and self.sessionController.routes:
-                self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
+                if time.time() - self.timestamp < 2.1:
+                    # for the first two seconds display the selected account
+                    label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else u"Bonjour"
+                    self.elapsed.setStringValue_(label)
+                else:
+                    self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
             elif self.status == STREAM_RINGING:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Ringing...", "Audio status label"))
             else:
-                self.elapsed.setStringValue_(u"")
+                label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else u"Bonjour"
+                self.elapsed.setStringValue_(label)
 
     def updateTileStatistics(self):
         if not self.session:
