@@ -1704,7 +1704,10 @@ class SessionController(NSObject):
 
     def _NH_DNSLookupDidFail(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
-        message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
+        if host is None or host.default_ip is None:
+            message = NSLocalizedString("No IP Address", "Label")
+        else:
+            message = u"SIP DNS lookup for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
 
     def _NH_DNSLookupDidSucceed(self, lookup, data):
