@@ -990,7 +990,7 @@ class H264LevelOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("3.1", "4.0"):
+        for item in ("3.1", "4.0", "3.0"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150

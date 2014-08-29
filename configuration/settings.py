@@ -33,7 +33,7 @@ class AnsweringMachineSettings(SettingsGroup):
 if video_support:
     class H264SettingsExtension(H264Settings):
         profile = Setting(type=H264Profile, default='baseline')
-        level = Setting(type=float, default=3.1)
+        level = Setting(type=str, default="3.1")
         max_resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
         max_framerate = Setting(type=int, default=30)
         avg_bitrate = Setting(type=int, default=0)

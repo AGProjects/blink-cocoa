@@ -13,10 +13,17 @@ from AppKit import (NSWindowController,
                     NSTrackingActiveAlways,
                     NSRightMouseUp,
                     NSImage,
-                    NSImageScaleProportionallyUpOrDown
+                    NSImageScaleProportionallyUpOrDown,
+                    NSTitledWindowMask,
+                    NSClosableWindowMask,
+                    NSMiniaturizableWindowMask,
+                    NSResizableWindowMask,
+                    NSTexturedBackgroundWindowMask
+
                     )
 
 from Foundation import (NSBundle,
+                        NSColor,
                         NSMakeRect,
                         NSTimer,
                         NSEvent,
@@ -31,6 +38,8 @@ from Foundation import (NSBundle,
 
 import objc
 import AppKit
+from math import floor
+
 
 from BlinkLogger import BlinkLogger
 
@@ -41,19 +50,20 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 
 from MediaStream import STREAM_PROPOSING
 from util import run_in_gui_thread
+from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 
 
-class VideoSDLLocalWindowController(NSWindowController):
-    window = None
+class VideoLocalWindowController(NSWindowController):
     finished = False
     initial_size = None
-    dif_y = 0
-    overlayView = None
     tracking_area = None
     initialLocation = None
     titleBarView = None
     alwaysOnTop = True
     initialized = False
+    videoView = objc.IBOutlet()
+    videoImage = objc.IBOutlet()
+    aspect_ratio = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -61,55 +71,19 @@ class VideoSDLLocalWindowController(NSWindowController):
     def __init__(self, videoWindowController):
         self.videoWindowController = videoWindowController
         self.log_debug('Init %s' % self)
-        self._init_sdl_window()
-
-    @run_in_thread('video-io')
-    def _init_sdl_window(self):
         if self.finished:
             self._finish_close()
             return
-        self.sdl_window = SIPApplication.video_device.get_preview_window()
-        self.initial_size = self.sdl_window.size
-        self.log_info('Opened local video at %0.fx%0.f resolution' % (self.initial_size[0], self.initial_size[1]))
-        self.sdl_window.size = (self.initial_size[0]/2, self.initial_size[1]/2)
-
-        self._init_window()
-
-    @run_in_gui_thread
-    def _init_window(self):
+        
         from VideoWindowController import TitleBarView
 
-        if self.finished:
-            self._finish_close()
-            return
+        NSBundle.loadNibNamed_owner_("VideoLocalWindow", self)
+        self.window().makeKeyAndOrderFront_(None)
+        self.window().center()
+        self.window().setLevel_(NSFloatingWindowLevel)
+        self.window().setTitle_(self.videoWindowController.title)
 
-        self.window = NSWindow(cobject=self.sdl_window.native_handle)
-        self.window.setDelegate_(self)
-        self.window.setTitle_(self.videoWindowController.title)
-        self.window.orderFront_(None)
-        self.window.center()
-        self.window.setLevel_(NSFloatingWindowLevel)
-
-        # this hold the height of the Cocoa window title bar
-        self.dif_y = self.window.frame().size.height - self.initial_size[1]/2
-
-        # capture mouse events into a transparent view
-        self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
-
-        # TODO: find a way to render the button -adi
-        self.infoButton = NSButton.alloc().initWithFrame_(NSMakeRect(10, 10 , 16, 16))
-        self.infoButton.setButtonType_(NSToggleButton)
-        self.infoButton.setBordered_(False)
-        self.infoButton.setImage_(NSImage.imageNamed_('panel-info'))
-        self.infoButton.setImageScaling_(NSImageScaleProportionallyUpOrDown)
-        self.infoButton.setTarget_(self)
-        self.infoButton.setAction_("showInfoPanel:")
-        self.overlayView.addSubview_(self.infoButton)
-
-        self.window.contentView().addSubview_(self.overlayView)
-        self.window.makeFirstResponder_(self.overlayView)
-
-        themeFrame = self.window.contentView().superview()
+        themeFrame = self.window().contentView().superview()
         self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
         topmenu_frame = self.titleBarView.view.frame()
 
@@ -119,24 +93,37 @@ class VideoSDLLocalWindowController(NSWindowController):
                                 topmenu_frame.size.width,
                                 topmenu_frame.size.height
                                 )
+
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
         self.titleBarView.textLabel.setHidden_(False)
         self.titleBarView.alwaysOnTop.setHidden_(True)
         self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
-        self.initialized = True
+        
+        self.renderer = FrameBufferVideoRenderer(self.videoView.handle_frame)
+        self.renderer.producer = SIPApplication.video_device.producer
+
+    def init_aspect_ratio(self, width, height):
+        self.videoWindowController.sessionController.log_info('Local video stream at %0.fx%0.f resolution' % (width, height))
+        self.aspect_ratio = floor((float(width) / height) * 100)/100
+
+        frame = self.window().frame()
+        frame.size.height = frame.size.width / self.aspect_ratio
+
+        self.window().setFrame_display_(frame, True)
+        self.window().center()
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
-            self.window.contentView().removeTrackingArea_(self.tracking_area)
+            self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
 
         rect = NSZeroRect
-        rect.size = self.window.contentView().frame().size
+        rect.size = self.window().contentView().frame().size
         self.tracking_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
                          NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
-        self.window.contentView().addTrackingArea_(self.tracking_area)
+        self.window().contentView().addTrackingArea_(self.tracking_area)
 
     def showInfoPanel_(self, sender):
         self.videoWindowController.sessionController.info_panel.toggle()
@@ -174,21 +161,20 @@ class VideoSDLLocalWindowController(NSWindowController):
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
         self.videoWindowController = None
-        super(VideoSDLLocalWindowController, self).dealloc()
+        super(VideoLocalWindowController, self).dealloc()
 
     def windowDidBecomeMain_(self, notification):
-        if self.videoWindowController.window:
+        if self.videoWindowController.window():
             # remote video window opened faster than local video window
-            if self.videoWindowController.window.isVisible():
+            if self.videoWindowController.window().isVisible():
                 self.hide()
 
     def windowWillResize_toSize_(self, window, frameSize):
-        currentSize = self.window.frame().size
+        if self.aspect_ratio is None:
+            return frameSize
+        currentSize = self.window().frame().size
         scaledSize = frameSize
-        scaleFactor = float(self.initial_size[0]) / self.initial_size[1]
-        scaledSize.width = frameSize.width
-        scaledSize.height = scaledSize.width / scaleFactor
-        scaledSize.height += self.dif_y
+        scaledSize.height = scaledSize.width / self.aspect_ratio
         return scaledSize
 
     def windowDidResize_(self, notification):
@@ -200,22 +186,17 @@ class VideoSDLLocalWindowController(NSWindowController):
         if not self.stream:
             return
 
-        frame = self.window.frame()
-        if frame.size.width != self.sdl_window.size[0]:
-            self.sdl_window.size = (frame.size.width, frame.size.height - self.dif_y)
+        frame = self.window().frame()
 
         self.updateTrackingAreas()
-        self.overlayView.setFrame_(self.window.contentView().frame())
 
     def windowShouldClose_(self, sender):
         if self.finished:
             return True
 
         if self.tracking_area is not None:
-            self.window.contentView().removeTrackingArea_(self.tracking_area)
+            self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
-
-        self.overlayView.removeFromSuperview()
 
         if not self.streamController:
             return True
@@ -226,7 +207,7 @@ class VideoSDLLocalWindowController(NSWindowController):
             self.sessionController.end()
 
         if self.window:
-            self.window.close()
+            self.window().close()
 
         return True
 
@@ -238,7 +219,7 @@ class VideoSDLLocalWindowController(NSWindowController):
             return
 
         screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
-        windowFrame = self.window.frame()
+        windowFrame = self.window().frame()
         newOrigin = windowFrame.origin
 
         currentLocation = event.locationInWindow()
@@ -249,10 +230,9 @@ class VideoSDLLocalWindowController(NSWindowController):
         if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
             newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
 
-        self.window.setFrameOrigin_(newOrigin);
+        self.window().setFrameOrigin_(newOrigin);
 
     def windowWillClose_(self, sender):
-        self.infoButton.removeFromSuperview()
         self.finished = True
 
     def keyDown_(self, event):
@@ -262,31 +242,21 @@ class VideoSDLLocalWindowController(NSWindowController):
 
     def hide(self):
         if self.window:
-            self.window.close()
+            self.window().close()
 
     def close(self):
-        self.log_debug('Close %s' % self)
-        if not self.initialized:
-            self.finished = True
-            return
-        if self.titleBarView is not None:
-            self.titleBarView.close()
-        if self.window:
-            self.window.close()
-        self._finish_close()
-
-    @run_in_thread('video-io')
-    def _finish_close(self):
-        if self.sdl_window:
-            self.sdl_window.close()
-
-        self.release()
+        self.log_info('Close %s' % self)
+        self.finished = True
+        self.titleBarView.close()
+        self.window().close()
+        self.renderer.close()
+        self.renderer = None
 
     def rightMouseDown_(self, event):
-        point = self.window.convertScreenToBase_(NSEvent.mouseLocation())
+        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                  NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window.windowNumber(),
-                  self.window.graphicsContext(), 0, 1, 0)
+                  NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
+                  self.window().graphicsContext(), 0, 1, 0)
 
         videoDevicesMenu = NSMenu.alloc().init()
         lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
@@ -309,7 +279,7 @@ class VideoSDLLocalWindowController(NSWindowController):
               lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Auto Rotate Cameras", "Menu item"), "toggleAutoRotate:", "")
               lastItem.setState_(NSOnState if settings.video.auto_rotate_cameras else NSOffState)
 
-        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self.window.contentView())
+        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self.window().contentView())
 
     def changeVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
@@ -321,16 +291,3 @@ class VideoSDLLocalWindowController(NSWindowController):
         settings.video.auto_rotate_cameras = not settings.video.auto_rotate_cameras
         settings.save()
 
-
-class VideoStreamOverlayView(NSView):
-    def mouseDown_(self, event):
-        self.window().delegate().mouseDown_(event)
-
-    def rightMouseDown_(self, event):
-        self.window().delegate().rightMouseDown_(event)
-
-    def keyDown_(self, event):
-        self.window().delegate().keyDown_(event)
-
-    def mouseDragged_(self, event):
-        self.window().delegate().mouseDraggedView_(event)

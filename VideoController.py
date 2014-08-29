@@ -88,6 +88,8 @@ class VideoController(MediaStream):
         return self
 
     def updateStatusLabelAfterConnect(self):
+        if self.videoWindowController.titleBarView is None:
+            return
         codec = beautify_video_codec(self.stream.codec)
         if not self.sessionController.account.nat_traversal.use_ice:
             self.videoWindowController.titleBarView.textLabel.setStringValue_(codec)
@@ -261,7 +263,7 @@ class VideoController(MediaStream):
         if local_window is not None and local_window.titleBarView is not None:
             labels.append(local_window.titleBarView.textLabel)
 
-        remote_window = self.videoWindowController.window
+        remote_window = self.videoWindowController.window()
         if remote_window is not None and self.videoWindowController.titleBarView is not None:
             labels.append(self.videoWindowController.titleBarView.textLabel)
 
@@ -281,7 +283,7 @@ class VideoController(MediaStream):
 
     def _NH_VideoStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
-        if self.videoWindowController.window is not None:
+        if self.videoWindowController.window() is not None:
             self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"))
         self.ice_negotiation_status = data.reason
         self.stopTimers()
@@ -294,11 +296,11 @@ class VideoController(MediaStream):
         codec = beautify_video_codec(self.stream.codec)
         if self.stream.local_rtp_candidate.type.lower() != 'relay' and self.stream.remote_rtp_candidate.type.lower() != 'relay':
             self.sessionController.log_info(u'Video stream is peer to peer')
-            if self.videoWindowController.window is not None:
+            if self.videoWindowController.window() is not None:
                 self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Peer to Peer" % codec, "Label"))
         else:
             self.sessionController.log_info(u'Video stream is relayed by server')
-            if self.videoWindowController.window is not None:
+            if self.videoWindowController.window() is not None:
                 self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Server Relayed" % codec, "Label"))
 
         self.ice_negotiation_status = 'Success'
@@ -320,7 +322,7 @@ class VideoController(MediaStream):
             elif data.state == 'FAILED':
                 label.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"), True)
 
-        if self.videoWindowController.window is not None:
+        if self.videoWindowController.window() is not None:
             label = self.videoWindowController.titleBarView.textLabel
             if data.state == 'GATHERING':
                 label.setStringValue_(NSLocalizedString("Gathering ICE Candidates...", "Label"))
@@ -338,9 +340,9 @@ class VideoController(MediaStream):
     @run_in_gui_thread
     def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
         if data.on_hold:
-            self.videoWindowController.window.setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
+            self.videoWindowController.window().setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
         else:
-            self.videoWindowController.window.setTitle_(self.videoWindowController.title)
+            self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
@@ -352,7 +354,8 @@ class VideoController(MediaStream):
         self.videoWindowController.show()
 
         if not self.sessionController.account.nat_traversal.use_ice:
-            self.videoWindowController.titleBarView.textLabel.setStringValue_(codec)
+            if self.videoWindowController.titleBarView is not None:
+                self.videoWindowController.titleBarView.textLabel.setStringValue_(codec)
         else:
             self.updateStatusLabelAfterConnect()
 
@@ -450,4 +453,5 @@ class VideoController(MediaStream):
             if self.statistics_timer.isValid():
                 self.statistics_timer.invalidate()
         self.statistics_timer = None
+
 

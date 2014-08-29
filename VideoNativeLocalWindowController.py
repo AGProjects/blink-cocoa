@@ -82,12 +82,14 @@ ALPHA = 1.0
 class VideoNativeLocalWindowController(NSWindowController):
     implements(IObserver)
 
-    localVideoView = objc.IBOutlet()
 
     visible = False
     close_timer = None
     tracking_area = None
     closed_by_user = False
+
+    videoView = objc.IBOutlet()
+ 
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -138,7 +140,7 @@ class VideoNativeLocalWindowController(NSWindowController):
         return False
 
     def windowWillResize_toSize_(self, window, frameSize):
-        aspect_ratio = self.localVideoView.aspect_ratio
+        aspect_ratio = self.videoView.aspect_ratio
         if aspect_ratio is None:
             return frameSize
 
@@ -158,8 +160,8 @@ class VideoNativeLocalWindowController(NSWindowController):
     @run_in_gui_thread
     def close(self):
         BlinkLogger().log_debug('Close %s' % self)
-        self.localVideoView.close()
-        self.localVideoView = None
+        self.videoView.close()
+        self.videoView = None
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
         self.notification_center = None
         self.window().close()
@@ -170,14 +172,14 @@ class VideoNativeLocalWindowController(NSWindowController):
         handler(notification)
 
     def _NH_VideoDeviceDidChangeCamera(self, notification):
-        self.localVideoView.reloadCamera()
+        self.videoView.reloadCamera()
 
     @run_in_gui_thread
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
-        aspect_ratio = self.localVideoView.aspect_ratio
+        aspect_ratio = self.videoView.aspect_ratio
         self.visible = True
-        self.localVideoView.show()
+        self.videoView.show()
 
         if self.close_timer is not None and self.close_timer.isValid():
             self.close_timer.invalidate()
@@ -213,7 +215,7 @@ class VideoNativeLocalWindowController(NSWindowController):
         else:
             self.close_timer.invalidate()
             self.close_timer = None
-            self.localVideoView.hide()
+            self.videoView.hide()
             self.window().close()
             self.window().setAlphaValue_(ALPHA) # make the window fully opaque again for next time
 

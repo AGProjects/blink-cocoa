@@ -258,7 +258,7 @@ class VideoControlPanel(NSWindowController):
         self.window().setAlphaValue_(ALPHA)
         self.visible = True
         if self.videoWindowController and self.videoWindowController.window is not None:
-            self.videoWindowController.window.orderFront_(None)
+            self.videoWindowController.window().orderFront_(None)
 
     def windowWillClose_(self, sender):
         self.stopFadeTimer()

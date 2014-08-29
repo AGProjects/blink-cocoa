@@ -3,6 +3,9 @@
 
 
 from AppKit import (NSApp,
+                    NSGraphicsContext,
+                    NSCalibratedRGBColorSpace,
+                    NSAlphaFirstBitmapFormat,
                     NSWindow,
                     NSView,
                     NSOnState,
@@ -24,8 +27,13 @@ from AppKit import (NSApp,
                     NSRightMouseUp
                     )
 
-from Foundation import (NSBundle,
+from Foundation import (NSAttributedString,
+                        NSBundle,
+                        NSData,
+                        NSBitmapImageRep,
                         NSObject,
+                        NSColor,
+                        NSDictionary,
                         NSArray,
                         NSImage,
                         NSDate,
@@ -37,8 +45,10 @@ from Foundation import (NSBundle,
                         NSTrackingArea,
                         NSZeroRect,
                         NSScreen,
+                        NSMakeSize,
                         NSMakeRect,
-                        NSPopUpButton
+                        NSPopUpButton,
+                        NSTextField
                         )
 
 from Foundation import mbFlipWindow
@@ -50,11 +60,56 @@ from math import floor
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
+
+from Quartz import CIImage, kCIFormatARGB8, kCGColorSpaceGenericRGB
+
 from VideoControlPanel import VideoControlPanel
+from VideoLocalWindowController import VideoLocalWindowController
 from VideoDisconnectWindow import VideoDisconnectWindow
-from VideoSDLLocalWindowController import VideoSDLLocalWindowController, VideoStreamOverlayView
 from util import run_in_gui_thread
+
+
+class VideoStreamOverlayView(NSView):
+    _data = None
+    aspect_ratio_initialized = False
+
+
+    def mouseDown_(self, event):
+        self.window().delegate().mouseDown_(event)
+
+    def rightMouseDown_(self, event):
+        self.window().delegate().rightMouseDown_(event)
+
+    def keyDown_(self, event):
+        self.window().delegate().keyDown_(event)
+
+    def mouseDragged_(self, event):
+        self.window().delegate().mouseDraggedView_(event)
+
+    def handle_frame(self, frame, width, height):
+        self._data = (frame, width, height)
+        if not self.aspect_ratio_initialized:
+            self.window().delegate().init_aspect_ratio(width, height)
+            self.aspect_ratio_initialized = True
+
+        self.setNeedsDisplay_(True)
+
+    def drawRect_(self, rect):
+        data = self._data
+        if data is None:
+            return
+
+        frame, width, height = data
+        data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame, len(frame), False)
+        image = CIImage.imageWithBitmapData_bytesPerRow_size_format_colorSpace_(data,
+                                                                                width * 4,
+                                                                                (width, height),
+                                                                                kCIFormatARGB8,
+                                                                                kCGColorSpaceGenericRGB)
+        context = NSGraphicsContext.currentContext().CIContext()
+        context.drawImage_inRect_fromRect_(image, self.frame(), image.extent())
 
 
 class VideoWindowController(NSWindowController):
@@ -70,23 +125,21 @@ class VideoWindowController(NSWindowController):
     full_screen_in_progress = False
     mouse_in_window = True
     mouse_timer = None
-    window = None
     title = None
-    initial_size = None
-    dif_y = 0
     disconnectedPanel = None
     show_window_after_full_screen_ends = None
-    sdl_window = None
     tracking_area = None
     flipped = False
     aspect_ratio = None
     initial_aspect_ratio = None
     titleBarView = None
-    overlayView = None
     initialLocation = None
     local_video_visible_before_fullscreen = False
     is_key_window = False
     updating_aspect_ratio = False
+    renderer = None
+
+    videoView = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -104,32 +157,25 @@ class VideoWindowController(NSWindowController):
         sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
         other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
         if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
-            self.localVideoWindow = VideoSDLLocalWindowController(self)
+            self.localVideoWindow = VideoLocalWindowController(self)
 
     @property
     def sessionController(self):
         return self.streamController.sessionController
 
-    def init_sdl_window(self):
-        if self.sdl_window:
-            return
-        if self.window is not None:
-            return
-        if self.streamController.stream is None:
-            return
-        if self.streamController.stream.video_window is None:
+    def init_aspect_ratio(self, width, height):
+        if self.aspect_ratio is not None:
             return
 
-        self.sdl_window = self.streamController.stream.video_window
-        self.initial_size = self.sdl_window.size
+        self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
         try:
-            self.aspect_ratio = floor((float(self.initial_size[0]) / self.initial_size[1]) * 100)/100
-            self.sessionController.log_debug('Remote aspect ratio is %s' % self.aspect_ratio)
-        except TypeError:
-            return
-
+            self.aspect_ratio = floor((float(width) / height) * 100)/100
+            self.sessionController.log_info('Remote aspect ratio is %s' % self.aspect_ratio)
+        except (TypeError, AttributeError):
+            self.aspect_ratio = 1.77
+        
         self.initial_aspect_ratio = self.aspect_ratio
-
+        
         found = False
         for ratio in self.valid_aspect_ratios:
             if ratio is None:
@@ -140,36 +186,39 @@ class VideoWindowController(NSWindowController):
             if self.aspect_ratio > 0.95 * ratio and self.aspect_ratio < 1.05 * ratio:
                 found = True
                 break
-
+        
         if not found:
             self.valid_aspect_ratios.append(self.aspect_ratio)
-
-        self.window = NSWindow(cobject=self.sdl_window.native_handle)
-        self.window.orderOut_(None)
-        self.window.setTitle_(self.title)
-        self.window.setDelegate_(self)
-        self.sessionController.log_debug('Init %s in %s' % (self.window, self))
-        self.dif_y = self.window.frame().size.height - self.sdl_window.size[1]
-
-        # capture mouse events into a transparent view
-        self.overlayView = VideoStreamOverlayView.alloc().initWithFrame_(self.window.contentView().frame())
-        self.window.contentView().addSubview_(self.overlayView)
-        self.window.makeFirstResponder_(self.overlayView)
-        self.updateTrackingAreas()
-
-        frame = self.window.frame()
-        self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (frame.size.width, frame.size.height-self.dif_y))
+        
+        frame = self.window().frame()
         frame.size.width = 640
         try:
             frame.size.height = frame.size.width / self.aspect_ratio
         except TypeError:
-            return
-        frame.size.height += self.dif_y
-        self.window.setFrame_display_(frame, True)
-        self.window.center()
-        self.window.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
+            pass
+        
+        self.window().setFrame_display_(frame, True)
+        self.window().center()
 
-        themeFrame = self.window.contentView().superview()
+    def init_renderer(self):
+        if self.renderer is not None:
+            return
+
+        if self.streamController.stream is None:
+            return
+
+        NSBundle.loadNibNamed_owner_("VideoWindow", self)
+
+        self.window().registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
+        self.window().orderOut_(None)
+        self.window().center()
+        self.window().setDelegate_(self)
+        self.sessionController.log_info('Init %s in %s' % (self.window(), self))
+        self.window().makeFirstResponder_(self.videoView)
+        self.window().setTitle_(self.title)
+        self.updateTrackingAreas()
+
+        themeFrame = self.window().contentView().superview()
         self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
         topmenu_frame = self.titleBarView.view.frame()
 
@@ -184,6 +233,9 @@ class VideoWindowController(NSWindowController):
 
         if SIPSimpleSettings().video.keep_window_on_top:
             self.toogleAlwaysOnTop()
+
+        self.renderer = FrameBufferVideoRenderer(self.videoView.handle_frame)
+        self.renderer.producer = self.streamController.stream.producer
 
     def draggingEntered_(self, sender):
         if self.finished:
@@ -230,16 +282,16 @@ class VideoWindowController(NSWindowController):
         return False
 
     def rightMouseDown_(self, event):
-        point = self.window.convertScreenToBase_(NSEvent.mouseLocation())
+        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-          NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window.windowNumber(),
-          self.window.graphicsContext(), 0, 1, 0)
+          NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
+          self.window().graphicsContext(), 0, 1, 0)
 
         menu = NSMenu.alloc().init()
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "removeVideo:", "")
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hangup", "Menu item"), "hangup:", "")
 
-        NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window.contentView())
+        NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
     def removeVideo_(self, sender):
         self.streamController.sessionController.removeVideoFromSession()
@@ -258,7 +310,7 @@ class VideoWindowController(NSWindowController):
             return
 
         screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
-        windowFrame = self.window.frame()
+        windowFrame = self.window().frame()
         newOrigin = windowFrame.origin
 
         currentLocation = event.locationInWindow()
@@ -269,18 +321,18 @@ class VideoWindowController(NSWindowController):
         if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
             newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
 
-        self.window.setFrameOrigin_(newOrigin)
+        self.window().setFrameOrigin_(newOrigin)
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
-            self.window.contentView().removeTrackingArea_(self.tracking_area)
+            self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
 
         rect = NSZeroRect
-        rect.size = self.window.contentView().frame().size
+        rect.size = self.window().contentView().frame().size
         self.tracking_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
                                                                                          NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
-        self.window.contentView().addTrackingArea_(self.tracking_area)
+        self.window().contentView().addTrackingArea_(self.tracking_area)
 
     @property
     def sessionController(self):
@@ -336,12 +388,11 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
 
-    @run_in_thread('video-io')
     def updateAspectRatio(self):
-        if not self.window:
+        if not self.window():
             return
 
-        if not self.sdl_window:
+        if self.renderer is None:
             return
 
         if self.finished:
@@ -349,7 +400,7 @@ class VideoWindowController(NSWindowController):
 
         self.updating_aspect_ratio = True
         if self.aspect_ratio is not None:
-            frame = self.window.frame()
+            frame = self.window().frame()
             currentSize = frame.size
             scaledSize = currentSize
             try:
@@ -358,10 +409,9 @@ class VideoWindowController(NSWindowController):
                 self.updating_aspect_ratio = False
                 return
             frame.size = scaledSize
-            self.window.setFrame_display_animate_(frame, True, False)
-            self.sdl_window.size = (frame.size.width, frame.size.height)
+            self.window().setFrame_display_animate_(frame, True, False)
         elif self.initial_aspect_ratio is not None:
-            frame = self.window.frame()
+            frame = self.window().frame()
             currentSize = frame.size
             scaledSize = currentSize
             try:
@@ -370,8 +420,7 @@ class VideoWindowController(NSWindowController):
                 self.updating_aspect_ratio = False
                 return
             frame.size = scaledSize
-            self.window.setFrame_display_animate_(frame, True, False)
-            self.sdl_window.size = (frame.size.width, frame.size.height)
+            self.window().setFrame_display_animate_(frame, True, False)
         self.updating_aspect_ratio = False
 
     @run_in_gui_thread
@@ -380,42 +429,36 @@ class VideoWindowController(NSWindowController):
         if self.finished:
             return
 
-        self.init_sdl_window()
+        self.init_renderer()
         self.updateAspectRatio()
 
         if self.videoControlPanel is not None:
             self.videoControlPanel.show()
 
         if self.localVideoWindow and not self.flipped:
-            self.localVideoWindow.window.orderOut_(None)
-            self.window.orderOut_(None)
-            self.flipWnd.flip_to_(self.localVideoWindow.window, self.window)
+            self.localVideoWindow.window().orderOut_(None)
+            self.window().orderOut_(None)
+            self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
             self.flipped = True
             self.streamController.updateStatusLabelAfterConnect()
         else:
-            self.window.orderFront_(self)
+            self.window().orderFront_(self)
 
     def windowWillResize_toSize_(self, window, frameSize):
-        if self.aspect_ratio is not None:
-            currentSize = self.window.frame().size
-            scaledSize = frameSize
-            scaledSize.width = frameSize.width
-            try:
-                scaledSize.height = scaledSize.width / self.aspect_ratio
-            except TypeError:
-                return frameSize
-
-            scaledSize.height += self.dif_y
-            return scaledSize
-        else:
+        if self.aspect_ratio is None:
             return frameSize
 
-    @run_in_thread('video-io')
+        currentSize = self.window().frame().size
+        scaledSize = frameSize
+        scaledSize.width = frameSize.width
+        try:
+            scaledSize.height = scaledSize.width / self.aspect_ratio
+        except TypeError:
+            return frameSize
+        return scaledSize
+
     def windowDidResize_(self, notification):
         if not self.streamController.stream:
-            return
-
-        if not self.streamController.stream.video_window:
             return
 
         if self.updating_aspect_ratio:
@@ -424,11 +467,6 @@ class VideoWindowController(NSWindowController):
         if self.finished:
             return
 
-        # update underlying SDL window
-        frame = self.window.frame()
-        if frame.size.width != self.streamController.stream.video_window.size[0]:
-            self.streamController.stream.video_window.size = (frame.size.width, frame.size.height - self.dif_y)
-
         self.updateTrackingAreas()
 
     @run_in_gui_thread
@@ -436,8 +474,8 @@ class VideoWindowController(NSWindowController):
         if self.localVideoWindow:
             self.localVideoWindow.hide()
 
-        if self.window:
-            self.window.orderOut_(self)
+        if self.window():
+            self.window().orderOut_(self)
 
         if self.videoControlPanel:
             self.videoControlPanel.hide()
@@ -455,16 +493,16 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.hide()
 
         if not self.full_screen:
-            if self.window:
-                self.window.toggleFullScreen_(None)
+            if self.window():
+                self.window().toggleFullScreen_(None)
                 self.show()
 
     @run_in_gui_thread
     def goToWindowMode(self, window=None):
         if self.full_screen:
             self.show_window_after_full_screen_ends = window
-            if self.window:
-                self.window.toggleFullScreen_(None)
+            if self.window():
+                self.window().toggleFullScreen_(None)
                 self.show()
                 self.updateAspectRatio()
 
@@ -481,26 +519,13 @@ class VideoWindowController(NSWindowController):
         else:
             self.goToFullScreen()
 
-    def windowWillResize_toSize_(self, window, frameSize):
-        if self.aspect_ratio is None:
-            return frameSize
-
-        currentSize = self.window.frame().size
-        scaledSize = frameSize
-        scaledSize.width = frameSize.width
-        try:
-            scaledSize.height = scaledSize.width / self.aspect_ratio
-        except TypeError:
-            return frameSize
-        return scaledSize
-
     def windowDidEnterFullScreen_(self, notification):
-        if self.window:
+        self.sessionController.log_debug('windowDidEnterFullScreen_ %s' % self)
+        if self.window():
             if self.streamController.ended:
-                self.window.orderOut_(self)
+                self.window().orderOut_(self)
                 return
 
-        self.sessionController.log_debug('windowDidEnterFullScreen %s' % self)
 
         self.full_screen_in_progress = False
         self.full_screen = True
@@ -512,8 +537,8 @@ class VideoWindowController(NSWindowController):
             self.videoControlPanel.show()
             self.videoControlPanel.window().makeKeyAndOrderFront_(None)
 
-        if self.window:
-            self.window.setLevel_(NSNormalWindowLevel)
+        if self.window():
+            self.window().setLevel_(NSNormalWindowLevel)
 
     def windowDidExitFullScreen_(self, notification):
         self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
@@ -530,16 +555,15 @@ class VideoWindowController(NSWindowController):
             self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
             self.show_window_after_full_screen_ends = None
         else:
-            if self.window:
+            if self.window():
                 if self.streamController.ended:
-                    self.window.orderOut_(self)
+                    self.window().orderOut_(self)
                 else:
-                    self.window.orderFront_(self)
-                    self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
+                    self.window().orderFront_(self)
+                    self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
-        self.overlayView.removeFromSuperview()
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         self.sessionController.removeVideoFromSession()
         if not self.sessionController.hasStreamOfType("chat"):
@@ -567,8 +591,12 @@ class VideoWindowController(NSWindowController):
         self.videoControlPanel.close()
         self.videoControlPanel = None
 
-        if self.window:
-            self.window.performClose_(None)
+        if self.renderer is not None:
+            self.renderer.close()
+            self.renderer = None
+        
+        if self.window():
+            self.window().performClose_(None)
 
         if self.localVideoWindow:
             self.localVideoWindow.close()
@@ -583,7 +611,7 @@ class VideoWindowController(NSWindowController):
 
     def toogleAlwaysOnTop(self):
         self.always_on_top  = not self.always_on_top
-        self.window.setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
+        self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
         self.titleBarView.alwaysOnTop.setState_(self.always_on_top)
 
     def stopMouseOutTimer(self):
@@ -615,6 +643,7 @@ class TitleBarView(NSObject):
     view = objc.IBOutlet()
     alwaysOnTop = objc.IBOutlet()
     textLabel = objc.IBOutlet()
+    titleLabel = objc.IBOutlet()
 
     def initWithWindowController_(self, windowController):
         self.windowController = windowController

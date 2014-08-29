@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -7,7 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoNativeLocalWindowController">
             <connections>
-                <outlet property="localVideoView" destination="6WE-Ek-cFR" id="J8e-57-Zc8"/>
+                <outlet property="videoView" destination="6WE-Ek-cFR" id="702-EJ-Ahw"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="liw-g7-E4J"/>
             </connections>
         </customObject>
