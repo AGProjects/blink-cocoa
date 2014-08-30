@@ -227,7 +227,6 @@ class VideoController(MediaStream):
             return
 
         self.sessionController.log_debug(u"End %s" % self)
-
         self.ended = True
 
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
@@ -412,6 +411,10 @@ class VideoController(MediaStream):
     def _NH_BlinkProposalAccepted(self, sender, data):
         if self.stream in data.accepted_streams:
             self.updateStatusLabelAfterConnect()
+
+    def _NH_BlinkWillCancelProposal(self, sender, data):
+        self.sessionController.log_info(u"Video proposal cancelled")
+        self.changeStatus(STREAM_FAILED, "Proposal Cancelled")
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
