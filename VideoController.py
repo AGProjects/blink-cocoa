@@ -193,6 +193,7 @@ class VideoController(MediaStream):
         self.videoWindowController.goToFullScreen()
 
     def startOutgoing(self, is_update):
+        self.videoWindowController.initLocalVideoWindow()
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -278,8 +279,7 @@ class VideoController(MediaStream):
                 label.setStringValue_(NSLocalizedString("Call Failed", "Label"))
 
     def _NH_MediaStreamDidInitialize(self, sender, data):
-        if self.sessionController.session.direction == 'outgoing':
-            self.videoWindowController.initLocalVideoWindow()
+        pass
 
     def _NH_VideoStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)

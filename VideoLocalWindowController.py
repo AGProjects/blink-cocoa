@@ -23,6 +23,7 @@ from AppKit import (NSWindowController,
                     )
 
 from Foundation import (NSBundle,
+                        NSObject,
                         NSColor,
                         NSMakeRect,
                         NSTimer,
@@ -52,18 +53,21 @@ from MediaStream import STREAM_PROPOSING
 from util import run_in_gui_thread
 from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 
+from application.notification import NotificationCenter, IObserver
+from application.python import Null
+from zope.interface import implements
+
 
 class VideoLocalWindowController(NSWindowController):
+    implements(IObserver)
+
     finished = False
-    initial_size = None
     tracking_area = None
     initialLocation = None
     titleBarView = None
-    alwaysOnTop = True
-    initialized = False
     videoView = objc.IBOutlet()
-    videoImage = objc.IBOutlet()
     aspect_ratio = None
+    full_screen_in_progress = False
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -84,7 +88,7 @@ class VideoLocalWindowController(NSWindowController):
         self.window().setTitle_(self.videoWindowController.title)
 
         themeFrame = self.window().contentView().superview()
-        self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
+        self.titleBarView = LocalTitleBarView.alloc().init()
         topmenu_frame = self.titleBarView.view.frame()
 
         newFrame = NSMakeRect(
@@ -97,12 +101,16 @@ class VideoLocalWindowController(NSWindowController):
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
         self.titleBarView.textLabel.setHidden_(False)
-        self.titleBarView.alwaysOnTop.setHidden_(True)
         self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
         
         self.renderer = FrameBufferVideoRenderer(self.videoView.handle_frame)
         self.renderer.producer = SIPApplication.video_device.producer
+        self.notification_center =  NotificationCenter()
+        self.notification_center.add_observer(self, name="VideoDeviceDidChangeCamera")
+
+    def windowDidEnterFullScreen_(self, notification):
+        self.full_screen_in_progress = False
 
     def init_aspect_ratio(self, width, height):
         self.videoWindowController.sessionController.log_info('Local video stream at %0.fx%0.f resolution' % (width, height))
@@ -110,7 +118,6 @@ class VideoLocalWindowController(NSWindowController):
 
         frame = self.window().frame()
         frame.size.height = frame.size.width / self.aspect_ratio
-
         self.window().setFrame_display_(frame, True)
         self.window().center()
 
@@ -245,12 +252,14 @@ class VideoLocalWindowController(NSWindowController):
             self.window().close()
 
     def close(self):
-        self.log_info('Close %s' % self)
+        self.log_debug('Close %s' % self)
         self.finished = True
         self.titleBarView.close()
         self.window().close()
         self.renderer.close()
         self.renderer = None
+        self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
+        self.notification_center = None
 
     def rightMouseDown_(self, event):
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
@@ -290,4 +299,29 @@ class VideoLocalWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         settings.video.auto_rotate_cameras = not settings.video.auto_rotate_cameras
         settings.save()
+
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_VideoDeviceDidChangeCamera(self, notification):
+        if self.renderer is not None:
+            self.renderer.producer = None
+            self.renderer.producer = SIPApplication.video_device.producer
+
+
+class LocalTitleBarView(NSObject):
+    view = objc.IBOutlet()
+    textLabel = objc.IBOutlet()
+    
+    def init(self):
+        self = super(LocalTitleBarView, self).init()
+        if self:
+            NSBundle.loadNibNamed_owner_("VideoLocalTitleBarView", self)
+        
+        return self
+    
+    def close(self):
+        self.view.removeFromSuperview()
+
 

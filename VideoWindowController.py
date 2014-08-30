@@ -75,7 +75,6 @@ class VideoStreamOverlayView(NSView):
     _data = None
     aspect_ratio_initialized = False
 
-
     def mouseDown_(self, event):
         self.window().delegate().mouseDown_(event)
 
@@ -97,6 +96,9 @@ class VideoStreamOverlayView(NSView):
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
+        if self.window().delegate().full_screen_in_progress:
+            return
+        
         data = self._data
         if data is None:
             return
@@ -191,12 +193,7 @@ class VideoWindowController(NSWindowController):
             self.valid_aspect_ratios.append(self.aspect_ratio)
         
         frame = self.window().frame()
-        frame.size.width = 640
-        try:
-            frame.size.height = frame.size.width / self.aspect_ratio
-        except TypeError:
-            pass
-        
+        frame.size.height = frame.size.width / self.aspect_ratio
         self.window().setFrame_display_(frame, True)
         self.window().center()
 
@@ -208,7 +205,6 @@ class VideoWindowController(NSWindowController):
             return
 
         NSBundle.loadNibNamed_owner_("VideoWindow", self)
-
         self.window().registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
         self.window().orderOut_(None)
         self.window().center()
@@ -403,22 +399,14 @@ class VideoWindowController(NSWindowController):
             frame = self.window().frame()
             currentSize = frame.size
             scaledSize = currentSize
-            try:
-                scaledSize.height = scaledSize.width / self.aspect_ratio
-            except TypeError:
-                self.updating_aspect_ratio = False
-                return
+            scaledSize.height = scaledSize.width / self.aspect_ratio
             frame.size = scaledSize
             self.window().setFrame_display_animate_(frame, True, False)
         elif self.initial_aspect_ratio is not None:
             frame = self.window().frame()
             currentSize = frame.size
             scaledSize = currentSize
-            try:
-                scaledSize.height = scaledSize.width / self.initial_aspect_ratio
-            except TypeError:
-                self.updating_aspect_ratio = False
-                return
+            scaledSize.height = scaledSize.width / self.initial_aspect_ratio
             frame.size = scaledSize
             self.window().setFrame_display_animate_(frame, True, False)
         self.updating_aspect_ratio = False
@@ -519,13 +507,18 @@ class VideoWindowController(NSWindowController):
         else:
             self.goToFullScreen()
 
+    def windowWillEnterFullScreen_(self, notification):
+        self.full_screen_in_progress = True
+
+    def windowWillExitFullScreen_(self, notification):
+        self.full_screen_in_progress = True
+
     def windowDidEnterFullScreen_(self, notification):
         self.sessionController.log_debug('windowDidEnterFullScreen_ %s' % self)
         if self.window():
             if self.streamController.ended:
                 self.window().orderOut_(self)
                 return
-
 
         self.full_screen_in_progress = False
         self.full_screen = True
