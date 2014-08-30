@@ -7,28 +7,26 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoLocalWindowController">
             <connections>
-                <outlet property="videoImage" destination="Ha3-SE-TDq" id="br8-J1-63C"/>
-                <outlet property="videoView" destination="EiT-Mj-1SZ" id="Ndj-L7-eYs"/>
+                <outlet property="videoView" destination="cMz-OM-B9k" id="wPb-Ko-LYS"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hasShadow="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="NSPanel">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" HUD="YES"/>
+        <window autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" showsToolbarButton="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="633" y="334" width="531" height="300"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <value key="minSize" type="size" width="531" height="300"/>
-            <view key="contentView" id="EiT-Mj-1SZ" customClass="VideoStreamOverlayView">
+            <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="Ha3-SE-TDq">
-                        <rect key="frame" x="-3" y="-3" width="537" height="306"/>
+                    <customView id="cMz-OM-B9k" customClass="VideoStreamOverlayView">
+                        <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <imageCell key="cell" continuous="YES" alignment="left" imageScaling="proportionallyUpOrDown" imageFrameStyle="grayBezel" id="bHc-Rj-kJE"/>
-                    </imageView>
+                    </customView>
                 </subviews>
             </view>
             <connections>

@@ -42,6 +42,12 @@
 		1F17D31617F9825D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D31017F9825D00CB74EC /* database-remote-off.png */; };
 		1F17D31717F9825D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D31017F9825D00CB74EC /* database-remote-off.png */; };
 		1F17D31817F9825D00CB74EC /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D31017F9825D00CB74EC /* database-remote-off.png */; };
+		1F194A8219B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
+		1F194A8319B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
+		1F194A8419B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
+		1F194A8519B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
+		1F194A8619B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
+		1F194A8719B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
 		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
@@ -589,19 +595,16 @@
 		1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
-		1F48BF3C18E51716004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
 		1F48BF3D18E51716004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
 		1F48BF3E18E51716004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F48BF3F18E5171F004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF4018E5171F004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF4118E5171F004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
-		1F48BF4218E5171F004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
 		1F48BF4318E5171F004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
 		1F48BF4418E5171F004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F48BF4518E51728004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF4618E51728004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF4718E51728004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
-		1F48BF4818E51728004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
 		1F48BF4918E51728004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
 		1F48BF4A18E51728004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F4B789119AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
@@ -1398,7 +1401,6 @@
 		1FC80F5A192E3E1F00BD62F4 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1FC80F5B192E3E1F00BD62F4 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1FC80F5C192E3E1F00BD62F4 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
-		1FC80F5D192E3E1F00BD62F4 /* libSDL2-2.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */; };
 		1FC80F5E192E3E1F00BD62F4 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
 		1FC80F5F192E3E1F00BD62F4 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
@@ -2270,7 +2272,6 @@
 				1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
 				1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
 				1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
-				1F48BF3C18E51716004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
 				1F48BF3D18E51716004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
 				1F48BF3E18E51716004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */,
@@ -2385,7 +2386,6 @@
 				1F48BF3F18E5171F004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
 				1F48BF4018E5171F004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
 				1F48BF4118E5171F004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
-				1F48BF4218E5171F004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
 				1F48BF4318E5171F004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
 				1F48BF4418E5171F004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
@@ -2500,7 +2500,6 @@
 				1FC80F5A192E3E1F00BD62F4 /* libavcodec.55.dylib in Copy Frameworks */,
 				1FC80F5B192E3E1F00BD62F4 /* libavformat.55.dylib in Copy Frameworks */,
 				1FC80F5C192E3E1F00BD62F4 /* libavutil.52.dylib in Copy Frameworks */,
-				1FC80F5D192E3E1F00BD62F4 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
 				1FC80F5E192E3E1F00BD62F4 /* libswscale.2.dylib in Copy Frameworks */,
 				1FC80F5F192E3E1F00BD62F4 /* libx264.142.dylib in Copy Frameworks */,
 				1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */,
@@ -2695,7 +2694,6 @@
 				1F48BF4518E51728004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
 				1F48BF4618E51728004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
 				1F48BF4718E51728004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
-				1F48BF4818E51728004D41B1 /* libSDL2-2.0.0.dylib in Copy Frameworks */,
 				1F48BF4918E51728004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
 				1F48BF4A18E51728004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */,
@@ -2761,6 +2759,13 @@
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F17D30F17F9825D00CB74EC /* database-local-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-local-off.png"; path = "icons/database-local-off.png"; sourceTree = SOURCE_ROOT; };
 		1F17D31017F9825D00CB74EC /* database-remote-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-remote-off.png"; path = "icons/database-remote-off.png"; sourceTree = SOURCE_ROOT; };
+		1F194A8819B1F06200CE5A0F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F194A8A19B1F06700CE5A0F /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F194A8B19B1F06800CE5A0F /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F194A8C19B1F06A00CE5A0F /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F194A8D19B1F9C000CE5A0F /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F194A8E19B1F9C200CE5A0F /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F194A8F19B1F9C400CE5A0F /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
@@ -2803,17 +2808,10 @@
 		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.55.dylib; path = Distribution/Frameworks/libavcodec.55.dylib; sourceTree = "<group>"; };
 		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.55.dylib; path = Distribution/Frameworks/libavformat.55.dylib; sourceTree = "<group>"; };
 		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.52.dylib; path = Distribution/Frameworks/libavutil.52.dylib; sourceTree = "<group>"; };
-		1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "Distribution/Frameworks/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		1F48BF3118E51466004D41B1 /* libswscale.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.2.dylib; path = Distribution/Frameworks/libswscale.2.dylib; sourceTree = "<group>"; };
 		1F48BF3218E5146E004D41B1 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.142.dylib; path = Distribution/Frameworks/libx264.142.dylib; sourceTree = "<group>"; };
 		1F4B789719AEAEC200F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1F4B789919AEAEC700F854CB /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1F4B789A19AEAEC800F854CB /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1F4B789B19AEAEC900F854CB /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1F4B78A419AEAED600F854CB /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1F4B78A519AEAED700F854CB /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1F4B78A619AEAED700F854CB /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
 		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
@@ -3103,6 +3101,9 @@
 		1FE5F5DC18EF3ED300EDEE20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
 		1FE5F5DE18EF3ED900EDEE20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
+		1FED61AE19B1D0E3001F5F44 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1FED61AF19B1D0E6001F5F44 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1FED61B019B1D0E9001F5F44 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF32B4C17EC83F000E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
@@ -3546,6 +3547,7 @@
 				1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */,
 				1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */,
 				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
+				1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */,
 				1F6EF7FE18E637E0008592D2 /* VideoLocalWindowController.py */,
 				1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */,
 				1FF63CD019128A1400A502FB /* VideoNativeLocalWindowController.py */,
@@ -3579,7 +3581,6 @@
 				1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */,
 				1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */,
 				1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */,
-				1F48BF3018E51466004D41B1 /* libSDL2-2.0.0.dylib */,
 				1F48BF3118E51466004D41B1 /* libswscale.2.dylib */,
 				1F48BF3218E5146E004D41B1 /* libx264.142.dylib */,
 				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
@@ -4401,6 +4402,7 @@
 				1F2272E912B554F50010A8B2 /* answering_machine_tone.wav in Resources */,
 				1F2272EA12B554F50010A8B2 /* dtmf_0_tone.wav in Resources */,
 				1F2272EB12B554F50010A8B2 /* dtmf_1_tone.wav in Resources */,
+				1F194A8319B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
 				1F2272EC12B554F50010A8B2 /* dtmf_2_tone.wav in Resources */,
 				1F2272ED12B554F50010A8B2 /* dtmf_3_tone.wav in Resources */,
 				1F2272EE12B554F50010A8B2 /* dtmf_4_tone.wav in Resources */,
@@ -4832,6 +4834,7 @@
 				1F35D05117894FFF00C6FE38 /* PresenceInfoPanel.xib in Resources */,
 				1F35D05217894FFF00C6FE38 /* PresenceInfoController.py in Resources */,
 				1F35D05317894FFF00C6FE38 /* WorldMapView.py in Resources */,
+				1F194A8519B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
 				1F35D05417894FFF00C6FE38 /* location.png in Resources */,
 				1F2436821912B23700E71253 /* VideoNativeLocalWindow.xib in Resources */,
 				1F35D05E17894FFF00C6FE38 /* BlockedContact.py in Resources */,
@@ -4971,6 +4974,7 @@
 				1F8DC382135084FA0034815C /* dtmf_C_tone.wav in Resources */,
 				1F8DC383135084FA0034815C /* dtmf_D_tone.wav in Resources */,
 				1F8DC384135084FA0034815C /* dtmf_pound_tone.wav in Resources */,
+				1F194A8419B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
 				1F8DC385135084FA0034815C /* dtmf_star_tone.wav in Resources */,
 				1F8DC386135084FA0034815C /* hangup_tone.wav in Resources */,
 				1F8DC387135084FA0034815C /* hold_tone.wav in Resources */,
@@ -5151,6 +5155,7 @@
 				1FC80E10192E3E1F00BD62F4 /* ContactListModel.py in Resources */,
 				1FC80E11192E3E1F00BD62F4 /* reconnect.png in Resources */,
 				1FC80E12192E3E1F00BD62F4 /* SessionController.py in Resources */,
+				1F194A8619B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
 				1FC80E13192E3E1F00BD62F4 /* HorizontalBoxView.py in Resources */,
 				1FC80E14192E3E1F00BD62F4 /* Contact.xib in Resources */,
 				1FC80E15192E3E1F00BD62F4 /* close.png in Resources */,
@@ -5503,6 +5508,7 @@
 				1FCA7DB519546B0B00765366 /* MediaStream.py in Resources */,
 				1FCA7DB619546B0B00765366 /* AccountSettings.py in Resources */,
 				1FCA7DB719546B0B00765366 /* AccountSettings.xib in Resources */,
+				1F194A8719B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
 				1FCA7DB819546B0B00765366 /* answering_machine_tone.wav in Resources */,
 				1FCA7DB919546B0B00765366 /* dtmf_0_tone.wav in Resources */,
 				1FCA7DBA19546B0B00765366 /* dtmf_1_tone.wav in Resources */,
@@ -5796,6 +5802,7 @@
 				1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */,
 				1FB9B1251095BFF500284E18 /* dtmf_B_tone.wav in Resources */,
 				1FB9B1261095BFF500284E18 /* dtmf_C_tone.wav in Resources */,
+				1F194A8219B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
 				1FB9B1271095BFF500284E18 /* dtmf_D_tone.wav in Resources */,
 				1FB9B1281095BFF500284E18 /* dtmf_pound_tone.wav in Resources */,
 				1FB9B1291095BFF500284E18 /* dtmf_star_tone.wav in Resources */,
@@ -6050,6 +6057,17 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
+		1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F194A8819B1F06200CE5A0F /* en */,
+				1F194A8A19B1F06700CE5A0F /* ro */,
+				1F194A8B19B1F06800CE5A0F /* es */,
+				1F194A8C19B1F06A00CE5A0F /* pt */,
+			);
+			name = VideoLocalTitleBarView.xib;
+			sourceTree = "<group>";
+		};
 		1F2436841912B23700E71253 /* VideoNativeLocalWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -6098,9 +6116,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B789719AEAEC200F854CB /* en */,
-				1F4B789919AEAEC700F854CB /* ro */,
-				1F4B789A19AEAEC800F854CB /* es */,
-				1F4B789B19AEAEC900F854CB /* pt */,
+				1F194A8D19B1F9C000CE5A0F /* ro */,
+				1F194A8E19B1F9C200CE5A0F /* es */,
+				1F194A8F19B1F9C400CE5A0F /* pt */,
 			);
 			name = VideoWindow.xib;
 			sourceTree = "<group>";
@@ -6109,9 +6127,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B78A219AEAED300F854CB /* en */,
-				1F4B78A419AEAED600F854CB /* ro */,
-				1F4B78A519AEAED700F854CB /* es */,
-				1F4B78A619AEAED700F854CB /* pt */,
+				1FED61AE19B1D0E3001F5F44 /* ro */,
+				1FED61AF19B1D0E6001F5F44 /* es */,
+				1FED61B019B1D0E9001F5F44 /* pt */,
 			);
 			name = VideoLocalWindow.xib;
 			sourceTree = "<group>";
