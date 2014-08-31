@@ -426,6 +426,7 @@ class VideoController(MediaStream):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
+        skip_disconnect_panel = False
         if host is None or host.default_ip is None:
             reason = NSLocalizedString("No IP Address", "Label")
         else:
@@ -435,6 +436,7 @@ class VideoController(MediaStream):
                     reason = NSLocalizedString("Busy Here", "Label")
                 elif data.code == 487:
                     reason = NSLocalizedString("Call Cancelled", "Label")
+                    skip_disconnect_panel = True
                 elif data.code == 603:
                     reason = NSLocalizedString("Call Declined", "Label")
                 elif data.code == 408:
@@ -447,7 +449,8 @@ class VideoController(MediaStream):
                 elif data.code >= 500 and data.code < 600:
                     reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
 
-        self.videoWindowController.showDisconnectedPanel(reason)
+        if not skip_disconnect_panel:
+            self.videoWindowController.showDisconnectedPanel(reason)
         self.stopTimers()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
