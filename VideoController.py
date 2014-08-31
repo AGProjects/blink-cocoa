@@ -446,6 +446,8 @@ class VideoController(MediaStream):
                         reason = NSLocalizedString("User Unreachable", "Label")
                 elif data.code == 480:
                     reason = NSLocalizedString("User Not Online", "Label")
+                elif data.code == 482:
+                    reason = NSLocalizedString("User Unreachable", "Label")
                 elif data.code >= 500 and data.code < 600:
                     reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
 
