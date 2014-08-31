@@ -205,11 +205,11 @@ class VideoWindowController(NSWindowController):
         self.window().setFrame_display_(frame, True)
         self.window().center()
 
-    def init_renderer(self):
-        if self.streamController.stream is None:
+    def init_window(self):
+        if self.window() is not None:
             return
 
-        if self.window() is not None:
+        if self.streamController.stream is None:
             return
 
         NSBundle.loadNibNamed_owner_("VideoWindow", self)
@@ -415,7 +415,7 @@ class VideoWindowController(NSWindowController):
         if self.finished:
             return
 
-        self.init_renderer()
+        self.init_window()
         self.updateAspectRatio()
 
         if self.videoControlPanel is not None:
