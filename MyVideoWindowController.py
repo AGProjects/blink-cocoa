@@ -79,7 +79,7 @@ from util import run_in_gui_thread
 
 ALPHA = 1.0
 
-class VideoNativeLocalWindowController(NSWindowController):
+class MyVideoWindowController(NSWindowController):
     implements(IObserver)
 
 
@@ -96,9 +96,9 @@ class VideoNativeLocalWindowController(NSWindowController):
         return cls.alloc().init()
 
     def init(self):
-        self = super(VideoNativeLocalWindowController, self).init()
+        self = super(MyVideoWindowController, self).init()
         if self:
-            NSBundle.loadNibNamed_owner_("VideoNativeLocalWindow", self)
+            NSBundle.loadNibNamed_owner_("MyVideoLocalWindow", self)
             userdef = NSUserDefaults.standardUserDefaults()
             savedFrame = userdef.stringForKey_("NSWindow Frame MirrorWindow")
 
@@ -206,7 +206,7 @@ class VideoNativeLocalWindowController(NSWindowController):
         self.window().contentView().removeTrackingArea_(self.tracking_area)
         self.tracking_area = None
         BlinkLogger().log_debug('Dealloc %s' % self)
-        super(VideoNativeLocalWindowController, self).dealloc()
+        super(MyVideoWindowController, self).dealloc()
 
     @run_in_gui_thread
     def hide(self):

@@ -137,7 +137,7 @@ from SIPManager import MWIData
 from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
-from VideoNativeLocalWindowController import VideoNativeLocalWindowController
+from MyVideoWindowController import MyVideoWindowController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import (allocate_autorelease_pool,
@@ -2920,7 +2920,7 @@ class ContactWindowController(NSWindowController):
 
     def showLocalVideoWindow(self):
         if self.localVideoWindow is None:
-            self.localVideoWindow = VideoNativeLocalWindowController()
+            self.localVideoWindow = MyVideoWindowController()
 
         self.localVideoWindow.show()
 
