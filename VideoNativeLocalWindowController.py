@@ -89,6 +89,7 @@ class VideoNativeLocalWindowController(NSWindowController):
     closed_by_user = False
 
     videoView = objc.IBOutlet()
+    toogleMirrorButton = objc.IBOutlet()
  
 
     def __new__(cls, *args, **kwargs):
@@ -166,6 +167,11 @@ class VideoNativeLocalWindowController(NSWindowController):
         self.notification_center = None
         self.window().close()
 
+    @objc.IBAction
+    def userClickedMirrorButton_(self, sender):
+        self.videoView.mirrored = not self.videoView.mirrored
+        self.videoView.setMirroring()
+
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -225,8 +231,10 @@ class LocalVideoView(NSView):
     captureSession = None
     stillImageOutput = None
     videoOutput = None
+    videoPreviewLayer = None
     auto_rotate_menu_enabled = True
     mirrored = True
+
 
     aspect_ratio = None
     resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
@@ -385,15 +393,13 @@ class LocalVideoView(NSView):
                 return
 
             self.setWantsLayer_(True)
-            videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
-            videoPreviewLayer.setFrame_(self.layer().bounds())
-            videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
-            videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
-            videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
-            if self.mirrored:
-                videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
-                videoPreviewLayer.connection().setVideoMirrored_(True)
-            self.layer().addSublayer_(videoPreviewLayer)
+            self.videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
+            self.videoPreviewLayer.setFrame_(self.layer().bounds())
+            self.videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
+            self.videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
+            self.videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
+            self.setMirroring()
+            self.layer().addSublayer_(self.videoPreviewLayer)
 
             self.stillImageOutput = AVCaptureStillImageOutput.new()
             pixelFormat = NSNumber.numberWithInt_(kCVPixelFormatType_32BGRA)
@@ -403,6 +409,13 @@ class LocalVideoView(NSView):
 
         BlinkLogger().log_debug('Start aquire video %s' % self)
         self.captureSession.startRunning()
+
+    def setMirroring(self):
+        self.videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
+        if self.mirrored:
+            self.videoPreviewLayer.connection().setVideoMirrored_(True)
+        else:
+            self.videoPreviewLayer.connection().setVideoMirrored_(False)
 
     def getSnapshot(self):
         def capture_handler(sampleBuffer):
@@ -432,6 +445,7 @@ class LocalVideoView(NSView):
             BlinkLogger().log_debug('Stop aquire video %s' % self)
             self.captureSession.stopRunning()
             self.captureSession = None
+            self.videoPreviewLayer = None
 
 
 class BorderlessRoundWindow(NSPanel):

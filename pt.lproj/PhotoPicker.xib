@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -19,6 +19,7 @@
                 <outlet property="cropWindowImage" destination="135" id="138"/>
                 <outlet property="historyTabView" destination="10" id="159"/>
                 <outlet property="libraryCollectionView" destination="78" id="90"/>
+                <outlet property="mirrorButton" destination="5VV-K5-bNb" id="Ut4-D3-Luh"/>
                 <outlet property="photoView" destination="70" id="72"/>
                 <outlet property="previewButton" destination="14" id="56"/>
                 <outlet property="tabView" destination="8" id="118"/>
@@ -139,6 +140,17 @@
                                             <rect key="frame" x="2" y="7" width="466" height="20"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                         </progressIndicator>
+                                        <button id="5VV-K5-bNb">
+                                            <rect key="frame" x="2" y="6" width="20" height="21"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="m46-8i-yEw">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="userClickedMirrorButton:" target="-2" id="qb6-mO-lhj"/>
+                                            </connections>
+                                        </button>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -304,10 +316,10 @@ Gw
                 </subviews>
             </view>
         </window>
-        <button verticalHuggingPriority="750" id="RCl-Nd-JNc">
-            <rect key="frame" x="0.0" y="0.0" width="82" height="32"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <buttonCell key="cell" type="push" title="Botão" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="aW9-Lk-14o">
+        <button id="tZY-Zf-jhx">
+            <rect key="frame" x="0.0" y="0.0" width="20" height="21"/>
+            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+            <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="foj-1E-Y8k">
                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                 <font key="font" metaFont="system"/>
             </buttonCell>
@@ -315,5 +327,6 @@ Gw
     </objects>
     <resources>
         <image name="NSInfo" width="32" height="32"/>
+        <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
     </resources>
 </document>

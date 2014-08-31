@@ -178,6 +178,7 @@ class PhotoPicker(NSObject):
     cropButton = objc.IBOutlet()
     captureView = objc.IBOutlet()
     useButton = objc.IBOutlet()
+    mirrorButton = objc.IBOutlet()
     cameraTabView = objc.IBOutlet()
     historyTabView = objc.IBOutlet()
     countdownCheckbox = objc.IBOutlet()
@@ -207,6 +208,7 @@ class PhotoPicker(NSObject):
         self.captureButton.setHidden_(True)
         self.previewButton.setHidden_(False)
         self.countdownCheckbox.setHidden_(True)
+        self.mirrorButton.setHidden_(True)
         self.storage_folder = storage_folder
         self.high_res = high_res
 
@@ -224,7 +226,8 @@ class PhotoPicker(NSObject):
         if not self.history:
             self.tabView.selectTabViewItem_(self.cameraTabView)
             self.previewButton.setHidden_(True)
-            self.countdownCheckbox.setHidden_(False)
+            #self.countdownCheckbox.setHidden_(False)
+            self.mirrorButton.setHidden_(False)
             self.captureButton.setHidden_(False)
 
         self.notification_center =  NotificationCenter()
@@ -235,7 +238,6 @@ class PhotoPicker(NSObject):
         if not self.history:
             self.tabView.removeTabViewItem_(self.historyTabView)
         self.captureView.auto_rotate_menu_enabled = False
-        self.captureView.mirrored = False
 
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -247,6 +249,7 @@ class PhotoPicker(NSObject):
         self.captureView.setHidden_(True)
         self.previewButton.setHidden_(False)
         self.countdownCheckbox.setHidden_(True)
+        self.mirrorButton.setHidden_(True)
         self.captureButton.setHidden_(True)
         self.useButton.setEnabled_(True)
 
@@ -323,7 +326,8 @@ class PhotoPicker(NSObject):
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
             self.previewButton.setHidden_(True)
-            self.countdownCheckbox.setHidden_(False)
+            #self.countdownCheckbox.setHidden_(False)
+            self.mirrorButton.setHidden_(False)
             self.captureButton.setHidden_(False)
             self.useButton.setEnabled_(False)
 
@@ -333,7 +337,8 @@ class PhotoPicker(NSObject):
         self.captureView.setHidden_(False)
         self.captureView.show()
         self.previewButton.setHidden_(True)
-        self.countdownCheckbox.setHidden_(False)
+        #self.countdownCheckbox.setHidden_(False)
+        self.mirrorButton.setHidden_(False)
         self.captureButton.setHidden_(False)
         self.useButton.setEnabled_(False)
 
@@ -344,6 +349,7 @@ class PhotoPicker(NSObject):
             self.previewButton.setHidden_(True)
             self.captureButton.setHidden_(True)
             self.countdownCheckbox.setHidden_(True)
+            self.mirrorButton.setHidden_(True)
             self.countdownProgress.setHidden_(False)
             self.countdownProgress.startAnimation_(None)
             self.countdownProgress.setIndeterminate_(False)
@@ -354,6 +360,7 @@ class PhotoPicker(NSObject):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSDefaultRunLoopMode)
         else:
             self.countdownCheckbox.setHidden_(True)
+            self.mirrorButton.setHidden_(True)
             self.countdownProgress.setHidden_(True)
             self.executeCapture()
 
@@ -362,6 +369,7 @@ class PhotoPicker(NSObject):
             self.executeCapture()
             self.countdownProgress.stopAnimation_(None)
             self.countdownCheckbox.setHidden_(True)
+            self.mirrorButton.setHidden_(True)
             self.countdownProgress.setHidden_(True)
             self.timer.invalidate()
             self.timer = None
@@ -374,6 +382,10 @@ class PhotoPicker(NSObject):
         self.captureView.getSnapshot()
         NSSound.soundNamed_("Grab").play()
 
+    @objc.IBAction
+    def userClickedMirrorButton_(self, sender):
+        self.captureView.mirrored = not self.captureView.mirrored
+        self.captureView.setMirroring()
 
     @objc.IBAction
     def cropWindowButtonClicked_(self, sender):

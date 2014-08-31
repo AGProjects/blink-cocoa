@@ -26,6 +26,17 @@
                         <rect key="frame" x="-10" y="-5" width="492" height="252"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>
+                    <button id="sGj-Hi-JkA">
+                        <rect key="frame" x="446" y="222" width="20" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="Xad-RY-ylh">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedMirrorButton:" target="-2" id="wZl-tn-Igd"/>
+                        </connections>
+                    </button>
                     <button hidden="YES" id="0vJ-dE-guV">
                         <rect key="frame" x="2" y="225" width="18" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -47,5 +58,6 @@
     </objects>
     <resources>
         <image name="close" width="204" height="204"/>
+        <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
     </resources>
 </document>
