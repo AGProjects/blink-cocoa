@@ -73,7 +73,22 @@ from util import run_in_gui_thread
 
 class VideoStreamOverlayView(NSView):
     _data = None
-    aspect_ratio_initialized = False
+    renderer = None
+    aspect_ratio = None
+
+    def setProducer(self, producer):
+        if self.renderer is None:
+            self.renderer = FrameBufferVideoRenderer(self.handle_frame)
+        self.renderer.producer = producer
+
+    def close(self):
+        if  self.renderer is not None:
+            self.renderer.close()
+            self.renderer = None
+        self.removeFromSuperview()
+
+    def dealloc(self):
+        super(VideoStreamOverlayView, self).dealloc()
 
     def mouseDown_(self, event):
         self.window().delegate().mouseDown_(event)
@@ -89,9 +104,9 @@ class VideoStreamOverlayView(NSView):
 
     def handle_frame(self, frame, width, height):
         self._data = (frame, width, height)
-        if not self.aspect_ratio_initialized:
+        if self.aspect_ratio is None:
+            self.aspect_ratio = floor((float(width) / height) * 100)/100
             self.window().delegate().init_aspect_ratio(width, height)
-            self.aspect_ratio_initialized = True
 
         self.setNeedsDisplay_(True)
 
@@ -133,13 +148,11 @@ class VideoWindowController(NSWindowController):
     tracking_area = None
     flipped = False
     aspect_ratio = None
-    initial_aspect_ratio = None
     titleBarView = None
     initialLocation = None
     local_video_visible_before_fullscreen = False
     is_key_window = False
     updating_aspect_ratio = False
-    renderer = None
 
     videoView = objc.IBOutlet()
 
@@ -170,14 +183,9 @@ class VideoWindowController(NSWindowController):
             return
 
         self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
-        try:
-            self.aspect_ratio = floor((float(width) / height) * 100)/100
-            self.sessionController.log_info('Remote aspect ratio is %s' % self.aspect_ratio)
-        except (TypeError, AttributeError):
-            self.aspect_ratio = 1.77
-        
-        self.initial_aspect_ratio = self.aspect_ratio
-        
+        self.aspect_ratio = floor((float(width) / height) * 100)/100
+        self.sessionController.log_info('Remote aspect ratio is %s' % self.aspect_ratio)
+
         found = False
         for ratio in self.valid_aspect_ratios:
             if ratio is None:
@@ -198,10 +206,10 @@ class VideoWindowController(NSWindowController):
         self.window().center()
 
     def init_renderer(self):
-        if self.renderer is not None:
+        if self.streamController.stream is None:
             return
 
-        if self.streamController.stream is None:
+        if self.window() is not None:
             return
 
         NSBundle.loadNibNamed_owner_("VideoWindow", self)
@@ -230,8 +238,7 @@ class VideoWindowController(NSWindowController):
         if SIPSimpleSettings().video.keep_window_on_top:
             self.toogleAlwaysOnTop()
 
-        self.renderer = FrameBufferVideoRenderer(self.videoView.handle_frame)
-        self.renderer.producer = self.streamController.stream.producer
+        self.videoView.setProducer(self.streamController.stream.producer)
 
     def draggingEntered_(self, sender):
         if self.finished:
@@ -388,27 +395,18 @@ class VideoWindowController(NSWindowController):
         if not self.window():
             return
 
-        if self.renderer is None:
-            return
-
         if self.finished:
             return
 
-        self.updating_aspect_ratio = True
         if self.aspect_ratio is not None:
+            self.updating_aspect_ratio = True
             frame = self.window().frame()
             currentSize = frame.size
             scaledSize = currentSize
             scaledSize.height = scaledSize.width / self.aspect_ratio
             frame.size = scaledSize
             self.window().setFrame_display_animate_(frame, True, False)
-        elif self.initial_aspect_ratio is not None:
-            frame = self.window().frame()
-            currentSize = frame.size
-            scaledSize = currentSize
-            scaledSize.height = scaledSize.width / self.initial_aspect_ratio
-            frame.size = scaledSize
-            self.window().setFrame_display_animate_(frame, True, False)
+
         self.updating_aspect_ratio = False
 
     @run_in_gui_thread
@@ -557,6 +555,7 @@ class VideoWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
+        self.videoView.close()
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         self.sessionController.removeVideoFromSession()
         if not self.sessionController.hasStreamOfType("chat"):
@@ -584,10 +583,6 @@ class VideoWindowController(NSWindowController):
         self.videoControlPanel.close()
         self.videoControlPanel = None
 
-        if self.renderer is not None:
-            self.renderer.close()
-            self.renderer = None
-        
         if self.window():
             self.window().performClose_(None)
 

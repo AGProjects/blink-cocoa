@@ -51,7 +51,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 
 from MediaStream import STREAM_PROPOSING
 from util import run_in_gui_thread
-from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
+from sipsimple.core import VideoCamera
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -104,8 +104,7 @@ class VideoLocalWindowController(NSWindowController):
         self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
         
-        self.renderer = FrameBufferVideoRenderer(self.videoView.handle_frame)
-        self.renderer.producer = SIPApplication.video_device.producer
+        self.videoView.setProducer(SIPApplication.video_device.producer)
         self.notification_center =  NotificationCenter()
         self.notification_center.add_observer(self, name="VideoDeviceDidChangeCamera")
 
@@ -255,9 +254,8 @@ class VideoLocalWindowController(NSWindowController):
         self.log_debug('Close %s' % self)
         self.finished = True
         self.titleBarView.close()
+        self.videoView.close()
         self.window().close()
-        self.renderer.close()
-        self.renderer = None
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
         self.notification_center = None
 
@@ -305,9 +303,7 @@ class VideoLocalWindowController(NSWindowController):
         handler(notification)
 
     def _NH_VideoDeviceDidChangeCamera(self, notification):
-        if self.renderer is not None:
-            self.renderer.producer = None
-            self.renderer.producer = SIPApplication.video_device.producer
+        self.videoView.setProducer(SIPApplication.video_device.producer)
 
 
 class LocalTitleBarView(NSObject):

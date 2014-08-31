@@ -241,6 +241,7 @@ class VideoController(MediaStream):
             self.changeStatus(STREAM_IDLE)
 
         self.removeFromSession()
+        self.videoWindowController.close()
 
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
@@ -381,6 +382,8 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
+        self.videoWindowController.close()
+
     def _NH_MediaStreamDidEnd(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
 
@@ -399,7 +402,6 @@ class VideoController(MediaStream):
             self.sessionController.log_info(u"Video stream canceled")
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.videoWindowController.close()
 
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
         self.changeStatus(STREAM_RINGING)
