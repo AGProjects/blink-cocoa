@@ -38,9 +38,8 @@ from MediaStream import (MediaStream,
 from util import allocate_autorelease_pool, run_in_gui_thread
 
 
-class BlinkScreenSharingStream(ScreenSharingStream):
-    ServerHandler = ExternalVNCServerHandler
-    ViewerHandler = ExternalVNCViewerHandler
+ScreenSharingStream.ServerHandler = ExternalVNCServerHandler
+ScreenSharingStream.ViewerHandler = ExternalVNCViewerHandler
 
 
 class StatusItem(NSObject):
@@ -348,11 +347,11 @@ class ScreenSharingController(MediaStream):
 class ScreenSharingViewerController(ScreenSharingController):
     @classmethod
     def createStream(cls):
-        return BlinkScreenSharingStream("viewer")
+        return ScreenSharingStream(mode="viewer")
 
 
 class ScreenSharingServerController(ScreenSharingController):
     @classmethod
     def createStream(cls):
-        return BlinkScreenSharingStream("server")
+        return ScreenSharingStream(mode="server")
 
