@@ -785,6 +785,61 @@ class PreferencesController(NSWindowController, object):
                     account.tls.verify_server = settings.tls.verify_server
                     account.save()
 
+            if 'video.resolution' in notification.data.modified:
+                if settings.video.resolution == "vga":
+                    settings.video.h264.level = "3.0"
+                    settings.video.h264.max_resolution = "640x480"
+                    settings.video.h264.profile = "baseline"
+                elif settings.video.resolution in ("720p", "auto"):
+                    settings.video.h264.level = "3.1"
+                    settings.video.h264.profile = "baseline"
+                    settings.video.h264.max_resolution = "1280x720"
+                elif settings.video.resolution == "1080p":
+                    settings.video.h264.level = "4.0"
+                    settings.video.h264.profile = "high"
+                    settings.video.h264.max_resolution = "1920x1080"
+
+                settings.save()
+                self.settingViews["h264.level"].restore()
+                self.settingViews["h264.profile"].restore()
+                self.settingViews["h264.max_resolution"].restore()
+            elif 'video.h264.max_resolution' in notification.data.modified:
+                if settings.video.h264.max_resolution == (640, 480):
+                    settings.video.resolution = "vga"
+                    settings.video.h264.profile = "baseline"
+                    settings.video.h264.level = "3.0"
+                elif settings.video.h264.max_resolution == (1280, 720):
+                    settings.video.resolution = "720p"
+                    settings.video.h264.profile = "baseline"
+                    settings.video.h264.level = "3.1"
+                elif settings.video.h264.max_resolution == (1920, 1080):
+                    settings.video.resolution = "1080p"
+                    settings.video.h264.profile = "high"
+                    settings.video.h264.level = "4.0"
+                settings.save()
+                self.settingViews["video.resolution"].restore()
+                self.settingViews["h264.profile"].restore()
+                self.settingViews["h264.level"].restore()
+
+            elif 'video.h264.profile' in notification.data.modified:
+                if settings.video.h264.profile == "high":
+                    settings.video.h264.level = "4.0"
+                    settings.video.h264.max_resolution = "1920x1080"
+                elif settings.video.h264.profile == "baseline":
+                    if settings.video.h264.max_resolution == (1920, 1080):
+                        settings.video.h264.level = "3.1"
+                        settings.video.h264.max_resolution = "1280x720"
+                    else:
+                        if settings.video.h264.level == "4.0":
+                            settings.video.h264.level = "3.1"
+                elif settings.video.h264.profile == "main":
+                    if settings.video.h264.max_resolution == (640, 480):
+                        settings.video.h264.level = "3.1"
+                        settings.video.h264.max_resolution = "1280x720"
+                settings.save()
+                self.settingViews["h264.level"].restore()
+                self.settingViews["h264.max_resolution"].restore()
+
         if not self.saving and sender in (settings, self.selectedAccount()):
             for option in (o for o in notification.data.modified if o in self.settingViews):
                 self.settingViews[option].restore()
