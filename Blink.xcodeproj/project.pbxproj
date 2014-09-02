@@ -596,17 +596,14 @@
 		1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
 		1F48BF3D18E51716004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
-		1F48BF3E18E51716004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F48BF3F18E5171F004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF4018E5171F004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF4118E5171F004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
 		1F48BF4318E5171F004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
-		1F48BF4418E5171F004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F48BF4518E51728004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF4618E51728004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF4718E51728004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
 		1F48BF4918E51728004D41B1 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
-		1F48BF4A18E51728004D41B1 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1F4B789119AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789219AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789319AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
@@ -736,6 +733,12 @@
 		1F7EAC6418E0FA6500CA7B86 /* paused-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6018E0FA6500CA7B86 /* paused-red.png */; };
 		1F7EAC6718E0FA6E00CA7B86 /* pause-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */; };
 		1F7EAC6918E0FA6E00CA7B86 /* pause-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */; };
+		1F8436B119B65104001C3E59 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */; };
+		1F8436B219B6510A001C3E59 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */; };
+		1F8436B319B65110001C3E59 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */; };
+		1F8436B419B65115001C3E59 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */; };
+		1F8436B519B6511A001C3E59 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */; };
+		1F8436B619B6511F001C3E59 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */; };
 		1F85BE3D117CC33D0054888F /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1F8760B512C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
 		1F8760B612C026840090846C /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
@@ -1402,7 +1405,6 @@
 		1FC80F5B192E3E1F00BD62F4 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1FC80F5C192E3E1F00BD62F4 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
 		1FC80F5E192E3E1F00BD62F4 /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
-		1FC80F5F192E3E1F00BD62F4 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3218E5146E004D41B1 /* libx264.142.dylib */; };
 		1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
 		1FC80F61192E3E1F00BD62F4 /* libgcrypt.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722512B554000010A8B2 /* libgcrypt.11.dylib */; };
 		1FC80F62192E3E1F00BD62F4 /* libgnutls-extra.26.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */; };
@@ -2161,6 +2163,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F8436B219B6510A001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F22737112B5558A0010A8B2 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F22737212B5558A0010A8B2 /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -2269,11 +2272,11 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F8436B419B65115001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
 				1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
 				1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
 				1F48BF3D18E51716004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
-				1F48BF3E18E51716004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */,
 				1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */,
 				1F35D0A717894FFF00C6FE38 /* libgcrypt.11.dylib in Copy Frameworks */,
@@ -2385,9 +2388,9 @@
 			files = (
 				1F48BF3F18E5171F004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
 				1F48BF4018E5171F004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
+				1F8436B319B65110001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				1F48BF4118E5171F004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
 				1F48BF4318E5171F004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
-				1F48BF4418E5171F004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
 				1F8DC406135084FA0034815C /* libgcrypt.11.dylib in Copy Frameworks */,
 				1F8DC407135084FA0034815C /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -2497,11 +2500,11 @@
 			dstSubfolderSpec = 10;
 			files = (
 				1F58A9D119321ECB00460853 /* Sparkle.framework in Copy Frameworks */,
+				1F8436B519B6511A001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				1FC80F5A192E3E1F00BD62F4 /* libavcodec.55.dylib in Copy Frameworks */,
 				1FC80F5B192E3E1F00BD62F4 /* libavformat.55.dylib in Copy Frameworks */,
 				1FC80F5C192E3E1F00BD62F4 /* libavutil.52.dylib in Copy Frameworks */,
 				1FC80F5E192E3E1F00BD62F4 /* libswscale.2.dylib in Copy Frameworks */,
-				1FC80F5F192E3E1F00BD62F4 /* libx264.142.dylib in Copy Frameworks */,
 				1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */,
 				1FC80F61192E3E1F00BD62F4 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1FC80F62192E3E1F00BD62F4 /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -2610,6 +2613,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F8436B619B6511F001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				1FCA7EBD19546B0B00765366 /* Python.framework in Copy Frameworks */,
 				1FCA7EBE19546B0B00765366 /* libgcrypt.11.dylib in Copy Frameworks */,
 				1FCA7EBF19546B0B00765366 /* libgnutls-extra.26.dylib in Copy Frameworks */,
@@ -2691,11 +2695,11 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F8436B119B65104001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				1F48BF4518E51728004D41B1 /* libavcodec.55.dylib in Copy Frameworks */,
 				1F48BF4618E51728004D41B1 /* libavformat.55.dylib in Copy Frameworks */,
 				1F48BF4718E51728004D41B1 /* libavutil.52.dylib in Copy Frameworks */,
 				1F48BF4918E51728004D41B1 /* libswscale.2.dylib in Copy Frameworks */,
-				1F48BF4A18E51728004D41B1 /* libx264.142.dylib in Copy Frameworks */,
 				1F69E8ED17F561E600B98B1E /* Sparkle.framework in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1F27973915D24F8600FB33D9 /* libgcrypt.11.dylib in Copy Frameworks */,
@@ -2809,7 +2813,6 @@
 		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.55.dylib; path = Distribution/Frameworks/libavformat.55.dylib; sourceTree = "<group>"; };
 		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.52.dylib; path = Distribution/Frameworks/libavutil.52.dylib; sourceTree = "<group>"; };
 		1F48BF3118E51466004D41B1 /* libswscale.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.2.dylib; path = Distribution/Frameworks/libswscale.2.dylib; sourceTree = "<group>"; };
-		1F48BF3218E5146E004D41B1 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.142.dylib; path = Distribution/Frameworks/libx264.142.dylib; sourceTree = "<group>"; };
 		1F4B789719AEAEC200F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
@@ -2990,6 +2993,7 @@
 		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
 		1F7EAC6018E0FA6500CA7B86 /* paused-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "paused-red.png"; path = "icons/paused-red.png"; sourceTree = SOURCE_ROOT; };
 		1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "pause-white.png"; path = "icons/pause-white.png"; sourceTree = SOURCE_ROOT; };
+		1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.142.dylib; path = Distribution/Frameworks/libx264.142.dylib; sourceTree = "<group>"; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F87B6EE1477D57000BDF25A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
@@ -3578,11 +3582,11 @@
 		1FEDE7CF17AFD4C50038C579 /* C-Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				1F8436AA19B64EAE001C3E59 /* libx264.142.dylib */,
 				1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */,
 				1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */,
 				1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */,
 				1F48BF3118E51466004D41B1 /* libswscale.2.dylib */,
-				1F48BF3218E5146E004D41B1 /* libx264.142.dylib */,
 				DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */,
 				1F22722512B554000010A8B2 /* libgcrypt.11.dylib */,
 				1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */,
@@ -6637,6 +6641,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6675,6 +6680,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6716,6 +6722,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6754,6 +6761,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6794,6 +6802,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
@@ -6832,6 +6841,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
@@ -6870,6 +6880,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6908,6 +6919,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6949,6 +6961,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6988,6 +7001,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -7027,6 +7041,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -7064,6 +7079,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
+					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
