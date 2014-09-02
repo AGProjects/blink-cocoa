@@ -217,7 +217,7 @@ class VideoWindowController(NSWindowController):
         self.window().orderOut_(None)
         self.window().center()
         self.window().setDelegate_(self)
-        self.sessionController.log_info('Init %s in %s' % (self.window(), self))
+        self.sessionController.log_debug('Init %s in %s' % (self.window(), self))
         self.window().makeFirstResponder_(self.videoView)
         self.window().setTitle_(self.title)
         self.updateTrackingAreas()
