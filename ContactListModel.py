@@ -456,7 +456,6 @@ class BlinkContact(NSObject):
             return (user, '')
 
     def matchesURI(self, uri, exact_match=False):
-
         def match(me, candidate, exact_match=False):
             # check exact match
             if not len(candidate[1]):
@@ -503,8 +502,10 @@ class BlinkContact(NSObject):
         if hasattr(self, 'note'):
             if self.note is not None and unicode(uri).lower() in self.note.lower():
                 return True
-
-        return any(match(self.split_uri(item.uri), candidate, exact_match) for item in self.uris if item.uri)
+        try:
+            return any(match(self.split_uri(item.uri), candidate, exact_match) for item in self.uris if item.uri)
+        except TypeError:
+            return False
 
 
 class BlinkConferenceContact(BlinkContact):
