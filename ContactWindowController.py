@@ -1159,7 +1159,6 @@ class ContactWindowController(NSWindowController):
         self.accounts[position].subscribe_presence_state = 'ended'
         self.accounts[position].subscribe_presence_timestamp = None
 
-
     @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
         try:
@@ -1173,46 +1172,6 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_timestamp = time.time()
             self.accounts[position].subscribe_presence_state = 'active'
             self.accounts[position].subscribe_presence_purged = False
-
-        resource_map = notification.data.resource_map
-        BlinkLogger().log_debug('Account %s got availability %s for %d SIP URIs: %s' % (notification.sender.id, 'full state' if notification.data.full_state else 'update', len(resource_map.keys()), resource_map.keys()))
-
-        blink_contacts_set = set()
-        for key, value in resource_map.iteritems():
-            m = self.model.getPresenceContactsMatchingURI(key, exact_match=True)
-            if m is None:
-                continue
-
-            for b in m:
-                blink_contacts_set.add(b)
-
-        changed_blink_contacts = []
-        for blink_contact, group in blink_contacts_set:
-            if blink_contact.contact is None:
-                continue
-            contact_uris = list(uri.uri for uri in iter(blink_contact.contact.uris))
-            resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
-            if resources:
-                changed = blink_contact.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(group, AllContactsBlinkGroup))
-
-                if changed:
-                    BlinkLogger().log_debug('Availability for %s in group %s has changed' % (blink_contact.name, group.name))
-                    changed_blink_contacts.append((blink_contact,group))
-            else:
-                BlinkLogger().log_debug('%s in group %s has not resources in PIDF' % (blink_contact.name, group.name))
-
-        for blink_contact, group in changed_blink_contacts:
-            self.contactOutline.reloadItem_reloadChildren_(blink_contact, False)
-            if isinstance(group, AllContactsBlinkGroup):
-                online_group_changed = blink_contact.addToOrRemoveFromOnlineGroup()
-                if online_group_changed:
-                    self.contactOutline.reloadItem_reloadChildren_(online_group_changed, True)
-
-        if changed_blink_contacts:
-            BlinkLogger().log_debug("Availability for %d out of %d contacts have been updated" % (len(changed_blink_contacts), len(blink_contacts_set)))
-        else:
-            BlinkLogger().log_debug("No Availability has changed")
-
 
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()

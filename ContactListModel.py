@@ -719,6 +719,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
         NotificationCenter().add_observer(self, name="BlinkPresenceFailed")
+        NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
 
     @property
     def pidfs(self):
@@ -789,6 +790,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().remove_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().remove_observer(self, name="BlinkPresenceFailed")
         NotificationCenter().remove_observer(self, name="SystemDidWakeUpFromSleep")
+        NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
 
         self.contact = None
         if self.timer:
@@ -824,6 +826,28 @@ class BlinkPresenceContact(BlinkContact):
         if self.application_will_end:
             return
         self.purge_pidfs_for_account(notification.sender.id)
+
+    @allocate_autorelease_pool
+    @run_in_green_thread
+    def _NH_SIPAccountGotPresenceState(self, notification):
+        resource_map = notification.data.resource_map
+        for key, value in resource_map.iteritems():
+            if self.matchesURI(key, True) and self.contact is not None:
+                contact_uris = list(uri.uri for uri in iter(self.contact.uris))
+                resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
+                if resources:
+                    changed = self.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
+                    if changed:
+                        BlinkLogger().log_debug('Availability for %s %s by account %s has changed' % (self.name, key, notification.sender.id))
+                        self.reloadModelItem(self)
+                        if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
+                            online_group_changed = self.addToOrRemoveFromOnlineGroup()
+                            if online_group_changed:
+                                self.reloadModelItem(online_group_changed)
+
+    @run_in_gui_thread
+    def reloadModelItem(self, item):
+        NSApp.delegate().contactsWindowController.model.contactOutline.reloadItem_reloadChildren_(item, True)
 
     def _NH_BlinkPresenceFailed(self, notification):
         if self.application_will_end:
@@ -1478,6 +1502,9 @@ class BlinkPresenceContact(BlinkContact):
         if detail != self.detail:
             self.detail = detail
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
+
+class AllContactsBlinkGroupBlinkPresenceContact(BlinkPresenceContact):
+    pass
 
 class BlinkOnlineContact(BlinkPresenceContact):
     pass
@@ -3508,7 +3535,9 @@ class ContactListModel(CustomListModel):
         contact = notification.sender
 
         blink_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
-        self.all_contacts_group.contacts.append(blink_contact)
+        all_blink_contact = AllContactsBlinkGroupBlinkPresenceContact(contact, log_presence_transitions = True)
+
+        self.all_contacts_group.contacts.append(all_blink_contact)
         self.all_contacts_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self.all_contacts_group)
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
