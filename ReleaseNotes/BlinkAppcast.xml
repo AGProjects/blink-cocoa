@@ -18,6 +18,18 @@
                        />
          </item>
          <item>
+            <title>Version 4.4.2</title>
+            <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sat Sep  6 07:39:06 UYT 2014</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-video-beta.phtml?update"
+                       sparkle:version="4.4.2"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 4.4.0</title>
             <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
