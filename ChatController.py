@@ -677,6 +677,8 @@ class ChatController(MediaStream):
     def replay_history(self, scrollToMessageId=None):
         if not self:
             return
+        if self.sessionController is None:
+            return
 
         blink_contact = self.sessionController.contact
         if not blink_contact:
