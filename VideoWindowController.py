@@ -128,12 +128,46 @@ class VideoStreamOverlayView(NSView):
         context = NSGraphicsContext.currentContext().CIContext()
         context.drawImage_inRect_fromRect_(image, self.frame(), image.extent())
 
+    def draggingEntered_(self, sender):
+        pboard = sender.draggingPasteboard()
+        if pboard.types().containsObject_(NSFilenamesPboardType):
+            pboard = sender.draggingPasteboard()
+            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f) and not os.path.isdir(f):
+                    return NSDragOperationNone
+            return NSDragOperationCopy
+        return NSDragOperationNone
+
+    def prepareForDragOperation_(self, sender):
+        pboard = sender.draggingPasteboard()
+        if pboard.types().containsObject_(NSFilenamesPboardType):
+            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
+            for f in fnames:
+                if not os.path.isfile(f) and not os.path.isdir(f):
+                    return False
+            return True
+        return False
+
+    def performDragOperation_(self, sender):
+        pboard = sender.draggingPasteboard()
+        if pboard.types().containsObject_(NSFilenamesPboardType):
+            filenames = pboard.propertyListForType_(NSFilenamesPboardType)
+            return self.sendFiles(filenames)
+        return False
+
+    def sendFiles(self, fnames):
+        filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
+        if filenames and hasattr(self.window().delegate(), "sessionController"):
+            self.window().delegate().sessionController.sessionControllersManager.send_files_to_contact(self.window().delegate().sessionController.account, self.window().delegate().sessionController.target_uri, filenames)
+            return True
+        return False
+
 
 class VideoWindowController(NSWindowController):
 
     valid_aspect_ratios = [None, 1.33, 1.77]
     aspect_ratio_descriptions = {1.33: '4/3', 1.77: '16/9'}
-    finished = False
     videoControlPanel = None
     full_screen = False
     initialLocation = None
@@ -213,7 +247,6 @@ class VideoWindowController(NSWindowController):
             return
 
         NSBundle.loadNibNamed_owner_("VideoWindow", self)
-        self.window().registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
         self.window().orderOut_(None)
         self.window().center()
         self.window().setDelegate_(self)
@@ -239,50 +272,6 @@ class VideoWindowController(NSWindowController):
             self.toogleAlwaysOnTop()
 
         self.videoView.setProducer(self.streamController.stream.producer)
-
-    def draggingEntered_(self, sender):
-        if self.finished:
-            return
-
-        pboard = sender.draggingPasteboard()
-        if pboard.types().containsObject_(NSFilenamesPboardType):
-            pboard = sender.draggingPasteboard()
-            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
-            for f in fnames:
-                if not os.path.isfile(f) and not os.path.isdir(f):
-                    return NSDragOperationNone
-            return NSDragOperationCopy
-        return NSDragOperationNone
-
-    def prepareForDragOperation_(self, sender):
-        if self.finished:
-            return
-
-        pboard = sender.draggingPasteboard()
-        if pboard.types().containsObject_(NSFilenamesPboardType):
-            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
-            for f in fnames:
-                if not os.path.isfile(f) and not os.path.isdir(f):
-                    return False
-            return True
-        return False
-
-    def performDragOperation_(self, sender):
-        if self.finished:
-            return
-
-        pboard = sender.draggingPasteboard()
-        if pboard.types().containsObject_(NSFilenamesPboardType):
-            filenames = pboard.propertyListForType_(NSFilenamesPboardType)
-            return self.sendFiles(filenames)
-        return False
-
-    def sendFiles(self, fnames):
-        filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
-        if filenames:
-            self.sessionController.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
-            return True
-        return False
 
     def rightMouseDown_(self, event):
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
@@ -395,9 +384,6 @@ class VideoWindowController(NSWindowController):
         if not self.window():
             return
 
-        if self.finished:
-            return
-
         if self.aspect_ratio is not None:
             self.updating_aspect_ratio = True
             frame = self.window().frame()
@@ -412,9 +398,6 @@ class VideoWindowController(NSWindowController):
     @run_in_gui_thread
     def show(self):
         self.sessionController.log_debug("Show %s" % self)
-        if self.finished:
-            return
-
         self.init_window()
         self.updateAspectRatio()
 
@@ -450,9 +433,6 @@ class VideoWindowController(NSWindowController):
         if self.updating_aspect_ratio:
             return
 
-        if self.finished:
-            return
-
         self.updateTrackingAreas()
 
     @run_in_gui_thread
@@ -469,9 +449,6 @@ class VideoWindowController(NSWindowController):
     @run_in_gui_thread
     def goToFullScreen(self):
         self.sessionController.log_debug('goToFullScreen %s' % self)
-
-        if self.finished:
-            return
 
         self.local_video_visible_before_fullscreen = NSApp.delegate().contactsWindowController.localVideoVisible()
 
@@ -567,11 +544,6 @@ class VideoWindowController(NSWindowController):
     @run_in_gui_thread
     def close(self):
         self.sessionController.log_debug('Close %s' % self)
-
-        if self.finished:
-            return
-
-        self.finished = True
 
         self.goToWindowMode()
 
