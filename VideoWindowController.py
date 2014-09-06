@@ -558,7 +558,6 @@ class VideoWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
-        self.videoView.close()
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         self.sessionController.removeVideoFromSession()
         if not self.sessionController.hasStreamOfType("chat"):
@@ -580,6 +579,9 @@ class VideoWindowController(NSWindowController):
 
         self.videoControlPanel.close()
         self.videoControlPanel = None
+
+        if self.videoView:
+            self.videoView.close()
 
         if self.window():
             self.window().performClose_(None)
