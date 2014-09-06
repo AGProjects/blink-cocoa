@@ -23,7 +23,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <customView id="cMz-OM-B9k" customClass="VideoStreamOverlayView">
+                    <customView id="cMz-OM-B9k" customClass="VideoWidget">
                         <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>

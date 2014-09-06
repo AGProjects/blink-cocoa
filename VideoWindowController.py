@@ -8,6 +8,7 @@ from AppKit import (NSApp,
                     NSAlphaFirstBitmapFormat,
                     NSWindow,
                     NSView,
+                    NSOpenGLView,
                     NSOnState,
                     NSOffState,
                     NSMenu,
@@ -30,7 +31,6 @@ from AppKit import (NSApp,
 from Foundation import (NSAttributedString,
                         NSBundle,
                         NSData,
-                        NSBitmapImageRep,
                         NSObject,
                         NSColor,
                         NSDictionary,
@@ -63,7 +63,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
 
-from Quartz import CIImage, kCIFormatARGB8, kCGColorSpaceGenericRGB
+from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat
 
 from VideoControlPanel import VideoControlPanel
 from VideoLocalWindowController import VideoLocalWindowController
@@ -71,10 +71,29 @@ from VideoDisconnectWindow import VideoDisconnectWindow
 from util import run_in_gui_thread
 
 
-class VideoStreamOverlayView(NSView):
+class VideoWidget(NSView):
     _data = None
     renderer = None
     aspect_ratio = None
+
+    def awakeFromNib(self):
+        self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
+
+    def initWithFrame2_(self, frame):
+        attribs = [
+                   #NSOpenGLPFANoRecovery,
+                   NSOpenGLPFAWindow,
+                   NSOpenGLPFAAccelerated,
+                   NSOpenGLPFADoubleBuffer,
+                   #NSOpenGLPixelFormat,
+                   #NSOpenGLPFAColorSize, 24,
+                   #NSOpenGLPFAAlphaSize, 8,
+                   #NSOpenGLPFADepthSize, 24,
+                   #NSOpenGLPFAStencilSize, 8,
+                   #NSOpenGLPFAAccumSize, 0,
+                   ]
+        fmt = NSOpenGLPixelFormat.alloc().initWithAttributes_(attribs)
+        return super(VideoWidget, self).initWithFrame_pixelFormat_(frame, fmt)
 
     def setProducer(self, producer):
         if self.renderer is None:
@@ -83,12 +102,13 @@ class VideoStreamOverlayView(NSView):
 
     def close(self):
         if  self.renderer is not None:
+            print 'Close renderer %s' % self
             self.renderer.close()
             self.renderer = None
         self.removeFromSuperview()
 
     def dealloc(self):
-        super(VideoStreamOverlayView, self).dealloc()
+        super(VideoWidget, self).dealloc()
 
     def mouseDown_(self, event):
         self.window().delegate().mouseDown_(event)
@@ -125,6 +145,12 @@ class VideoStreamOverlayView(NSView):
                                                                                 (width, height),
                                                                                 kCIFormatARGB8,
                                                                                 kCGColorSpaceGenericRGB)
+
+        #self.openGLContext().makeCurrentContext()
+        #context = CIContext.contextWithCGLContext_pixelFormat_options_(self.openGLContext().CGLContextObj(),                                                                      self.pixelFormat().CGLPixelFormatObj(), None)
+        #context.drawImage_inRect_fromRect_(image, self.frame(), image.extent())
+        #self.openGLContext().flushBuffer()
+    
         context = NSGraphicsContext.currentContext().CIContext()
         context.drawImage_inRect_fromRect_(image, self.frame(), image.extent())
 

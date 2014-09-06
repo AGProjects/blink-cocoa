@@ -23,10 +23,10 @@
                 <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="VideoStreamOverlayView">
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="VideoWidget">
                         <rect key="frame" x="-3" y="-3" width="537" height="306"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
+                        <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
                     </imageView>
                 </subviews>
             </view>

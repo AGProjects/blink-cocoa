@@ -31,7 +31,7 @@
                     </connections>
                 </button>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="8Wm-re-6NQ">
-                    <rect key="frame" x="398.99999879471341" y="1" width="135" height="17"/>
+                    <rect key="frame" x="398.99999857676642" y="1" width="135" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" id="oc0-69-OYv">
                         <font key="font" metaFont="smallSystem"/>
