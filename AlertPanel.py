@@ -191,6 +191,7 @@ class AlertPanel(NSObject, object):
             self.speech_synthesizer.startSpeakingString_(self.speak_text)
 
     def show(self):
+        self.panel.center()
         self.panel.orderFront_(self)
         self.attention = NSApp.requestUserAttention_(NSCriticalRequest)
 
