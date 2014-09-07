@@ -2766,14 +2766,6 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
         self.drawer.toggle_(sender)
-        if self.drawer.isOpen():
-            sessionBoxes = self.audioSessionsListView.subviews()
-            if sessionBoxes.count() > 0:
-                selected = [session for session in sessionBoxes if session.selected]
-                if selected:
-                    self.window().makeFirstResponder_(selected[0])
-                else:
-                    self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
 
     def sip_session_missed(self, session, stream_types):
         BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
@@ -2832,11 +2824,21 @@ class ContactWindowController(NSWindowController):
             self.window().zoom_(None)
             self.setCollapsed(True)
 
+        sessionBoxes = self.audioSessionsListView.subviews()
+        if sessionBoxes.count() > 0:
+            selected = [session for session in sessionBoxes if session.selected]
+            if selected:
+                self.window().makeFirstResponder_(selected[0])
+            else:
+                self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
+
     def drawerDidClose_(self, notification):
         self.windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
         if self.collapsedState:
             self.window().zoom_(None)
             self.setCollapsed(True)
+
+        self.focusSearchTextField()
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
