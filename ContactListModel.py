@@ -520,7 +520,6 @@ class BlinkConferenceContact(BlinkContact):
         if presence_contact is not None:
             NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
         self.presence_note = None
-        self.init_presence_state()
         self.updatePresenceState()
 
     def setPresenceContact_(self, presence_contact):
@@ -579,6 +578,8 @@ class BlinkConferenceContact(BlinkContact):
 
     @allocate_autorelease_pool
     def updatePresenceState(self):
+        self.init_presence_state()
+
         if self.presence_contact is None:
             return
         pidfs = []
@@ -589,7 +590,6 @@ class BlinkConferenceContact(BlinkContact):
 
         presence_notes = []
         basic_status = 'closed'
-        self.init_presence_state()
 
         for pidf in pidfs:
             if basic_status is 'closed':

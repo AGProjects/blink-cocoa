@@ -131,14 +131,14 @@ class ContactCell(NSTextFieldCell):
                 status = settings.presence_state.status.lower()
         elif type(self.contact) is BlinkConferenceContact:
             blink_contact = self.contact.presence_contact
-            if type(blink_contact) is not BlinkPresenceContact:
+            if not isinstance(blink_contact, BlinkPresenceContact):
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
             status = presence_status_for_contact(blink_contact)
         elif type(self.contact) is BlinkHistoryViewerContact:
             blink_contact = self.contact.presence_contact
-            if type(blink_contact) is not BlinkPresenceContact:
+            if not isinstance(blink_contact, BlinkPresenceContact):
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
@@ -146,7 +146,7 @@ class ContactCell(NSTextFieldCell):
 
         elif type(self.contact) is HistoryBlinkContact:
             blink_contact = self.contact.contact
-            if type(blink_contact) is not BlinkPresenceContact:
+            if not isinstance(blink_contact, BlinkPresenceContact):
                 return
             if not blink_contact.contact.presence.subscribe:
                 return
@@ -177,7 +177,7 @@ class ContactCell(NSTextFieldCell):
             pass
 
         has_locations = None
-        if type(self.contact) in (BlinkOnlineContact, BlinkPresenceContact):
+        if isinstance(self.contact, (BlinkOnlineContact, BlinkPresenceContact)):
             try:
                 has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
             except KeyError:
@@ -214,7 +214,7 @@ class ContactCell(NSTextFieldCell):
         border.stroke()
 
         # sleep icon
-        if type(self.contact) in (BlinkOnlineContact, BlinkPresenceContact):
+        if isinstance(self.contact, (BlinkOnlineContact, BlinkPresenceContact)):
             if self.contact.presence_state['time_offset'] is not None:
                 ctime = datetime.datetime.utcnow() + self.contact.presence_state['time_offset']
                 hour = int(ctime.strftime("%H"))
