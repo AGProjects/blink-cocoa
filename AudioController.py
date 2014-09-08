@@ -1425,7 +1425,7 @@ class AudioController(MediaStream):
                 self.send_dtmf(digit)
 
     @run_in_gui_thread
-    def _NH_MediaStreamDidFail(self, sender, data):
+    def _NH_MediaStreamDidNotInitialize(self, sender, data):
         self.transfer_in_progress = False
         self.ice_negotiation_status = None
         self.holdByLocal = False
@@ -1435,6 +1435,10 @@ class AudioController(MediaStream):
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
+
+    @run_in_gui_thread
+    def _NH_MediaStreamDidFail(self, sender, data):
+        pass
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -1532,8 +1536,7 @@ class AudioController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSEventTrackingRunLoopMode)
 
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
-        reason = data.reason.capitalize()
-        self.updateTransferProgress(NSLocalizedString("Transfer: %s", "Audio status label") % reason)
+        self.updateTransferProgress(NSLocalizedString("Transfer: %s", "Audio status label") % data.reason.capitalize())
 
     def stopRinging(self):
         if self.outbound_ringtone is None:

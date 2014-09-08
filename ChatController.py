@@ -207,9 +207,7 @@ class ChatController(MediaStream):
     def initWithOwner_stream_(self, sessionController, stream):
         self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
         sessionController.log_debug(u"Creating %s" % self)
-        self.mediastream_failed = False
         self.mediastream_ended = False
-        self.mediastream_started = False
         self.session_succeeded = False
         self.last_failure_reason = None
         self.remoteIcon = None
@@ -1531,7 +1529,7 @@ class ChatController(MediaStream):
         if reason != 'Session Cancelled':
             if self.last_failure_reason != reason:
                 self.last_failure_reason = reason
-        if not self.mediastream_failed and not self.mediastream_ended:
+        if not self.mediastream_ended:
             if reason != 'Session Cancelled':
                 #message = "Connection failed: %s" % reason.title()
                 message = reason.title()
@@ -1579,7 +1577,6 @@ class ChatController(MediaStream):
         if self.sessionController.remote_focus:
             self.chatWindowController.drawer.open()
 
-        self.mediastream_started = True
         self.last_failure_reason = None
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info(u"Chat session established to %s" % endpoint)
@@ -1598,37 +1595,38 @@ class ChatController(MediaStream):
         self.sendOwnIcon()
         self.sendLoggingState()
 
+    def _NH_MediaStreamDidInitialize(self, sender, data):
+        self.sessionController.log_info(u"Chat stream initialized")
 
-    def _NH_MediaStreamDidEnd(self, sender, data):
-        self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
-        self.mediastream_ended = True
-        self.sessionController.log_info(u"Chat session ended")
-        if self.mediastream_started:
-            self.mediastream_started = False
-            t = self.sessionController.getTitleShort()
-            self.showSystemMessage(NSLocalizedString("%s left the conversation", "Label") % t, ISOTimestamp.now())
-
-        if not self.mediastream_failed:
-            self.outgoing_message_handler.setDisconnected()
-
-    def _NH_MediaStreamDidFail(self, sender, data):
-        self.mediastream_failed = True
-
-        self.sessionController.log_info(u"Chat session failed: %s" % data.reason)
-        if data.reason in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
-            t = self.sessionController.getTitleShort()
-            reason = NSLocalizedString("%s left the conversation", "Label") % t
-        elif data.failure is not None and data.failure.type is GNUTLSError:
-            reason = NSLocalizedString("TLS connection broke", "Label")
-        elif data.reason in ('MSRPTimeout', 'MSRPConnectTimeout', 'MSRPBindSessionTimeout', 'MSRPIncomingConnectTimeout', 'MSRPRelayConnectTimeout'):
-            reason = NSLocalizedString("MSRP connection failed", "Label")
-        elif data.reason == 'MSRPRelayAuthError':
+    def _NH_MediaStreamDidNotInitialize(self, sender, data):
+        if data.reason == 'MSRPRelayAuthError':
             reason = NSLocalizedString("MSRP relay authentication failed", "Label")
         else:
-            reason = data.reason
+            reason = NSLocalizedString("MSRP connection failed", "Label")
 
+        self.sessionController.log_info(reason)
         self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
+        self.outgoing_message_handler.setDisconnected()
+
+    def _NH_MediaStreamDidEnd(self, sender, data):
+        self.mediastream_ended = True
+        if data.error is not None:
+            self.sessionController.log_info(u"Chat session failed: %s" % data.error)
+            if data.error in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
+                t = self.sessionController.getTitleShort()
+                reason = NSLocalizedString("%s left the conversation", "Label") % t
+            else:
+                reason = NSLocalizedString("MSRP connection failed", "Label")
+
+            self.showSystemMessage(reason, ISOTimestamp.now(), True)
+            self.changeStatus(STREAM_FAILED, data.error)
+        else:
+            t = self.sessionController.getTitleShort()
+            self.showSystemMessage(NSLocalizedString("%s left the conversation", "Label") % t, ISOTimestamp.now())
+            self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
+            self.sessionController.log_info(u"Chat session ended")
+
         self.outgoing_message_handler.setDisconnected()
 
     def _NH_OTRPrivateKeyDidChange(self, sender, data):
@@ -1708,11 +1706,23 @@ class ChatController(MediaStream):
         if self.screensharing_handler:
             self.screensharing_handler.setDisconnected()
         self.closeWindow()
+
+        # remove middleware observers
         self.notification_center.discard_observer(self, sender=self.sessionController)
+        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
+        self.notification_center.remove_observer(self, name='ChatReplicationJournalEntryReceived')
+        self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
+        self.notification_center.remove_observer(self, name='OTRPrivateKeyDidChange')
+
+        # remove GUI observers
+        NSNotificationCenter.defaultCenter().removeObserver_(self)
+
+        if not self.session_was_active:
+            self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController)
+
         self.startDeallocTimer()
 
     def reset(self):
-        self.mediastream_failed = False
         self.mediastream_ended = False
         self.session_succeeded = False
         self.last_failure_reason = None
@@ -1731,9 +1741,7 @@ class ChatController(MediaStream):
     def startDeallocTimer(self):
         self.removeFromSession()
         self.otr_account = None
-
-        if not self.session_was_active:
-            self.notification_center.post_notification("BlinkChatWindowWasClosed", sender=self.sessionController)
+        self.notification_center = None
 
         if not self.dealloc_timer:
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)
@@ -1744,17 +1752,6 @@ class ChatController(MediaStream):
         self.release()
 
     def dealloc(self):
-        # remove middleware observers
-        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
-        self.notification_center.remove_observer(self, name='ChatReplicationJournalEntryReceived')
-        self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
-        self.notification_center.remove_observer(self, name='OTRPrivateKeyDidChange')
-
-        self.notification_center = None
-
-        # remove GUI observers
-        NSNotificationCenter.defaultCenter().removeObserver_(self)
-
         # dealloc timers
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()

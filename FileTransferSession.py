@@ -290,16 +290,21 @@ class IncomingFileTransferHandler(FileTransfer):
         notification_center.post_notification("BlinkFileTransferDidStart", sender=self)
 
     def _NH_MediaStreamDidFail(self, sender, data):
+        pass
+
+    def _NH_MediaStreamDidNotInitialize(self, sender, data):
         self.log_info("Error transferring file: %s" % data.reason)
-        # TODO: connection should always be cleaned correctly
-        if not isinstance(data.failure.value, ConnectionLost):
-            self.error = True
-            self.fail_reason = data.reason
-        # The session will end by itself
+        self.error = True
+        self.fail_reason = data.error
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         # Mark end of write operations
         self.write_chunk(None)
+        if data.error is not None:
+            self.log_info("Error transferring file: %s" % data.reason)
+            self.error = True
+            self.fail_reason = data.error
+
 
     def _NH_FileTransferStreamGotChunk(self, sender, data):
         self.file_pos = data.transferred_bytes
@@ -774,16 +779,25 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         notification_center.post_notification("BlinkFileTransferDidStart", sender=self)
 
     def _NH_MediaStreamDidFail(self, sender, data):
-        self.log_info("Error while handling file transfer: %s" % data.reason)
-        # TODO: connection should always be cleaned correctly
-        if not isinstance(data.failure.value, ConnectionLost):
-            self.error = True
-            self.fail_reason = data.reason
-        # The session will end by itself
+        pass
+
+    def _NH_MediaStreamDidNotInitialize(self, sender, data):
+        if data.reason == 'MSRPRelayAuthError':
+            reason = NSLocalizedString("MSRP relay authentication failed", "Label")
+        else:
+            reason = NSLocalizedString("MSRP connection failed", "Label")
+        self.log_info("Error transferring file: %s" % reason)
+        self.error = True
+        self.fail_reason = data.reason
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         # Mark end of write operations
         self.write_chunk(None)
+        if data.error is not None:
+            self.log_info("Error while handling file transfer: %s" % data.error)
+            self.error = True
+            self.fail_reason = data.error
+
 
     def _NH_FileTransferStreamGotChunk(self, sender, data):
         self.file_pos = data.transferred_bytes

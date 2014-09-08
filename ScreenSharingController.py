@@ -293,16 +293,24 @@ class ScreenSharingController(MediaStream):
         if videoStream:
             self.sessionController.removeVideoFromSession()
 
-    def _NH_MediaStreamDidFail(self, sender, data):
-        self.sessionController.log_info("Screen sharing failed")
-        self.changeStatus(STREAM_IDLE)
-        self.resetTrace()
-        if self.statusWindow:
-            self.stopButton.setHidden_(True)
+    def _NH_MediaStreamDidNotInitialize(self, sender, data):
+        if data.reason == 'MSRPRelayAuthError':
+            reason = NSLocalizedString("MSRP relay authentication failed", "Label")
+        else:
+            reason = NSLocalizedString("MSRP connection failed", "Label")
+        self.sessionController.log_info(reason)
+        self.changeStatus(STREAM_FAILED, data.reason)
+        NotificationCenter().remove_observer(self, sender=self.stream.handler)
+        NotificationCenter().remove_observer(self, sender=self.stream)
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        self.sessionController.log_info("Screen sharing ended")
-        self.changeStatus(STREAM_IDLE)
+        if data.error is None:
+            self.sessionController.log_info("Screen sharing ended")
+            self.changeStatus(STREAM_IDLE)
+        else:
+            self.sessionController.log_info("Screen sharing failed")
+            self.changeStatus(STREAM_IDLE)
+        
         if self.statusWindow:
             self.stopButton.setHidden_(True)
             self.statusProgress.setHidden_(True)
@@ -325,8 +333,7 @@ class ScreenSharingController(MediaStream):
                 self.resetTrace()
 
     def _NH_ScreenSharingHandlerDidFail(self, sender, data):
-        if data.failure.type == VNCConnectionError:
-            self.sessionController.log_info("%s" % data.reason.title())
+        self.sessionController.log_info("%s" % data.reason.title())
 
     def resetTrace(self):
         if self.must_reset_trace_msrp:

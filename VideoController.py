@@ -368,12 +368,9 @@ class VideoController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
 
-    def _NH_MediaStreamDidFail(self, sender, data):
-        super(VideoController, self)._NH_MediaStreamDidFail(sender, data)
+    def _NH_MediaStreamDidNotInitialize(self, sender, data):
         self.sessionController.log_info(u"Video call failed: %s" % data.reason)
-
         self.stopTimers()
-
         self.changeStatus(STREAM_FAILED, data.reason)
         self.ice_negotiation_status = None
         self.rtt_history = None
@@ -381,14 +378,14 @@ class VideoController(MediaStream):
         self.jitter_history = None
         self.rx_speed_history = None
         self.tx_speed_history = None
-
         self.videoWindowController.close()
+
+    def _NH_MediaStreamDidFail(self, sender, data):
+        pass
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
-
         self.stopTimers()
-
         self.ice_negotiation_status = None
         self.rtt_history = None
         self.loss_history = None
@@ -396,7 +393,11 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
-        if self.started:
+        if data.error is not None:
+            self.sessionController.log_info(u"Video call failed: %s" % data.error)
+            self.changeStatus(STREAM_FAILED, data.reason)
+            self.videoWindowController.close()
+        elif self.started:
             self.sessionController.log_info(u"Video stream ended")
         else:
             self.sessionController.log_info(u"Video stream canceled")
