@@ -2,8 +2,10 @@
 #
 
 from AppKit import (NSWindowController,
+                    NSApplication,
                     NSFloatingWindowLevel,
                     NSWindow,
+                    NSRectFill,
                     NSButton,
                     NSToggleButton,
                     NSView,
@@ -23,6 +25,7 @@ from AppKit import (NSWindowController,
                     )
 
 from Foundation import (NSBundle,
+                        NSBezierPath,
                         NSObject,
                         NSColor,
                         NSMakeRect,
@@ -82,25 +85,24 @@ class VideoLocalWindowController(NSWindowController):
         from VideoWindowController import TitleBarView
 
         NSBundle.loadNibNamed_owner_("VideoLocalWindow", self)
-        self.window().makeKeyAndOrderFront_(None)
         self.window().center()
-        self.window().setLevel_(NSFloatingWindowLevel)
-        self.window().setTitle_(self.videoWindowController.title)
+        self.window().setTitle_(NSLocalizedString("My Video", "Window title"))
 
+        self.window().setLevel_(NSFloatingWindowLevel)
         themeFrame = self.window().contentView().superview()
         self.titleBarView = LocalTitleBarView.alloc().init()
         topmenu_frame = self.titleBarView.view.frame()
 
         newFrame = NSMakeRect(
-                                themeFrame.frame().size.width - topmenu_frame.size.width,
+                                0,
                                 themeFrame.frame().size.height - topmenu_frame.size.height,
-                                topmenu_frame.size.width,
-                                topmenu_frame.size.height
-                                )
+                                themeFrame.frame().size.width,
+                                topmenu_frame.size.height)
 
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
         self.titleBarView.textLabel.setHidden_(False)
+        self.titleBarView.titleLabel.setStringValue_(self.videoWindowController.title)
         self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
         
@@ -112,13 +114,16 @@ class VideoLocalWindowController(NSWindowController):
         self.full_screen_in_progress = False
 
     def init_aspect_ratio(self, width, height):
-        self.videoWindowController.sessionController.log_info('Local video stream at %0.fx%0.f resolution' % (width, height))
+        self.sessionController.log_info('Local video stream at %0.fx%0.f resolution' % (width, height))
         self.aspect_ratio = floor((float(width) / height) * 100)/100
 
         frame = self.window().frame()
         frame.size.height = frame.size.width / self.aspect_ratio
         self.window().setFrame_display_(frame, True)
         self.window().center()
+        self.window().makeKeyAndOrderFront_(None)
+        title = NSLocalizedString("Video with %s", "Window title") % self.videoWindowController.title
+        NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
@@ -132,7 +137,7 @@ class VideoLocalWindowController(NSWindowController):
         self.window().contentView().addTrackingArea_(self.tracking_area)
 
     def showInfoPanel_(self, sender):
-        self.videoWindowController.sessionController.info_panel.toggle()
+        self.sessionController.info_panel.toggle()
 
     @property
     def stream(self):
@@ -184,25 +189,11 @@ class VideoLocalWindowController(NSWindowController):
         return scaledSize
 
     def windowDidResize_(self, notification):
-        # stuff may vanish while we drag the window
-        if not self.videoWindowController:
-            return
-        if not self.streamController:
-            return
-        if not self.stream:
-            return
-
-        frame = self.window().frame()
-
         self.updateTrackingAreas()
-
+    
     def windowShouldClose_(self, sender):
         if self.finished:
             return True
-
-        if self.tracking_area is not None:
-            self.window().contentView().removeTrackingArea_(self.tracking_area)
-            self.tracking_area = None
 
         if not self.streamController:
             return True
@@ -244,16 +235,18 @@ class VideoLocalWindowController(NSWindowController):
     def keyDown_(self, event):
         if event.keyCode() == 53:
             self.streamController.sessionController.end()
-        self.hide()
+            self.hide()
 
     def hide(self):
-        if self.window:
-            self.window().close()
+        self.window().close()
 
     def close(self):
         self.log_debug('Close %s' % self)
         self.finished = True
         self.titleBarView.close()
+        if self.tracking_area is not None:
+            self.window().contentView().removeTrackingArea_(self.tracking_area)
+            self.tracking_area = None
         self.videoView.close()
         self.window().close()
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
@@ -309,6 +302,7 @@ class VideoLocalWindowController(NSWindowController):
 class LocalTitleBarView(NSObject):
     view = objc.IBOutlet()
     textLabel = objc.IBOutlet()
+    titleLabel = objc.IBOutlet()
     
     def init(self):
         self = super(LocalTitleBarView, self).init()
@@ -320,4 +314,12 @@ class LocalTitleBarView(NSObject):
     def close(self):
         self.view.removeFromSuperview()
 
+    @objc.IBAction
+    def performClose_(self, sender):
+        self.view.window().performClose_(sender)
 
+
+class BlackView(NSView):
+    def drawRect_(self, rect):
+        NSColor.blackColor().set()
+        NSRectFill(self.bounds())

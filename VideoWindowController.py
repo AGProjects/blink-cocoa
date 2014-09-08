@@ -3,6 +3,7 @@
 
 
 from AppKit import (NSApp,
+                    NSApplication,
                     NSGraphicsContext,
                     NSCalibratedRGBColorSpace,
                     NSAlphaFirstBitmapFormat,
@@ -95,6 +96,12 @@ class VideoWidget(NSView):
         fmt = NSOpenGLPixelFormat.alloc().initWithAttributes_(attribs)
         return super(VideoWidget, self).initWithFrame_pixelFormat_(frame, fmt)
 
+    def acceptsFirstResponder(self):
+        return True
+
+    def canBecomeKeyView(self):
+        return True
+    
     def setProducer(self, producer):
         if self.renderer is None:
             self.renderer = FrameBufferVideoRenderer(self.handle_frame)
@@ -102,7 +109,6 @@ class VideoWidget(NSView):
 
     def close(self):
         if  self.renderer is not None:
-            print 'Close renderer %s' % self
             self.renderer.close()
             self.renderer = None
         self.removeFromSuperview()
@@ -273,7 +279,8 @@ class VideoWindowController(NSWindowController):
             return
 
         NSBundle.loadNibNamed_owner_("VideoWindow", self)
-        self.window().orderOut_(None)
+        title = NSLocalizedString("Video with %s", "Window title") % self.title
+        NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
         self.window().center()
         self.window().setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window(), self))
@@ -281,23 +288,35 @@ class VideoWindowController(NSWindowController):
         self.window().setTitle_(self.title)
         self.updateTrackingAreas()
 
-        themeFrame = self.window().contentView().superview()
-        self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
-        topmenu_frame = self.titleBarView.view.frame()
-
-        newFrame = NSMakeRect(
-                             themeFrame.frame().size.width - topmenu_frame.size.width,
-                             themeFrame.frame().size.height - topmenu_frame.size.height,
-                             topmenu_frame.size.width,
-                             topmenu_frame.size.height
-                              )
-        self.titleBarView.view.setFrame_(newFrame)
-        themeFrame.addSubview_(self.titleBarView.view)
-
+        self.showTitleBar()
+        
         if SIPSimpleSettings().video.keep_window_on_top:
             self.toogleAlwaysOnTop()
 
+        self.titleBarView.titleLabel.setStringValue_(self.title)
         self.videoView.setProducer(self.streamController.stream.producer)
+
+    def showTitleBar(self):
+        if self.streamController.ended:
+            return
+
+        if self.titleBarView is None:
+            self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
+
+        themeFrame = self.window().contentView().superview()
+        topmenu_frame = self.titleBarView.view.frame()
+        
+        newFrame = NSMakeRect(
+                              0,
+                              themeFrame.frame().size.height - topmenu_frame.size.height,
+                              themeFrame.frame().size.width,
+                              topmenu_frame.size.height)
+            
+        self.titleBarView.view.setFrame_(newFrame)
+        themeFrame.addSubview_(self.titleBarView.view)
+
+    def hideTitleBar(self):
+        self.titleBarView.view.removeFromSuperview()
 
     def rightMouseDown_(self, event):
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
@@ -367,7 +386,7 @@ class VideoWindowController(NSWindowController):
             if self.full_screen:
                 self.toggleFullScreen()
             else:
-                self.sessionController.end()
+                self.sessionController.removeVideoFromSession()
 
     def mouseEntered_(self, event):
         self.mouse_in_window = True
@@ -437,7 +456,7 @@ class VideoWindowController(NSWindowController):
             self.flipped = True
             self.streamController.updateStatusLabelAfterConnect()
         else:
-            self.window().orderFront_(self)
+            self.window().makeKeyAndOrderFront_(self)
 
     def windowWillResize_toSize_(self, window, frameSize):
         if self.aspect_ratio is None:
@@ -472,9 +491,17 @@ class VideoWindowController(NSWindowController):
         if self.videoControlPanel:
             self.videoControlPanel.hide()
 
+    def removeVideo(self):
+        self.window().orderOut_(None)
+        if self.videoControlPanel is not None:
+            self.videoControlPanel.window().orderOut_(None)
+        self.sessionController.removeVideoFromSession()
+        NSApp.delegate().contactsWindowController.showAudioDrawer()
+    
     @run_in_gui_thread
     def goToFullScreen(self):
         self.sessionController.log_debug('goToFullScreen %s' % self)
+        self.hideTitleBar()
 
         self.local_video_visible_before_fullscreen = NSApp.delegate().contactsWindowController.localVideoVisible()
 
@@ -516,10 +543,9 @@ class VideoWindowController(NSWindowController):
 
     def windowDidEnterFullScreen_(self, notification):
         self.sessionController.log_debug('windowDidEnterFullScreen_ %s' % self)
-        if self.window():
-            if self.streamController.ended:
-                self.window().orderOut_(self)
-                return
+        if self.streamController.ended:
+            self.window().orderOut_(self)
+            return
 
         self.full_screen_in_progress = False
         self.full_screen = True
@@ -529,13 +555,15 @@ class VideoWindowController(NSWindowController):
 
         if self.videoControlPanel is not None:
             self.videoControlPanel.show()
-            self.videoControlPanel.window().makeKeyAndOrderFront_(None)
+            #self.videoControlPanel.window().makeKeyAndOrderFront_(None)
+            self.videoControlPanel.window().orderFront_(None)
 
         if self.window():
             self.window().setLevel_(NSNormalWindowLevel)
 
     def windowDidExitFullScreen_(self, notification):
         self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
+        self.showTitleBar()
 
         self.full_screen_in_progress = False
         self.full_screen = False
@@ -584,7 +612,7 @@ class VideoWindowController(NSWindowController):
             self.videoView.close()
 
         if self.window():
-            self.window().performClose_(None)
+            self.window().close()
 
         if self.localVideoWindow:
             self.localVideoWindow.close()
@@ -645,11 +673,15 @@ class TitleBarView(NSObject):
         self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
 
     def close(self):
-        self.view.removeFromSuperview()
-        self.release()
+        if self.view:
+            self.view.removeFromSuperview()
+            self.release()
+
+    @objc.IBAction
+    def removeVideo_(self, sender):
+        self.view.window().delegate().removeVideo()
 
     def dealloc(self):
-        self.windowController.sessionController.log_debug('Dealloc %s' % self)
         self.windowController = None
         super(TitleBarView, self).dealloc()
 

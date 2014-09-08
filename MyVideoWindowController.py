@@ -99,14 +99,6 @@ class MyVideoWindowController(NSWindowController):
         self = super(MyVideoWindowController, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("MyVideoLocalWindow", self)
-            userdef = NSUserDefaults.standardUserDefaults()
-            savedFrame = userdef.stringForKey_("NSWindow Frame MirrorWindow")
-
-            if savedFrame:
-                x, y, w, h = str(savedFrame).split()[:4]
-                frame = NSMakeRect(int(x), int(y), int(w), int(h))
-                self.window().setFrame_display_(frame, True)
-
             self.window().setAlphaValue_(ALPHA)
             self.window().setLevel_(NSFloatingWindowLevel)
             self.window().closeButton.setHidden_(True)
@@ -155,8 +147,7 @@ class MyVideoWindowController(NSWindowController):
         self.updateTrackingAreas()
 
     def windowDidMove_(self, notification):
-        if self.window().frameAutosaveName():
-            self.window().saveFrameUsingName_(self.window().frameAutosaveName())
+        self.window().saveFrameUsingName_(self.window().frameAutosaveName())
 
     @run_in_gui_thread
     def close(self):
@@ -192,6 +183,14 @@ class MyVideoWindowController(NSWindowController):
             self.close_timer = None
 
         self.window().setAlphaValue_(ALPHA)
+        userdef = NSUserDefaults.standardUserDefaults()
+        savedFrame = userdef.stringForKey_(self.window().frameAutosaveName())
+        
+        if savedFrame:
+            x, y, w, h = str(savedFrame).split()[:4]
+            frame = NSMakeRect(int(x), int(y), int(w), int(h))
+            self.window().setFrame_display_(frame, True)
+
         frame = self.window().frame()
         currentSize = frame.size
         scaledSize = currentSize
@@ -463,7 +462,7 @@ class BorderlessRoundWindow(NSPanel):
     def setContentView_(self, view):
         view.setWantsLayer_(True)
         view.layer().setFrame_(view.frame())
-        view.layer().setCornerRadius_(8.0)
+        view.layer().setCornerRadius_(4.0)
         view.layer().setMasksToBounds_(True)
         super(BorderlessRoundWindow, self).setContentView_(view)
 

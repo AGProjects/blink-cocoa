@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -7,13 +7,13 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="MyVideoWindowController">
             <connections>
-                <outlet property="localVideoView" destination="6WE-Ek-cFR" id="J8e-57-Zc8"/>
+                <outlet property="videoView" destination="6WE-Ek-cFR" id="702-EJ-Ahw"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="liw-g7-E4J"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <window title="Mi Vídeo" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="BorderlessRoundWindow">
+        <window title="My Video" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="myvideo" animationBehavior="default" id="QvC-M9-y7g" customClass="BorderlessRoundWindow">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="467" height="247"/>
@@ -26,10 +26,21 @@
                         <rect key="frame" x="-10" y="-5" width="492" height="252"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>
+                    <button id="sGj-Hi-JkA">
+                        <rect key="frame" x="446" y="224" width="20" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="Xad-RY-ylh">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedMirrorButton:" target="-2" id="wZl-tn-Igd"/>
+                        </connections>
+                    </button>
                     <button hidden="YES" id="0vJ-dE-guV">
-                        <rect key="frame" x="2" y="225" width="18" height="18"/>
+                        <rect key="frame" x="1" y="228" width="18" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="bevel" bezelStyle="circular" image="close" imagePosition="left" alignment="left" controlSize="small" imageScaling="proportionallyUpOrDown" inset="2" id="yUx-8P-oUi">
+                        <buttonCell key="cell" type="bevel" bezelStyle="circular" image="close-small" imagePosition="left" alignment="left" controlSize="small" imageScaling="proportionallyUpOrDown" inset="2" id="yUx-8P-oUi">
                             <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
                             <font key="font" metaFont="smallSystem"/>
                         </buttonCell>
@@ -46,6 +57,7 @@
         </window>
     </objects>
     <resources>
-        <image name="close" width="204" height="204"/>
+        <image name="close-small" width="264" height="264"/>
+        <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
     </resources>
 </document>
