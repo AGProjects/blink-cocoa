@@ -6,20 +6,20 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
-            <title>Version 4.4.1</title>
-            <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
+            <title>Version 4.5.0</title>
+            <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
 		</sparkle:releaseNotesLink>
-            <pubDate>Fri Sep  5 10:08:13 UYT 2014</pubDate>
+            <pubDate>Sun Sep  7 11:53:43 UYT 2014</pubDate>
             <enclosure url="https://blink.sipthor.net/download-video-beta.phtml?update"
-                       sparkle:version="4.4.1"
+                       sparkle:version="4.5.0"
                        type="application/octet-stream"
                        />
          </item>
          <item>
             <title>Version 4.4.2</title>
-            <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
 		</sparkle:releaseNotesLink>
@@ -30,8 +30,20 @@
                        />
          </item>
          <item>
+            <title>Version 4.4.1</title>
+            <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Sep  5 10:08:13 UYT 2014</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-video-beta.phtml?update"
+                       sparkle:version="4.4.1"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 4.4.0</title>
-            <sparkle:minimumSystemVersion>10.8.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>10.7.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
 		</sparkle:releaseNotesLink>
