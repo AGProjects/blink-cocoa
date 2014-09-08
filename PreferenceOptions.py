@@ -1907,7 +1907,7 @@ PreferenceOptionTypes = {
 "nat_traversal.stun_server_list" : STUNServerAddressListOption,
 "rtp.use_srtp_without_tls" : HiddenOption,
 "sounds.use_speech_recognition": HiddenOption,
-"sounds.enable_speech_synthesizer": HiddenOption,
+"sounds.enable_speech_synthesizer": BoolOption,
 "server.collaboration_url" : HiddenOption,
 "server.enrollment_url" : HiddenOption,
 "sip.outbound_proxy": HiddenOption,
