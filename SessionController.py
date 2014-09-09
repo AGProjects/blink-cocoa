@@ -44,7 +44,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
-from sipsimple.streams import AudioStream
+from sipsimple.streams import AudioStream, VideoStream
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
@@ -67,6 +67,7 @@ from SIPManager import SIPManager
 try:
     from VideoController import VideoController
     video_support = True
+    from VideoDisconnectWindow import VideoDisconnectWindow
 except ImportError:
     video_support = False
 from interfaces.itunes import MusicApplications
@@ -2082,6 +2083,17 @@ class SessionController(NSObject):
         if not sender.streams:
             self.log_info("Ending session without streams")
             self.end()
+
+        if data.originator == "remote":
+            for stream in data.removed_streams:
+                self.log_debug("%s stream removed by remote party")
+
+            if video_support:
+                video_removed = any(stream for stream in data.removed_streams if isinstance(stream, VideoStream))
+                if video_removed:
+                    label = NSLocalizedString("Video removed by remote party", "Label")
+                    disconnectedPanel = VideoDisconnectWindow(label)
+                    disconnectedPanel.window.setTitle_(self.getTitle())
 
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 
