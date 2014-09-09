@@ -967,7 +967,7 @@ class H264ResolutionOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("1280x720", "1920x1080", "640x480"):
+        for item in ("740x500", "320x240", "1280x720", "1920x1080", "640x480"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -978,7 +978,7 @@ class H264FramerateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
-        for item in ("25", "30", "15", "10"):
+        for item in ("10", "25", "30", "60", "15", "10", "5"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -1007,6 +1007,34 @@ class VideoResolutionOption(PopUpMenuOption):
         frame.size.width = 150
         self.popup.setFrame_(frame)
 
+
+class VideoQualityOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
+        self.addMissingOptions = True
+        self.popup.addItemWithTitle_(NSLocalizedString("Embarrasing", "Menu item") + " (320x240 @5fps)")
+        self.popup.lastItem().setRepresentedObject_('embarrassing')
+
+        self.popup.addItemWithTitle_(NSLocalizedString("Lowest", "Menu item") + " (640x480 @10fps)")
+        self.popup.lastItem().setRepresentedObject_('lowest')
+
+        self.popup.addItemWithTitle_(NSLocalizedString("Low", "Menu item") + " (740x400 @10fps)")
+        self.popup.lastItem().setRepresentedObject_('low')
+
+        self.popup.addItemWithTitle_(NSLocalizedString("Medium", "Menu item") + " (1280x720 @15fps)")
+        self.popup.lastItem().setRepresentedObject_('medium')
+
+        self.popup.addItemWithTitle_(NSLocalizedString("High", "Menu item") + " (1280x720 @25fps)")
+        self.popup.lastItem().setRepresentedObject_('high')
+
+        self.popup.addItemWithTitle_(NSLocalizedString("Highest", "Menu item") + " (1920x1080 @30fps)")
+        self.popup.lastItem().setRepresentedObject_('highest')
+
+        self.popup.addItemWithTitle_(NSLocalizedString("Absurd", "Menu item") + " (1920x1080 @60fps)")
+        self.popup.lastItem().setRepresentedObject_('absurd')
+        frame = self.popup.frame()
+        frame.size.width = 300
+        self.popup.setFrame_(frame)
 
 class VideoDeviceOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
@@ -1878,7 +1906,8 @@ PreferenceOptionTypes = {
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.per_device_aec": HiddenOption,
 "video.device" : VideoDeviceOption,
-"video.resolution" : VideoResolutionOption,
+"video.quality": VideoQualityOption,
+"video.resolution" : HiddenOption,
 "video.paused" : HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.enable_encryption": OTRSettings,
@@ -2066,6 +2095,7 @@ SettingDescription = {
                       'video.auto_rotate_cameras': NSLocalizedString("Auto Rotate Cameras", "Label"),
                       'video.full_screen_after_connect': NSLocalizedString("Full Screen After Connect", "Label"),
                       'video.device': NSLocalizedString("Device", "Label"),
+                      'video.quality': NSLocalizedString("Quality", "Label"),
                       'video.resolution': NSLocalizedString("Resolution", "Label"),
                       'xcap.enabled': NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root': NSLocalizedString("Root URI", "Label"),
@@ -2118,7 +2148,7 @@ GeneralSettingsOrder = {
                        'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
                        'chat': ['disabled', 'enable_sms'],
-                       'video': ['device', 'resolution'],
+                       'video': ['device', 'quality', 'resolution'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
