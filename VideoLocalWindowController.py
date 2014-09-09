@@ -86,7 +86,8 @@ class VideoLocalWindowController(NSWindowController):
 
         NSBundle.loadNibNamed_owner_("VideoLocalWindow", self)
         self.window().center()
-        self.window().setTitle_(NSLocalizedString("My Video", "Window title"))
+        title = NSLocalizedString("Video with %s", "Window title") % self.videoWindowController.title
+        NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
 
         self.window().setLevel_(NSFloatingWindowLevel)
         themeFrame = self.window().contentView().superview()
@@ -122,8 +123,6 @@ class VideoLocalWindowController(NSWindowController):
         self.window().setFrame_display_(frame, True)
         self.window().center()
         self.window().makeKeyAndOrderFront_(None)
-        title = NSLocalizedString("Video with %s", "Window title") % self.videoWindowController.title
-        NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
 
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
