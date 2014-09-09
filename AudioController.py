@@ -1269,7 +1269,7 @@ class AudioController(MediaStream):
         session = self.sessionController.session
         direction = session.direction
         remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
-        filename = "%s-%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote, direction)
+        filename = "%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote)
         path = os.path.join(settings.audio.directory.normalized, session.account.id)
         self.recording_path=os.path.join(path, filename)
         self.stream.start_recording(self.recording_path)
