@@ -951,6 +951,7 @@ class SessionController(NSObject):
     notify_when_participants_changed = False
     transport = None
     screensharing_urls = {}
+    cancelled_during_dns_lookup = False
 
     @property
     def sessionControllersManager(self):
@@ -1230,8 +1231,11 @@ class SessionController(NSObject):
             return None
 
     def end(self):
-        if self.state in (STATE_DNS_FAILED, STATE_DNS_LOOKUP):
+        if self.state == STATE_DNS_FAILED:
             return
+        elif self.state == STATE_DNS_LOOKUP:
+            self.cancelled_during_dns_lookup = True
+        
         if self.session is not None:
             self.session.end()
 
@@ -1332,6 +1336,7 @@ class SessionController(NSObject):
         self.failureReason = None
         self.selected_contact = None
         self.cancelledStream = None
+        cancelled_during_dns_lookup = False
         self.remote_focus = False
         self.remote_focus_log = False
         self.conference_info = None
@@ -1629,6 +1634,10 @@ class SessionController(NSObject):
             self.connectSession()
 
     def connectSession(self):
+        if self.cancelled_during_dns_lookup:
+            self.log_info("Session cancelled during DNS lookup")
+            return
+
         if self.dealloc_timer is not None and self.dealloc_timer.isValid():
             self.dealloc_timer.invalidate()
             self.dealloc_timer = None

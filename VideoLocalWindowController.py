@@ -52,7 +52,7 @@ from sipsimple.threading import run_in_thread
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 
-from MediaStream import STREAM_PROPOSING
+from MediaStream import STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP
 from util import run_in_gui_thread
 from sipsimple.core import VideoCamera
 
@@ -197,11 +197,6 @@ class VideoLocalWindowController(NSWindowController):
         if not self.streamController:
             return True
 
-        if self.streamController.status == STREAM_PROPOSING:
-            self.sessionController.cancelProposal(self.streamController)
-        else:
-            self.sessionController.end()
-
         if self.window:
             self.window().close()
 
@@ -229,11 +224,17 @@ class VideoLocalWindowController(NSWindowController):
         self.window().setFrameOrigin_(newOrigin);
 
     def windowWillClose_(self, sender):
+        if self.streamController.status == STREAM_PROPOSING:
+            self.sessionController.cancelProposal(self.streamController)
+        else:
+            self.streamController.end()
+            self.sessionController.end()
+        
         self.finished = True
 
     def keyDown_(self, event):
         if event.keyCode() == 53:
-            self.streamController.sessionController.end()
+            self.sessionController.end()
             self.hide()
 
     def hide(self):
