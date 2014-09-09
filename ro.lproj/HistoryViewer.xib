@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -280,7 +280,7 @@
                         <size key="minSize" width="97" height="22"/>
                         <size key="maxSize" width="217" height="22"/>
                         <searchField key="view" verticalHuggingPriority="750" id="113">
-                            <rect key="frame" x="0.0" y="14" width="127" height="22"/>
+                            <rect key="frame" x="10" y="14" width="127" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduce o Adresă" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
                                 <font key="font" metaFont="system"/>
@@ -321,7 +321,7 @@
                         <popUpButton key="view" toolTip="Filtreză Dupa Canal" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Conversații Text" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="2" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="105" id="101">
+                            <popUpButtonCell key="cell" type="push" title="Înregistrări Video" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="7" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="L1M-Bo-eaH" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                                 <menu key="menu" title="OtherViews" id="102">
@@ -331,6 +331,7 @@
                                         <menuItem title="Conversații Text" state="on" tag="2" id="105"/>
                                         <menuItem title="Transfer Fișiere" tag="3" id="109"/>
                                         <menuItem title="Înregistrări Audio" tag="4" id="135"/>
+                                        <menuItem title="Înregistrări Video" state="on" tag="7" id="L1M-Bo-eaH"/>
                                         <menuItem title="Disponibilitate" tag="5" id="136"/>
                                         <menuItem title="Mesaje Vocale" tag="6" id="137"/>
                                     </items>

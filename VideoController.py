@@ -19,6 +19,7 @@ from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_FAILED, STATE_D
 from SessionInfoController import ice_candidates
 
 from VideoWindowController import VideoWindowController
+from VideoRecorder import VideoRecorder
 from util import allocate_autorelease_pool, run_in_gui_thread, beautify_video_codec
 
 
@@ -74,6 +75,7 @@ class VideoController(MediaStream):
         self = super(VideoController, self).initWithOwner_stream_(sessionController, stream)
         self.notification_center = NotificationCenter()
         sessionController.log_debug(u"Init %s" % self)
+        self.videoRecorder = VideoRecorder(self)
         self.videoWindowController = VideoWindowController(self)
 
         self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
@@ -385,6 +387,8 @@ class VideoController(MediaStream):
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
+        self.videoRecorder.stop()
+
         self.stopTimers()
         self.ice_negotiation_status = None
         self.rtt_history = None

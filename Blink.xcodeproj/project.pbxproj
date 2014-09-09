@@ -28,6 +28,12 @@
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
+		1F0D4A3719BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
+		1F0D4A3819BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
+		1F0D4A3919BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
+		1F0D4A3A19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
+		1F0D4A3B19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
+		1F0D4A3C19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255C1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
@@ -2756,6 +2762,7 @@
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
+		1F0D4A3619BF351D002AB989 /* VideoRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoRecorder.py; sourceTree = "<group>"; };
 		1F0E260C1402F097004AED9C /* blink-crypto.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-crypto.icns"; sourceTree = "<group>"; };
 		1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		1F0F2AA115456DAD00ECB98E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -3550,6 +3557,7 @@
 			children = (
 				1F6009CD18F74D22005517FA /* mbFlipWindow.h */,
 				1F6009CE18F74D22005517FA /* mbFlipWindow.m */,
+				1F0D4A3619BF351D002AB989 /* VideoRecorder.py */,
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
 				1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */,
 				1F4B789819AEAEC200F854CB /* VideoWindow.xib */,
@@ -4581,6 +4589,7 @@
 				1F7E0486176DC43D0006FF31 /* hangup_16.png in Resources */,
 				1F9A27D5179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */,
 				1F9A27DE1795452100672B73 /* AecSlider.xib in Resources */,
+				1F0D4A3819BF351D002AB989 /* VideoRecorder.py in Resources */,
 				1F6963F317BF770900985747 /* locked-green.png in Resources */,
 				1F6963F817BF771A00985747 /* unlocked-red.png in Resources */,
 				1F6963FE17BF777D00985747 /* locked-orange.png in Resources */,
@@ -4830,6 +4839,7 @@
 				1F35D04217894FFF00C6FE38 /* AddressBookTel-plugin-setup.py in Resources */,
 				1F35D04317894FFF00C6FE38 /* AddressBookTel-plugin.py in Resources */,
 				1F35D04417894FFF00C6FE38 /* AddressBookURL-plugin-setup.py in Resources */,
+				1F0D4A3A19BF351D002AB989 /* VideoRecorder.py in Resources */,
 				1F35D04517894FFF00C6FE38 /* AddressBookURL-plugin.py in Resources */,
 				1F35D04617894FFF00C6FE38 /* EncryptionWrappers.py in Resources */,
 				1F35D04717894FFF00C6FE38 /* Nickname.xib in Resources */,
@@ -5083,6 +5093,7 @@
 				1F689572140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A1140CE18E00DA5329 /* screenshot.png in Resources */,
 				1FF62301140E20C000E81891 /* help.png in Resources */,
+				1F0D4A3919BF351D002AB989 /* VideoRecorder.py in Resources */,
 				1FD996FF142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99704142DEFD100EE171F /* stop_chat.png in Resources */,
 				1F9406C014307D180053D741 /* display_16.png in Resources */,
@@ -5359,6 +5370,7 @@
 				1FC80EC6192E3E1F00BD62F4 /* layers.png in Resources */,
 				1FC80EC7192E3E1F00BD62F4 /* panel-info.png in Resources */,
 				1FC80EC8192E3E1F00BD62F4 /* screenshot.png in Resources */,
+				1F0D4A3B19BF351D002AB989 /* VideoRecorder.py in Resources */,
 				1FC80EC9192E3E1F00BD62F4 /* help.png in Resources */,
 				1FC80ECA192E3E1F00BD62F4 /* start_chat.png in Resources */,
 				1FC80ECB192E3E1F00BD62F4 /* stop_chat.png in Resources */,
@@ -5691,6 +5703,7 @@
 				1FCA7E5B19546B0B00765366 /* hangup_16.png in Resources */,
 				1FCA7E5C19546B0B00765366 /* echo@conference.sip2sip.info.tiff in Resources */,
 				1FCA7E5D19546B0B00765366 /* AecSlider.xib in Resources */,
+				1F0D4A3C19BF351D002AB989 /* VideoRecorder.py in Resources */,
 				1FCA7E5E19546B0B00765366 /* locked-green.png in Resources */,
 				1FCA7E5F19546B0B00765366 /* unlocked-red.png in Resources */,
 				1FCA7E6019546B0B00765366 /* locked-orange.png in Resources */,
@@ -5914,6 +5927,7 @@
 				1F689574140BA93100DA5329 /* panel-info.png in Resources */,
 				1F6896A3140CE18E00DA5329 /* screenshot.png in Resources */,
 				1FF62303140E20C000E81891 /* help.png in Resources */,
+				1F0D4A3719BF351D002AB989 /* VideoRecorder.py in Resources */,
 				1FD99701142DEFC400EE171F /* start_chat.png in Resources */,
 				1FD99706142DEFD100EE171F /* stop_chat.png in Resources */,
 				1F9406C214307D180053D741 /* display_16.png in Resources */,

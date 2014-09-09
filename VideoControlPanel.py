@@ -56,6 +56,14 @@ objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEven
 IDLE_TIME = 5
 ALPHA = 1.0
 
+RecordingImages = []
+def loadRecordingImages():
+    if not RecordingImages:
+        RecordingImages.append(NSImage.imageNamed_("recording1"))
+        RecordingImages.append(NSImage.imageNamed_("recording2"))
+        RecordingImages.append(NSImage.imageNamed_("recording3"))
+
+
 class VideoControlPanel(NSWindowController):
     implements(IObserver)
 
@@ -72,8 +80,11 @@ class VideoControlPanel(NSWindowController):
     screenshotButton = objc.IBOutlet()
     myvideoButton = objc.IBOutlet()
     pauseButton = objc.IBOutlet()
+    recordButton = objc.IBOutlet()
     toolbarView = objc.IBOutlet()
 
+    recordingImage = 0
+    recording_timer = 0
     idle_timer = None
     fade_timer = None
     is_idle = False
@@ -93,9 +104,16 @@ class VideoControlPanel(NSWindowController):
         self.window().setTitle_(self.videoWindowController.title)
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self,sender=self.videoWindowController)
+        self.notification_center.add_observer(self,sender=self.streamController.videoRecorder)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
+        self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "updateRecordingTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSEventTrackingRunLoopMode)
+        loadRecordingImages()
+
     def awakeFromNib(self):
+        self.recordButton.setEnabled_(False)
         self.fullscreenButton.setImage_(NSImage.imageNamed_("restore" if self.videoWindowController.full_screen else "fullscreen"))
         self.updateMuteButton()
         audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -130,6 +148,12 @@ class VideoControlPanel(NSWindowController):
         if sender.full_screen:
             self.fullscreenButton.setImage_(NSImage.imageNamed_("restore"))
         else:
+            self.recordButton.setEnabled_(False)
+            self.recordButton.setImage_(RecordingImages[1])
+
+            if self.streamController.videoRecorder.isRecording():
+                self.streamController.videoRecorder.pause()
+
             self.fullscreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
 
     @property
@@ -172,6 +196,11 @@ class VideoControlPanel(NSWindowController):
             self.idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "updateIdleTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.idle_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.idle_timer, NSEventTrackingRunLoopMode)
+
+    def stopRecordingTimer(self):
+        if self.recording_timer is not None and self.recording_timer.isValid():
+            self.recording_timer.invalidate()
+            self.recording_timer = None
 
     def stopIdleTimer(self):
         if self.idle_timer is not None and self.idle_timer.isValid():
@@ -225,9 +254,11 @@ class VideoControlPanel(NSWindowController):
 
         self.closed = True
 
+        self.notification_center.remove_observer(self, sender=self.streamController.videoRecorder)
         self.notification_center.remove_observer(self, sender=self.videoWindowController)
         self.notification_center.remove_observer(self, name='BlinkMuteChangedState')
 
+        self.stopRecordingTimer()
         self.stopIdleTimer()
         self.stopFadeTimer()
 
@@ -287,6 +318,20 @@ class VideoControlPanel(NSWindowController):
                     self.visible = True
             self.is_idle = False
 
+    def updateRecordingTimer_(self, timer):
+        if not self.videoWindowController.full_screen:
+            self.recordButton.setEnabled_(False)
+            self.recordButton.setImage_(RecordingImages[1])
+        else:
+            self.recordButton.setEnabled_(True)
+            if self.streamController.videoRecorder.isRecording():
+                self.recordingImage += 1
+                if self.recordingImage >= len(RecordingImages):
+                    self.recordingImage = 0
+                self.recordButton.setImage_(RecordingImages[self.recordingImage])
+            else:
+                self.recordButton.setImage_(RecordingImages[0])
+
     def fade_(self, timer):
         if self.window():
             if self.window().alphaValue() > 0.0:
@@ -308,6 +353,10 @@ class VideoControlPanel(NSWindowController):
     def userClickedMuteButton_(self, sender):
         SIPManager().mute(not SIPManager().is_muted())
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
+
+    @objc.IBAction
+    def userClickedRecordButton_(self, sender):
+        self.streamController.videoRecorder.toggleRecording()
 
     @objc.IBAction
     def userClickedHoldButton_(self, sender):
