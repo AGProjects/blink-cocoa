@@ -1613,12 +1613,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = True
         if data.error is not None:
             self.sessionController.log_info(u"Chat session failed: %s" % data.error)
-            if data.error in ('Connection was closed cleanly.', 'Cannot send chunk because MSRPSession is DONE'):
-                t = self.sessionController.getTitleShort()
-                reason = NSLocalizedString("%s left the conversation", "Label") % t
-            else:
-                reason = NSLocalizedString("MSRP connection failed", "Label")
-
+            reason = NSLocalizedString("Connection failed", "Label")+ " (%s)" % data.error
             self.showSystemMessage(reason, ISOTimestamp.now(), True)
             self.changeStatus(STREAM_FAILED, data.error)
         else:
