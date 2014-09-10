@@ -7,6 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoLocalWindowController">
             <connections>
+                <outlet property="disconnectLabel" destination="IQF-Bd-lPu" id="oNG-xA-WWr"/>
                 <outlet property="videoView" destination="cMz-OM-B9k" id="wPb-Ko-LYS"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
             </connections>
@@ -27,6 +28,15 @@
                         <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>
+                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="IQF-Bd-lPu">
+                        <rect key="frame" x="-2" y="107" width="535" height="70"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Video Ended" id="jgr-zJ-IpB">
+                            <font key="font" metaFont="system" size="40"/>
+                            <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
             <connections>

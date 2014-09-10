@@ -67,7 +67,6 @@ from SIPManager import SIPManager
 try:
     from VideoController import VideoController
     video_support = True
-    from VideoDisconnectWindow import VideoDisconnectWindow
 except ImportError:
     video_support = False
 from interfaces.itunes import MusicApplications
@@ -2101,8 +2100,9 @@ class SessionController(NSObject):
                 video_removed = any(stream for stream in data.removed_streams if isinstance(stream, VideoStream))
                 if video_removed:
                     label = NSLocalizedString("Video removed by remote party", "Label")
-                    disconnectedPanel = VideoDisconnectWindow(label)
-                    disconnectedPanel.window.setTitle_(self.getTitle())
+                    video_stream = self.streamHandlerOfType("video")
+                    if video_stream:
+                        video_stream.showDisconnectedReason(label)
 
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 

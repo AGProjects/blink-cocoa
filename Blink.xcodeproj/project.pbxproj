@@ -1190,7 +1190,6 @@
 		1FC80E6F192E3E1F00BD62F4 /* dtmf_star_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1141095BFF500284E18 /* dtmf_star_tone.wav */; };
 		1FC80E70192E3E1F00BD62F4 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
 		1FC80E71192E3E1F00BD62F4 /* hangup_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1151095BFF500284E18 /* hangup_tone.wav */; };
-		1FC80E72192E3E1F00BD62F4 /* VideoDisconnectWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */; };
 		1FC80E73192E3E1F00BD62F4 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
 		1FC80E74192E3E1F00BD62F4 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1FC80E75192E3E1F00BD62F4 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
@@ -1292,7 +1291,6 @@
 		1FC80EDA192E3E1F00BD62F4 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
 		1FC80EDB192E3E1F00BD62F4 /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
 		1FC80EDC192E3E1F00BD62F4 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
-		1FC80EDD192E3E1F00BD62F4 /* VideoDisconnectWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */; };
 		1FC80EDE192E3E1F00BD62F4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1FC80EE0192E3E1F00BD62F4 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FC80EE1192E3E1F00BD62F4 /* AddressBookEmail-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */; };
@@ -1543,7 +1541,6 @@
 		1FCA7DCA19546B0B00765366 /* dtmf_star_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1141095BFF500284E18 /* dtmf_star_tone.wav */; };
 		1FCA7DCB19546B0B00765366 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
 		1FCA7DCC19546B0B00765366 /* hangup_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1151095BFF500284E18 /* hangup_tone.wav */; };
-		1FCA7DCD19546B0B00765366 /* VideoDisconnectWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */; };
 		1FCA7DCE19546B0B00765366 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
 		1FCA7DCF19546B0B00765366 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
 		1FCA7DD019546B0B00765366 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
@@ -1648,7 +1645,6 @@
 		1FCA7E3619546B0B00765366 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
 		1FCA7E3719546B0B00765366 /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
 		1FCA7E3819546B0B00765366 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
-		1FCA7E3919546B0B00765366 /* VideoDisconnectWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */; };
 		1FCA7E3A19546B0B00765366 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1FCA7E3B19546B0B00765366 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FCA7E3C19546B0B00765366 /* AddressBookEmail-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */; };
@@ -1853,14 +1849,6 @@
 		1FE59BB9161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBA161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBB161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
-		1FE5F5D418EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */; };
-		1FE5F5D518EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */; };
-		1FE5F5D618EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */; };
-		1FE5F5D718EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */; };
-		1FE5F5D818EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */; };
-		1FE5F5D918EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */; };
-		1FE5F5DA18EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */; };
-		1FE5F5DB18EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */; };
 		1FEC3E9114D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9214D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
 		1FEC3E9314D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
@@ -2945,7 +2933,6 @@
 		1F73B310191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1F73B311191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1F73B313191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
-		1F73B314191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
 		1F762B44194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F762B45194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSSession.xib; sourceTree = "<group>"; };
 		1F762B46194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSView.xib; sourceTree = "<group>"; };
@@ -2986,7 +2973,6 @@
 		1F762B69194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1F762B6A194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1F762B6C194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
-		1F762B6D194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
 		1F762B6F194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatWindow.xib; sourceTree = "<group>"; };
 		1F762B70194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatView.xib; sourceTree = "<group>"; };
 		1F762B71194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
@@ -3115,9 +3101,6 @@
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
-		1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoDisconnectWindow.py; sourceTree = "<group>"; };
-		1FE5F5DC18EF3ED300EDEE20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
-		1FE5F5DE18EF3ED900EDEE20 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoDisconnectWindow.xib; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
 		1FED61AE19B1D0E3001F5F44 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FED61AF19B1D0E6001F5F44 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
@@ -3563,8 +3546,6 @@
 				1F4B789819AEAEC200F854CB /* VideoWindow.xib */,
 				1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */,
 				1FC0184D18E0774D0009145A /* VideoControlPanel.xib */,
-				1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */,
-				1FE5F5D318EF2A2900EDEE20 /* VideoDisconnectWindow.py */,
 				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
 				1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */,
 				1F6EF7FE18E637E0008592D2 /* VideoLocalWindowController.py */,
@@ -4441,7 +4422,6 @@
 				1F2272F912B554F50010A8B2 /* dtmf_star_tone.wav in Resources */,
 				1FD0807D18C02DA800A3B313 /* available.png in Resources */,
 				1F2272FA12B554F50010A8B2 /* hangup_tone.wav in Resources */,
-				1FE5F5D518EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */,
 				1F2272FB12B554F50010A8B2 /* hold_tone.wav in Resources */,
 				1F2272FC12B554F50010A8B2 /* ring_outbound2.wav in Resources */,
 				1F2272FD12B554F50010A8B2 /* ring_tone.wav in Resources */,
@@ -4552,7 +4532,6 @@
 				1FC99CF719BC93700013C580 /* close-small.png in Resources */,
 				1F87B6EB1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
-				1FE5F5D918EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */,
 				1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */,
 				1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 				1FEC3E9214D41678003745B9 /* ca.crt in Resources */,
@@ -4655,7 +4634,6 @@
 				1F35CF9B17894FFF00C6FE38 /* AudioSession.py in Resources */,
 				1F35CF9C17894FFF00C6FE38 /* muted.png in Resources */,
 				1F35CF9D17894FFF00C6FE38 /* srtp.png in Resources */,
-				1FE5F5DB18EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */,
 				1F35CF9E17894FFF00C6FE38 /* AlertPanel.py in Resources */,
 				1F35CFA117894FFF00C6FE38 /* blink.icns in Resources */,
 				1F35CFA217894FFF00C6FE38 /* util.py in Resources */,
@@ -4733,7 +4711,6 @@
 				1F35CFE517894FFF00C6FE38 /* ChatView.html in Resources */,
 				1F35CFE617894FFF00C6FE38 /* smiley_off.png in Resources */,
 				1F35CFE717894FFF00C6FE38 /* smiley_on.png in Resources */,
-				1FE5F5D718EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */,
 				1F35CFE917894FFF00C6FE38 /* SMSWindowManager.py in Resources */,
 				1F35CFEA17894FFF00C6FE38 /* HistoryViewer.py in Resources */,
 				1F35CFEB17894FFF00C6FE38 /* HistoryViewer.xib in Resources */,
@@ -4908,7 +4885,6 @@
 				1F8DC330135084FA0034815C /* PreferencesWindow.xib in Resources */,
 				1FC99CF819BC93700013C580 /* close-small.png in Resources */,
 				1F8DC331135084FA0034815C /* ChatWindow.xib in Resources */,
-				1FE5F5D618EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */,
 				1F8DC332135084FA0034815C /* ChatView.xib in Resources */,
 				1F8DC333135084FA0034815C /* BlinkAppDelegate.py in Resources */,
 				1F8DC334135084FA0034815C /* SIPManager.py in Resources */,
@@ -4971,7 +4947,6 @@
 				1F8DC36B135084FA0034815C /* incoming_file.png in Resources */,
 				1F8DC36C135084FA0034815C /* upfile.png in Resources */,
 				1F8DC36D135084FA0034815C /* hangup.png in Resources */,
-				1FE5F5DA18EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */,
 				1F8DC36E135084FA0034815C /* belloff.png in Resources */,
 				1F8DC36F135084FA0034815C /* bellon.png in Resources */,
 				1F8DC370135084FA0034815C /* AudioController.py in Resources */,
@@ -5282,7 +5257,6 @@
 				1FC80E6F192E3E1F00BD62F4 /* dtmf_star_tone.wav in Resources */,
 				1FC80E70192E3E1F00BD62F4 /* available.png in Resources */,
 				1FC80E71192E3E1F00BD62F4 /* hangup_tone.wav in Resources */,
-				1FC80E72192E3E1F00BD62F4 /* VideoDisconnectWindow.py in Resources */,
 				1FC80E73192E3E1F00BD62F4 /* hold_tone.wav in Resources */,
 				1FC80E74192E3E1F00BD62F4 /* ring_outbound2.wav in Resources */,
 				1FC80E75192E3E1F00BD62F4 /* ring_tone.wav in Resources */,
@@ -5390,7 +5364,6 @@
 				1FC80EDA192E3E1F00BD62F4 /* invisible.png in Resources */,
 				1FC80EDB192E3E1F00BD62F4 /* NightVolumeSetting.xib in Resources */,
 				1FC80EDC192E3E1F00BD62F4 /* ScreensharingPreviewPanel.xib in Resources */,
-				1FC80EDD192E3E1F00BD62F4 /* VideoDisconnectWindow.xib in Resources */,
 				1FC80EDE192E3E1F00BD62F4 /* iCloudManager.py in Resources */,
 				1FC80EE0192E3E1F00BD62F4 /* ca.crt in Resources */,
 				1FC80EE1192E3E1F00BD62F4 /* AddressBookEmail-plugin-setup.py in Resources */,
@@ -5558,7 +5531,6 @@
 				1FCA7DCA19546B0B00765366 /* dtmf_star_tone.wav in Resources */,
 				1FCA7DCB19546B0B00765366 /* available.png in Resources */,
 				1FCA7DCC19546B0B00765366 /* hangup_tone.wav in Resources */,
-				1FCA7DCD19546B0B00765366 /* VideoDisconnectWindow.py in Resources */,
 				1FCA7DCE19546B0B00765366 /* hold_tone.wav in Resources */,
 				1FCA7DCF19546B0B00765366 /* ring_outbound2.wav in Resources */,
 				1FCA7DD019546B0B00765366 /* ring_tone.wav in Resources */,
@@ -5666,7 +5638,6 @@
 				1FC99CFB19BC93700013C580 /* close-small.png in Resources */,
 				1FCA7E3719546B0B00765366 /* NightVolumeSetting.xib in Resources */,
 				1FCA7E3819546B0B00765366 /* ScreensharingPreviewPanel.xib in Resources */,
-				1FCA7E3919546B0B00765366 /* VideoDisconnectWindow.xib in Resources */,
 				1FCA7E3A19546B0B00765366 /* iCloudManager.py in Resources */,
 				1FCA7E3B19546B0B00765366 /* ca.crt in Resources */,
 				1FCA7E3C19546B0B00765366 /* AddressBookEmail-plugin-setup.py in Resources */,
@@ -5744,7 +5715,6 @@
 				2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */,
 				2BAF381E0FE088C70040117A /* PreferencesWindow.xib in Resources */,
 				2BAF381F0FE088C70040117A /* ChatWindow.xib in Resources */,
-				1FE5F5D418EF2A2900EDEE20 /* VideoDisconnectWindow.py in Resources */,
 				2BAF38210FE088C70040117A /* ChatView.xib in Resources */,
 				2BAF382A0FE088E80040117A /* BlinkAppDelegate.py in Resources */,
 				2BAF382C0FE088E80040117A /* SIPManager.py in Resources */,
@@ -5807,7 +5777,6 @@
 				2B0C236B107BB2FA008266C7 /* incoming_file.png in Resources */,
 				2B0C236C107BB2FB008266C7 /* upfile.png in Resources */,
 				2BF42B54107D7DFF00F04A6C /* hangup.png in Resources */,
-				1FE5F5D818EF3ED300EDEE20 /* VideoDisconnectWindow.xib in Resources */,
 				2BF42BA4107D8B4D00F04A6C /* belloff.png in Resources */,
 				2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */,
 				2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */,
@@ -6373,17 +6342,6 @@
 				1F762B72194B34B5002D998E /* pt */,
 			);
 			name = ChatPrivateMessage.xib;
-			sourceTree = "<group>";
-		};
-		1FE5F5DD18EF3ED300EDEE20 /* VideoDisconnectWindow.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1FE5F5DC18EF3ED300EDEE20 /* en */,
-				1FE5F5DE18EF3ED900EDEE20 /* ro */,
-				1F73B314191BCBB500213DC5 /* es */,
-				1F762B6D194B34B5002D998E /* pt */,
-			);
-			name = VideoDisconnectWindow.xib;
 			sourceTree = "<group>";
 		};
 		1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */ = {

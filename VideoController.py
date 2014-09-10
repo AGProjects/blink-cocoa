@@ -277,9 +277,9 @@ class VideoController(MediaStream):
                 label.setStringValue_(NSLocalizedString("Connecting...", "Label"))
             elif self.status == STREAM_RINGING:
                 label.setStringValue_(NSLocalizedString("Ringing...", "Label"))
-            elif self.status == STREAM_FAILED:
-                label.setStringValue_(NSLocalizedString("Call Failed", "Label"))
-
+            elif self.status in (STREAM_IDLE, STREAM_FAILED):
+                label.setStringValue_("")
+ 
     def _NH_MediaStreamDidInitialize(self, sender, data):
         pass
 
@@ -413,7 +413,7 @@ class VideoController(MediaStream):
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if self.stream in data.proposed_streams:
-            self.videoWindowController.showDisconnectedPanel()
+            self.videoWindowController.showDisconnectedReason()
 
     def _NH_BlinkProposalAccepted(self, sender, data):
         if self.stream in data.accepted_streams:
@@ -425,7 +425,7 @@ class VideoController(MediaStream):
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
-            self.videoWindowController.showDisconnectedPanel()
+            self.videoWindowController.showDisconnectedReason()
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
@@ -457,11 +457,11 @@ class VideoController(MediaStream):
                     reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
 
         if not skip_disconnect_panel:
-            self.videoWindowController.showDisconnectedPanel(reason)
+            self.videoWindowController.showDisconnectedReason(reason)
         self.stopTimers()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
-        self.videoWindowController.showDisconnectedPanel(NSLocalizedString("Video Ended", "Label"))
+        self.videoWindowController.showDisconnectedReason(NSLocalizedString("Video Ended", "Label"))
 
     def stopTimers(self):
         if self.statistics_timer is not None:

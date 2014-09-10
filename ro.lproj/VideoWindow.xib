@@ -7,6 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoWindowController">
             <connections>
+                <outlet property="disconnectLabel" destination="Hrg-Fl-9hC" id="hrs-WW-TP3"/>
                 <outlet property="videoView" destination="U8k-ux-24e" id="fab-CT-YGl"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
             </connections>
@@ -29,6 +30,15 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
                     </imageView>
+                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Hrg-Fl-9hC">
+                        <rect key="frame" x="-2" y="118" width="535" height="64"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Apel Terminat" id="l1e-35-jrw">
+                            <font key="font" metaFont="system" size="40"/>
+                            <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
             <connections>

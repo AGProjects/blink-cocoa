@@ -69,6 +69,7 @@ class VideoLocalWindowController(NSWindowController):
     initialLocation = None
     titleBarView = None
     videoView = objc.IBOutlet()
+    disconnectLabel = objc.IBOutlet()
     aspect_ratio = None
     full_screen_in_progress = False
 
@@ -197,10 +198,12 @@ class VideoLocalWindowController(NSWindowController):
         if not self.streamController:
             return True
 
-        if self.window:
-            self.window().close()
-
         return True
+
+    def fade_(self, timer):
+        self.titleBarView.close()
+        self.videoView.close()
+        self.window().close()
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
@@ -243,12 +246,12 @@ class VideoLocalWindowController(NSWindowController):
     def close(self):
         self.log_debug('Close %s' % self)
         self.finished = True
-        self.titleBarView.close()
         if self.tracking_area is not None:
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
-        self.videoView.close()
-        self.window().close()
+
+        timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "fade:", None, False)
+
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
         self.notification_center = None
 

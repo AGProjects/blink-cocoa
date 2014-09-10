@@ -68,7 +68,6 @@ from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, 
 
 from VideoControlPanel import VideoControlPanel
 from VideoLocalWindowController import VideoLocalWindowController
-from VideoDisconnectWindow import VideoDisconnectWindow
 from util import run_in_gui_thread
 
 
@@ -221,6 +220,7 @@ class VideoWindowController(NSWindowController):
     updating_aspect_ratio = False
 
     videoView = objc.IBOutlet()
+    disconnectLabel = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -400,9 +400,15 @@ class VideoWindowController(NSWindowController):
         self.mouse_in_window = False
         self.startMouseOutTimer()
 
-    def showDisconnectedPanel(self, label=None):
-        self.disconnectedPanel = VideoDisconnectWindow(label)
-        self.disconnectedPanel.window.setTitle_(self.title)
+    def showDisconnectedReason(self, label=None):
+        if self.window():
+            if label:
+                self.disconnectLabel.setStringValue_(label)
+            self.disconnectLabel.setHidden_(False)
+        if self.localVideoWindow and self.localVideoWindow.window():
+            if label:
+                self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
+            self.localVideoWindow.window().delegate().disconnectLabel.setHidden_(False)
 
     def changeAspectRatio(self):
         try:
@@ -599,23 +605,21 @@ class VideoWindowController(NSWindowController):
         self.sessionController.log_debug('Close %s' % self)
 
         self.goToWindowMode()
-
-        if self.titleBarView is not None:
-            self.titleBarView.close()
-
         self.stopMouseOutTimer()
 
         self.videoControlPanel.close()
         self.videoControlPanel = None
 
-        if self.videoView:
-            self.videoView.close()
-
         if self.window():
-            self.window().close()
+            timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "fade:", None, False)
 
         if self.localVideoWindow:
             self.localVideoWindow.close()
+
+    def fade_(self, timer):
+        self.titleBarView.close()
+        self.videoView.close()
+        self.window().close()
 
     def dealloc(self):
         self.sessionController.log_debug('Dealloc %s' % self)

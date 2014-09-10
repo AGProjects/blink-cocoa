@@ -20,7 +20,7 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
             <subviews>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="8Wm-re-6NQ">
-                    <rect key="frame" x="225.00000054567624" y="-3" width="146" height="17"/>
+                    <rect key="frame" x="225.0000011209284" y="-3" width="146" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" id="oc0-69-OYv">
                         <font key="font" metaFont="miniSystem"/>
@@ -29,7 +29,7 @@
                     </textFieldCell>
                 </textField>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="bJk-Id-gct">
-                    <rect key="frame" x="24" y="-1.5" width="347.0000005456763" height="17"/>
+                    <rect key="frame" x="24" y="-1.5" width="347.00000112092846" height="17"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" id="6sb-cu-RN0">
                         <font key="font" metaFont="smallSystem"/>
