@@ -293,7 +293,6 @@ class VideoWindowController(NSWindowController):
         if SIPSimpleSettings().video.keep_window_on_top:
             self.toogleAlwaysOnTop()
 
-        self.titleBarView.titleLabel.setStringValue_(self.title)
         self.videoView.setProducer(self.streamController.stream.producer)
 
     def showTitleBar(self):
@@ -663,7 +662,6 @@ class TitleBarView(NSObject):
     view = objc.IBOutlet()
     alwaysOnTop = objc.IBOutlet()
     textLabel = objc.IBOutlet()
-    titleLabel = objc.IBOutlet()
 
     def initWithWindowController_(self, windowController):
         self.windowController = windowController

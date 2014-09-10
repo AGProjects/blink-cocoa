@@ -104,7 +104,6 @@ class VideoLocalWindowController(NSWindowController):
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
         self.titleBarView.textLabel.setHidden_(False)
-        self.titleBarView.titleLabel.setStringValue_(self.videoWindowController.title)
         self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
         
@@ -305,7 +304,6 @@ class VideoLocalWindowController(NSWindowController):
 class LocalTitleBarView(NSObject):
     view = objc.IBOutlet()
     textLabel = objc.IBOutlet()
-    titleLabel = objc.IBOutlet()
     
     def init(self):
         self = super(LocalTitleBarView, self).init()
@@ -321,8 +319,3 @@ class LocalTitleBarView(NSObject):
     def performClose_(self, sender):
         self.view.window().performClose_(sender)
 
-
-class BlackView(NSView):
-    def drawRect_(self, rect):
-        NSColor.blackColor().set()
-        NSRectFill(self.bounds())

@@ -2803,9 +2803,6 @@
 		1F419C991915330B0051F3D9 /* branding-pro.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-pro.py"; sourceTree = "<group>"; };
 		1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoWindowController.py; sourceTree = "<group>"; };
 		1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoControlPanel.py; sourceTree = "<group>"; };
-		1F4480C719BCC72700B199E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1F4480C819BCC72900B199E0 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1F4480C919BCC72B00B199E0 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.55.dylib; path = Distribution/Frameworks/libavcodec.55.dylib; sourceTree = "<group>"; };
 		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.55.dylib; path = Distribution/Frameworks/libavformat.55.dylib; sourceTree = "<group>"; };
 		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.52.dylib; path = Distribution/Frameworks/libavutil.52.dylib; sourceTree = "<group>"; };
@@ -3062,12 +3059,6 @@
 		1FC80F70192E414C00BD62F4 /* branding-elquijote.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote.py"; sourceTree = "<group>"; };
 		1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ElQuijote-logo.png"; sourceTree = "<group>"; };
 		1FC99CF519BC93700013C580 /* close-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "close-small.png"; path = "icons/close-small.png"; sourceTree = "<group>"; };
-		1FC99CFC19BC96AA0013C580 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1FC99CFD19BC96AC0013C580 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1FC99CFE19BC96AE0013C580 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1FC99CFF19BCA57C0013C580 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
-		1FC99D0019BCA57E0013C580 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
-		1FC99D0119BCA5800013C580 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
 		1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "support@conference.sip2sip.info.tiff"; path = "icons/support@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
@@ -3102,14 +3093,23 @@
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
 		1FEC3E9014D41678003745B9 /* ca.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.crt; sourceTree = "<group>"; };
-		1FED61AE19B1D0E3001F5F44 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FED61AF19B1D0E6001F5F44 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FED61B019B1D0E9001F5F44 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FF2F5B113AB406A00502BDB /* contact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = contact.py; sourceTree = "<group>"; };
 		1FF32B4C17EC83F000E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/DebugWindow.xib; sourceTree = "<group>"; };
 		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FF32B5E17EC842B00E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		1FF3736F17C9E656007418EB /* ChatOTR.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatOTR.py; sourceTree = "<group>"; };
+		1FF44ADE19C076ED006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1FF44ADF19C076EF006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1FF44AE019C076F1006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1FF44AE219C07876006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1FF44AE319C07878006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1FF44AE419C0787A006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1FF44AE519C07886006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1FF44AE619C07888006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1FF44AE719C0788A006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1FF44AE819C079E2006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1FF44AE919C079E4006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1FF44AEA19C079E7006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
 		1FF63CD019128A1400A502FB /* MyVideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MyVideoWindowController.py; sourceTree = "<group>"; };
@@ -6062,9 +6062,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F194A8819B1F06200CE5A0F /* en */,
-				1FC99CFC19BC96AA0013C580 /* ro */,
-				1FC99CFD19BC96AC0013C580 /* es */,
-				1FC99CFE19BC96AE0013C580 /* pt */,
+				1FF44ADE19C076ED006C504D /* ro */,
+				1FF44ADF19C076EF006C504D /* es */,
+				1FF44AE019C076F1006C504D /* pt */,
 			);
 			name = VideoLocalTitleBarView.xib;
 			sourceTree = "<group>";
@@ -6117,9 +6117,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B789719AEAEC200F854CB /* en */,
-				1F4480C719BCC72700B199E0 /* ro */,
-				1F4480C819BCC72900B199E0 /* es */,
-				1F4480C919BCC72B00B199E0 /* pt */,
+				1FF44AE519C07886006C504D /* ro */,
+				1FF44AE619C07888006C504D /* es */,
+				1FF44AE719C0788A006C504D /* pt */,
 			);
 			name = VideoWindow.xib;
 			sourceTree = "<group>";
@@ -6128,9 +6128,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B78A219AEAED300F854CB /* en */,
-				1FED61AE19B1D0E3001F5F44 /* ro */,
-				1FED61AF19B1D0E6001F5F44 /* es */,
-				1FED61B019B1D0E9001F5F44 /* pt */,
+				1FF44AE819C079E2006C504D /* ro */,
+				1FF44AE919C079E4006C504D /* es */,
+				1FF44AEA19C079E7006C504D /* pt */,
 			);
 			name = VideoLocalWindow.xib;
 			sourceTree = "<group>";
@@ -6216,9 +6216,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F6C0DC2190EBD8F00E79D90 /* en */,
-				1FC99CFF19BCA57C0013C580 /* ro */,
-				1FC99D0019BCA57E0013C580 /* es */,
-				1FC99D0119BCA5800013C580 /* pt */,
+				1FF44AE219C07876006C504D /* ro */,
+				1FF44AE319C07878006C504D /* es */,
+				1FF44AE419C0787A006C504D /* pt */,
 			);
 			name = VideoTitleBarView.xib;
 			sourceTree = "<group>";
