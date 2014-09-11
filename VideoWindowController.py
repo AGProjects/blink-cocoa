@@ -427,7 +427,7 @@ class VideoWindowController(NSWindowController):
         self.streamController.sessionController.removeVideoFromSession()
 
     def hangup_(self, sender):
-        self.sessionController.end(self)
+        self.sessionController.end()
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
@@ -810,7 +810,7 @@ class VideoWindowController(NSWindowController):
     @objc.IBAction
     def userClickedHangupButton_(self, sender):
         self.window().orderOut_(None)
-        self.sessionController.end(self)
+        self.sessionController.end()
 
     @objc.IBAction
     def userClickedContactsButton_(self, sender):

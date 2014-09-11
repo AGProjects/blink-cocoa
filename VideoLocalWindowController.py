@@ -235,7 +235,7 @@ class VideoLocalWindowController(NSWindowController):
 
     def keyDown_(self, event):
         if event.keyCode() == 53:
-            self.sessionController.end(self)
+            self.sessionController.end()
             self.hide()
 
     def hide(self):
