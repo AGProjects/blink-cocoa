@@ -26,7 +26,12 @@ from AppKit import (NSApp,
                     NSDragOperationCopy,
                     NSDeviceIsScreen,
                     NSZeroPoint,
-                    NSRightMouseUp
+                    NSRightMouseUp,
+                    NSSound,
+                    NSViewMinXMargin,
+                    NSViewMaxXMargin,
+                    NSViewMinYMargin,
+                    NSViewMaxYMargin
                     )
 
 from Foundation import (NSAttributedString,
@@ -49,7 +54,14 @@ from Foundation import (NSAttributedString,
                         NSMakeSize,
                         NSMakeRect,
                         NSPopUpButton,
-                        NSTextField
+                        NSTextField,
+                        NSTask,
+                        NSMakePoint,
+                        NSWidth,
+                        NSHeight,
+                        NSDownloadsDirectory,
+                        NSSearchPathForDirectoriesInDomains,
+                        NSUserDomainMask
                         )
 
 from Foundation import mbFlipWindow
@@ -64,12 +76,30 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
 
-from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat
+from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
 
-from VideoControlPanel import VideoControlPanel
+from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
 from VideoLocalWindowController import VideoLocalWindowController
-from util import run_in_gui_thread
+from SIPManager import SIPManager
+from util import allocate_autorelease_pool, run_in_gui_thread
+from application.notification import IObserver, NotificationCenter
+from application.python import Null
+from zope.interface import implements
+from BlinkLogger import BlinkLogger
 
+
+bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
+objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
+
+IDLE_TIME = 5
+
+
+RecordingImages = []
+def loadRecordingImages():
+    if not RecordingImages:
+        RecordingImages.append(NSImage.imageNamed_("recording1"))
+        RecordingImages.append(NSImage.imageNamed_("recording2"))
+        RecordingImages.append(NSImage.imageNamed_("recording3"))
 
 class VideoWidget(NSView):
     _data = None
@@ -113,6 +143,7 @@ class VideoWidget(NSView):
         self.removeFromSuperview()
 
     def dealloc(self):
+        BlinkLogger().log_debug("Dealloc %s" % self)
         super(VideoWidget, self).dealloc()
 
     def mouseDown_(self, event):
@@ -196,10 +227,10 @@ class VideoWidget(NSView):
 
 
 class VideoWindowController(NSWindowController):
+    implements(IObserver)
 
     valid_aspect_ratios = [None, 1.33, 1.77]
     aspect_ratio_descriptions = {1.33: '4/3', 1.77: '16/9'}
-    videoControlPanel = None
     full_screen = False
     initialLocation = None
     always_on_top = False
@@ -218,10 +249,31 @@ class VideoWindowController(NSWindowController):
     local_video_visible_before_fullscreen = False
     is_key_window = False
     updating_aspect_ratio = False
+        
+    holdButton = objc.IBOutlet()
+    hangupButton = objc.IBOutlet()
+    chatButton = objc.IBOutlet()
+    infoButton = objc.IBOutlet()
+    muteButton = objc.IBOutlet()
+    aspectButton = objc.IBOutlet()
+    screenshotButton = objc.IBOutlet()
+    myvideoButton = objc.IBOutlet()
+    recordButton = objc.IBOutlet()
 
+    buttonsView = objc.IBOutlet()
     videoView = objc.IBOutlet()
     disconnectLabel = objc.IBOutlet()
 
+    recordingImage = 0
+    recording_timer = 0
+    idle_timer = None
+    is_idle = False
+    show_time = None
+    mouse_in_window = False
+    is_key_window = False
+    visible_buttons = True
+    recording_timer = None
+    
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -229,16 +281,57 @@ class VideoWindowController(NSWindowController):
         self.streamController = streamController
         self.sessionController.log_debug('Init %s' % self)
         self.title = self.sessionController.getTitleShort()
-        self.videoControlPanel = VideoControlPanel(self)
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
         self.flipWnd.setDuration_(2.4)
+        
+        self.notification_center = NotificationCenter()
+
+        loadRecordingImages()
 
     def initLocalVideoWindow(self):
         sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
         other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
         if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
             self.localVideoWindow = VideoLocalWindowController(self)
+
+    def _NH_BlinkMuteChangedState(self, sender, data):
+        self.updateMuteButton()
+
+    def updateMuteButton(self):
+        self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
+    
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def awakeFromNib(self):
+        try:
+            self.notification_center.add_observer(self,sender=self.streamController.videoRecorder)
+            self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+
+            self.recordButton.setHidden_(True)
+            self.updateMuteButton()
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream:
+                if audio_stream.status == STREAM_CONNECTED:
+                    if audio_stream.holdByLocal or audio_stream.holdByRemote:
+                        self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
+                    else:
+                        self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+                else:
+                    self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+            else:
+                self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+        except Exception,e:
+            print e
+
+        self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "updateRecordingTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSEventTrackingRunLoopMode)
+
 
     @property
     def sessionController(self):
@@ -285,7 +378,7 @@ class VideoWindowController(NSWindowController):
         self.window().setDelegate_(self)
         self.sessionController.log_debug('Init %s in %s' % (self.window(), self))
         self.window().makeFirstResponder_(self.videoView)
-        self.window().setTitle_(self.title)
+        self.window().setTitle_(title)
         self.updateTrackingAreas()
 
         self.showTitleBar()
@@ -294,6 +387,7 @@ class VideoWindowController(NSWindowController):
             self.toogleAlwaysOnTop()
 
         self.videoView.setProducer(self.streamController.stream.producer)
+        self.startIdleTimer()
 
     def showTitleBar(self):
         if self.streamController.ended:
@@ -333,7 +427,7 @@ class VideoWindowController(NSWindowController):
         self.streamController.sessionController.removeVideoFromSession()
 
     def hangup_(self, sender):
-        self.streamController.sessionController.end()
+        self.sessionController.end(self)
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
@@ -390,8 +484,7 @@ class VideoWindowController(NSWindowController):
     def mouseEntered_(self, event):
         self.mouse_in_window = True
         self.stopMouseOutTimer()
-        if self.videoControlPanel is not None:
-            self.videoControlPanel.show()
+        self.showButtons()
 
     def mouseExited_(self, event):
         if self.full_screen or self.full_screen_in_progress:
@@ -408,6 +501,17 @@ class VideoWindowController(NSWindowController):
             if label:
                 self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
             self.localVideoWindow.window().delegate().disconnectLabel.setHidden_(False)
+
+    def startIdleTimer(self):
+        if self.idle_timer is None:
+            self.idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "updateIdleTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.idle_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.idle_timer, NSEventTrackingRunLoopMode)
+
+    def stopIdleTimer(self):
+        if self.idle_timer is not None and self.idle_timer.isValid():
+            self.idle_timer.invalidate()
+            self.idle_timer = None
 
     def changeAspectRatio(self):
         try:
@@ -450,9 +554,7 @@ class VideoWindowController(NSWindowController):
         self.sessionController.log_debug("Show %s" % self)
         self.init_window()
         self.updateAspectRatio()
-
-        if self.videoControlPanel is not None:
-            self.videoControlPanel.show()
+        self.showButtons()
 
         if self.localVideoWindow and not self.flipped:
             self.localVideoWindow.window().orderOut_(None)
@@ -484,6 +586,17 @@ class VideoWindowController(NSWindowController):
             return
 
         self.updateTrackingAreas()
+        origin = NSMakePoint(
+                    (NSWidth(self.buttonsView.superview().bounds()) - NSWidth(self.buttonsView.frame())) / 2,
+                    (NSHeight(self.buttonsView.superview().bounds()) - NSHeight(self.buttonsView.frame())) - 100)
+        origin = NSMakePoint((NSWidth(self.buttonsView.superview().bounds()) - NSWidth(self.buttonsView.frame())) / 2,
+                    (NSHeight(self.buttonsView.superview().bounds())))
+
+        origin = self.buttonsView.frame().origin
+        origin.x = (NSWidth(self.buttonsView.superview().bounds()) - NSWidth(self.buttonsView.frame())) / 2
+        self.buttonsView.setFrameOrigin_(origin)
+        self.buttonsView.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin)
+
 
     @run_in_gui_thread
     def hide(self):
@@ -493,13 +606,10 @@ class VideoWindowController(NSWindowController):
         if self.window():
             self.window().orderOut_(self)
 
-        if self.videoControlPanel:
-            self.videoControlPanel.hide()
+        self.hideButtons()
 
     def removeVideo(self):
         self.window().orderOut_(None)
-        if self.videoControlPanel is not None:
-            self.videoControlPanel.window().orderOut_(None)
         self.sessionController.removeVideoFromSession()
         NSApp.delegate().contactsWindowController.showAudioDrawer()
     
@@ -542,6 +652,7 @@ class VideoWindowController(NSWindowController):
 
     def windowWillEnterFullScreen_(self, notification):
         self.full_screen_in_progress = True
+        self.hideTitleBar()
 
     def windowWillExitFullScreen_(self, notification):
         self.full_screen_in_progress = True
@@ -556,12 +667,8 @@ class VideoWindowController(NSWindowController):
         self.full_screen = True
         self.stopMouseOutTimer()
         NSApp.delegate().contactsWindowController.showLocalVideoWindow()
-        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
 
-        if self.videoControlPanel is not None:
-            self.videoControlPanel.show()
-            #self.videoControlPanel.window().makeKeyAndOrderFront_(None)
-            self.videoControlPanel.window().orderFront_(None)
+        self.showButtons()
 
         if self.window():
             self.window().setLevel_(NSNormalWindowLevel)
@@ -576,7 +683,9 @@ class VideoWindowController(NSWindowController):
         if not self.local_video_visible_before_fullscreen:
             NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
 
-        NotificationCenter().post_notification("BlinkVideoWindowFullScreenChanged", sender=self)
+        self.recordButton.setHidden_(True)
+        if self.streamController.videoRecorder.isRecording():
+            self.streamController.videoRecorder.pause()
 
         if self.show_window_after_full_screen_ends is not None:
             self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
@@ -602,15 +711,17 @@ class VideoWindowController(NSWindowController):
     @run_in_gui_thread
     def close(self):
         self.sessionController.log_debug('Close %s' % self)
+        self.notification_center.discard_observer(self, sender=self.streamController.videoRecorder)
+        self.notification_center.discard_observer(self, name='BlinkMuteChangedState')
+        self.notification_center = None
 
+        self.stopRecordingTimer()
         self.goToWindowMode()
+        self.stopIdleTimer()
         self.stopMouseOutTimer()
 
-        self.videoControlPanel.close()
-        self.videoControlPanel = None
-
         if self.window():
-            timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "fade:", None, False)
+            timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "fade:", None, False)
 
         if self.localVideoWindow:
             self.localVideoWindow.close()
@@ -621,7 +732,7 @@ class VideoWindowController(NSWindowController):
         self.window().close()
 
     def dealloc(self):
-        self.sessionController.log_debug('Dealloc %s' % self)
+        BlinkLogger().log_debug("Dealloc %s" % self)
         self.flipWnd = None
         self.tracking_area = None
         self.localVideoWindow = None
@@ -632,6 +743,11 @@ class VideoWindowController(NSWindowController):
         self.always_on_top  = not self.always_on_top
         self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
         self.titleBarView.alwaysOnTop.setState_(self.always_on_top)
+
+    def stopRecordingTimer(self):
+        if self.recording_timer is not None and self.recording_timer.isValid():
+            self.recording_timer.invalidate()
+        self.recording_timer = None
 
     def stopMouseOutTimer(self):
         if self.mouse_timer is not None:
@@ -646,8 +762,7 @@ class VideoWindowController(NSWindowController):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.mouse_timer, NSEventTrackingRunLoopMode)
 
     def mouseOutTimer_(self, timer):
-        if self.videoControlPanel:
-            self.videoControlPanel.hide()
+        self.hideButtons()
         self.mouse_timer = None
 
     def getSecondaryScreen(self):
@@ -657,6 +772,153 @@ class VideoWindowController(NSWindowController):
             secondaryScreen = None
         return secondaryScreen
 
+    @objc.IBAction
+    def userClickedFullScreenButton_(self, sender):
+        self.toggleFullScreen()
+
+    @objc.IBAction
+    def userClickedAspectButton_(self, sender):
+        self.changeAspectRatio()
+
+    @objc.IBAction
+    def userClickedMuteButton_(self, sender):
+        SIPManager().mute(not SIPManager().is_muted())
+        self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
+
+    @objc.IBAction
+    def userClickedRecordButton_(self, sender):
+        self.streamController.videoRecorder.toggleRecording()
+
+    @objc.IBAction
+    def userClickedInfoButton_(self, sender):
+        if self.sessionController.info_panel is not None:
+            self.sessionController.info_panel.toggle()
+    
+    @objc.IBAction
+    def userClickedHoldButton_(self, sender):
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream and audio_stream.status == STREAM_CONNECTED and not self.sessionController.inProposal:
+                if audio_stream.holdByLocal:
+                    audio_stream.unhold()
+                    audio_stream.view.setSelected_(True)
+                    sender.setImage_(NSImage.imageNamed_("pause-white"))
+                else:
+                    sender.setImage_(NSImage.imageNamed_("paused-red"))
+                    audio_stream.hold()
+
+    @objc.IBAction
+    def userClickedHangupButton_(self, sender):
+        self.window().orderOut_(None)
+        self.sessionController.end(self)
+
+    @objc.IBAction
+    def userClickedContactsButton_(self, sender):
+        if self.full_screen:
+            self.toggleFullScreen()
+        NSApp.delegate().contactsWindowController.focusSearchTextField()
+
+    @objc.IBAction
+    def userClickedChatButton_(self, sender):
+        if self.always_on_top:
+            self.toogleAlwaysOnTop()
+        chat_stream = self.sessionController.streamHandlerOfType("chat")
+        if chat_stream:
+            if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
+                self.sessionController.startChatSession()
+        else:
+            self.sessionController.addChatToSession()
+        
+        if self.full_screen:
+            NSApp.delegate().contactsWindowController.showChatWindow_(None)
+            self.goToWindowMode(NSApp.delegate().contactsWindowController.chatWindowController.window())
+
+    @objc.IBAction
+    def userClickedInfoButton_(self, sender):
+        if self.sessionController.info_panel is not None:
+            self.sessionController.info_panel.toggle()
+
+    @objc.IBAction
+    def userClickedPauseButton_(self, sender):
+        self.pauseButton.setImage_(NSImage.imageNamed_("video-paused" if not self.streamController.paused else "video"))
+        self.streamController.togglePause()
+
+    @objc.IBAction
+    def userClickedMyVideoButton_(self, sender):
+        NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
+
+    @objc.IBAction
+    def userClickedScreenshotButton_(self, sender):
+        download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
+        filename = '%s/Screencapture.png' % download_folder
+        basename, ext = os.path.splitext(filename)
+        i = 1
+        while os.path.exists(filename):
+            filename = '%s_%d%s' % (basename, i, ext)
+            i += 1
+        
+        screenshot_task = NSTask.alloc().init()
+        screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+        screenshot_task.setArguments_(['-tpng', filename])
+        screenshot_task.launch()
+        NSSound.soundNamed_("Grab").play()
+        self.sessionController.log_info("Screenshot saved in %s" % filename)
+
+    def updateIdleTimer_(self, timer):
+        last_idle_counter = CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateHIDSystemState, kCGEventMouseMoved)
+        chat_stream = self.sessionController.streamHandlerOfType("chat")
+        if not chat_stream:
+            if self.show_time is not None and time.time() - self.show_time < IDLE_TIME:
+                return
+        
+        if last_idle_counter > IDLE_TIME:
+            self.show_time = None
+            if not self.is_idle:
+                if self.visible_buttons:
+                    self.hideButtons()
+                self.is_idle = True
+        else:
+            if not self.visible_buttons:
+                self.showButtons()
+            self.is_idle = False
+
+
+    def hideButtons(self):
+        self.visible_buttons = False
+        self.holdButton.setHidden_(True)
+        self.hangupButton.setHidden_(True)
+        self.chatButton.setHidden_(True)
+        self.infoButton.setHidden_(True)
+        self.muteButton.setHidden_(True)
+        self.aspectButton.setHidden_(True)
+        self.screenshotButton.setHidden_(True)
+        self.myvideoButton.setHidden_(True)
+        self.recordButton.setHidden_(True)
+
+    def showButtons(self):
+        self.visible_buttons = True
+        self.holdButton.setHidden_(False)
+        self.hangupButton.setHidden_(False)
+        self.chatButton.setHidden_(False)
+        self.infoButton.setHidden_(False)
+        self.muteButton.setHidden_(False)
+        self.aspectButton.setHidden_(False)
+        self.screenshotButton.setHidden_(False)
+        self.myvideoButton.setHidden_(False)
+        self.recordButton.setHidden_(False if self.full_screen else True)
+
+    def updateRecordingTimer_(self, timer):
+        if not self.full_screen:
+            self.recordButton.setHidden_(True)
+        else:
+            self.recordButton.setHidden_(self.is_idle)
+            if self.streamController.videoRecorder.isRecording():
+                self.recordingImage += 1
+                if self.recordingImage >= len(RecordingImages):
+                    self.recordingImage = 0
+                self.recordButton.setImage_(RecordingImages[self.recordingImage])
+            else:
+                self.recordButton.setImage_(RecordingImages[0])
 
 class TitleBarView(NSObject):
     view = objc.IBOutlet()

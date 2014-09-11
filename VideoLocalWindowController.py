@@ -89,7 +89,7 @@ class VideoLocalWindowController(NSWindowController):
         self.window().center()
         title = NSLocalizedString("Video with %s", "Window title") % self.videoWindowController.title
         NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
-
+        self.window().setTitle_(title)
         self.window().setLevel_(NSFloatingWindowLevel)
         themeFrame = self.window().contentView().superview()
         self.titleBarView = LocalTitleBarView.alloc().init()
@@ -230,13 +230,12 @@ class VideoLocalWindowController(NSWindowController):
             self.sessionController.cancelProposal(self.streamController)
         else:
             self.streamController.end()
-            self.sessionController.end()
         
         self.finished = True
 
     def keyDown_(self, event):
         if event.keyCode() == 53:
-            self.sessionController.end()
+            self.sessionController.end(self)
             self.hide()
 
     def hide(self):

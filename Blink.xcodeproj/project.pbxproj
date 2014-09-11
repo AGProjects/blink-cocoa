@@ -594,10 +594,6 @@
 		1F447E7F18DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
 		1F447E8018DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
 		1F447E8118DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
-		1F447E8C18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
-		1F447E8D18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
-		1F447E8E18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
-		1F447E8F18E06381001EF4C9 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1F48BF3918E51716004D41B1 /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
 		1F48BF3A18E51716004D41B1 /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
 		1F48BF3B18E51716004D41B1 /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
@@ -1076,10 +1072,6 @@
 		1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1FBF2B4517915410002E110B /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
-		1FC0184818E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
-		1FC0184918E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
-		1FC0184A18E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
-		1FC0184B18E0774D0009145A /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
 		1FC38F02192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
 		1FC38F03192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
 		1FC38F04192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
@@ -1332,13 +1324,11 @@
 		1FC80F05192E3E1F00BD62F4 /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
 		1FC80F06192E3E1F00BD62F4 /* unlocked-darkgray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */; };
 		1FC80F07192E3E1F00BD62F4 /* OTRSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C9C17CB60D50056ADB4 /* OTRSettings.xib */; };
-		1FC80F08192E3E1F00BD62F4 /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
 		1FC80F09192E3E1F00BD62F4 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
 		1FC80F0A192E3E1F00BD62F4 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
 		1FC80F0B192E3E1F00BD62F4 /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
 		1FC80F0C192E3E1F00BD62F4 /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
 		1FC80F0D192E3E1F00BD62F4 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
-		1FC80F0E192E3E1F00BD62F4 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1FC80F0F192E3E1F00BD62F4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
 		1FC80F11192E3E1F00BD62F4 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
 		1FC80F12192E3E1F00BD62F4 /* database-local-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30F17F9825D00CB74EC /* database-local-off.png */; };
@@ -1688,13 +1678,11 @@
 		1FCA7E6219546B0B00765366 /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
 		1FCA7E6319546B0B00765366 /* unlocked-darkgray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */; };
 		1FCA7E6419546B0B00765366 /* OTRSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C9C17CB60D50056ADB4 /* OTRSettings.xib */; };
-		1FCA7E6519546B0B00765366 /* VideoControlPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC0184D18E0774D0009145A /* VideoControlPanel.xib */; };
 		1FCA7E6619546B0B00765366 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
 		1FCA7E6719546B0B00765366 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
 		1FCA7E6819546B0B00765366 /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
 		1FCA7E6919546B0B00765366 /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
 		1FCA7E6A19546B0B00765366 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
-		1FCA7E6B19546B0B00765366 /* VideoControlPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */; };
 		1FCA7E6C19546B0B00765366 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
 		1FCA7E6D19546B0B00765366 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
 		1FCA7E6E19546B0B00765366 /* database-local-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30F17F9825D00CB74EC /* database-local-off.png */; };
@@ -2798,11 +2786,19 @@
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
 		1F3C358215F521A8005356AE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
 		1F3C358415F522FA005356AE /* PresenceInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresenceInfoController.py; sourceTree = "<group>"; };
+		1F3D0E8619C13B7300681677 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1F3D0E8719C13B7600681677 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1F3D0E8819C13B7800681677 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
+		1F3D0E8919C13BA000681677 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F3D0E8A19C13BA200681677 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F3D0E8B19C13BA500681677 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F3D0E8C19C1E27100681677 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F3D0E8D19C1E27300681677 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F3D0E8E19C1E27500681677 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1F419C9519152F400051F3D9 /* branding-sip2sip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-sip2sip.py"; sourceTree = "<group>"; };
 		1F419C97191530080051F3D9 /* branding-lite.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-lite.py"; sourceTree = "<group>"; };
 		1F419C991915330B0051F3D9 /* branding-pro.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-pro.py"; sourceTree = "<group>"; };
 		1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoWindowController.py; sourceTree = "<group>"; };
-		1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoControlPanel.py; sourceTree = "<group>"; };
 		1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.55.dylib; path = Distribution/Frameworks/libavcodec.55.dylib; sourceTree = "<group>"; };
 		1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.55.dylib; path = Distribution/Frameworks/libavformat.55.dylib; sourceTree = "<group>"; };
 		1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.52.dylib; path = Distribution/Frameworks/libavutil.52.dylib; sourceTree = "<group>"; };
@@ -2929,7 +2925,6 @@
 		1F73B30F191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
 		1F73B310191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1F73B311191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1F73B313191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
 		1F762B44194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F762B45194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSSession.xib; sourceTree = "<group>"; };
 		1F762B46194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSView.xib; sourceTree = "<group>"; };
@@ -2969,7 +2964,6 @@
 		1F762B68194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
 		1F762B69194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1F762B6A194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
-		1F762B6C194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
 		1F762B6F194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatWindow.xib; sourceTree = "<group>"; };
 		1F762B70194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatView.xib; sourceTree = "<group>"; };
 		1F762B71194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
@@ -3047,8 +3041,6 @@
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FBF2B3D179151D9002E110B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		1FBF2B4417915410002E110B /* Updater.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Updater.py; sourceTree = "<group>"; };
-		1FC0184C18E0774D0009145A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
-		1FC0184E18E077590009145A /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoControlPanel.xib; sourceTree = "<group>"; };
 		1FC38F01192234E1007B0340 /* layers.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers.png; path = icons/layers.png; sourceTree = SOURCE_ROOT; };
 		1FC6342F18F9D3450098945F /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
@@ -3098,15 +3090,6 @@
 		1FF32B5517EC841500E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FF32B5E17EC842B00E63A20 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
 		1FF3736F17C9E656007418EB /* ChatOTR.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatOTR.py; sourceTree = "<group>"; };
-		1FF44ADE19C076ED006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1FF44ADF19C076EF006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1FF44AE019C076F1006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1FF44AE219C07876006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
-		1FF44AE319C07878006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
-		1FF44AE419C0787A006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
-		1FF44AE519C07886006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1FF44AE619C07888006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1FF44AE719C0788A006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1FF44AE819C079E2006C504D /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FF44AE919C079E4006C504D /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FF44AEA19C079E7006C504D /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
@@ -3545,8 +3528,6 @@
 				1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */,
 				1F4B789819AEAEC200F854CB /* VideoWindow.xib */,
 				1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */,
-				1FC0184D18E0774D0009145A /* VideoControlPanel.xib */,
-				1F447E8B18E06381001EF4C9 /* VideoControlPanel.py */,
 				1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */,
 				1F6EF7FE18E637E0008592D2 /* VideoLocalWindowController.py */,
 				1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */,
@@ -4576,13 +4557,11 @@
 				1FF3737117C9E656007418EB /* ChatOTR.py in Resources */,
 				1F946C8F17CB3D9B0056ADB4 /* unlocked-darkgray.png in Resources */,
 				1F946C9817CB60D50056ADB4 /* OTRSettings.xib in Resources */,
-				1FC0184918E0774D0009145A /* VideoControlPanel.xib in Resources */,
 				1F683AC917CD32960090A902 /* locked-red.png in Resources */,
 				1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */,
 				1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */,
 				1F5BC26417E6114700D1D8BE /* AlertPanelView.xib in Resources */,
 				1FD0808E18C02E1F00A3B313 /* offline.png in Resources */,
-				1F447E8D18E06381001EF4C9 /* VideoControlPanel.py in Resources */,
 				1F5BC2FE17E66DAC00D1D8BE /* Localizable.strings in Resources */,
 				1FF32B7717ED0DAE00E63A20 /* blink-crypto.icns in Resources */,
 				1FB9BB4217F8117500D7FFA8 /* database-on.png in Resources */,
@@ -4716,7 +4695,6 @@
 				1F35CFEB17894FFF00C6FE38 /* HistoryViewer.xib in Resources */,
 				1F35CFEC17894FFF00C6FE38 /* SoundRecorder.xib in Resources */,
 				1F35CFED17894FFF00C6FE38 /* unavailable_message.wav in Resources */,
-				1F447E8F18E06381001EF4C9 /* VideoControlPanel.py in Resources */,
 				1F7EAC6918E0FA6E00CA7B86 /* pause-white.png in Resources */,
 				1F35CFEE17894FFF00C6FE38 /* AnsweringMachineSetting.xib in Resources */,
 				1F35CFEF17894FFF00C6FE38 /* audio_small.png in Resources */,
@@ -4737,7 +4715,6 @@
 				1F35CFFB17894FFF00C6FE38 /* ParticipantsTableView.py in Resources */,
 				1FAE0B1518FD7A2300038AA4 /* pencil_16.png in Resources */,
 				1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
-				1FC0184B18E0774D0009145A /* VideoControlPanel.xib in Resources */,
 				1F35CFFC17894FFF00C6FE38 /* hangup_small.png in Resources */,
 				1F35CFFD17894FFF00C6FE38 /* audio_16.png in Resources */,
 				1F35CFFE17894FFF00C6FE38 /* video.png in Resources */,
@@ -4979,7 +4956,6 @@
 				1F8DC386135084FA0034815C /* hangup_tone.wav in Resources */,
 				1F8DC387135084FA0034815C /* hold_tone.wav in Resources */,
 				1F8DC388135084FA0034815C /* ring_outbound2.wav in Resources */,
-				1FC0184A18E0774D0009145A /* VideoControlPanel.xib in Resources */,
 				1F8DC389135084FA0034815C /* ring_tone.wav in Resources */,
 				1F8DC38A135084FA0034815C /* FancyTabSwitcher.py in Resources */,
 				1F8DC38B135084FA0034815C /* Group.xib in Resources */,
@@ -5051,7 +5027,6 @@
 				1FCF11F013910878001D1CAF /* audio-preferences.png in Resources */,
 				1FB3AE7618F1E73E001C612B /* close.png in Resources */,
 				1FCF12A01391151A001D1CAF /* answering_machine.png in Resources */,
-				1F447E8E18E06381001EF4C9 /* VideoControlPanel.py in Resources */,
 				1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */,
 				DE3A673213A8A987006EEB0F /* default.crt in Resources */,
@@ -5408,13 +5383,11 @@
 				1FC80F05192E3E1F00BD62F4 /* ChatOTR.py in Resources */,
 				1FC80F06192E3E1F00BD62F4 /* unlocked-darkgray.png in Resources */,
 				1FC80F07192E3E1F00BD62F4 /* OTRSettings.xib in Resources */,
-				1FC80F08192E3E1F00BD62F4 /* VideoControlPanel.xib in Resources */,
 				1FC80F09192E3E1F00BD62F4 /* locked-red.png in Resources */,
 				1FC80F0A192E3E1F00BD62F4 /* ChatOtrSmp.xib in Resources */,
 				1FC80F0B192E3E1F00BD62F4 /* AlertPanel.xib in Resources */,
 				1FC80F0C192E3E1F00BD62F4 /* AlertPanelView.xib in Resources */,
 				1FC80F0D192E3E1F00BD62F4 /* offline.png in Resources */,
-				1FC80F0E192E3E1F00BD62F4 /* VideoControlPanel.py in Resources */,
 				1FC80F0F192E3E1F00BD62F4 /* Localizable.strings in Resources */,
 				1FC80F11192E3E1F00BD62F4 /* database-on.png in Resources */,
 				1FC80F12192E3E1F00BD62F4 /* database-local-off.png in Resources */,
@@ -5683,13 +5656,11 @@
 				1FCA7E6219546B0B00765366 /* ChatOTR.py in Resources */,
 				1FCA7E6319546B0B00765366 /* unlocked-darkgray.png in Resources */,
 				1FCA7E6419546B0B00765366 /* OTRSettings.xib in Resources */,
-				1FCA7E6519546B0B00765366 /* VideoControlPanel.xib in Resources */,
 				1FCA7E6619546B0B00765366 /* locked-red.png in Resources */,
 				1FCA7E6719546B0B00765366 /* ChatOtrSmp.xib in Resources */,
 				1FCA7E6819546B0B00765366 /* AlertPanel.xib in Resources */,
 				1FCA7E6919546B0B00765366 /* AlertPanelView.xib in Resources */,
 				1FCA7E6A19546B0B00765366 /* offline.png in Resources */,
-				1FCA7E6B19546B0B00765366 /* VideoControlPanel.py in Resources */,
 				1FCA7E6C19546B0B00765366 /* Localizable.strings in Resources */,
 				1FCA7E6D19546B0B00765366 /* database-on.png in Resources */,
 				1FCA7E6E19546B0B00765366 /* database-local-off.png in Resources */,
@@ -5809,7 +5780,6 @@
 				1FB9B12A1095BFF500284E18 /* hangup_tone.wav in Resources */,
 				1FB9B12B1095BFF500284E18 /* hold_tone.wav in Resources */,
 				1FB9B12C1095BFF500284E18 /* ring_outbound2.wav in Resources */,
-				1FC0184818E0774D0009145A /* VideoControlPanel.xib in Resources */,
 				1FB9B12D1095BFF500284E18 /* ring_tone.wav in Resources */,
 				2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */,
 				2B4CA92F10AA5F2F00D5F19E /* Group.xib in Resources */,
@@ -5878,7 +5848,6 @@
 				1FCF11991390EDFD001D1CAF /* alerts.png in Resources */,
 				1FCF119D1390EE08001D1CAF /* logs.png in Resources */,
 				1FCF11F113910878001D1CAF /* audio-preferences.png in Resources */,
-				1F447E8C18E06381001EF4C9 /* VideoControlPanel.py in Resources */,
 				1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */,
 				1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */,
 				1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */,
@@ -6062,9 +6031,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F194A8819B1F06200CE5A0F /* en */,
-				1FF44ADE19C076ED006C504D /* ro */,
-				1FF44ADF19C076EF006C504D /* es */,
-				1FF44AE019C076F1006C504D /* pt */,
+				1F3D0E8C19C1E27100681677 /* ro */,
+				1F3D0E8D19C1E27300681677 /* es */,
+				1F3D0E8E19C1E27500681677 /* pt */,
 			);
 			name = VideoLocalTitleBarView.xib;
 			sourceTree = "<group>";
@@ -6117,9 +6086,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B789719AEAEC200F854CB /* en */,
-				1FF44AE519C07886006C504D /* ro */,
-				1FF44AE619C07888006C504D /* es */,
-				1FF44AE719C0788A006C504D /* pt */,
+				1F3D0E8919C13BA000681677 /* ro */,
+				1F3D0E8A19C13BA200681677 /* es */,
+				1F3D0E8B19C13BA500681677 /* pt */,
 			);
 			name = VideoWindow.xib;
 			sourceTree = "<group>";
@@ -6216,9 +6185,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F6C0DC2190EBD8F00E79D90 /* en */,
-				1FF44AE219C07876006C504D /* ro */,
-				1FF44AE319C07878006C504D /* es */,
-				1FF44AE419C0787A006C504D /* pt */,
+				1F3D0E8619C13B7300681677 /* ro */,
+				1F3D0E8719C13B7600681677 /* es */,
+				1F3D0E8819C13B7800681677 /* pt */,
 			);
 			name = VideoTitleBarView.xib;
 			sourceTree = "<group>";
@@ -6298,17 +6267,6 @@
 				1F762B64194B34B5002D998E /* pt */,
 			);
 			name = JoinConferenceWindow.xib;
-			sourceTree = "<group>";
-		};
-		1FC0184D18E0774D0009145A /* VideoControlPanel.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1FC0184C18E0774D0009145A /* en */,
-				1FC0184E18E077590009145A /* ro */,
-				1F73B313191BCBB500213DC5 /* es */,
-				1F762B6C194B34B5002D998E /* pt */,
-			);
-			name = VideoControlPanel.xib;
 			sourceTree = "<group>";
 		};
 		1FC66E0C139E208700D03D71 /* MigrationPanel.xib */ = {

@@ -2099,10 +2099,7 @@ class SessionController(NSObject):
             if video_support:
                 video_removed = any(stream for stream in data.removed_streams if isinstance(stream, VideoStream))
                 if video_removed:
-                    label = NSLocalizedString("Video removed by remote party", "Label")
-                    video_stream = self.streamHandlerOfType("video")
-                    if video_stream:
-                        video_stream.showDisconnectedReason(label)
+                    self.notification_center.post_notification("VideoRemovedByRemoteParty", sender=self, data=data)
 
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 

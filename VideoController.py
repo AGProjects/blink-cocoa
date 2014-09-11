@@ -90,6 +90,7 @@ class VideoController(MediaStream):
         return self
 
     def updateStatusLabelAfterConnect(self):
+        return
         if self.videoWindowController.titleBarView is None:
             return
         codec = beautify_video_codec(self.stream.codec)
@@ -199,6 +200,7 @@ class VideoController(MediaStream):
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
+        self.notification_center.add_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         if is_update and self.sessionController.canProposeMediaStreamChanges():
             self.changeStatus(STREAM_PROPOSING)
         else:
@@ -208,10 +210,12 @@ class VideoController(MediaStream):
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
+        self.notification_center.add_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         self.videoWindowController.release()
         self.videoWindowController = None
         self.stream = None
@@ -410,6 +414,9 @@ class VideoController(MediaStream):
 
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
         self.changeStatus(STREAM_RINGING)
+
+    def _NH_VideoRemovedByRemoteParty(self, sender, data):
+        self.videoWindowController.showDisconnectedReason()
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if self.stream in data.proposed_streams:
