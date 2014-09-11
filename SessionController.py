@@ -2094,7 +2094,7 @@ class SessionController(NSObject):
 
         if data.originator == "remote":
             for stream in data.removed_streams:
-                self.log_debug("%s stream removed by remote party")
+                self.log_debug("%s stream removed by remote party" % stream.type.title())
 
             if video_support:
                 video_removed = any(stream for stream in data.removed_streams if isinstance(stream, VideoStream))
