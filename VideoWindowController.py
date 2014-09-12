@@ -3,6 +3,8 @@
 
 
 from AppKit import (NSApp,
+                    NSRectFillUsingOperation,
+                    NSCompositeSourceOver,
                     NSApplication,
                     NSGraphicsContext,
                     NSCalibratedRGBColorSpace,
@@ -26,6 +28,7 @@ from AppKit import (NSApp,
                     NSDragOperationCopy,
                     NSDeviceIsScreen,
                     NSZeroPoint,
+                    NSRectFill,
                     NSRightMouseUp,
                     NSSound,
                     NSViewMinXMargin,
@@ -36,6 +39,7 @@ from AppKit import (NSApp,
 
 from Foundation import (NSAttributedString,
                         NSBundle,
+                        NSBezierPath,
                         NSData,
                         NSObject,
                         NSColor,
@@ -76,7 +80,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
 
-from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
+from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState, CGColorCreateGenericRGB
 
 from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
 from VideoLocalWindowController import VideoLocalWindowController
@@ -308,25 +312,22 @@ class VideoWindowController(NSWindowController):
         handler(notification.sender, notification.data)
 
     def awakeFromNib(self):
-        try:
-            self.notification_center.add_observer(self,sender=self.streamController.videoRecorder)
-            self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+        self.notification_center.add_observer(self,sender=self.streamController.videoRecorder)
+        self.notification_center.add_observer(self, name='BlinkMuteChangedState')
 
-            self.recordButton.setHidden_(True)
-            self.updateMuteButton()
-            audio_stream = self.sessionController.streamHandlerOfType("audio")
-            if audio_stream:
-                if audio_stream.status == STREAM_CONNECTED:
-                    if audio_stream.holdByLocal or audio_stream.holdByRemote:
-                        self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
-                    else:
-                        self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+        self.recordButton.setEnabled_(False)
+        self.updateMuteButton()
+        audio_stream = self.sessionController.streamHandlerOfType("audio")
+        if audio_stream:
+            if audio_stream.status == STREAM_CONNECTED:
+                if audio_stream.holdByLocal or audio_stream.holdByRemote:
+                    self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
                 else:
                     self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
             else:
                 self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-        except Exception,e:
-            print e
+        else:
+            self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
 
         self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "updateRecordingTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSRunLoopCommonModes)
@@ -605,7 +606,6 @@ class VideoWindowController(NSWindowController):
 
         if self.window():
             self.window().orderOut_(self)
-
         self.hideButtons()
 
     def removeVideo(self):
@@ -683,7 +683,7 @@ class VideoWindowController(NSWindowController):
         if not self.local_video_visible_before_fullscreen:
             NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
 
-        self.recordButton.setHidden_(True)
+        self.recordButton.setEnabled_(False)
         if self.streamController.videoRecorder.isRecording():
             self.streamController.videoRecorder.pause()
 
@@ -715,6 +715,7 @@ class VideoWindowController(NSWindowController):
         self.notification_center.discard_observer(self, name='BlinkMuteChangedState')
         self.notification_center = None
 
+        self.hideButtons()
         self.stopRecordingTimer()
         self.goToWindowMode()
         self.stopIdleTimer()
@@ -884,6 +885,7 @@ class VideoWindowController(NSWindowController):
 
 
     def hideButtons(self):
+        self.buttonsView.hide()
         self.visible_buttons = False
         self.holdButton.setHidden_(True)
         self.hangupButton.setHidden_(True)
@@ -896,6 +898,7 @@ class VideoWindowController(NSWindowController):
         self.recordButton.setHidden_(True)
 
     def showButtons(self):
+        self.buttonsView.show()
         self.visible_buttons = True
         self.holdButton.setHidden_(False)
         self.hangupButton.setHidden_(False)
@@ -905,13 +908,13 @@ class VideoWindowController(NSWindowController):
         self.aspectButton.setHidden_(False)
         self.screenshotButton.setHidden_(False)
         self.myvideoButton.setHidden_(False)
-        self.recordButton.setHidden_(False if self.full_screen else True)
+        self.recordButton.setHidden_(False)
 
     def updateRecordingTimer_(self, timer):
         if not self.full_screen:
-            self.recordButton.setHidden_(True)
+            self.recordButton.setEnabled_(False)
         else:
-            self.recordButton.setHidden_(self.is_idle)
+            self.recordButton.setEnabled_(True)
             if self.streamController.videoRecorder.isRecording():
                 self.recordingImage += 1
                 if self.recordingImage >= len(RecordingImages):
@@ -958,3 +961,23 @@ class TitleBarView(NSObject):
         self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
 
 
+class RoundedCornersView(NSView):
+    hidden = False
+
+    def hide(self):
+        self.hidden = True
+        self.setNeedsDisplay_(True)
+
+    def show(self):
+        self.hidden = False
+        self.setNeedsDisplay_(True)
+
+    def drawRect_(self, dirtyRect):
+        path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(dirtyRect, 7.0, 7.0)
+        path.addClip()
+        if self.hidden:
+            NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.0).setFill()
+        else:
+            NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.3).setFill()
+        NSRectFillUsingOperation(dirtyRect, NSCompositeSourceOver)
+        super(RoundedCornersView, self).drawRect_(dirtyRect)
