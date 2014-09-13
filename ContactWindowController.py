@@ -3783,8 +3783,12 @@ class ContactWindowController(NSWindowController):
         session_history = SessionHistory()
         results = session_history.get_entries(direction='incoming', status= 'completed', count=count)
 
+        last_recipient = None
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            if target_uri == last_recipient:
+                continue
+            last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != contact.uri:
                 display_name = contact.name
@@ -3808,8 +3812,12 @@ class ContactWindowController(NSWindowController):
 
         results = session_history.get_entries(direction='outgoing', count=count)
 
+        last_recipient = None
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            if target_uri == last_recipient:
+                continue
+            last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
@@ -3833,8 +3841,12 @@ class ContactWindowController(NSWindowController):
 
         results = session_history.get_entries(direction='incoming', status='missed', count=count)
 
+        last_recipient = None
         for result in results:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            if target_uri == last_recipient:
+                continue
+            last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
