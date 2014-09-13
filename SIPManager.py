@@ -358,7 +358,7 @@ class SIPManager(object):
                         date, time, rest = toks
                         timestamp = date[:4]+"/"+date[4:6]+"/"+date[6:8]+" "+time[:2]+":"+time[2:4]
 
-                        pos = rest.rfind("-")
+                        pos = rest.rfind(".")
                         if pos >= 0:
                             remote = rest[:pos]
                         else:
