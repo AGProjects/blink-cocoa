@@ -147,7 +147,6 @@ class VideoRecorder(object):
         if self.movieOutput.isRecordingPaused():
             self.movieOutput.resumeRecording()
 
-    @run_in_gui_thread
     def isRecording(self):
         return self.started and self.movieOutput.isRecording() and not self.movieOutput.isRecordingPaused()
 

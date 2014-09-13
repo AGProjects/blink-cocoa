@@ -326,8 +326,8 @@ class VideoWindowController(NSWindowController):
         self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
     
         self.disconnectLabel.superview().hide()
-
         self.recordButton.setEnabled_(False)
+
         self.updateMuteButton()
         audio_stream = self.sessionController.streamHandlerOfType("audio")
         if audio_stream:
@@ -341,7 +341,7 @@ class VideoWindowController(NSWindowController):
         else:
             self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
 
-        self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "updateRecordingTimer:", None, True)
+        self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "updateRecordingTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSEventTrackingRunLoopMode)
 
@@ -775,6 +775,7 @@ class VideoWindowController(NSWindowController):
             #NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
 
         self.recordButton.setEnabled_(False)
+
         if self.streamController.videoRecorder.isRecording():
             self.streamController.videoRecorder.pause()
 
@@ -1004,7 +1005,7 @@ class VideoWindowController(NSWindowController):
         self.aspectButton.setHidden_(True)
         self.screenshotButton.setHidden_(True)
         self.myvideoButton.setHidden_(True)
-        self.recordButton.setHidden_(True)
+        self.recordButton.setHidden_(not self.streamController.videoRecorder.isRecording())
 
     def showButtons(self):
         if not self.window():
@@ -1026,19 +1027,16 @@ class VideoWindowController(NSWindowController):
         self.recordButton.setHidden_(False)
 
     def updateRecordingTimer_(self, timer):
-        if not self.full_screen:
-            self.recordButton.setEnabled_(False)
+        self.recordButton.setEnabled_(self.full_screen)
+        if self.streamController.videoRecorder.isRecording():
+            self.recordButton.setToolTip_(NSLocalizedString("Stop Recording", "Label"))
+            self.recordingImage += 1
+            if self.recordingImage >= len(RecordingImages):
+                self.recordingImage = 0
+            self.recordButton.setImage_(RecordingImages[self.recordingImage])
         else:
-            self.recordButton.setEnabled_(True)
-            if self.streamController.videoRecorder.isRecording():
-                self.recordButton.setToolTip_(NSLocalizedString("Stop Recording", "Label"))
-                self.recordingImage += 1
-                if self.recordingImage >= len(RecordingImages):
-                    self.recordingImage = 0
-                self.recordButton.setImage_(RecordingImages[self.recordingImage])
-            else:
-                self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
-                self.recordButton.setImage_(RecordingImages[0])
+            self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
+            self.recordButton.setImage_(RecordingImages[0])
 
 class TitleBarView(NSObject):
     view = objc.IBOutlet()
