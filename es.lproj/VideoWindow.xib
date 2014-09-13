@@ -15,7 +15,12 @@
                 <outlet property="holdButton" destination="KKF-yB-vq1" id="vho-WV-og1"/>
                 <outlet property="infoButton" destination="I9k-Br-fgq" id="Ytf-8U-A73"/>
                 <outlet property="muteButton" destination="jY2-T6-DZT" id="SeY-M8-IEO"/>
-                <outlet property="myvideoButton" destination="3wA-h2-aKT" id="0BB-Hc-5gW"/>
+                <outlet property="myVideoView" destination="g4v-Xf-ipS" id="nWw-am-b24"/>
+                <outlet property="myVideoViewBL" destination="Mbl-8w-9fs" id="VBM-0X-6yJ"/>
+                <outlet property="myVideoViewBR" destination="7AV-gS-EuK" id="m6z-y2-pPh"/>
+                <outlet property="myVideoViewTL" destination="clN-w5-T4L" id="kkW-v7-gsR"/>
+                <outlet property="myVideoViewTR" destination="fxb-9f-6dz" id="AmG-Cd-P9D"/>
+                <outlet property="myvideoButton" destination="3wA-h2-aKT" id="NAO-CM-QAd"/>
                 <outlet property="recordButton" destination="IeQ-BC-f6X" id="Lm1-nw-jL5"/>
                 <outlet property="screenshotButton" destination="BKQ-kq-DFD" id="94c-Ve-GkH"/>
                 <outlet property="videoView" destination="U8k-ux-24e" id="fab-CT-YGl"/>
@@ -28,33 +33,39 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES"/>
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="562" y="346" width="665" height="341"/>
+            <rect key="contentRect" x="562" y="346" width="665" height="375"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
-            <value key="minSize" type="size" width="300" height="200"/>
-            <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="665" height="341"/>
+            <value key="minSize" type="size" width="665" height="375"/>
+            <view key="contentView" id="EiT-Mj-1SZ" customClass="BlackView">
+                <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="VideoWidget">
-                        <rect key="frame" x="-3" y="-3" width="671" height="347"/>
+                        <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
                     </imageView>
-                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="eVG-9y-W1v">
-                        <rect key="frame" x="-2" y="153" width="669" height="64"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Video Finalizado" id="MzQ-vj-Ben">
-                            <font key="font" metaFont="system" size="32"/>
-                            <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
-                    <view focusRingType="none" id="Y9H-en-cNJ">
-                        <rect key="frame" x="173" y="8" width="319" height="38"/>
+                    <customView id="gXK-wO-PCf" customClass="RoundedCornersView">
+                        <rect key="frame" x="118" y="163" width="428" height="49"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="eVG-9y-W1v">
+                                <rect key="frame" x="-117" y="4" width="663" height="39"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Video Ended" id="MzQ-vj-Ben">
+                                    <font key="font" metaFont="system" size="28"/>
+                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                    </customView>
+                    <view focusRingType="none" id="Y9H-en-cNJ" customClass="RoundedCornersView">
+                        <rect key="frame" x="182" y="11" width="300" height="35"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <button toolTip="Aspecto" id="qgv-hv-8jn">
-                                <rect key="frame" x="20" y="10" width="37" height="27"/>
+                            <button id="qgv-hv-8jn">
+                                <rect key="frame" x="7" y="7" width="37" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="aspect_ratio" imagePosition="above" alignment="center" imageScaling="proportionallyDown" inset="2" id="DCj-Na-fmk">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -64,8 +75,8 @@
                                     <action selector="userClickedAspectButton:" target="-2" id="rxA-Qp-dQa"/>
                                 </connections>
                             </button>
-                            <button toolTip="Silenciar" id="jY2-T6-DZT">
-                                <rect key="frame" x="57" y="10" width="32" height="23"/>
+                            <button id="jY2-T6-DZT">
+                                <rect key="frame" x="44" y="5" width="32" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mute-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="P5Q-ng-o10">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -75,8 +86,8 @@
                                     <action selector="userClickedMuteButton:" target="-2" id="dXr-H5-d6h"/>
                                 </connections>
                             </button>
-                            <button toolTip="Colgar" id="8Az-PJ-y76">
-                                <rect key="frame" x="118" y="10" width="31" height="27"/>
+                            <button id="8Az-PJ-y76">
+                                <rect key="frame" x="102" y="7" width="31" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="YBv-AF-tXo">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -86,8 +97,8 @@
                                     <action selector="userClickedHangupButton:" target="-2" id="fY3-9b-L9C"/>
                                 </connections>
                             </button>
-                            <button toolTip="Retener" id="KKF-yB-vq1">
-                                <rect key="frame" x="84" y="9" width="31" height="27"/>
+                            <button id="KKF-yB-vq1">
+                                <rect key="frame" x="71" y="6" width="31" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pause-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="u8N-mG-TdB">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -97,8 +108,8 @@
                                     <action selector="userClickedHoldButton:" target="-2" id="4Wt-Mb-amF"/>
                                 </connections>
                             </button>
-                            <button toolTip="Chat" id="5zy-g6-Zl6">
-                                <rect key="frame" x="146" y="8" width="31" height="27"/>
+                            <button id="5zy-g6-Zl6">
+                                <rect key="frame" x="137" y="6" width="27" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pencil" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="KDg-ji-9yE">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -108,8 +119,8 @@
                                     <action selector="userClickedChatButton:" target="-2" id="YZi-X6-2wa"/>
                                 </connections>
                             </button>
-                            <button toolTip="Info" id="I9k-Br-fgq">
-                                <rect key="frame" x="185" y="8" width="22" height="24"/>
+                            <button id="I9k-Br-fgq">
+                                <rect key="frame" x="170" y="4" width="22" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSInfo" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="QsW-aU-vEV">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -119,8 +130,8 @@
                                     <action selector="userClickedInfoButton:" target="-2" id="IWa-cB-8nj"/>
                                 </connections>
                             </button>
-                            <button toolTip="Grabar" id="IeQ-BC-f6X">
-                                <rect key="frame" x="282" y="9" width="31" height="27"/>
+                            <button id="IeQ-BC-f6X">
+                                <rect key="frame" x="270" y="10" width="24" height="20"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="recording1" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="wlp-on-h2g">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -130,8 +141,8 @@
                                     <action selector="userClickedRecordButton:" target="-2" id="EHq-ZX-Lq4"/>
                                 </connections>
                             </button>
-                            <button toolTip="Mi Vídeo" id="3wA-h2-aKT">
-                                <rect key="frame" x="246" y="11" width="40" height="24"/>
+                            <button id="3wA-h2-aKT">
+                                <rect key="frame" x="231" y="8" width="40" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="Y0Y-Hf-Z5P">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -141,8 +152,8 @@
                                     <action selector="userClickedMyVideoButton:" target="-2" id="bdT-zK-7by"/>
                                 </connections>
                             </button>
-                            <button toolTip="Instantánea" id="BKQ-kq-DFD">
-                                <rect key="frame" x="207" y="8" width="46" height="27"/>
+                            <button id="BKQ-kq-DFD">
+                                <rect key="frame" x="194" y="5" width="46" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="screenshot" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="gy8-5m-BAn">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -153,7 +164,7 @@
                                 </connections>
                             </button>
                             <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="pcT-2p-dF9">
-                                <rect key="frame" x="291" y="-11" width="52" height="17"/>
+                                <rect key="frame" x="278" y="-14" width="52" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Info" id="9dh-F9-7hq">
                                     <font key="font" metaFont="system" size="10"/>
@@ -163,6 +174,26 @@
                             </textField>
                         </subviews>
                     </view>
+                    <customView id="g4v-Xf-ipS" customClass="LocalVideoView">
+                        <rect key="frame" x="10" y="281" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    </customView>
+                    <customView id="fxb-9f-6dz">
+                        <rect key="frame" x="505" y="281" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    </customView>
+                    <customView id="7AV-gS-EuK">
+                        <rect key="frame" x="505" y="10" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    </customView>
+                    <customView id="Mbl-8w-9fs">
+                        <rect key="frame" x="10" y="10" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    </customView>
+                    <customView id="clN-w5-T4L">
+                        <rect key="frame" x="10" y="281" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    </customView>
                 </subviews>
             </view>
             <connections>

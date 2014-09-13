@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -33,7 +33,7 @@
                     <button verticalHuggingPriority="750" tag="10" id="30">
                         <rect key="frame" x="625" y="13" width="120" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Accept All" bezelStyle="rounded" image="85EBD3F2-63A7-452F-AD9D-B41783765ABB" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
+                        <buttonCell key="cell" type="push" title="Accept All" bezelStyle="rounded" image="383BB2A9-2FDF-4AB9-AA9B-8C70153CECFB" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="31">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -141,7 +141,7 @@ Gw
         </window>
     </objects>
     <resources>
-        <image name="85EBD3F2-63A7-452F-AD9D-B41783765ABB" width="1" height="1">
+        <image name="383BB2A9-2FDF-4AB9-AA9B-8C70153CECFB" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPj9YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQsLzI4O1UkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw

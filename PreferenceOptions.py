@@ -962,23 +962,23 @@ class H264ProfileOption(PopUpMenuOption):
         self.popup.setFrame_(frame)
 
 
-class H264ResolutionOption(PopUpMenuOption):
+class VideoResolutionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("740x500", "320x240", "1280x720", "1920x1080", "640x480"):
+        for item in ("1280x720", "640x480"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
         self.popup.setFrame_(frame)
 
 
-class H264FramerateOption(PopUpMenuOption):
+class VideoFramerateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
-        for item in ("10", "25", "30", "60", "15", "10", "5"):
+        for item in ("10", "15", "25", "30", "60"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -997,28 +997,11 @@ class H264LevelOption(PopUpMenuOption):
         self.popup.setFrame_(frame)
 
 
-class VideoResolutionOption(PopUpMenuOption):
-    def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
-        self.addMissingOptions = True
-        for item in ('720p', '1080p', 'vga', 'auto'):
-            self.popup.addItemWithTitle_(str(item))
-        frame = self.popup.frame()
-        frame.size.width = 150
-        self.popup.setFrame_(frame)
-
-
 class VideoQualityOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = True
-        self.popup.addItemWithTitle_(NSLocalizedString("Embarrasing", "Menu item") + " (320x240 @5fps)")
-        self.popup.lastItem().setRepresentedObject_('embarrassing')
-
-        self.popup.addItemWithTitle_(NSLocalizedString("Lowest", "Menu item") + " (640x480 @10fps)")
-        self.popup.lastItem().setRepresentedObject_('lowest')
-
-        self.popup.addItemWithTitle_(NSLocalizedString("Low", "Menu item") + " (740x400 @10fps)")
+        self.popup.addItemWithTitle_(NSLocalizedString("Low", "Menu item") + " (640x480 @10fps)")
         self.popup.lastItem().setRepresentedObject_('low')
 
         self.popup.addItemWithTitle_(NSLocalizedString("Medium", "Menu item") + " (1280x720 @15fps)")
@@ -1027,11 +1010,6 @@ class VideoQualityOption(PopUpMenuOption):
         self.popup.addItemWithTitle_(NSLocalizedString("High", "Menu item") + " (1280x720 @25fps)")
         self.popup.lastItem().setRepresentedObject_('high')
 
-        self.popup.addItemWithTitle_(NSLocalizedString("Highest", "Menu item") + " (1920x1080 @30fps)")
-        self.popup.lastItem().setRepresentedObject_('highest')
-
-        self.popup.addItemWithTitle_(NSLocalizedString("Absurd", "Menu item") + " (1920x1080 @60fps)")
-        self.popup.lastItem().setRepresentedObject_('absurd')
         frame = self.popup.frame()
         frame.size.width = 300
         self.popup.setFrame_(frame)
@@ -1905,10 +1883,6 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.per_device_aec": HiddenOption,
-"video.device" : VideoDeviceOption,
-"video.quality": VideoQualityOption,
-"video.resolution" : HiddenOption,
-"video.paused" : HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
 "chat.enable_encryption": OTRSettings,
 "chat.font_size": HiddenOption,
@@ -1948,12 +1922,14 @@ PreferenceOptionTypes = {
 "tls.ca_list": HiddenOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.timeout" : HiddenOption,
+"video.device" : VideoDeviceOption,
+"video.enable_colorbar_device" : HiddenOption,
+"video.quality": VideoQualityOption,
+"video.resolution" : VideoResolutionOption,
+"video.framerate" : VideoFramerateOption,
+"video.paused" : HiddenOption,
 "h264.profile": H264ProfileOption,
 "h264.level": H264LevelOption,
-"h264.max_resolution": H264ResolutionOption,
-"h264.max_framerate": H264FramerateOption,
-"h264.avg_bitrate": NonNegativeIntegerOption,
-"h264.max_bitrate": NonNegativeIntegerOption,
 "xcap.discovered": HiddenOption,
 "UserIcon": HiddenOption
 }
@@ -2096,15 +2072,12 @@ SettingDescription = {
                       'video.full_screen_after_connect': NSLocalizedString("Full Screen After Connect", "Label"),
                       'video.device': NSLocalizedString("Device", "Label"),
                       'video.quality': NSLocalizedString("Quality", "Label"),
-                      'video.resolution': NSLocalizedString("Resolution", "Label"),
+                      'video.resolution': NSLocalizedString("Maximum Resolution", "Label"),
+                      'video.framerate': NSLocalizedString("Maximum Framerate", "Label"),
                       'xcap.enabled': NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root': NSLocalizedString("Root URI", "Label"),
                       'h264.profile': NSLocalizedString("Profile", "Label"),
-                      'h264.level': NSLocalizedString("Level", "Label"),
-                      'h264.max_framerate': NSLocalizedString("Maximum Framerate", "Label"),
-                      'h264.max_resolution': NSLocalizedString("Maximum Resolution", "Label"),
-                      'h264.avg_bitrate': NSLocalizedString("Average Bitrate", "Label"),
-                      'h264.max_bitrate': NSLocalizedString("Maximum Bitrate", "Label")
+                      'h264.level': NSLocalizedString("Level", "Label")
                       }
 
 Placeholders = {
@@ -2148,14 +2121,14 @@ GeneralSettingsOrder = {
                        'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
                        'chat': ['disabled', 'enable_sms'],
-                       'video': ['device', 'quality', 'resolution'],
+                       'video': ['device', 'quality', 'resolution', 'framerate'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
                        'sounds': ['audio_inbound', 'audio_outbound', 'message_received', 'message_sent', 'file_received' ,'file_sent', 'night_volume'],
                        'gui': ['extended_debug', 'use_default_web_browser_for_alerts', 'media_support_detection', 'idle_threshold', 'rtt_threshold'],
                        'logs': ['trace_sip_to_file', 'trace_msrp_to_file', 'trace_xcap_to_file', 'trace_notifications_to_file', 'trace_pjsip_to_file', 'pjsip_level'],
-                       'h264': ['profile', 'level', 'max_resolution', 'max_framerate']
+                       'h264': ['profile', 'level']
                        }
 
 AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal', 'presence', 'xcap', 'server', 'ldap', 'gui')

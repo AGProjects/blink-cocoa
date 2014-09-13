@@ -34,16 +34,14 @@ if video_support:
     class H264SettingsExtension(H264Settings):
         profile = Setting(type=H264Profile, default='baseline')
         level = Setting(type=str, default='3.0')
-        max_resolution = Setting(type=VideoResolution, default=VideoResolution('740x400'))
-        max_framerate = Setting(type=int, default=10)
-        avg_bitrate = Setting(type=int, default=0)
-        max_bitrate = Setting(type=int, default=0)
+
     class VideoSettingsExtension(VideoSettings):
         enable_when_auto_answer = Setting(type=bool, default=False)
         full_screen_after_connect = Setting(type=bool, default=True)
         keep_window_on_top = Setting(type=bool, default=True)
-        resolution = Setting(type=str, default="720p")
-        quality = Setting(type=str, default="low")
+        resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
+        framerate = Setting(type=int, default=15)
+        quality = Setting(type=str, default="medium")
         h264 = H264SettingsExtension
         auto_rotate_cameras = Setting(type=bool, default=True)
 

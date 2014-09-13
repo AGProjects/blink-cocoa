@@ -484,12 +484,20 @@ class SIPManager(object):
         BlinkLogger().log_debug(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
 
         codecs_print = []
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+        try:
+            from VideoController import VideoController
+        except ImportError:
+            pass
+        else:
             for codec in settings.rtp.video_codec_list:
                 codecs_print.append(beautify_video_codec(codec))
             BlinkLogger().log_debug(u"Enabled video codecs: %s" % ", ".join(codecs_print))
             BlinkLogger().log_debug(u"Available video cameras: %s" % ", ".join((camera for camera in self._app.engine.video_devices)))
             BlinkLogger().log_debug(u"Using video camera: %s" % self._app.video_device.real_name)
+            if settings.video.device != "system_default" and settings.video.device != self._app.video_device.real_name:
+                settings.video.device = self._app.video_device.real_name
+                settings.save()
+
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
             for transport in settings.sip.transport_list:

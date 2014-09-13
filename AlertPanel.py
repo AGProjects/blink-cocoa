@@ -570,10 +570,8 @@ class AlertPanel(NSObject, object):
                     subject = ", ".join(type_names)
                 elif 'Video' in type_names:
                     subject = NSLocalizedString("Video call requested by", "Label")
-                else:
-                    subject = NSLocalizedString("%s Session requested by", "Label") % ", ".join(type_names)
-            elif type(streams[0]) is VideoStream:
-                subject = NSLocalizedString("Video call requested by", "Label")
+                elif type(streams[0]) is VideoStream:
+                    subject = NSLocalizedString("Video call requested by", "Label")
             elif type(streams[0]) is AudioStream:
                 subject = NSLocalizedString("Audio call requested by", "Label")
             elif type(streams[0]) is ChatStream:

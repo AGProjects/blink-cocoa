@@ -94,6 +94,7 @@ class VideoLocalWindowController(NSWindowController):
         themeFrame = self.window().contentView().superview()
         self.titleBarView = LocalTitleBarView.alloc().init()
         topmenu_frame = self.titleBarView.view.frame()
+        self.disconnectLabel.superview().hide()
 
         newFrame = NSMakeRect(
                                 0,
@@ -104,7 +105,6 @@ class VideoLocalWindowController(NSWindowController):
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
         self.titleBarView.textLabel.setHidden_(False)
-        self.videoWindowController.streamController.updateStatusLabel()
         self.updateTrackingAreas()
         
         self.videoView.setProducer(SIPApplication.video_device.producer)

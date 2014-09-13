@@ -2,6 +2,7 @@
 #
 
 from AppKit import (NSApp,
+                    NSEventTrackingRunLoopMode,
                     NSSize,
                     NSBorderlessWindowMask,
                     NSResizableWindowMask,
@@ -18,6 +19,8 @@ from AppKit import (NSApp,
                     )
 
 from Foundation import (NSBundle,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
                         NSNumber,
                         NSDictionary,
                         NSColor,
@@ -70,6 +73,7 @@ from util import run_in_gui_thread
 from sipsimple.core import Engine
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.threading.green import run_in_green_thread
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -84,6 +88,8 @@ class MyVideoWindowController(NSWindowController):
 
 
     visible = False
+    full_screen = False
+    full_screen_in_progress = False
     close_timer = None
     tracking_area = None
     closed_by_user = False
@@ -227,15 +233,24 @@ class MyVideoWindowController(NSWindowController):
 
 class LocalVideoView(NSView):
     initialLocation = None
+    initialOrigin = None
     captureSession = None
     stillImageOutput = None
     videoOutput = None
     videoPreviewLayer = None
     auto_rotate_menu_enabled = True
     mirrored = True
-
-
     aspect_ratio = None
+
+    start_origin = None
+    final_origin = None
+    temp_origin = None
+    elastix_timer = None
+    elastic_step = 0
+    elastic_steps = 10
+    step_x = 0
+    step_y = 0
+
     resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
 
     def close(self):
@@ -245,11 +260,9 @@ class LocalVideoView(NSView):
                 self.captureSession.removeOutput_(self.stillImageOutput)
                 self.stillImageOutput = None
 
-            if self.captureSession.isRunning():
-                self.captureSession.stopRunning()
+            self.hide()
 
-            self.captureSession = None
-
+        self.videoPreviewLayer = None
         self.removeFromSuperview()
 
     def dealloc(self):
@@ -262,8 +275,6 @@ class LocalVideoView(NSView):
             self.window().hide()
 
     def rightMouseDown_(self, event):
-        if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
-            return
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
             NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
@@ -272,14 +283,14 @@ class LocalVideoView(NSView):
         videoDevicesMenu = NSMenu.alloc().init()
         lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
         lastItem.setEnabled_(False)
-        videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
-
+ 
         i = 0
         for item in Engine().video_devices:
             if item not in (None, 'system_default'):
                 i += 1
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
             lastItem.setRepresentedObject_(item)
+            lastItem.setIndentationLevel_(2)
             if SIPApplication.video_device.real_name == item:
                 lastItem.setState_(NSOnState)
 
@@ -289,7 +300,14 @@ class LocalVideoView(NSView):
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Auto Rotate Cameras", "Menu item"), "toggleAutoRotate:", "")
             lastItem.setState_(NSOnState if settings.video.auto_rotate_cameras else NSOffState)
 
+        if hasattr(self.window().delegate(), "toggleMyVideoViewCorner"):
+            videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+            lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Change Corner", "Menu item"), "toggleCorner:", "")
+
         NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self)
+
+    def toggleCorner_(self, sender):
+        self.window().delegate().toggleMyVideoViewCorner()
 
     def toggleAutoRotate_(self, sender):
         settings = SIPSimpleSettings()
@@ -304,34 +322,88 @@ class LocalVideoView(NSView):
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
+        self.initialOrigin = self.frame().origin
+        self.final_origin = None
+
+    def mouseUp_(self, event):
+        if self.final_origin:
+            self.setFrameOrigin_(self.final_origin)
+            self.start_origin = None
+            self.final_origin = None
+
+    def acceptsFirstMouse(self):
+        return True
 
     def mouseDragged_(self, event):
-        screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
-        windowFrame = self.window().frame()
-        newOrigin = windowFrame.origin
+        if hasattr(self.window().delegate(), "dragMyVideoViewWithinWindow"):
+            # drag the view within its window
+            newOrigin = self.frame().origin
+            currentLocation = event.locationInWindow()
 
-        currentLocation = event.locationInWindow()
+            offset_x =  self.initialLocation.x - self.initialOrigin.x
+            offset_y =  self.initialLocation.y - self.initialOrigin.y
+            newOrigin.x = currentLocation.x - offset_x
+            newOrigin.y = currentLocation.y - offset_y
 
-        newOrigin.x += (currentLocation.x - self.initialLocation.x)
-        newOrigin.y += (currentLocation.y - self.initialLocation.y)
+            if newOrigin.x < 10:
+                newOrigin.x = 10
 
-        if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
-            newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
+            if newOrigin.y < 10:
+                newOrigin.y = 10
 
-        self.window().setFrameOrigin_(newOrigin)
+            if self.window().delegate().full_screen:
+                parentFrame = NSScreen.mainScreen().visibleFrame()
+            else:
+                parentFrame = self.window().frame()
+
+            if newOrigin.x > parentFrame.size.width - 10 - self.frame().size.width:
+                newOrigin.x = parentFrame.size.width - 10 - self.frame().size.width
+
+            if newOrigin.y > parentFrame.size.height - 30 - self.frame().size.height:
+                newOrigin.y = parentFrame.size.height - 30 - self.frame().size.height
+
+            if ((newOrigin.y + self.frame().size.height) > (parentFrame.origin.y + parentFrame.size.height)):
+                newOrigin.y = parentFrame.origin.y + (parentFrame.size.height - self.frame().size.height)
+
+            if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
+                letter2 = "R"
+            else:
+                letter2 = "L"
+
+            if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
+                letter1 = "B"
+            else:
+                letter1 = "T"
+
+            finalFrame = "myVideoView" + letter1 + letter2
+            self.start_origin = newOrigin
+            self.final_origin = getattr(self.window().delegate(), finalFrame).frame().origin
+            self.setFrameOrigin_(newOrigin)
+        else:
+            # drag the whole window
+            screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
+            windowFrame = self.window().frame()
+            newOrigin = windowFrame.origin
+            
+            currentLocation = event.locationInWindow()
+            
+            newOrigin.x += (currentLocation.x - self.initialLocation.x)
+            newOrigin.y += (currentLocation.y - self.initialLocation.y)
+            
+            if ((newOrigin.y + windowFrame.size.height) > (screenVisibleFrame.origin.y + screenVisibleFrame.size.height)):
+                newOrigin.y = screenVisibleFrame.origin.y + (screenVisibleFrame.size.height - windowFrame.size.height)
+            
+            self.window().setFrameOrigin_(newOrigin)
 
     def getDevice(self):
         # Find a video device
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
-            try:
-                device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and  device.localizedName() == SIPApplication.video_device.real_name).next()
-            except StopIteration:
-                BlinkLogger().log_info('No camera found')
-                return None
-            else:
-                return device
+        try:
+            device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and device.localizedName() == SIPApplication.video_device.real_name).next()
+        except StopIteration:
+            BlinkLogger().log_error('No video camera found')
+            return None
         else:
-            return AVCaptureDevice.defaultDeviceWithMediaType_(AVMediaTypeVideo)
+            return device
 
     def reloadCamera(self):
         if not self.captureSession:
@@ -351,15 +423,16 @@ class LocalVideoView(NSView):
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
         if self.captureSession is None:
-            self.captureSession = AVCaptureSession.alloc().init()
-            if self.captureSession.canSetSessionPreset_(AVCaptureSessionPresetHigh):
-                self.captureSession.setSessionPreset_(AVCaptureSessionPresetHigh)
 
             # Find a video device
             device = self.getDevice()
 
             if not device:
                 return
+
+            self.captureSession = AVCaptureSession.alloc().init()
+            if self.captureSession.canSetSessionPreset_(AVCaptureSessionPresetHigh):
+                self.captureSession.setSessionPreset_(AVCaptureSessionPresetHigh)
 
             max_resolution = (0, 0)
             BlinkLogger().log_debug("%s camera provides %d formats" % (device.localizedName(), len(device.formats())))
@@ -393,12 +466,16 @@ class LocalVideoView(NSView):
 
             self.setWantsLayer_(True)
             self.videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
+            self.layer().addSublayer_(self.videoPreviewLayer)
             self.videoPreviewLayer.setFrame_(self.layer().bounds())
             self.videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
-            self.videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
+            #self.videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
             self.videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
+
+            self.videoPreviewLayer.setCornerRadius_(5.0)
+            self.videoPreviewLayer.setMasksToBounds_(True)
+
             self.setMirroring()
-            self.layer().addSublayer_(self.videoPreviewLayer)
 
             self.stillImageOutput = AVCaptureStillImageOutput.new()
             pixelFormat = NSNumber.numberWithInt_(kCVPixelFormatType_32BGRA)
@@ -406,8 +483,10 @@ class LocalVideoView(NSView):
 
             self.captureSession.addOutput_(self.stillImageOutput)
 
-        BlinkLogger().log_debug('Start aquire video %s' % self)
-        self.captureSession.startRunning()
+        if self.captureSession:
+            BlinkLogger().log_debug('Start aquire local video %s' % self)
+            self.videoPreviewLayer.setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.4))
+            self.captureSession.startRunning()
 
     def setMirroring(self):
         self.videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
@@ -438,13 +517,23 @@ class LocalVideoView(NSView):
         connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
         self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, capture_handler)
 
+    def visible(self):
+        return self.captureSession is not None
+    
+    def toggle(self):
+        if self.visible():
+            self.hide()
+        else:
+            self.show()
+    
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
         if self.captureSession is not None:
-            BlinkLogger().log_debug('Stop aquire video %s' % self)
+            BlinkLogger().log_debug('Stop aquire local video %s' % self)
             self.captureSession.stopRunning()
             self.captureSession = None
-            self.videoPreviewLayer = None
+            self.videoPreviewLayer.setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.0))
+            #self.videoPreviewLayer = None
 
 
 class BorderlessRoundWindow(NSPanel):

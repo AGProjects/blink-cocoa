@@ -89,23 +89,6 @@ class VideoController(MediaStream):
 
         return self
 
-    def updateStatusLabelAfterConnect(self):
-        return
-        if self.videoWindowController.titleBarView is None:
-            return
-        codec = beautify_video_codec(self.stream.codec)
-        if not self.sessionController.account.nat_traversal.use_ice:
-            self.videoWindowController.titleBarView.textLabel.setStringValue_(codec)
-        else:
-            if self.ice_negotiation_status == 'Success':
-                codec = beautify_video_codec(self.stream.codec)
-                if self.stream.local_rtp_candidate.type.lower() != 'relay' and self.stream.remote_rtp_candidate.type.lower() != 'relay':
-                    self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Peer to Peer" % codec, "Label"))
-                else:
-                    self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Server Relayed" % codec, "Label"))
-            else:
-                self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"))
-
     @run_in_thread('video-io')
     def updateStatisticsTimer_(self, timer):
         if not self.stream:
@@ -205,7 +188,7 @@ class VideoController(MediaStream):
             self.changeStatus(STREAM_PROPOSING)
         else:
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
-
+    
     def startIncoming(self, is_update):
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
@@ -258,96 +241,54 @@ class VideoController(MediaStream):
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
 
-        self.updateStatusLabel()
-
         if newstate in (STREAM_IDLE, STREAM_FAILED):
             self.end()
 
-    def updateStatusLabel(self):
-        labels = []
+        if newstate == STREAM_WAITING_DNS_LOOKUP:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Finding Destination...", "Audio status label"))
+        elif newstate == STREAM_RINGING:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Ringing...", "Audio status label"))
+        elif newstate == STREAM_CONNECTING:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
+        elif newstate == STREAM_PROPOSING:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 
-        local_window = self.videoWindowController.localVideoWindow
-        if local_window is not None and local_window.titleBarView is not None:
-            labels.append(local_window.titleBarView.textLabel)
-
-        remote_window = self.videoWindowController.window()
-        if remote_window is not None and self.videoWindowController.titleBarView is not None:
-            labels.append(self.videoWindowController.titleBarView.textLabel)
-
-        for label in labels:
-            if self.status == STREAM_WAITING_DNS_LOOKUP:
-                label.setStringValue_(NSLocalizedString("Finding Destination...", "Label"))
-            elif self.status in (STREAM_CONNECTING, STREAM_PROPOSING):
-                label.setStringValue_(NSLocalizedString("Connecting...", "Label"))
-            elif self.status == STREAM_RINGING:
-                label.setStringValue_(NSLocalizedString("Ringing...", "Label"))
-            elif self.status in (STREAM_IDLE, STREAM_FAILED):
-                label.setStringValue_("")
- 
     def _NH_MediaStreamDidInitialize(self, sender, data):
         pass
 
     def _NH_VideoStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
-        if self.videoWindowController.window() is not None:
-            self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"))
         self.ice_negotiation_status = data.reason
-        self.stopTimers()
+
+    @run_in_gui_thread
+    def _NH_VideoStreamICENegotiationStateDidChange(self, sender, data):
+        if data.state == 'GATHERING':
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
+        elif data.state == 'NEGOTIATION_START':
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
+        elif data.state == 'NEGOTIATING':
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Negotiating ICE...", "Audio status label"))
+        elif data.state == 'GATHERING_COMPLETE':
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering Complete", "Audio status label"))
+        elif data.state == 'RUNNING':
+            self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Succeeded", "Audio status label"))
+        elif data.state == 'FAILED':
+            self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
 
     def _NH_VideoStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation succeeded')
         self.sessionController.log_info(u'Video RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, ice_candidates[self.stream.local_rtp_candidate.type.lower()], self.stream.remote_rtp_address, self.stream.remote_rtp_port,
             ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
 
-        codec = beautify_video_codec(self.stream.codec)
-        if self.stream.local_rtp_candidate.type.lower() != 'relay' and self.stream.remote_rtp_candidate.type.lower() != 'relay':
-            self.sessionController.log_info(u'Video stream is peer to peer')
-            if self.videoWindowController.window() is not None:
-                self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Peer to Peer" % codec, "Label"))
-        else:
-            self.sessionController.log_info(u'Video stream is relayed by server')
-            if self.videoWindowController.window() is not None:
-                self.videoWindowController.titleBarView.textLabel.setStringValue_(NSLocalizedString("%s Server Relayed" % codec, "Label"))
-
         self.ice_negotiation_status = 'Success'
-
-    def _NH_VideoStreamICENegotiationStateDidChange(self, sender, data):
-        local_window = self.videoWindowController.localVideoWindow
-        if local_window is not None and local_window.titleBarView is not None:
-            label = local_window.titleBarView.textLabel
-            if data.state == 'GATHERING':
-                label.setStringValue_(NSLocalizedString("Gathering ICE Candidates...", "Label"))
-            elif data.state == 'NEGOTIATION_START':
-                label.setStringValue_(NSLocalizedString("Connecting...", "Label"))
-            elif data.state == 'NEGOTIATING':
-                label.setStringValue_(NSLocalizedString("Negotiating ICE...", "Label"))
-            elif data.state == 'GATHERING_COMPLETE':
-                label.setStringValue_(NSLocalizedString("Gathering Complete", "Label"))
-            elif data.state == 'RUNNING':
-                label.setStringValue_(NSLocalizedString("ICE Negotiation Succeeded", "Label"))
-            elif data.state == 'FAILED':
-                label.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"), True)
-
-        if self.videoWindowController.window() is not None:
-            label = self.videoWindowController.titleBarView.textLabel
-            if data.state == 'GATHERING':
-                label.setStringValue_(NSLocalizedString("Gathering ICE Candidates...", "Label"))
-            elif data.state == 'NEGOTIATION_START':
-                label.setStringValue_(NSLocalizedString("Connecting...", "Label"))
-            elif data.state == 'NEGOTIATING':
-                label.setStringValue_(NSLocalizedString("Negotiating ICE...", "Label"))
-            elif data.state == 'GATHERING_COMPLETE':
-                label.setStringValue_(NSLocalizedString("Gathering Complete", "Label"))
-            elif data.state == 'RUNNING':
-                label.setStringValue_(NSLocalizedString("ICE Negotiation Succeeded", "Label"))
-            elif data.state == 'FAILED':
-                label.setStringValue_(NSLocalizedString("ICE Negotiation Failed", "Label"), True)
 
     @run_in_gui_thread
     def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
         if data.on_hold:
             self.videoWindowController.window().setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
+            self.videoWindowController.showStatusLabel(NSLocalizedString("On Hold", "Label"))
         else:
+            self.videoWindowController.hideStatusLabel()
             self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
@@ -358,13 +299,6 @@ class VideoController(MediaStream):
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
 
         self.videoWindowController.show()
-
-        if not self.sessionController.account.nat_traversal.use_ice:
-            if self.videoWindowController.titleBarView is not None:
-                self.videoWindowController.titleBarView.textLabel.setStringValue_(codec)
-        else:
-            self.updateStatusLabelAfterConnect()
-
         self.changeStatus(STREAM_CONNECTED)
 
         if self.sessionController.hasStreamOfType("chat") and self.videoWindowController.always_on_top:
@@ -416,15 +350,11 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_RINGING)
 
     def _NH_VideoRemovedByRemoteParty(self, sender, data):
-        self.videoWindowController.showDisconnectedReason()
+        self.videoWindowController.showStatusLabel()
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if self.stream in data.proposed_streams:
-            self.videoWindowController.showDisconnectedReason()
-
-    def _NH_BlinkProposalAccepted(self, sender, data):
-        if self.stream in data.accepted_streams:
-            self.updateStatusLabelAfterConnect()
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Proposal rejected", "Label"))
 
     def _NH_BlinkWillCancelProposal(self, sender, data):
         self.sessionController.log_info(u"Video proposal cancelled")
@@ -432,7 +362,7 @@ class VideoController(MediaStream):
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
-            self.videoWindowController.showDisconnectedReason()
+            self.videoWindowController.showStatusLabel()
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
@@ -464,11 +394,11 @@ class VideoController(MediaStream):
                     reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
 
         if not skip_disconnect_panel:
-            self.videoWindowController.showDisconnectedReason(reason)
+            self.videoWindowController.showStatusLabel(reason)
         self.stopTimers()
 
-    def _NH_BlinkSessionDidEnd(self, sender, data):
-        self.videoWindowController.showDisconnectedReason(NSLocalizedString("Video Ended", "Label"))
+    def _NH_BlinkSessionWillEnd(self, sender, data):
+        self.videoWindowController.showStatusLabel()
 
     def stopTimers(self):
         if self.statistics_timer is not None:

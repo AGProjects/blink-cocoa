@@ -786,54 +786,27 @@ class PreferencesController(NSWindowController, object):
                     account.save()
 
             if 'video.quality' in notification.data.modified:
-                if settings.video.quality == "embarrassing":
-                    settings.video.resolution = "vga"
-                    settings.video.h264.level = "3.0"
-                    settings.video.h264.max_resolution = "320x240"
-                    settings.video.h264.max_framerate = "5"
+                if settings.video.quality == "low":
+                    settings.video.resolution = "640x480"
+                    settings.video.framerate = "10"
                     settings.video.h264.profile = "baseline"
-                elif settings.video.quality == "lowest":
-                    settings.video.resolution = "vga"
                     settings.video.h264.level = "3.0"
-                    settings.video.h264.max_framerate = "10"
-                    settings.video.h264.max_resolution = "640x480"
-                    settings.video.h264.profile = "baseline"
-                elif settings.video.quality == "low":
-                    settings.video.resolution = "720p"
-                    settings.video.h264.level = "3.0"
-                    settings.video.h264.max_framerate = "10"
-                    settings.video.h264.max_resolution = "740x400"
-                    settings.video.h264.profile = "baseline"
                 elif settings.video.quality == "medium":
-                    settings.video.resolution = "720p"
+                    settings.video.resolution = "1280x720"
+                    settings.video.framerate = "15"
                     settings.video.h264.level = "3.0"
-                    settings.video.h264.max_framerate = "15"
-                    settings.video.h264.max_resolution = "1280x720"
                     settings.video.h264.profile = "baseline"
                 elif settings.video.quality == "high":
-                    settings.video.resolution = "720p"
+                    settings.video.resolution = "1280x720"
+                    settings.video.framerate = "25"
                     settings.video.h264.level = "3.1"
-                    settings.video.h264.max_framerate = "25"
-                    settings.video.h264.max_resolution = "1280x720"
-                    settings.video.h264.profile = "main"
-                elif settings.video.quality == "highest":
-                    settings.video.resolution = "1080p"
-                    settings.video.h264.level = "3.1"
-                    settings.video.h264.max_framerate = "30"
-                    settings.video.h264.max_resolution = "1920x1080"
-                    settings.video.h264.profile = "high"
-                elif settings.video.quality == "absurd":
-                    settings.video.resolution = "1080p"
-                    settings.video.h264.max_framerate = "60"
-                    settings.video.h264.level = "4.0"
-                    settings.video.h264.max_resolution = "1920x1080"
-                    settings.video.h264.profile = "high"
+                    settings.video.h264.profile = "baseline"
 
                 settings.save()
                 self.settingViews["h264.profile"].restore()
                 self.settingViews["h264.level"].restore()
-                self.settingViews["h264.max_resolution"].restore()
-                self.settingViews["h264.max_framerate"].restore()
+                self.settingViews["video.resolution"].restore()
+                self.settingViews["video.framerate"].restore()
 
         if not self.saving and sender in (settings, self.selectedAccount()):
             for option in (o for o in notification.data.modified if o in self.settingViews):
