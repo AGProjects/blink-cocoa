@@ -78,7 +78,7 @@ class VideoController(MediaStream):
         self.videoRecorder = VideoRecorder(self)
         self.videoWindowController = VideoWindowController(self)
 
-        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
+        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0, 'fps': 0}
         # 5 minutes of history data for Session Info graphs
         self.loss_history = deque(maxlen=300)
         self.rtt_history = deque(maxlen=300)
@@ -105,6 +105,8 @@ class VideoController(MediaStream):
             self.statistics['loss'] = loss
             self.statistics['jitter'] = jitter
             self.statistics['rtt'] = rtt
+            self.statistics['fps'] = self.videoWindowController.frames
+            self.videoWindowController.resetFrames()
 
             rx_overhead = (stats['rx']['packets'] - self.previous_rx_packets) * RTP_PACKET_OVERHEAD
             tx_overhead = (stats['tx']['packets'] - self.previous_tx_packets) * RTP_PACKET_OVERHEAD

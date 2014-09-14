@@ -115,6 +115,7 @@ class VideoWidget(NSView):
     _data = None
     renderer = None
     aspect_ratio = None
+    frames = 0
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
@@ -129,6 +130,9 @@ class VideoWidget(NSView):
         if self.renderer is None:
             self.renderer = FrameBufferVideoRenderer(self.handle_frame)
         self.renderer.producer = producer
+
+    def resetFrames(self):
+        self.frames = 0
 
     def close(self):
         if  self.renderer is not None:
@@ -153,6 +157,7 @@ class VideoWidget(NSView):
         self.window().delegate().mouseDraggedView_(event)
 
     def handle_frame(self, frame, width, height):
+        self.frames += 1
         self._data = (frame, width, height)
         if self.aspect_ratio is None:
             self.aspect_ratio = floor((float(width) / height) * 100)/100
@@ -303,7 +308,15 @@ class VideoWindowController(NSWindowController):
 
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
-    
+
+    @property
+    def frames(self):
+        return self.videoView.frames if self.videoView else 0
+
+    def resetFrames(self):
+        if self.videoView:
+            self.videoView.resetFrames()
+
     @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):

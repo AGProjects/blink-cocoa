@@ -412,7 +412,8 @@ class SessionInfoController(NSObject):
                 try:
                     settings = SIPSimpleSettings()
                     sample_rate = self.video_stream.stream.sample_rate/1000
-                    codec = codec + " %0.fkHz" % sample_rate
+                    codec = codec + " @%d fps" % self.video_stream.statistics['fps']
+
                 except TypeError:
                     pass
 
