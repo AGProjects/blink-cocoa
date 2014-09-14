@@ -3497,7 +3497,7 @@ class ContactWindowController(NSWindowController):
 
         def format_item(name, when):
             a = NSMutableAttributedString.alloc().init()
-            n = NSAttributedString.alloc().initWithString_attributes_(name+"    ", normal_font_color)
+            n = NSAttributedString.alloc().initWithString_attributes_("%s   " % name, normal_font_color)
             a.appendAttributedString_(n)
             t = NSAttributedString.alloc().initWithString_attributes_(when, mini_blue)
             a.appendAttributedString_(t)
@@ -3505,19 +3505,23 @@ class ContactWindowController(NSWindowController):
 
         while not self.recordingsMenu.itemAtIndex_(0).isSeparatorItem():
             self.recordingsMenu.removeItemAtIndex_(0)
-        self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_audio_recordings_directory())
+        self.recordingsMenu.itemAtIndex_(1).setRepresentedObject_(self.backend.get_recordings_directory())
 
-        recordings = self.backend.get_audio_recordings()[-10:]
+        recordings = self.backend.get_recordings()[-20:]
         if not recordings:
             item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("No recordings available", None), "", "", 0)
             item.setEnabled_(False)
 
-        for dt, name, f in recordings:
-            title = name + "  " + dt
+        for timestamp, remote_party, file, recording_type in recordings:
+            title = "%s %s (%s)" % (remote_party, timestamp, recording_type)
             item = self.recordingsMenu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, "recordingClicked:", "", 0)
             item.setTarget_(self)
-            item.setRepresentedObject_(f)
-            item.setAttributedTitle_(format_item(name,dt))
+            item.setRepresentedObject_(file)
+            icon = NSImage.imageNamed_("video" if recording_type == "video" else "speaker")
+            icon.setScalesWhenResized_(True)
+            icon.setSize_(NSMakeSize(14,14))
+            item.setImage_(icon)
+            item.setAttributedTitle_(format_item(remote_party, timestamp))
 
     def updateRestoreContactsMenu(self):
         while not self.restoreContactsMenu.itemAtIndex_(0).isSeparatorItem():
@@ -4759,11 +4763,11 @@ class ContactWindowController(NSWindowController):
                     history_item.setRepresentedObject_(all_uris)
                     history_item.setEnabled_(NSApp.delegate().history_enabled)
 
-                    recordings = self.backend.get_audio_recordings(all_uris)[-10:]
+                    recordings = self.backend.get_recordings(all_uris)[-10:]
 
                     if recordings:
                         audio_recordings_submenu = NSMenu.alloc().init()
-                        for dt, name, f in recordings:
+                        for dt, name, f, t in recordings:
                             r_item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
                             r_item.setTarget_(self)
                             r_item.setRepresentedObject_(f)
@@ -4773,7 +4777,7 @@ class ContactWindowController(NSWindowController):
 
                         if history_contact and history_contact.answering_machine_filenames:
                             voice_messages_submenu = NSMenu.alloc().init()
-                            for dt, name, f in recordings:
+                            for dt, name, f, t in recordings:
                                 if f not in history_contact.answering_machine_filenames:
                                     continue
                                 r_item = voice_messages_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
@@ -4828,10 +4832,10 @@ class ContactWindowController(NSWindowController):
                         lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add to Contacts List...", "Menu item"), "createPresenceContactFromOtherContact:", "")
                         lastItem.setRepresentedObject_(history_contact)
 
-                recordings = self.backend.get_audio_recordings([history_contact.uris[0].uri])[-10:]
+                recordings = self.backend.get_recordings([history_contact.uris[0].uri])[-10:]
                 if recordings:
                     audio_recordings_submenu = NSMenu.alloc().init()
-                    for dt, name, f in recordings:
+                    for dt, name, f, t in recordings:
                         aitem = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
                         aitem.setTarget_(self)
                         aitem.setRepresentedObject_(f)
@@ -4841,7 +4845,7 @@ class ContactWindowController(NSWindowController):
 
                     if history_contact.answering_machine_filenames:
                         voice_messages_submenu = NSMenu.alloc().init()
-                        for dt, name, f in recordings:
+                        for dt, name, f, t in recordings:
                             if f not in history_contact.answering_machine_filenames:
                                 continue
                             r_item = voice_messages_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)

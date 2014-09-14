@@ -331,7 +331,7 @@ class SIPManager(object):
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
 
-    def get_audio_recordings_directory(self):
+    def get_recordings_directory(self):
         return ApplicationData.get('history')
 
     def get_contacts_backup_directory(self):
@@ -339,19 +339,20 @@ class SIPManager(object):
         makedirs(path)
         return path
 
-    def get_audio_recordings(self, filter_uris=[]):
+    def get_recordings(self, filter_uris=[]):
         result = []
-        historydir = self.get_audio_recordings_directory()
+        historydir = self.get_recordings_directory()
 
         for acct in os.listdir(historydir):
             dirname = historydir + "/" + acct
             if not os.path.isdir(dirname):
                 continue
 
-            files = [dirname+"/"+f for f in os.listdir(dirname) if f.endswith(".wav")]
+            files = [dirname+"/"+f for f in os.listdir(dirname)]
 
             for file in files:
                 try:
+                    recording_type = "audio" if file.endswith(".wav") else "video"
                     stat = os.stat(file)
                     toks = file.split("/")[-1].split("-", 2)
                     if len(toks) == 3:
@@ -379,7 +380,7 @@ class SIPManager(object):
 
                     if filter_uris and remote_party not in filter_uris:
                         continue
-                    result.append((timestamp, remote_party, file))
+                    result.append((timestamp, remote_party, file, recording_type))
                 except Exception:
                     pass
 
