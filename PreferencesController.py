@@ -788,17 +788,17 @@ class PreferencesController(NSWindowController, object):
             if 'video.quality' in notification.data.modified:
                 if settings.video.quality == "low":
                     settings.video.resolution = "640x480"
-                    settings.video.framerate = "10"
+                    settings.video.framerate = "25"
                     settings.video.h264.profile = "baseline"
                     settings.video.h264.level = "3.0"
                 elif settings.video.quality == "medium":
                     settings.video.resolution = "1280x720"
                     settings.video.framerate = "15"
-                    settings.video.h264.level = "3.0"
+                    settings.video.h264.level = "3.1"
                     settings.video.h264.profile = "baseline"
                 elif settings.video.quality == "high":
                     settings.video.resolution = "1280x720"
-                    settings.video.framerate = "25"
+                    settings.video.framerate = "30"
                     settings.video.h264.level = "3.1"
                     settings.video.h264.profile = "baseline"
 

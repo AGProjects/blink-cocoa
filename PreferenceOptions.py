@@ -1001,13 +1001,13 @@ class VideoQualityOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = True
-        self.popup.addItemWithTitle_(NSLocalizedString("Low", "Menu item") + " (640x480 @10fps)")
+        self.popup.addItemWithTitle_(NSLocalizedString("Low", "Menu item") + " (640x480 @25fps)")
         self.popup.lastItem().setRepresentedObject_('low')
 
         self.popup.addItemWithTitle_(NSLocalizedString("Medium", "Menu item") + " (1280x720 @15fps)")
         self.popup.lastItem().setRepresentedObject_('medium')
 
-        self.popup.addItemWithTitle_(NSLocalizedString("High", "Menu item") + " (1280x720 @25fps)")
+        self.popup.addItemWithTitle_(NSLocalizedString("High", "Menu item") + " (1280x720 @30fps)")
         self.popup.lastItem().setRepresentedObject_('high')
 
         frame = self.popup.frame()

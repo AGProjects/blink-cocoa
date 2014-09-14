@@ -33,7 +33,7 @@ class AnsweringMachineSettings(SettingsGroup):
 if video_support:
     class H264SettingsExtension(H264Settings):
         profile = Setting(type=H264Profile, default='baseline')
-        level = Setting(type=str, default='3.0')
+        level = Setting(type=str, default='3.1')
 
     class VideoSettingsExtension(VideoSettings):
         enable_when_auto_answer = Setting(type=bool, default=False)
