@@ -978,7 +978,7 @@ class VideoFramerateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
-        for item in ("5", "10", "15", "20", "25", "30", "60"):
+        for item in ("5", "10", "15", "20", "25", "30"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
