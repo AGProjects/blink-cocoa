@@ -11,6 +11,7 @@
                 <outlet property="buttonsView" destination="Y9H-en-cNJ" id="T6p-ko-bRo"/>
                 <outlet property="chatButton" destination="5zy-g6-Zl6" id="qYF-g1-Ffr"/>
                 <outlet property="disconnectLabel" destination="eVG-9y-W1v" id="4V4-jU-2tV"/>
+                <outlet property="fullScreenButton" destination="APe-V0-I1B" id="abe-eu-fVp"/>
                 <outlet property="hangupButton" destination="8Az-PJ-y76" id="bm2-xj-i0u"/>
                 <outlet property="holdButton" destination="KKF-yB-vq1" id="vho-WV-og1"/>
                 <outlet property="infoButton" destination="I9k-Br-fgq" id="Ytf-8U-A73"/>
@@ -61,25 +62,36 @@
                         </subviews>
                     </customView>
                     <view focusRingType="none" id="Y9H-en-cNJ" customClass="RoundedCornersView">
-                        <rect key="frame" x="182" y="11" width="300" height="35"/>
+                        <rect key="frame" x="182" y="13" width="300" height="35"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <button id="qgv-hv-8jn">
-                                <rect key="frame" x="7" y="7" width="37" height="27"/>
+                                <rect key="frame" x="40" y="8" width="35" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="aspect_ratio" imagePosition="above" alignment="center" imageScaling="proportionallyDown" inset="2" id="DCj-Na-fmk">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
                                     <action selector="userClickedAspectButton:" target="-2" id="rxA-Qp-dQa"/>
                                 </connections>
                             </button>
+                            <button id="APe-V0-I1B">
+                                <rect key="frame" x="2" y="6" width="37" height="27"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="fullscreen" imagePosition="above" alignment="center" imageScaling="proportionallyDown" inset="2" id="ipd-M6-2bI">
+                                    <behavior key="behavior" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="userClickedFullScreenButton:" target="-2" id="vJE-Z7-5br"/>
+                                </connections>
+                            </button>
                             <button id="jY2-T6-DZT">
-                                <rect key="frame" x="44" y="5" width="32" height="27"/>
+                                <rect key="frame" x="74" y="5" width="32" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mute-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="P5Q-ng-o10">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -87,10 +99,10 @@
                                 </connections>
                             </button>
                             <button id="8Az-PJ-y76">
-                                <rect key="frame" x="102" y="7" width="31" height="27"/>
+                                <rect key="frame" x="129" y="7" width="31" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="YBv-AF-tXo">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -98,10 +110,10 @@
                                 </connections>
                             </button>
                             <button id="KKF-yB-vq1">
-                                <rect key="frame" x="71" y="6" width="31" height="27"/>
+                                <rect key="frame" x="100" y="6" width="31" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pause-white" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="u8N-mG-TdB">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -109,10 +121,10 @@
                                 </connections>
                             </button>
                             <button id="5zy-g6-Zl6">
-                                <rect key="frame" x="137" y="6" width="27" height="27"/>
+                                <rect key="frame" x="158" y="6" width="27" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pencil" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="KDg-ji-9yE">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -120,10 +132,10 @@
                                 </connections>
                             </button>
                             <button id="I9k-Br-fgq">
-                                <rect key="frame" x="170" y="4" width="22" height="27"/>
+                                <rect key="frame" x="188" y="4" width="22" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSInfo" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="QsW-aU-vEV">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -131,10 +143,10 @@
                                 </connections>
                             </button>
                             <button id="IeQ-BC-f6X">
-                                <rect key="frame" x="270" y="10" width="24" height="20"/>
+                                <rect key="frame" x="244" y="9" width="24" height="20"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="recording1" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="wlp-on-h2g">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -142,10 +154,10 @@
                                 </connections>
                             </button>
                             <button id="3wA-h2-aKT">
-                                <rect key="frame" x="231" y="8" width="40" height="24"/>
+                                <rect key="frame" x="272" y="5" width="28" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="Y0Y-Hf-Z5P">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -153,10 +165,10 @@
                                 </connections>
                             </button>
                             <button id="BKQ-kq-DFD">
-                                <rect key="frame" x="194" y="5" width="46" height="27"/>
+                                <rect key="frame" x="206" y="5" width="46" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="screenshot" imagePosition="above" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="gy8-5m-BAn">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <behavior key="behavior" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
@@ -204,6 +216,7 @@
     <resources>
         <image name="NSInfo" width="32" height="32"/>
         <image name="aspect_ratio" width="79.680000305175781" height="79.680000305175781"/>
+        <image name="fullscreen" width="128" height="128"/>
         <image name="hangup" width="240" height="240"/>
         <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
         <image name="mute-white" width="24" height="24"/>

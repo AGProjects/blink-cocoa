@@ -241,7 +241,6 @@ class VideoWindowController(NSWindowController):
     aspect_ratio = None
     titleBarView = None
     initialLocation = None
-    local_video_visible_before_fullscreen = False
     is_key_window = False
     updating_aspect_ratio = False
     last_corner = "TL"
@@ -253,6 +252,7 @@ class VideoWindowController(NSWindowController):
     chatButton = objc.IBOutlet()
     infoButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
+    fullScreenButton = objc.IBOutlet()
     aspectButton = objc.IBOutlet()
     screenshotButton = objc.IBOutlet()
     myvideoButton = objc.IBOutlet()
@@ -337,7 +337,8 @@ class VideoWindowController(NSWindowController):
         self.screenshotButton.setToolTip_(NSLocalizedString("Screenshot", "Label"))
         self.myvideoButton.setToolTip_(NSLocalizedString("My Video", "Label"))
         self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
-    
+        self.fullScreenButton.setToolTip_(NSLocalizedString("Full Screen", "Label"))
+
         self.disconnectLabel.superview().hide()
         self.recordButton.setEnabled_(False)
 
@@ -720,26 +721,14 @@ class VideoWindowController(NSWindowController):
     @run_in_gui_thread
     def goToFullScreen(self):
         BlinkLogger().log_debug('goToFullScreen %s' % self)
-        self.hideTitleBar()
-
-        self.local_video_visible_before_fullscreen = NSApp.delegate().contactsWindowController.localVideoVisible()
-
-        if self.localVideoWindow:
-            self.localVideoWindow.hide()
-
         if not self.full_screen:
-            if self.window():
-                self.window().toggleFullScreen_(None)
-                self.show()
+            self.window().toggleFullScreen_(None)
 
     @run_in_gui_thread
     def goToWindowMode(self, window=None):
         if self.full_screen:
             self.show_window_after_full_screen_ends = window
-            if self.window():
-                self.window().toggleFullScreen_(None)
-                self.show()
-                self.updateAspectRatio()
+            self.window().toggleFullScreen_(None)
 
     @run_in_gui_thread
     def toggleFullScreen(self):
@@ -749,6 +738,7 @@ class VideoWindowController(NSWindowController):
             return
 
         self.full_screen_in_progress = True
+
         if self.full_screen:
             self.goToWindowMode()
         else:
@@ -770,6 +760,8 @@ class VideoWindowController(NSWindowController):
         self.full_screen_in_progress = False
         self.full_screen = True
         self.stopMouseOutTimer()
+        self.fullScreenButton.setImage_(NSImage.imageNamed_("restore"))
+
         #NSApp.delegate().contactsWindowController.showLocalVideoWindow()
 
         self.showButtons()
@@ -779,13 +771,11 @@ class VideoWindowController(NSWindowController):
 
     def windowDidExitFullScreen_(self, notification):
         BlinkLogger().log_debug('windowDidExitFullScreen %s' % self)
+        self.fullScreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
         self.showTitleBar()
 
         self.full_screen_in_progress = False
         self.full_screen = False
-
-        # if not self.local_video_visible_before_fullscreen:
-            #NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
 
         self.recordButton.setEnabled_(False)
 
@@ -1009,6 +999,7 @@ class VideoWindowController(NSWindowController):
             return
 
         self.buttonsView.hide()
+        self.fullScreenButton.setHidden_(True)
         self.visible_buttons = False
         self.holdButton.setHidden_(True)
         self.hangupButton.setHidden_(True)
@@ -1029,6 +1020,7 @@ class VideoWindowController(NSWindowController):
 
         self.buttonsView.show()
         self.visible_buttons = True
+        self.fullScreenButton.setHidden_(False)
         self.holdButton.setHidden_(False)
         self.hangupButton.setHidden_(False)
         self.chatButton.setHidden_(False)

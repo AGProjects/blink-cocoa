@@ -2758,6 +2758,9 @@
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
+		1F21A22719C5F679006866C8 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F21A22819C5F67B006866C8 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F21A22919C5F67E006866C8 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F22722512B554000010A8B2 /* libgcrypt.11.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgcrypt.11.dylib; path = Distribution/Frameworks/libgcrypt.11.dylib; sourceTree = "<group>"; };
 		1F22722612B554000010A8B2 /* libgnutls-extra.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libgnutls-extra.26.dylib"; path = "Distribution/Frameworks/libgnutls-extra.26.dylib"; sourceTree = "<group>"; };
 		1F22722712B554000010A8B2 /* libgnutls.26.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.26.dylib; path = Distribution/Frameworks/libgnutls.26.dylib; sourceTree = "<group>"; };
@@ -3004,9 +3007,6 @@
 		1FAC9E6519C4B615006E8093 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FAC9E6619C4B618006E8093 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FAC9E6719C4B61A006E8093 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FAC9E6819C4B7AD006E8093 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1FAC9E6919C4B7AF006E8093 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
-		1FAC9E6A19C4B7B1006E8093 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1FAD022C18C8010C00FBE7EE /* Grab.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grab.aif; path = sounds/Grab.aif; sourceTree = "<group>"; };
 		1FAE0B1118FD7A2300038AA4 /* pencil_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pencil_16.png; path = icons/pencil_16.png; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
@@ -6086,9 +6086,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B789719AEAEC200F854CB /* en */,
-				1FAC9E6819C4B7AD006E8093 /* ro */,
-				1FAC9E6919C4B7AF006E8093 /* es */,
-				1FAC9E6A19C4B7B1006E8093 /* pt */,
+				1F21A22719C5F679006866C8 /* ro */,
+				1F21A22819C5F67B006866C8 /* es */,
+				1F21A22919C5F67E006866C8 /* pt */,
 			);
 			name = VideoWindow.xib;
 			sourceTree = "<group>";
