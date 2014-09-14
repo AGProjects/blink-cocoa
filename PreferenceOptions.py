@@ -2157,10 +2157,8 @@ UnitOptions = {
                'subscribe_interval': NSLocalizedString("seconds", "Label"),
                'idle_threshold': NSLocalizedString("seconds", "Label"),
                'rtt_threshold': NSLocalizedString("milliseconds", "Label"),
-               'max_bitrate': NSLocalizedString("bits/s", "Label"),
-               'avg_bitrate': NSLocalizedString("bits/s", "Label"),
-               'max_framerate': NSLocalizedString("frames/s", "Label"),
-               'max_resolution': NSLocalizedString("pixels", "Label")
+               'framerate': NSLocalizedString("frames/s", "Label"),
+               'resolution': NSLocalizedString("pixels", "Label")
                }
 
 ToolTips = {

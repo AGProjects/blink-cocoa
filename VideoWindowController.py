@@ -46,6 +46,7 @@ from AppKit import (NSApp,
 from Foundation import (NSAttributedString,
                         NSBundle,
                         NSBezierPath,
+                        NSUserDefaults,
                         NSData,
                         NSObject,
                         NSColor,
@@ -152,6 +153,9 @@ class VideoWidget(NSView):
 
     def keyDown_(self, event):
         self.window().delegate().keyDown_(event)
+
+    def mouseUp_(self, event):
+        pass
 
     def mouseDragged_(self, event):
         self.window().delegate().mouseDraggedView_(event)
@@ -324,6 +328,7 @@ class VideoWindowController(NSWindowController):
         handler(notification.sender, notification.data)
 
     def awakeFromNib(self):
+
         self.notification_center.add_observer(self,sender=self.streamController.videoRecorder)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
         self.notification_center.add_observer(self, name='VideoDeviceDidChangeCamera')
@@ -409,6 +414,7 @@ class VideoWindowController(NSWindowController):
         self.window().setDelegate_(self)
         BlinkLogger().log_debug('Init %s in %s' % (self.window(), self))
         self.window().makeFirstResponder_(self.videoView)
+        self.window().setAcceptsMouseMovedEvents_(True)
         self.window().setTitle_(title)
         self.updateTrackingAreas()
 
@@ -462,6 +468,14 @@ class VideoWindowController(NSWindowController):
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
+
+    def mouseUp_(self, event):
+        if self.myVideoView and self.myVideoView.is_dragging:
+            self.myVideoView.goToFinalOrigin()
+
+    def mouseDragged_(self, event):
+        if self.myVideoView and self.myVideoView.is_dragging:
+            self.myVideoView.mouseDragged_(event)
 
     def mouseDraggedView_(self, event):
         if not self.initialLocation:
@@ -640,9 +654,11 @@ class VideoWindowController(NSWindowController):
             return
 
         self.myVideoView.show()
-        self.replaceMyVideo()
+        self.repositionMyVideo()
 
-    def replaceMyVideo(self):
+    def repositionMyVideo(self):
+        userdef = NSUserDefaults.standardUserDefaults()
+        self.last_corner = userdef.stringForKey_("MyVideoCorner")
         if self.last_corner == "TL":
             self.moveMyVideoView(self.myVideoViewTL)
         elif self.last_corner == "TR":
@@ -657,24 +673,12 @@ class VideoWindowController(NSWindowController):
         self.myVideoView.setAutoresizingMask_(view.autoresizingMask())
         self.myVideoView.setFrameOrigin_(view.frame().origin)
 
-    def toggleMyVideoViewCorner(self):
-        if self.last_corner == "TL":
-            self.moveMyVideoView(self.myVideoViewTR)
-            self.last_corner = "TR"
-        elif self.last_corner == "TR":
-            self.moveMyVideoView(self.myVideoViewBR)
-            self.last_corner = "BR"
-        elif self.last_corner == "BR":
-            self.moveMyVideoView(self.myVideoViewBL)
-            self.last_corner = "BL"
-        elif self.last_corner == "BL":
-            self.moveMyVideoView(self.myVideoViewTL)
-            self.last_corner = "TL"
-
     def windowWillResize_toSize_(self, window, frameSize):
         scaledSize = frameSize
         scaledSize.width = frameSize.width
         scaledSize.height = scaledSize.width / self.initial_aspect_ratio or self.aspect_ratio or 1.77
+        if self.myVideoView:
+            self.myVideoView.snapToCorner()
         return scaledSize
 
     def windowDidResize_(self, notification):
@@ -701,7 +705,7 @@ class VideoWindowController(NSWindowController):
                      (NSHeight(status_view.superview().bounds()) - NSHeight(status_view.frame())) /2)
         status_view.setFrameOrigin_(origin)
         status_view.setAutoresizingMask_(mask)
-
+    
     @run_in_gui_thread
     def hide(self):
         if self.localVideoWindow:
@@ -952,7 +956,7 @@ class VideoWindowController(NSWindowController):
     @objc.IBAction
     def userClickedMyVideoButton_(self, sender):
         self.myVideoView.toggle()
-        self.replaceMyVideo()
+        self.repositionMyVideo()
         #NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
 
     @objc.IBAction

@@ -250,6 +250,7 @@ class LocalVideoView(NSView):
     elastic_steps = 10
     step_x = 0
     step_y = 0
+    is_dragging = False
 
     resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
 
@@ -290,7 +291,6 @@ class LocalVideoView(NSView):
                 i += 1
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
             lastItem.setRepresentedObject_(item)
-            lastItem.setIndentationLevel_(2)
             if SIPApplication.video_device.real_name == item:
                 lastItem.setState_(NSOnState)
 
@@ -299,10 +299,6 @@ class LocalVideoView(NSView):
             settings = SIPSimpleSettings()
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Auto Rotate Cameras", "Menu item"), "toggleAutoRotate:", "")
             lastItem.setState_(NSOnState if settings.video.auto_rotate_cameras else NSOffState)
-
-        if hasattr(self.window().delegate(), "toggleMyVideoViewCorner"):
-            videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
-            lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Change Corner", "Menu item"), "toggleCorner:", "")
 
         NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self)
 
@@ -316,7 +312,7 @@ class LocalVideoView(NSView):
 
     def changeVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info('Switching to %s video camera' % sender.representedObject())
+        BlinkLogger().log_info('Switching to %s video device' % sender.representedObject())
         settings.video.device = sender.representedObject()
         settings.save()
 
@@ -326,6 +322,10 @@ class LocalVideoView(NSView):
         self.final_origin = None
 
     def mouseUp_(self, event):
+        self.is_dragging = False
+        self.goToFinalOrigin()
+
+    def goToFinalOrigin(self):
         if self.final_origin:
             self.setFrameOrigin_(self.final_origin)
             self.start_origin = None
@@ -334,51 +334,75 @@ class LocalVideoView(NSView):
     def acceptsFirstMouse(self):
         return True
 
+    def performDrag(self):
+        if not self.currentLocation:
+            return
+
+        newOrigin = self.frame().origin
+        offset_x =  self.initialLocation.x - self.initialOrigin.x
+        offset_y =  self.initialLocation.y - self.initialOrigin.y
+        newOrigin.x = self.currentLocation.x - offset_x
+        newOrigin.y = self.currentLocation.y - offset_y
+
+        if newOrigin.x < 10:
+            newOrigin.x = 10
+
+        if newOrigin.y < 10:
+            newOrigin.y = 10
+
+        if self.window().delegate().full_screen:
+            parentFrame = NSScreen.mainScreen().visibleFrame()
+        else:
+            parentFrame = self.window().frame()
+
+        if newOrigin.x > parentFrame.size.width - 10 - self.frame().size.width:
+            newOrigin.x = parentFrame.size.width - 10 - self.frame().size.width
+
+        if newOrigin.y > parentFrame.size.height - 30 - self.frame().size.height:
+            newOrigin.y = parentFrame.size.height - 30 - self.frame().size.height
+
+        if ((newOrigin.y + self.frame().size.height) > (parentFrame.origin.y + parentFrame.size.height)):
+            newOrigin.y = parentFrame.origin.y + (parentFrame.size.height - self.frame().size.height)
+
+        if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
+            letter2 = "R"
+        else:
+            letter2 = "L"
+
+        if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
+            letter1 = "B"
+        else:
+            letter1 = "T"
+
+        finalFrame = "myVideoView" + letter1 + letter2
+        self.start_origin = newOrigin
+        self.final_origin = getattr(self.window().delegate(), finalFrame).frame().origin
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
+        self.setFrameOrigin_(newOrigin)
+
+    def snapToCorner(self):
+        newOrigin = self.frame().origin
+        if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
+            letter2 = "R"
+        else:
+            letter2 = "L"
+
+        if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
+            letter1 = "B"
+        else:
+            letter1 = "T"
+
+        finalFrame = "myVideoView" + letter1 + letter2
+        self.setFrameOrigin_(getattr(self.window().delegate(), finalFrame).frame().origin)
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
+
     def mouseDragged_(self, event):
+        self.is_dragging = True
         if hasattr(self.window().delegate(), "dragMyVideoViewWithinWindow"):
             # drag the view within its window
-            newOrigin = self.frame().origin
-            currentLocation = event.locationInWindow()
+            self.currentLocation = event.locationInWindow()
+            self.performDrag()
 
-            offset_x =  self.initialLocation.x - self.initialOrigin.x
-            offset_y =  self.initialLocation.y - self.initialOrigin.y
-            newOrigin.x = currentLocation.x - offset_x
-            newOrigin.y = currentLocation.y - offset_y
-
-            if newOrigin.x < 10:
-                newOrigin.x = 10
-
-            if newOrigin.y < 10:
-                newOrigin.y = 10
-
-            if self.window().delegate().full_screen:
-                parentFrame = NSScreen.mainScreen().visibleFrame()
-            else:
-                parentFrame = self.window().frame()
-
-            if newOrigin.x > parentFrame.size.width - 10 - self.frame().size.width:
-                newOrigin.x = parentFrame.size.width - 10 - self.frame().size.width
-
-            if newOrigin.y > parentFrame.size.height - 30 - self.frame().size.height:
-                newOrigin.y = parentFrame.size.height - 30 - self.frame().size.height
-
-            if ((newOrigin.y + self.frame().size.height) > (parentFrame.origin.y + parentFrame.size.height)):
-                newOrigin.y = parentFrame.origin.y + (parentFrame.size.height - self.frame().size.height)
-
-            if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
-                letter2 = "R"
-            else:
-                letter2 = "L"
-
-            if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
-                letter1 = "B"
-            else:
-                letter1 = "T"
-
-            finalFrame = "myVideoView" + letter1 + letter2
-            self.start_origin = newOrigin
-            self.final_origin = getattr(self.window().delegate(), finalFrame).frame().origin
-            self.setFrameOrigin_(newOrigin)
         else:
             # drag the whole window
             screenVisibleFrame = NSScreen.mainScreen().visibleFrame()
