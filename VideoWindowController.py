@@ -344,6 +344,9 @@ class VideoWindowController(NSWindowController):
         self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
         self.fullScreenButton.setToolTip_(NSLocalizedString("Full Screen", "Label"))
 
+        self.myVideoView.show()
+        self.repositionMyVideo()
+
         self.disconnectLabel.superview().hide()
         self.recordButton.setEnabled_(False)
 
@@ -652,9 +655,6 @@ class VideoWindowController(NSWindowController):
     def windowDidBecomeKey_(self, notification):
         if self.closed:
             return
-
-        self.myVideoView.show()
-        self.repositionMyVideo()
 
     def repositionMyVideo(self):
         userdef = NSUserDefaults.standardUserDefaults()
