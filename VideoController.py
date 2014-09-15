@@ -275,7 +275,7 @@ class VideoController(MediaStream):
         elif data.state == 'RUNNING':
             self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Succeeded", "Audio status label"))
         elif data.state == 'FAILED':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
+            self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"))
 
     def _NH_VideoStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation succeeded')
