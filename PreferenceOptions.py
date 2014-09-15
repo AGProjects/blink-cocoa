@@ -2070,7 +2070,7 @@ SettingDescription = {
                       'video.device': NSLocalizedString("Device", "Label"),
                       'video.quality': NSLocalizedString("Quality", "Label"),
                       'video.resolution': NSLocalizedString("Maximum Resolution", "Label"),
-                      'video.framerate': NSLocalizedString("Maximum Framerate", "Label"),
+                      'video.framerate': NSLocalizedString("Framerate", "Label"),
                       'xcap.enabled': NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root': NSLocalizedString("Root URI", "Label"),
                       'h264.profile': NSLocalizedString("Profile", "Label"),
