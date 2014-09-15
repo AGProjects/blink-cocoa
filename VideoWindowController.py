@@ -460,6 +460,9 @@ class VideoWindowController(NSWindowController):
         menu = NSMenu.alloc().init()
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "removeVideo:", "")
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hangup", "Menu item"), "hangup:", "")
+        menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Always On Top", "Menu item"), "toogleAlwaysOnTop:", "")
+        lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
 
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
@@ -848,6 +851,10 @@ class VideoWindowController(NSWindowController):
         self.always_on_top  = not self.always_on_top
         self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
         self.titleBarView.alwaysOnTop.setState_(self.always_on_top)
+        self.titleBarView.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.always_on_top else NSImage.imageNamed_('layers2'))
+
+    def toogleAlwaysOnTop_(self, sender):
+        self.toogleAlwaysOnTop()
 
     def stopRecordingTimer(self):
         if self.recording_timer is not None and self.recording_timer.isValid():
@@ -957,7 +964,6 @@ class VideoWindowController(NSWindowController):
     def userClickedMyVideoButton_(self, sender):
         self.myVideoView.toggle()
         self.repositionMyVideo()
-        #NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(sender)
 
     @objc.IBAction
     def userClickedScreenshotButton_(self, sender):
