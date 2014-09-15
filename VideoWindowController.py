@@ -247,7 +247,6 @@ class VideoWindowController(NSWindowController):
     initialLocation = None
     is_key_window = False
     updating_aspect_ratio = False
-    last_corner = "TL"
     dragMyVideoViewWithinWindow = True
     closed = False
 
@@ -281,6 +280,7 @@ class VideoWindowController(NSWindowController):
     is_key_window = False
     visible_buttons = True
     recording_timer = None
+    must_show_my_video = False
     
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -343,9 +343,6 @@ class VideoWindowController(NSWindowController):
         self.myvideoButton.setToolTip_(NSLocalizedString("My Video", "Label"))
         self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
         self.fullScreenButton.setToolTip_(NSLocalizedString("Full Screen", "Label"))
-
-        self.myVideoView.show()
-        self.repositionMyVideo()
 
         self.disconnectLabel.superview().hide()
         self.recordButton.setEnabled_(False)
@@ -655,20 +652,28 @@ class VideoWindowController(NSWindowController):
         else:
             self.window().makeKeyAndOrderFront_(self)
 
+        userdef = NSUserDefaults.standardUserDefaults()
+        self.must_show_my_video = userdef.boolForKey_("ShowMyVideo")
+
     def windowDidBecomeKey_(self, notification):
         if self.closed:
             return
 
+        if self.myVideoView.active or self.must_show_my_video:
+            self.myVideoView.show()
+            self.repositionMyVideo()
+            self.must_show_my_video = False
+
     def repositionMyVideo(self):
         userdef = NSUserDefaults.standardUserDefaults()
-        self.last_corner = userdef.stringForKey_("MyVideoCorner")
-        if self.last_corner == "TL":
+        last_corner = userdef.stringForKey_("MyVideoCorner")
+        if last_corner == "TL":
             self.moveMyVideoView(self.myVideoViewTL)
-        elif self.last_corner == "TR":
+        elif last_corner == "TR":
             self.moveMyVideoView(self.myVideoViewTR)
-        elif self.last_corner == "BR":
+        elif last_corner == "BR":
             self.moveMyVideoView(self.myVideoViewBR)
-        elif self.last_corner == "BL":
+        elif last_corner == "BL":
             self.moveMyVideoView(self.myVideoViewBL)
 
     def moveMyVideoView(self, view):

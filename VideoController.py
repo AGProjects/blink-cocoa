@@ -301,6 +301,7 @@ class VideoController(MediaStream):
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
 
         self.videoWindowController.show()
+
         self.changeStatus(STREAM_CONNECTED)
 
         if self.sessionController.hasStreamOfType("chat") and self.videoWindowController.always_on_top:

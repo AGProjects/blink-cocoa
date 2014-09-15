@@ -251,6 +251,7 @@ class LocalVideoView(NSView):
     step_x = 0
     step_y = 0
     is_dragging = False
+    active = False
 
     resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
 
@@ -447,8 +448,9 @@ class LocalVideoView(NSView):
 
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
-        if self.captureSession is None:
+        self.active = True
 
+        if self.captureSession is None:
             # Find a video device
             device = self.getDevice()
 
@@ -548,11 +550,15 @@ class LocalVideoView(NSView):
     def toggle(self):
         if self.visible():
             self.hide()
+            NSUserDefaults.standardUserDefaults().setValue_forKey_(False, "ShowMyVideo")
         else:
+            NSUserDefaults.standardUserDefaults().setBool_forKey_(True, "ShowMyVideo")
             self.show()
     
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
+        self.active = False
+
         if self.captureSession is not None:
             BlinkLogger().log_debug('Stop aquire local video %s' % self)
             self.captureSession.stopRunning()
