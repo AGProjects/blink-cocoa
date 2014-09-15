@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -8,12 +8,12 @@
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
             <connections>
                 <outlet property="audioStatus" destination="31" id="44"/>
-                <outlet property="segmentedConferenceButtons" destination="71" id="73"/>
                 <outlet property="elapsed" destination="6" id="43"/>
                 <outlet property="encryptionMenu" destination="202" id="209"/>
-                <outlet property="segmentedButtons" destination="198" id="201"/>
                 <outlet property="info" destination="26" id="45"/>
                 <outlet property="label" destination="2" id="41"/>
+                <outlet property="segmentedButtons" destination="198" id="201"/>
+                <outlet property="segmentedConferenceButtons" destination="71" id="73"/>
                 <outlet property="sessionInfoButton" destination="166" id="168"/>
                 <outlet property="srtpIcon" destination="32" id="46"/>
                 <outlet property="tlsIcon" destination="23" id="42"/>
@@ -186,12 +186,6 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Always On Top" tag="15" id="aYc-EH-OI4">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="zCh-pD-PSX"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
