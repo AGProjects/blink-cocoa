@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -405,24 +405,24 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="271"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Chat" paletteLabel="Chat" image="pencil" autovalidates="NO" selectable="YES" id="269">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="272"/>
-                        </connections>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Video" paletteLabel="Video" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Answering Machine" paletteLabel="Answering Machine" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
+                    <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Chat" paletteLabel="Chat" image="pencil" autovalidates="NO" selectable="YES" id="269">
                         <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="283"/>
+                            <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="File Transfer" paletteLabel="File Transfer" image="upfile" autovalidates="NO" selectable="YES" id="264">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="273"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Answering Machine" paletteLabel="Answering Machine" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="283"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Screen Sharing" paletteLabel="Screen Sharing" image="display" autovalidates="NO" selectable="YES" id="276">
@@ -458,8 +458,8 @@
                     <toolbarItem reference="286"/>
                     <toolbarItem reference="265"/>
                     <toolbarItem reference="263"/>
-                    <toolbarItem reference="269"/>
                     <toolbarItem reference="VXd-Rw-cDk"/>
+                    <toolbarItem reference="269"/>
                     <toolbarItem reference="264"/>
                     <toolbarItem reference="276"/>
                     <toolbarItem reference="282"/>
