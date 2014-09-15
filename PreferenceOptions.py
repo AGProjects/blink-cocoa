@@ -1001,14 +1001,11 @@ class VideoQualityOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = True
-        self.popup.addItemWithTitle_(NSLocalizedString("Low", "Menu item") + " (640x480 @25fps)")
+        self.popup.addItemWithTitle_(NSLocalizedString("VGA", "Menu item"))
         self.popup.lastItem().setRepresentedObject_('low')
 
-        self.popup.addItemWithTitle_(NSLocalizedString("Medium", "Menu item") + " (1280x720 @15fps)")
+        self.popup.addItemWithTitle_(NSLocalizedString("HD 720p", "Menu item"))
         self.popup.lastItem().setRepresentedObject_('medium')
-
-        self.popup.addItemWithTitle_(NSLocalizedString("High", "Menu item") + " (1280x720 @30fps)")
-        self.popup.lastItem().setRepresentedObject_('high')
 
         frame = self.popup.frame()
         frame.size.width = 300
@@ -1925,11 +1922,11 @@ PreferenceOptionTypes = {
 "video.device" : VideoDeviceOption,
 "video.enable_colorbar_device" : HiddenOption,
 "video.quality": VideoQualityOption,
-"video.resolution" : VideoResolutionOption,
+"video.resolution" : HiddenOption,
 "video.framerate" : VideoFramerateOption,
 "video.paused" : HiddenOption,
 "h264.profile": H264ProfileOption,
-"h264.level": H264LevelOption,
+"h264.level": HiddenOption,
 "xcap.discovered": HiddenOption,
 "UserIcon": HiddenOption
 }

@@ -284,7 +284,8 @@ class LocalVideoView(NSView):
         videoDevicesMenu = NSMenu.alloc().init()
         lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
         lastItem.setEnabled_(False)
- 
+        videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+
         i = 0
         for item in Engine().video_devices:
             if item not in (None, 'system_default'):

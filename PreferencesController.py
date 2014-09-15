@@ -804,8 +804,6 @@ class PreferencesController(NSWindowController, object):
 
                 settings.save()
                 self.settingViews["h264.profile"].restore()
-                self.settingViews["h264.level"].restore()
-                self.settingViews["video.resolution"].restore()
                 self.settingViews["video.framerate"].restore()
 
         if not self.saving and sender in (settings, self.selectedAccount()):
