@@ -148,5 +148,5 @@ class VideoRecorder(object):
             self.movieOutput.resumeRecording()
 
     def isRecording(self):
-        return self.started and self.movieOutput.isRecording() and not self.movieOutput.isRecordingPaused()
+        return self.started and self.movieOutput and self.movieOutput.isRecording() and not self.movieOutput.isRecordingPaused()
 
