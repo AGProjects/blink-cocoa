@@ -41,7 +41,6 @@ if video_support:
         keep_window_on_top = Setting(type=bool, default=True)
         resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
         framerate = Setting(type=int, default=15)
-        quality = Setting(type=str, default="medium")
         h264 = H264SettingsExtension
         auto_rotate_cameras = Setting(type=bool, default=True)
 

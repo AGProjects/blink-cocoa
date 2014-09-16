@@ -57,7 +57,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
-from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress
+from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress, VideoResolution
 try:
     from sipsimple.configuration.datatypes import VideoCodecList, H264Profile
     video_support = True
@@ -964,11 +964,13 @@ class H264ProfileOption(PopUpMenuOption):
 
 class VideoResolutionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("1280x720", "640x480"):
-            self.popup.addItemWithTitle_(str(item))
+        self.popup.addItemWithTitle_(NSLocalizedString("HD 720p", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_(VideoResolution("1280x720"))
+        self.popup.addItemWithTitle_(NSLocalizedString("VGA", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_(VideoResolution("640x480"))
         frame = self.popup.frame()
         frame.size.width = 150
         self.popup.setFrame_(frame)
@@ -990,7 +992,7 @@ class H264LevelOption(PopUpMenuOption):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for item in ("3.1", "4.0", "3.0"):
+        for item in ("3.1", "3.0"):
             self.popup.addItemWithTitle_(str(item))
         frame = self.popup.frame()
         frame.size.width = 150
@@ -1921,8 +1923,7 @@ PreferenceOptionTypes = {
 "tls.timeout" : HiddenOption,
 "video.device" : VideoDeviceOption,
 "video.enable_colorbar_device" : HiddenOption,
-"video.quality": VideoQualityOption,
-"video.resolution" : HiddenOption,
+"video.resolution" : VideoResolutionOption,
 "video.framerate" : VideoFramerateOption,
 "video.paused" : HiddenOption,
 "h264.profile": H264ProfileOption,
@@ -2068,8 +2069,7 @@ SettingDescription = {
                       'video.auto_rotate_cameras': NSLocalizedString("Auto Rotate Cameras", "Label"),
                       'video.full_screen_after_connect': NSLocalizedString("Full Screen After Connect", "Label"),
                       'video.device': NSLocalizedString("Device", "Label"),
-                      'video.quality': NSLocalizedString("Quality", "Label"),
-                      'video.resolution': NSLocalizedString("Maximum Resolution", "Label"),
+                      'video.resolution': NSLocalizedString("Resolution", "Label"),
                       'video.framerate': NSLocalizedString("Framerate", "Label"),
                       'xcap.enabled': NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root': NSLocalizedString("Root URI", "Label"),

@@ -785,26 +785,13 @@ class PreferencesController(NSWindowController, object):
                     account.tls.verify_server = settings.tls.verify_server
                     account.save()
 
-            if 'video.quality' in notification.data.modified:
-                if settings.video.quality == "low":
-                    settings.video.resolution = "640x480"
-                    settings.video.framerate = "25"
-                    settings.video.h264.profile = "baseline"
+            if 'video.resolution' in notification.data.modified:
+                if settings.video.resolution == (640, 480):
                     settings.video.h264.level = "3.0"
-                elif settings.video.quality == "medium":
-                    settings.video.resolution = "1280x720"
-                    settings.video.framerate = "15"
+                elif settings.video.resolution == (1280, 720):
                     settings.video.h264.level = "3.1"
-                    settings.video.h264.profile = "baseline"
-                elif settings.video.quality == "high":
-                    settings.video.resolution = "1280x720"
-                    settings.video.framerate = "30"
-                    settings.video.h264.level = "3.1"
-                    settings.video.h264.profile = "baseline"
-
+ 
                 settings.save()
-                self.settingViews["h264.profile"].restore()
-                self.settingViews["video.framerate"].restore()
 
         if not self.saving and sender in (settings, self.selectedAccount()):
             for option in (o for o in notification.data.modified if o in self.settingViews):
