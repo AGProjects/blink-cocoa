@@ -604,7 +604,7 @@ class VideoWindowController(NSWindowController):
             scaledSize = currentSize
             scaledSize.height = scaledSize.width / self.aspect_ratio
             frame.size = scaledSize
-            self.window().setFrame_display_animate_(frame, True, False)
+            #self.window().setFrame_display_animate_(frame, True, False)
 
         self.updating_aspect_ratio = False
 
