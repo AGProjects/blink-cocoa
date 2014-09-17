@@ -807,6 +807,8 @@ class VideoWindowController(NSWindowController):
                     self.window().orderFront_(self)
                     self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
 
+        self.updateAspectRatio()
+
     def windowWillClose_(self, sender):
         BlinkLogger().log_debug('windowWillClose %s' % self)
         #NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
