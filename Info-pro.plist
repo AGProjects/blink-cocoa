@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>June 21st, 2014</string>
+	<string>September 16th, 2014</string>
 	<key>BrandingFile</key>
 	<string>branding-pro</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -21,7 +21,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.9.1</string>
+	<string>4.0.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>

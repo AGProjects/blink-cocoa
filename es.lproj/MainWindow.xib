@@ -530,7 +530,7 @@ CA
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <string key="toolTip">Puedes escribibir un texto, para buscar un contacto, o presiona Enter, para comenzar una llamada a una dirección en particular o un número telefónico</string>
-                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Buscar Contactos o Ingresar Dirección" bezelStyle="round" recentsAutosaveName="" id="464">
+                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" alignment="left" placeholderString="Buscar Contactos o Ingresar Dirección" bezelStyle="round" recentsAutosaveName="" id="464">
                             <font key="font" metaFont="cellTitle"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

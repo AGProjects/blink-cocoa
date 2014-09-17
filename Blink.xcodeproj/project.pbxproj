@@ -298,6 +298,10 @@
 		1F337A57194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F337A58194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F337A59194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
+		1F357EE619C8CEB800E580ED /* libavcodec.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2D18E51455004D41B1 /* libavcodec.55.dylib */; };
+		1F357EE719C8CEBA00E580ED /* libavformat.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2E18E51455004D41B1 /* libavformat.55.dylib */; };
+		1F357EE819C8CEBD00E580ED /* libavutil.52.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF2F18E51455004D41B1 /* libavutil.52.dylib */; };
+		1F357EE919C8CEC000E580ED /* libswscale.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F48BF3118E51466004D41B1 /* libswscale.2.dylib */; };
 		1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F35CF7D17894FFF00C6FE38 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -2151,6 +2155,10 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F357EE919C8CEC000E580ED /* libswscale.2.dylib in Copy Frameworks */,
+				1F357EE819C8CEBD00E580ED /* libavutil.52.dylib in Copy Frameworks */,
+				1F357EE719C8CEBA00E580ED /* libavformat.55.dylib in Copy Frameworks */,
+				1F357EE619C8CEB800E580ED /* libavcodec.55.dylib in Copy Frameworks */,
 				1F8436B219B6510A001C3E59 /* libx264.142.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F22737112B5558A0010A8B2 /* libgcrypt.11.dylib in Copy Frameworks */,
