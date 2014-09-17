@@ -2068,7 +2068,7 @@ SettingDescription = {
                       'tls.verify_server': NSLocalizedString("Verify Server", "Label"),
                       'video.enable_when_auto_answer': NSLocalizedString("Enabled When Automatic Answering Calls", "Label"),
                       'video.keep_window_on_top': NSLocalizedString("Keep Window on Top", "Label"),
-                      'video.auto_rotate_cameras': NSLocalizedString("Auto Rotate Cameras", "Label"),
+                      'video.auto_rotate_cameras': NSLocalizedString("Auto Switch Devices", "Label"),
                       'video.full_screen_after_connect': NSLocalizedString("Full Screen After Connect", "Label"),
                       'video.device': NSLocalizedString("Device", "Label"),
                       'video.resolution': NSLocalizedString("Resolution", "Label"),
@@ -2156,8 +2156,7 @@ UnitOptions = {
                'subscribe_interval': NSLocalizedString("seconds", "Label"),
                'idle_threshold': NSLocalizedString("seconds", "Label"),
                'rtt_threshold': NSLocalizedString("milliseconds", "Label"),
-               'framerate': NSLocalizedString("frames/s", "Label"),
-               'resolution': NSLocalizedString("pixels", "Label")
+               'framerate': NSLocalizedString("frames/s", "Label")
                }
 
 ToolTips = {
