@@ -266,7 +266,7 @@ class SessionHistory(object):
         except dberrors.DuplicateEntryError:
             return True
         except Exception, e:
-            BlinkLogger().log_error(u"Error adding record %s to sessions table: %s" % (session_id, e))
+            BlinkLogger().log_debug(u"Error adding record %s to sessions table: %s" % (session_id, e))
             return False
 
     @run_in_db_thread
@@ -654,9 +654,9 @@ class ChatHistory(object):
 
                 return True
             except Exception, e:
-                BlinkLogger().log_error(u"Error updating record %s: %s" % (msgid, e))
+                BlinkLogger().log_debug(u"Error updating record %s: %s" % (msgid, e))
         except Exception, e:
-            BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (msgid, e))
+            BlinkLogger().log_debug(u"Error adding record %s to history table: %s" % (msgid, e))
         return False
 
     @run_in_db_thread
@@ -998,9 +998,9 @@ class FileTransferHistory(object):
                     ft.date             = datetime.utcnow().date()
                 return True
             except Exception, e:
-                BlinkLogger().log_error(u"Error updating record %s: %s" % (transfer_id, e))
+                BlinkLogger().log_debug(u"Error updating record %s: %s" % (transfer_id, e))
         except Exception, e:
-            BlinkLogger().log_error(u"Error adding record %s to history table: %s" % (transfer_id, e))
+            BlinkLogger().log_debug(u"Error adding record %s to history table: %s" % (transfer_id, e))
         return False
 
     @run_in_db_thread
