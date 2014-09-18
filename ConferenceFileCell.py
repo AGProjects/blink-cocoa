@@ -4,12 +4,15 @@
 from AppKit import (NSCompositeSourceOver,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName)
+
 from Foundation import (NSColor,
                         NSDictionary,
                         NSFont,
                         NSMakeRect,
                         NSMakeSize,
                         NSTextFieldCell)
+
+from objc import super
 
 
 class ConferenceFileCell(NSTextFieldCell):

@@ -4,6 +4,8 @@
 from FileTransferSession import IncomingFileTransferHandler
 from MediaStream import MediaStream
 
+from objc import super
+
 
 class FileTransferController(MediaStream):
     type = "file-transfer"

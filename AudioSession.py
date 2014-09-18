@@ -11,6 +11,7 @@ from AppKit import (NSApp,
                     NSFontAttributeName,
                     NSLeftMouseUp,
                     NSStringPboardType)
+
 from Foundation import (NSArray,
                         NSBezierPath,
                         NSColor,
@@ -30,6 +31,8 @@ from Foundation import (NSArray,
                         NSView,
                         NSWidth,
                         NSZeroPoint)
+
+from objc import super
 import objc
 
 import os

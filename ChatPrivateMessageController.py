@@ -5,6 +5,7 @@ from AppKit import (NSApp,
                     NSCancelButton,
                     NSFontAttributeName,
                     NSOKButton)
+
 from Foundation import (NSAttributedString,
                         NSBundle,
                         NSDictionary,
@@ -14,6 +15,8 @@ from Foundation import (NSAttributedString,
                         NSMakeSize,
                         NSMenuItem,
                         NSObject)
+
+from objc import super
 import objc
 
 from ChatViewController import ChatInputTextView

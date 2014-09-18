@@ -14,6 +14,7 @@ from Foundation import (NSBundle,
                         NSURL,
                         NSWorkspace)
 from AppKit import NSEventTrackingRunLoopMode, NSRunAlertPanel
+from objc import super
 import objc
 
 from application.notification import IObserver, NotificationCenter

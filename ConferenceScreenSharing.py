@@ -10,6 +10,8 @@ from Foundation import (NSBundle,
                         NSURL,
                         NSURLRequest,
                         NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
+
+from objc import super
 import objc
 
 from urllib import unquote

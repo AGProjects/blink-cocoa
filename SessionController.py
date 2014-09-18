@@ -5,6 +5,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSApp,
                     NSEventTrackingRunLoopMode,
                     NSRunAlertPanel)
+
 from Foundation import (NSBundle,
                         NSLocalizedString,
                         NSObject,
@@ -13,6 +14,8 @@ from Foundation import (NSBundle,
                         NSTimer,
                         NSURL,
                         NSWorkspace)
+
+from objc import super
 import objc
 
 import hashlib

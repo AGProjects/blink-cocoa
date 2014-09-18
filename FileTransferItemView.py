@@ -15,6 +15,8 @@ from Foundation import (NSBundle,
                         NSWorkspace,
                         NSDownloadsDirectory, NSSearchPathForDirectoriesInDomains, NSUserDomainMask
                         )
+
+from objc import super
 import objc
 
 import os

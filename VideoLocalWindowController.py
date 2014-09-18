@@ -21,7 +21,6 @@ from AppKit import (NSWindowController,
                     NSMiniaturizableWindowMask,
                     NSResizableWindowMask,
                     NSTexturedBackgroundWindowMask
-
                     )
 
 from Foundation import (NSBundle,
@@ -40,7 +39,9 @@ from Foundation import (NSBundle,
                         NSLocalizedString
                         )
 
+from objc import super
 import objc
+
 import AppKit
 from math import floor
 

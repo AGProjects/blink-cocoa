@@ -59,6 +59,8 @@ from Quartz import (CGWindowListCopyWindowInfo,
                     kCGWindowName,
                     kCGWindowNumber,
                     kCGWindowOwnerName)
+
+from objc import super
 import objc
 
 import os

@@ -20,6 +20,7 @@ from AppKit import (NSBackingStoreBuffered,
                     NSTrackingMouseEnteredAndExited,
                     NSViewMaxXMargin,
                     NSViewMaxYMargin)
+
 from Foundation import (NSAttributedString,
                         NSBezierPath,
                         NSBitmapImageRep,
@@ -48,6 +49,8 @@ from Foundation import (NSAttributedString,
                         NSWindow,
                         NSZeroPoint,
                         NSZeroRect)
+
+from objc import super
 import objc
 
 

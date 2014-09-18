@@ -4,6 +4,7 @@
 from AppKit import (NSApp,
                     NSInformationalRequest,
                     NSOKButton)
+
 from Foundation import (NSBundle,
                         NSHeight,
                         NSLocalizedString,
@@ -11,6 +12,8 @@ from Foundation import (NSBundle,
                         NSObject,
                         NSOpenPanel,
                         NSURL)
+
+from objc import super
 import objc
 
 import unicodedata

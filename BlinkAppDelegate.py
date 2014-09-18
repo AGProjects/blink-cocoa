@@ -24,9 +24,12 @@ from AppKit import (NSAlertDefaultReturn,
                     NSWorkspace,
                     NSWorkspaceWillSleepNotification,
                     NSWorkspaceDidWakeNotification)
+
+from objc import super
+import objc
+
 import Foundation
 import LaunchServices
-import objc
 import time
 import urllib
 

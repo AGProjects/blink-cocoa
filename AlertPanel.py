@@ -29,6 +29,8 @@ from Foundation import (NSBezierPath,
                         NSSpeechSynthesizer,
                         NSTimer,
                         NSWidth)
+
+from objc import super
 import objc
 
 import random

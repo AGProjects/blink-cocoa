@@ -11,6 +11,8 @@ from Foundation import (NSBundle,
                         NSPrintInfo,
                         NSTabViewItem,
                         NSWindowController)
+
+from objc import super
 import objc
 
 from application.notification import IObserver, NotificationCenter, NotificationData

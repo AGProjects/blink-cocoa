@@ -18,7 +18,7 @@ from Foundation import (NSAttributedString,
                         NSTimer,
                         NSView)
 
-
+from objc import super
 import objc
 
 import datetime

@@ -19,6 +19,8 @@ from Foundation import (NSArray,
                         NSMenu,
                         NSMenuItem,
                         NSObject)
+
+from objc import super
 import objc
 
 import cPickle

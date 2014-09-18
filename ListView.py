@@ -5,10 +5,13 @@ from AppKit import (NSRectFill,
                     NSWindowBelow,
                     NSWindowDidBecomeKeyNotification,
                     NSWindowDidResignKeyNotification)
+
 from Foundation import (NSColor,
                         NSMaxY,
                         NSNotificationCenter,
                         NSWidth)
+
+from objc import super
 
 from VerticalBoxView import VerticalBoxView
 from util import osx_version

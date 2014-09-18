@@ -12,6 +12,7 @@ from AppKit import (NSApp,
                     NSRunAlertPanel,
                     NSTableViewDropOn,
                     NSTableViewDropAbove)
+
 from Foundation import (NSArray,
                         NSBundle,
                         NSImage,
@@ -25,6 +26,8 @@ from Foundation import (NSArray,
                         NSString,
                         NSLocalizedString,
                         NSTimer)
+
+from objc import super
 import objc
 
 import urlparse
