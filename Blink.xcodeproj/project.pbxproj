@@ -54,6 +54,7 @@
 		1F194A8519B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
 		1F194A8619B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
 		1F194A8719B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
+		1F1CEB4719C9BBEE00BD378A /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1CEB4619C9BBEE00BD378A /* StoreKit.framework */; };
 		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8C13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
@@ -2767,6 +2768,7 @@
 		1F17D30F17F9825D00CB74EC /* database-local-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-local-off.png"; path = "icons/database-local-off.png"; sourceTree = SOURCE_ROOT; };
 		1F17D31017F9825D00CB74EC /* database-remote-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-remote-off.png"; path = "icons/database-remote-off.png"; sourceTree = SOURCE_ROOT; };
 		1F194A8819B1F06200CE5A0F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F1CEB4619C9BBEE00BD378A /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
@@ -3310,6 +3312,7 @@
 				1F2436871912B27800E71253 /* AVFoundation.framework in Frameworks */,
 				1F6EF80B18E64FD7008592D2 /* QuartzCore.framework in Frameworks */,
 				1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */,
+				1F1CEB4719C9BBEE00BD378A /* StoreKit.framework in Frameworks */,
 				1FD066B917537BA500957876 /* libpython2.7.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
@@ -3619,6 +3622,7 @@
 		29B97323FDCFA39411CA2CEA /* SystemFrameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F1CEB4619C9BBEE00BD378A /* StoreKit.framework */,
 				1FF63CD519128C4800A502FB /* AVFoundation.framework */,
 				1FC6342F18F9D3450098945F /* ScriptingBridge.framework */,
 				1F6EF7F718E61CC8008592D2 /* OpenGL.framework */,
@@ -4235,6 +4239,9 @@
 					1F22729312B554F50010A8B2 = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 						SystemCapabilities = {
+							com.apple.InAppPurchase = {
+								enabled = 1;
+							};
 							com.apple.iCloud = {
 								enabled = 1;
 							};
@@ -4246,6 +4253,9 @@
 					1F8DC324135084FA0034815C = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 						SystemCapabilities = {
+							com.apple.InAppPurchase = {
+								enabled = 1;
+							};
 							com.apple.iCloud = {
 								enabled = 1;
 							};
