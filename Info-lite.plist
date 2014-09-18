@@ -4,6 +4,8 @@
 <dict>
 	<key>BlinkVersionDate</key>
 	<string>April 23rd, 2014</string>
+	<key>BrandingFile</key>
+	<string>branding-lite</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -42,7 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>13097</string>
+	<string>14391</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>NSMainNibFile</key>
@@ -51,7 +53,5 @@
 	<string>NSApplication</string>
 	<key>NSUbiquitousDisplaySet</key>
 	<string>com.agprojects.BlinkLite</string>
-        <key>BrandingFile</key>
-        <string>branding-lite</string>
 </dict>
 </plist>
