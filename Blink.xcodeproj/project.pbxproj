@@ -724,6 +724,12 @@
 		1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
 		1F72E53F16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
 		1F72E54016A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
+		1F774C6719CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
+		1F774C6819CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
+		1F774C6919CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
+		1F774C6A19CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
+		1F774C6B19CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
+		1F774C6C19CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
@@ -2977,6 +2983,7 @@
 		1F762B71194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
 		1F762B72194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1F762B73194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Nickname.xib; sourceTree = "<group>"; };
+		1F774C6619CB169800240DC1 /* video-active.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-active.png"; path = "icons/video-active.png"; sourceTree = "<group>"; };
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
@@ -3670,6 +3677,7 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				1F774C6619CB169800240DC1 /* video-active.png */,
 				1F337A54194C95E000DB726B /* moon.png */,
 				1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */,
 				1F331DCA193B655800831F31 /* voicemail-red.png */,
@@ -4359,6 +4367,7 @@
 				1F2272C812B554F50010A8B2 /* audio.png in Resources */,
 				1F2272C912B554F50010A8B2 /* display.png in Resources */,
 				1F2272CA12B554F50010A8B2 /* record.png in Resources */,
+				1F774C6819CB169800240DC1 /* video-active.png in Resources */,
 				1F2272CB12B554F50010A8B2 /* recording1.png in Resources */,
 				1F2272CC12B554F50010A8B2 /* recording2.png in Resources */,
 				1F2272CD12B554F50010A8B2 /* recording3.png in Resources */,
@@ -4725,6 +4734,7 @@
 				1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1F35CFFC17894FFF00C6FE38 /* hangup_small.png in Resources */,
 				1F35CFFD17894FFF00C6FE38 /* audio_16.png in Resources */,
+				1F774C6A19CB169800240DC1 /* video-active.png in Resources */,
 				1F35CFFE17894FFF00C6FE38 /* video.png in Resources */,
 				1F35CFFF17894FFF00C6FE38 /* VideoController.py in Resources */,
 				1F35D00017894FFF00C6FE38 /* video-hangup.png in Resources */,
@@ -4933,6 +4943,7 @@
 				1F8DC36C135084FA0034815C /* upfile.png in Resources */,
 				1F8DC36D135084FA0034815C /* hangup.png in Resources */,
 				1F8DC36E135084FA0034815C /* belloff.png in Resources */,
+				1F774C6919CB169800240DC1 /* video-active.png in Resources */,
 				1F8DC36F135084FA0034815C /* bellon.png in Resources */,
 				1F8DC370135084FA0034815C /* AudioController.py in Resources */,
 				1F8DC372135084FA0034815C /* MediaStream.py in Resources */,
@@ -5278,6 +5289,7 @@
 				1FC80E95192E3E1F00BD62F4 /* AddParticipantsWindow.xib in Resources */,
 				1FC80E96192E3E1F00BD62F4 /* FileTransferController.py in Resources */,
 				1FC80E97192E3E1F00BD62F4 /* ParticipantsTableView.py in Resources */,
+				1F774C6B19CB169800240DC1 /* video-active.png in Resources */,
 				1FC80E98192E3E1F00BD62F4 /* hangup_small.png in Resources */,
 				1FC80E99192E3E1F00BD62F4 /* audio_16.png in Resources */,
 				1FC80E9A192E3E1F00BD62F4 /* video.png in Resources */,
@@ -5457,6 +5469,7 @@
 				1FCA7D9419546B0B00765366 /* PhotoPicker.py in Resources */,
 				1FCA7D9519546B0B00765366 /* SoundSetting.xib in Resources */,
 				1FCA7D9619546B0B00765366 /* audio.png in Resources */,
+				1F774C6C19CB169800240DC1 /* video-active.png in Resources */,
 				1FCA7D9719546B0B00765366 /* display.png in Resources */,
 				1FCA7D9819546B0B00765366 /* record.png in Resources */,
 				1FCA7D9919546B0B00765366 /* recording1.png in Resources */,
@@ -5755,6 +5768,7 @@
 				2BE7632B10732DC000A1DF24 /* About.xib in Resources */,
 				2B0C236B107BB2FA008266C7 /* incoming_file.png in Resources */,
 				2B0C236C107BB2FB008266C7 /* upfile.png in Resources */,
+				1F774C6719CB169800240DC1 /* video-active.png in Resources */,
 				2BF42B54107D7DFF00F04A6C /* hangup.png in Resources */,
 				2BF42BA4107D8B4D00F04A6C /* belloff.png in Resources */,
 				2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */,

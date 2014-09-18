@@ -563,38 +563,6 @@ class ChatController(MediaStream):
     def revalidateToolbar(self):
         self.chatWindowController.revalidateToolbar()
 
-    @objc.IBAction
-    def userClickedVideoMenu_(self, sender):
-        if not self.sessionControllersManager.isMediaTypeSupported('video'):
-            return
-
-        tag = sender.tag()
-        video_stream = self.sessionController.streamHandlerOfType("video")
-
-        if tag == 1: # connect
-            if video_stream:
-                if video_stream.status == STREAM_PROPOSING:
-                    self.sessionController.cancelProposal(video_stream)
-                else:
-                    if self.status == STREAM_CONNECTED:
-                        self.sessionController.removeVideoFromSession()
-                    else:
-                        self.sessionController.endStream(video_stream)
-            else:
-                if self.sessionController.state == STATE_IDLE:
-                    self.sessionController.startVideoSession()
-                else:
-                    self.sessionController.addVideoToSession()
-
-        elif tag == 5: # bring to front
-            if video_stream and video_stream.videoWindowController:
-                video_stream.videoWindowController.show()
-        elif tag == 6: # bring to front
-            if video_stream and video_stream.videoWindowController:
-                video_stream.videoWindowController.toogleAlwaysOnTop()
-        elif tag == 4: # mirror
-            NSApp.delegate().contactsWindowController.toggleLocalVideoWindow_(None)
-
     @run_in_gui_thread
     def resetStyle(self):
         str_attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.fontWithName_size_("Lucida Grande", 11), NSFontAttributeName)
@@ -1046,7 +1014,7 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING):
-                        item.setImage_(NSImage.imageNamed_("video-hangup"))
+                        item.setImage_(NSImage.imageNamed_("video-active"))
                     else:
                         item.setImage_(NSImage.imageNamed_("video"))
                 else:
@@ -1126,6 +1094,31 @@ class ChatController(MediaStream):
 
                     sender.setToolTip_(NSLocalizedString("Cancel Audio", "Tooltip"))
                     sender.setImage_(NSImage.imageNamed_("hangup"))
+
+            elif identifier == 'video':
+                if self.sessionController.hasStreamOfType("video"):
+                    if video_stream.status == STREAM_PROPOSING:
+                        self.sessionController.cancelProposal(video_stream)
+                    else:
+                        if self.status == STREAM_CONNECTED:
+                            self.sessionController.removeVideoromSession()
+                            sender.setToolTip_(NSLocalizedString("Add Video", "Tooltip"))
+                        else:
+                            self.sessionController.endStream(video_stream)
+                            sender.setToolTip_(NSLocalizedString("Start video", "Tooltip"))
+                    
+                    # The button will be enabled again after operation is finished
+                    sender.setEnabled_(False)
+                else:
+                    if self.sessionController.state == STATE_IDLE:
+                        self.notification_center.add_observer(self, sender=self.sessionController)
+                        self.sessionController.startCompositeSessionWithStreamsOfTypes(("video", "audio", "chat"))
+                    else:
+                        self.sessionController.addVideoToSession()
+                    
+                    sender.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
+                    sender.setImage_(NSImage.imageNamed_("video"))
+
 
             elif identifier == 'record' and NSApp.delegate().recording_enabled:
                 if audio_stream and audio_stream.stream.recorder is not None and audio_stream.stream.recorder.is_active:

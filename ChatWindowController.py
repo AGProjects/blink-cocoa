@@ -140,7 +140,6 @@ class ChatWindowController(NSWindowController):
     conferenceScreenSharingMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     encryptionMenu = objc.IBOutlet()
-    videoMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
     drawer = objc.IBOutlet()
     participantsTableView = objc.IBOutlet()
@@ -150,6 +149,7 @@ class ChatWindowController(NSWindowController):
     screenSharingPopUpButton = objc.IBOutlet()
     actionsButton = objc.IBOutlet()
     editorButton = objc.IBOutlet()
+    videoButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
@@ -1032,16 +1032,6 @@ class ChatWindowController(NSWindowController):
                 chatStream.userClickedScreenSharingMenu_(sender)
 
     @objc.IBAction
-    def userClickedVideoMenu_(self, sender):
-        # dispatch the click to the active session
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            chatStream = selectedSession.streamHandlerOfType("chat")
-            if chatStream:
-                chatStream.userClickedVideoMenu_(sender)
-
-
-    @objc.IBAction
     def userClickedEncryptionMenu_(self, sender):
         # dispatch the click to the active session
         selectedSession = self.selectedSessionController()
@@ -1241,55 +1231,6 @@ class ChatWindowController(NSWindowController):
             except IndexError:
                 item.setState_(NSOffState)
                 item.setEnabled_(False)
-
-        elif menu == self.videoMenu:
-            # TODO: how to attach video to chat window?
-            selectedSession = self.selectedSessionController()
-            if selectedSession:
-                chat_stream = selectedSession.streamHandlerOfType("chat")
-                video_stream = selectedSession.streamHandlerOfType("video")
-                item = menu.itemWithTag_(1)
-                if video_stream:
-                    if video_stream.status == STREAM_CONNECTED:
-                        item.setTitle_(NSLocalizedString("Remove video", "Menu item"))
-                        item.setEnabled_(selectedSession.canProposeMediaStreamChanges())
-                    elif video_stream.status in (STREAM_RINGING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                        item.setTitle_(NSLocalizedString("Cancel", "Menu item"))
-                        item.setEnabled_(True)
-                    else:
-                        if selectedSession.remote_focus:
-                            item.setTitle_(NSLocalizedString("Video not supported by remote", "Menu item"))
-                            item.setEnabled_(False)
-                        else:
-                            if chat_stream.status == STREAM_CONNECTED:
-                                item.setTitle_(NSLocalizedString("Add video", "Menu item"))
-                            else:
-                                item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
-                            item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
-                else:
-                    if selectedSession.remote_focus:
-                        item.setTitle_(NSLocalizedString("Video not supported by remote", "Menu item"))
-                        item.setEnabled_(False)
-                    else:
-                        if chat_stream.status == STREAM_CONNECTED:
-                            item.setTitle_(NSLocalizedString("Add video", "Menu item"))
-                        else:
-                            item.setTitle_(NSLocalizedString("Start Video Call", "Menu item"))
-                        item.setEnabled_(selectedSession.canProposeMediaStreamChanges() or selectedSession.canStartSession())
-
-                item = menu.itemWithTag_(5) # bring to front
-                if video_stream and video_stream.status == STREAM_CONNECTED:
-                    item.setEnabled_(not video_stream.videoWindowController.always_on_top)
-                else:
-                    item.setEnabled_(False)
-
-                item = menu.itemWithTag_(6) # always on top
-                if video_stream and video_stream.status == STREAM_CONNECTED:
-                    item.setEnabled_(True)
-                else:
-                    item.setEnabled_(False)
-                if video_stream:
-                    item.setState_(NSOnState if video_stream.videoWindowController.always_on_top else NSOffState)
 
         elif menu == self.screenShareMenu:
             selectedSession = self.selectedSessionController()
