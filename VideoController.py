@@ -21,6 +21,7 @@ from SessionInfoController import ice_candidates
 from VideoWindowController import VideoWindowController
 from VideoRecorder import VideoRecorder
 from util import allocate_autorelease_pool, run_in_gui_thread, beautify_video_codec
+import objc
 
 
 # For voice over IP over Ethernet, an RTP packet contains 54 bytes (or 432 bits) header. These 54 bytes consist of 14 bytes Ethernet header, 20 bytes IP header, 8 bytes UDP header and 12 bytes RTP header.
@@ -72,7 +73,7 @@ class VideoController(MediaStream):
         handler(notification.sender, notification.data)
 
     def initWithOwner_stream_(self, sessionController, stream):
-        self = super(VideoController, self).initWithOwner_stream_(sessionController, stream)
+        self = objc.super(VideoController, self).initWithOwner_stream_(sessionController, stream)
         self.notification_center = NotificationCenter()
         sessionController.log_debug(u"Init %s" % self)
         self.videoRecorder = VideoRecorder(self)
@@ -206,7 +207,7 @@ class VideoController(MediaStream):
         self.stream = None
         self.notification_center = None
         self.sessionController = None
-        super(VideoController, self).dealloc()
+        objc.super(VideoController, self).dealloc()
 
     def deallocTimer_(self, timer):
         self.notification_center.discard_observer(self, sender=self.sessionController)
@@ -294,7 +295,7 @@ class VideoController(MediaStream):
             self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
-        super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
+        objc.super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
         self.started = True
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
@@ -327,7 +328,7 @@ class VideoController(MediaStream):
         pass
 
     def _NH_MediaStreamDidEnd(self, sender, data):
-        super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
+        objc.super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
         self.videoRecorder.stop()
 
         self.stopTimers()

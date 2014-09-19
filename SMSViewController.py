@@ -133,7 +133,7 @@ class SMSViewController(NSObject):
     last_route = None
 
     def initWithAccount_target_name_(self, account, target, display_name):
-        self = super(SMSViewController, self).init()
+        self = objc.super(SMSViewController, self).init()
         if self:
             self.session_id = str(uuid.uuid1())
 
@@ -187,7 +187,7 @@ class SMSViewController(NSObject):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
         self.chatViewController.close()
-        super(SMSViewController, self).dealloc()
+        objc.super(SMSViewController, self).dealloc()
 
     def awakeFromNib(self):
         # setup smiley popup

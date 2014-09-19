@@ -39,7 +39,7 @@ class SMSWindowController(NSWindowController):
     encryptionIconMenuItem = objc.IBOutlet()
 
     def initWithOwner_(self, owner):
-        self= super(SMSWindowController, self).init()
+        self = objc.super(SMSWindowController, self).init()
         if self:
             self._owner = owner
             NSBundle.loadNibNamed_owner_("SMSSession", self)
@@ -316,7 +316,7 @@ class SMSWindowManagerClass(NSObject):
     received_call_ids = set()
 
     def init(self):
-        self = super(SMSWindowManagerClass, self).init()
+        self = objc.super(SMSWindowManagerClass, self).init()
         if self:
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")

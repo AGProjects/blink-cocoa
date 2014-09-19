@@ -102,7 +102,7 @@ class PreferencesController(NSWindowController, object):
 
 
     def init(self):
-        self = super(PreferencesController, self).init()
+        self = objc.super(PreferencesController, self).init()
         if self:
             notification_center = NotificationCenter()
             notification_center.add_observer(self, name="BlinkShouldTerminate")

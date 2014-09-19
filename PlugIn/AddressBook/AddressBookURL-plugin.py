@@ -12,6 +12,7 @@ from AddressBook import *
 from AppKit import *
 import re
 import sys
+import objc
 
 class NSLogger(object):
     closed = False
@@ -57,7 +58,7 @@ class BlinkProURLAddressDialerDelegate (NSObject):
     valid_pattern = re.compile("((sip:|sips:)?[\w\-\.+]+@(\w[\w\-]+\.)+[\w\-]+)")
 
     def init(self):
-        self = super(BlinkProURLAddressDialerDelegate, self).init()
+        self = objc.super(BlinkProURLAddressDialerDelegate, self).init()
         if self:
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "workspaceDidLaunchApplication:", NSWorkspaceDidLaunchApplicationNotification, None)
             self.selected_address = None

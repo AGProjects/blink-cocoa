@@ -62,9 +62,11 @@ from Quartz.CoreGraphics import kCGColorBlack, CGColorGetConstantColor
 from Quartz import CVBufferRetain, NSCIImageRep, CIImage, CVBufferRelease
 from Quartz.CoreVideo import kCVPixelBufferPixelFormatTypeKey
 from Quartz.CoreVideo import kCVPixelFormatType_32BGRA
+
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('CoreMedia.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CMSampleBufferGetImageBuffer', '@@')])
 
+import objc
 
 import re
 
@@ -102,7 +104,7 @@ class MyVideoWindowController(NSWindowController):
         return cls.alloc().init()
 
     def init(self):
-        self = super(MyVideoWindowController, self).init()
+        self = objc.super(MyVideoWindowController, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("MyVideoLocalWindow", self)
             self.window().setAlphaValue_(ALPHA)
@@ -211,7 +213,7 @@ class MyVideoWindowController(NSWindowController):
         self.window().contentView().removeTrackingArea_(self.tracking_area)
         self.tracking_area = None
         BlinkLogger().log_debug('Dealloc %s' % self)
-        super(MyVideoWindowController, self).dealloc()
+        objc.super(MyVideoWindowController, self).dealloc()
 
     @run_in_gui_thread
     def hide(self):
@@ -270,7 +272,7 @@ class LocalVideoView(NSView):
     def dealloc(self):
         self.captureSession = None
         BlinkLogger().log_debug('Dealloc %s' % self)
-        super(LocalVideoView, self).dealloc()
+        objc.super(LocalVideoView, self).dealloc()
 
     def keyDown_(self, event):
         if event.keyCode() == 53:
@@ -571,7 +573,7 @@ class BorderlessRoundWindow(NSPanel):
     closeButton = objc.IBOutlet()
 
     def initWithContentRect_styleMask_backing_defer_(self, contentRect, aStyle, bufferingType, flag):
-        self = super(BorderlessRoundWindow, self).initWithContentRect_styleMask_backing_defer_(contentRect, aStyle, bufferingType, flag)
+        self = objc.super(BorderlessRoundWindow, self).initWithContentRect_styleMask_backing_defer_(contentRect, aStyle, bufferingType, flag)
         if self:
             self.setStyleMask_(NSBorderlessWindowMask|NSResizableWindowMask)
             self.setOpaque_(False)
@@ -584,7 +586,7 @@ class BorderlessRoundWindow(NSPanel):
         view.layer().setFrame_(view.frame())
         view.layer().setCornerRadius_(4.0)
         view.layer().setMasksToBounds_(True)
-        super(BorderlessRoundWindow, self).setContentView_(view)
+        objc.super(BorderlessRoundWindow, self).setContentView_(view)
 
     def performClose_(self, sender):
         self.delegate().windowShouldClose_(self)

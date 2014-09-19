@@ -135,7 +135,7 @@ class DebugWindow(NSObject):
     sendingText = NSAttributedString.alloc().initWithString_attributes_("SENDING:", NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
 
     def init(self):
-        self = super(DebugWindow, self).init()
+        self = objc.super(DebugWindow, self).init()
 
         NSBundle.loadNibNamed_owner_("DebugWindow", self)
 
@@ -352,7 +352,7 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="SIPEngineLog")
         notification_center.discard_observer(self)
 
-        super(DebugWindow, self).dealloc()
+        objc.super(DebugWindow, self).dealloc()
 
     def append_line(self, textView, line):
         if isinstance(line, NSAttributedString):

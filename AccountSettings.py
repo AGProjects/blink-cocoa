@@ -45,7 +45,7 @@ class AccountSettings(NSObject):
         return w
 
     def initWithOwner_(self, owner):
-        self = super(AccountSettings, self).init()
+        self = objc.super(AccountSettings, self).init()
         if self:
             self.owner = owner
             NSBundle.loadNibNamed_owner_("AccountSettings", self)

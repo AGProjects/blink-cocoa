@@ -6,11 +6,12 @@ from Foundation import (NSView,
                         NSHeight,
                         NSTextField)
 from AppKit import NSRectFill
+import objc
 
 
 class HorizontalBoxView(NSView):
     def initWithFrame_(self, frame):
-        self = super(HorizontalBoxView, self).initWithFrame_(frame)
+        self = objc.super(HorizontalBoxView, self).initWithFrame_(frame)
         if self:
             self.background_color = None
             self.spacing = 0

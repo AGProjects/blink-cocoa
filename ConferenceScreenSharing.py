@@ -48,7 +48,7 @@ class ConferenceScreenSharing(NSObject):
         return w
 
     def initWithOwner_(self, owner):
-        self = super(ConferenceScreenSharing, self).init()
+        self = objc.super(ConferenceScreenSharing, self).init()
         if self:
             self.owner = owner
             NSBundle.loadNibNamed_owner_("ConferenceScreenSharing", self)

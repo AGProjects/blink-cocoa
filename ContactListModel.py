@@ -403,7 +403,7 @@ class BlinkContact(NSObject):
 
     def dealloc(self):
         self.avatar = None
-        super(BlinkContact, self).dealloc()
+        objc.super(BlinkContact, self).dealloc()
 
     def destroy(self):
         # workaround to keep the object alive as cocoa still sends delegate outline view messages to deallocated contacts
@@ -513,7 +513,7 @@ class BlinkConferenceContact(BlinkContact):
     implements(IObserver)
 
     def __init__(self, uri, name=None, icon=None, presence_contact=None):
-        super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
+        objc.super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
         self.active_media = []
         self.screensharing_url = None
         self.presence_contact = presence_contact
@@ -535,7 +535,7 @@ class BlinkConferenceContact(BlinkContact):
         if self.presence_contact is not None:
             NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
             self.presence_contact = None
-        super(BlinkConferenceContact, self).destroy()
+        objc.super(BlinkConferenceContact, self).destroy()
 
     @run_in_gui_thread
     def handle_notification(self, notification):
@@ -637,7 +637,7 @@ class BlinkMyselfConferenceContact(BlinkContact):
 
         name = account.display_name or uri
 
-        super(BlinkMyselfConferenceContact, self).__init__(uri, name=name, icon=own_icon)
+        objc.super(BlinkMyselfConferenceContact, self).__init__(uri, name=name, icon=own_icon)
         self.active_media = []
         self.screensharing_url = None
         self.presence_note = None
@@ -650,7 +650,7 @@ class BlinkPendingWatcher(BlinkContact):
 
     def __init__(self, watcher):
         uri = sip_prefix_pattern.sub('', watcher.sipuri)
-        super(BlinkPendingWatcher, self).__init__(uri, name=watcher.display_name)
+        objc.super(BlinkPendingWatcher, self).__init__(uri, name=watcher.display_name)
         self.avatar = PendingWatcherAvatar()
 
 
@@ -663,12 +663,12 @@ class BlinkBlockedPresenceContact(BlinkContact):
         self.policy = policy
         uri = policy.uri
         name = policy.name
-        super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
+        objc.super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
         self.avatar = BlockedPolicyAvatar()
 
     def destroy(self):
         self.policy = None
-        super(BlinkBlockedPresenceContact, self).destroy()
+        objc.super(BlinkBlockedPresenceContact, self).destroy()
 
 
 class BlinkPresenceContactAttribute(object):
@@ -797,7 +797,7 @@ class BlinkPresenceContact(BlinkContact):
             self.timer.invalidate()
         self.timer = None
         self.pidfs_map = {}
-        super(BlinkPresenceContact, self).destroy()
+        objc.super(BlinkPresenceContact, self).destroy()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1551,7 +1551,7 @@ class BonjourBlinkContact(BlinkContact):
 
     def destroy(self):
         self.bonjour_neighbour = None
-        super(BonjourBlinkContact, self).destroy()
+        objc.super(BonjourBlinkContact, self).destroy()
 
 
 class SearchResultContact(BlinkContact):
@@ -1760,7 +1760,7 @@ class BonjourBlinkGroup(VirtualBlinkGroup):
     delete_contact_allowed = False
 
     def __init__(self, name=NSLocalizedString("Bonjour Neighbours", "Group name label"), expanded=True):
-        super(BonjourBlinkGroup, self).__init__(name, expanded)
+        objc.super(BonjourBlinkGroup, self).__init__(name, expanded)
         self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
         self.original_position = None
 
@@ -1775,7 +1775,7 @@ class NoBlinkGroup(VirtualBlinkGroup):
     delete_contact_allowed = True
 
     def __init__(self, name=NSLocalizedString("No Group", "Group name label"), expanded=False):
-        super(NoBlinkGroup, self).__init__(name, expanded)
+        objc.super(NoBlinkGroup, self).__init__(name, expanded)
 
 
 class PendingWatchersGroup(VirtualBlinkGroup):
@@ -1788,7 +1788,7 @@ class PendingWatchersGroup(VirtualBlinkGroup):
     delete_contact_allowed = False
 
     def __init__(self, name=NSLocalizedString("New Contact Requests", "Group name label"), expanded=True):
-        super(PendingWatchersGroup, self).__init__(name, expanded)
+        objc.super(PendingWatchersGroup, self).__init__(name, expanded)
 
 
 class BlockedGroup(VirtualBlinkGroup):
@@ -1801,7 +1801,7 @@ class BlockedGroup(VirtualBlinkGroup):
     delete_contact_allowed = False
 
     def __init__(self, name=NSLocalizedString("Blocked Contacts", "Group name label"), expanded=False):
-        super(BlockedGroup, self).__init__(name, expanded)
+        objc.super(BlockedGroup, self).__init__(name, expanded)
 
 
 class OnlineGroup(VirtualBlinkGroup):
@@ -1814,7 +1814,7 @@ class OnlineGroup(VirtualBlinkGroup):
     delete_contact_allowed = True
 
     def __init__(self, name=NSLocalizedString("Online Contacts", "Group name label"), expanded=True):
-        super(OnlineGroup, self).__init__(name, expanded)
+        objc.super(OnlineGroup, self).__init__(name, expanded)
 
 
 class AllContactsBlinkGroup(VirtualBlinkGroup):
@@ -1828,7 +1828,7 @@ class AllContactsBlinkGroup(VirtualBlinkGroup):
     delete_contact_allowed = True
 
     def __init__(self, name=NSLocalizedString("All Contacts", "Group name label"), expanded=True):
-        super(AllContactsBlinkGroup, self).__init__(name, expanded)
+        objc.super(AllContactsBlinkGroup, self).__init__(name, expanded)
 
 
 class HistoryBlinkGroup(VirtualBlinkGroup):
@@ -1844,7 +1844,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
     last_results = []
 
     def __init__(self, name, expanded=False):
-        super(HistoryBlinkGroup, self).__init__(name, expanded)
+        objc.super(HistoryBlinkGroup, self).__init__(name, expanded)
         # contacts are not yet loaded when building this group so we cannot lookup contacts just yet
         self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "firstLoadTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
@@ -1998,7 +1998,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
     type = 'missed'
 
     def __init__(self, name=NSLocalizedString("Missed Calls", "Group name label")):
-        super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
+        objc.super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
         return SessionHistory().get_entries(hidden=0, after_date=self.after_date, count=200)
@@ -2008,7 +2008,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'outgoing'
 
     def __init__(self, name=NSLocalizedString("Outgoing Calls", "Group name label")):
-        super(OutgoingCallsBlinkGroup, self).__init__(name, expanded=True)
+        objc.super(OutgoingCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='outgoing', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
@@ -2018,7 +2018,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
     type = 'incoming'
 
     def __init__(self, name=NSLocalizedString("Incoming Calls", "Group name label")):
-        super(IncomingCallsBlinkGroup, self).__init__(name, expanded=True)
+        objc.super(IncomingCallsBlinkGroup, self).__init__(name, expanded=True)
 
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='completed', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
@@ -2035,7 +2035,7 @@ class VoicemailBlinkGroup(VirtualBlinkGroup):
     original_position = None
 
     def __init__(self, name=NSLocalizedString("Voicemail", "Group name label")):
-        super(VoicemailBlinkGroup, self).__init__(name, expanded=True)
+        objc.super(VoicemailBlinkGroup, self).__init__(name, expanded=True)
 
     @property
     def groupsList(self):
@@ -2112,7 +2112,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
     delete_contact_allowed = False
 
     def __init__(self, name=NSLocalizedString("Address Book", "Group name label")):
-        super(AddressBookBlinkGroup, self).__init__(name, expanded=False)
+        objc.super(AddressBookBlinkGroup, self).__init__(name, expanded=False)
 
     @run_in_thread('addressbook')
     @allocate_autorelease_pool

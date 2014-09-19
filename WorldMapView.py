@@ -37,7 +37,7 @@ from Foundation import (NSArray,
 
 from ContactListModel import presence_status_icons
 from util import allocate_autorelease_pool
-
+import objc
 
 country_iso_map = {
 "Anonymous Proxy":"A1",
@@ -498,7 +498,7 @@ worldMap.setObject_forKey_(NSArray.arrayWithObjects_("{5463,4186};{5503,4126};{5
 
 class MapView(NSView):
     def initWithFrame_(self, frame):
-        self = super(MapView, self).initWithFrame_(frame)
+        self = objc.super(MapView, self).initWithFrame_(frame)
         if self:
             self.background_color = NSColor.colorWithDeviceRed_green_blue_alpha_(234.0/255.0, 247.0/255.0, 254.0/255.0, 1.0)
             self.color = NSColor.whiteColor()
@@ -754,5 +754,5 @@ class MapView(NSView):
         self.labels = {}
         self.icons = {}
         self.buttons = {}
-        super(MapView, self).dealloc()
+        objc.super(MapView, self).dealloc()
 

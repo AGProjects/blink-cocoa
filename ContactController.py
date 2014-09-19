@@ -43,7 +43,7 @@ from util import allocate_autorelease_pool, checkValidPhoneNumber, format_uri_ty
 
 class MyImageThing(NSImageView):
     def mouseDown_(self, event):
-        super(MyImageThing, self).mouseDown_(event)
+        objc.super(MyImageThing, self).mouseDown_(event)
         self.target().performSelector_withObject_(self.action(), self)
 
 

@@ -145,7 +145,7 @@ class JoinConferenceWindowController(NSObject):
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidUpdateServer')
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidAddServer')
         self.notification_center.remove_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
-        super(JoinConferenceWindowController, self).dealloc()
+        objc.super(JoinConferenceWindowController, self).dealloc()
 
     @allocate_autorelease_pool
     @run_in_gui_thread

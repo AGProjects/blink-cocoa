@@ -161,7 +161,7 @@ class ChatWindowController(NSWindowController):
     contact_timer = None
 
     def init(self):
-        self = super(ChatWindowController, self).init()
+        self = objc.super(ChatWindowController, self).init()
         if self:
             BlinkLogger().log_debug('Starting Chat Window Controller')
             smileys = SmileyManager()
@@ -668,7 +668,7 @@ class ChatWindowController(NSWindowController):
             if keys[0] == 'i' and session and session.info_panel is not None:
                 session.info_panel.toggle()
         else:
-            super(ChatWindowController, self).keyDown_(event)
+            objc.super(ChatWindowController, self).keyDown_(event)
 
     def close_(self, sender):
         chat_sessions = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])

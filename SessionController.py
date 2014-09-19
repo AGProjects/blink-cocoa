@@ -959,7 +959,7 @@ class SessionController(NSObject):
     def initWithAccount_target_displayName_(self, account, target_uri, display_name):
         global SessionIdentifierSerial
         assert isinstance(target_uri, SIPURI)
-        self = super(SessionController, self).init()
+        self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.contactDisplayName = display_name
         self.remoteParty = display_name or format_identity_to_string(target_uri, format='compact')
@@ -1002,7 +1002,7 @@ class SessionController(NSObject):
 
     def initWithSession_(self, session):
         global SessionIdentifierSerial
-        self = super(SessionController, self).init()
+        self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.contactDisplayName = None
         self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
@@ -1050,7 +1050,7 @@ class SessionController(NSObject):
 
     def initWithSessionTransfer_(self, session):
         global SessionIdentifierSerial
-        self = super(SessionController, self).init()
+        self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.contactDisplayName = None
         self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
@@ -1125,7 +1125,7 @@ class SessionController(NSObject):
 
     def dealloc(self):
         self.notification_center = None
-        super(SessionController, self).dealloc()
+        objc.super(SessionController, self).dealloc()
 
     def log_info(self, text):
         BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))

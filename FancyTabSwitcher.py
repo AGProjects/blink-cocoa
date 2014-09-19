@@ -86,7 +86,7 @@ class FancyTabItem(NSView):
         self.item = None
 
     def dealloc(self):
-        super(FancyTabItem, self).dealloc()
+        objc.super(FancyTabItem, self).dealloc()
 
     def initWithSwitcher_item_(self, switcher, item):
         self = NSView.initWithFrame_(self, NSMakeRect(0, 2, 100, 18))
@@ -318,7 +318,7 @@ class FancyTabSwitcher(NSView):
         return self
 
     def dealloc(self):
-        super(FancyTabSwitcher, self).dealloc()
+        objc.super(FancyTabSwitcher, self).dealloc()
 
     def setTabView_(self, tabView):
         self.tabView = tabView

@@ -12,7 +12,7 @@ from Foundation import (NSColor,
 
 from VerticalBoxView import VerticalBoxView
 from util import osx_version
-
+import objc
 
 class ListView(VerticalBoxView):
     allowMultiSelection = False
@@ -21,7 +21,7 @@ class ListView(VerticalBoxView):
     selection = -1
 
     def initWithFrame_(self, frame):
-        self = super(ListView, self).initWithFrame_(frame)
+        self = objc.super(ListView, self).initWithFrame_(frame)
         if self:
             self.setBackgroundColor_(NSColor.whiteColor())
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "windowChangedKey:", NSWindowDidBecomeKeyNotification, None)

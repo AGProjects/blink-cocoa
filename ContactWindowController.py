@@ -730,7 +730,7 @@ class ContactWindowController(NSWindowController):
             self.window().setTitle_(NSApp.delegate().main_window_title)
         else:
             self.window().setTitle_(NSApp.delegate().applicationNamePrint)
-        super(ContactWindowController, self).showWindow_(sender)
+        objc.super(ContactWindowController, self).showWindow_(sender)
 
     def copyToSearchBar_(self, sender):
         self.searchBox.setStringValue_(sender.representedObject())

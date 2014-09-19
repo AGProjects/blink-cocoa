@@ -84,7 +84,7 @@ class ChatInputTextView(NSTextView):
     maxLength = None
 
     def dealloc(self):
-        super(ChatInputTextView, self).dealloc()
+        objc.super(ChatInputTextView, self).dealloc()
 
     def initWithRect_(self, rect):
         self = NSTextView.initWithRect_(self, rect)
@@ -156,12 +156,12 @@ class ChatInputTextView(NSTextView):
             if keys[0] == 'i' and self.owner.delegate.sessionController.info_panel is not None:
                 self.owner.delegate.sessionController.info_panel.toggle()
         else:
-            super(ChatInputTextView, self).keyDown_(event)
+            objc.super(ChatInputTextView, self).keyDown_(event)
 
 
 class ChatWebView(WebView):
     def dealloc(self):
-        super(ChatWebView, self).dealloc()
+        objc.super(ChatWebView, self).dealloc()
 
     def draggingEntered_(self, sender):
         pboard = sender.draggingPasteboard()
@@ -681,7 +681,7 @@ class ChatViewController(NSObject):
             self.scrollingTimer.invalidate()
             self.scrollingTimer = None
         NSNotificationCenter.defaultCenter().removeObserver_(self)
-        super(ChatViewController, self).dealloc()
+        objc.super(ChatViewController, self).dealloc()
 
 
 class Transform(object):

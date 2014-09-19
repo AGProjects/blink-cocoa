@@ -19,6 +19,7 @@ from Foundation import (NSBezierPath,
                         NSTextFieldCell)
 
 import datetime
+import objc
 
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import BonjourAccount
@@ -57,13 +58,13 @@ class ContactCell(NSTextFieldCell):
 
     def cellSize(self):
         if self.contact is None:
-            return super(ContactCell, self).cellSize()
+            return objc.super(ContactCell, self).cellSize()
         return NSMakeSize(100, 30)
 
     @allocate_autorelease_pool
     def drawWithFrame_inView_(self, frame, view):
         if self.contact is None:
-            return super(ContactCell, self).drawWithFrame_inView_(frame, view)
+            return objc.super(ContactCell, self).drawWithFrame_inView_(frame, view)
 
         self.frame = frame
         self.view = view

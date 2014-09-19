@@ -113,7 +113,7 @@ class ScreenSharingController(MediaStream):
     stopButton = objc.IBOutlet()
 
     def initWithOwner_stream_(self, scontroller, stream):
-        self = super(ScreenSharingController, self).initWithOwner_stream_(scontroller, stream)
+        self = objc.super(ScreenSharingController, self).initWithOwner_stream_(scontroller, stream)
         BlinkLogger().log_debug(u"Creating %s" % self)
         self.stream = stream
         self.direction = stream.handler.type
@@ -348,7 +348,7 @@ class ScreenSharingController(MediaStream):
         self.resetTrace()
         self.stream = None
         self.sessionController = None
-        super(ScreenSharingController, self).dealloc()
+        objc.super(ScreenSharingController, self).dealloc()
 
 
 class ScreenSharingViewerController(ScreenSharingController):

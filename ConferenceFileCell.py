@@ -11,6 +11,7 @@ from Foundation import (NSColor,
                         NSMakeSize,
                         NSTextFieldCell)
 
+import objc
 
 class ConferenceFileCell(NSTextFieldCell):
     conference_file = None
@@ -35,13 +36,13 @@ class ConferenceFileCell(NSTextFieldCell):
 
     def cellSize(self):
         if self.conference_file is None:
-            return super(ConferenceFileCell, self).cellSize()
+            return objc.super(ConferenceFileCell, self).cellSize()
         return NSMakeSize(100, 30)
 
     def drawWithFrame_inView_(self, frame, view):
         if self.conference_file is None:
             tmp = frame
-            return super(ConferenceFileCell, self).drawWithFrame_inView_(tmp, view)
+            return objc.super(ConferenceFileCell, self).drawWithFrame_inView_(tmp, view)
 
         self.drawIcon(self.conference_file.icon, 2, frame.origin.y+3, 28, 28)
 

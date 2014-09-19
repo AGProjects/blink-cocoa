@@ -99,7 +99,7 @@ class EnrollmentController(NSObject):
 
     def dealloc(self):
         NotificationCenter().discard_observer(self, name='SIPAccountManagerDidAddAccount')
-        super(EnrollmentController, self).dealloc()
+        objc.super(EnrollmentController, self).dealloc()
 
     def runModal(self):
         BlinkLogger().log_info('Starting Enrollment')

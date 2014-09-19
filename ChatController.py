@@ -1824,7 +1824,7 @@ class OutgoingMessageHandler(NSObject):
     OTRNegotiationTimer = None
 
     def initWithView_(self, chatView):
-        self = super(OutgoingMessageHandler, self).init()
+        self = objc.super(OutgoingMessageHandler, self).init()
         if self:
             self.stream = None
             self.connected = None
@@ -1838,7 +1838,7 @@ class OutgoingMessageHandler(NSObject):
 
     def dealloc(self):
         self.delegate = None
-        super(OutgoingMessageHandler, self).dealloc()
+        objc.super(OutgoingMessageHandler, self).dealloc()
 
     def close(self):
         self.stream = None

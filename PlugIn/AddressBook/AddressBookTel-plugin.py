@@ -11,6 +11,7 @@ import AddressBook
 from AddressBook import *
 from AppKit import *
 import sys
+import objc
 
 class NSLogger(object):
     closed = False
@@ -55,7 +56,7 @@ class BlinkProTelephoneNumberDialerDelegate (NSObject):
     blink_bundle_id = 'com.agprojects.Blink'
 
     def init(self):
-        self = super(BlinkProTelephoneNumberDialerDelegate, self).init()
+        self = objc.super(BlinkProTelephoneNumberDialerDelegate, self).init()
         if self:
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "workspaceDidLaunchApplication:", NSWorkspaceDidLaunchApplicationNotification, None)
             self.selected_number = None

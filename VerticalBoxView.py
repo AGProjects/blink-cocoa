@@ -6,13 +6,14 @@ from Foundation import (NSView,
                         NSZeroSize,
                         NSWidth)
 from AppKit import NSRectFill
+import objc
 
 from PreferenceOptions import NightVolumeOption
 
 
 class VerticalBoxView(NSView):
     def initWithFrame_(self, frame):
-        self = super(VerticalBoxView, self).initWithFrame_(frame)
+        self = objc.super(VerticalBoxView, self).initWithFrame_(frame)
         if self:
             self.background_color = None
             self.spacing = 0

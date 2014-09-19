@@ -56,7 +56,7 @@ class AudioSession(NSView):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     def dealloc(self):
-        super(AudioSession, self).dealloc()
+        objc.super(AudioSession, self).dealloc()
 
     def acceptsFirstResponder(self):
         return True

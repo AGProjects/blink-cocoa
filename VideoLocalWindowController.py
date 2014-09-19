@@ -60,7 +60,6 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from zope.interface import implements
 
-
 class VideoLocalWindowController(NSWindowController):
     implements(IObserver)
 
@@ -171,7 +170,7 @@ class VideoLocalWindowController(NSWindowController):
     def dealloc(self):
         self.log_debug('Dealloc %s' % self)
         self.videoWindowController = None
-        super(VideoLocalWindowController, self).dealloc()
+        objc.super(VideoLocalWindowController, self).dealloc()
 
     def windowDidBecomeMain_(self, notification):
         if self.videoWindowController.window():
@@ -305,7 +304,7 @@ class LocalTitleBarView(NSObject):
     textLabel = objc.IBOutlet()
     
     def init(self):
-        self = super(LocalTitleBarView, self).init()
+        self = objc.super(LocalTitleBarView, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("VideoLocalTitleBarView", self)
         

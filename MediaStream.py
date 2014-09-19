@@ -9,7 +9,7 @@ from application.notification import NotificationCenter, NotificationData
 
 from Foundation import NSObject
 from AppKit import NSApp
-
+import objc
 
 # Session states
 STATE_IDLE       = "IDLE"
@@ -43,7 +43,7 @@ class MediaStream(NSObject):
         return cls.alloc().initWithOwner_stream_(*args)
 
     def initWithOwner_stream_(self, owner, stream):
-        self = super(MediaStream, self).init()
+        self = objc.super(MediaStream, self).init()
         if self:
             self.sessionController = owner
             self.stream = stream

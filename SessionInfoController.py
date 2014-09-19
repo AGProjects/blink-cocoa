@@ -611,7 +611,7 @@ class SessionInfoController(NSObject):
         self.tx_speed_graph.removeFromSuperview()
         self.video_rx_speed_graph.removeFromSuperview()
         self.video_tx_speed_graph.removeFromSuperview()
-        super(SessionInfoController, self).dealloc()
+        objc.super(SessionInfoController, self).dealloc()
 
 
 class CBGraphView(NSView):
@@ -635,7 +635,7 @@ class CBGraphView(NSView):
     def initWithFrame_(self, frame):
         """ basic constructor for views. here we init colors and gradients """
 
-        self = super(CBGraphView, self).initWithFrame_(frame)
+        self = objc.super(CBGraphView, self).initWithFrame_(frame)
 
         if self:
             self.gradientGray = NSColor.colorWithCalibratedRed_green_blue_alpha_(50/255.0, 50/255.0, 50/255.0, 1.0)
@@ -691,7 +691,7 @@ class CBGraphView(NSView):
         """ default destructor """
         self.grad.release()
         self.dataQueue = None
-        super(CBGraphView, self).dealloc()
+        objc.super(CBGraphView, self).dealloc()
 
     def drawRect_(self, rect):
         """ we raw the background gradient and graph outline then clip the inner rect

@@ -142,7 +142,7 @@ class BlinkAppDelegate(NSObject):
     terminating = False
 
     def init(self):
-        self = super(BlinkAppDelegate, self).init()
+        self = objc.super(BlinkAppDelegate, self).init()
         if self:
             self.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))
             self.applicationNamePrint = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleName"))

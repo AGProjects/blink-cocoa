@@ -135,7 +135,7 @@ class FileTransferItemView(NSView):
         return self
 
     def dealloc(self):
-        super(FileTransferItemView, self).dealloc()
+        objc.super(FileTransferItemView, self).dealloc()
 
     def updateIcon(self, icon):
         image = NSImage.alloc().initWithSize_(NSMakeSize(48,48))

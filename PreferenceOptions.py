@@ -1116,7 +1116,7 @@ class MessageRecorder(NSObject):
     bridge = None
 
     def init(self):
-        self = super(MessageRecorder, self).init()
+        self = objc.super(MessageRecorder, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("SoundRecorder", self)
             self.window.center()

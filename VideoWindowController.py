@@ -81,6 +81,7 @@ import os
 import objc
 import unicodedata
 from math import floor
+import objc
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -143,7 +144,7 @@ class VideoWidget(NSView):
 
     def dealloc(self):
         BlinkLogger().log_debug("Dealloc %s" % self)
-        super(VideoWidget, self).dealloc()
+        objc.super(VideoWidget, self).dealloc()
 
     def mouseDown_(self, event):
         self.window().delegate().mouseDown_(event)
@@ -852,7 +853,7 @@ class VideoWindowController(NSWindowController):
         self.tracking_area = None
         self.localVideoWindow = None
         self.streamController = None
-        super(VideoWindowController, self).dealloc()
+        objc.super(VideoWindowController, self).dealloc()
 
     def toogleAlwaysOnTop(self):
         self.always_on_top  = not self.always_on_top
@@ -1067,7 +1068,7 @@ class TitleBarView(NSObject):
 
     def initWithWindowController_(self, windowController):
         self.windowController = windowController
-        self = super(TitleBarView, self).init()
+        self = objc.super(TitleBarView, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("VideoTitleBarView", self)
 
@@ -1087,7 +1088,7 @@ class TitleBarView(NSObject):
 
     def dealloc(self):
         self.windowController = None
-        super(TitleBarView, self).dealloc()
+        objc.super(TitleBarView, self).dealloc()
 
     @objc.IBAction
     def userClickedCheckbox_(self, sender):
@@ -1117,7 +1118,7 @@ class RoundedCornersView(NSView):
         else:
             NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.3).setFill()
         NSRectFillUsingOperation(dirtyRect, NSCompositeSourceOver)
-        super(RoundedCornersView, self).drawRect_(dirtyRect)
+        objc.super(RoundedCornersView, self).drawRect_(dirtyRect)
 
 
 class BlackView(NSView):
