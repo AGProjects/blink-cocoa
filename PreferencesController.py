@@ -1043,7 +1043,7 @@ class PreferencesController(NSWindowController, object):
         elif item.identifier() == 'tls':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("These settings apply only for SIP signalling", "Label"))
         elif item.identifier() == 'h264':
-            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("To revert to the standard values, chose the first option", "Label"))
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Any profile will be accepted but this will be proposed", "Label"))
         else:
             self.sectionHelpPlaceholder.setStringValue_('')
 
