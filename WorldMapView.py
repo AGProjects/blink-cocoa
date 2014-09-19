@@ -15,7 +15,6 @@ from AppKit import (NSApp,
                     NSViewMinXMargin,
                     NSViewMinYMargin,
                     NSViewWidthSizable)
-
 from Foundation import (NSArray,
                         NSBezierPath,
                         NSButton,
@@ -35,8 +34,6 @@ from Foundation import (NSArray,
                         NSView,
                         NSLocalizedString
                         )
-
-from objc import super
 
 from ContactListModel import presence_status_icons
 from util import allocate_autorelease_pool

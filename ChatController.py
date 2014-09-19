@@ -47,7 +47,6 @@ from Foundation import (NSAttributedString,
                         NSZeroSize,
                         NSURL,
                         NSWorkspace)
-
 from Quartz import (CGDisplayBounds,
                     CGImageGetWidth,
                     CGMainDisplayID,
@@ -57,8 +56,6 @@ from Quartz import (CGDisplayBounds,
                     kCGWindowListExcludeDesktopElements,
                     kCGWindowListOptionIncludingWindow,
                     kCGWindowNumber)
-
-from objc import super
 import objc
 
 import datetime

@@ -70,11 +70,8 @@ from Foundation import (NSArray,
                         NSTimer,
                         NSURL,
                         NSWorkspace)
-
-from objc import super
-import objc
-
 import AddressBook
+import objc
 
 import base64
 import bisect

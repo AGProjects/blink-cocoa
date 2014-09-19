@@ -31,8 +31,6 @@ from Foundation import (NSBundle,
                         NSZeroPoint,
                         NSURL,
                         NSWorkspace)
-
-from objc import super
 import objc
 
 import datetime

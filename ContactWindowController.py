@@ -75,8 +75,6 @@ from Foundation import (NSArray,
                         NSWorkspace,
                         NSZeroPoint,
                         NSZeroRect)
-
-from objc import super
 import objc
 
 import cPickle

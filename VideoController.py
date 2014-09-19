@@ -3,7 +3,6 @@
 
 from AppKit import NSApp, NSEventTrackingRunLoopMode
 from Foundation import NSRunLoop, NSRunLoopCommonModes, NSTimer, NSLocalizedString
-from objc import super
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null

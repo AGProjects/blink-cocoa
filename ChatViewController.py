@@ -7,6 +7,7 @@ __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
 import calendar
 import cgi
 import datetime
+import objc
 import os
 import re
 import time
@@ -16,9 +17,6 @@ import uuid
 from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification
 from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL, NSURLRequest, NSWorkspace
 from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
-
-from objc import super
-import objc
 
 from application.notification import NotificationCenter
 from sipsimple.configuration.settings import SIPSimpleSettings

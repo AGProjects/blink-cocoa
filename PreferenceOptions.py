@@ -45,8 +45,6 @@ from Foundation import (NSArray,
                         NSString,
                         NSTimer,
                         NSView)
-
-from objc import super
 import objc
 
 import os

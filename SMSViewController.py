@@ -27,10 +27,7 @@ from Foundation import (NSAttributedString,
                         NSTimer,
                         NSWorkspace,
                         NSURL)
-
-from objc import super
 import objc
-
 import uuid
 import potr
 import potr.crypt

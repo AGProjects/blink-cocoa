@@ -9,7 +9,6 @@ from application.notification import NotificationCenter, NotificationData
 
 from Foundation import NSObject
 from AppKit import NSApp
-from objc import super
 
 
 # Session states

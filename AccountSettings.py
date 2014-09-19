@@ -17,8 +17,6 @@ from Foundation import (NSBundle,
                         NSURLRequest,
                         NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 from WebKit import WebActionOriginalURLKey
-
-from objc import super
 import objc
 
 from BlinkLogger import BlinkLogger

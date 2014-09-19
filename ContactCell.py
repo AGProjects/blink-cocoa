@@ -18,8 +18,6 @@ from Foundation import (NSBezierPath,
                         NSParagraphStyle,
                         NSTextFieldCell)
 
-from objc import super
-
 import datetime
 
 from sipsimple.configuration.settings import SIPSimpleSettings

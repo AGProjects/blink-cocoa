@@ -15,8 +15,6 @@ from AppKit import (NSApp,
                     NSLocalizedString,
                     NSURL,
                     NSWorkspace)
-
-from objc import super
 import objc
 
 import cjson

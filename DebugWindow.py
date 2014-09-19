@@ -5,7 +5,6 @@ from AppKit import (NSFontAttributeName,
                     NSForegroundColorAttributeName,
                     NSOnState,
                     NSOffState)
-
 from Foundation import (NSAttributedString,
                         NSBundle,
                         NSColor,
@@ -17,8 +16,6 @@ from Foundation import (NSAttributedString,
                         NSObject,
                         NSString
                         )
-
-from objc import super
 import objc
 
 from datetime import datetime

@@ -6,7 +6,6 @@ from Foundation import (NSView,
                         NSZeroSize,
                         NSWidth)
 from AppKit import NSRectFill
-from objc import super
 
 from PreferenceOptions import NightVolumeOption
 

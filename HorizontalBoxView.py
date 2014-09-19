@@ -5,10 +5,7 @@ from Foundation import (NSView,
                         NSWidth,
                         NSHeight,
                         NSTextField)
-
 from AppKit import NSRectFill
-
-from objc import super
 
 
 class HorizontalBoxView(NSView):

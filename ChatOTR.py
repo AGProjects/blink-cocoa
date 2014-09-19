@@ -5,7 +5,6 @@
 from AppKit import NSApp, NSOKButton, NSCancelButton, NSOnState
 from Foundation import NSObject, NSBundle, NSColor, NSLocalizedString, NSTimer, NSRunLoop, NSRunLoopCommonModes
 
-from objc import super
 import objc
 
 import potr

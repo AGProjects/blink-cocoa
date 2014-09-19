@@ -54,7 +54,6 @@ from AVFoundation import (AVCaptureDeviceInput,
                           AVVideoCodecKey
                           )
 
-from objc import super
 import objc
 
 

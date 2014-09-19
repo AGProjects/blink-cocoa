@@ -77,10 +77,8 @@ from Foundation import (NSAttributedString,
 
 from Foundation import mbFlipWindow
 
-from objc import super
-import objc
-
 import os
+import objc
 import unicodedata
 from math import floor
 

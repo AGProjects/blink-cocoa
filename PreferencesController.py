@@ -43,8 +43,6 @@ from Foundation import (NSArray,
                         NSRunLoopCommonModes,
                         NSTimer,
                         NSWorkspace)
-
-from objc import super
 import objc
 
 from application.notification import NotificationCenter, IObserver
