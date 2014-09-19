@@ -238,6 +238,7 @@ class LocalVideoView(NSView):
     initialOrigin = None
     captureSession = None
     stillImageOutput = None
+    captureDeviceInput = None
     videoOutput = None
     videoPreviewLayer = None
     auto_rotate_menu_enabled = True
@@ -486,9 +487,9 @@ class LocalVideoView(NSView):
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 
-            captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
-            if captureDeviceInput:
-                self.captureSession.addInput_(captureDeviceInput)
+            self.captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
+            if self.captureDeviceInput:
+                self.captureSession.addInput_(self.captureDeviceInput)
             else:
                 BlinkLogger().log_debug('Failed to aquire input %s' % self)
                 return
@@ -564,10 +565,14 @@ class LocalVideoView(NSView):
         if self.captureSession is not None:
             BlinkLogger().log_debug('Stop aquire local video %s' % self)
             self.captureSession.stopRunning()
-            self.captureSession = None
-            self.videoPreviewLayer.setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.0))
-            #self.videoPreviewLayer = None
 
+            self.videoPreviewLayer.removeFromSuperlayer()
+            self.videoPreviewLayer = None
+
+            self.captureSession.removeInput_(self.captureDeviceInput)
+            self.captureDeviceInput = None
+
+            self.captureSession = None
 
 class BorderlessRoundWindow(NSPanel):
     closeButton = objc.IBOutlet()
