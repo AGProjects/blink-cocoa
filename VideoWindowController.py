@@ -367,7 +367,10 @@ class VideoWindowController(NSWindowController):
 
     @property
     def sessionController(self):
-        return self.streamController.sessionController
+        if self.streamController:
+            return self.streamController.sessionController
+        else:
+            return None
 
     def init_aspect_ratio(self, width, height):
         if self.aspect_ratio is not None:
@@ -469,7 +472,8 @@ class VideoWindowController(NSWindowController):
         self.streamController.sessionController.removeVideoFromSession()
 
     def hangup_(self, sender):
-        self.sessionController.end()
+        if self.sessionController:
+            self.sessionController.end()
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
@@ -516,7 +520,10 @@ class VideoWindowController(NSWindowController):
 
     @property
     def sessionController(self):
-        return self.streamController.sessionController
+        if self.streamController:
+            return self.streamController.sessionController
+        else:
+            return None
 
     def windowDidResignKey_(self, notification):
         self.is_key_window = False
@@ -529,7 +536,8 @@ class VideoWindowController(NSWindowController):
             if self.full_screen:
                 self.toggleFullScreen()
             else:
-                self.sessionController.removeVideoFromSession()
+                if self.sessionController:
+                    self.sessionController.removeVideoFromSession()
 
     def mouseEntered_(self, event):
         self.mouse_in_window = True
@@ -684,6 +692,9 @@ class VideoWindowController(NSWindowController):
         self.myVideoView.setFrameOrigin_(view.frame().origin)
 
     def windowWillResize_toSize_(self, window, frameSize):
+        if self.full_screen_in_progress or self.full_screen:
+            return frameSize
+
         scaledSize = frameSize
         scaledSize.width = frameSize.width
         scaledSize.height = scaledSize.width / self.initial_aspect_ratio or self.aspect_ratio or 1.77
@@ -729,7 +740,8 @@ class VideoWindowController(NSWindowController):
 
     def removeVideo(self):
         self.window().orderOut_(None)
-        self.sessionController.removeVideoFromSession()
+        if self.sessionController:
+            self.sessionController.removeVideoFromSession()
         NSApp.delegate().contactsWindowController.showAudioDrawer()
     
     @run_in_gui_thread
@@ -812,9 +824,10 @@ class VideoWindowController(NSWindowController):
     def windowWillClose_(self, sender):
         BlinkLogger().log_debug('windowWillClose %s' % self)
         #NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
-        self.sessionController.removeVideoFromSession()
-        if not self.sessionController.hasStreamOfType("chat"):
-            NotificationCenter().post_notification("BlinkVideoWindowClosed", sender=self)
+        if self.sessionController:
+            self.sessionController.removeVideoFromSession()
+            if not self.sessionController.hasStreamOfType("chat"):
+                NotificationCenter().post_notification("BlinkVideoWindowClosed", sender=self)
 
     def windowShouldClose_(self, sender):
         return True
@@ -912,11 +925,13 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedInfoButton_(self, sender):
-        if self.sessionController.info_panel is not None:
+        if self.sessionController and self.sessionController.info_panel is not None:
             self.sessionController.info_panel.toggle()
     
     @objc.IBAction
     def userClickedHoldButton_(self, sender):
+        if not self.sessionController:
+            return
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status == STREAM_CONNECTED and not self.sessionController.inProposal:
@@ -936,7 +951,8 @@ class VideoWindowController(NSWindowController):
             self.toggleFullScreen()
         else:
             self.window().orderOut_(None)
-        self.sessionController.end()
+        if self.sessionController:
+            self.sessionController.end()
 
     @objc.IBAction
     def userClickedContactsButton_(self, sender):
@@ -946,6 +962,8 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedChatButton_(self, sender):
+        if not self.sessionController:
+            return
         if self.always_on_top:
             self.toogleAlwaysOnTop()
         chat_stream = self.sessionController.streamHandlerOfType("chat")
@@ -961,7 +979,7 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedInfoButton_(self, sender):
-        if self.sessionController.info_panel is not None:
+        if self.sessionController and self.sessionController.info_panel is not None:
             self.sessionController.info_panel.toggle()
 
     @objc.IBAction
@@ -992,6 +1010,8 @@ class VideoWindowController(NSWindowController):
         BlinkLogger().log_info("Screenshot saved in %s" % filename)
 
     def updateIdleTimer_(self, timer):
+        if not self.sessionController:
+            return
         last_idle_counter = CGEventSourceSecondsSinceLastEventType(kCGEventSourceStateHIDSystemState, kCGEventMouseMoved)
         chat_stream = self.sessionController.streamHandlerOfType("chat")
         if not chat_stream:
