@@ -574,6 +574,7 @@ class LocalVideoView(NSView):
 
             self.captureSession = None
 
+
 class BorderlessRoundWindow(NSPanel):
     closeButton = objc.IBOutlet()
 
@@ -589,7 +590,7 @@ class BorderlessRoundWindow(NSPanel):
     def setContentView_(self, view):
         view.setWantsLayer_(True)
         view.layer().setFrame_(view.frame())
-        view.layer().setCornerRadius_(4.0)
+        view.layer().setCornerRadius_(6.0)
         view.layer().setMasksToBounds_(True)
         objc.super(BorderlessRoundWindow, self).setContentView_(view)
 
