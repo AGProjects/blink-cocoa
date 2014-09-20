@@ -15,7 +15,10 @@ from AppKit import (NSApp,
                     NSFloatingWindowLevel,
                     NSTrackingMouseEnteredAndExited,
                     NSTrackingActiveAlways,
-                    NSRightMouseUp
+                    NSRightMouseUp,
+                    NSWorkspace,
+                    NSWorkspaceWillSleepNotification,
+                    NSWorkspaceDidWakeNotification
                     )
 
 from Foundation import (NSBundle,
@@ -464,6 +467,9 @@ class LocalVideoView(NSView):
             if self.captureSession.canSetSessionPreset_(AVCaptureSessionPresetHigh):
                 self.captureSession.setSessionPreset_(AVCaptureSessionPresetHigh)
 
+            NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
+            NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerWillSleep:", NSWorkspaceWillSleepNotification, None)
+
             max_resolution = (0, 0)
             BlinkLogger().log_debug("%s camera provides %d formats" % (device.localizedName(), len(device.formats())))
             for desc in device.formats():
@@ -517,6 +523,14 @@ class LocalVideoView(NSView):
             BlinkLogger().log_debug('Start aquire local video %s' % self)
             self.videoPreviewLayer.setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.4))
             self.captureSession.startRunning()
+
+    def computerDidWake_(self, notification):
+        if self.captureSession:
+            self.captureSession.startRunning()
+
+    def computerWillSleep_(self, notification):
+        if self.captureSession:
+            self.captureSession.stopRunning()
 
     def setMirroring(self):
         self.videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
