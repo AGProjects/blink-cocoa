@@ -389,7 +389,8 @@ class VideoWindowController(NSWindowController):
                 break
     
         if self.aspect_ratio == 1:
-            self.aspect_ratio = 1.33
+            self.aspect_ratio = 1.77
+            found = True
 
         if not found:
             self.valid_aspect_ratios.append(self.aspect_ratio)
