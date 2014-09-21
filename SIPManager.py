@@ -482,7 +482,17 @@ class SIPManager(object):
         codecs_print = []
         for codec in settings.rtp.audio_codec_list:
             codecs_print.append(beautify_audio_codec(codec))
-        BlinkLogger().log_debug(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
+
+        if settings.audio.input_device is None:
+            BlinkLogger().log_info(u"Switching audio input device to system default")
+            settings.audio.input_device = 'system_default'
+        if settings.audio.output_device is None:
+            BlinkLogger().log_info(u"Switching audio output device to system default")
+            settings.audio.output_device = 'system_default'
+        if settings.audio.alert_device is None:
+            BlinkLogger().log_info(u"Switching audio alert device to system default")
+            settings.audio.alert_device = 'system_default'
 
         codecs_print = []
         try:
@@ -494,10 +504,18 @@ class SIPManager(object):
                 codecs_print.append(beautify_video_codec(codec))
             BlinkLogger().log_debug(u"Enabled video codecs: %s" % ", ".join(codecs_print))
             BlinkLogger().log_debug(u"Available video cameras: %s" % ", ".join((camera for camera in self._app.engine.video_devices)))
-            BlinkLogger().log_debug(u"Using video camera: %s" % self._app.video_device.real_name)
-            if settings.video.device != "system_default" and settings.video.device != self._app.video_device.real_name:
+            if settings.video.device != "system_default" and settings.video.device != self._app.video_device.real_name and self._app.video_device.real_name != None:
                 settings.video.device = self._app.video_device.real_name
-                settings.save()
+                BlinkLogger().log_info(u"Using video device: %s" % self._app.video_device.real_name)
+            elif settings.video.device is None:
+                devices = list(device for device in self._app.engine.video_devices if device not in ('system_default', None))
+                if devices:
+                    BlinkLogger().log_info(u"Switching video device to %s" % devices[0])
+                    settings.video.device = devices[0]
+            else:
+                BlinkLogger().log_info(u"Using video device: %s" % self._app.video_device.real_name)
+
+        settings.save()
 
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
