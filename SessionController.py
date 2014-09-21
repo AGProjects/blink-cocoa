@@ -1527,7 +1527,7 @@ class SessionController(NSObject):
         else:
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
-                self.log_info("Proposing %s streams" % ",".join(stream.type for stream in add_streams))
+                self.log_info("Proposing %s streams" % ", ".join(stream.type for stream in add_streams))
                 try:
                    self.session.add_streams(add_streams)
                    self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
@@ -1770,7 +1770,7 @@ class SessionController(NSObject):
         self.remoteParty = format_identity_to_string(self.session.remote_identity)
         self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
-        self.log_info("Session started with %s" % ",".join(stream.type for stream in data.streams))
+        self.log_info("Session started with %s" % ", ".join(stream.type for stream in data.streams))
         for contact in self.invited_participants:
             self.session.conference.add_participant(contact.uri)
 
