@@ -1887,7 +1887,7 @@ class SessionController(NSObject):
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
     def _NH_SIPSessionNewOutgoing(self, session, data):
-        self.log_info(u"Proposed media: %s" % ','.join([s.type for s in data.streams]))
+        self.log_info(u"Proposed media: %s" % ', '.join([s.type for s in data.streams]))
 
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.transport = None

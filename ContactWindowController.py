@@ -2351,14 +2351,15 @@ class ContactWindowController(NSWindowController):
         selected_contact = None
         account = None
         uri_type = 'SIP'
+        media_type_print = ", ".join(media_type) if type(media_type) in (tuple, list) else media_type
         try:
             contact = self.getSelectedContacts()[0]
-            BlinkLogger().log_info(u"Starting %s session to selected contact %s" % (media_type, contact.name))
+            BlinkLogger().log_info(u"Starting %s session to selected contact %s" % (media_type_print, contact.name))
         except IndexError:
             target = unicode(self.searchBox.stringValue()).strip()
             if not target:
                 return
-            BlinkLogger().log_info(u"Starting %s session to entered address %s" % (media_type, target))
+            BlinkLogger().log_info(u"Starting %s session to entered address %s" % (media_type_print, target))
         else:
             selected_contact = contact
             settings = SIPSimpleSettings()
