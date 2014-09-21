@@ -449,8 +449,7 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         self.debug = settings.gui.extended_debug
-        settings.audio.enable_aec = settings.audio.echo_canceller.enabled
-        settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
+
         call_in_thread('file-io', self.purge_temporary_files)
 
     def _NH_SIPApplicationDidEnd(self, notification):
