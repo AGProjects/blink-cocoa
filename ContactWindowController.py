@@ -5019,6 +5019,10 @@ class ContactWindowController(NSWindowController):
             self.backend._app.engine.refresh_video_devices()
             settings = SIPSimpleSettings()
 
+            if not self.backend._app.engine.video_devices:
+                BlinkLogger().log_error('No video device available. Please connect a camera.')
+                return
+
             for i in range(100):
                 old = menu.itemWithTag_(tag*100+i)
                 if old:
