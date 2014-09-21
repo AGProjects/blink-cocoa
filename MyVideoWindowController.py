@@ -576,6 +576,9 @@ class LocalVideoView(NSView):
         BlinkLogger().log_debug('Hide %s' % self)
         self.active = False
 
+        NSWorkspace.sharedWorkspace().notificationCenter().removeObserver_name_object_(self, NSWorkspaceDidWakeNotification, None)
+        NSWorkspace.sharedWorkspace().notificationCenter().removeObserver_name_object_(self, NSWorkspaceWillSleepNotification, None)
+
         if self.captureSession is not None:
             BlinkLogger().log_debug('Stop aquire local video %s' % self)
             self.captureSession.stopRunning()
