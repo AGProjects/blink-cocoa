@@ -1832,7 +1832,7 @@ class SessionController(NSObject):
                 status += ' (%s)' % data.code
             self.failureReason = "failed"
 
-        self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed: %s, %s (%s)" % (data.reason, data.failure_reason, data.code))
+        self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed %sly: %s, %s (%s)" % (data.originator, data.reason, data.failure_reason, data.code))
 
         must_retry = False
         if self.routes is not None and len(self.routes) > 1:
