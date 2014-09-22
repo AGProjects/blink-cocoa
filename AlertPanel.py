@@ -558,6 +558,7 @@ class AlertPanel(NSObject, object):
         if session.subject:
             subject = session.subject
         else:
+            subject = NSLocalizedString("Audio call requested by", "Label")
             if len(streams) != 1:
                 if "Screen sharing" in type_names:
                     ds = [s for s in streams if s.type == "screen-sharing"]
