@@ -987,6 +987,31 @@ class VideoFramerateOption(PopUpMenuOption):
         self.popup.setFrame_(frame)
 
 
+class BandwidthOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
+        self.addMissingOptions = True
+        self.popup.addItemWithTitle_("500 Kbps")
+        self.popup.lastItem().setRepresentedObject_(500000)
+        self.popup.addItemWithTitle_("1 Mpbs")
+        self.popup.lastItem().setRepresentedObject_(1000000)
+        self.popup.addItemWithTitle_("2 Mbps")
+        self.popup.lastItem().setRepresentedObject_(2000000)
+        self.popup.addItemWithTitle_("3 Mbps")
+        self.popup.lastItem().setRepresentedObject_(3000000)
+        self.popup.addItemWithTitle_("4 Mbps")
+        self.popup.lastItem().setRepresentedObject_(4000000)
+        self.popup.addItemWithTitle_("5 Mbps")
+        self.popup.lastItem().setRepresentedObject_(5000000)
+        self.popup.addItemWithTitle_("10 Mbps")
+        self.popup.lastItem().setRepresentedObject_(10000000)
+        self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_(None)
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
 class H264LevelOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=False, description=description)
@@ -1012,6 +1037,7 @@ class VideoQualityOption(PopUpMenuOption):
         frame = self.popup.frame()
         frame.size.width = 300
         self.popup.setFrame_(frame)
+
 
 class VideoDeviceOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
@@ -1924,6 +1950,7 @@ PreferenceOptionTypes = {
 "video.device" : VideoDeviceOption,
 "video.enable_colorbar_device" : HiddenOption,
 "video.resolution" : VideoResolutionOption,
+"video.max_bitrate": BandwidthOption,
 "video.framerate" : VideoFramerateOption,
 "video.paused" : HiddenOption,
 "h264.profile": H264ProfileOption,
@@ -2071,6 +2098,7 @@ SettingDescription = {
                       'video.device': NSLocalizedString("Device", "Label"),
                       'video.resolution': NSLocalizedString("Resolution", "Label"),
                       'video.framerate': NSLocalizedString("Framerate", "Label"),
+                      'video.max_bitrate': NSLocalizedString("Bandwidth Limit", "Label"),
                       'xcap.enabled': NSLocalizedString("Enabled", "Label"),
                       'xcap.xcap_root': NSLocalizedString("Root URI", "Label"),
                       'h264.profile': NSLocalizedString("Profile", "Label"),
@@ -2118,7 +2146,7 @@ GeneralSettingsOrder = {
                        'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
                        'chat': ['disabled', 'enable_sms'],
-                       'video': ['device', 'quality', 'resolution', 'framerate'],
+                       'video': ['device', 'quality', 'resolution', 'framerate', 'max_bitrate'],
                        'file_transfer': ['disabled', 'auto_accept', 'render_incoming_image_in_chat_window', 'render_incoming_video_in_chat_window', 'directory'],
                        'rtp': ['audio_codec_list', 'video_codec_list', 'port_range', 'timeout'],
                        'sip': ['transport_list', 'udp_port', 'tcp_port', 'tls_port', 'invite_timeout'],
