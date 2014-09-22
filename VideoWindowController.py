@@ -601,27 +601,20 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
 
-    def updateAspectRatioOld(self):
-        if not self.window():
-            return
-
-        if self.aspect_ratio is not None:
-            self.updating_aspect_ratio = True
-            frame = self.window().frame()
-            currentSize = frame.size
-            scaledSize = currentSize
-            scaledSize.height = scaledSize.width / self.aspect_ratio
-            frame.size = scaledSize
-            #self.window().setFrame_display_animate_(frame, True, False)
-
-        self.updating_aspect_ratio = False
-
     def updateAspectRatio(self):
         if not self.window():
             return
         
         if self.aspect_ratio is not None:
             self.updating_aspect_ratio = True
+            
+            frame = self.window().frame()
+            currentSize = frame.size
+            scaledSize = currentSize
+            scaledSize.height = scaledSize.width / self.aspect_ratio
+            frame.size = scaledSize
+            self.window().setFrame_display_animate_(frame, True, False)
+
             mask = self.videoView.autoresizingMask()
             frame = self.videoView.superview().frame()
             currentSize = frame.size
