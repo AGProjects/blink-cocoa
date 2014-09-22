@@ -951,6 +951,7 @@ class SessionController(NSObject):
     transport = None
     screensharing_urls = {}
     cancelled_during_dns_lookup = False
+    retries = 0
 
     @property
     def sessionControllersManager(self):
@@ -1835,11 +1836,13 @@ class SessionController(NSObject):
         self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed %sly: %s, %s (%s)" % (data.originator, data.reason, data.failure_reason, data.code))
 
         must_retry = False
-        if self.routes is not None and len(self.routes) > 1:
+        if self.routes is not None and len(self.routes) > 1 and self.retries < 2:
             if data.code == 408 and data.originator == 'local':
                 must_retry = True
             elif data.code >= 500 and data.code < 600:
                 must_retry = True
+                    
+            self.retries += 1
 
         if not must_retry:
             log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
@@ -1890,6 +1893,8 @@ class SessionController(NSObject):
         self.log_info(u"Proposed media: %s" % ', '.join([s.type for s in data.streams]))
 
     def _NH_SIPSessionDidEnd(self, sender, data):
+        self.retries = 0
+
         self.transport = None
         self.call_id = sender._invitation.call_id
         try:
