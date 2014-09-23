@@ -28,6 +28,7 @@ import re
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.util import ISOTimestamp
 from zope.interface import implements
 
 from MediaStream import STREAM_CONNECTED
@@ -470,7 +471,7 @@ class SessionInfoController(NSObject):
             if self.sessionController.session.end_time:
                 now = self.sessionController.session.end_time
             else:
-                now = datetime.datetime(*time.localtime()[:6])
+                now = ISOTimestamp.now()
 
             if self.sessionController.session.start_time and now >= self.sessionController.session.start_time:
                 elapsed = now - self.sessionController.session.start_time
