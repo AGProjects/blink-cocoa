@@ -795,7 +795,7 @@ class AudioController(MediaStream):
         if self.session.end_time:
             now = self.session.end_time
         else:
-            now = datetime.datetime(*time.localtime()[:6])
+            now = ISOTimestamp.now()
 
         if self.session.start_time and now >= self.session.start_time:
             elapsed = now - self.session.start_time
