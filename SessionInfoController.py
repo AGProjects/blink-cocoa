@@ -28,8 +28,8 @@ import re
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.util import ISOTimestamp
 from zope.interface import implements
+from sipsimple.util import ISOTimestamp
 
 from MediaStream import STREAM_CONNECTED
 from util import allocate_autorelease_pool, beautify_audio_codec, beautify_video_codec, run_in_gui_thread, format_size
