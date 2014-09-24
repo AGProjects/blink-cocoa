@@ -111,7 +111,7 @@ class TableVersions(object):
         try:
             TableVersionEntry(table_name=table, version=version)
             return True
-        except dberrors.DuplicateEntryError:
+        except (dberrors.DuplicateEntryError, dberrors.IntegrityError):
             try:
                 results = TableVersionEntry.selectBy(table_name=table)
                 record = results.getOne()
