@@ -159,6 +159,10 @@ class VideoWidget(NSView):
         self.window().delegate().mouseDraggedView_(event)
 
     def handle_frame(self, frame):
+        if self.aspect_ratio is None:
+            self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
+            self.window().delegate().init_aspect_ratio(*frame.size)
+
         self._frame = frame
         self.setNeedsDisplay_(True)
 
@@ -169,10 +173,6 @@ class VideoWidget(NSView):
         frame = self._frame
         if frame is None:
             return
-
-        if self.aspect_ratio is None:
-            self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
-            self.window().delegate().init_aspect_ratio(*frame.size)
 
         data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame.data, len(frame.data), False)
         image = CIImage.imageWithBitmapData_bytesPerRow_size_format_colorSpace_(data,
