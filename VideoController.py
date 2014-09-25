@@ -106,8 +106,10 @@ class VideoController(MediaStream):
             self.statistics['loss'] = loss
             self.statistics['jitter'] = jitter
             self.statistics['rtt'] = rtt
-            self.statistics['fps'] = self.videoWindowController.frames
-            self.videoWindowController.resetFrames()
+            try:
+                self.statistics['fps'] = self.stream.producer.framerate
+            except AttributeError:
+                self.statistics['fps'] = 0
 
             rx_overhead = (stats['rx']['packets'] - self.previous_rx_packets) * RTP_PACKET_OVERHEAD
             tx_overhead = (stats['tx']['packets'] - self.previous_tx_packets) * RTP_PACKET_OVERHEAD

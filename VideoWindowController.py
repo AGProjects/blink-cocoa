@@ -113,11 +113,11 @@ def loadRecordingImages():
         RecordingImages.append(NSImage.imageNamed_("recording2"))
         RecordingImages.append(NSImage.imageNamed_("recording3"))
 
+
 class VideoWidget(NSView):
     _frame = None
     renderer = None
     aspect_ratio = None
-    frames = 0
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
@@ -312,14 +312,6 @@ class VideoWindowController(NSWindowController):
 
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
-
-    @property
-    def frames(self):
-        return self.videoView.frames if self.videoView else 0
-
-    def resetFrames(self):
-        if self.videoView:
-            self.videoView.resetFrames()
 
     @allocate_autorelease_pool
     @run_in_gui_thread
