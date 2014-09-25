@@ -415,6 +415,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPAccountWillRegister")
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
+        nc.add_observer(self, name="NetworkConditionsDidChange")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
         nc.add_observer(self, name="SIPAccountRegistrationGotAnswer")
@@ -1308,6 +1309,13 @@ class ContactWindowController(NSWindowController):
             account.register_failure_code = None
             account.register_failure_reason = None
         self.refreshAccountList()
+
+    def _NH_NetworkConditionsDidChange(self, notification):
+        if host.default_ip is not None:
+            for account in self.accounts:
+                if account.register_failure_reason == NSLocalizedString("No IP Address", "Label"):
+                    account.register_failure_reason = None
+            self.refreshAccountList()
 
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
         try:
