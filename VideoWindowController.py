@@ -133,9 +133,6 @@ class VideoWidget(NSView):
             self.renderer = FrameBufferVideoRenderer(self.handle_frame)
         self.renderer.producer = producer
 
-    def resetFrames(self):
-        self.frames = 0
-
     def close(self):
         if  self.renderer is not None:
             self.renderer.close()
@@ -162,7 +159,6 @@ class VideoWidget(NSView):
         self.window().delegate().mouseDraggedView_(event)
 
     def handle_frame(self, frame):
-        self.frames += 1
         self._frame = frame
         self.setNeedsDisplay_(True)
 
