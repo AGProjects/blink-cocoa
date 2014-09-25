@@ -114,7 +114,7 @@ def loadRecordingImages():
         RecordingImages.append(NSImage.imageNamed_("recording3"))
 
 class VideoWidget(NSView):
-    _data = None
+    _frame = None
     renderer = None
     aspect_ratio = None
     frames = 0
@@ -161,28 +161,27 @@ class VideoWidget(NSView):
     def mouseDragged_(self, event):
         self.window().delegate().mouseDraggedView_(event)
 
-    def handle_frame(self, frame, width, height):
+    def handle_frame(self, frame):
         self.frames += 1
-        self._data = (frame, width, height)
-        if self.aspect_ratio is None:
-            self.aspect_ratio = floor((float(width) / height) * 100)/100
-            self.window().delegate().init_aspect_ratio(width, height)
-
+        self._frame = frame
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
         if self.window().delegate().full_screen_in_progress:
             return
-        
-        data = self._data
-        if data is None:
+
+        frame = self._frame
+        if frame is None:
             return
 
-        frame, width, height = data
-        data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame, len(frame), False)
+        if self.aspect_ratio is None:
+            self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
+            self.window().delegate().init_aspect_ratio(*frame.size)
+
+        data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame.data, len(frame.data), False)
         image = CIImage.imageWithBitmapData_bytesPerRow_size_format_colorSpace_(data,
-                                                                                width * 4,
-                                                                                (width, height),
+                                                                                frame.width * 4,
+                                                                                frame.size,
                                                                                 kCIFormatARGB8,
                                                                                 kCGColorSpaceGenericRGB)
 
