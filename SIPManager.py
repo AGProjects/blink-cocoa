@@ -502,6 +502,8 @@ class SIPManager(object):
         except ImportError:
             pass
         else:
+            if settings.video.max_bitrate is not None and settings.video.max_bitrate > 10000:
+                settings.video.max_bitrate = 4.0
             codecs_print = []
             for codec in settings.rtp.video_codec_list:
                 codecs_print.append(beautify_video_codec(codec))
