@@ -463,17 +463,27 @@ class VideoWindowController(NSWindowController):
             self.sessionController.end()
 
     def mouseDown_(self, event):
+        if self.streamController.ended:
+            return
         self.initialLocation = event.locationInWindow()
 
     def mouseUp_(self, event):
+        if self.streamController.ended:
+            return
         if self.myVideoView and self.myVideoView.is_dragging:
             self.myVideoView.goToFinalOrigin()
 
     def mouseDragged_(self, event):
+        if self.streamController.ended:
+            return
+
         if self.myVideoView and self.myVideoView.is_dragging:
             self.myVideoView.mouseDragged_(event)
 
     def mouseDraggedView_(self, event):
+        if self.streamController.ended:
+            return
+
         if not self.initialLocation:
             return
 
@@ -527,11 +537,15 @@ class VideoWindowController(NSWindowController):
                     self.sessionController.removeVideoFromSession()
 
     def mouseEntered_(self, event):
+        if self.streamController.ended:
+            return
         self.mouse_in_window = True
         self.stopMouseOutTimer()
         self.showButtons()
 
     def mouseExited_(self, event):
+        if self.streamController.ended:
+            return
         if self.full_screen or self.full_screen_in_progress:
             return
         self.mouse_in_window = False
