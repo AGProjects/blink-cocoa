@@ -346,6 +346,9 @@ class ContactWindowController(NSWindowController):
     created_accounts = set()
     purge_presence_timer = None
     last_video_device = None
+    last_audio_alert_device = None
+    last_audio_input_device = None
+    last_audio_output_device = None
     sleeping = False
     awake = True
 
@@ -1308,14 +1311,14 @@ class ContactWindowController(NSWindowController):
 
         settings = SIPSimpleSettings()
         self.last_video_device = settings.video.device
+        self.last_audio_input_device = settings.audio.input_device
+        self.last_audio_output_device = settings.audio.output_device
+        self.last_audio_alert_device = settings.audio.alert_device
         settings.video.device = None
+        settings.audio.alert_device = None
+        settings.audio.input_device = None
+        settings.audio.output_device = None
         settings.save()
-
-        for account in self.accounts:
-            account.register_state = 'ended'
-            account.register_failure_code = None
-            account.register_failure_reason = None
-        self.refreshAccountList()
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         if self.awake and not self.sleeping:
@@ -1330,13 +1333,18 @@ class ContactWindowController(NSWindowController):
             account.register_failure_reason = None
         self.refreshAccountList()
 
-        self.backend._app.engine.refresh_sound_devices()
+        settings = SIPSimpleSettings()
         self.backend._app.engine.refresh_video_devices()
-
         if self.last_video_device is not None:
-            settings = SIPSimpleSettings()
             settings.video.device = self.last_video_device
-            settings.save()
+        self.backend._app.engine.refresh_sound_devices()
+        if self.last_audio_input_device is not None:
+            settings.audio.input_device = self.last_audio_input_device
+        if self.last_audio_output_device is not None:
+            settings.audio.output_device = self.last_audio_output_device
+        if self.last_audio_alert_device is not None:
+            settings.audio.alert_device = self.last_audio_alert_device
+        settings.save()
 
     def _NH_NetworkConditionsDidChange(self, notification):
         if host.default_ip is not None:
