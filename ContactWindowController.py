@@ -345,6 +345,9 @@ class ContactWindowController(NSWindowController):
     last_status_per_device =  {}
     created_accounts = set()
     purge_presence_timer = None
+    last_video_device = None
+    sleeping = False
+    awake = True
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -1297,6 +1300,17 @@ class ContactWindowController(NSWindowController):
                 self.authFailPopupShown = False
 
     def _NH_SystemWillSleep(self, notification):
+        if self.sleeping and not self.awake:
+            return
+
+        self.sleeping = True
+        self.awake = False
+
+        settings = SIPSimpleSettings()
+        self.last_video_device = settings.video.device
+        settings.video.device = None
+        settings.save()
+
         for account in self.accounts:
             account.register_state = 'ended'
             account.register_failure_code = None
@@ -1304,11 +1318,25 @@ class ContactWindowController(NSWindowController):
         self.refreshAccountList()
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
+        if self.awake and not self.sleeping:
+            return
+        
+        self.awake = True
+        self.sleeping = False
+
         for account in self.accounts:
             account.register_state = 'ended'
             account.register_failure_code = None
             account.register_failure_reason = None
         self.refreshAccountList()
+
+        self.backend._app.engine.refresh_sound_devices()
+        self.backend._app.engine.refresh_video_devices()
+
+        if self.last_video_device is not None:
+            settings = SIPSimpleSettings()
+            settings.video.device = self.last_video_device
+            settings.save()
 
     def _NH_NetworkConditionsDidChange(self, notification):
         if host.default_ip is not None:
