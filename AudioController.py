@@ -1429,7 +1429,7 @@ class AudioController(MediaStream):
         pass
 
     @run_in_gui_thread
-    def _NH_MediaStreamDidEnd(self, sender, data):
+    def _NH_MediaStreamWillEnd(self, sender, data):
         self.transfer_in_progress = False
         self.ice_negotiation_status = None
         self.holdByLocal = False
@@ -1439,6 +1439,9 @@ class AudioController(MediaStream):
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
+
+    @run_in_gui_thread
+    def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Audio stream ended")
 
         if self.sessionController.endingBy:

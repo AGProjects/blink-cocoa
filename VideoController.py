@@ -297,7 +297,6 @@ class VideoController(MediaStream):
             self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
-        objc.super(VideoController, self)._NH_MediaStreamDidStart(sender, data)
         self.started = True
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
@@ -316,24 +315,26 @@ class VideoController(MediaStream):
 
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
         self.sessionController.log_info(u"Video call failed: %s" % data.reason)
+
         self.stopTimers()
+        self.videoWindowController.close()
         self.changeStatus(STREAM_FAILED, data.reason)
+
         self.ice_negotiation_status = None
         self.rtt_history = None
         self.loss_history = None
         self.jitter_history = None
         self.rx_speed_history = None
         self.tx_speed_history = None
-        self.videoWindowController.close()
 
     def _NH_MediaStreamDidFail(self, sender, data):
         pass
 
-    def _NH_MediaStreamDidEnd(self, sender, data):
-        objc.super(VideoController, self)._NH_MediaStreamDidEnd(sender, data)
-        self.videoRecorder.stop()
-
+    def _NH_MediaStreamWillEnd(self, sender, data):
         self.stopTimers()
+        self.videoRecorder.stop()
+        self.videoWindowController.close()
+
         self.ice_negotiation_status = None
         self.rtt_history = None
         self.loss_history = None
@@ -341,10 +342,10 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
+    def _NH_MediaStreamDidEnd(self, sender, data):
         if data.error is not None:
             self.sessionController.log_info(u"Video call failed: %s" % data.error)
             self.changeStatus(STREAM_FAILED, data.reason)
-            self.videoWindowController.close()
         elif self.started:
             self.sessionController.log_info(u"Video stream ended")
         else:
