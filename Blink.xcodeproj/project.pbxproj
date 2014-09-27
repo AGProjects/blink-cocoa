@@ -2837,9 +2837,6 @@
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
 		1F6009CD18F74D22005517FA /* mbFlipWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mbFlipWindow.h; sourceTree = "<group>"; };
 		1F6009CE18F74D22005517FA /* mbFlipWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mbFlipWindow.m; sourceTree = "<group>"; };
-		1F61668B19CDDD1400BA1963 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1F61668C19CDDD1700BA1963 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1F61668D19CDDD1900BA1963 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F64609018BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F64609118BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SMSSession.xib; sourceTree = "<group>"; };
 		1F64609218BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SMSView.xib; sourceTree = "<group>"; };
@@ -3101,6 +3098,9 @@
 		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
+		1FDB6EAE19D6D1F200015238 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1FDB6EAF19D6D1F400015238 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1FDB6EB019D6D1F600015238 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
@@ -6129,9 +6129,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B78A219AEAED300F854CB /* en */,
-				1F61668B19CDDD1400BA1963 /* ro */,
-				1F61668C19CDDD1700BA1963 /* es */,
-				1F61668D19CDDD1900BA1963 /* pt */,
+				1FDB6EAE19D6D1F200015238 /* ro */,
+				1FDB6EAF19D6D1F400015238 /* es */,
+				1FDB6EB019D6D1F600015238 /* pt */,
 			);
 			name = VideoLocalWindow.xib;
 			sourceTree = "<group>";
