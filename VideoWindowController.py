@@ -452,6 +452,9 @@ class VideoWindowController(NSWindowController):
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Always On Top", "Menu item"), "toogleAlwaysOnTop:", "")
         lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
+        menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
+        lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
 
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
