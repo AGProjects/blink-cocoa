@@ -832,6 +832,9 @@ class VideoWindowController(NSWindowController):
     @run_in_gui_thread
     def close(self):
         BlinkLogger().log_debug('Close %s' % self)
+        if self.closed:
+            return
+
         self.closed = True
         self.notification_center.discard_observer(self, sender=self.streamController.videoRecorder)
         self.notification_center.discard_observer(self, name='BlinkMuteChangedState')
