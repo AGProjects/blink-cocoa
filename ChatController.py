@@ -936,6 +936,19 @@ class ChatController(MediaStream):
                     else:
                         item.setToolTip_(NSLocalizedString("Add audio", "Tooltip"))
                     item.setImage_(NSImage.imageNamed_("audio"))
+            elif identifier == 'video':
+                if self.sessionController.hasStreamOfType("video"):
+                    video_stream = self.sessionController.streamHandlerOfType("video")
+                    if video_stream.status == STREAM_CONNECTED:
+                        item.setToolTip_(NSLocalizedString("Remove video", "Tooltip"))
+                    elif video_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
+                        item.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
+                else:
+                    if self.sessionController.state == STATE_IDLE:
+                        item.setToolTip_(NSLocalizedString("Start Video Call", "Tooltip"))
+                    else:
+                        item.setToolTip_(NSLocalizedString("Add video", "Tooltip"))
+
             elif identifier == 'hold':
                 if self.sessionController.hasStreamOfType("audio"):
                     if audio_stream.status == STREAM_CONNECTED:
