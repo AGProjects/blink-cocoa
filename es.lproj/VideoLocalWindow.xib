@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1080" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -28,32 +28,17 @@
                         <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view focusRingType="none" id="4uN-8Q-4ha" customClass="RoundedCornersView">
-                                <rect key="frame" x="237" y="11" width="56" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <subviews>
-                                    <button id="0Pc-NT-YOd">
-                                        <rect key="frame" x="15" y="7" width="31" height="27"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="vhr-kY-q3G">
-                                            <behavior key="behavior" lightByContents="YES"/>
-                                            <font key="font" metaFont="system"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="performClose:" target="QvC-M9-y7g" id="ouW-vW-PqQ"/>
-                                        </connections>
-                                    </button>
-                                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="yyG-Od-a9n">
-                                        <rect key="frame" x="164" y="-14" width="52" height="17"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" alignment="center" title="Info" id="Mfk-xO-yeP">
-                                            <font key="font" metaFont="system" size="10"/>
-                                            <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                        </textFieldCell>
-                                    </textField>
-                                </subviews>
-                            </view>
+                            <button id="0Pc-NT-YOd">
+                                <rect key="frame" x="250" y="20" width="31" height="27"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="vhr-kY-q3G">
+                                    <behavior key="behavior" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="performClose:" target="QvC-M9-y7g" id="ouW-vW-PqQ"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </customView>
                     <customView id="FtU-7j-auf" customClass="RoundedCornersView">

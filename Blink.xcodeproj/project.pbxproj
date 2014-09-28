@@ -3007,6 +3007,9 @@
 		1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-darkgray.png"; path = "icons/unlocked-darkgray.png"; sourceTree = "<group>"; };
 		1F946C9B17CB60D50056ADB4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/OTRSettings.xib; sourceTree = "<group>"; };
 		1F960C4618E0F83D00060690 /* pause-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "pause-white.png"; path = "icons/pause-white.png"; sourceTree = SOURCE_ROOT; };
+		1F9A17A519D868C100520E80 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1F9A17A619D868C300520E80 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
+		1F9A17A719D868C500520E80 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
@@ -3098,9 +3101,6 @@
 		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
-		1FDB6EAE19D6D1F200015238 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FDB6EAF19D6D1F400015238 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FDB6EB019D6D1F600015238 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
@@ -6129,9 +6129,9 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F4B78A219AEAED300F854CB /* en */,
-				1FDB6EAE19D6D1F200015238 /* ro */,
-				1FDB6EAF19D6D1F400015238 /* es */,
-				1FDB6EB019D6D1F600015238 /* pt */,
+				1F9A17A519D868C100520E80 /* ro */,
+				1F9A17A619D868C300520E80 /* es */,
+				1F9A17A719D868C500520E80 /* pt */,
 			);
 			name = VideoLocalWindow.xib;
 			sourceTree = "<group>";
