@@ -705,7 +705,7 @@ class VideoWindowController(NSWindowController):
 
         scaledSize = frameSize
         scaledSize.width = frameSize.width
-        scaledSize.height = scaledSize.width / self.initial_aspect_ratio or self.aspect_ratio or 1.77
+        scaledSize.height = scaledSize.width / self.aspect_ratio or 1.77
         if self.myVideoView:
             self.myVideoView.snapToCorner()
         return scaledSize
