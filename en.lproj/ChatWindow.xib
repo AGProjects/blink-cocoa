@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
+        <deployment defaultVersion="1080" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
@@ -31,6 +31,7 @@
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="72" id="85"/>
                 <outlet property="videoButton" destination="MK1-En-CVo" id="U1Z-Be-b0h"/>
+                <outlet property="videoView" destination="Tr7-Qb-Y9k" id="a2s-Cb-ZEj"/>
                 <outlet property="window" destination="1" id="25"/>
             </connections>
         </customObject>
@@ -299,19 +300,19 @@
                     </textFieldCell>
                     <accessibility description="Audio Session Status"/>
                 </textField>
-                <splitView autosaveName="chat_drawer_view" id="348">
+                <splitView autosaveName="chat_drawer_view" dividerStyle="thin" id="348">
                     <rect key="frame" x="0.0" y="30" width="260" height="570"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="445"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="385"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="17" width="258" height="427"/>
+                                <rect key="frame" x="1" y="17" width="258" height="367"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="427"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="367"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -355,14 +356,14 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="454" width="260" height="116"/>
+                            <rect key="frame" x="0.0" y="386" width="260" height="101"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="17" width="258" height="98"/>
+                                <rect key="frame" x="1" y="17" width="258" height="83"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="98"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="83"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -405,8 +406,19 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
+                        <customView id="U2L-3u-ZBI" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="488" width="260" height="82"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <subviews>
+                                <customView id="Tr7-Qb-Y9k" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="260" height="95.5"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                </customView>
+                            </subviews>
+                        </customView>
                     </subviews>
                     <holdingPriorities>
+                        <real value="250"/>
                         <real value="250"/>
                         <real value="250"/>
                     </holdingPriorities>
@@ -577,6 +589,13 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
+                <menuItem title="Detach Video" tag="327" enabled="NO" indentationLevel="1" id="MEi-C1-IuT">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="PtQ-J8-WWQ"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="56r-Xj-CTr"/>
                 <menuItem title="Show Session Information" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
@@ -664,7 +683,6 @@
                 <outlet property="delegate" destination="-2" id="533"/>
             </connections>
         </menu>
-        <menuItem isSeparatorItem="YES" id="uS8-Jc-8ac"/>
     </objects>
     <resources>
         <image name="NSActionTemplate" width="14" height="14"/>

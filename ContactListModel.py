@@ -1400,7 +1400,10 @@ class BlinkPresenceContact(BlinkContact):
     del _get_preferred_media, _set_preferred_media
 
     def _get_default_uri(self):
-        return self.contact.uris.default if self.contact is not None else None
+        try:
+            return self.contact.uris.default if self.contact is not None else None
+        except AttributeError:
+            return None
 
     def _set_default_uri(self, value):
         self.contact.uris.default = value

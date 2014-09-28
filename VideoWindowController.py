@@ -144,13 +144,16 @@ class VideoWidget(NSView):
         objc.super(VideoWidget, self).dealloc()
 
     def mouseDown_(self, event):
-        self.window().delegate().mouseDown_(event)
+        if self.window().delegate() and hasattr(self.window().delegate(), "mouseDown_"):
+            self.window().delegate().mouseDown_(event)
 
     def rightMouseDown_(self, event):
-        self.window().delegate().rightMouseDown_(event)
+        if self.window().delegate() and hasattr(self.window().delegate(), "rightMouseDown_"):
+            self.window().delegate().rightMouseDown_(event)
 
     def keyDown_(self, event):
-        self.window().delegate().keyDown_(event)
+        if self.window().delegate() and hasattr(self.window().delegate(), "keyDown_"):
+            self.window().delegate().keyDown_(event)
 
     def mouseUp_(self, event):
         pass
@@ -161,14 +164,16 @@ class VideoWidget(NSView):
     def handle_frame(self, frame):
         if self.aspect_ratio is None:
             self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
-            self.window().delegate().init_aspect_ratio(*frame.size)
+            if hasattr(self.window().delegate(), "init_aspect_ratio"):
+                self.window().delegate().init_aspect_ratio(*frame.size)
 
         self._frame = frame
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
-        if self.window().delegate().full_screen_in_progress:
-            return
+        if hasattr(self.window().delegate(), "full_screen_in_progress"):
+            if self.window().delegate().full_screen_in_progress:
+                return
 
         frame = self._frame
         if frame is None:
@@ -415,7 +420,6 @@ class VideoWindowController(NSWindowController):
         if SIPSimpleSettings().video.keep_window_on_top:
             self.toogleAlwaysOnTop()
 
-        self.videoView.setProducer(self.streamController.stream.producer)
         self.startIdleTimer()
 
     def showTitleBar(self):
@@ -648,16 +652,23 @@ class VideoWindowController(NSWindowController):
 
         BlinkLogger().log_debug("Show %s" % self)
         self.init_window()
+
+        if self.sessionController.video_consumer == "standalone":
+            self.videoView.setProducer(self.streamController.stream.producer)
+
         self.updateAspectRatio()
         self.showButtons()
 
-        if self.localVideoWindow and not self.flipped:
-            self.localVideoWindow.window().orderOut_(None)
-            self.window().orderOut_(None)
-            self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
-            self.flipped = True
+        if self.sessionController.video_consumer == "standalone":
+            if self.localVideoWindow and not self.flipped:
+                self.localVideoWindow.window().orderOut_(None)
+                self.window().orderOut_(None)
+                self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
+                self.flipped = True
+            else:
+                self.window().makeKeyAndOrderFront_(self)
         else:
-            self.window().makeKeyAndOrderFront_(self)
+            self.flipped = True
 
         userdef = NSUserDefaults.standardUserDefaults()
         self.must_show_my_video = userdef.boolForKey_("ShowMyVideo")
@@ -966,6 +977,9 @@ class VideoWindowController(NSWindowController):
             return
         if self.always_on_top:
             self.toogleAlwaysOnTop()
+        self.sessionController.video_consumer = "chat"
+        self.videoView.setProducer(None)
+        self.window().orderOut_(None)
         chat_stream = self.sessionController.streamHandlerOfType("chat")
         if chat_stream:
             if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
@@ -976,6 +990,8 @@ class VideoWindowController(NSWindowController):
         if self.full_screen:
             NSApp.delegate().contactsWindowController.showChatWindow_(None)
             self.goToWindowMode(NSApp.delegate().contactsWindowController.chatWindowController.window())
+
+        NSApp.delegate().contactsWindowController.chatWindowController.drawer.open()
 
     @objc.IBAction
     def userClickedInfoButton_(self, sender):

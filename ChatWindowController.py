@@ -110,6 +110,7 @@ CONFERENCE_ROOM_MENU_GOTO_CONFERENCE_WEBSITE = 313
 CONFERENCE_ROOM_MENU_START_AUDIO_SESSION = 320
 CONFERENCE_ROOM_MENU_START_CHAT_SESSION = 321
 CONFERENCE_ROOM_MENU_START_VIDEO_SESSION = 322
+CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION = 327
 CONFERENCE_ROOM_MENU_SEND_FILES = 323
 CONFERENCE_ROOM_MENU_VIEW_SCREEN = 324
 CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO = 400
@@ -153,6 +154,7 @@ class ChatWindowController(NSWindowController):
     audioStatus = objc.IBOutlet()
     micLevelIndicator = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
+    videoView = objc.IBOutlet()
 
     conferenceFilesView = objc.IBOutlet()
     participantsView = objc.IBOutlet()
@@ -455,6 +457,9 @@ class ChatWindowController(NSWindowController):
 
         if session and session.streamHandlerOfType("chat"):
             self.window().makeFirstResponder_(session.streamHandlerOfType("chat").chatViewController.inputText)
+
+    def init_aspect_ratio(self, width, height):
+        self.refresh_drawer_counter += 1
 
     @allocate_autorelease_pool
     def handle_notification(self, notification):
@@ -798,7 +803,7 @@ class ChatWindowController(NSWindowController):
 
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
-            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_VIDEO_SESSION).setEnabled_(False)
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_VIDEO_SESSION).setEnabled_(not session.hasStreamOfType("video"))
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_FILES).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_COPY_PARTICIPANT_TO_CLIPBOARD).setEnabled_(True)
 
@@ -818,12 +823,17 @@ class ChatWindowController(NSWindowController):
         if session:
             chat_stream = session.streamHandlerOfType("chat")
             if chat_stream and chat_stream.drawerSplitterPosition is not None:
-                self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
-                self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
+                self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
+                self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['middleFrame'])
+                self.videoView.superview().setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
             else:
                 frame = self.conferenceFilesView.frame()
                 frame.size.height = 0
                 self.conferenceFilesView.setFrame_(frame)
+
+                frame = self.videoView.superview().frame()
+                frame.size.height = 0
+                self.videoView.superview().setFrame_(frame)
 
     def drawerSplitViewDidResize_(self, notification):
         if notification.userInfo() is not None:
@@ -831,7 +841,63 @@ class ChatWindowController(NSWindowController):
             if session:
                 chat_stream = session.streamHandlerOfType("chat")
                 if chat_stream:
-                    chat_stream.drawerSplitterPosition = {'topFrame': self.conferenceFilesView.frame(), 'bottomFrame': self.participantsView.frame() }
+
+                    video_stream = session.streamHandlerOfType("chat")
+
+                    parent_frame = self.participantsView.superview().frame()
+                    top_frame = self.participantsView.frame()
+                    middle_frame = self.conferenceFilesView.frame()
+                    bottom_frame = self.videoView.superview().frame()
+
+                    must_resize = False
+
+                    if video_stream:
+                        if self.videoView.aspect_ratio is not None:
+                            new_height = bottom_frame.size.width / self.videoView.aspect_ratio
+                        else:
+                            new_height = bottom_frame.size.width / 1.77
+
+                        if new_height != bottom_frame.size.height:
+                            bottom_frame.size.height = new_height
+                            must_resize = True
+                            middle_frame.size.height = 170
+                    else:
+                        if bottom_frame.size.height > 0:
+                            must_resize = True
+                            bottom_frame.size.height = 0
+                            middle_frame.size.height = 170
+
+                        else:
+                            if bottom_frame.size.height != 0:
+                                bottom_frame.size.height = 0
+                                middle_frame.size.height = 170
+                                must_resize = True
+                            
+                    if top_frame.size.height < 100:
+                        middle_frame.size.height = 170
+                        must_resize = True
+                            
+                    if middle_frame.size.height < 50:
+                        middle_frame.size.height = 0
+                        must_resize = True
+
+                    if not session.conference_shared_files:
+                        middle_frame.size.height = 0
+                        must_resize = True
+
+                    if not video_stream or session.video_consumer == "standalone":
+                        bottom_frame.size.height = 0
+                        must_resize = True
+
+                    top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
+                    print bottom_frame
+
+                    chat_stream.drawerSplitterPosition = { 'topFrame':    top_frame,
+                                                           'middleFrame': middle_frame,
+                                                           'bottomFrame': bottom_frame
+                                                           }
+                    if must_resize:
+                        self.resizeDrawerSplitter()
 
     def sendPrivateMessage(self):
         session = self.selectedSessionController()
@@ -993,6 +1059,9 @@ class ChatWindowController(NSWindowController):
 
                 # print the content of the web view
                 print_view.mainFrame().frameView().documentView().print_(self)
+
+    def rightMouseDown_(self, event):
+        return
 
     @objc.IBAction
     def userClickedActionsButton_(self, sender):
@@ -1436,7 +1505,17 @@ class ChatWindowController(NSWindowController):
             elif tag == CONFERENCE_ROOM_MENU_START_AUDIO_SESSION:
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="audio", local_uri=session.account.id)
             elif tag == CONFERENCE_ROOM_MENU_START_VIDEO_SESSION:
-                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="video", local_uri=session.account.id)
+                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type=("video", "audio"), local_uri=session.account.id)
+            elif tag == CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION:
+                session.video_consumer = "standalone"
+                chat_stream = session.streamHandlerOfType("chat")
+                if chat_stream:
+                    chat_stream.dettachVideo()
+                video_stream = session.streamHandlerOfType("video")
+                if video_stream:
+                    video_stream.videoWindowController.show()
+                self.refresh_drawer_counter += 1
+
             elif tag == CONFERENCE_ROOM_MENU_START_CHAT_SESSION:
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="chat", local_uri=session.account.id)
             elif tag == CONFERENCE_ROOM_MENU_VIEW_SCREEN:
@@ -1568,12 +1647,18 @@ class ChatWindowController(NSWindowController):
             self.refresh_drawer_counter = 0
             self.refreshDrawerIfNecessary()
 
+
     @run_in_gui_thread
     def refreshDrawer(self):
         self.refresh_drawer_counter += 1
 
     def refreshDrawerIfNecessary(self):
         session = self.selectedSessionController()
+        video_stream = None
+        audio_stream = None
+
+        if session:
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION).setEnabled_(session.hasStreamOfType("video") and session.video_consumer == "chat")
 
         participants, self.participants = self.participants, []
         for item in set(participants).difference(session.invited_participants if session else []):
@@ -1589,7 +1674,6 @@ class ChatWindowController(NSWindowController):
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                 self.audioStatus.setHidden_(False)
                 self.audioStatus.setStringValue_(NSLocalizedString("Connecting...", "Audio status label"))
-
 
             elif state == STATE_CONNECTED:
                 self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
@@ -1645,6 +1729,9 @@ class ChatWindowController(NSWindowController):
 
             if session.hasStreamOfType("audio"):
                 audio_stream = session.streamHandlerOfType("audio")
+
+            if session.hasStreamOfType("video"):
+                video_stream = session.streamHandlerOfType("video")
 
             if session.conference_info is None or (session.conference_info is not None and not session.conference_info.users):
                 active_media = []
@@ -1813,20 +1900,38 @@ class ChatWindowController(NSWindowController):
                 item = ConferenceFile(file)
                 self.conference_shared_files.append(item)
 
-            if session.conference_shared_files:
-                column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
-                if chat_stream and chat_stream.drawerSplitterPosition is None:
-                    top_frame = self.conferenceFilesView.frame()
-                    top_frame.size.height = 130
-                    bottom_frame = self.participantsView.frame()
-                    bottom_frame.size.height = bottom_frame.size.height - 130
-                    chat_stream.drawerSplitterPosition = {'topFrame': top_frame, 'bottomFrame': bottom_frame}
-            else:
-                column_header_title = NSLocalizedString("Remote Conference Files", "Label")
-                if chat_stream:
-                    chat_stream.drawerSplitterPosition = None
+            chat_stream.drawerSplitterPosition = None
+            if session.conference_shared_files or video_stream:
+                top_frame = self.participantsView.superview().frame()
+                middle_frame = self.conferenceFilesView.frame()
+                bottom_frame = self.videoView.superview().frame()
 
-            self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
+                middle_frame.size.height = 0
+                bottom_frame.size.height = 0
+
+                if session.conference_shared_files:
+                    column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
+                    if chat_stream and chat_stream.drawerSplitterPosition is None:
+                        middle_frame.size.height = 130
+                        top_frame.size.height -= middle_frame.size.height
+                else:
+                    column_header_title = NSLocalizedString("Remote Conference Files", "Label")
+
+                self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
+
+                if video_stream:
+                    if session.video_consumer == "chat":
+                        if self.videoView.aspect_ratio is not None:
+                            bottom_frame.size.height = bottom_frame.size.width / self.videoView.aspect_ratio
+                        else:
+                            bottom_frame.size.height = bottom_frame.size.width / 1.77
+                            top_frame.size.height -= bottom_frame.size.height
+                    else:
+                        bottom_frame.size.height = 0
+                chat_stream.drawerSplitterPosition = {'topFrame'    : top_frame,
+                                                      'middleFrame' : middle_frame,
+                                                      'bottomFrame'  : bottom_frame
+                                                     }
 
             self.resizeDrawerSplitter()
 
@@ -1860,11 +1965,16 @@ class ChatWindowController(NSWindowController):
             if chat_stream:
                 chat_stream.updateDatabaseRecordingButton()
 
+            if session.hasStreamOfType("video"):
+                if session.video_consumer == "chat":
+                    chat_stream.attachVideo()
+
             self.refreshDrawer()
-            if session.remote_focus:
+            if session.remote_focus or session.hasStreamOfType("video"):
                 self.drawer.open()
             else:
                 self.drawer.close()
+
             if session.mustCloseAudioDrawer:
                 NSApp.delegate().contactsWindowController.drawer.close()
                 self.participantsTableView.deselectAll_(self)

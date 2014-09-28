@@ -184,7 +184,14 @@ class VideoController(MediaStream):
         self.videoWindowController.goToFullScreen()
 
     def startOutgoing(self, is_update):
-        self.videoWindowController.initLocalVideoWindow()
+        if self.sessionController.video_consumer == "standalone":
+            self.videoWindowController.initLocalVideoWindow()
+        else:
+            if self.sessionController.video_consumer == "chat":
+                chat_stream = self.sessionController.streamHandlerOfType("chat")
+                if chat_stream:
+                    chat_stream.attachVideo()
+        
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -222,6 +229,11 @@ class VideoController(MediaStream):
 
         self.sessionController.log_debug(u"End %s" % self)
         self.ended = True
+
+        if self.sessionController.video_consumer == "chat":
+            chat_stream = self.sessionController.streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.dettachVideo()
 
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         status = self.status
@@ -302,9 +314,13 @@ class VideoController(MediaStream):
         codec = beautify_video_codec(self.stream.codec)
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
 
-        self.videoWindowController.show()
-
         self.changeStatus(STREAM_CONNECTED)
+
+        self.videoWindowController.show()
+        if self.sessionController.video_consumer == "chat":
+            chat_stream = self.sessionController.streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.attachVideo()
 
         if self.sessionController.hasStreamOfType("chat") and self.videoWindowController.always_on_top:
             self.videoWindowController.toogleAlwaysOnTop()
@@ -375,6 +391,7 @@ class VideoController(MediaStream):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
+
         skip_disconnect_panel = False
         if host is None or host.default_ip is None:
             reason = NSLocalizedString("No IP Address", "Label")

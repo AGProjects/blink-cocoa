@@ -82,6 +82,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import ChatStream, ChatStreamError
 from sipsimple.streams.applications.chat import CPIMIdentity
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.application import SIPApplication
 from sipsimple.util import ISOTimestamp
 
 import ChatWindowController
@@ -192,6 +193,7 @@ class ChatController(MediaStream):
     chatOtrSmpWindow = None
     disable_chat_history = False
     remote_party_history = True
+    video_attached = False
 
     @classmethod
     def createStream(self):
@@ -377,6 +379,21 @@ class ChatController(MediaStream):
     @property
     def chatWindowController(self):
         return NSApp.delegate().contactsWindowController.chatWindowController
+
+    def attachVideo(self):
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream:
+            if self.chatWindowController.selectedSessionController() == self.sessionController:
+                if video_stream.status == STREAM_CONNECTED:
+                    self.chatWindowController.videoView.setProducer(video_stream.stream.producer)
+                else:
+                    self.chatWindowController.videoView.setProducer(SIPApplication.video_device.producer)
+                self.chatWindowController.drawer.open()
+
+    def dettachVideo(self):
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream and self.chatWindowController.selectedSessionController() == self.sessionController:
+            self.chatWindowController.videoView.setProducer(None)
 
     def awakeFromNib(self):
         # setup smiley popup
@@ -1120,6 +1137,8 @@ class ChatController(MediaStream):
                     # The button will be enabled again after operation is finished
                     sender.setEnabled_(False)
                 else:
+                    self.sessionController.video_consumer = "chat"
+                    self.chatWindowController.drawer.open()
                     if self.sessionController.state == STATE_IDLE:
                         self.notification_center.add_observer(self, sender=self.sessionController)
                         self.sessionController.startCompositeSessionWithStreamsOfTypes(("video", "audio", "chat"))
@@ -1701,6 +1720,8 @@ class ChatController(MediaStream):
     # 4. User clicks on disconnect button: endStream -> reset
 
     def closeTab(self):
+        self.sessionController.video_consumer = "standalone"
+
         self.endStream(True)
         if self.outgoing_message_handler:
             self.outgoing_message_handler.setDisconnected()

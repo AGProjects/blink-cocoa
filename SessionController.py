@@ -952,6 +952,7 @@ class SessionController(NSObject):
     screensharing_urls = {}
     cancelled_during_dns_lookup = False
     retries = 0
+    video_consumer = 'standalone'
 
     @property
     def sessionControllersManager(self):
