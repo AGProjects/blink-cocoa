@@ -109,6 +109,7 @@ from sipsimple.util import ISOTimestamp
 from sipsimple.threading import call_in_thread, run_in_thread, run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
+from twisted.internet import reactor
 from zope.interface import implements
 
 from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
@@ -1322,7 +1323,8 @@ class ContactWindowController(NSWindowController):
 
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         if self.awake and not self.sleeping:
-            return
+            pass # seems like this is called multiple times but the last one is the moment when the system is really stable
+            #return
         
         self.awake = True
         self.sleeping = False
@@ -1332,12 +1334,17 @@ class ContactWindowController(NSWindowController):
             account.register_failure_code = None
             account.register_failure_reason = None
         self.refreshAccountList()
-
-        settings = SIPSimpleSettings()
+        
         self.backend._app.engine.refresh_video_devices()
+        self.backend._app.engine.refresh_sound_devices()
+
+        # wait for system to stabilize
+        reactor.callLater(5, self.refresh_devices)
+
+    def refresh_devices(self):
+        settings = SIPSimpleSettings()
         if self.last_video_device is not None:
             settings.video.device = self.last_video_device
-        self.backend._app.engine.refresh_sound_devices()
         if self.last_audio_input_device is not None:
             settings.audio.input_device = self.last_audio_input_device
         if self.last_audio_output_device is not None:
@@ -5087,7 +5094,7 @@ class ContactWindowController(NSWindowController):
                 value = self.backend._app.video_device.real_name
 
             if not self.backend._app.engine.video_devices:
-                BlinkLogger().log_error('No video device available. Please connect a camera.')
+                BlinkLogger().log_debug('No video device available. Please connect a camera.')
                 return
 
             i = 1
