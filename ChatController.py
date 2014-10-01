@@ -381,19 +381,17 @@ class ChatController(MediaStream):
         return NSApp.delegate().contactsWindowController.chatWindowController
 
     def attachVideo(self):
-        video_stream = self.sessionController.streamHandlerOfType("video")
-        if video_stream:
-            if self.chatWindowController.selectedSessionController() == self.sessionController:
+        if self.chatWindowController.selectedSessionController() == self.sessionController:
+            video_stream = self.sessionController.streamHandlerOfType("video")
+            if video_stream:
                 if video_stream.status == STREAM_CONNECTED:
-                    self.chatWindowController.videoView.setProducer(video_stream.stream.producer)
+                    self.chatWindowController.setVideoProducer(video_stream.stream.producer)
                 else:
-                    self.chatWindowController.videoView.setProducer(SIPApplication.video_device.producer)
-                self.chatWindowController.drawer.open()
+                    self.chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
 
     def dettachVideo(self):
-        video_stream = self.sessionController.streamHandlerOfType("video")
-        if video_stream and self.chatWindowController.selectedSessionController() == self.sessionController:
-            self.chatWindowController.videoView.setProducer(None)
+        if self.chatWindowController.selectedSessionController() == self.sessionController:
+            self.chatWindowController.setVideoProducer(None)
 
     def awakeFromNib(self):
         # setup smiley popup

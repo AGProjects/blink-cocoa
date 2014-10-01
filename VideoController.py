@@ -210,6 +210,11 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
+        if self.sessionController.video_consumer == "chat":
+            chat_stream = self.sessionController.streamHandlerOfType("chat")
+            if chat_stream:
+                chat_stream.dettachVideo()
+
         self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         self.videoWindowController.release()
         self.videoWindowController = None
@@ -391,7 +396,6 @@ class VideoController(MediaStream):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
-
         skip_disconnect_panel = False
         if host is None or host.default_ip is None:
             reason = NSLocalizedString("No IP Address", "Label")

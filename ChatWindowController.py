@@ -387,6 +387,14 @@ class ChatWindowController(NSWindowController):
             return self.sessions[activeTab.identifier()]
         return None
 
+    def setVideoProducer(self, producer=None):
+        self.videoView.setProducer(producer)
+        self.refresh_drawer_counter += 1
+        if producer is not None:
+            self.drawer.open()
+        else:
+            self.drawer.close()
+
     def updateTitle(self):
         title = self.getConferenceTitle()
         icon = None
@@ -890,7 +898,6 @@ class ChatWindowController(NSWindowController):
                         must_resize = True
 
                     top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
-                    print bottom_frame
 
                     chat_stream.drawerSplitterPosition = { 'topFrame':    top_frame,
                                                            'middleFrame': middle_frame,
@@ -1901,14 +1908,13 @@ class ChatWindowController(NSWindowController):
                 self.conference_shared_files.append(item)
 
             chat_stream.drawerSplitterPosition = None
+            top_frame = self.participantsView.superview().frame()
+            middle_frame = self.conferenceFilesView.frame()
+            bottom_frame = self.videoView.superview().frame()
+            middle_frame.size.height = 0
+            bottom_frame.size.height = 0
+
             if session.conference_shared_files or video_stream:
-                top_frame = self.participantsView.superview().frame()
-                middle_frame = self.conferenceFilesView.frame()
-                bottom_frame = self.videoView.superview().frame()
-
-                middle_frame.size.height = 0
-                bottom_frame.size.height = 0
-
                 if session.conference_shared_files:
                     column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
                     if chat_stream and chat_stream.drawerSplitterPosition is None:
@@ -1928,11 +1934,11 @@ class ChatWindowController(NSWindowController):
                             top_frame.size.height -= bottom_frame.size.height
                     else:
                         bottom_frame.size.height = 0
-                chat_stream.drawerSplitterPosition = {'topFrame'    : top_frame,
-                                                      'middleFrame' : middle_frame,
-                                                      'bottomFrame'  : bottom_frame
-                                                     }
-
+            
+            chat_stream.drawerSplitterPosition = {'topFrame'    : top_frame,
+                                                  'middleFrame' : middle_frame,
+                                                  'bottomFrame'  : bottom_frame
+                                                    }
             self.resizeDrawerSplitter()
 
         self.participantsTableView.reloadData()
