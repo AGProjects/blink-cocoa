@@ -420,6 +420,7 @@ class VideoController(MediaStream):
         if not skip_disconnect_panel:
             self.videoWindowController.showStatusLabel(reason)
         self.stopTimers()
+        self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionWillEnd(self, sender, data):
         self.videoWindowController.showStatusLabel()
