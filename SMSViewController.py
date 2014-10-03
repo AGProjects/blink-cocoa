@@ -789,7 +789,7 @@ class SMSViewController(NSObject):
 
         # Async DNS lookup
         if host is None or host.default_ip is None:
-            self.setRoutesFailed(NSLocalizedString("No IP Address", "Label"))
+            self.setRoutesFailed(NSLocalizedString("No Internet connection", "Label"))
             return
 
         if self.last_route is None:

@@ -73,6 +73,7 @@ from gnutls.errors import GNUTLSError
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
+from application.system import host
 from itertools import chain
 from zope.interface import implements
 
@@ -1554,8 +1555,11 @@ class ChatController(MediaStream):
                 self.last_failure_reason = reason
         if not self.mediastream_ended:
             if reason != 'Session Cancelled':
-                #message = "Connection failed: %s" % reason.title()
-                message = reason.title()
+                if host is None or host.default_ip is None:
+                    message = NSLocalizedString("No Internet connection", "Label")
+                else:
+                    message = reason.title()
+
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)

@@ -1521,8 +1521,8 @@ class SessionController(NSObject):
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
 
                     if host is None or host.default_ip is None:
-                        self.setRoutesFailed("No IP Address")
-                        self.changeSessionState(STATE_FAILED, NSLocalizedString("No IP Address", "Label"))
+                        self.setRoutesFailed("No Internet connection")
+                        self.changeSessionState(STATE_FAILED, NSLocalizedString("No Internet connection", "Label"))
                     else:
                         self.lookup_destination(self.target_uri)
 
@@ -1716,7 +1716,7 @@ class SessionController(NSObject):
     def _NH_DNSLookupDidFail(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
         if host is None or host.default_ip is None:
-            message = NSLocalizedString("No IP Address", "Label")
+            message = NSLocalizedString("No Internet connection", "Label")
         else:
             message = u"SIP DNS lookup for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)

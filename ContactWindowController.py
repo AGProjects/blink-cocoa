@@ -579,7 +579,7 @@ class ContactWindowController(NSWindowController):
             if account_info.subscribe_presence_timestamp is None:
                 continue
 
-            if account_info.register_failure_reason != NSLocalizedString("No IP Address", "Label"):
+            if account_info.register_failure_reason != NSLocalizedString("No Internet connection", "Label"):
                 delta = time.time() - account_info.subscribe_presence_timestamp
                 if delta < 90:
                     continue
@@ -1280,7 +1280,7 @@ class ContactWindowController(NSWindowController):
         self.accounts[position].register_state = 'failed'
         if self.accounts[position].register_failure_reason is None:
             if host is None or host.default_ip is None:
-                self.accounts[position].register_failure_reason = NSLocalizedString("No IP Address", "Label")
+                self.accounts[position].register_failure_reason = NSLocalizedString("No Internet connection", "Label")
             elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
                     self.accounts[position].register_failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
@@ -1356,7 +1356,7 @@ class ContactWindowController(NSWindowController):
     def _NH_NetworkConditionsDidChange(self, notification):
         if host.default_ip is not None:
             for account in self.accounts:
-                if account.register_failure_reason == NSLocalizedString("No IP Address", "Label"):
+                if account.register_failure_reason == NSLocalizedString("No Internet connection", "Label"):
                     account.register_failure_reason = None
             self.refreshAccountList()
 

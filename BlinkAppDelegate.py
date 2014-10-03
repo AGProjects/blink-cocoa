@@ -395,7 +395,7 @@ class BlinkAppDelegate(NSObject):
             account_info.register_state = 'failed'
 
             if host is None or host.default_ip is None:
-                account_info.register_failure_reason = NSLocalizedString("No IP Address", "Label")
+                account_info.register_failure_reason = NSLocalizedString("No Internet connection", "Label")
             else:
                 account_info.register_failure_reason = NSLocalizedString("Connection failed", "Label")
 

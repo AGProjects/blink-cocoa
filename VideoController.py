@@ -398,7 +398,7 @@ class VideoController(MediaStream):
     def _NH_BlinkSessionDidFail(self, sender, data):
         skip_disconnect_panel = False
         if host is None or host.default_ip is None:
-            reason = NSLocalizedString("No IP Address", "Label")
+            reason = NSLocalizedString("No Internet connection", "Label")
         else:
             reason = "%s (%s)" % (data.failure_reason.title(), data.code)
             if data.code is not None:
