@@ -195,6 +195,7 @@ class ChatController(MediaStream):
     disable_chat_history = False
     remote_party_history = True
     video_attached = False
+    media_started = False
 
     @classmethod
     def createStream(self):
@@ -203,6 +204,7 @@ class ChatController(MediaStream):
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
+        self.media_started = False
         self.stream = BlinkChatStream()
         self.databaseLoggingButton.setHidden_(True)
         self.databaseLoggingButton.setState_(NSOffState)
@@ -1553,6 +1555,7 @@ class ChatController(MediaStream):
         if reason != 'Session Cancelled':
             if self.last_failure_reason != reason:
                 self.last_failure_reason = reason
+
         if not self.mediastream_ended:
             if reason != 'Session Cancelled':
                 if host is None or host.default_ip is None:
@@ -1595,6 +1598,7 @@ class ChatController(MediaStream):
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.media_started = True
         if self.stream is None or self.stream.msrp is None: # stream may have ended in the mean time
             return
         self.changeStatus(STREAM_CONNECTED)
@@ -1645,7 +1649,8 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_FAILED, data.error)
         else:
             t = self.sessionController.getTitleShort()
-            self.showSystemMessage(NSLocalizedString("%s left the conversation", "Label") % t, ISOTimestamp.now())
+            msg = NSLocalizedString("%s left the conversation", "Label") if self.media_started else NSLocalizedString("Unreachable", "Contact detail")
+            self.showSystemMessage(msg % t, ISOTimestamp.now())
             self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
             self.sessionController.log_info(u"Chat session ended")
 
