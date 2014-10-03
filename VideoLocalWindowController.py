@@ -69,6 +69,7 @@ class VideoLocalWindowController(NSWindowController):
     titleBarView = None
     videoView = objc.IBOutlet()
     disconnectLabel = objc.IBOutlet()
+    cancelButton = objc.IBOutlet()
     aspect_ratio = None
     full_screen_in_progress = False
 
