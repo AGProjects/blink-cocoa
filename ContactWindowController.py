@@ -930,7 +930,8 @@ class ContactWindowController(NSWindowController):
         account_manager = AccountManager()
 
         for account_info in (account_info for account_info in self.accounts if account_info.account.enabled):
-            self.accountPopUp.addItemWithTitle_(account_info.account.gui.account_label or account_info.name)
+            label = account_info.account.gui.account_label or account_info.name
+            self.accountPopUp.addItemWithTitle_(label)
             item = self.accountPopUp.lastItem()
             item.setRepresentedObject_(account_info.account)
             if isinstance(account_info.account, BonjourAccount):
@@ -940,28 +941,28 @@ class ContactWindowController(NSWindowController):
                 item.setImage_(image)
                 if account_info.account.enabled and not account_info.register_state == 'succeeded':
                     if account_info.register_failure_reason:
-                        name = '%s (%s)' % (account_info.name, account_info.register_failure_reason)
+                        name = '%s (%s)' % (label, account_info.register_failure_reason)
                     else:
-                        name = account_info.name
+                        name = label
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
                     item.setAttributedTitle_(title)
             else:
                 if not account_info.register_state == 'succeeded':
                     if account_info.account.sip.register:
                         if account_info.register_failure_reason and account_info.register_failure_code:
-                            name = '%s (%s %s)' % (account_info.name, account_info.register_failure_code, account_info.register_failure_reason)
+                            name = '%s (%s %s)' % (label, account_info.register_failure_code, account_info.register_failure_reason)
                         elif account_info.register_failure_reason:
-                            name = '%s (%s)' % (account_info.name, account_info.register_failure_reason)
+                            name = '%s (%s)' % (label, account_info.register_failure_reason)
                         else:
-                            name = account_info.name
+                            name = label
                     else:
-                        name = account_info.name
+                        name = label
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
                     item.setAttributedTitle_(title)
                     item.setImage_(None)
                 else:
                     if account_info.account.audio.do_not_disturb:
-                        title = NSAttributedString.alloc().initWithString_attributes_(account_info.name, redAttrs)
+                        title = NSAttributedString.alloc().initWithString_attributes_(label, redAttrs)
                         item.setAttributedTitle_(title)
                         image = NSImage.imageNamed_("blocked")
                         image.setScalesWhenResized_(True)
@@ -1244,7 +1245,6 @@ class ContactWindowController(NSWindowController):
         except ValueError:
             return
         self.accounts[position].register_state = 'succeeded'
-        self.refreshAccountList()
 
         if notification.sender is not BonjourAccount():
             self.accounts[position].registrar
@@ -1253,6 +1253,8 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].register_expires = notification.data.expires
             self.accounts[position].register_timestamp = time.time()
             #print 'SIP account %s registration succeeded to %s for ' % (notification.sender.id, registrar)
+
+        self.refreshAccountList()
 
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
         if notification.data.code > 200:
