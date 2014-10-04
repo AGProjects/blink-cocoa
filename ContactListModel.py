@@ -353,13 +353,14 @@ class BlinkContact(NSObject):
     auto_answer = False
     default_preferred_media = 'audio'
     dealloc_timer = None
+    destroyed = False
+    contact = None
 
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
     def __init__(self, uri, uri_type=None, name=None, icon=None):
         self.id = None
-        self.contact = None
         self.uris = [ContactURI(uri=uri, type=format_uri_type(uri_type))]
         self.name = name or self.uri
         self.detail = self.uri
@@ -403,9 +404,13 @@ class BlinkContact(NSObject):
 
     def dealloc(self):
         self.avatar = None
+        self.contact = None
         objc.super(BlinkContact, self).dealloc()
 
     def destroy(self):
+        if self.destroyed:
+            return
+        self.destroyed = True
         # workaround to keep the object alive as cocoa still sends delegate outline view messages to deallocated contacts
         self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(2.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
@@ -792,7 +797,6 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().remove_observer(self, name="SystemDidWakeUpFromSleep")
         NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
 
-        self.contact = None
         if self.timer:
             self.timer.invalidate()
         self.timer = None
@@ -1576,7 +1580,6 @@ class SystemAddressBookBlinkContact(BlinkContact):
 
     def __init__(self, ab_contact):
         self.id = ab_contact.uniqueId()
-
         self.name = self.__class__.format_person_name(ab_contact)
         self.organization = ab_contact.valueForProperty_(AddressBook.kABOrganizationProperty)
         self.job_title = ab_contact.valueForProperty_(AddressBook.kABJobTitleProperty)
