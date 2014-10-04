@@ -10,8 +10,6 @@
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>Blink Lite</string>
-	<key>CFBundleIconFile</key>
-	<string>blink</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.agprojects.BlinkLite</string>
 	<key>CFBundleInfoDictionaryVersion</key>
