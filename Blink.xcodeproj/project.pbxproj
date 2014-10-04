@@ -6612,7 +6612,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-pro.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
+				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
@@ -6651,7 +6651,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-pro.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
+				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
@@ -6773,7 +6773,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-lite.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
+				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
@@ -6812,7 +6812,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = "Info-lite.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
+				INSTALL_PATH = /Applications;
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
