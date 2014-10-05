@@ -407,7 +407,7 @@ class SessionHistory(object):
         try:
             rows = list(self.db.queryAll(query))
         except Exception, e:
-            BlinkLogger().log_error(u"Error getting last sms convesations: %s" % e)
+            BlinkLogger().log_error(u"Error getting last sms conversations: %s" % e)
             return results
         for row in rows:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
