@@ -1739,10 +1739,10 @@ class ChatController(MediaStream):
 
         # remove middleware observers
         self.notification_center.discard_observer(self, sender=self.sessionController)
-        self.notification_center.remove_observer(self, name='BlinkFileTransferDidEnd')
-        self.notification_center.remove_observer(self, name='ChatReplicationJournalEntryReceived')
-        self.notification_center.remove_observer(self, name='CFGSettingsObjectDidChange')
-        self.notification_center.remove_observer(self, name='OTRPrivateKeyDidChange')
+        self.notification_center.discard_observer(self, name='BlinkFileTransferDidEnd')
+        self.notification_center.discard_observer(self, name='ChatReplicationJournalEntryReceived')
+        self.notification_center.discard_observer(self, name='CFGSettingsObjectDidChange')
+        self.notification_center.discard_observer(self, name='OTRPrivateKeyDidChange')
 
         # remove GUI observers
         NSNotificationCenter.defaultCenter().removeObserver_(self)
@@ -1771,7 +1771,6 @@ class ChatController(MediaStream):
     def startDeallocTimer(self):
         self.removeFromSession()
         self.otr_account = None
-        self.notification_center = None
 
         if not self.dealloc_timer:
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)
@@ -1813,6 +1812,7 @@ class ChatController(MediaStream):
         self.screensharing_handler = None
         self.history = None
         self.backend = None
+        self.notification_center = None
 
         self.sessionController.log_debug(u"Dealloc %s" % self)
         self.sessionController = None
