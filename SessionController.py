@@ -594,7 +594,10 @@ class SessionControllersManager(object):
 
         if type == 'video':
             try:
-                return bool(settings.video.device)
+                ret = bool(settings.video.device)
+                if not ret and not SIPManager()._app.engine.video_devices:
+                    BlinkLogger().log_info(u"No video devices are available or your camera software may be stuck, try 'sudo killall VDCAssistant' command in Terminal application")
+                return ret
             except AttributeError:
                 return False
 
