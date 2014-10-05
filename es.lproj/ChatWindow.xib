@@ -66,7 +66,7 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconAndLabel" sizeMode="small" id="72">
+            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar2" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectar" paletteLabel="Conectar" toolTip="Comenzar Chat" tag="100" image="start_chat" id="81">
                         <connections>
@@ -129,7 +129,7 @@
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="Other views" autoenablesItems="NO" id="569">
@@ -165,7 +165,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="10" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="Other views" autoenablesItems="NO" id="662">
@@ -305,7 +305,7 @@
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="450.5"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="451"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
                                 <rect key="frame" x="1" y="17" width="258" height="420"/>
@@ -356,7 +356,7 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="451.5" width="260" height="117.5"/>
+                            <rect key="frame" x="0.0" y="452" width="260" height="117"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
                                 <rect key="frame" x="1" y="17" width="258" height="96"/>
@@ -410,7 +410,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView id="g0V-GA-4Xc" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="260" height="13.5"/>
+                                    <rect key="frame" x="0.0" y="-7" width="520" height="13.5"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
