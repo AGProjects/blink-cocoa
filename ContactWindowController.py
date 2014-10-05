@@ -346,12 +346,6 @@ class ContactWindowController(NSWindowController):
     last_status_per_device =  {}
     created_accounts = set()
     purge_presence_timer = None
-    last_video_device = None
-    last_audio_alert_device = None
-    last_audio_input_device = None
-    last_audio_output_device = None
-    sleeping = False
-    awake = True
 
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -1305,55 +1299,30 @@ class ContactWindowController(NSWindowController):
                     #NSRunAlertPanel(u"SIP Registration Error", u"The account %s could not be registered at this time: %s" % (notification.sender.id, notification.data.error),  u"OK", None, None)
                 self.authFailPopupShown = False
 
-    def _NH_SystemWillSleep(self, notification):
-        if self.sleeping and not self.awake:
-            return
-
-        self.sleeping = True
-        self.awake = False
-
+    def _NH_SystemDidWakeUpFromSleep(self, notification):
         settings = SIPSimpleSettings()
-        self.last_video_device = settings.video.device
-        self.last_audio_input_device = settings.audio.input_device
-        self.last_audio_output_device = settings.audio.output_device
-        self.last_audio_alert_device = settings.audio.alert_device
+        last_video_device = settings.video.device
+        last_audio_input_device = settings.audio.input_device
+        last_audio_output_device = settings.audio.output_device
+        last_audio_alert_device = settings.audio.alert_device
         settings.video.device = None
         settings.audio.alert_device = None
         settings.audio.input_device = None
         settings.audio.output_device = None
         settings.save()
 
-    def _NH_SystemDidWakeUpFromSleep(self, notification):
-        if self.awake and not self.sleeping:
-            pass # seems like this is called multiple times but the last one is the moment when the system is really stable
-            #return
-        
-        self.awake = True
-        self.sleeping = False
+        def wakeup():
+            SIPApplication.engine.refresh_sound_devices()
+            SIPApplication.engine.refresh_video_devices()
 
-        for account in self.accounts:
-            account.register_state = 'ended'
-            account.register_failure_code = None
-            account.register_failure_reason = None
-        self.refreshAccountList()
-        
-        self.backend._app.engine.refresh_video_devices()
-        self.backend._app.engine.refresh_sound_devices()
+            settings.video.device = last_video_device or 'system_default'
+            settings.audio.input_device = last_audio_input_device or 'system_default'
+            settings.audio.output_device = last_audio_output_device or 'system_default'
+            settings.audio.alert_device = last_audio_alert_device or 'system_default'
+            settings.save()
 
         # wait for system to stabilize
-        reactor.callLater(5, self.refresh_devices)
-
-    def refresh_devices(self):
-        settings = SIPSimpleSettings()
-        if self.last_video_device is not None:
-            settings.video.device = self.last_video_device
-        if self.last_audio_input_device is not None:
-            settings.audio.input_device = self.last_audio_input_device
-        if self.last_audio_output_device is not None:
-            settings.audio.output_device = self.last_audio_output_device
-        if self.last_audio_alert_device is not None:
-            settings.audio.alert_device = self.last_audio_alert_device
-        settings.save()
+        reactor.callLater(5, wakeup)
 
     def _NH_NetworkConditionsDidChange(self, notification):
         if host.default_ip is not None:
