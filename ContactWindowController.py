@@ -3779,7 +3779,7 @@ class ContactWindowController(NSWindowController):
 
     @run_in_green_thread
     def show_last_chat_conversations(self):
-        results = SessionHistory().get_last_chat_conversations(4)
+        results = SessionHistory().get_last_chat_conversations()
         self.open_last_chat_conversations(results)
 
     @run_in_gui_thread

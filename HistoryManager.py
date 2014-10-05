@@ -366,14 +366,26 @@ class SessionHistory(object):
 
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
-        query="select local_uri, remote_uri from sessions where media_types like '%chat%' and local_uri <> 'bonjour' order by start_time desc limit 100"
+        query="select local_uri, remote_uri, sip_callid from sessions where media_types like '%chat%' and local_uri <> 'bonjour' order by start_time desc limit 100"
         results = []
         try:
             rows = list(self.db.queryAll(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting last chat convesations: %s" % e)
+        except dberrors.OperationalError, e:
+            BlinkLogger().log_error(u"Error getting last chat sessions: %s" % e)
             return results
         for row in rows:
+            if not row[2]:
+                continue
+
+            try:
+                query="select count(*) from chat_messages where sip_callid = '%s'" % row[2]
+                nr_messages = list(self.db.queryAll(query))
+                if nr_messages[0][0] == 0:
+                    continue
+            except dberrors.OperationalError, e:
+                BlinkLogger().log_error(u"Error getting count of chat messages: %s" % e)
+                continue
+
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
             pair = (row[0], target_uri)
             if pair not in results:
