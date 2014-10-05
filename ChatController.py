@@ -1649,8 +1649,9 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_FAILED, data.error)
         else:
             t = self.sessionController.getTitleShort()
-            msg = NSLocalizedString("%s left the conversation", "Label") if self.media_started else NSLocalizedString("Unreachable", "Contact detail")
-            self.showSystemMessage(msg % t, ISOTimestamp.now())
+            if self.media_started:
+                msg = NSLocalizedString("%s left the conversation", "Label")
+                self.showSystemMessage(msg, ISOTimestamp.now(), False)
             self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
             self.sessionController.log_info(u"Chat session ended")
 
