@@ -76,8 +76,6 @@ def loadImages():
 
 
 
-AUDIO_CLEANUP_DELAY = 4.0
-TRANSFERRED_CLEANUP_DELAY = 6.0
 STATISTICS_INTERVAL = 1.0
 
 # For voice over IP over Ethernet, an RTP packet contains 54 bytes (or 432 bits) header. These 54 bytes consist of 14 bytes Ethernet header, 20 bytes IP header, 8 bytes UDP header and 12 bytes RTP header.
@@ -510,6 +508,7 @@ class AudioController(MediaStream):
         self.sessionController.transferSession(target)
 
     def updateTimer_(self, timer):
+        settings = SIPSimpleSettings()
         self.updateTileStatistics()
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
@@ -519,8 +518,7 @@ class AudioController(MediaStream):
                 return
 
         if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING] or self.hangedUp:
-            cleanup_delay = TRANSFERRED_CLEANUP_DELAY if self.transferred else AUDIO_CLEANUP_DELAY
-            if self.audioEndTime and (time.time() - self.audioEndTime > cleanup_delay):
+            if self.audioEndTime and (time.time() - self.audioEndTime > settings.gui.close_delay):
                 self.removeFromSession()
                 NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
                 if timer.isValid():

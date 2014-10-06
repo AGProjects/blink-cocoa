@@ -121,6 +121,8 @@ class GUISettings(SettingsGroup):
     rtt_threshold = Setting(type=NonNegativeInteger, default=200)
     language = Setting(type=str, default='system_default', nillable=False)
     media_support_detection = Setting(type=bool, default=False)
+    close_delay = Setting(type=NonNegativeInteger, default=4)
+
 
 
 if video_support:
