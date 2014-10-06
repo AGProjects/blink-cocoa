@@ -2861,8 +2861,6 @@ class ContactWindowController(NSWindowController):
             self.window().zoom_(None)
             self.setCollapsed(True)
 
-        self.focusSearchTextField()
-
     @objc.IBAction
     def showDebugWindow_(self, sender):
         self.debugWindow.show()

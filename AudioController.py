@@ -1412,6 +1412,9 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
+        if NSApp.delegate().contactsWindowController.window().isKeyWindow():
+            NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
+
         self.transfer_in_progress = False
         self.ice_negotiation_status = None
         self.holdByLocal = False
@@ -1441,6 +1444,8 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Audio stream ended")
+        if NSApp.delegate().contactsWindowController.window().isKeyWindow():
+            NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
 
         if self.sessionController.endingBy:
             pass # the session is being ended
@@ -1493,12 +1498,17 @@ class AudioController(MediaStream):
         self.changeStatus(STREAM_RINGING)
 
     def _NH_BlinkSessionDidFail(self, sender, data):
+        if NSApp.delegate().contactsWindowController.window().isKeyWindow():
+            NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stopRinging()
         self.reset()
 
     def _NH_BlinkSessionDidEnd(self, sender, data):
+        if NSApp.delegate().contactsWindowController.window().isKeyWindow():
+            NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
+
         self.notification_center.remove_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stopRinging()
