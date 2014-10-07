@@ -1262,9 +1262,15 @@ class SessionController(NSObject):
             elif len(self.streamHandlers) > 1 and self.session.streams:
                 # session established, streamHandler is one of many streams
                 if self.canProposeMediaStreamChanges():
-                    self.log_info("Removing %s stream" % streamHandler.stream.type)
+                    streams_to_remove = [streamHandler.stream]
+                    if streamHandler.stream.type == "audio":
+                        for _streamHandler in self.streamHandlers:
+                            if _streamHandler.stream.type == "video":
+                                streams_to_remove.append(_streamHandler.stream)
+                
+                    self.log_info("Removing %s streams" % ", ".join(s.type for s in streams_to_remove))
                     try:
-                        self.session.remove_stream(streamHandler.stream)
+                        self.session.remove_streams(streams_to_remove)
                         self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
                     except IllegalStateError, e:
                         self.log_info("IllegalStateError: %s" % e)
