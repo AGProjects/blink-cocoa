@@ -1517,6 +1517,7 @@ class ChatWindowController(NSWindowController):
                 if session.video_consumer == "chat":
                     chat_stream = session.streamHandlerOfType("chat")
                     if chat_stream:
+                        session.video_consumer = "standalone"
                         chat_stream.dettachVideo()
                     video_stream = session.streamHandlerOfType("video")
                     if video_stream:

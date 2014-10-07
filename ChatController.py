@@ -399,7 +399,6 @@ class ChatController(MediaStream):
                     self.chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
 
     def dettachVideo(self):
-        self.sessionController.video_consumer = "standalone"
         if self.chatWindowController.selectedSessionController() == self.sessionController:
             self.chatWindowController.setVideoProducer(None)
 
