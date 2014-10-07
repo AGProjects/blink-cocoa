@@ -129,11 +129,13 @@ class VideoWidget(NSView):
         return True
     
     def setProducer(self, producer):
+        BlinkLogger().log_debug("setProducer %s" % self)
         if self.renderer is None:
             self.renderer = FrameBufferVideoRenderer(self.handle_frame)
         self.renderer.producer = producer
 
     def close(self):
+        BlinkLogger().log_debug("Close %s" % self)
         if  self.renderer is not None:
             self.renderer.close()
             self.renderer = None
