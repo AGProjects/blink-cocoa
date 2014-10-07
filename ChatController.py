@@ -273,6 +273,7 @@ class ChatController(MediaStream):
             self.disable_chat_history = settings.chat.disable_history
 
         self.updateDatabaseRecordingButton()
+        self.sessionController.video_consumer = "chat"
 
         return self
 
@@ -384,15 +385,21 @@ class ChatController(MediaStream):
         return NSApp.delegate().contactsWindowController.chatWindowController
 
     def attachVideo(self):
+        self.sessionController.video_consumer = "chat"
         if self.chatWindowController.selectedSessionController() == self.sessionController:
             video_stream = self.sessionController.streamHandlerOfType("video")
             if video_stream:
+                if video_stream.videoWindowController and video_stream.videoWindowController.videoView:
+                    video_stream.videoWindowController.videoView.setProducer(None)
+                    video_stream.videoWindowController.window().orderOut_(None)
+            
                 if video_stream.status == STREAM_CONNECTED:
                     self.chatWindowController.setVideoProducer(video_stream.stream.producer)
                 else:
                     self.chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
 
     def dettachVideo(self):
+        self.sessionController.video_consumer = "standalone"
         if self.chatWindowController.selectedSessionController() == self.sessionController:
             self.chatWindowController.setVideoProducer(None)
 
@@ -466,12 +473,15 @@ class ChatController(MediaStream):
 
         self.changeStatus(STREAM_IDLE)
 
+        self.attachVideo()
+
     def closeWindow(self):
         self.chatWindowController.removeSession_(self.sessionController)
         if not self.chatWindowController.sessions:
             self.chatWindowController.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.sessionController.video_consumer = "chat"
         self.session_succeeded = False
         self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
@@ -485,6 +495,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.sessionController.video_consumer = "chat"
         self.session_succeeded = False
         self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
@@ -1128,8 +1139,8 @@ class ChatController(MediaStream):
                     if video_stream.status == STREAM_PROPOSING:
                         self.sessionController.cancelProposal(video_stream)
                     else:
-                        if self.status == STREAM_CONNECTED:
-                            self.sessionController.removeVideoromSession()
+                        if video_stream.status == STREAM_CONNECTED:
+                            self.sessionController.removeVideoFromSession()
                             sender.setToolTip_(NSLocalizedString("Add Video", "Tooltip"))
                         else:
                             self.sessionController.endStream(video_stream)
@@ -1138,7 +1149,6 @@ class ChatController(MediaStream):
                     # The button will be enabled again after operation is finished
                     sender.setEnabled_(False)
                 else:
-                    self.sessionController.video_consumer = "chat"
                     self.chatWindowController.drawer.open()
                     if self.sessionController.state == STATE_IDLE:
                         self.notification_center.add_observer(self, sender=self.sessionController)

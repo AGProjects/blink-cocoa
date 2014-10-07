@@ -456,6 +456,8 @@ class VideoWindowController(NSWindowController):
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Always On Top", "Menu item"), "toogleAlwaysOnTop:", "")
         lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
+        if self.sessionController.hasStreamOfType("chat"):
+            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Window", "Menu item"), "userClickedChatButton:", "")
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
@@ -978,13 +980,17 @@ class VideoWindowController(NSWindowController):
             return
         if self.always_on_top:
             self.toogleAlwaysOnTop()
+
         self.sessionController.video_consumer = "chat"
         self.videoView.setProducer(None)
         self.window().orderOut_(None)
+
         chat_stream = self.sessionController.streamHandlerOfType("chat")
         if chat_stream:
             if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
                 self.sessionController.startChatSession()
+            else:
+                chat_stream.attachVideo()
         else:
             self.sessionController.addChatToSession()
         

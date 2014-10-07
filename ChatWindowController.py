@@ -1514,13 +1514,18 @@ class ChatWindowController(NSWindowController):
             elif tag == CONFERENCE_ROOM_MENU_START_VIDEO_SESSION:
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type=("video", "audio"), local_uri=session.account.id)
             elif tag == CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION:
-                session.video_consumer = "standalone"
-                chat_stream = session.streamHandlerOfType("chat")
-                if chat_stream:
-                    chat_stream.dettachVideo()
-                video_stream = session.streamHandlerOfType("video")
-                if video_stream:
-                    video_stream.videoWindowController.show()
+                if session.video_consumer == "chat":
+                    chat_stream = session.streamHandlerOfType("chat")
+                    if chat_stream:
+                        chat_stream.dettachVideo()
+                    video_stream = session.streamHandlerOfType("video")
+                    if video_stream:
+                        video_stream.videoWindowController.show()
+                else:
+                    chat_stream = session.streamHandlerOfType("chat")
+                    if chat_stream:
+                        chat_stream.attachVideo()
+                
                 self.refresh_drawer_counter += 1
 
             elif tag == CONFERENCE_ROOM_MENU_START_CHAT_SESSION:
@@ -1665,7 +1670,8 @@ class ChatWindowController(NSWindowController):
         audio_stream = None
 
         if session:
-            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION).setEnabled_(session.hasStreamOfType("video") and session.video_consumer == "chat")
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION).setEnabled_(session.hasStreamOfType("video"))
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION).setTitle_(NSLocalizedString("Detach Video", "Label") if session.video_consumer == "chat" else NSLocalizedString("Attach Video", "Label"))
 
         participants, self.participants = self.participants, []
         for item in set(participants).difference(session.invited_participants if session else []):
