@@ -790,12 +790,12 @@ class BlinkPresenceContact(BlinkContact):
 
     @allocate_autorelease_pool
     def destroy(self):
-        NotificationCenter().remove_observer(self, name="SIPAccountDidDeactivate")
-        NotificationCenter().remove_observer(self, name="CFGSettingsObjectDidChange")
-        NotificationCenter().remove_observer(self, name="SIPApplicationWillEnd")
-        NotificationCenter().remove_observer(self, name="BlinkPresenceFailed")
-        NotificationCenter().remove_observer(self, name="SystemDidWakeUpFromSleep")
-        NotificationCenter().remove_observer(self, name="SIPAccountGotPresenceState")
+        NotificationCenter().discard_observer(self, name="SIPAccountDidDeactivate")
+        NotificationCenter().discard_observer(self, name="CFGSettingsObjectDidChange")
+        NotificationCenter().discard_observer(self, name="SIPApplicationWillEnd")
+        NotificationCenter().discard_observer(self, name="BlinkPresenceFailed")
+        NotificationCenter().discard_observer(self, name="SystemDidWakeUpFromSleep")
+        NotificationCenter().discard_observer(self, name="SIPAccountGotPresenceState")
 
         if self.timer:
             self.timer.invalidate()
