@@ -7,7 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoLocalWindowController">
             <connections>
-                <outlet property="cancelButton" destination="0Pc-NT-YOd" id="HFK-H8-xbt"/>
+                <outlet property="cancelButton" destination="0Pc-NT-YOd" id="UXp-MG-zGw"/>
                 <outlet property="disconnectLabel" destination="cad-zP-pMx" id="16x-J1-4nJ"/>
                 <outlet property="videoView" destination="cMz-OM-B9k" id="wPb-Ko-LYS"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
@@ -28,19 +28,6 @@
                     <customView id="cMz-OM-B9k" customClass="VideoWidget">
                         <rect key="frame" x="0.0" y="0.0" width="531" height="300"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <button id="0Pc-NT-YOd">
-                                <rect key="frame" x="250" y="20" width="31" height="27"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="vhr-kY-q3G">
-                                    <behavior key="behavior" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="performClose:" target="QvC-M9-y7g" id="ouW-vW-PqQ"/>
-                                </connections>
-                            </button>
-                        </subviews>
                     </customView>
                     <customView id="FtU-7j-auf" customClass="RoundedCornersView">
                         <rect key="frame" x="55" y="56" width="420" height="44"/>
@@ -57,11 +44,23 @@
                             </textField>
                         </subviews>
                     </customView>
+                    <button id="0Pc-NT-YOd">
+                        <rect key="frame" x="250" y="20" width="31" height="27"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="vhr-kY-q3G">
+                            <behavior key="behavior" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performClose:" target="QvC-M9-y7g" id="ouW-vW-PqQ"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <connections>
                 <outlet property="delegate" destination="-2" id="0hK-o1-dWX"/>
             </connections>
+            <point key="canvasLocation" x="112.5" y="106"/>
         </window>
     </objects>
     <resources>

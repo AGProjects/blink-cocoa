@@ -265,6 +265,8 @@ class VideoController(MediaStream):
 
         if newstate in (STREAM_IDLE, STREAM_FAILED):
             self.end()
+            if self.videoWindowController and self.videoWindowController.localVideoWindow:
+                self.videoWindowController.localVideoWindow.cancelButton.setHidden_(True)
 
         if newstate == STREAM_WAITING_DNS_LOOKUP:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Finding Destination...", "Audio status label"))
@@ -362,6 +364,7 @@ class VideoController(MediaStream):
         self.jitter_history = None
         self.rx_speed_history = None
         self.tx_speed_history = None
+
 
     def _NH_MediaStreamDidEnd(self, sender, data):
         if data.error is not None:

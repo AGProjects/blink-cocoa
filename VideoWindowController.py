@@ -577,7 +577,6 @@ class VideoWindowController(NSWindowController):
             if label:
                 self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
             self.localVideoWindow.window().delegate().disconnectLabel.superview().show()
-            self.localVideoWindow.window().delegate().cancelButton.setHidden_(True)
             self.localVideoWindow.window().delegate().disconnectLabel.setHidden_(False)
 
     def startIdleTimer(self):
