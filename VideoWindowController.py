@@ -285,6 +285,7 @@ class VideoWindowController(NSWindowController):
     visible_buttons = True
     recording_timer = None
     must_show_my_video = False
+    must_hide_after_exit_full_screen = False
     
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
@@ -826,7 +827,8 @@ class VideoWindowController(NSWindowController):
             self.show_window_after_full_screen_ends = None
         else:
             if self.window():
-                if self.streamController.ended:
+                if self.streamController.ended or self.must_hide_after_exit_full_screen:
+                    self.must_hide_after_exit_full_screen = False
                     self.window().orderOut_(self)
                 else:
                     self.window().orderFront_(self)

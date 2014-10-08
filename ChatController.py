@@ -391,7 +391,11 @@ class ChatController(MediaStream):
             if video_stream:
                 if video_stream.videoWindowController and video_stream.videoWindowController.videoView:
                     video_stream.videoWindowController.videoView.setProducer(None)
-                    video_stream.videoWindowController.window().orderOut_(None)
+                    if video_stream.videoWindowController.full_screen or video_stream.videoWindowController.full_screen_in_progress:
+                        video_stream.videoWindowController.must_hide_after_exit_full_screen = True
+                        video_stream.videoWindowController.goToWindowMode()
+                    else:
+                        video_stream.videoWindowController.window().orderOut_(None)
             
                 if video_stream.status == STREAM_CONNECTED:
                     self.chatWindowController.setVideoProducer(video_stream.stream.producer)
@@ -1737,6 +1741,10 @@ class ChatController(MediaStream):
 
     def closeTab(self):
         self.sessionController.video_consumer = "standalone"
+        video_stream = self.sessionController.streamHandlerOfType("video")
+        if video_stream and video_stream.status == STREAM_CONNECTED:
+            self.dettachVideo()
+            video_stream.videoWindowController.show()
 
         self.endStream(True)
         if self.outgoing_message_handler:

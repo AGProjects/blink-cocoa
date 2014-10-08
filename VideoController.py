@@ -150,7 +150,7 @@ class VideoController(MediaStream):
 
         self.last_stats = stats
 
-        if self.all_rx_bytes > 200000 and not self.initial_full_screen:
+        if self.all_rx_bytes > 200000 and not self.initial_full_screen and self.sessionController.video_consumer == "standalone":
             settings = SIPSimpleSettings()
             if settings.video.full_screen_after_connect:
                 self.initial_full_screen = True
