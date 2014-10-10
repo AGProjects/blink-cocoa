@@ -303,10 +303,11 @@ class VideoWindowController(NSWindowController):
         loadRecordingImages()
 
     def initLocalVideoWindow(self):
-        sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
-        other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
-        if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
-            self.localVideoWindow = VideoLocalWindowController(self)
+        if self.sessionController.video_consumer == "standalone":
+            sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
+            other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
+            if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
+                self.localVideoWindow = VideoLocalWindowController(self)
 
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateMuteButton()
@@ -461,7 +462,7 @@ class VideoWindowController(NSWindowController):
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Always On Top", "Menu item"), "toogleAlwaysOnTop:", "")
         lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
         if self.sessionController.hasStreamOfType("chat"):
-            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Window", "Menu item"), "userClickedChatButton:", "")
+            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Window", "Menu item"), "userClickedAttachToChatMenuItem:", "")
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
@@ -980,29 +981,12 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedChatButton_(self, sender):
-        if not self.sessionController:
-            return
-        if self.always_on_top:
-            self.toogleAlwaysOnTop()
-
-        self.sessionController.video_consumer = "chat"
-        self.videoView.setProducer(None)
-        self.window().orderOut_(None)
-
-        chat_stream = self.sessionController.streamHandlerOfType("chat")
-        if chat_stream:
-            if chat_stream.status in (STREAM_IDLE, STREAM_FAILED):
-                self.sessionController.startChatSession()
-            else:
-                chat_stream.attachVideo()
-        else:
+        if self.sessionController:
             self.sessionController.addChatToSession()
-        
-        if self.full_screen:
-            NSApp.delegate().contactsWindowController.showChatWindow_(None)
-            self.goToWindowMode(NSApp.delegate().contactsWindowController.chatWindowController.window())
 
-        NSApp.delegate().contactsWindowController.chatWindowController.drawer.open()
+    @objc.IBAction
+    def userClickedAttachToChatMenuItem_(self, sender):
+        self.sessionController.setVideoConsumer("chat")
 
     @objc.IBAction
     def userClickedInfoButton_(self, sender):

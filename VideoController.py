@@ -172,9 +172,18 @@ class VideoController(MediaStream):
             self.sessionController.log_debug("Pause Video")
             self.stream.pause()
 
-    def show(self):
+    def showVideoWindow(self):
         if self.videoWindowController:
             self.videoWindowController.show()
+
+    def hideVideoWindow(self):
+        if self.videoWindowController and self.videoWindowController.window():
+            self.videoWindowController.videoView.setProducer(None)
+            if self.videoWindowController.full_screen or self.videoWindowController.full_screen_in_progress:
+                self.videoWindowController.must_hide_after_exit_full_screen = True
+                self.videoWindowController.goToWindowMode()
+            else:
+                self.videoWindowController.window().orderOut_(None)
 
     def hide(self):
         if self.videoWindowController:
@@ -184,14 +193,8 @@ class VideoController(MediaStream):
         self.videoWindowController.goToFullScreen()
 
     def startOutgoing(self, is_update):
-        if self.sessionController.video_consumer == "standalone":
-            self.videoWindowController.initLocalVideoWindow()
-        else:
-            if self.sessionController.video_consumer == "chat":
-                chat_stream = self.sessionController.streamHandlerOfType("chat")
-                if chat_stream:
-                    chat_stream.attachVideo()
-        
+        self.videoWindowController.initLocalVideoWindow()
+
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
@@ -210,11 +213,7 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
-        if self.sessionController.video_consumer == "chat":
-            chat_stream = self.sessionController.streamHandlerOfType("chat")
-            if chat_stream:
-                chat_stream.dettachVideo()
-
+        NSApp.delegate().contactsWindowController.chatWindowController.detachVideo(self.sessionController)
         self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         self.videoWindowController.release()
         self.videoWindowController = None
@@ -235,10 +234,7 @@ class VideoController(MediaStream):
         self.sessionController.log_debug(u"End %s" % self)
         self.ended = True
 
-        if self.sessionController.video_consumer == "chat":
-            chat_stream = self.sessionController.streamHandlerOfType("chat")
-            if chat_stream:
-                chat_stream.dettachVideo()
+        NSApp.delegate().contactsWindowController.chatWindowController.detachVideo(self.sessionController)
 
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         status = self.status
@@ -322,15 +318,7 @@ class VideoController(MediaStream):
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
 
         self.changeStatus(STREAM_CONNECTED)
-
-        self.videoWindowController.show()
-        if self.sessionController.video_consumer == "chat":
-            chat_stream = self.sessionController.streamHandlerOfType("chat")
-            if chat_stream:
-                chat_stream.attachVideo()
-
-        if self.sessionController.hasStreamOfType("chat") and self.videoWindowController.always_on_top:
-            self.videoWindowController.toogleAlwaysOnTop()
+        self.sessionController.setVideoConsumer()
 
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)

@@ -273,7 +273,6 @@ class ChatController(MediaStream):
             self.disable_chat_history = settings.chat.disable_history
 
         self.updateDatabaseRecordingButton()
-        self.sessionController.video_consumer = "chat"
 
         return self
 
@@ -384,28 +383,6 @@ class ChatController(MediaStream):
     def chatWindowController(self):
         return NSApp.delegate().contactsWindowController.chatWindowController
 
-    def attachVideo(self):
-        self.sessionController.video_consumer = "chat"
-        if self.chatWindowController.selectedSessionController() == self.sessionController:
-            video_stream = self.sessionController.streamHandlerOfType("video")
-            if video_stream:
-                if video_stream.videoWindowController and video_stream.videoWindowController.videoView:
-                    video_stream.videoWindowController.videoView.setProducer(None)
-                    if video_stream.videoWindowController.full_screen or video_stream.videoWindowController.full_screen_in_progress:
-                        video_stream.videoWindowController.must_hide_after_exit_full_screen = True
-                        video_stream.videoWindowController.goToWindowMode()
-                    else:
-                        video_stream.videoWindowController.window().orderOut_(None)
-            
-                if video_stream.status == STREAM_CONNECTED:
-                    self.chatWindowController.setVideoProducer(video_stream.stream.producer)
-                else:
-                    self.chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
-
-    def dettachVideo(self):
-        if self.chatWindowController.selectedSessionController() == self.sessionController:
-            self.chatWindowController.setVideoProducer(None)
-
     def awakeFromNib(self):
         # setup smiley popup
         smileys = SmileyManager().get_smiley_list()
@@ -475,8 +452,7 @@ class ChatController(MediaStream):
         self.chatWindowController.addTimer()
 
         self.changeStatus(STREAM_IDLE)
-
-        self.attachVideo()
+        self.sessionController.setVideoConsumer("chat")
 
     def closeWindow(self):
         self.chatWindowController.removeSession_(self.sessionController)
@@ -484,7 +460,6 @@ class ChatController(MediaStream):
             self.chatWindowController.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
-        self.sessionController.video_consumer = "chat"
         self.session_succeeded = False
         self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
@@ -1152,13 +1127,12 @@ class ChatController(MediaStream):
                     # The button will be enabled again after operation is finished
                     sender.setEnabled_(False)
                 else:
-                    self.chatWindowController.drawer.open()
                     if self.sessionController.state == STATE_IDLE:
                         self.notification_center.add_observer(self, sender=self.sessionController)
                         self.sessionController.startCompositeSessionWithStreamsOfTypes(("video", "audio", "chat"))
                     else:
                         self.sessionController.addVideoToSession()
-                    
+                    self.sessionController.setVideoConsumer("chat")
                     sender.setToolTip_(NSLocalizedString("Cancel Video", "Tooltip"))
                     sender.setImage_(NSImage.imageNamed_("video"))
 
@@ -1740,11 +1714,7 @@ class ChatController(MediaStream):
     # 4. User clicks on disconnect button: endStream -> reset
 
     def closeTab(self):
-        self.sessionController.video_consumer = "standalone"
-        video_stream = self.sessionController.streamHandlerOfType("video")
-        if video_stream and video_stream.status == STREAM_CONNECTED:
-            self.dettachVideo()
-            video_stream.videoWindowController.show()
+        self.sessionController.setVideoConsumer("standalone")
 
         self.endStream(True)
         if self.outgoing_message_handler:

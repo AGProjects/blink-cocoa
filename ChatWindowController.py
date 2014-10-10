@@ -395,6 +395,11 @@ class ChatWindowController(NSWindowController):
         else:
             self.drawer.close()
 
+    def detachVideo(self, sessionController):
+        if self.selectedSessionController() == sessionController:
+            self.setVideoProducer(None)
+            self.videoView.aspect_ratio = None
+
     def updateTitle(self):
         title = self.getConferenceTitle()
         icon = None
@@ -1515,17 +1520,9 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type=("video", "audio"), local_uri=session.account.id)
             elif tag == CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION:
                 if session.video_consumer == "chat":
-                    chat_stream = session.streamHandlerOfType("chat")
-                    if chat_stream:
-                        session.video_consumer = "standalone"
-                        chat_stream.dettachVideo()
-                    video_stream = session.streamHandlerOfType("video")
-                    if video_stream:
-                        video_stream.videoWindowController.show()
+                    session.setVideoConsumer("standalone")
                 else:
-                    chat_stream = session.streamHandlerOfType("chat")
-                    if chat_stream:
-                        chat_stream.attachVideo()
+                    session.setVideoConsumer("chat")
                 
                 self.refresh_drawer_counter += 1
 
@@ -1982,9 +1979,7 @@ class ChatWindowController(NSWindowController):
             if chat_stream:
                 chat_stream.updateDatabaseRecordingButton()
 
-            if session.hasStreamOfType("video"):
-                if session.video_consumer == "chat":
-                    chat_stream.attachVideo()
+            session.setVideoConsumer()
 
             self.refreshDrawer()
             if session.remote_focus or session.hasStreamOfType("video"):
@@ -2008,7 +2003,7 @@ class ChatWindowController(NSWindowController):
 
             if session.hasStreamOfType("video"):
                 video_stream = session.streamHandlerOfType("video")
-                video_stream.show()
+                video_stream.showVideoWindow()
 
         self.unreadMessageCounts[item.identifier()] = 0
         sitem = self.tabSwitcher.itemForTabViewItem_(item)

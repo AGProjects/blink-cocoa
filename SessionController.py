@@ -60,7 +60,7 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
 from HistoryManager import SessionHistoryReplicator, ChatHistoryReplicator
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
-from MediaStream import STREAM_IDLE, STREAM_FAILED
+from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED
 from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
@@ -946,7 +946,7 @@ class SessionController(NSObject):
     screensharing_urls = {}
     cancelled_during_dns_lookup = False
     retries = 0
-    video_consumer = 'standalone'
+    video_consumer = 'standalone'   # can be standalone or chat
 
     @property
     def sessionControllersManager(self):
@@ -1224,6 +1224,34 @@ class SessionController(NSObject):
             return (s for s in self.streamHandlers if s.stream==stream).next()
         except StopIteration:
             return None
+
+    def setVideoConsumer(self, type=None):
+        if not type:
+            type = self.video_consumer
+        else:
+            self.video_consumer = type
+
+        video_stream = self.streamHandlerOfType("video")
+        chat_stream = self.streamHandlerOfType("chat")
+        
+        if chat_stream and video_stream:
+            chatWindowController = NSApp.delegate().contactsWindowController.chatWindowController
+            if self.video_consumer == "standalone":
+                if chatWindowController.selectedSessionController() == self:
+                    chatWindowController.setVideoProducer(None)
+                video_stream.showVideoWindow()
+            elif self.video_consumer == "chat":
+                video_stream.hideVideoWindow()
+                if chatWindowController.selectedSessionController() == self:
+                    chatWindowController.drawer.open()
+                    if video_stream.status == STREAM_CONNECTED:
+                        chatWindowController.setVideoProducer(video_stream.stream.producer)
+                    else:
+                        chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
+        elif video_stream:
+            if self.video_consumer == "standalone":
+                video_stream.showVideoWindow()
+
 
     def end(self):
         if self.state == STATE_DNS_FAILED:
@@ -1571,8 +1599,7 @@ class SessionController(NSObject):
             self.endStream(audioStream)
 
     def addChatToSession(self):
-        if not self.hasStreamOfType("chat"):
-            self.startSessionWithStreamOfType("chat")
+        self.startSessionWithStreamOfType("chat")
 
     def removeChatFromSession(self):
         if self.hasStreamOfType("chat"):
