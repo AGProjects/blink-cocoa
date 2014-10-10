@@ -5065,7 +5065,7 @@ class ContactWindowController(NSWindowController):
                 value = self.backend._app.video_device.real_name
 
             if not self.backend._app.engine.video_devices:
-                BlinkLogger().log_debug("No video device are available or your camera may be stuck, try 'sudo killall VDCAssistant' command in Terminal application")
+                BlinkLogger().log_info("No video devices available or camera software is stuck. Try this command in Terminal application: sudo killall VDCAssistant")
                 return
 
             i = 1
