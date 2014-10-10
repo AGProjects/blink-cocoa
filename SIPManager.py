@@ -479,6 +479,7 @@ class SIPManager(object):
         settings = SIPSimpleSettings()
         settings.audio.enable_aec = settings.audio.echo_canceller.enabled
         settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
+        #self._app.engine.enable_colorbar_device = True
 
         BlinkLogger().log_debug(u"SDK loaded")
         BlinkLogger().log_debug(u"SIP device ID: %s" % settings.instance_id)
