@@ -855,7 +855,7 @@ class ChatWindowController(NSWindowController):
             chat_stream = session.streamHandlerOfType("chat")
             if chat_stream:
 
-                video_stream = session.streamHandlerOfType("chat")
+                video_stream = session.streamHandlerOfType("video")
 
                 parent_frame = self.participantsView.superview().frame()
                 top_frame = self.participantsView.frame()
