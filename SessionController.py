@@ -946,7 +946,6 @@ class SessionController(NSObject):
     screensharing_urls = {}
     cancelled_during_dns_lookup = False
     retries = 0
-    video_consumer = 'standalone'   # can be standalone or chat
 
     @property
     def sessionControllersManager(self):
@@ -993,6 +992,9 @@ class SessionController(NSObject):
         self.streams_log = []
         self.participants_log = set()
         self.remote_focus_log = False
+
+        settings = SIPSimpleSettings()
+        self.video_consumer = settings.video.container
 
         return self
 
@@ -1041,6 +1043,9 @@ class SessionController(NSObject):
         self.participants_log = set()
         self.remote_focus_log = False
 
+        settings = SIPSimpleSettings()
+        self.video_consumer = settings.video.container
+
         self.log_info(u'Invite from: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
         return self
 
@@ -1087,6 +1092,9 @@ class SessionController(NSObject):
         self.streams_log = [stream.type for stream in session.proposed_streams or []]
         self.participants_log = set()
         self.remote_focus_log = False
+
+        settings = SIPSimpleSettings()
+        self.video_consumer = settings.video.container
 
         self.log_info(u'Invite to: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
 
@@ -1231,28 +1239,41 @@ class SessionController(NSObject):
         else:
             self.video_consumer = type
 
+        audio_stream = self.streamHandlerOfType("audio")
         video_stream = self.streamHandlerOfType("video")
         chat_stream = self.streamHandlerOfType("chat")
-        
-        if chat_stream and video_stream:
-            chatWindowController = NSApp.delegate().contactsWindowController.chatWindowController
-            if self.video_consumer == "standalone":
-                if chatWindowController.selectedSessionController() == self:
-                    chatWindowController.setVideoProducer(None)
-                video_stream.showVideoWindow()
-            elif self.video_consumer == "chat":
+        chatWindowController = NSApp.delegate().contactsWindowController.chatWindowController
+        contactsWindowController = NSApp.delegate().contactsWindowController
+
+        if self.video_consumer == "standalone":
+            if chat_stream and chatWindowController.selectedSessionController() == self:
+                chatWindowController.setVideoProducer(None)
+            if audio_stream and contactsWindowController.getSelectedAudioSession() == self:
+                contactsWindowController.setVideoProducer(None)
+            if video_stream:
+                if video_stream.status == STREAM_CONNECTED:
+                    video_stream.showVideoWindow()
+        elif self.video_consumer == "chat":
+            if audio_stream and contactsWindowController.getSelectedAudioSession() == self:
+                contactsWindowController.setVideoProducer(None)
+            chatWindowController.drawer.open()
+            if video_stream:
                 video_stream.hideVideoWindow()
-                if chatWindowController.selectedSessionController() == self:
-                    chatWindowController.drawer.open()
-                    if video_stream.status == STREAM_CONNECTED:
-                        chatWindowController.setVideoProducer(video_stream.stream.producer)
-                    else:
-                        chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
-        elif video_stream:
-            if self.video_consumer == "standalone":
-                video_stream.showVideoWindow()
+                if video_stream.status == STREAM_CONNECTED:
+                    chatWindowController.setVideoProducer(video_stream.stream.producer)
+                else:
+                    chatWindowController.setVideoProducer(SIPApplication.video_device.producer)
+        elif self.video_consumer == "audio":
+            if chat_stream and chatWindowController.selectedSessionController() == self:
+                chatWindowController.setVideoProducer(None)
 
-
+            if video_stream:
+                video_stream.hideVideoWindow()
+                if video_stream.status == STREAM_CONNECTED:
+                    contactsWindowController.setVideoProducer(video_stream.stream.producer)
+                else:
+                    contactsWindowController.setVideoProducer(SIPApplication.video_device.producer)
+ 
     def end(self):
         if self.state == STATE_DNS_FAILED:
             return

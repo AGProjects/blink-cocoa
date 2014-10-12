@@ -980,21 +980,26 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(14) # add Video
             item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('video'))
             item.setHidden_(not(self.sessionControllersManager.isMediaTypeSupported('video')))
+            video_stream = self.sessionController.streamHandlerOfType("video")
+            
             if not self.sessionController.hasStreamOfType("video"):
                 item.setTitle_(NSLocalizedString("Add Video", "Menu item"))
                 item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
             else:
-                videoStream = self.sessionController.streamHandlerOfType("video")
-                if videoStream:
-                    if videoStream.status == STREAM_CONNECTED:
+                if video_stream:
+                    if video_stream.status == STREAM_CONNECTED:
                         item.setTitle_(NSLocalizedString("Remove video", "Menu item"))
                         item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
-                    elif videoStream.status in (STREAM_RINGING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
+                    elif video_stream.status in (STREAM_RINGING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                         item.setTitle_(NSLocalizedString("Cancel", "Menu item"))
                         item.setEnabled_(True)
                     else:
                         item.setTitle_(NSLocalizedString("Add video", "Menu item"))
                         item.setEnabled_(self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession())
+
+            d_item = menu.itemWithTag_(16) # detach video
+            d_item.setEnabled_(video_stream and video_stream.status == STREAM_CONNECTED and self.sessionController.video_consumer == "audio")
+            d_item.setHidden_(not(video_stream and self.sessionController.video_consumer == "audio"))
 
             title = self.sessionController.getTitleShort()
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
@@ -1061,9 +1066,9 @@ class AudioController(MediaStream):
                 NSApp.delegate().contactsWindowController.drawer.close()
                 self.sessionController.addVideoToSession()
             else:
-                videoStream = self.sessionController.streamHandlerOfType("video")
-                if videoStream:
-                    if videoStream.status in (STREAM_IDLE, STREAM_FAILED):
+                video_stream = self.sessionController.streamHandlerOfType("video")
+                if video_stream:
+                    if video_stream.status in (STREAM_IDLE, STREAM_FAILED):
                         self.sessionController.startVideoSession()
                     else:
                         self.sessionController.removeVideoFromSession()
@@ -1080,6 +1085,8 @@ class AudioController(MediaStream):
                     self.sessionController.cancelProposal(screen_sharing_stream)
                 elif screen_sharing_stream.status == STREAM_CONNECTED:
                     self.sessionController.removeScreenFromSession()
+        elif tag == 16: # detach video
+            self.sessionController.setVideoConsumer("standalone")
         elif tag == 20: # add to contacts
             if hasattr(self.sessionController.remotePartyObject, "display_name"):
                 display_name = self.sessionController.remotePartyObject.display_name

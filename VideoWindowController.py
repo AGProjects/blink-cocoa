@@ -129,10 +129,17 @@ class VideoWidget(NSView):
         return True
     
     def setProducer(self, producer):
-        BlinkLogger().log_debug("setProducer %s" % self)
-        if self.renderer is None:
-            self.renderer = FrameBufferVideoRenderer(self.handle_frame)
-        self.renderer.producer = producer
+        BlinkLogger().log_debug("setProducer %s" % producer)
+        if producer == None:
+            if  self.renderer is not None:
+                self.renderer.close()
+                self.renderer = None
+        else:
+            if self.renderer is None:
+                self.renderer = FrameBufferVideoRenderer(self.handle_frame)
+
+        if self.renderer is not None and self.renderer.producer != producer:
+            self.renderer.producer = producer
 
     def close(self):
         BlinkLogger().log_debug("Close %s" % self)
@@ -463,6 +470,8 @@ class VideoWindowController(NSWindowController):
         lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
         if self.sessionController.hasStreamOfType("chat"):
             menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Window", "Menu item"), "userClickedAttachToChatMenuItem:", "")
+        if self.sessionController.hasStreamOfType("audio"):
+            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Audio Window", "Menu item"), "userClickedAttachToAudioMenuItem:", "")
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
@@ -987,6 +996,11 @@ class VideoWindowController(NSWindowController):
     @objc.IBAction
     def userClickedAttachToChatMenuItem_(self, sender):
         self.sessionController.setVideoConsumer("chat")
+
+    @objc.IBAction
+    def userClickedAttachToAudioMenuItem_(self, sender):
+        self.sessionController.setVideoConsumer("audio")
+        NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     @objc.IBAction
     def userClickedInfoButton_(self, sender):

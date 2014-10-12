@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <deployment defaultVersion="1080" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
@@ -23,7 +23,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView id="1" customClass="AudioSession">
             <rect key="frame" x="0.0" y="0.0" width="265" height="57"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -52,7 +52,7 @@
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="71" userLabel="Session Control Buttons">
                     <rect key="frame" x="173" y="3" width="89" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="72">
+                    <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
                             <segment toolTip="Emudecer" image="mute" width="20" tag="3"/>
@@ -69,7 +69,7 @@
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="198" userLabel="Session Control Buttons">
                     <rect key="frame" x="153" y="3" width="110" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="199">
+                    <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
                             <segment toolTip="Encriptação" image="NSLockUnlockedTemplate" width="20" tag="4">
@@ -158,7 +158,7 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="325">
                     <rect key="frame" x="152" y="2" width="111" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="326">
+                    <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="326">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
                             <segment label="Confirmar" width="52" tag="1"/>
@@ -187,6 +187,12 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Detach Video" tag="16" enabled="NO" id="4a0-gr-BcC">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="Gli-TR-ulc"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>

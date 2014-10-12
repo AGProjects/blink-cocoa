@@ -305,8 +305,8 @@ class ContactWindowController(NSWindowController):
     useSpeechRecognitionMenuItem = objc.IBOutlet()
     useSpeechSynthesisMenuItem = objc.IBOutlet()
     micLevelIndicator = objc.IBOutlet()
-    selectedAudioDeviceLabel = objc.IBOutlet()
     myvideoMenuItem = objc.IBOutlet()
+    videoView = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
     screenShareMenu = objc.IBOutlet()
@@ -992,28 +992,6 @@ class ContactWindowController(NSWindowController):
         else:
             self.nameText.setStringValue_(u'')
 
-    @run_in_gui_thread
-    def updateAudioDeviceLabel(self):
-        settings = SIPSimpleSettings()
-        outdev = settings.audio.output_device
-        indev = settings.audio.input_device
-
-        outdev = outdev.strip() if outdev is not None else 'None'
-        indev = indev.strip() if indev is not None else 'None'
-
-        if outdev == u"system_default":
-            outdev = self.backend._app.engine.default_output_device
-        if indev == u"system_default":
-            indev = self.backend._app.engine.default_input_device
-
-        if outdev != indev:
-            if indev == NSLocalizedString("Built-in Microphone", "Label") and outdev == NSLocalizedString("Built-in Output", "Label"):
-                self.selectedAudioDeviceLabel.setStringValue_(NSLocalizedString("Built-in Microphone and Output", "Label"))
-            else:
-                self.selectedAudioDeviceLabel.setStringValue_(u"%s/%s" % (outdev, indev))
-        else:
-          self.selectedAudioDeviceLabel.setStringValue_(outdev)
-
     def activeAccount(self):
         return self.accountPopUp.selectedItem().representedObject()
 
@@ -1397,7 +1375,6 @@ class ContactWindowController(NSWindowController):
         self.refreshLdapDirectory()
         self.updateHistoryMenu()
         self.updateStartSessionButtons()
-        self.updateAudioDeviceLabel()
         self.removePresenceContactForOurselves()
         self.fileTransfersWindow = FileTransferWindowController()
 
@@ -1436,6 +1413,9 @@ class ContactWindowController(NSWindowController):
 
     def _NH_ActiveAudioSessionChanged(self, notification):
         self.updateParticipantsView()
+        session = self.getSelectedAudioSession()
+        if session:
+            session.setVideoConsumer()
 
     def _NH_CFGSettingsObjectWasCreated(self, notification):
         if isinstance(notification.sender, Account):
@@ -1509,12 +1489,6 @@ class ContactWindowController(NSWindowController):
 
         if 'presence_state.icon' in notification.data.modified:
             self.loadUserIcon()
-
-        if notification.data.modified.has_key("audio.input_device"):
-            self.updateAudioDeviceLabel()
-
-        if notification.data.modified.has_key("audio.output_device"):
-            self.updateAudioDeviceLabel()
 
         if notification.data.modified.has_key("gui.language"):
             lang = None if settings.gui.language == "system_default" else settings.gui.language
@@ -1613,14 +1587,15 @@ class ContactWindowController(NSWindowController):
         if add_to_conference:
             streamController.addToConference()
 
-        if not streamController.sessionController.hasStreamOfType("chat") and not streamController.sessionController.hasStreamOfType("video"):
-            self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
-            self.showWindow_(None)
-            self.showAudioDrawer()
+        if not streamController.sessionController.hasStreamOfType("chat"):
+            if (streamController.sessionController.hasStreamOfType("video") and streamController.sessionController.video_consumer == "audio") or not streamController.sessionController.hasStreamOfType("video"):
+                self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
+                self.showAudioDrawer()
 
     def showAudioDrawer(self):
         if not self.drawer.isOpen() and self.has_audio:
             #self.drawer.setContentSize_(self.window().frame().size)
+            self.showWindow_(None)
             self.drawer.open()
 
     def shuffleUpAudioSession(self, audioSessionView):
@@ -2803,7 +2778,6 @@ class ContactWindowController(NSWindowController):
             self.updateParticipantsView()
         if flag:
             self.contactOutline.deselectAll_(None)
-        self.selectedAudioDeviceLabel.setHidden_(flag)
 
     def windowWillUseStandardFrame_defaultFrame_(self, window, nframe):
         if self.originalSize:
@@ -2857,11 +2831,18 @@ class ContactWindowController(NSWindowController):
             else:
                 self.window().makeFirstResponder_(sessionBoxes.objectAtIndex_(0))
 
+            session = self.getSelectedAudioSession()
+            if session:
+                session.setVideoConsumer()
+
+        self.recalculateDrawerSplitter()
+
     def drawerDidClose_(self, notification):
         self.windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
         if self.collapsedState:
             self.window().zoom_(None)
             self.setCollapsed(True)
+        self.setVideoProducer(None)
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
@@ -5486,7 +5467,6 @@ class ContactWindowController(NSWindowController):
 
         return session
 
-
     @allocate_autorelease_pool
     def updateParticipantsView(self):
         session = self.getSelectedAudioSession()
@@ -5550,16 +5530,7 @@ class ContactWindowController(NSWindowController):
                     self.participants.append(contact)
 
         self.participantsTableView.reloadData()
-        sessions_frame = self.sessionsView.frame()
-
-        # adjust splitter
-        if len(self.participants) and self.drawerSplitterPosition is None and sessions_frame.size.height > 130:
-            participants_frame = self.participantsView.frame()
-            participants_frame.size.height = 130
-            sessions_frame.size.height -= 130
-            self.drawerSplitterPosition = {'topFrame': sessions_frame, 'bottomFrame': participants_frame}
-
-        self.resizeDrawerSplitter()
+        self.recalculateDrawerSplitter()
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
@@ -5654,24 +5625,100 @@ class ContactWindowController(NSWindowController):
         own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
         return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
-    def resizeDrawerSplitter(self):
+    def detachVideo(self, sessionController):
         session = self.getSelectedAudioSession()
-        if session and session.conference_info is not None and not self.collapsedState:
-            if self.drawerSplitterPosition is not None:
-                self.sessionsView.setFrame_(self.drawerSplitterPosition['topFrame'])
-                self.participantsView.setFrame_(self.drawerSplitterPosition['bottomFrame'])
-            else:
-                frame = self.participantsView.frame()
-                frame.size.height = 0
-                self.participantsView.setFrame_(frame)
+        if session == sessionController:
+            self.videoView.aspect_ratio = None
+            self.setVideoProducer(None)
+
+    def setVideoProducer(self, producer=None):
+        self.videoView.setProducer(producer)
+        self.recalculateDrawerSplitter()
+
+    @run_in_gui_thread
+    def resizeDrawerSplitter(self):
+        if self.drawerSplitterPosition is not None:
+            self.sessionsView.setFrame_(self.drawerSplitterPosition['topFrame'])
+            self.participantsView.setFrame_(self.drawerSplitterPosition['middleFrame'])
+            self.videoView.superview().setFrame_(self.drawerSplitterPosition['bottomFrame'])
         else:
             frame = self.participantsView.frame()
             frame.size.height = 0
             self.participantsView.setFrame_(frame)
+            frame = self.videoView.superview().frame()
+            frame.size.height = 0
+            self.videoView.superview().setFrame_(frame)
+
+        if not self.videoView.superview().frame().size.height:
+            self.setVideoProducer(None)
+        elif not self.getSelectedAudioSession():
+            self.setVideoProducer(SIPApplication.video_device.producer)
+
+
+    @run_in_gui_thread
+    def recalculateDrawerSplitter(self):
+        if not self.drawer.isOpen():
+            return
+        
+        parent_frame = self.drawerSplitView.frame()
+        top_frame = self.sessionsView.frame()
+        middle_frame = self.participantsView.frame()
+        bottom_frame = self.videoView.superview().frame()
+
+        must_resize = False
+        session = self.getSelectedAudioSession()
+
+        if session:
+            if session.hasStreamOfType("video") and session.video_consumer == "audio":
+                if self.videoView.aspect_ratio is not None:
+                    new_height = bottom_frame.size.width / self.videoView.aspect_ratio
+                    if new_height != bottom_frame.size.height:
+                        bottom_frame.size.height = new_height
+                        must_resize = True
+                else:
+                    new_height = bottom_frame.size.width / 1.77
+                    if new_height != bottom_frame.size.height:
+                        bottom_frame.size.height = new_height
+                        must_resize = True
+            else:
+                new_height = 0
+                if new_height != bottom_frame.size.height:
+                    bottom_frame.size.height = new_height
+                    must_resize = True
+        else:
+            new_height = 0
+            if new_height != bottom_frame.size.height:
+                bottom_frame.size.height = new_height
+                must_resize = True
+
+        # we have conference participants
+        if len(self.participants) and middle_frame.size.height < 30:
+            new_height = 170
+        else:
+            new_height = 0
+
+        if new_height != middle_frame.size.height:
+            middle_frame.size.height = new_height
+            must_resize = True
+
+        if bottom_frame.size.height > parent_frame.size.height - 62 - middle_frame.size.height:
+            bottom_frame.size.height = 0
+            if session and session.hasStreamOfType("video"):
+                print 'detach video'
+                session.setVideoConsumer("standalone")
+
+        top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
+
+        self.drawerSplitterPosition = { 'topFrame':    top_frame,
+                                        'middleFrame': middle_frame,
+                                        'bottomFrame': bottom_frame
+                                      }
+        if must_resize:
+            self.resizeDrawerSplitter()
 
     def drawerSplitViewDidResize_(self, notification):
         if notification.userInfo() is not None:
-            self.drawerSplitterPosition = {'topFrame': self.sessionsView.frame(), 'bottomFrame': self.participantsView.frame() }
+            self.recalculateDrawerSplitter()
 
     def addParticipants(self):
         session = self.getSelectedAudioSession()

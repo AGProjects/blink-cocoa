@@ -213,7 +213,7 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
-        NSApp.delegate().contactsWindowController.chatWindowController.detachVideo(self.sessionController)
+
         self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         self.videoWindowController.release()
         self.videoWindowController = None
@@ -234,7 +234,10 @@ class VideoController(MediaStream):
         self.sessionController.log_debug(u"End %s" % self)
         self.ended = True
 
-        NSApp.delegate().contactsWindowController.chatWindowController.detachVideo(self.sessionController)
+        if self.sessionController.video_consumer == "audio":
+            NSApp.delegate().contactsWindowController.detachVideo(self.sessionController)
+        elif self.sessionController.video_consumer == "chat":
+            NSApp.delegate().contactsWindowController.chatWindowController.detachVideo(self.sessionController)
 
         NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         status = self.status
@@ -304,6 +307,9 @@ class VideoController(MediaStream):
 
     @run_in_gui_thread
     def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
+        if not self.videoWindowController.window():
+            return
+
         if data.on_hold:
             self.videoWindowController.window().setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
             self.videoWindowController.showStatusLabel(NSLocalizedString("On Hold", "Label"))

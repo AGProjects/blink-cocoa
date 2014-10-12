@@ -44,6 +44,7 @@ if video_support:
         framerate = Setting(type=int, default=15)
         h264 = H264SettingsExtension
         auto_rotate_cameras = Setting(type=bool, default=True)
+        container = Setting(type=str, default='standalone')
 
 
 class EchoCancellerSettingsExtension(EchoCancellerSettings):
