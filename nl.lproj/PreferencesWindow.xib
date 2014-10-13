@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -32,7 +32,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <window title="Blink Preferences" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="197" customClass="NSPanel">
+        <window title="Blink voorkeuren" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="197" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="132" width="728" height="441"/>
@@ -59,7 +59,7 @@
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
-                                            <accessibility description="Add Account"/>
+                                            <accessibility description="Account toevoegen"/>
                                             <connections>
                                                 <action selector="buttonClicked:" target="-2" id="131"/>
                                             </connections>
@@ -71,7 +71,7 @@
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
-                                            <accessibility description="Remove Account"/>
+                                            <accessibility description="Verwijder Account"/>
                                             <connections>
                                                 <action selector="buttonClicked:" target="-2" id="132"/>
                                             </connections>
@@ -90,7 +90,7 @@
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                         <tableColumns>
-                                                            <tableColumn identifier="enable" width="25" minWidth="25" maxWidth="25" headerToolTip="Enable Account" id="25" userLabel="Enable/Disable Account checkbox">
+                                                            <tableColumn identifier="enable" width="25" minWidth="25" maxWidth="25" headerToolTip="Inschakelen account" id="25" userLabel="Enable/Disable Account checkbox">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -99,9 +99,9 @@
                                                                 <buttonCell key="dataCell" type="check" bezelStyle="regularSquare" imagePosition="only" alignment="left" inset="2" id="51">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                     <font key="font" metaFont="system"/>
-                                                                    <accessibility description="Enable Account"/>
+                                                                    <accessibility description="Inschakelen account"/>
                                                                 </buttonCell>
-                                                                <accessibility description="Enable Account"/>
+                                                                <accessibility description="Inschakelen account"/>
                                                             </tableColumn>
                                                             <tableColumn identifier="name" editable="NO" width="231" minWidth="10" maxWidth="3.4028229999999999e+38" id="64" userLabel="Label">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Accounts">
@@ -128,10 +128,10 @@
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                 </tableHeaderCell>
                                                                 <imageCell key="dataCell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="215">
-                                                                    <accessibility description="Registration Status"/>
+                                                                    <accessibility description="Registratie status"/>
                                                                 </imageCell>
                                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                                                <accessibility description="Registration Status"/>
+                                                                <accessibility description="Registratie status"/>
                                                             </tableColumn>
                                                         </tableColumns>
                                                         <connections>
@@ -158,7 +158,7 @@
                                         <textField verticalHuggingPriority="750" tag="20" id="43">
                                             <rect key="frame" x="302" y="392" width="133" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="SIP Address:" id="44">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="SIP Adres:" id="44">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -167,7 +167,7 @@
                                         <textField verticalHuggingPriority="750" id="45" userLabel="Label">
                                             <rect key="frame" x="441" y="387" width="248" height="22"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" state="on" placeholderString="user@example.com" id="46">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" state="on" placeholderString="gebruiker@voorbeeld.com" id="46">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -179,7 +179,7 @@
                                         <textField hidden="YES" verticalHuggingPriority="750" id="300">
                                             <rect key="frame" x="313" y="2" width="379" height="22"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" title="Registration status" id="301">
+                                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" title="Registratie status" id="301">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -191,7 +191,7 @@
                                         <textField verticalHuggingPriority="750" id="68" customClass="NSSecureTextField">
                                             <rect key="frame" x="441" y="362" width="248" height="22"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Password for this account" drawsBackground="YES" id="69">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Wachtwoord voor dit account" drawsBackground="YES" id="69">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -204,7 +204,7 @@
                                         <textField verticalHuggingPriority="750" tag="21" id="70">
                                             <rect key="frame" x="314" y="364" width="122" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Password:" id="71">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Wachtwoord:" id="71">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -213,7 +213,7 @@
                                         <textField verticalHuggingPriority="750" id="74">
                                             <rect key="frame" x="368" y="299" width="66" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Advanced" id="75">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Geavanceerd" id="75">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -229,7 +229,7 @@
                                                     <items>
                                                         <menuItem title="Audio" state="on" id="88"/>
                                                         <menuItem title="xcap root" id="89"/>
-                                                        <menuItem title="dialog" id="90"/>
+                                                        <menuItem title="dialoog" id="90"/>
                                                     </items>
                                                 </menu>
                                             </popUpButtonCell>
@@ -254,7 +254,7 @@
                                         <textField verticalHuggingPriority="750" id="112">
                                             <rect key="frame" x="313" y="336" width="122" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Display Name:" id="113">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Weergavenaam:" id="113">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -290,7 +290,7 @@
                                         <button hidden="YES" id="316">
                                             <rect key="frame" x="125" y="6" width="179" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Sync with iCloud" bezelStyle="regularSquare" imagePosition="right" alignment="right" controlSize="small" state="on" inset="2" id="317">
+                                            <buttonCell key="cell" type="check" title="Sync met iCloud" bezelStyle="regularSquare" imagePosition="right" alignment="right" controlSize="small" state="on" inset="2" id="317">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
@@ -327,7 +327,7 @@
                                     </subviews>
                                 </view>
                             </tabViewItem>
-                            <tabViewItem label="Settings" identifier="settings" id="201">
+                            <tabViewItem label="Instellingen" identifier="settings" id="201">
                                 <view key="view" id="202">
                                     <rect key="frame" x="10" y="7" width="720" height="434.00000288337469"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -345,7 +345,7 @@
                                         <textField verticalHuggingPriority="750" id="278">
                                             <rect key="frame" x="76" y="399.00000288337469" width="567" height="17"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Description" id="279">
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Omschrijving" id="279">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -354,7 +354,7 @@
                                         <textField hidden="YES" verticalHuggingPriority="750" id="333">
                                             <rect key="frame" x="14" y="0.0" width="692" height="33"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" title="Help For Section" id="334">
+                                            <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" title="Help voor sectie" id="334">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -363,7 +363,7 @@
                                         <button verticalHuggingPriority="750" id="342">
                                             <rect key="frame" x="557" y="9" width="155" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Purge Logs" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="343">
+                                            <buttonCell key="cell" type="push" title="Log bestanden leegmaken" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="343">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
@@ -374,7 +374,7 @@
                                         <button verticalHuggingPriority="750" id="346">
                                             <rect key="frame" x="407" y="9" width="152" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Open Logs Folder" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="347">
+                                            <buttonCell key="cell" type="push" title="Open Logs folder" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="347">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
@@ -405,9 +405,19 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="271"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Machine" paletteLabel="Machine" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="283"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Chat" paletteLabel="Chat" image="pencil" autovalidates="NO" selectable="YES" id="269">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Bestanden" paletteLabel="Bestanden" image="upfile" autovalidates="NO" selectable="YES" id="264">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="273"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Video" paletteLabel="Video" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
@@ -415,32 +425,22 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Answering Machine" paletteLabel="Answering Machine" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="283"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="File Transfer" paletteLabel="File Transfer" image="upfile" autovalidates="NO" selectable="YES" id="264">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="273"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Screen Sharing" paletteLabel="Screen Sharing" image="display" autovalidates="NO" selectable="YES" id="276">
+                    <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Scherm" paletteLabel="Scherm" image="display" autovalidates="NO" selectable="YES" id="276">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="3842C6BF-5A9E-47A3-BAFB-78A5081C34C5" explicitItemIdentifier="alerts" label="Alerts" paletteLabel="Alerts" image="alerts" autovalidates="NO" selectable="YES" id="265">
+                    <toolbarItem implicitItemIdentifier="3842C6BF-5A9E-47A3-BAFB-78A5081C34C5" explicitItemIdentifier="alerts" label="Meldingen" paletteLabel="Meldingen" image="alerts" autovalidates="NO" selectable="YES" id="265">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="274"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="7F6CEF6E-EA19-49AD-9637-E43C55808FD8" explicitItemIdentifier="contacts" label="Contacts" paletteLabel="Contacts" image="contacts" autovalidates="NO" selectable="YES" id="286">
+                    <toolbarItem implicitItemIdentifier="7F6CEF6E-EA19-49AD-9637-E43C55808FD8" explicitItemIdentifier="contacts" label="Contacten" paletteLabel="Contacten" image="contacts" autovalidates="NO" selectable="YES" id="286">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="287"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Advanced" paletteLabel="Advanced" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
+                    <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Geavanceerd" paletteLabel="Geavanceerd" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
@@ -455,16 +455,16 @@
                 <defaultToolbarItems>
                     <toolbarItem reference="251"/>
                     <toolbarItem reference="259"/>
-                    <toolbarItem reference="286"/>
-                    <toolbarItem reference="265"/>
                     <toolbarItem reference="263"/>
-                    <toolbarItem reference="269"/>
                     <toolbarItem reference="VXd-Rw-cDk"/>
+                    <toolbarItem reference="282"/>
+                    <toolbarItem reference="269"/>
                     <toolbarItem reference="264"/>
                     <toolbarItem reference="276"/>
-                    <toolbarItem reference="282"/>
-                    <toolbarItem reference="290"/>
+                    <toolbarItem reference="265"/>
+                    <toolbarItem reference="286"/>
                     <toolbarItem reference="252"/>
+                    <toolbarItem reference="290"/>
                     <toolbarItem reference="288"/>
                 </defaultToolbarItems>
                 <connections>

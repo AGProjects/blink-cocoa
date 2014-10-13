@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -47,7 +47,7 @@
                     <textField verticalHuggingPriority="750" id="27">
                         <rect key="frame" x="38" y="259" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Participant:" id="28">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Deelnemer:" id="28">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -56,7 +56,7 @@
                     <textField verticalHuggingPriority="750" id="97">
                         <rect key="frame" x="18" y="233" width="141" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Participants List:" id="98">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Deelnemerslijst:" id="98">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -65,7 +65,7 @@
                     <textField verticalHuggingPriority="750" id="172">
                         <rect key="frame" x="38" y="90" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Proposed Media:" id="173">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Voorgestelde media:" id="173">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -74,7 +74,7 @@
                     <textField verticalHuggingPriority="750" id="25">
                         <rect key="frame" x="38" y="318" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Room:" id="26">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Chatroom:" id="26">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -83,7 +83,7 @@
                     <textField verticalHuggingPriority="750" id="17">
                         <rect key="frame" x="163" y="315" width="368" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Enter a room or leave empty to create a random one" drawsBackground="YES" id="18">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voer naam in of laat leeg voor een willekeurige naam" drawsBackground="YES" id="18">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -96,7 +96,7 @@
                     <textField verticalHuggingPriority="750" id="161">
                         <rect key="frame" x="38" y="289" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Nickname:" id="164">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Bijnaam:" id="164">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -105,7 +105,7 @@
                     <textField verticalHuggingPriority="750" id="162">
                         <rect key="frame" x="164" y="286" width="367" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Enter a nickname for your display name" drawsBackground="YES" id="163">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voer een bijnaam in voor de getoonde naam" drawsBackground="YES" id="163">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -129,7 +129,7 @@ DQ
                     <button verticalHuggingPriority="750" id="6">
                         <rect key="frame" x="344" y="15" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="7">
+                        <buttonCell key="cell" type="push" title="Annuleer" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="7">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
@@ -147,7 +147,7 @@ Gw
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Propose Audio"/>
+                        <accessibility description="Audio voorstellen"/>
                     </button>
                     <button id="46">
                         <rect key="frame" x="162" y="88" width="108" height="18"/>
@@ -156,17 +156,17 @@ Gw
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Propose Chat"/>
+                        <accessibility description="Stel chat voor"/>
                     </button>
                     <textField verticalHuggingPriority="750" id="57">
                         <rect key="frame" x="164" y="256" width="307" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Enter address or drag contacts to the list" drawsBackground="YES" id="58">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voer adres in of sleep contacten naar de lijst" drawsBackground="YES" id="58">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                        <accessibility description="New Participant"/>
+                        <accessibility description="Nieuwe deelnemer"/>
                         <connections>
                             <accessibilityConnection property="title" destination="27" id="159"/>
                         </connections>
@@ -187,7 +187,7 @@ Gw
                                     <color key="gridColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
                                         <tableColumn identifier="sip-address" editable="NO" width="362" minWidth="40" maxWidth="1000" id="64">
-                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Current Participants">
+                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Huidige Deelnemers">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -216,7 +216,7 @@ Gw
                             <rect key="frame" x="224" y="17" width="15" height="102"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <accessibility description="Participants List"/>
+                        <accessibility description="Deelnemerslijst"/>
                         <connections>
                             <accessibilityConnection property="title" destination="97" id="160"/>
                         </connections>
@@ -232,21 +232,21 @@ Gw
                                     <nil key="label"/>
                                 </segment>
                             </segments>
-                            <accessibility description="Add or Remove Participant"/>
+                            <accessibility description="Deelnemer toevoegen of verwijderen "/>
                         </segmentedCell>
-                        <accessibility description="Add or Remove Participant"/>
+                        <accessibility description="Deelnemer toevoegen of verwijderen "/>
                         <connections>
                             <action selector="addRemoveParticipant:" target="-2" id="95"/>
                         </connections>
                     </segmentedControl>
-                    <button hidden="YES" toolTip="Remove All Participants" id="105">
+                    <button hidden="YES" toolTip="Verwijder alle deelnemers" id="105">
                         <rect key="frame" x="138" y="115" width="27" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="trash" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="106">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Remove All Participants"/>
+                        <accessibility description="Verwijder alle deelnemers"/>
                         <connections>
                             <action selector="removeAllParticipants:" target="-2" id="108"/>
                         </connections>
@@ -254,12 +254,12 @@ Gw
                     <popUpButton id="115">
                         <rect key="frame" x="151" y="354" width="380" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="bevel" title="Select Configuration" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="118" id="116">
+                        <popUpButtonCell key="cell" type="bevel" title="Selecteer configuratie" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="118" id="116">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="OtherViews" autoenablesItems="NO" id="117">
                                 <items>
-                                    <menuItem title="Select Configuration" state="on" id="118"/>
+                                    <menuItem title="Selecteer configuratie" state="on" id="118"/>
                                 </items>
                             </menu>
                         </popUpButtonCell>
@@ -288,7 +288,7 @@ Gw
                     <button id="170">
                         <rect key="frame" x="161" y="61" width="385" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Start Conference When Participants are Available" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
+                        <buttonCell key="cell" type="check" title="Start de conferentie als de deelnemers beschikbaar zijn" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>

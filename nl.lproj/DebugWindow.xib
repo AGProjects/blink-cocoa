@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
     </dependencies>
     <objects>
@@ -49,7 +48,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
-                            <tabViewItem label="Activity" identifier="activity" id="14">
+                            <tabViewItem label="Activiteit" identifier="activity" id="14">
                                 <view key="view" id="15">
                                     <rect key="frame" x="10" y="33" width="576" height="300"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -84,14 +83,14 @@
                                             </scroller>
                                             <accessibility description="Activity Logs"/>
                                         </scrollView>
-                                        <button toolTip="Clear Activity Logs" verticalHuggingPriority="750" tag="100" id="147">
+                                        <button toolTip="Verwijder Activity logs" verticalHuggingPriority="750" tag="100" id="147">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="148">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="148">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Clear Activity Logs"/>
+                                            <accessibility description="Verwijder Activity logs"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="149"/>
                                             </connections>
@@ -99,7 +98,7 @@
                                         <textField verticalHuggingPriority="750" id="275">
                                             <rect key="frame" x="378" y="1" width="192" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="276">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="276">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -125,19 +124,19 @@
                                             </buttonCell>
                                             <cells>
                                                 <column>
-                                                    <buttonCell type="radio" title="Disabled" imagePosition="left" alignment="left" controlSize="small" state="on" tag="1" inset="2" id="121">
+                                                    <buttonCell type="radio" title="Uitgeschakeld" imagePosition="left" alignment="left" controlSize="small" state="on" tag="1" inset="2" id="121">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                 </column>
                                                 <column>
-                                                    <buttonCell type="radio" title="Simplified" imagePosition="left" alignment="left" controlSize="small" tag="2" inset="2" id="124">
+                                                    <buttonCell type="radio" title="Versimpeld" imagePosition="left" alignment="left" controlSize="small" tag="2" inset="2" id="124">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                 </column>
                                                 <column>
-                                                    <buttonCell type="radio" title="Everything" imagePosition="left" alignment="left" controlSize="small" tag="3" inset="2" id="125">
+                                                    <buttonCell type="radio" title="Alles" imagePosition="left" alignment="left" controlSize="small" tag="3" inset="2" id="125">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
@@ -179,14 +178,14 @@
                                             </scroller>
                                             <accessibility description="SIP Logs"/>
                                         </scrollView>
-                                        <button toolTip="Clear SIP Logs" verticalHuggingPriority="750" tag="101" id="107">
+                                        <button toolTip="Verwijder SIP logs" verticalHuggingPriority="750" tag="101" id="107">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="108">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="108">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Clear SIP Logs"/>
+                                            <accessibility description="Verwijder SIP logs"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="109"/>
                                             </connections>
@@ -194,7 +193,7 @@
                                         <textField verticalHuggingPriority="750" id="272">
                                             <rect key="frame" x="234" y="1" width="336" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="273">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="273">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -203,17 +202,17 @@
                                         <popUpButton verticalHuggingPriority="750" id="281">
                                             <rect key="frame" x="293" y="277" width="121" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <popUpButtonCell key="cell" type="push" title="All Applications" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="284" id="282">
+                                            <popUpButtonCell key="cell" type="push" title="Alle applicaties" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="284" id="282">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <menu key="menu" title="OtherViews" id="283">
                                                     <items>
-                                                        <menuItem title="All Applications" state="on" id="284"/>
+                                                        <menuItem title="Alle applicaties" state="on" id="284"/>
                                                         <menuItem isSeparatorItem="YES" id="290"/>
-                                                        <menuItem title="Sessions" tag="1" id="285"/>
+                                                        <menuItem title="Sessies" tag="1" id="285"/>
                                                         <menuItem title="Subscriptions" tag="2" id="286"/>
                                                         <menuItem title="Register" tag="3" id="293"/>
-                                                        <menuItem title="Message" tag="4" id="295"/>
+                                                        <menuItem title="Bericht" tag="4" id="295"/>
                                                     </items>
                                                 </menu>
                                             </popUpButtonCell>
@@ -259,14 +258,14 @@
                                             </scroller>
                                             <accessibility description="RTP Logs"/>
                                         </scrollView>
-                                        <button toolTip="Clear RTP Logs" verticalHuggingPriority="750" tag="102" id="160">
+                                        <button toolTip="Verwijder RTP logs" verticalHuggingPriority="750" tag="102" id="160">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="161">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="161">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Clear RTP Logs"/>
+                                            <accessibility description="Verwijder RTP logs"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="170"/>
                                             </connections>
@@ -274,7 +273,7 @@
                                         <textField verticalHuggingPriority="750" id="269">
                                             <rect key="frame" x="378" y="1" width="192" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="270">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="270">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -330,19 +329,19 @@
                                             </buttonCell>
                                             <cells>
                                                 <column>
-                                                    <buttonCell type="radio" title="Disabled" imagePosition="left" alignment="left" controlSize="small" state="on" tag="1" inset="2" id="130">
+                                                    <buttonCell type="radio" title="Uitgeschakeld" imagePosition="left" alignment="left" controlSize="small" state="on" tag="1" inset="2" id="130">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                 </column>
                                                 <column>
-                                                    <buttonCell type="radio" title="Simplified" imagePosition="left" alignment="left" controlSize="small" tag="2" inset="2" id="128">
+                                                    <buttonCell type="radio" title="Versimpeld" imagePosition="left" alignment="left" controlSize="small" tag="2" inset="2" id="128">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                 </column>
                                                 <column>
-                                                    <buttonCell type="radio" title="Everything" imagePosition="left" alignment="left" controlSize="small" tag="3" inset="2" id="127">
+                                                    <buttonCell type="radio" title="Alles" imagePosition="left" alignment="left" controlSize="small" tag="3" inset="2" id="127">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
@@ -353,14 +352,14 @@
                                                 <action selector="msrpRadioClicked:" target="-2" id="314"/>
                                             </connections>
                                         </matrix>
-                                        <button toolTip="Clear MSRP Logs" verticalHuggingPriority="750" tag="104" id="172">
+                                        <button toolTip="Verwijder MSRP logs" verticalHuggingPriority="750" tag="104" id="172">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="173">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="173">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Clear MSRP Logs"/>
+                                            <accessibility description="Verwijder MSRP logs"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="194"/>
                                             </connections>
@@ -368,7 +367,7 @@
                                         <textField verticalHuggingPriority="750" id="266">
                                             <rect key="frame" x="171" y="1" width="399" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="267">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="267">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -424,19 +423,19 @@
                                             </buttonCell>
                                             <cells>
                                                 <column>
-                                                    <buttonCell type="radio" title="Disabled" imagePosition="left" alignment="left" controlSize="small" state="on" tag="1" inset="2" id="135">
+                                                    <buttonCell type="radio" title="Uitgeschakeld" imagePosition="left" alignment="left" controlSize="small" state="on" tag="1" inset="2" id="135">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                 </column>
                                                 <column>
-                                                    <buttonCell type="radio" title="Simplified" imagePosition="left" alignment="left" controlSize="small" tag="2" inset="2" id="133">
+                                                    <buttonCell type="radio" title="Versimpeld" imagePosition="left" alignment="left" controlSize="small" tag="2" inset="2" id="133">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                 </column>
                                                 <column>
-                                                    <buttonCell type="radio" title="Everything" imagePosition="left" alignment="left" controlSize="small" tag="3" inset="2" id="132">
+                                                    <buttonCell type="radio" title="Alles" imagePosition="left" alignment="left" controlSize="small" tag="3" inset="2" id="132">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
@@ -447,14 +446,17 @@
                                                 <action selector="xcapRadioClicked:" target="-2" id="315"/>
                                             </connections>
                                         </matrix>
-                                        <button toolTip="Clear XCAP logs" verticalHuggingPriority="750" tag="105" id="174">
+                                        <button toolTip="Verwijder XCAP logs" verticalHuggingPriority="750" tag="105" id="174">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="175">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="175">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Clear XCAP Logs"/>
+                                            <accessibility>
+                                                <string key="description">Verwijder XCAP logs
+</string>
+                                            </accessibility>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="193"/>
                                             </connections>
@@ -462,7 +464,7 @@
                                         <textField verticalHuggingPriority="750" id="260">
                                             <rect key="frame" x="378" y="1" width="192" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="261">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="261">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -471,7 +473,7 @@
                                     </subviews>
                                 </view>
                             </tabViewItem>
-                            <tabViewItem label="Notifications" identifier="notifications" id="12">
+                            <tabViewItem label="Notificaties" identifier="notifications" id="12">
                                 <view key="view" id="13">
                                     <rect key="frame" x="10" y="33" width="576" height="300"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -479,23 +481,23 @@
                                         <button id="49">
                                             <rect key="frame" x="6" y="281" width="77" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Enabled" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="50">
+                                            <buttonCell key="cell" type="check" title="Ingeschakeld" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="50">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Enable Notifications"/>
+                                            <accessibility description="Inschakelen Notifications"/>
                                             <connections>
                                                 <action selector="notificationsCheckboxClicked:" target="-2" id="302"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Clear Notifications Logs" verticalHuggingPriority="750" tag="103" id="176">
+                                        <button toolTip="Verwijder Notification logs" verticalHuggingPriority="750" tag="103" id="176">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="177">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="177">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Clear Notifications Logs"/>
+                                            <accessibility description="Verwijder Notification logs"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="192"/>
                                             </connections>
@@ -515,7 +517,7 @@
                                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                         <tableColumns>
                                                             <tableColumn identifier="0" width="123" minWidth="40" maxWidth="1000" id="183">
-                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Name">
+                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Naam">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -526,10 +528,10 @@
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                                                <accessibility description="Notification Name"/>
+                                                                <accessibility description="Notification naam"/>
                                                             </tableColumn>
                                                             <tableColumn identifier="1" width="120" minWidth="40" maxWidth="1000" id="184">
-                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Sender">
+                                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Zender">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -540,7 +542,7 @@
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                                                <accessibility description="Notification Sender"/>
+                                                                <accessibility description="Notification zender"/>
                                                             </tableColumn>
                                                             <tableColumn identifier="2" width="200" minWidth="10" maxWidth="2000" id="187">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Data">
@@ -554,7 +556,7 @@
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
-                                                                <accessibility description="Notification Data"/>
+                                                                <accessibility description="Notification data"/>
                                                             </tableColumn>
                                                             <tableColumn identifier="3" width="120" minWidth="10" maxWidth="200" id="205">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Timestamp">
@@ -593,16 +595,16 @@
                                             </tableHeaderView>
                                             <accessibility description="Notifications Logs"/>
                                         </scrollView>
-                                        <searchField toolTip="Enter text to filter notifications by name" verticalHuggingPriority="750" id="251">
+                                        <searchField toolTip="Voer tekst in om notifications the filteren op naam" verticalHuggingPriority="750" id="251">
                                             <rect key="frame" x="89" y="281" width="138" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" borderStyle="bezel" placeholderString="Filter by Name" usesSingleLineMode="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="252">
+                                            <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" borderStyle="bezel" placeholderString="Filter op naam" usesSingleLineMode="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="252">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                <accessibility description="Filter by Name"/>
+                                                <accessibility description="Filter op naam"/>
                                             </searchFieldCell>
-                                            <accessibility description="Filter Notifications by Name"/>
+                                            <accessibility description="Filter Notifications op naam"/>
                                             <connections>
                                                 <action selector="searchNotifications:" target="-2" id="254"/>
                                             </connections>
@@ -610,12 +612,12 @@
                                         <textField verticalHuggingPriority="750" id="255">
                                             <rect key="frame" x="378" y="1" width="192" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="256">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="256">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
-                                            <accessibility description="Number of Notifications"/>
+                                            <accessibility description="Aantal notificaties"/>
                                         </textField>
                                     </subviews>
                                 </view>
@@ -948,19 +950,19 @@
                                         <button id="31">
                                             <rect key="frame" x="6" y="281" width="72" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Enabled" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="32">
+                                            <buttonCell key="cell" type="check" title="Ingeschakeld" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="32">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Enable Engine Logs"/>
+                                            <accessibility description="Inschakelen Engine logs"/>
                                             <connections>
                                                 <action selector="engineCheckboxClicked:" target="-2" id="303"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Clear Engine Logs" verticalHuggingPriority="750" tag="107" id="248">
+                                        <button toolTip="Verwijder Engine logs" verticalHuggingPriority="750" tag="107" id="248">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="249">
+                                            <buttonCell key="cell" type="push" title="Wissen" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="249">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
@@ -971,14 +973,14 @@
                                         <textField verticalHuggingPriority="750" id="263">
                                             <rect key="frame" x="174" y="1" width="396" height="11"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Number of  records" id="264">
+                                            <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Aantal records" id="264">
                                                 <font key="font" metaFont="miniSystem"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
                                     </subviews>
-                                    <accessibility description="Clear Engine Logs"/>
+                                    <accessibility description="Verwijder Engine logs"/>
                                 </view>
                             </tabViewItem>
                         </tabViewItems>

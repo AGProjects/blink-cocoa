@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <deployment defaultVersion="1080" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatWindowController">
@@ -30,13 +30,14 @@
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="72" id="85"/>
-                <outlet property="videoMenu" destination="gOf-lM-IGj" id="saJ-bI-uqr"/>
+                <outlet property="videoButton" destination="Puf-LO-eeO" id="F2x-yT-9rX"/>
+                <outlet property="videoView" destination="4mP-67-aeK" id="eOG-54-MdT"/>
                 <outlet property="window" destination="1" id="25"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
-        <window title="Chat Session" autorecalculatesKeyViewLoop="NO" oneShot="NO" frameAutosaveName="chat_window" animationBehavior="default" id="1">
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="Chat Sessie" autorecalculatesKeyViewLoop="NO" oneShot="NO" frameAutosaveName="chat_window" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="438" y="279" width="770" height="520"/>
@@ -67,96 +68,44 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Connect" paletteLabel="Connect" toolTip="Start chat session" tag="100" image="start_chat" id="81">
+                    <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Verbinden" paletteLabel="Verbinden" toolTip="Chatsessie starten" tag="100" image="start_chat" id="81">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="83"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" toolTip="Add audio session" tag="101" image="audio" id="113">
+                    <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" toolTip="Audiosessie toevoegen" tag="101" image="audio" id="113">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Hold" paletteLabel="Hold" toolTip="Hold/Unhold audio" tag="102" image="pause" id="224">
+                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Wachtstand" paletteLabel="Wachtstand" toolTip="Audio in/uit wachtstand " tag="102" image="pause" id="224">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Record" paletteLabel="Record" toolTip="Record audio" tag="103" image="record" autovalidates="NO" id="244">
+                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Opnemen" paletteLabel="Opnemen" toolTip="Opnemen audio" tag="103" image="record" autovalidates="NO" id="244">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="DEC70AE9-E5F0-4552-8EFC-5F1501330852" explicitItemIdentifier="video" label="Video" paletteLabel="Video" image="video" id="eIh-o1-LpH">
-                        <nil key="toolTip"/>
-                        <size key="minSize" width="48" height="31"/>
-                        <size key="maxSize" width="55" height="47"/>
-                        <popUpButton key="view" id="WLQ-qX-0Kq">
-                            <rect key="frame" x="0.0" y="14" width="54" height="42"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="Zt8-cr-V6X" id="fM7-lv-qBF">
-                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="gOf-lM-IGj">
-                                    <items>
-                                        <menuItem image="video" hidden="YES" id="Fx9-Nk-oqa">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                        <menuItem title="Connect" tag="1" id="Zt8-cr-V6X">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedVideoMenu:" target="-2" id="sZi-ww-kqk"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="vh2-BX-chG"/>
-                                        <menuItem title="Window" enabled="NO" id="pMo-9g-vxH">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                        <menuItem title="Bring To Front" tag="5" indentationLevel="1" id="leL-u3-FEw">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedVideoMenu:" target="-2" id="yF2-lL-zRN"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Always On Top" tag="6" indentationLevel="1" id="DT8-3W-CmS">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedVideoMenu:" target="-2" id="Owd-Lt-DHK"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="eur-EC-Cwe"/>
-                                        <menuItem title="My Video" tag="4" id="APC-Mu-ONO">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedVideoMenu:" target="-2" id="yQH-6h-4ci"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                    <connections>
-                                        <outlet property="delegate" destination="-2" id="XdC-0R-Bzl"/>
-                                    </connections>
-                                </menu>
-                            </popUpButtonCell>
-                        </popUpButton>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Show collaborative editor" tag="109" image="editor" id="441">
+                    <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Toon gedeelde editor" tag="109" image="editor" id="441">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
-                    <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Send File" paletteLabel="Send File" toolTip="Send files" tag="105" image="upfile" id="92">
+                    <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Stuur bestand" paletteLabel="Stuur bestand" toolTip="Stuur bestanden" tag="105" image="upfile" id="92">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="94A6B932-2B35-4C7C-889C-AA8DABBDD596" explicitItemIdentifier="screen" label="Screen  " paletteLabel="Screen  " toolTip="Screen sharing" tag="204" image="display" autovalidates="NO" id="549">
+                    <toolbarItem implicitItemIdentifier="94A6B932-2B35-4C7C-889C-AA8DABBDD596" explicitItemIdentifier="screen" label="Scherm" paletteLabel="Scherm" toolTip="Scherm delen" tag="204" image="display" autovalidates="NO" id="549">
                         <size key="minSize" width="48" height="42"/>
                         <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
@@ -169,7 +118,7 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Grab" paletteLabel="Grab" toolTip="Send screenshot" image="screenshot" id="573">
+                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Grab" paletteLabel="Grab" toolTip="Stuur schermafbeelding" image="screenshot" id="573">
                         <size key="minSize" width="48" height="42"/>
                         <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
@@ -181,23 +130,23 @@
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
                                     <items>
                                         <menuItem state="on" image="screenshot" hidden="YES" id="570"/>
-                                        <menuItem title="Send Screenshot with Selected Window..." tag="301" id="571">
+                                        <menuItem title="Stuur screenshot van een geselecteerd venster..." tag="301" id="571">
                                             <connections>
                                                 <action selector="userClickedScreenshotMenu:" target="-2" id="576"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Send Screenshot with Mouse Selected Area..." tag="302" id="572">
+                                        <menuItem title="Stuur screenshot van een geselecteerd gebied met de muis..." tag="302" id="572">
                                             <connections>
                                                 <action selector="userClickedScreenshotMenu:" target="-2" id="577"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Send Snapshot from Camera..." tag="303" id="676">
+                                        <menuItem title="Stuur snapshot van camera..." tag="303" id="676">
                                             <connections>
                                                 <action selector="userClickedSnapshotMenu:" target="-2" id="678"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="574"/>
-                                        <menuItem title="Use Escape Key to Cancel" enabled="NO" id="575" userLabel="Menu Item (Use Escape Key to Cancel...)">
+                                        <menuItem title="Gebruik de Escape knop om te annuleren" enabled="NO" id="575" userLabel="Menu Item (Use Escape Key to Cancel...)">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                     </items>
@@ -205,51 +154,51 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="31DAD979-72E0-4CE9-8AC5-7F153ECEAEDF" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="666">
+                    <toolbarItem implicitItemIdentifier="31DAD979-72E0-4CE9-8AC5-7F153ECEAEDF" explicitItemIdentifier="encryption" label="Encryptie" paletteLabel="Encryptie" toolTip="Encryptie opties" image="unlocked-darkgray" autovalidates="NO" id="666">
                         <size key="minSize" width="48" height="35"/>
                         <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
                                     <items>
                                         <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="663"/>
-                                        <menuItem title="My Fingerprint" tag="1" enabled="NO" id="638">
+                                        <menuItem title="Mijn vingerafdruk" tag="1" enabled="NO" id="638">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="Active" tag="4" id="647">
+                                        <menuItem title="Actief" tag="4" id="647">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="648"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Always Require Encryption With This Contact" tag="3" id="643">
+                                        <menuItem title="Verlang altijd encryptie van dit contact" tag="3" id="643">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="650"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" tag="6" id="645"/>
-                                        <menuItem title="No Fingerprint Discovered" tag="7" id="639">
+                                        <menuItem title="Geen vingerafdruk ontdekt" tag="7" id="639">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="I Have Verified The Fingerprint" tag="5" id="644">
+                                        <menuItem title="Ik heb de vingerafdruk geverifieerd" tag="5" id="644">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="649"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Verify Identity using SMP protocol" tag="9" id="670">
+                                        <menuItem title="Verifieer identiteit door het SMP protocol" tag="9" id="670">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="672"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="673"/>
-                                        <menuItem title="About OTR protocol" tag="10" id="674">
+                                        <menuItem title="Over OTR protocol" tag="10" id="674">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="675"/>
@@ -263,23 +212,29 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C3864E27-5270-4B55-AA49-BE2C6E9DEF25" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Add audio session" tag="107" image="video" id="Puf-LO-eeO">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="gcW-zU-sbN"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="99"/>
-                    <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="106" image="smiley_on" id="443">
+                    <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Toon/Verberg emoticons" tag="106" image="smiley_on" id="443">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="444"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="History" paletteLabel="History" toolTip="Show previously exchanged messages" tag="107" image="time" id="253">
+                    <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="Geschiedenis" paletteLabel="Geschiedenis" toolTip="Toon vorige uitgewisselde berichten" tag="107" image="time" id="253">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="9277B918-C2D9-41A1-A62A-32504D846977" explicitItemIdentifier="participants" label="Participants" paletteLabel="Participants" toolTip="Toogle participants drawer" tag="108" image="NSEveryone" id="208">
+                    <toolbarItem implicitItemIdentifier="9277B918-C2D9-41A1-A62A-32504D846977" explicitItemIdentifier="participants" label="Deelnemers" paletteLabel="Deelnemers" toolTip="Toon/Verberg deelnemerslijst" tag="108" image="NSEveryone" id="208">
                         <connections>
                             <action selector="toggle:" target="136" id="210"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="449"/>
+                    <toolbarItem implicitItemIdentifier="9E32CDD0-C561-4C0D-9353-9ADD4A41F3EB" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Add audio session" tag="107" image="video" id="xic-3C-cIA"/>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="81"/>
@@ -287,7 +242,7 @@
                     <toolbarItem reference="113"/>
                     <toolbarItem reference="224"/>
                     <toolbarItem reference="244"/>
-                    <toolbarItem reference="eIh-o1-LpH"/>
+                    <toolbarItem reference="Puf-LO-eeO"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="441"/>
                     <toolbarItem reference="573"/>
@@ -312,26 +267,26 @@
             <rect key="frame" x="0.0" y="0.0" width="260" height="600"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
             <subviews>
-                <button toolTip="Participant actions..." verticalHuggingPriority="750" id="216">
+                <button toolTip="Deelnemer acties..." verticalHuggingPriority="750" id="216">
                     <rect key="frame" x="10" y="2" width="29" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Invite Participants" bezelStyle="texturedRounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="217">
+                    <buttonCell key="cell" type="roundTextured" alternateTitle="Uitnodigen deelnemers" bezelStyle="texturedRounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="217">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
-                    <accessibility description="Participant actions"/>
+                    <accessibility description="Deelnemer acties"/>
                     <connections>
                         <action selector="userClickedActionsButton:" target="-2" id="312"/>
                     </connections>
                 </button>
-                <button toolTip="Mute Microphone" verticalHuggingPriority="750" id="220">
+                <button toolTip="Dempen microfoon" verticalHuggingPriority="750" id="220">
                     <rect key="frame" x="221" y="2" width="28" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Mute Microphone" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
+                    <buttonCell key="cell" type="roundTextured" alternateTitle="Dempen microfoon" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
-                    <accessibility description="Mute Microphone"/>
+                    <accessibility description="Dempen microfoon"/>
                     <connections>
                         <action selector="muteClicked:" target="-2" id="223"/>
                     </connections>
@@ -339,33 +294,33 @@
                 <textField verticalHuggingPriority="750" id="241">
                     <rect key="frame" x="44" y="8" width="136" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Audio Status" bezelStyle="round" id="242">
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Audiostatus" bezelStyle="round" id="242">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Audio Session Status"/>
+                    <accessibility description="Audiosessiestatus"/>
                 </textField>
                 <splitView autosaveName="chat_drawer_view" id="348">
                     <rect key="frame" x="0.0" y="30" width="260" height="570"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="445"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="382"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
                                 <rect key="frame" x="1" y="17" width="258" height="427"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="427"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="36"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
                                             <tableColumn identifier="participant" width="255" minWidth="40" maxWidth="1000" id="386">
-                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participants">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Deelnemers">
                                                     <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -378,7 +333,7 @@
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                         </tableColumns>
-                                        <accessibility description="Current Participants"/>
+                                        <accessibility description="Huidige deelnemers"/>
                                         <connections>
                                             <outlet property="dataSource" destination="-2" id="389"/>
                                             <outlet property="delegate" destination="-2" id="390"/>
@@ -402,21 +357,21 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="454" width="260" height="116"/>
+                            <rect key="frame" x="0.0" y="391" width="260" height="99.5"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
                                 <rect key="frame" x="1" y="17" width="258" height="98"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="98"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="36"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
                                             <tableColumn identifier="files" width="255" minWidth="40" maxWidth="1000" id="396">
-                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Shared Files">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Gedeelde bestanden">
                                                     <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -429,7 +384,7 @@
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                         </tableColumns>
-                                        <accessibility description="Shared Files"/>
+                                        <accessibility description="Gedeelde bestanden"/>
                                         <connections>
                                             <outlet property="dataSource" destination="-2" id="398"/>
                                             <outlet property="delegate" destination="-2" id="399"/>
@@ -452,8 +407,19 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
+                        <customView id="FBm-OI-iDM" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="499.5" width="260" height="70.5"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <subviews>
+                                <customView id="4mP-67-aeK" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="260" height="84"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                </customView>
+                            </subviews>
+                        </customView>
                     </subviews>
                     <holdingPriorities>
+                        <real value="250"/>
                         <real value="250"/>
                         <real value="250"/>
                     </holdingPriorities>
@@ -461,13 +427,13 @@
                         <outlet property="delegate" destination="-2" id="439"/>
                     </connections>
                 </splitView>
-                <levelIndicator toolTip="Microphone Input Signal" verticalHuggingPriority="750" id="586">
+                <levelIndicator toolTip="Microfooninganssignaal" verticalHuggingPriority="750" id="586">
                     <rect key="frame" x="186" y="9" width="27.5" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
                         <font key="font" metaFont="miniSystem"/>
                     </levelIndicatorCell>
-                    <accessibility description="Microphone Input Signal"/>
+                    <accessibility description="Microfooninganssignaal"/>
                 </levelIndicator>
             </subviews>
         </customView>
@@ -481,150 +447,157 @@
                 <outlet property="parentWindow" destination="1" id="140"/>
             </connections>
         </drawer>
-        <menu title="Participant" autoenablesItems="NO" id="226">
+        <menu title="Deelnemer" autoenablesItems="NO" id="226">
             <items>
-                <menuItem title="Conference Room" enabled="NO" id="277" userLabel="Menu Item (Conference)">
+                <menuItem title="Conferentie" enabled="NO" id="277" userLabel="Menu Item (Conference)">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="278"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Set Nickname..." tag="316" enabled="NO" indentationLevel="1" id="539">
+                <menuItem title="Stel bijnaam in..." tag="316" enabled="NO" indentationLevel="1" id="539">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="540"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Set Title..." tag="317" enabled="NO" indentationLevel="1" id="541">
+                <menuItem title="Zet titel..." tag="317" enabled="NO" indentationLevel="1" id="541">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="542"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Invite Participants..." tag="312" indentationLevel="1" id="316" userLabel="Menu Item (Invite Participants...)">
+                <menuItem title="Uitnodigen deelnemers..." tag="312" indentationLevel="1" id="316" userLabel="Menu Item (Invite Participants...)">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="317"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Go to Website..." tag="313" enabled="NO" indentationLevel="1" id="323">
+                <menuItem title="Ga naar website..." tag="313" enabled="NO" indentationLevel="1" id="323">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="324"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Add to Contacts List..." tag="314" enabled="NO" indentationLevel="1" id="334">
+                <menuItem title="Toevoegen aan contactenlijst..." tag="314" enabled="NO" indentationLevel="1" id="334">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="335"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Copy Address To Clipboard" tag="318" enabled="NO" indentationLevel="1" id="578">
+                <menuItem title="Kopieer adres naar het klemboard" tag="318" enabled="NO" indentationLevel="1" id="578">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="579"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Send Email Invitation..." tag="325" enabled="NO" indentationLevel="1" id="582">
+                <menuItem title="Vestuur e-mail uitnodiging..." tag="325" enabled="NO" indentationLevel="1" id="582">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="583"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Tell Me When Participants Change" tag="326" enabled="NO" indentationLevel="1" id="3Hf-hK-Tfp">
+                <menuItem title="Vertel me als de deelnemers wijzigen" tag="326" enabled="NO" indentationLevel="1" id="3Hf-hK-Tfp">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="Wl4-Su-Uxa"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="308"/>
-                <menuItem title="Participant" enabled="NO" id="318" userLabel="Menu Item (Participant)">
+                <menuItem title="Deelnemer" enabled="NO" id="318" userLabel="Menu Item (Participant)">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="319"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Send Private Message..." tag="311" enabled="NO" indentationLevel="1" id="325">
+                <menuItem title="Stuur een privé bericht..." tag="311" enabled="NO" indentationLevel="1" id="325">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="326"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Remove from Conference..." tag="310" enabled="NO" indentationLevel="1" id="327">
+                <menuItem title="Verwijder uit de conferentie..." tag="310" enabled="NO" indentationLevel="1" id="327">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="328"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Mute..." tag="315" enabled="NO" indentationLevel="1" id="336">
+                <menuItem title="Dempen..." tag="315" enabled="NO" indentationLevel="1" id="336">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="337"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Add to Contacts List..." tag="301" enabled="NO" indentationLevel="1" id="332">
+                <menuItem title="Toevoegen aan contactenlijst..." tag="301" enabled="NO" indentationLevel="1" id="332">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="333"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Start Audio Call" tag="320" enabled="NO" indentationLevel="1" id="261">
+                <menuItem title="Audiogesprek starten" tag="320" enabled="NO" indentationLevel="1" id="261">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="262"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Invite to Chat..." tag="321" enabled="NO" indentationLevel="1" id="263">
+                <menuItem title="Uitnodigen voor chat..." tag="321" enabled="NO" indentationLevel="1" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="264"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Start Video Call" tag="322" hidden="YES" enabled="NO" indentationLevel="1" id="275">
+                <menuItem title="Videogesprek starten" tag="322" hidden="YES" enabled="NO" indentationLevel="1" id="275">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="276"/>
                     </connections>
                 </menuItem>
-                <menuItem title="View Shared Screen" tag="324" indentationLevel="1" id="483">
+                <menuItem title="Gedeeld scherm bekijken" tag="324" indentationLevel="1" id="483">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="484"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Send File(s)..." tag="323" enabled="NO" indentationLevel="1" id="266">
+                <menuItem title="Stuur bestand(en)..." tag="323" enabled="NO" indentationLevel="1" id="266">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="267"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Copy Address To Clipboard" tag="319" enabled="NO" indentationLevel="1" id="580">
+                <menuItem title="Kopieer adres naar het klemboard" tag="319" enabled="NO" indentationLevel="1" id="580">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="581"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="453"/>
-                <menuItem title="Font Size" tag="500" enabled="NO" id="h3r-um-zSq">
+                <menuItem title="Font grootte" tag="500" enabled="NO" id="h3r-um-zSq">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="ipS-DQ-x4I"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Increase Font Size" tag="501" indentationLevel="1" id="XTF-Bu-H74">
+                <menuItem title="Vergroot font grootte" tag="501" indentationLevel="1" id="XTF-Bu-H74">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="zRI-Lt-paf"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Decrease Font Size" tag="502" indentationLevel="1" id="2Wj-FV-0Gx">
+                <menuItem title="Verklein font grootte" tag="502" indentationLevel="1" id="2Wj-FV-0Gx">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="tAU-7A-2I0"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
-                <menuItem title="Show Session Information" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
+                <menuItem title="Detach Video" tag="327" enabled="NO" indentationLevel="1" id="zsc-AH-BFv">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="WZ3-CZ-8hy"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="Cov-g9-XDG"/>
+                <menuItem title="Toon sessie-informatie" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="455"/>
@@ -635,9 +608,9 @@
                 <outlet property="delegate" destination="-2" id="456"/>
             </connections>
         </menu>
-        <menu title="SharedFile" autoenablesItems="NO" id="405">
+        <menu title="GedeeldBestand" autoenablesItems="NO" id="405">
             <items>
-                <menuItem title="Request File..." tag="100" indentationLevel="1" id="417" userLabel="Menu Item (Request File Transfer...)">
+                <menuItem title="Verzoek bestand...." tag="100" indentationLevel="1" id="417" userLabel="Menu Item (Request File Transfer...)">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSharedFileMenu:" target="-2" id="435"/>
@@ -645,25 +618,25 @@
                 </menuItem>
             </items>
         </menu>
-        <menu title="Screen Sharing" autoenablesItems="NO" id="123" userLabel="Menu (Screen Sharing)">
+        <menu title="Scherm delen" autoenablesItems="NO" id="123" userLabel="Menu (Screen Sharing)">
             <items>
                 <menuItem image="display" hidden="YES" id="551">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Request Screen from Contact" tag="201" id="125">
+                <menuItem title="Verzoek scherm van contact" tag="201" id="125">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedScreenSharingMenu:" target="-2" id="558"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Share My Screen with Contact" tag="202" id="126">
+                <menuItem title="Mijn scherm delen met contact" tag="202" id="126">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedScreenSharingMenu:" target="-2" id="559"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="553"/>
-                <menuItem title="Cancel Screen Sharing Proposal" tag="203" id="494">
+                <menuItem title="Annuleer voorstel scherm delen" tag="203" id="494">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedScreenSharingMenu:" target="-2" id="560"/>
@@ -674,36 +647,36 @@
                 <outlet property="delegate" destination="-2" id="492"/>
             </connections>
         </menu>
-        <menu title="Conference Screen Sharing" autoenablesItems="NO" id="512" userLabel="Menu (Conference Screen Sharing)">
+        <menu title="Schermdeling conferentie" autoenablesItems="NO" id="512" userLabel="Menu (Conference Screen Sharing)">
             <items>
                 <menuItem image="display" hidden="YES" id="552">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Share My Screen with Conference Participants" tag="202" id="514">
+                <menuItem title="Deel mijn scherm met conferentiedeelnemers" tag="202" id="514">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Quality" enabled="NO" id="521">
+                <menuItem title="Kwaliteit" enabled="NO" id="521">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="High - Native screen resolution" tag="401" indentationLevel="2" id="534">
+                <menuItem title="Hoog - Huidige scherm resolutie" tag="401" indentationLevel="2" id="534">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="561"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Medium - Compromise between bandwidth usage and resolution" tag="403" indentationLevel="2" id="520">
+                <menuItem title="Medium - compromie tussen bandbreedte en resolutie" tag="403" indentationLevel="2" id="520">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="562"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Low - Uses less bandwidth" tag="402" indentationLevel="2" id="519">
+                <menuItem title="Laag - gebruikt minder bandbreedte" tag="402" indentationLevel="2" id="519">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="563"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Shared Screen Area" enabled="NO" id="513">
+                <menuItem title="Gedeeld scherm gebied" enabled="NO" id="513">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>

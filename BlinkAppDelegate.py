@@ -132,6 +132,7 @@ class BlinkAppDelegate(NSObject):
     supported_languages = {
                            "system_default": NSLocalizedString("System Default", "Menu item"),
                            "en": NSLocalizedString("English", "Menu item"),
+                           "nl": NSLocalizedString("Nederlands", "Menu item"),
                            "es": NSLocalizedString("Spanish", "Menu item"),
                            "ro": NSLocalizedString("Romanian", "Menu item"),
                            "pt": NSLocalizedString("Portuguese", "Menu item")

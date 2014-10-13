@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -58,7 +58,7 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="125"/>
-                    <toolbarItem implicitItemIdentifier="CA113185-2B92-4E8D-95B1-351679504117" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="eXG-Dz-cun">
+                    <toolbarItem implicitItemIdentifier="CA113185-2B92-4E8D-95B1-351679504117" explicitItemIdentifier="encryption" label="Encryptie" paletteLabel="Encryptie" toolTip="Encryptie-opties" image="unlocked-darkgray" autovalidates="NO" id="eXG-Dz-cun">
                         <size key="minSize" width="55" height="25"/>
                         <size key="maxSize" width="55" height="35"/>
                         <popUpButton key="view" id="kNe-Tq-nrN">
@@ -70,39 +70,39 @@
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="eqf-k7-4lX">
                                     <items>
                                         <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="ode-SL-AzX"/>
-                                        <menuItem title="My Fingerprint" tag="1" enabled="NO" id="mB6-M1-KMr">
+                                        <menuItem title="Mijn vingerafdruk" tag="1" enabled="NO" id="mB6-M1-KMr">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="Active" tag="4" id="PbT-Jt-vT9">
+                                        <menuItem title="Actief" tag="4" id="PbT-Jt-vT9">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="Hcf-qY-5yO"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Always Require Encryption With This Contact" tag="3" id="oam-Ba-ulg">
+                                        <menuItem title="Encryptie altijd vereist voor dit contact" tag="3" id="oam-Ba-ulg">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="71t-bP-LRJ"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" tag="6" id="pzI-9j-Jft"/>
-                                        <menuItem title="No Fingerprint Discovered" tag="7" id="EG1-SW-Olu">
+                                        <menuItem title="Geen vingerafdruk ontdekt" tag="7" id="EG1-SW-Olu">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="I Have Verified The Fingerprint" tag="5" id="rEQ-Fm-xMH">
+                                        <menuItem title="Ik heb de vingerafdruk geverifieerd" tag="5" id="rEQ-Fm-xMH">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="eWP-zO-xjG"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Verify Identity using SMP protocol" tag="9" id="etd-a0-8Ca">
+                                        <menuItem title="Verifieer met het SMP protocol" tag="9" id="etd-a0-8Ca">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="3ID-ue-qie"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="14w-ix-dju"/>
-                                        <menuItem title="About OTR protocol" tag="10" id="C4L-bC-kSK">
+                                        <menuItem title="Over het OTR protocol" tag="10" id="C4L-bC-kSK">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="4zk-LH-oPa"/>
@@ -116,13 +116,13 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="100" image="smiley_on" id="127">
+                    <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Toon/Verberg emoticons" tag="100" image="smiley_on" id="127">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="131"/>
-                    <toolbarItem implicitItemIdentifier="F706FBD6-3282-4E5A-B901-59387DE517EE" explicitItemIdentifier="history" label="History" paletteLabel="History" toolTip="Show previously exchanged messages" tag="101" image="time" id="128">
+                    <toolbarItem implicitItemIdentifier="F706FBD6-3282-4E5A-B901-59387DE517EE" explicitItemIdentifier="history" label="Geschiedenis" paletteLabel="Geschiedenis" toolTip="Toon vorige uitgewisselde berichten" tag="101" image="time" id="128">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="130"/>
                         </connections>

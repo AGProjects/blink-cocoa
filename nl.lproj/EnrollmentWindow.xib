@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -46,7 +46,7 @@
                     <textField verticalHuggingPriority="750" tag="100" id="3">
                         <rect key="frame" x="91" y="428" width="333" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Communicate in real time using SIP protocol" id="4">
+                        <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" title="Communiceer in 'real time' met het SIP protocol" id="4">
                             <font key="font" metaFont="system" size="14"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -64,14 +64,14 @@
                         </buttonCell>
                         <cells>
                             <column>
-                                <buttonCell type="radio" title="I already have a SIP account" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="6">
+                                <buttonCell type="radio" title="Ik heb al een SIP account" imagePosition="left" alignment="left" state="on" tag="1" inset="2" id="6">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                     <connections>
                                         <action selector="selectRadio:" target="-2" id="106"/>
                                     </connections>
                                 </buttonCell>
-                                <buttonCell type="radio" title="Create a free SIP Account" imagePosition="left" alignment="left" tag="2" inset="2" id="7">
+                                <buttonCell type="radio" title="Maak een gratis SIP account" imagePosition="left" alignment="left" tag="2" inset="2" id="7">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
@@ -84,7 +84,7 @@
                     <button verticalHuggingPriority="750" tag="111" id="25">
                         <rect key="frame" x="353" y="23" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Next" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="26">
+                        <buttonCell key="cell" type="push" title="Volgende" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="26">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
@@ -98,7 +98,7 @@ DQ
                     <button verticalHuggingPriority="750" tag="110" id="27">
                         <rect key="frame" x="257" y="23" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Skip" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="28">
+                        <buttonCell key="cell" type="push" title="Sla over" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="28">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
@@ -117,7 +117,7 @@ Gw
                     <button verticalHuggingPriority="750" id="155">
                         <rect key="frame" x="188" y="58" width="255" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="recessed" title="How can I use my own Internet domain?" bezelStyle="recessed" alignment="right" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="156">
+                        <buttonCell key="cell" type="recessed" title="Hoe kan ik mijn eigen internet domein gebruiken?" bezelStyle="recessed" alignment="right" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="156">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystemBold"/>
                         </buttonCell>
@@ -128,7 +128,7 @@ Gw
                     <textField verticalHuggingPriority="750" tag="101" id="115">
                         <rect key="frame" x="91" y="392" width="333" height="28"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="To use SIP you need an account. Select one option below." id="116">
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Om gebruik te maken van SIP is een account nodig. Selecteer één optie hieronder." id="116">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -137,16 +137,16 @@ Gw
                     <textField hidden="YES" verticalHuggingPriority="750" tag="101" id="136">
                         <rect key="frame" x="18" y="10" width="426" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Purchase Blink Pro for more accounts" id="137">
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Koop Blink Pro om meer accounts toe te voegen" id="137">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button toolTip="Synchronize this SIP account to all my other computers where I use Blink" id="159">
+                    <button toolTip="Synchroniseer deze SIP account naar alle andere computers waar ik Blink gebruik" id="159">
                         <rect key="frame" x="17" y="28" width="181" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="check" title="Sync with iCloud" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="160">
+                        <buttonCell key="cell" type="check" title="Synchroniseer met iCloud" bezelStyle="regularSquare" imagePosition="left" alignment="left" controlSize="small" state="on" inset="2" id="160">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="smallSystem"/>
                         </buttonCell>
@@ -156,7 +156,7 @@ Gw
                         <autoresizingMask key="autoresizingMask"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
-                            <tabViewItem label="Existing Account" identifier="existing_account" id="163">
+                            <tabViewItem label="Bestaande account" identifier="existing_account" id="163">
                                 <view key="view" id="166">
                                     <rect key="frame" x="0.0" y="0.0" width="423" height="237"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -180,16 +180,16 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="10" id="19">
                                                     <rect key="frame" x="1" y="210" width="146" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" alignment="right" title="Display Name:" id="20">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" alignment="right" title="Weergavenaam:" id="20">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                 </textField>
-                                                <textField toolTip="Enter SIP address in the form of user@domain" verticalHuggingPriority="750" tag="13" id="11">
+                                                <textField toolTip="Voer SIP adres met het formaat gebruiker@domein" verticalHuggingPriority="750" tag="13" id="11">
                                                     <rect key="frame" x="155" y="175" width="262" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="user@domain.com" drawsBackground="YES" id="12">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="gebruiker@domein.com" drawsBackground="YES" id="12">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -201,7 +201,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="12" id="13">
                                                     <rect key="frame" x="1" y="178" width="146" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" alignment="right" title="SIP Address:" id="14">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" alignment="right" title="SIP Adres:" id="14">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -222,7 +222,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="14" id="15">
                                                     <rect key="frame" x="-2" y="146" width="149" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" alignment="right" title="Password:" id="16">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" alignment="right" title="Wachtwoord:" id="16">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -231,7 +231,7 @@ Gw
                                                 <button id="170">
                                                     <rect key="frame" x="153" y="119" width="247" height="18"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <buttonCell key="cell" type="check" title="Syncronize contacts with server" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="171">
+                                                    <buttonCell key="cell" type="check" title="Synchroniseer contacten met de server" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="171">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
@@ -250,7 +250,7 @@ Gw
                                     </subviews>
                                 </view>
                             </tabViewItem>
-                            <tabViewItem label="Create Account" identifier="create_account" id="164">
+                            <tabViewItem label="Maak een account" identifier="create_account" id="164">
                                 <view key="view" id="165">
                                     <rect key="frame" x="0.0" y="0.0" width="423" height="237"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -262,7 +262,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="21" id="90">
                                                     <rect key="frame" x="155" y="204" width="262" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Firstname Lastname" drawsBackground="YES" id="91">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voornaam Acchternaam" drawsBackground="YES" id="91">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -274,7 +274,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="20" id="89">
                                                     <rect key="frame" x="-2" y="207" width="149" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Display Name:" id="92">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Weergavenaam:" id="92">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -295,7 +295,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="20" id="120">
                                                     <rect key="frame" x="0.0" y="175" width="147" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Username:" id="123">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Gebruikersnaam:" id="123">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -316,7 +316,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="22" id="31">
                                                     <rect key="frame" x="0.0" y="143" width="147" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Password:" id="34">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Wachtwoord:" id="34">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -337,7 +337,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="24" id="35">
                                                     <rect key="frame" x="-2" y="111" width="149" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Confirm Password:" id="36">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Bevestig wachtwoord:" id="36">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -346,7 +346,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="29" id="81">
                                                     <rect key="frame" x="152" y="29" width="267" height="41"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="The email address is used to send voicemail messages, missed calls notifications and to recover a lost password." id="82">
+                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Het e-mail adres wordt gebruikt voor voicemail berichten, gemiste gesprekken en om verloren wachtwoorden te resetten" id="82">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -367,7 +367,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="26" id="84">
                                                     <rect key="frame" x="-2" y="79" width="149" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Email Address:" id="85">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="E-mailadres:" id="85">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -376,7 +376,7 @@ Gw
                                                 <textField hidden="YES" verticalHuggingPriority="750" id="75">
                                                     <rect key="frame" x="153" y="9" width="223" height="14"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Creating account..." id="76">
+                                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Maken account..." id="76">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -385,7 +385,7 @@ Gw
                                                 <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" minValue="16" maxValue="100" doubleValue="16" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="74">
                                                     <rect key="frame" x="382" y="8" width="16" height="16"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                                    <accessibility description="Progress Indicator"/>
+                                                    <accessibility description="Voortgangsindicator"/>
                                                 </progressIndicator>
                                             </subviews>
                                         </customView>

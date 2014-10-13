@@ -32,6 +32,7 @@ def setup(delegate):
     delegate.supported_languages = {
         "system_default": NSLocalizedString("System Default", "Menu item"),
         "en": NSLocalizedString("English", "Menu item"),
+        "nl": NSLocalizedString("Nederlands", "Menu item"),
         "ro": NSLocalizedString("Romanian", "Menu item")
 }
 

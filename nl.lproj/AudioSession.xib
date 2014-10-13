@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -8,12 +8,12 @@
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
             <connections>
                 <outlet property="audioStatus" destination="31" id="44"/>
-                <outlet property="segmentedConferenceButtons" destination="71" id="73"/>
                 <outlet property="elapsed" destination="6" id="43"/>
                 <outlet property="encryptionMenu" destination="202" id="209"/>
-                <outlet property="segmentedButtons" destination="198" id="201"/>
                 <outlet property="info" destination="26" id="45"/>
                 <outlet property="label" destination="2" id="41"/>
+                <outlet property="segmentedButtons" destination="198" id="201"/>
+                <outlet property="segmentedConferenceButtons" destination="71" id="73"/>
                 <outlet property="sessionInfoButton" destination="166" id="168"/>
                 <outlet property="srtpIcon" destination="32" id="46"/>
                 <outlet property="tlsIcon" destination="23" id="42"/>
@@ -28,7 +28,7 @@
             <rect key="frame" x="0.0" y="0.0" width="265" height="57"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <imageView hidden="YES" toolTip="Audio stream is encrypted with sRTP" id="32">
+                <imageView hidden="YES" toolTip="Audiostream heeft sRTP encryptie" id="32">
                     <rect key="frame" x="5" y="5" width="17" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="srtp" id="33"/>
@@ -39,12 +39,12 @@
                 <textField verticalHuggingPriority="750" id="31">
                     <rect key="frame" x="4" y="6" width="171" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Established" id="34">
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Verbonden" id="34">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Session Status"/>
+                    <accessibility description="Sessiestatus"/>
                     <connections>
                         <outlet property="menu" destination="53" id="66"/>
                     </connections>
@@ -55,13 +55,13 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Mute" image="mute" width="20" tag="3"/>
+                            <segment toolTip="Dempen" image="mute" width="20" tag="3"/>
                             <segment toolTip="Pause" image="pause" width="20"/>
-                            <segment toolTip="Record" image="record" width="20" tag="1"/>
-                            <segment toolTip="Hangup" image="hangup" width="20" tag="2"/>
+                            <segment toolTip="Opnemen" image="record" width="20" tag="1"/>
+                            <segment toolTip="Hang op" image="hangup" width="20" tag="2"/>
                         </segments>
                     </segmentedCell>
-                    <accessibility description="Session Control Buttons"/>
+                    <accessibility description="Sessie controle knoppen"/>
                     <connections>
                         <action selector="userClickedSegmentButton:" target="-2" id="74"/>
                     </connections>
@@ -72,24 +72,24 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Encryption" image="NSLockUnlockedTemplate" width="20" tag="4">
+                            <segment toolTip="Encryptie" image="NSLockUnlockedTemplate" width="20" tag="4">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Transfer" image="transfer" width="20">
+                            <segment toolTip="Doorschakelen" image="transfer" width="20">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Pause" image="pause" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Record" image="record" width="20" tag="1">
+                            <segment toolTip="Opnemen" image="record" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
-                            <segment toolTip="Hangup" image="hangup" width="20" tag="1">
+                            <segment toolTip="Hang op" image="hangup" width="20" tag="1">
                                 <nil key="label"/>
                             </segment>
                         </segments>
                     </segmentedCell>
-                    <accessibility description="Session Control Buttons"/>
+                    <accessibility description="Sessie controle knoppen"/>
                     <connections>
                         <action selector="userClickedSegmentButton:" target="-2" id="200"/>
                     </connections>
@@ -123,7 +123,7 @@
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Session Duration"/>
+                    <accessibility description="Sessieduur"/>
                     <connections>
                         <outlet property="menu" destination="53" id="63"/>
                     </connections>
@@ -148,7 +148,7 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
-                    <accessibility description="Open Session Info Panel"/>
+                    <accessibility description="Open sessie informatie paneel"/>
                     <connections>
                         <accessibilityConnection property="link" destination="160" id="175"/>
                         <action selector="userClickedSessionInfoButton:" target="-2" id="169"/>
@@ -160,8 +160,8 @@
                     <segmentedCell key="cell" controlSize="small" alignment="left" style="rounded" trackingMode="momentary" id="326">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment label="Confirm" width="52" tag="1"/>
-                            <segment label="Hangup" width="52" tag="2"/>
+                            <segment label="Bevestig" width="52" tag="1"/>
+                            <segment label="Hang op" width="52" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <connections>
@@ -173,22 +173,22 @@
                 <outlet property="menu" destination="53" id="57"/>
             </connections>
         </customView>
-        <menu title="Session" autoenablesItems="NO" id="53">
+        <menu title="Sessie" autoenablesItems="NO" id="53">
             <items>
-                <menuItem title="Add Chat" tag="10" id="54">
+                <menuItem title="Chat toevoegen" tag="10" id="54">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="107"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="68"/>
-                <menuItem title="Add Video" tag="14" id="87">
+                <menuItem title="Video toevoegen" tag="14" id="87">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Always On Top" tag="15" id="aYc-EH-OI4">
+                <menuItem title="Altijd bovenaan" tag="15" id="aYc-EH-OI4">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="zCh-pD-PSX"/>
@@ -207,32 +207,32 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="110"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Cancel Screen Sharing Proposal" tag="13" enabled="NO" id="170">
+                <menuItem title="Annuleer voorstel scherm delen" tag="13" enabled="NO" id="170">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="171"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="172"/>
-                <menuItem title="Add to Contacts" tag="20" id="69">
+                <menuItem title="Toevoegen aan contacten" tag="20" id="69">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="111"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Show Session Information" tag="30" enabled="NO" keyEquivalent="i" id="160">
+                <menuItem title="Toon sessie informatie" tag="30" enabled="NO" keyEquivalent="i" id="160">
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="161"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Do Not Disturb During This Call" tag="41" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
+                <menuItem title="Niet storen tijdens dit gesprek" tag="41" id="331" userLabel="Menu Item - Do Not Disturb During This Call">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="332"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="178"/>
-                <menuItem title="Move Conference to Server" tag="40" enabled="NO" id="176">
+                <menuItem title="Verplaats naar conferentie server" tag="40" enabled="NO" id="176">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedSessionMenuItem:" target="-2" id="177"/>
@@ -243,9 +243,9 @@
                 <outlet property="delegate" destination="-2" id="61"/>
             </connections>
         </menu>
-        <menu title="Call Transfer" autoenablesItems="NO" id="93">
+        <menu title="Gesprek doorschakelen" autoenablesItems="NO" id="93">
             <items>
-                <menuItem title="Transfer Call To" enabled="NO" id="99">
+                <menuItem title="Doorschakelen gesprek naar" enabled="NO" id="99">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>
@@ -255,11 +255,11 @@
         </menu>
         <menu title="zRTP" autoenablesItems="NO" id="202">
             <items>
-                <menuItem title="Encryption Status (SRTP)" enabled="NO" id="241">
+                <menuItem title="Encryptie status (SRTP) " enabled="NO" id="241">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" tag="20" id="239"/>
-                <menuItem title="Encrypt using Diffie-Hellman key exchange (zRTP)" tag="21" id="251">
+                <menuItem title="Encrypt met Diffie-Hellman key uitwisseling (zRTP)" tag="21" id="251">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="253"/>
@@ -271,13 +271,13 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="260"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Confirm Identity by verbally comparing the phrase" tag="22" indentationLevel="1" id="261">
+                <menuItem title="Bevestig de identiteit door het woord met spraak te vergelijken " tag="22" indentationLevel="1" id="261">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="262"/>
                     </connections>
                 </menuItem>
-                <menuItem title="zRTP is compromised (Man-in-the-middle detected)" tag="24" indentationLevel="1" id="252">
+                <menuItem title="zRTP is gecompromiteerd (Man-in-the-middle gedetecteerd)" tag="24" indentationLevel="1" id="252">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="254"/>
@@ -295,13 +295,13 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="301"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Man-in-the-middle attacks are always detected" state="on" tag="26" enabled="NO" indentationLevel="1" id="274">
+                <menuItem title="Man-in-the-middle aanvallen worden altijd gedetecteerd" state="on" tag="26" enabled="NO" indentationLevel="1" id="274">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="275"/>
                     </connections>
                 </menuItem>
-                <menuItem title="About zRTP key exchange" tag="27" indentationLevel="1" id="288">
+                <menuItem title="Over zRTP key uitwisseling" tag="27" indentationLevel="1" id="288">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="289"/>
@@ -314,19 +314,19 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="264"/>
                     </connections>
                 </menuItem>
-                <menuItem title="SIP Service Provider has access to the encryption key" state="on" tag="12" enabled="NO" indentationLevel="1" id="265">
+                <menuItem title="SIP serviceprovider heeft toegang to de encryptiesleutel" state="on" tag="12" enabled="NO" indentationLevel="1" id="265">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="266"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Internet Provider can access the encryption key (SIP signaling is not encrypted)" state="on" tag="14" enabled="NO" indentationLevel="1" id="278">
+                <menuItem title="ISP kan de encryptiesleutel verkrijgen (SIP signalering is niet versleuteld)" state="on" tag="14" enabled="NO" indentationLevel="1" id="278">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="279"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Man-in-the-middle attacks cannot be reliably detected" state="on" tag="13" enabled="NO" indentationLevel="1" id="282">
+                <menuItem title="Man-in-the-middle aanvallen kunnen niet betrouwbaar worden gedetecteerd" state="on" tag="13" enabled="NO" indentationLevel="1" id="282">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="283"/>
@@ -338,20 +338,20 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="299"/>
                     </connections>
                 </menuItem>
-                <menuItem title="About SDES key exchange" tag="15" indentationLevel="1" id="290">
+                <menuItem title="Over SDES key uitwisseling" tag="15" indentationLevel="1" id="290">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="291"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" tag="30" id="292"/>
-                <menuItem title="Media stream is not encrypted" tag="31" indentationLevel="1" id="296">
+                <menuItem title="Mediastream heeft geen ecryptie" tag="31" indentationLevel="1" id="296">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="297"/>
                     </connections>
                 </menuItem>
-                <menuItem title="About SRTP encryption" tag="39" indentationLevel="1" id="293">
+                <menuItem title="Over SRTP encryptie" tag="39" indentationLevel="1" id="293">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="294"/>

@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="8.00">
 	<data>
-		<int key="IBDocument.SystemTarget">1060</int>
-		<string key="IBDocument.SystemVersion">10K549</string>
-		<string key="IBDocument.InterfaceBuilderVersion">1938</string>
-		<string key="IBDocument.AppKitVersion">1038.36</string>
-		<string key="IBDocument.HIToolboxVersion">461.00</string>
+		<int key="IBDocument.SystemTarget">1090</int>
+		<string key="IBDocument.SystemVersion">13E25</string>
+		<string key="IBDocument.InterfaceBuilderVersion">5056</string>
+		<string key="IBDocument.AppKitVersion">1265.21</string>
+		<string key="IBDocument.HIToolboxVersion">698.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">1938</string>
+			<string key="NS.object.0">5056</string>
 		</object>
 		<array key="IBDocument.IntegratedClassDependencies">
-			<string>NSTextField</string>
+			<string>NSButton</string>
+			<string>NSButtonCell</string>
 			<string>NSCustomObject</string>
-			<string>NSProgressIndicator</string>
 			<string>NSCustomView</string>
 			<string>NSImageCell</string>
-			<string>NSButtonCell</string>
 			<string>NSImageView</string>
-			<string>NSButton</string>
+			<string>NSProgressIndicator</string>
+			<string>NSTextField</string>
 			<string>NSTextFieldCell</string>
 		</array>
 		<array key="IBDocument.PluginDependencies">
@@ -39,7 +39,7 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSCustomView" id="7880885">
-				<reference key="NSNextResponder"/>
+				<nil key="NSNextResponder"/>
 				<int key="NSvFlags">274</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="NSImageView" id="241215001">
@@ -57,7 +57,7 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSImageCell" key="NSCell" id="748819662">
-							<int key="NSCellFlags">537001472</int>
+							<int key="NSCellFlags">671088640</int>
 							<int key="NSCellFlags2">33554432</int>
 							<object class="NSCustomResource" key="NSContents">
 								<string key="NSClassName">NSImage</string>
@@ -68,6 +68,7 @@
 							<int key="NSStyle">0</int>
 							<bool key="NSAnimates">NO</bool>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 						<bool key="NSEditable">YES</bool>
 					</object>
 					<object class="NSTextField" id="977805831">
@@ -77,11 +78,11 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="746938080">
-							<int key="NSCellFlags">68288064</int>
+							<int key="NSCellFlags">68157504</int>
 							<int key="NSCellFlags2">272761856</int>
 							<string key="NSContents">Label</string>
 							<object class="NSFont" key="NSSupport">
-								<string key="NSName">LucidaGrande</string>
+								<string key="NSName">.LucidaGrandeUI</string>
 								<double key="NSSize">11</double>
 								<int key="NSfFlags">3100</int>
 							</object>
@@ -105,11 +106,12 @@
 								</object>
 							</object>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
+						<int key="NSTextFieldAlignmentRectInsetsVersion">1</int>
 					</object>
 					<object class="NSProgressIndicator" id="338078125">
 						<reference key="NSNextResponder" ref="7880885"/>
 						<int key="NSvFlags">-2147482358</int>
-						<object class="NSPSMatrix" key="NSDrawMatrix"/>
 						<string key="NSFrame">{{49, 20}, {300, 12}}</string>
 						<reference key="NSSuperview" ref="7880885"/>
 						<int key="NSpiFlags">24840</int>
@@ -118,7 +120,6 @@
 					<object class="NSProgressIndicator" id="41500479">
 						<reference key="NSNextResponder" ref="7880885"/>
 						<int key="NSvFlags">1290</int>
-						<object class="NSPSMatrix" key="NSDrawMatrix"/>
 						<string key="NSFrame">{{49, 20}, {300, 12}}</string>
 						<reference key="NSSuperview" ref="7880885"/>
 						<int key="NSpiFlags">16648</int>
@@ -131,11 +132,11 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="576384281">
-							<int key="NSCellFlags">67239488</int>
+							<int key="NSCellFlags">67108928</int>
 							<int key="NSCellFlags2">272893952</int>
-							<string key="NSContents">From: Joe Smith</string>
+							<string key="NSContents">Van: Joe Smith</string>
 							<object class="NSFont" key="NSSupport" id="22">
-								<string key="NSName">LucidaGrande</string>
+								<string key="NSName">.LucidaGrandeUI</string>
 								<double key="NSSize">9</double>
 								<int key="NSfFlags">3614</int>
 							</object>
@@ -146,6 +147,8 @@
 								<bytes key="NSRGB">MC4zNTIwNDA4MyAwLjM1MjA0MDgzIDAuMzUyMDQwODMAA</bytes>
 							</object>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
+						<int key="NSTextFieldAlignmentRectInsetsVersion">1</int>
 					</object>
 					<object class="NSButton" id="40015812">
 						<reference key="NSNextResponder" ref="7880885"/>
@@ -154,16 +157,16 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="555314770">
-							<int key="NSCellFlags">67239424</int>
+							<int key="NSCellFlags">67108864</int>
 							<int key="NSCellFlags2">134217728</int>
 							<string key="NSContents"/>
 							<object class="NSFont" key="NSSupport" id="264397877">
-								<string key="NSName">LucidaGrande</string>
+								<string key="NSName">.LucidaGrandeUI</string>
 								<double key="NSSize">13</double>
 								<int key="NSfFlags">1044</int>
 							</object>
 							<reference key="NSControlView" ref="40015812"/>
-							<int key="NSButtonFlags">139215103</int>
+							<int key="NSButtonFlags">139214848</int>
 							<int key="NSButtonFlags2">134</int>
 							<object class="NSCustomResource" key="NSNormalImage">
 								<string key="NSClassName">NSImage</string>
@@ -174,6 +177,7 @@
 							<int key="NSPeriodicDelay">200</int>
 							<int key="NSPeriodicInterval">25</int>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 					</object>
 					<object class="NSButton" id="592848784">
 						<reference key="NSNextResponder" ref="7880885"/>
@@ -182,12 +186,12 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="1069212756">
-							<int key="NSCellFlags">67239424</int>
+							<int key="NSCellFlags">67108864</int>
 							<int key="NSCellFlags2">134217728</int>
 							<string key="NSContents"/>
 							<reference key="NSSupport" ref="264397877"/>
 							<reference key="NSControlView" ref="592848784"/>
-							<int key="NSButtonFlags">139215103</int>
+							<int key="NSButtonFlags">139214848</int>
 							<int key="NSButtonFlags2">134</int>
 							<object class="NSCustomResource" key="NSNormalImage">
 								<string key="NSClassName">NSImage</string>
@@ -198,6 +202,7 @@
 							<int key="NSPeriodicDelay">200</int>
 							<int key="NSPeriodicInterval">25</int>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 					</object>
 					<object class="NSButton" id="99863829">
 						<reference key="NSNextResponder" ref="7880885"/>
@@ -206,12 +211,12 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSButtonCell" key="NSCell" id="702342181">
-							<int key="NSCellFlags">67239424</int>
+							<int key="NSCellFlags">67108864</int>
 							<int key="NSCellFlags2">134217728</int>
 							<string key="NSContents"/>
 							<reference key="NSSupport" ref="264397877"/>
 							<reference key="NSControlView" ref="99863829"/>
-							<int key="NSButtonFlags">139215103</int>
+							<int key="NSButtonFlags">139214848</int>
 							<int key="NSButtonFlags2">134</int>
 							<object class="NSCustomResource" key="NSNormalImage">
 								<string key="NSClassName">NSImage</string>
@@ -222,6 +227,7 @@
 							<int key="NSPeriodicDelay">200</int>
 							<int key="NSPeriodicInterval">25</int>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
 					</object>
 					<object class="NSTextField" id="419620050">
 						<reference key="NSNextResponder" ref="7880885"/>
@@ -230,9 +236,9 @@
 						<reference key="NSSuperview" ref="7880885"/>
 						<bool key="NSEnabled">YES</bool>
 						<object class="NSTextFieldCell" key="NSCell" id="699855808">
-							<int key="NSCellFlags">68288064</int>
+							<int key="NSCellFlags">68157504</int>
 							<int key="NSCellFlags2">4457472</int>
-							<string key="NSContents">121.0 of 125M</string>
+							<string key="NSContents">121.0 van 125M</string>
 							<reference key="NSSupport" ref="22"/>
 							<reference key="NSControlView" ref="419620050"/>
 							<reference key="NSBackgroundColor" ref="591189011"/>
@@ -241,10 +247,11 @@
 								<bytes key="NSRGB">MC40NDM4Nzc1OCAwLjQ0Mzg3NzU4IDAuNDQzODc3NTgAA</bytes>
 							</object>
 						</object>
+						<bool key="NSAllowsLogicalLayoutDirection">NO</bool>
+						<int key="NSTextFieldAlignmentRectInsetsVersion">1</int>
 					</object>
 				</array>
 				<string key="NSFrameSize">{400, 68}</string>
-				<reference key="NSSuperview"/>
 				<string key="NSClassName">NSView</string>
 			</object>
 		</array>
@@ -511,7 +518,7 @@
 					<object class="IBToolTipAttribute" key="NS.object.0">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="40015812"/>
-						<string key="toolTip">Show the folder where the file is located</string>
+						<string key="toolTip">Toon de folder waar het bestand is opgeslagen</string>
 					</object>
 				</object>
 				<string key="12.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -525,7 +532,7 @@
 					<object class="IBToolTipAttribute" key="NS.object.0">
 						<string key="name">ToolTip</string>
 						<reference key="object" ref="99863829"/>
-						<string key="toolTip">Retry sending the file</string>
+						<string key="toolTip">Probeer bestand opnieuw te sturen</string>
 					</object>
 				</object>
 				<string key="39.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
@@ -547,6 +554,11 @@
 		<object class="IBClassDescriber" key="IBDocument.Classes"/>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
+		<bool key="IBDocument.previouslyAttemptedUpgradeToXcode5">NO</bool>
+		<object class="NSMutableDictionary" key="IBDocument.PluginDeclaredDevelopmentDependencies">
+			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin.InterfaceBuilder3</string>
+			<integer value="4600" key="NS.object.0"/>
+		</object>
 		<bool key="IBDocument.PluginDeclaredDependenciesTrackSystemTargetVersion">YES</bool>
 		<int key="IBDocument.defaultPropertyAccessControl">3</int>
 		<dictionary class="NSMutableDictionary" key="IBDocument.LastKnownImageSizes">

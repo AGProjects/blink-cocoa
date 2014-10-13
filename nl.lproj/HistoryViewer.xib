@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -27,7 +27,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <window title="History Viewer" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="historyWindow" animationBehavior="default" id="1">
+        <window title="Geschiedenis venster" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="historyWindow" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="656" y="340" width="755" height="524"/>
@@ -56,7 +56,7 @@
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
                                                 <tableColumn identifier="contacts" editable="NO" width="177" minWidth="40" maxWidth="1000" id="69">
-                                                    <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Contacts">
+                                                    <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Contacten">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -124,7 +124,7 @@
                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                         </tableColumn>
                                                         <tableColumn identifier="local_uri" editable="NO" width="218" minWidth="40" maxWidth="1000" id="13">
-                                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Local Account">
+                                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Lokale account">
                                                                 <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -152,7 +152,7 @@
                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                         </tableColumn>
                                                         <tableColumn identifier="date" editable="NO" width="73" minWidth="10" maxWidth="3.4028229999999999e+38" id="17">
-                                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Date">
+                                                            <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Datum">
                                                                 <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -240,7 +240,7 @@
                     <textField verticalHuggingPriority="750" id="81">
                         <rect key="frame" x="308" y="4" width="272" height="11"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="No  entries found" id="82">
+                        <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Niets gevonden" id="82">
                             <font key="font" metaFont="miniSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -276,13 +276,13 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="48BE55B7-C662-4483-91B1-686E4E16A638" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="34">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Filter Contact Results" paletteLabel="Filter Contact Results" toolTip="Type text and press Enter" id="112">
+                    <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Filter resultaten op contact" paletteLabel="Filter resultaten op contact" toolTip="Tiep tekst en druk op enter" id="112">
                         <size key="minSize" width="97" height="22"/>
                         <size key="maxSize" width="217" height="22"/>
                         <searchField key="view" verticalHuggingPriority="750" id="113">
                             <rect key="frame" x="0.0" y="14" width="127" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Enter Address" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Voer adres in" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
                                 <font key="font" metaFont="system"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -304,87 +304,87 @@
                             <action selector="userClickedToolbarItem:" target="-2" id="174"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6F411DA1-8DE1-40E2-908F-C7609724A924" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="100" image="smiley_on" id="61">
+                    <toolbarItem implicitItemIdentifier="6F411DA1-8DE1-40E2-908F-C7609724A924" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Toon/Verberg emoticons" tag="100" image="smiley_on" id="61">
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="63"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="8C097A50-0FB6-4D94-A38F-75AA87F9C79F" explicitItemIdentifier="delete" label="Delete" paletteLabel="Delete" toolTip="Purge Messages" tag="101" image="trash" id="78">
+                    <toolbarItem implicitItemIdentifier="8C097A50-0FB6-4D94-A38F-75AA87F9C79F" explicitItemIdentifier="delete" label="Verwijder" paletteLabel="Verwijder" toolTip="Verwijder berichten" tag="101" image="trash" id="78">
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="79"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="2B4E8F2E-3342-434C-A85E-8083D0CE95E6" label="Search by Media" paletteLabel="Search by Media" id="106">
+                    <toolbarItem implicitItemIdentifier="2B4E8F2E-3342-434C-A85E-8083D0CE95E6" label="Zoek op media" paletteLabel="Zoek op media" id="106">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
                         <size key="maxSize" width="162" height="26"/>
-                        <popUpButton key="view" toolTip="Filter by Media" verticalHuggingPriority="750" id="100">
+                        <popUpButton key="view" toolTip="Filter op mediatype" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Any Media" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="103" id="101">
+                            <popUpButtonCell key="cell" type="push" title="Tekstconversaties" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="2" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="105" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                                 <menu key="menu" title="OtherViews" id="102">
                                     <items>
-                                        <menuItem title="Any Media" state="on" id="103"/>
-                                        <menuItem title="Audio Calls" tag="1" id="104"/>
-                                        <menuItem title="Text Conversations" tag="2" id="105"/>
-                                        <menuItem title="File Transfers" tag="3" id="109"/>
-                                        <menuItem title="Audio Recordings" tag="4" id="135"/>
-                                        <menuItem title="Availability" tag="5" id="136"/>
+                                        <menuItem title="Ieder mediatype" id="103"/>
+                                        <menuItem title="Audiogesprekken" tag="1" id="104"/>
+                                        <menuItem title="Tekstconversaties" state="on" tag="2" id="105"/>
+                                        <menuItem title="Bestandsoverdrachten" tag="3" id="109"/>
+                                        <menuItem title="Audio-opnamen" tag="4" id="135"/>
+                                        <menuItem title="Beschikbaarheid" tag="5" id="136"/>
                                         <menuItem title="Voicemail" tag="6" id="137"/>
                                     </items>
                                 </menu>
                             </popUpButtonCell>
-                            <accessibility description="Presence Activity"/>
+                            <accessibility description="Beschibaarheidsactiviteit"/>
                         </popUpButton>
                         <connections>
                             <action selector="filterByMediaChanged:" target="-2" id="110"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Search by Date" paletteLabel="Search by Date" id="121">
+                    <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Zoek op datum" paletteLabel="Zoek op datum" id="121">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
                         <size key="maxSize" width="172" height="26"/>
-                        <popUpButton key="view" toolTip="Filter by Date" verticalHuggingPriority="750" id="122">
+                        <popUpButton key="view" toolTip="Filteren op datum" verticalHuggingPriority="750" id="122">
                             <rect key="frame" x="0.0" y="14" width="172" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Last Day" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" preferredEdge="minX" selectedItem="128" id="123">
+                            <popUpButtonCell key="cell" type="push" title="Laatste dag" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" preferredEdge="minX" selectedItem="128" id="123">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                                 <menu key="menu" title="OtherViews" id="124">
                                     <items>
-                                        <menuItem title="Any Date" id="127"/>
+                                        <menuItem title="Elke datum" id="127"/>
                                         <menuItem isSeparatorItem="YES" id="190"/>
-                                        <menuItem title="Last Day" state="on" tag="1" id="128"/>
-                                        <menuItem title="Last Week" tag="2" id="129"/>
-                                        <menuItem title="Last Month" tag="3" id="126"/>
-                                        <menuItem title="Last 3 Months" tag="4" id="186"/>
-                                        <menuItem title="Last 6 Months" tag="5" id="187"/>
-                                        <menuItem title="Last Year" tag="6" id="188"/>
+                                        <menuItem title="Laatste dag" state="on" tag="1" id="128"/>
+                                        <menuItem title="Laatste week" tag="2" id="129"/>
+                                        <menuItem title="Laatste maand" tag="3" id="126"/>
+                                        <menuItem title="Laatste 3 maanden" tag="4" id="186"/>
+                                        <menuItem title="Laatste 6 maanden " tag="5" id="187"/>
+                                        <menuItem title="Laatste jaar" tag="6" id="188"/>
                                         <menuItem isSeparatorItem="YES" id="189"/>
-                                        <menuItem title="Older than 1 Day" tag="-1" id="191"/>
-                                        <menuItem title="Older than 1 Week" tag="-2" id="192"/>
-                                        <menuItem title="Older than 1 Month" tag="-3" id="193"/>
-                                        <menuItem title="Older than 3 Months" tag="-4" id="179"/>
-                                        <menuItem title="Older than 6 Months" tag="-5" id="181"/>
-                                        <menuItem title="Older than 1 Year" tag="-6" id="180"/>
+                                        <menuItem title="Ouder dan 1 dag" tag="-1" id="191"/>
+                                        <menuItem title="Ouder dan 1 week" tag="-2" id="192"/>
+                                        <menuItem title="Ouder dan 1 maand" tag="-3" id="193"/>
+                                        <menuItem title="Ouder dan 3 maanden" tag="-4" id="179"/>
+                                        <menuItem title="Ouder dan 6 maanden" tag="-5" id="181"/>
+                                        <menuItem title="Ouder dan 1 jaar" tag="-6" id="180"/>
                                     </items>
                                 </menu>
                             </popUpButtonCell>
-                            <accessibility description="Presence Activity"/>
+                            <accessibility description="Beschibaarheidsactiviteit"/>
                         </popUpButton>
                         <connections>
                             <action selector="filterByPeriodChanged:" target="-2" id="132"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Search Content" paletteLabel="Search Content" toolTip="Type text and press Enter" id="45">
+                    <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Zoek in geschiedenis" paletteLabel="Zoek in geschiedenis" toolTip="Tiep tekst en druk op enter" id="45">
                         <size key="minSize" width="191" height="22"/>
                         <size key="maxSize" width="217" height="26"/>
                         <searchField key="view" verticalHuggingPriority="750" id="43">
                             <rect key="frame" x="0.0" y="14" width="205" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Enter text and press Enter " bezelStyle="round" sendsWholeSearchString="YES" id="44">
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Voer tekst in en druk op Enter" bezelStyle="round" sendsWholeSearchString="YES" id="44">
                                 <font key="font" metaFont="system"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -420,13 +420,13 @@
         </customObject>
         <menu title="Contact" autoenablesItems="NO" id="148">
             <items>
-                <menuItem title="Delete History..." tag="1" id="165">
+                <menuItem title="Verwijder geschiedenis..." tag="1" id="165">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedContactMenu:" target="-2" id="166"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Start Session..." tag="2" id="167">
+                <menuItem title="Sessie starten..." tag="2" id="167">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedContactMenu:" target="-2" id="168"/>
@@ -439,7 +439,7 @@
                         <action selector="userClickedContactMenu:" target="-2" id="164"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Edit Contact... " tag="4" enabled="NO" id="183">
+                <menuItem title="Bewerk contact... " tag="4" enabled="NO" id="183">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedContactMenu:" target="-2" id="185"/>

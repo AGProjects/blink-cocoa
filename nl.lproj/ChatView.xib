@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13C1021" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13F18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
@@ -33,7 +33,7 @@
                             <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
                                 <nil key="identifier"/>
                             </webPreferences>
-                            <accessibility description="Chat Session History"/>
+                            <accessibility description="Geschiedenis chatsessie"/>
                             <connections>
                                 <outlet property="UIDelegate" destination="164" id="174"/>
                                 <outlet property="frameLoadDelegate" destination="164" id="171"/>
@@ -44,7 +44,7 @@
                         <textField verticalHuggingPriority="750" id="217">
                             <rect key="frame" x="17" y="397" width="275" height="14"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Previous messages" id="218">
+                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Vorige berichten" id="218">
                                 <font key="font" metaFont="smallSystem"/>
                                 <color key="textColor" white="0.2063067036" alpha="1" colorSpace="calibratedWhite"/>
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -57,7 +57,7 @@
                         <searchField verticalHuggingPriority="750" id="222">
                             <rect key="frame" x="319" y="396" width="162" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Search Messages" usesSingleLineMode="YES" bezelStyle="round" id="223">
+                            <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Zoek berichten" usesSingleLineMode="YES" bezelStyle="round" id="223">
                                 <font key="font" metaFont="system" size="10"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -66,7 +66,7 @@
                                 <action selector="searchMessages:" target="164" id="229"/>
                             </connections>
                         </searchField>
-                        <button hidden="YES" toolTip="Show All Messages Belonging To The Same Session" verticalHuggingPriority="750" id="230">
+                        <button hidden="YES" toolTip="Toon alle berichten die tot dezelfde sessie behoren" verticalHuggingPriority="750" id="230">
                             <rect key="frame" x="297" y="395" width="18" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="231">
@@ -108,7 +108,7 @@
                                     </items>
                                 </menu>
                             </popUpButtonCell>
-                            <accessibility description="Select Smiley"/>
+                            <accessibility description="Selecteer emoticon"/>
                         </popUpButton>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="24">
                             <rect key="frame" x="0.0" y="0.0" width="464" height="73"/>
@@ -126,7 +126,7 @@
                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                         <size key="minSize" width="462" height="71"/>
                                         <size key="maxSize" width="1000" height="10000000"/>
-                                        <accessibility description="Enter Text to send to the other party "/>
+                                        <accessibility description="Voer de tekst in om aan de andere partij te sturen"/>
                                         <connections>
                                             <outlet property="delegate" destination="-2" id="177"/>
                                         </connections>
@@ -157,7 +157,7 @@
                         <textField verticalHuggingPriority="750" id="253">
                             <rect key="frame" x="380" y="53" width="83" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="PRIVATE" id="254">
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="PRIVÉ" id="254">
                                 <font key="font" metaFont="systemBold" size="16"/>
                                 <color key="textColor" white="0.55884576610000003" alpha="1" colorSpace="calibratedWhite"/>
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
