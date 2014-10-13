@@ -1514,6 +1514,9 @@ class SessionController(NSObject):
                     #un-mute mic
                     SIPManager().mute(False)
 
+                if stype == 'video' and self.video_consumer != 'audio':
+                    NSApp.delegate().contactsWindowController.drawer.close()
+
             else:
                 self.log_debug("%s controller already exists in %s" % (stype, self.streamHandlers))
                 streamController = self.streamHandlerOfType(stype)

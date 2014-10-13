@@ -1063,7 +1063,6 @@ class AudioController(MediaStream):
                     self.sessionController.removeChatFromSession()
         elif tag == 14: # add video
             if not self.sessionController.hasStreamOfType("video"):
-                NSApp.delegate().contactsWindowController.drawer.close()
                 self.sessionController.addVideoToSession()
             else:
                 video_stream = self.sessionController.streamHandlerOfType("video")
