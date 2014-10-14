@@ -3096,7 +3096,7 @@
 		1FCEFA2D19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
 		1FCEFA2E19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
 		1FCEFA2F19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AccountSettings.xib; sourceTree = "<group>"; };
-		1FCEFA3019EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		1FCEFA3019EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1FCEFA3119EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Updater.xib; sourceTree = "<group>"; };
 		1FCEFA3219EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/About.xib; sourceTree = "<group>"; };
 		1FCEFA3319EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
