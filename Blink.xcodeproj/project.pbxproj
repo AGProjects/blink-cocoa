@@ -3002,6 +3002,7 @@
 		1F8760B412C026840090846C /* FileTransferController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferController.py; sourceTree = "<group>"; };
 		1F87B6EE1477D57000BDF25A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
 		1F88639815D6F62B00373743 /* PresencePublisher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePublisher.py; sourceTree = "<group>"; };
+		1F889B7019EEC50600772E1F /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
 		1F8CB30A19546C9700D73F74 /* branding-elquijote-appstore.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote-appstore.py"; sourceTree = "<group>"; };
@@ -3127,7 +3128,6 @@
 		1FCEFA4C19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/AudioSession.xib; sourceTree = "<group>"; };
 		1FCEFA4D19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FCEFA4F19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
-		1FCEFA5119EBFAB400E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1FCEFA5219EBFAC200E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FCEFA5319EBFAD300E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FCEFA5419EBFAF800E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
@@ -6188,7 +6188,7 @@
 				1F21A22A19C60254006866C8 /* ro */,
 				1F21A22B19C60256006866C8 /* es */,
 				1F21A22C19C60258006866C8 /* pt */,
-				1FCEFA5119EBFAB400E9647D /* nl */,
+				1F889B7019EEC50600772E1F /* nl */,
 			);
 			name = VideoWindow.xib;
 			sourceTree = "<group>";
