@@ -3003,6 +3003,8 @@
 		1F87B6EE1477D57000BDF25A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/NightVolumeSetting.xib; sourceTree = "<group>"; };
 		1F88639815D6F62B00373743 /* PresencePublisher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PresencePublisher.py; sourceTree = "<group>"; };
 		1F889B7019EEC50600772E1F /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoWindow.xib; sourceTree = "<group>"; };
+		1F889B7119EEC56400772E1F /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
+		1F889B7219EEC57200772E1F /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
 		1F8CB30A19546C9700D73F74 /* branding-elquijote-appstore.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote-appstore.py"; sourceTree = "<group>"; };
@@ -3129,8 +3131,6 @@
 		1FCEFA4D19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/CallTransferWindow.xib; sourceTree = "<group>"; };
 		1FCEFA4F19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoTitleBarView.xib; sourceTree = "<group>"; };
 		1FCEFA5219EBFAC200E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FCEFA5319EBFAD300E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
-		1FCEFA5419EBFAF800E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1FCF118E1390EDE7001D1CAF /* chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = chat.png; path = icons/chat.png; sourceTree = "<group>"; };
 		1FCF11961390EDFD001D1CAF /* alerts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = alerts.png; path = icons/alerts.png; sourceTree = "<group>"; };
 		1FCF119A1390EE08001D1CAF /* logs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logs.png; path = icons/logs.png; sourceTree = "<group>"; };
@@ -6128,7 +6128,7 @@
 				1F3D0E8C19C1E27100681677 /* ro */,
 				1F3D0E8D19C1E27300681677 /* es */,
 				1F3D0E8E19C1E27500681677 /* pt */,
-				1FCEFA5419EBFAF800E9647D /* nl */,
+				1F889B7119EEC56400772E1F /* nl */,
 			);
 			name = VideoLocalTitleBarView.xib;
 			sourceTree = "<group>";
@@ -6140,7 +6140,7 @@
 				1FCE106A19BD308D006F64C1 /* ro */,
 				1FCE106B19BD308F006F64C1 /* es */,
 				1FCE106C19BD3092006F64C1 /* pt */,
-				1FCEFA5319EBFAD300E9647D /* nl */,
+				1F889B7219EEC57200772E1F /* nl */,
 			);
 			name = MyVideoLocalWindow.xib;
 			sourceTree = "<group>";
