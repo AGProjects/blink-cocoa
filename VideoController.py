@@ -87,6 +87,8 @@ class VideoController(MediaStream):
         self.rx_speed_history = deque(maxlen=300)
         self.tx_speed_history = deque(maxlen=300)
         self.ice_negotiation_status = NSLocalizedString("Disabled", "Label") if not self.sessionController.account.nat_traversal.use_ice else None
+        if self.sessionController.video_consumer != "standalone":
+            self.initial_full_screen = True
 
         return self
 
