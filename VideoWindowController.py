@@ -59,6 +59,7 @@ from Foundation import (NSAttributedString,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSTimer,
+                        NSNotificationCenter,
                         NSLocalizedString,
                         NSTrackingArea,
                         NSZeroRect,
@@ -68,6 +69,7 @@ from Foundation import (NSAttributedString,
                         NSPopUpButton,
                         NSTextField,
                         NSTask,
+                        NSTaskDidTerminateNotification,
                         NSMakePoint,
                         NSWidth,
                         NSHeight,
@@ -79,16 +81,20 @@ from Foundation import (NSAttributedString,
 
 from Foundation import mbFlipWindow
 
+import datetime
 import os
 import objc
 import unicodedata
+
 from math import floor
-import objc
+from dateutil.tz import tzlocal
 
 from application.notification import NotificationCenter
+from resources import ApplicationData
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
+from util import format_identity_to_string
 
 from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState, CGColorCreateGenericRGB
 
@@ -295,6 +301,8 @@ class VideoWindowController(NSWindowController):
 
     disconnectLabel = objc.IBOutlet()
     last_label = None
+    screenshot_task = None
+    screencapture_file = None
 
     recordingImage = 0
     recording_timer = 0
@@ -517,8 +525,10 @@ class VideoWindowController(NSWindowController):
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Aspect", "Menu item"), "userClickedAspectButton:", "")
         menu.addItem_(NSMenuItem.separatorItem())
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Screenshot", "Menu item"), "userClickedScreenshotButton:", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Screenshot", "Menu item"), "userClickedSendScreenshotButton:", "")
+        lastItem.setEnabled_(not bool(self.screencapture_file))
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Open Screenshots Folder", "Menu item"), "userClickedOpenScreenshotFolder:", "")
-        lastItem.setRepresentedObject_(unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0]))
+        lastItem.setRepresentedObject_(ApplicationData.get('screenshots'))
         lastItem.setEnabled_(True)
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
@@ -1091,20 +1101,55 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedScreenshotButton_(self, sender):
-        download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
-        filename = '%s/Screencapture.png' % download_folder
-        basename, ext = os.path.splitext(filename)
-        i = 1
-        while os.path.exists(filename):
-            filename = '%s_%d%s' % (basename, i, ext)
-            i += 1
-        
+        filename = self.screenshot_filename()
         screenshot_task = NSTask.alloc().init()
         screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
         screenshot_task.setArguments_(['-tpng', filename])
         screenshot_task.launch()
         NSSound.soundNamed_("Grab").play()
         BlinkLogger().log_info("Screenshot saved in %s" % filename)
+
+    def screenshot_filename(self, for_remote=False):
+        screenshots_folder = ApplicationData.get('screenshots')
+        if not os.path.exists(screenshots_folder):
+           os.mkdir(screenshots_folder, 0700)
+
+        label = format_identity_to_string(self.sessionController.target_uri) if not for_remote else self.sessionController.account.id
+        filename = '%s/%s_screencapture_%s.png' % (screenshots_folder, datetime.datetime.now(tzlocal()).strftime("%Y-%m-%d_%H-%M"), label)
+        basename, ext = os.path.splitext(filename)
+        i = 1
+        while os.path.exists(filename):
+            filename = '%s_%d%s' % (basename, i, ext)
+            i += 1
+        return filename
+
+    @objc.IBAction
+    def userClickedSendScreenshotButton_(self, sender):
+        filename = self.screenshot_filename(True)
+        self.screencapture_file = filename
+        self.screenshot_task = NSTask.alloc().init()
+        self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+        self.screenshot_task.setArguments_(['-tpng', filename])
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "checkScreenshotTaskStatus:", NSTaskDidTerminateNotification, self.screenshot_task)
+        
+        self.screenshot_task.launch()
+        NSSound.soundNamed_("Grab").play()
+        BlinkLogger().log_info("Screenshot saved in %s" % filename)
+
+    def checkScreenshotTaskStatus_(self, notification):
+        status = notification.object().terminationStatus()
+        if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
+            self.sendFiles([unicode(self.screencapture_file)])
+        NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, self.screenshot_task)
+        self.screenshot_task = None
+        self.screencapture_file = None
+
+    def sendFiles(self, fnames):
+        filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
+        if filenames:
+            self.sessionController.sessionControllersManager.send_files_to_contact(self.sessionController.account, self.sessionController.target_uri, filenames)
+            return True
+        return False
 
     def updateIdleTimer_(self, timer):
         if not self.sessionController:
