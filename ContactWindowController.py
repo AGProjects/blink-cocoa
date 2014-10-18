@@ -25,6 +25,7 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSNormalWindowLevel,
                     NSOnState,
                     NSOffState,
+                    NSRightMouseUp,
                     NSOutlineViewSelectionDidChangeNotification,
                     NSParagraphStyleAttributeName,
                     NSPNGFileType,
@@ -128,6 +129,7 @@ from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
+from MediaStream import STREAM_CONNECTED
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
@@ -388,6 +390,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BlinkChatWindowClosed")
         nc.add_observer(self, name="BlinkVideoWindowClosed")
         nc.add_observer(self, name="BlinkConferenceGotUpdate")
+        nc.add_observer(self, name="BlinkDidRenegotiateStreams")
         nc.add_observer(self, name="BlinkContactsHaveChanged")
         nc.add_observer(self, name="BlinkMuteChangedState")
         nc.add_observer(self, name="BlinkShouldTerminate")
@@ -1393,7 +1396,11 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkChatWindowClosed(self, notification):
-        self.showAudioDrawer()
+        if self.hasStreamOfType("video"):
+            if self.video_consumer == "audio":
+                self.showAudioDrawer()
+        else:
+            self.showAudioDrawer()
 
     def _NH_BlinkVideoWindowClosed(self, notification):
         self.showAudioDrawer()
@@ -1410,6 +1417,9 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
         self.updateParticipantsView()
+    
+    def _NH_BlinkDidRenegotiateStreams(self, notification):
+        self.recalculateDrawerSplitter()
 
     def _NH_ActiveAudioSessionChanged(self, notification):
         self.updateParticipantsView()
@@ -2628,6 +2638,32 @@ class ContactWindowController(NSWindowController):
         item.contact.dialog.policy = 'allow' if item.contact.dialog.policy in ('default', 'block') else 'block'
         item.contact.save()
 
+    def rightMouseDown_(self, event):
+        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(), self.window().graphicsContext(), 0, 1, 0)
+                                                                                                                                  
+        menu = NSMenu.alloc().init()
+        session = self.getSelectedAudioSession()
+        video_stream = session.streamHandlerOfType("video")
+        if video_stream and video_stream.status == STREAM_CONNECTED:
+            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "userClickedRemoveVideo:", "")
+
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Detach Video", "Menu item"), "userClickedDetachVideo:", "")
+        NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
+
+
+    @objc.IBAction
+    def userClickedRemoveVideo_(self, sender):
+        session = self.getSelectedAudioSession()
+        if session:
+            session.removeVideoFromSession()
+
+    @objc.IBAction
+    def userClickedDetachVideo_(self, sender):
+        session = self.getSelectedAudioSession()
+        if session:
+            session.setVideoConsumer("standalone")
+    
     @objc.IBAction
     def groupButtonClicked_(self, sender):
         # IM button

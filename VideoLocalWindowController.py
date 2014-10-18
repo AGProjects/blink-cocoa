@@ -121,9 +121,14 @@ class VideoLocalWindowController(NSWindowController):
         frame = self.window().frame()
         frame.size.height = frame.size.width / self.aspect_ratio
         self.window().setFrame_display_(frame, True)
-        self.window().center()
-        self.window().makeKeyAndOrderFront_(None)
 
+        self.show()
+
+    def show(self):
+        if self.aspect_ratio:
+            self.window().center()
+            self.window().makeKeyAndOrderFront_(None)
+    
     def updateTrackingAreas(self):
         if self.tracking_area is not None:
             self.window().contentView().removeTrackingArea_(self.tracking_area)

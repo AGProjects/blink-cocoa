@@ -6,6 +6,7 @@ from AppKit import (NSApp,
                     NSRectFillUsingOperation,
                     NSCompositeSourceOver,
                     NSApplication,
+                    NSDrawerWindow,
                     NSGraphicsContext,
                     NSCalibratedRGBColorSpace,
                     NSAlphaFirstBitmapFormat,
@@ -72,7 +73,8 @@ from Foundation import (NSAttributedString,
                         NSHeight,
                         NSDownloadsDirectory,
                         NSSearchPathForDirectoriesInDomains,
-                        NSUserDomainMask
+                        NSUserDomainMask,
+                        NSWorkspace
                         )
 
 from Foundation import mbFlipWindow
@@ -98,7 +100,6 @@ from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
 from BlinkLogger import BlinkLogger
-
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
@@ -153,36 +154,47 @@ class VideoWidget(NSView):
         objc.super(VideoWidget, self).dealloc()
 
     def mouseDown_(self, event):
-        if self.window().delegate() and hasattr(self.window().delegate(), "mouseDown_"):
-            self.window().delegate().mouseDown_(event)
+        if hasattr(self.delegate, "mouseDown_"):
+            self.delegate.mouseDown_(event)
+
+    @property
+    def delegate(self):
+        delegate = self.window().delegate()
+        if type(self.window()) == NSDrawerWindow:
+            if NSApp.delegate().contactsWindowController.drawer.contentView().window() == self.window():
+                delegate = NSApp.delegate().contactsWindowController.drawer.parentWindow().delegate()
+            elif NSApp.delegate().contactsWindowController.chatWindowController.drawer.contentView().window() == self.window():
+                delegate = NSApp.delegate().contactsWindowController.chatWindowController.drawer.parentWindow().delegate()
+        return delegate
 
     def rightMouseDown_(self, event):
-        if self.window().delegate() and hasattr(self.window().delegate(), "rightMouseDown_"):
-            self.window().delegate().rightMouseDown_(event)
+        if hasattr(self.delegate, "rightMouseDown_"):
+            self.delegate.rightMouseDown_(event)
 
     def keyDown_(self, event):
-        if self.window().delegate() and hasattr(self.window().delegate(), "keyDown_"):
-            self.window().delegate().keyDown_(event)
+        if hasattr(self.delegate, "keyDown_"):
+            self.delegate.keyDown_(event)
 
     def mouseUp_(self, event):
-        pass
+        if hasattr(self.delegate, "mouseUp_"):
+            self.delegate.mouseUp_(event)
 
     def mouseDragged_(self, event):
-        if self.window().delegate():
-            self.window().delegate().mouseDraggedView_(event)
+        if hasattr(self.delegate, "mouseDraggedView_"):
+            self.delegate.mouseDraggedView_(event)
 
     def handle_frame(self, frame):
         if self.aspect_ratio is None:
             self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
-            if hasattr(self.window().delegate(), "init_aspect_ratio"):
-                self.window().delegate().init_aspect_ratio(*frame.size)
+            if hasattr(self.delegate, "init_aspect_ratio"):
+                self.delegate.init_aspect_ratio(*frame.size)
 
         self._frame = frame
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
-        if hasattr(self.window().delegate(), "full_screen_in_progress"):
-            if self.window().delegate().full_screen_in_progress:
+        if hasattr(self.delegate, "full_screen_in_progress"):
+            if self.delegate.full_screen_in_progress:
                 return
 
         frame = self._frame
@@ -229,8 +241,8 @@ class VideoWidget(NSView):
 
     def sendFiles(self, fnames):
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
-        if filenames and hasattr(self.window().delegate(), "sessionController"):
-            self.window().delegate().sessionController.sessionControllersManager.send_files_to_contact(self.window().delegate().sessionController.account, self.window().delegate().sessionController.target_uri, filenames)
+        if filenames and hasattr(self.delegate, "sessionController"):
+            self.delegate.sessionController.sessionControllersManager.send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
             return True
         return False
 
@@ -319,12 +331,33 @@ class VideoWindowController(NSWindowController):
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateMuteButton()
 
+    def _NH_BlinkAudioStreamChangedHoldState(self, sender, data):
+        self.updateHoldButton()
+
     def _NH_VideoDeviceDidChangeCamera(self, sender, data):
         if self.myVideoView:
             self.myVideoView.reloadCamera()
 
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
+
+    def updateHoldButton(self):
+        audio_stream = self.sessionController.streamHandlerOfType("audio")
+        if audio_stream:
+            if audio_stream.status == STREAM_CONNECTED:
+                if audio_stream.holdByLocal:
+                    self.holdButton.setToolTip_(NSLocalizedString("Unhold", "Label"))
+                else:
+                    self.holdButton.setToolTip_(NSLocalizedString("Hold", "Label"))
+
+                if audio_stream.holdByLocal or audio_stream.holdByRemote:
+                    self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
+                else:
+                    self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+            else:
+                self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+        else:
+            self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -333,12 +366,11 @@ class VideoWindowController(NSWindowController):
         handler(notification.sender, notification.data)
 
     def awakeFromNib(self):
-
         self.notification_center.add_observer(self,sender=self.streamController.videoRecorder)
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
+        self.notification_center.add_observer(self, name='BlinkAudioStreamChangedHoldState')
         self.notification_center.add_observer(self, name='VideoDeviceDidChangeCamera')
 
-        self.holdButton.setToolTip_(NSLocalizedString("Hold", "Label"))
         self.hangupButton.setToolTip_(NSLocalizedString("Hangup", "Label"))
         self.chatButton.setToolTip_(NSLocalizedString("Chat", "Label"))
         self.infoButton.setToolTip_(NSLocalizedString("Show Session Information", "Label"))
@@ -353,18 +385,8 @@ class VideoWindowController(NSWindowController):
         self.recordButton.setEnabled_(False)
 
         self.updateMuteButton()
-        audio_stream = self.sessionController.streamHandlerOfType("audio")
-        if audio_stream:
-            if audio_stream.status == STREAM_CONNECTED:
-                if audio_stream.holdByLocal or audio_stream.holdByRemote:
-                    self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
-                else:
-                    self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-            else:
-                self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-        else:
-            self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-
+        self.updateHoldButton()
+        
         self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "updateRecordingTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSEventTrackingRunLoopMode)
@@ -465,16 +487,39 @@ class VideoWindowController(NSWindowController):
         menu = NSMenu.alloc().init()
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "removeVideo:", "")
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hangup", "Menu item"), "hangup:", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hold", "Menu item"), "userClickedHoldButton:", "")
+        if self.sessionController.hasStreamOfType("audio"):
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream and audio_stream.status == STREAM_CONNECTED and not self.sessionController.inProposal:
+                if audio_stream.holdByLocal:
+                    lastItem.setTitle_(NSLocalizedString("Unhold", "Label"))
+                else:
+                    lastItem.setTitle_(NSLocalizedString("Hold", "Label"))
+
+
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Mute", "Menu item"), "userClickedMuteButton:", "")
+        lastItem.setState_(NSOnState if SIPManager().is_muted() else NSOffState)
+
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Always On Top", "Menu item"), "toogleAlwaysOnTop:", "")
+        lastItem.setEnabled_(not self.full_screen)
         lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
         if self.sessionController.hasStreamOfType("chat"):
             menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Window", "Menu item"), "userClickedAttachToChatMenuItem:", "")
         if self.sessionController.hasStreamOfType("audio"):
             menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Audio Window", "Menu item"), "userClickedAttachToAudioMenuItem:", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Full Screen", "Menu item"), "userClickedFullScreenButton:", "")
+        menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Aspect", "Menu item"), "userClickedAspectButton:", "")
+        menu.addItem_(NSMenuItem.separatorItem())
+        menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Screenshot", "Menu item"), "userClickedScreenshotButton:", "")
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Open Screenshots Folder", "Menu item"), "userClickedOpenScreenshotFolder:", "")
+        lastItem.setRepresentedObject_(unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0]))
+        lastItem.setEnabled_(True)
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
+        menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Info", "Menu item"), "userClickedInfoButton:", "")
 
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
@@ -676,13 +721,18 @@ class VideoWindowController(NSWindowController):
         self.showButtons()
 
         if self.sessionController.video_consumer == "standalone":
-            if self.localVideoWindow and not self.flipped:
-                self.localVideoWindow.window().orderOut_(None)
-                self.window().orderOut_(None)
-                self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
-                self.flipped = True
+            if self.streamController.status == STREAM_CONNECTED:
+                if self.localVideoWindow and not self.flipped:
+                    self.localVideoWindow.window().orderOut_(None)
+                    self.window().orderOut_(None)
+                    self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
+                    self.flipped = True
+                else:
+                    self.window().makeKeyAndOrderFront_(self)
             else:
-                self.window().makeKeyAndOrderFront_(self)
+                if not self.localVideoWindow:
+                    self.localVideoWindow = VideoLocalWindowController(self)
+                self.localVideoWindow.show()
         else:
             self.flipped = True
 
@@ -866,6 +916,7 @@ class VideoWindowController(NSWindowController):
         self.closed = True
         self.notification_center.discard_observer(self, sender=self.streamController.videoRecorder)
         self.notification_center.discard_observer(self, name='BlinkMuteChangedState')
+        self.notification_center.discard_observer(self, name='BlinkAudioStreamChangedHoldState')
         self.notification_center.discard_observer(self, name='VideoDeviceDidChangeCamera')
         self.notification_center = None
 
@@ -939,6 +990,10 @@ class VideoWindowController(NSWindowController):
         self.toggleFullScreen()
 
     @objc.IBAction
+    def userClickedOpenScreenshotFolder_(self, sender):
+        NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
+
+    @objc.IBAction
     def userClickedAspectButton_(self, sender):
         self.changeAspectRatio()
 
@@ -960,17 +1015,14 @@ class VideoWindowController(NSWindowController):
     def userClickedHoldButton_(self, sender):
         if not self.sessionController:
             return
+
         if self.sessionController.hasStreamOfType("audio"):
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status == STREAM_CONNECTED and not self.sessionController.inProposal:
                 if audio_stream.holdByLocal:
-                    self.holdButton.setToolTip_(NSLocalizedString("Hold", "Label"))
                     audio_stream.unhold()
                     audio_stream.view.setSelected_(True)
-                    sender.setImage_(NSImage.imageNamed_("pause-white"))
                 else:
-                    self.holdButton.setToolTip_(NSLocalizedString("Unhold", "Label"))
-                    sender.setImage_(NSImage.imageNamed_("paused-red"))
                     audio_stream.hold()
 
     @objc.IBAction
