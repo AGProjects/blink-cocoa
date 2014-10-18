@@ -1211,7 +1211,7 @@ class ChatController(MediaStream):
         screenshots_folder = ApplicationData.get('.tmp_screenshots')
         if not os.path.exists(screenshots_folder):
             os.mkdir(screenshots_folder, 0700)
-        filename = '%s/xscreencapture.png' % screenshots_folder
+        filename = '%s/%s_screencapture_%s.png' % (screenshots_folder, datetime.datetime.now(tzlocal()).strftime("%Y-%m-%d_%H-%M"), self.sessionController.account.id)
         basename, ext = os.path.splitext(filename)
         i = 1
         while os.path.exists(filename):

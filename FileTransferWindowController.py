@@ -183,7 +183,7 @@ class FileTransferWindowController(NSObject):
         h = NSHeight(self.listView.frame())
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
-        if 'xscreencapture' not in sender.file_path:
+        if 'screencapture' not in sender.file_path:
             self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
@@ -206,7 +206,7 @@ class FileTransferWindowController(NSObject):
         if isinstance(sender, IncomingFileTransferHandler):
             self.window.orderFront_(None)
             NSApp.requestUserAttention_(NSInformationalRequest)
-        elif 'xscreencapture' not in sender.file_path:
+        elif 'screencapture' not in sender.file_path:
             self.window.orderFront_(None)
             NSApp.requestUserAttention_(NSInformationalRequest)
 
