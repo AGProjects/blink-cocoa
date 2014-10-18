@@ -272,6 +272,7 @@ class VideoWindowController(NSWindowController):
     updating_aspect_ratio = False
     dragMyVideoViewWithinWindow = True
     closed = False
+    window_too_small = False
 
     holdButton = objc.IBOutlet()
     hangupButton = objc.IBOutlet()
@@ -293,6 +294,7 @@ class VideoWindowController(NSWindowController):
     myVideoViewBR = objc.IBOutlet()
 
     disconnectLabel = objc.IBOutlet()
+    last_label = None
 
     recordingImage = 0
     recording_timer = 0
@@ -430,6 +432,9 @@ class VideoWindowController(NSWindowController):
         self.window().center()
         if self.initial_aspect_ratio is None:
             self.initial_aspect_ratio = self.aspect_ratio
+
+        if self.myVideoView.visible():
+            self.myVideoView.show()
 
     def init_window(self):
         if self.window() is not None:
@@ -624,6 +629,7 @@ class VideoWindowController(NSWindowController):
         self.disconnectLabel.superview().hide()
 
     def showStatusLabel(self, label=None):
+        self.last_label = label
         default_label = NSLocalizedString("Video Ended", "Label")
         if self.window():
             self.disconnectLabel.superview().show()
@@ -719,6 +725,7 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
         self.showButtons()
+        self.hideStatusLabel()
 
         if self.sessionController.video_consumer == "standalone":
             if self.streamController.status == STREAM_CONNECTED:
@@ -730,9 +737,13 @@ class VideoWindowController(NSWindowController):
                 else:
                     self.window().makeKeyAndOrderFront_(self)
             else:
+                show_last_label = False
                 if not self.localVideoWindow:
                     self.localVideoWindow = VideoLocalWindowController(self)
+                    show_last_label = True
                 self.localVideoWindow.show()
+                if show_last_label:
+                    self.showStatusLabel(self.last_label)
         else:
             self.flipped = True
 
@@ -774,6 +785,15 @@ class VideoWindowController(NSWindowController):
         scaledSize.height = scaledSize.width / self.aspect_ratio or 1.77
         if self.myVideoView:
             self.myVideoView.snapToCorner()
+        
+        if scaledSize.width < 665:
+            self.window_too_small = True
+            self.hideButtons()
+            self.myVideoView.hide()
+        else:
+            self.window_too_small = False
+            self.showButtons()
+            self.myVideoView.show()
         return scaledSize
 
     def windowDidResize_(self, notification):
@@ -1132,6 +1152,10 @@ class VideoWindowController(NSWindowController):
             return
 
         if not self.window().isVisible():
+            return
+        
+        if self.window_too_small:
+            self.hideButtons()
             return
 
         self.buttonsView.show()

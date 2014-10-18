@@ -283,6 +283,9 @@ class LocalVideoView(NSView):
             self.window().hide()
 
     def rightMouseDown_(self, event):
+        if not self.active:
+            return
+
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
             NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),

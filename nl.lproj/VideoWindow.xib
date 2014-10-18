@@ -36,7 +36,7 @@
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="562" y="346" width="665" height="375"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
-            <value key="minSize" type="size" width="665" height="375"/>
+            <value key="minSize" type="size" width="200" height="150"/>
             <view key="contentView" id="EiT-Mj-1SZ" customClass="BlackView">
                 <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                 <autoresizingMask key="autoresizingMask"/>
