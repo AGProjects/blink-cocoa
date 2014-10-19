@@ -1019,9 +1019,9 @@ class BandwidthOption(PopUpMenuOption):
 class VideoContainerOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
-        self.popup.addItemWithTitle_("Audio Drawer")
+        self.popup.addItemWithTitle_(NSLocalizedString("Audio Drawer", "Menu item"))
         self.popup.lastItem().setRepresentedObject_("audio")
-        self.popup.addItemWithTitle_("Standalone Window")
+        self.popup.addItemWithTitle_(NSLocalizedString("Standalone Window", "Menu item"))
         self.popup.lastItem().setRepresentedObject_("standalone")
         frame = self.popup.frame()
         frame.size.width = 300

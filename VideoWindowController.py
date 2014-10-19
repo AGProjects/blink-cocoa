@@ -518,9 +518,9 @@ class VideoWindowController(NSWindowController):
         lastItem.setEnabled_(not self.full_screen)
         lastItem.setState_(NSOnState if self.always_on_top else NSOffState)
         if self.sessionController.hasStreamOfType("chat"):
-            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Window", "Menu item"), "userClickedAttachToChatMenuItem:", "")
+            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Chat Drawer", "Menu item"), "userClickedAttachToChatMenuItem:", "")
         if self.sessionController.hasStreamOfType("audio"):
-            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Audio Window", "Menu item"), "userClickedAttachToAudioMenuItem:", "")
+            menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Attach To Audio Drawer", "Menu item"), "userClickedAttachToAudioMenuItem:", "")
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Full Screen", "Menu item"), "userClickedFullScreenButton:", "")
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Aspect", "Menu item"), "userClickedAspectButton:", "")
         menu.addItem_(NSMenuItem.separatorItem())
