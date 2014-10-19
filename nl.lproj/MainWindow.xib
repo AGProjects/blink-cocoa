@@ -285,7 +285,7 @@ CA
                                     <action selector="redialLast:" target="389" id="1117"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Neem deel aan conferentie..." tag="44" keyEquivalent="j" id="1055">
+                            <menuItem title="Deelnemen aan conferentie..." tag="44" keyEquivalent="j" id="1055">
                                 <connections>
                                     <action selector="joinConferenceClicked:" target="389" id="1126"/>
                                 </connections>
@@ -467,7 +467,7 @@ CA
                                     <action selector="showFileTransfers:" target="389" id="Kv8-9N-sC1"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Geschiedenis venster" tag="3" keyEquivalent="6" id="1112">
+                            <menuItem title="Geschiedenis" tag="3" keyEquivalent="6" id="1112">
                                 <connections>
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
@@ -583,10 +583,10 @@ CA
                             <action selector="presenceActivityChanged:" target="389" id="1713"/>
                         </connections>
                     </popUpButton>
-                    <textField toolTip="Publish A Note To Contacts That Subscribed To My Availability" focusRingType="none" verticalHuggingPriority="750" id="691" userLabel="Presence Note">
+                    <textField toolTip="Notitie delen met contacten die aangemeld zijn op mijn beschikbaarheid" focusRingType="none" verticalHuggingPriority="750" id="691" userLabel="Presence Note">
                         <rect key="frame" x="45" y="390" width="224" height="16"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Publish a note to my contacts" usesSingleLineMode="YES" id="692">
+                        <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Notitie delen met mijn contacten" usesSingleLineMode="YES" id="692">
                             <font key="font" metaFont="cellTitle"/>
                             <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -994,7 +994,7 @@ ABC</string>
                                 <segment toolTip="Videogesprek starten" image="video" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Chat sessies" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                <segment toolTip="Chatsessies" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Scherm delen" image="display" width="30" tag="3">
@@ -1003,7 +1003,7 @@ ABC</string>
                             </segments>
                             <accessibility description="Sessies starten"/>
                         </segmentedCell>
-                        <accessibility description="Start Session Buttons"/>
+                        <accessibility description="Start Sessie Knoppen"/>
                         <connections>
                             <action selector="actionButtonClicked:" target="389" id="497"/>
                         </connections>
@@ -1293,7 +1293,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
-                            <rect key="frame" x="0.0" y="0.0" width="280" height="317.5"/>
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="318"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="354"/>
@@ -1315,7 +1315,7 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="545">
-                                <rect key="frame" x="203" y="1" width="15" height="251.5"/>
+                                <rect key="frame" x="203" y="0.5" width="15" height="252"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <accessibility description="Audiosessielijst"/>
@@ -1368,12 +1368,12 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="AR8-t4-L9c" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="319.5" width="280" height="37.5"/>
+                        <customView id="C73-Qs-jbr" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="320" width="280" height="37"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="zVc-jR-B43" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="280" height="51"/>
+                                <customView id="YUX-UC-DK5" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="280" height="50"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -1394,7 +1394,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <button toolTip="Hang alle audiosessies op" verticalHuggingPriority="750" tag="10" id="512">
-                            <rect key="frame" x="9" y="0.0" width="90.5" height="25"/>
+                            <rect key="frame" x="9" y="0.0" width="91" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Alles ophangen" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -1406,7 +1406,7 @@ ABC</string>
                             </connections>
                         </button>
                         <button verticalHuggingPriority="750" tag="11" id="587">
-                            <rect key="frame" x="107.5" y="0.0" width="94.5" height="25"/>
+                            <rect key="frame" x="107.5" y="0.0" width="95" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <string key="toolTip">Start and stop a multi-party conference. Once started, you may use drag and drop to add or remove contacts to and from the conference.</string>
                             <buttonCell key="cell" type="roundTextured" title="Conferentie" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
@@ -1419,7 +1419,7 @@ ABC</string>
                             </connections>
                         </button>
                         <levelIndicator toolTip="Microfooninganssignaal" verticalHuggingPriority="750" id="1820">
-                            <rect key="frame" x="214" y="8" width="27.5" height="12"/>
+                            <rect key="frame" x="214" y="8" width="28" height="12"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="1821">
                                 <font key="font" metaFont="miniSystem"/>
@@ -1459,9 +1459,9 @@ ABC</string>
                         </connections>
                     </menu>
                 </menuItem>
-                <menuItem title="Subscribers For My Availability" id="1738">
+                <menuItem title="Aangemeld voor mijn beschikbaarheid" id="1738">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Subscribers For My Availability" autoenablesItems="NO" id="1739">
+                    <menu key="submenu" title="Aangemeld voor mijn beschikbaarheid" autoenablesItems="NO" id="1739">
                         <items>
                             <menuItem title="Item" id="1740">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -1589,7 +1589,7 @@ ABC</string>
                 <outlet property="statusBarMenu" destination="1745" id="1762"/>
                 <outlet property="useSpeechRecognitionMenuItem" destination="Ked-li-VeB" id="yGP-TV-FPu"/>
                 <outlet property="useSpeechSynthesisMenuItem" destination="mk1-bq-3CO" id="AYH-dK-kdp"/>
-                <outlet property="videoView" destination="zVc-jR-B43" id="7GU-F4-TJ4"/>
+                <outlet property="videoView" destination="YUX-UC-DK5" id="YGb-F8-Wfh"/>
                 <outlet property="window" destination="371" id="406"/>
                 <outlet property="windowMenu" destination="24" id="1595"/>
             </connections>
@@ -1613,7 +1613,7 @@ ABC</string>
         <customObject id="920" userLabel="Search Model" customClass="SearchContactListModel"/>
         <menu autoenablesItems="NO" id="928" userLabel="Screen Sharing Button Menu">
             <items>
-                <menuItem title="Ask to Share Remote Screen" tag="1" id="929">
+                <menuItem title="Vragen om scherm van correspondent te delen" tag="1" id="929">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="startScreenSharing:" target="389" id="1743"/>
@@ -1635,7 +1635,7 @@ ABC</string>
                 <menuItem title="Chatsessie starten" id="952">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Stuur SMS" id="953">
+                <menuItem title="Verstuur SMS" id="953">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>
@@ -1735,7 +1735,7 @@ ABC</string>
                         <action selector="userClickedParticipantMenu:" target="389" id="1589"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Stuur bestand(en)..." tag="323" enabled="NO" indentationLevel="1" id="1575">
+                <menuItem title="Verstuur bestand(en)..." tag="323" enabled="NO" indentationLevel="1" id="1575">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="389" id="1590"/>

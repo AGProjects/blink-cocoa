@@ -30,8 +30,8 @@
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="72" id="85"/>
-                <outlet property="videoButton" destination="Puf-LO-eeO" id="F2x-yT-9rX"/>
-                <outlet property="videoView" destination="4mP-67-aeK" id="eOG-54-MdT"/>
+                <outlet property="videoButton" destination="MK1-En-CVo" id="U1Z-Be-b0h"/>
+                <outlet property="videoView" destination="Tr7-Qb-Y9k" id="a2s-Cb-ZEj"/>
                 <outlet property="window" destination="1" id="25"/>
             </connections>
         </customObject>
@@ -66,7 +66,7 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar" displayMode="iconAndLabel" sizeMode="small" id="72">
+            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar2" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Verbinden" paletteLabel="Verbinden" toolTip="Chatsessie starten" tag="100" image="start_chat" id="81">
                         <connections>
@@ -88,13 +88,18 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C3E6F7C9-F452-4335-BCFB-4A71AC47C40A" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Audiosessie toevoegen" tag="107" image="video" id="MK1-En-CVo">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="n7e-tx-St4"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Toon gedeelde editor" tag="109" image="editor" id="441">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
-                    <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Stuur bestand" paletteLabel="Stuur bestand" toolTip="Stuur bestanden" tag="105" image="upfile" id="92">
+                    <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Verstuur bestand" paletteLabel="Verstuur bestand" toolTip="Verstuur bestanden" tag="105" image="upfile" id="92">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
@@ -118,29 +123,29 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Grab" paletteLabel="Grab" toolTip="Stuur schermafbeelding" image="screenshot" id="573">
+                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Grab" paletteLabel="Grab" toolTip="Vertuur schermafbeelding" image="screenshot" id="573">
                         <size key="minSize" width="48" height="42"/>
                         <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
                                     <items>
                                         <menuItem state="on" image="screenshot" hidden="YES" id="570"/>
-                                        <menuItem title="Stuur screenshot van een geselecteerd venster..." tag="301" id="571">
+                                        <menuItem title="Verstuur screenshot van een geselecteerd venster..." tag="301" id="571">
                                             <connections>
                                                 <action selector="userClickedScreenshotMenu:" target="-2" id="576"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Stuur screenshot van een geselecteerd gebied met de muis..." tag="302" id="572">
+                                        <menuItem title="Verstuur screenshot van een geselecteerd gebied met de muis..." tag="302" id="572">
                                             <connections>
                                                 <action selector="userClickedScreenshotMenu:" target="-2" id="577"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Stuur snapshot van camera..." tag="303" id="676">
+                                        <menuItem title="Verstuur afbeelding van camera..." tag="303" id="676">
                                             <connections>
                                                 <action selector="userClickedSnapshotMenu:" target="-2" id="678"/>
                                             </connections>
@@ -160,7 +165,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -212,11 +217,6 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="C3864E27-5270-4B55-AA49-BE2C6E9DEF25" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Add audio session" tag="107" image="video" id="Puf-LO-eeO">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="gcW-zU-sbN"/>
-                        </connections>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="99"/>
                     <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Toon/Verberg emoticons" tag="106" image="smiley_on" id="443">
                         <connections>
@@ -241,7 +241,7 @@
                     <toolbarItem reference="113"/>
                     <toolbarItem reference="224"/>
                     <toolbarItem reference="244"/>
-                    <toolbarItem reference="Puf-LO-eeO"/>
+                    <toolbarItem reference="MK1-En-CVo"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="441"/>
                     <toolbarItem reference="573"/>
@@ -300,15 +300,15 @@
                     </textFieldCell>
                     <accessibility description="Audiosessiestatus"/>
                 </textField>
-                <splitView autosaveName="chat_drawer_view" id="348">
+                <splitView autosaveName="chat_drawer_view" dividerStyle="thin" id="348">
                     <rect key="frame" x="0.0" y="30" width="260" height="570"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="382"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="393"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="17" width="258" height="427"/>
+                                <rect key="frame" x="1" y="17" width="258" height="367"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
@@ -356,10 +356,10 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="391" width="260" height="100"/>
+                            <rect key="frame" x="0.0" y="394" width="260" height="103"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="17" width="258" height="98"/>
+                                <rect key="frame" x="1" y="17" width="258" height="83"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
@@ -406,12 +406,12 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="FBm-OI-iDM" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="500" width="260" height="70"/>
+                        <customView id="U2L-3u-ZBI" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="498" width="260" height="72"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="4mP-67-aeK" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="260" height="83.5"/>
+                                <customView id="Tr7-Qb-Y9k" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="260" height="85"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -427,7 +427,7 @@
                     </connections>
                 </splitView>
                 <levelIndicator toolTip="Microfooninganssignaal" verticalHuggingPriority="750" id="586">
-                    <rect key="frame" x="186" y="9" width="27.5" height="12"/>
+                    <rect key="frame" x="186" y="9" width="28" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
                         <font key="font" metaFont="miniSystem"/>
@@ -509,7 +509,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="319"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Stuur een privé bericht..." tag="311" enabled="NO" indentationLevel="1" id="325">
+                <menuItem title="Verstuur een privé bericht..." tag="311" enabled="NO" indentationLevel="1" id="325">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="326"/>
@@ -557,7 +557,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="484"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Stuur bestand(en)..." tag="323" enabled="NO" indentationLevel="1" id="266">
+                <menuItem title="Verstuur bestand(en)..." tag="323" enabled="NO" indentationLevel="1" id="266">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="267"/>
@@ -589,13 +589,13 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
-                <menuItem title="Detach Video" tag="327" enabled="NO" indentationLevel="1" id="zsc-AH-BFv">
+                <menuItem title="Video loskoppelen" tag="327" enabled="NO" indentationLevel="1" id="MEi-C1-IuT">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="userClickedParticipantMenu:" target="-2" id="WZ3-CZ-8hy"/>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="PtQ-J8-WWQ"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" id="Cov-g9-XDG"/>
+                <menuItem isSeparatorItem="YES" id="56r-Xj-CTr"/>
                 <menuItem title="Toon sessie-informatie" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
@@ -683,7 +683,6 @@
                 <outlet property="delegate" destination="-2" id="533"/>
             </connections>
         </menu>
-        <menuItem isSeparatorItem="YES" id="uS8-Jc-8ac"/>
     </objects>
     <resources>
         <image name="NSActionTemplate" width="14" height="14"/>
