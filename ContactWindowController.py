@@ -1396,8 +1396,9 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     def _NH_BlinkChatWindowClosed(self, notification):
-        if self.hasStreamOfType("video"):
-            if self.video_consumer == "audio":
+        session = self.getSelectedAudioSession()
+        if session and session.hasStreamOfType("video"):
+            if session.video_consumer == "audio":
                 self.showAudioDrawer()
         else:
             self.showAudioDrawer()
