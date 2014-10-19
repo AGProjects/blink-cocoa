@@ -44,7 +44,7 @@ DQ
                     <textField verticalHuggingPriority="750" id="34">
                         <rect key="frame" x="67" y="160" width="446" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Nombre &lt;user@domain>" id="35">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Nombre &lt;usuario@dominio>" id="35">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -128,7 +128,7 @@ Gw
                         <rect key="frame" x="17" y="105" width="48" height="48"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" image="NSUser" id="60"/>
-                        <accessibility description="Ícono del Participante"/>
+                        <accessibility description="Icono del Participante"/>
                     </imageView>
                 </subviews>
             </view>

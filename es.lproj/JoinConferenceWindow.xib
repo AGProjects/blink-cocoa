@@ -38,7 +38,7 @@
                     <textField verticalHuggingPriority="750" id="3">
                         <rect key="frame" x="160" y="381" width="373" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Iniciar Conferencia y Invitar Participantes:" id="10">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Iniciar Conferencia e Invitar Participantes:" id="10">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -83,7 +83,7 @@
                     <textField verticalHuggingPriority="750" id="17">
                         <rect key="frame" x="163" y="315" width="368" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Escribe la dirección. Si no, se usa una aleatorio" drawsBackground="YES" id="18">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Escribe la dirección. Si no, se usará una aleatoria" drawsBackground="YES" id="18">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -147,7 +147,7 @@ Gw
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Utiliza Audio"/>
+                        <accessibility description="Proponer Audio"/>
                     </button>
                     <button id="46">
                         <rect key="frame" x="162" y="88" width="108" height="18"/>
@@ -161,7 +161,7 @@ Gw
                     <textField verticalHuggingPriority="750" id="57">
                         <rect key="frame" x="164" y="256" width="307" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Escribe dirección, o arrastra contactos abajo" drawsBackground="YES" id="58">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Escriba una dirección, o arrastre contactos a la lista" drawsBackground="YES" id="58">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -192,7 +192,7 @@ Gw
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
                                             </tableHeaderCell>
-                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="67">
+                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="67">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -234,9 +234,9 @@ Gw
                                     <nil key="label"/>
                                 </segment>
                             </segments>
-                            <accessibility description="Modificar Participantes"/>
+                            <accessibility description="Agregar o Eliminar Participantes"/>
                         </segmentedCell>
-                        <accessibility description="Modificar Participantes"/>
+                        <accessibility description="Agregar o Eliminar Participantes"/>
                         <connections>
                             <action selector="addRemoveParticipant:" target="-2" id="95"/>
                         </connections>
@@ -259,7 +259,7 @@ Gw
                         <popUpButtonCell key="cell" type="bevel" title="Seleccionar Configuración" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="118" id="116">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="Other views" autoenablesItems="NO" id="117">
+                            <menu key="menu" title="OtherViews" autoenablesItems="NO" id="117">
                                 <items>
                                     <menuItem title="Seleccionar Configuración" state="on" id="118"/>
                                 </items>
@@ -275,7 +275,7 @@ Gw
                         <popUpButtonCell key="cell" type="bevel" title="Bonjour Combo" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" refusesFirstResponder="YES" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="153" id="151">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="Other views" autoenablesItems="NO" id="152">
+                            <menu key="menu" title="OtherViews" autoenablesItems="NO" id="152">
                                 <items>
                                     <menuItem title="Bonjour Combo" state="on" id="153"/>
                                 </items>
@@ -290,7 +290,7 @@ Gw
                     <button id="170">
                         <rect key="frame" x="161" y="61" width="385" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Comenzar Cuando los Participantes esten Disponibles" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
+                        <buttonCell key="cell" type="check" title="Comenzar Cuando los Participantes estén Disponibles" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>

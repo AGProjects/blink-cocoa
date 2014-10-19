@@ -31,7 +31,7 @@
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Aceptar Solo Chat"/>
+                        <accessibility description="Aceptar Sólo Chat"/>
                         <connections>
                             <action selector="buttonClicked:" target="-2" id="30"/>
                         </connections>
@@ -71,7 +71,7 @@
                     <textField verticalHuggingPriority="750" tag="3" id="32">
                         <rect key="frame" x="65" y="30" width="252" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="To Account: 123436249237@somewhere.com" id="33">
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Cuenta: 123436249237@somewhere.com" id="33">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -108,7 +108,7 @@
                         <rect key="frame" x="490" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSMultipleDocuments" id="48"/>
-                        <accessibility description="Transferencia de Archivo"/>
+                        <accessibility description="Transferencia de Archivos"/>
                     </imageView>
                     <imageView hidden="YES" tag="34" id="49">
                         <rect key="frame" x="452" y="63" width="30" height="30"/>

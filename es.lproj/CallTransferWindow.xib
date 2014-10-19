@@ -108,7 +108,7 @@
 							<object class="NSTextFieldCell" key="NSCell" id="669476266">
 								<int key="NSCellFlags">67108864</int>
 								<int key="NSCellFlags2">272629760</int>
-								<string key="NSContents">Multiline</string>
+								<string key="NSContents">Multiline Label</string>
 								<reference key="NSSupport" ref="1042206657"/>
 								<reference key="NSControlView" ref="972213122"/>
 								<object class="NSColor" key="NSBackgroundColor" id="440369185">

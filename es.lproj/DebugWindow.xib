@@ -34,7 +34,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
-        <window title="Blink Logs" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="DebugWindow" animationBehavior="default" id="1" customClass="NSPanel">
+        <window title="Logs de Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="DebugWindow" animationBehavior="default" id="1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="864" y="546" width="576" height="334"/>
@@ -83,14 +83,14 @@
                                             </scroller>
                                             <accessibility description="Actividad"/>
                                         </scrollView>
-                                        <button toolTip="Limpiar Actividad " verticalHuggingPriority="750" tag="100" id="147">
+                                        <button toolTip="Limpiar Logs de Actividad" verticalHuggingPriority="750" tag="100" id="147">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="148">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Limpiar Actividad Logs"/>
+                                            <accessibility description="Limpiar Logs de Actividad"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="149"/>
                                             </connections>
@@ -142,7 +142,7 @@
                                                     </buttonCell>
                                                 </column>
                                             </cells>
-                                            <accessibility description="Categorias de SIP Logs"/>
+                                            <accessibility description="Tipo de Logs SIP"/>
                                             <connections>
                                                 <action selector="sipRadioClicked:" target="-2" id="317"/>
                                                 <outlet property="delegate" destination="-2" id="152"/>
@@ -176,16 +176,16 @@
                                                 <rect key="frame" x="559" y="1" width="16" height="260"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <accessibility description="Logs SIP"/>
+                                            <accessibility description="Logs de SIP"/>
                                         </scrollView>
-                                        <button toolTip="Borrar SIP Logs" verticalHuggingPriority="750" tag="101" id="107">
+                                        <button toolTip="Borrar Logs de SIP" verticalHuggingPriority="750" tag="101" id="107">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="108">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Borrar SIP Logs"/>
+                                            <accessibility description="Borrar Logs de SIP"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="109"/>
                                             </connections>
@@ -205,7 +205,7 @@
                                             <popUpButtonCell key="cell" type="push" title="Todas las Aplicaciones" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="284" id="282">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
-                                                <menu key="menu" title="Other views" id="283">
+                                                <menu key="menu" title="OtherViews" id="283">
                                                     <items>
                                                         <menuItem title="Todas las Aplicaciones" state="on" id="284"/>
                                                         <menuItem isSeparatorItem="YES" id="290"/>
@@ -239,10 +239,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -256,16 +256,16 @@
                                                 <rect key="frame" x="559" y="1" width="16" height="260"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <accessibility description="RTP Logs"/>
+                                            <accessibility description="Logs de RTP"/>
                                         </scrollView>
-                                        <button toolTip="Borrar Logs RTP" verticalHuggingPriority="750" tag="102" id="160">
+                                        <button toolTip="Borrar Logs de RTP" verticalHuggingPriority="750" tag="102" id="160">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="161">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Borrar Logs RTP"/>
+                                            <accessibility description="Borrar Logs de RTP"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="170"/>
                                             </connections>
@@ -298,10 +298,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="559" height="260"/>
+                                                        <size key="minSize" width="574" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -315,7 +315,7 @@
                                                 <rect key="frame" x="559" y="1" width="16" height="260"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <accessibility description="MSRP Logs"/>
+                                            <accessibility description="Logs de MSRP"/>
                                         </scrollView>
                                         <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" id="126">
                                             <rect key="frame" x="16" y="280" width="272" height="18"/>
@@ -347,19 +347,19 @@
                                                     </buttonCell>
                                                 </column>
                                             </cells>
-                                            <accessibility description="Categorias de MSRP Logs"/>
+                                            <accessibility description="Tipo de Logs MSRP"/>
                                             <connections>
                                                 <action selector="msrpRadioClicked:" target="-2" id="314"/>
                                             </connections>
                                         </matrix>
-                                        <button toolTip="Borrar Logs MSRP" verticalHuggingPriority="750" tag="104" id="172">
+                                        <button toolTip="Borrar Logs de MSRP" verticalHuggingPriority="750" tag="104" id="172">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="173">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Borrar Logs MSRP"/>
+                                            <accessibility description="Borrar Logs de MSRP"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="194"/>
                                             </connections>
@@ -409,7 +409,7 @@
                                                 <rect key="frame" x="559" y="1" width="16" height="260"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <accessibility description="Logs XCAP"/>
+                                            <accessibility description="Logs de XCAP"/>
                                         </scrollView>
                                         <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" id="131">
                                             <rect key="frame" x="16" y="280" width="272" height="18"/>
@@ -441,19 +441,19 @@
                                                     </buttonCell>
                                                 </column>
                                             </cells>
-                                            <accessibility description="Categorías de XCAP Logs"/>
+                                            <accessibility description="Tipo de Logs XCAP"/>
                                             <connections>
                                                 <action selector="xcapRadioClicked:" target="-2" id="315"/>
                                             </connections>
                                         </matrix>
-                                        <button toolTip="Borrar Logs XCAP" verticalHuggingPriority="750" tag="105" id="174">
+                                        <button toolTip="Borrar Logs de XCAP" verticalHuggingPriority="750" tag="105" id="174">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="175">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Borrar Logs XCAP"/>
+                                            <accessibility description="Borrar Logs de XCAP"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="193"/>
                                             </connections>
@@ -487,14 +487,14 @@
                                                 <action selector="notificationsCheckboxClicked:" target="-2" id="302"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Borrar Notificaciones" verticalHuggingPriority="750" tag="103" id="176">
+                                        <button toolTip="Borrar Logs de Notificaciones" verticalHuggingPriority="750" tag="103" id="176">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="177">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Borrar Notificaciones"/>
+                                            <accessibility description="Borrar Logs de Notificaciones"/>
                                             <connections>
                                                 <action selector="clearClicked:" target="-2" id="192"/>
                                             </connections>
@@ -519,7 +519,7 @@
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </tableHeaderCell>
-                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="186">
+                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="186">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -533,7 +533,7 @@
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </tableHeaderCell>
-                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="185">
+                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="185">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -547,7 +547,7 @@
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                 </tableHeaderCell>
-                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="188">
+                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="188">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -561,7 +561,7 @@
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                 </tableHeaderCell>
-                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="206">
+                                                                <textFieldCell key="dataCell" controlSize="small" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="206">
                                                                     <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -570,7 +570,7 @@
                                                                 <accessibility description="Fecha y Hora"/>
                                                             </tableColumn>
                                                         </tableColumns>
-                                                        <accessibility description="Notifications Logs"/>
+                                                        <accessibility description="Logs de Notificaciones"/>
                                                         <connections>
                                                             <outlet property="dataSource" destination="-2" id="189"/>
                                                         </connections>
@@ -592,7 +592,7 @@
                                             </tableHeaderView>
                                             <accessibility description="Notifications Logs"/>
                                         </scrollView>
-                                        <searchField toolTip="Escribe para filtrar por nombre" verticalHuggingPriority="750" id="251">
+                                        <searchField toolTip="Escriba para filtrar por nombre" verticalHuggingPriority="750" id="251">
                                             <rect key="frame" x="89" y="281" width="138" height="19"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" borderStyle="bezel" placeholderString="Filtrar por Nombre" usesSingleLineMode="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="252">
@@ -942,7 +942,7 @@
                                                 <rect key="frame" x="559" y="1" width="16" height="260"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <accessibility description="Logs Núcleo"/>
+                                            <accessibility description="Logs del Núcleo"/>
                                         </scrollView>
                                         <button id="31">
                                             <rect key="frame" x="6" y="281" width="72" height="18"/>
@@ -951,12 +951,12 @@
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
-                                            <accessibility description="Habilitar Logs Núcleo"/>
+                                            <accessibility description="Habilitar Logs del Núcleo"/>
                                             <connections>
                                                 <action selector="engineCheckboxClicked:" target="-2" id="303"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Borrar Logs Núcleo" verticalHuggingPriority="750" tag="107" id="248">
+                                        <button toolTip="Borrar Logs del Núcleo" verticalHuggingPriority="750" tag="107" id="248">
                                             <rect key="frame" x="476" y="275" width="89" height="28"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Limpiar" bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="249">
@@ -977,7 +977,7 @@
                                             </textFieldCell>
                                         </textField>
                                     </subviews>
-                                    <accessibility description="Borrar Logs Núcleo"/>
+                                    <accessibility description="Borrar Logs del Núcleo"/>
                                 </view>
                             </tabViewItem>
                         </tabViewItems>

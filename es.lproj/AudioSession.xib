@@ -117,7 +117,7 @@
                 <imageView hidden="YES" id="23">
                     <rect key="frame" x="7" y="37" width="14" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <string key="toolTip">El intercambio de SIP hasta el próximo nodo está encriptado usando TLS. Esto no garantiza que la comunicación con sucesivos nodos esté encriptada</string>
+                    <string key="toolTip">El trafico SIP hasta el próximo nodo está encriptado usando TLS. Esto no garantiza que la comunicación con sucesivos nodos esté encriptada.</string>
                     <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="bluelock" id="24"/>
                     <connections>
                         <outlet property="menu" destination="53" id="64"/>
@@ -196,10 +196,10 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Separar Vídeo" tag="16" enabled="NO" id="HyR-9k-Lla">
+                <menuItem title="Separar Vídeo" tag="16" enabled="NO" id="34B-wV-Pxn">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="Ofm-km-fdk"/>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="yFh-OP-Ek9"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
@@ -267,7 +267,7 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" tag="20" id="239"/>
-                <menuItem title="El intercabmio de claves utilizado para la Encriptación, es realizado a través del algoritmo Diffie-Hellman (zRTP)" tag="21" id="251">
+                <menuItem title="Encriptar utilizando Diffie-Hellman para el intercambio de claves (zRTP)" tag="21" id="251">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="253"/>
@@ -297,7 +297,7 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="268"/>
                     </connections>
                 </menuItem>
-                <menuItem title="La encriptación está garantizada en su totalidad" state="on" tag="28" enabled="NO" indentationLevel="1" id="300">
+                <menuItem title="La encriptación está garantizada de extremo a extremo" state="on" tag="28" enabled="NO" indentationLevel="1" id="300">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="301"/>
@@ -316,19 +316,19 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" tag="10" id="250"/>
-                <menuItem title="Encriptado usando intercambio de claves sobre SDES" tag="11" enabled="NO" id="263">
+                <menuItem title="Encriptado usando intercambio de claves sobre SIP (SDES)" tag="11" enabled="NO" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="264"/>
                     </connections>
                 </menuItem>
-                <menuItem title="El Proveedor de SIP tiene acceso a la clave de Encriptación" state="on" tag="12" enabled="NO" indentationLevel="1" id="265">
+                <menuItem title="El Proveedor de SIP tiene acceso a la clave de encriptación" state="on" tag="12" enabled="NO" indentationLevel="1" id="265">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="266"/>
                     </connections>
                 </menuItem>
-                <menuItem title="El Proveedor puede acceder a la clave de Encriptado (SIP no está encriptado)" state="on" tag="14" enabled="NO" indentationLevel="1" id="278">
+                <menuItem title="El Proveedor puede acceder a la clave de Encriptado (el trafico SIP no está encriptado)" state="on" tag="14" enabled="NO" indentationLevel="1" id="278">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="279"/>
@@ -340,7 +340,7 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="283"/>
                     </connections>
                 </menuItem>
-                <menuItem title="El Encriptado está garantizado únicamente hasta el próximo nodo" state="on" tag="16" enabled="NO" indentationLevel="1" id="298">
+                <menuItem title="La Encriptación está garantizada únicamente hasta el próximo nodo" state="on" tag="16" enabled="NO" indentationLevel="1" id="298">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="299"/>

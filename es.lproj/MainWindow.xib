@@ -53,13 +53,13 @@
                             <menuItem isSeparatorItem="YES" tag="4" hidden="YES" id="143">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Acerca del Proveedor de Servicio..." tag="5" hidden="YES" id="1049">
+                            <menuItem title="Acerca del Proveedor de Servicios..." tag="5" hidden="YES" id="1049">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showServiceProvider:" target="389" id="1635"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Sitio Web del Soporte del Proveedor de Servicio..." tag="6" hidden="YES" id="1051">
+                            <menuItem title="Sitio Web del Soporte del Proveedor de Servicios..." tag="6" hidden="YES" id="1051">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showServiceProvider:" target="389" id="1636"/>
@@ -231,7 +231,7 @@ CA
                                 <menu key="submenu" title="Reestablecer" autoenablesItems="NO" id="1603">
                                     <items>
                                         <menuItem isSeparatorItem="YES" id="1611"/>
-                                        <menuItem title="Abrir Ubicación de Respaldo" id="1612">
+                                        <menuItem title="Abrir Ubicación de Respaldos" id="1612">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="goToBackupContactsFolderClicked:" target="389" id="1614"/>
@@ -253,9 +253,9 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Dispositivos" autoenablesItems="NO" id="751">
                         <items>
-                            <menuItem title="Cambio Rápido de Entrada y Salida de Audio" tag="404" enabled="NO" keyEquivalent="s" id="1132" userLabel="Menu Item (Quick Settings)"/>
+                            <menuItem title="Dispositivos de Entrada/Salida de Audio" tag="404" enabled="NO" keyEquivalent="s" id="1132" userLabel="Menu Item (Quick Settings)"/>
                             <menuItem isSeparatorItem="YES" tag="405" id="1131"/>
-                            <menuItem title="Dispositivo de Audio de Salida" image="speaker" tag="401" enabled="NO" id="755">
+                            <menuItem title="Dispositivo de Salida de Audio" image="speaker" tag="401" enabled="NO" id="755">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="862"/>
@@ -341,7 +341,7 @@ CA
                                     <action selector="addFontTrait:" target="lcu-W9-Fta" id="dVu-0J-HDt"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Itálico" tag="1" keyEquivalent="i" id="29y-LM-NaW">
+                            <menuItem title="Cursiva" tag="1" keyEquivalent="i" id="29y-LM-NaW">
                                 <connections>
                                     <action selector="addFontTrait:" target="lcu-W9-Fta" id="Tef-2G-42K"/>
                                 </connections>
@@ -384,9 +384,9 @@ CA
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="Historia" id="797">
+                <menuItem title="Historial" id="797">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Historia" autoenablesItems="NO" id="798">
+                    <menu key="submenu" title="Historial" autoenablesItems="NO" id="798">
                         <items>
                             <menuItem title="No Guardar Historial de Chat" tag="101" id="1863">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -452,7 +452,7 @@ CA
                                     <action selector="toggleAudioSessionsDrawer:" target="389" id="1111"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Chat" tag="5" keyEquivalent="3" id="1675">
+                            <menuItem title="Conversaciones de Chat" tag="5" keyEquivalent="3" id="1675">
                                 <connections>
                                     <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
@@ -467,7 +467,7 @@ CA
                                     <action selector="showFileTransfers:" target="389" id="Kv8-9N-sC1"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Visor de Historia" tag="3" keyEquivalent="6" id="1112">
+                            <menuItem title="Visor de Historial" tag="3" keyEquivalent="6" id="1112">
                                 <connections>
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
@@ -513,7 +513,7 @@ CA
                         <popUpButtonCell key="cell" type="bevel" title="Cuenta Activa" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" selectedItem="449" id="447">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystemBold"/>
-                            <menu key="menu" title="Other views" id="448">
+                            <menu key="menu" title="OtherViews" id="448">
                                 <items>
                                     <menuItem title="Cuenta Activa" state="on" id="449"/>
                                     <menuItem isSeparatorItem="YES" id="452"/>
@@ -530,7 +530,7 @@ CA
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <string key="toolTip">Puedes escribibir un texto, para buscar un contacto, o presiona Enter, para comenzar una llamada a una dirección en particular o un número telefónico</string>
-                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" alignment="left" placeholderString="Buscar Contactos o Ingresar Dirección" bezelStyle="round" recentsAutosaveName="" id="464">
+                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Buscar Contactos o Ingresar Dirección" bezelStyle="round" recentsAutosaveName="" id="464">
                             <font key="font" metaFont="cellTitle"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -568,11 +568,11 @@ CA
                         <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="right" controlSize="small" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="554">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystem"/>
-                            <menu key="menu" title="Other views" autoenablesItems="NO" id="555">
+                            <menu key="menu" title="OtherViews" autoenablesItems="NO" id="555">
                                 <items>
                                     <menuItem title="Disponibilidad" id="556"/>
                                     <menuItem title="Item 2" id="557"/>
-                                    <menuItem title="Item3" id="558"/>
+                                    <menuItem title="Item 3" id="558"/>
                                 </items>
                                 <connections>
                                     <outlet property="delegate" destination="389" id="1727"/>
@@ -629,7 +629,7 @@ CA
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </tableHeaderCell>
-                                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="508" customClass="ContactCell">
+                                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="508" customClass="ContactCell">
                                                                     <font key="font" metaFont="system" size="10"/>
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -677,8 +677,8 @@ CA
                                             <textFieldCell key="cell" lineBreakMode="truncatingMiddle" sendsActionOnEndEditing="YES" alignment="center" id="632">
                                                 <font key="font" metaFont="system"/>
                                                 <string key="title">Ningún Contacto Encontrado.
- Use Enter para llamar or 
- use los botones debajo
+ Use Enter para llamar o 
+ use los botones abajo
  para comenzar una sesión</string>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -970,14 +970,14 @@ ABC</string>
                             <action selector="addContact:" target="389" id="635"/>
                         </connections>
                     </button>
-                    <button toolTip="Click para desplegar menú de grupos y agregar contactos" verticalHuggingPriority="750" id="1689" userLabel="Navigate to Group Button">
+                    <button toolTip="Click para desplegar menú de grupos o agregar contactos" verticalHuggingPriority="750" id="1689" userLabel="Navigate to Group Button">
                         <rect key="frame" x="13" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="roundTextured" alternateTitle="Click para desplegar menú de grupos y agregar contactos" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Click para desplegar menú de grupos o agregar contactos" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
-                        <accessibility description="Agregar contactos y a navegación de grupos"/>
+                        <accessibility description="Agregar contactos y navegación de grupos"/>
                         <connections>
                             <accessibilityConnection property="link" destination="1598" id="1692"/>
                             <action selector="groupButtonClicked:" target="389" id="1698"/>
@@ -995,7 +995,7 @@ ABC</string>
                                 <segment toolTip="Comenzar Vídeollamada" image="video" width="30" tag="1">
                                     <nil key="label"/>
                                 </segment>
-                                <segment toolTip="Chat" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                <segment toolTip="Sesiones de Chat" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Compartir Pantalla" image="display" width="30" tag="3">
@@ -1294,7 +1294,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
-                            <rect key="frame" x="0.0" y="0.0" width="280" height="299"/>
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="318"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="354"/>
@@ -1316,7 +1316,7 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="545">
-                                <rect key="frame" x="203" y="1" width="15" height="251.5"/>
+                                <rect key="frame" x="203" y="0.5" width="15" height="252"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <accessibility description="Lista de Sesiones de Audio"/>
@@ -1339,7 +1339,7 @@ ABC</string>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
                                                 </tableHeaderCell>
-                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" allowsUndo="NO" alignment="left" title="TextCell" id="1540" customClass="ContactCell">
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" allowsUndo="NO" alignment="left" title="Text Cell" id="1540" customClass="ContactCell">
                                                     <font key="font" metaFont="system"/>
                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1369,12 +1369,12 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="Nem-YV-Ply" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="301" width="280" height="56"/>
+                        <customView id="C73-Qs-jbr" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="320" width="280" height="37"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="0PU-f1-IYO" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="280" height="69.5"/>
+                                <customView id="YUX-UC-DK5" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="280" height="50"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -1394,14 +1394,14 @@ ABC</string>
                     <rect key="frame" x="0.0" y="0.0" width="280" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
-                        <button toolTip="Colgar Todo" verticalHuggingPriority="750" tag="10" id="512">
+                        <button toolTip="Colgar Llamadas de Audio" verticalHuggingPriority="750" tag="10" id="512">
                             <rect key="frame" x="9" y="0.0" width="91" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <buttonCell key="cell" type="roundTextured" title="Colgar Todos" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
+                            <buttonCell key="cell" type="roundTextured" title="Colgar Todas las LLamadas" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                             </buttonCell>
-                            <accessibility description="Colgar Todos"/>
+                            <accessibility description="Colgar Todas las LLamadas"/>
                             <connections>
                                 <action selector="hangupAllClicked:" target="389" id="665"/>
                             </connections>
@@ -1409,7 +1409,7 @@ ABC</string>
                         <button verticalHuggingPriority="750" tag="11" id="587">
                             <rect key="frame" x="107.5" y="0.0" width="95" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <string key="toolTip">Comenzar y detener una sesión de varios participantes. Una vez comenzada, podrás arrastrar y soltar para agregar o quitar contactos de la conferencia.</string>
+                            <string key="toolTip">Comenzar y detener una multiconferencia. Una vez comenzada, podrá arrastrar y soltar para agregar o quitar contactos de la conferencia.</string>
                             <buttonCell key="cell" type="roundTextured" title="Conferencia" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
@@ -1501,7 +1501,7 @@ ABC</string>
                         <action selector="dndClicked:" target="389" id="1780"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Habilitar El Contestador" tag="50" id="1098">
+                <menuItem title="Habilitar Contestador" tag="50" id="1098">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="toggleAnsweringMachine:" target="389" id="1099"/>
@@ -1590,7 +1590,7 @@ ABC</string>
                 <outlet property="statusBarMenu" destination="1745" id="1762"/>
                 <outlet property="useSpeechRecognitionMenuItem" destination="Ked-li-VeB" id="yGP-TV-FPu"/>
                 <outlet property="useSpeechSynthesisMenuItem" destination="mk1-bq-3CO" id="AYH-dK-kdp"/>
-                <outlet property="videoView" destination="0PU-f1-IYO" id="l1g-5h-WNR"/>
+                <outlet property="videoView" destination="YUX-UC-DK5" id="YGb-F8-Wfh"/>
                 <outlet property="window" destination="371" id="406"/>
                 <outlet property="windowMenu" destination="24" id="1595"/>
             </connections>
@@ -1659,13 +1659,13 @@ ABC</string>
         </menu>
         <menu autoenablesItems="NO" id="1693" userLabel="Group Menu">
             <items>
-                <menuItem title="Item1" id="1694">
+                <menuItem title="Item 1" id="1694">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Item2" id="1695">
+                <menuItem title="Item 2" id="1695">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Item3" id="1696">
+                <menuItem title="Item 3" id="1696">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>
@@ -1745,6 +1745,7 @@ ABC</string>
             </items>
         </menu>
         <menuItem title="Grabaciones" id="1090">
+            <modifierMask key="keyEquivalentModifierMask"/>
             <menu key="submenu" title="Grabaciones" autoenablesItems="NO" id="1091">
                 <items>
                     <menuItem isSeparatorItem="YES" id="1092"/>

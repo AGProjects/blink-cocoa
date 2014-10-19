@@ -106,7 +106,7 @@ Gw
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                        <accessibility description="Nombre:"/>
+                        <accessibility description="Nombre"/>
                     </textField>
                     <textField verticalHuggingPriority="750" id="dWF-qo-934">
                         <rect key="frame" x="22" y="340" width="143" height="17"/>
@@ -126,7 +126,7 @@ Gw
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
-                        <accessibility description="Nombre:"/>
+                        <accessibility description="Nombre"/>
                         <connections>
                             <accessibilityConnection property="title" destination="13" id="97"/>
                         </connections>
@@ -162,7 +162,7 @@ Gw
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <imageView toolTip="Click para seleccionar fotografía desde archivo" tag="20" id="61" customClass="MyImageThing">
+                    <imageView toolTip="Click para seleccionar el icono desde archivo" tag="20" id="61" customClass="MyImageThing">
                         <rect key="frame" x="72" y="201" width="90" height="97"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" selectable="YES" editable="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="62"/>
@@ -200,7 +200,7 @@ Gw
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                             </tableHeaderCell>
-                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="114">
+                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="114">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -216,7 +216,7 @@ Gw
                                             <popUpButtonCell key="dataCell" type="bevel" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="110" id="108">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="menu"/>
-                                                <menu key="menu" title="Other views" id="109">
+                                                <menu key="menu" title="OtherViews" id="109">
                                                     <items>
                                                         <menuItem state="on" id="110">
                                                             <modifierMask key="keyEquivalentModifierMask"/>
@@ -263,11 +263,11 @@ Gw
                         <segmentedCell key="cell" state="on" alignment="left" style="rounded" trackingMode="momentary" id="130">
                             <font key="font" metaFont="system"/>
                             <segments>
-                                <segment label="Por Defecto"/>
-                                <segment label="Borrar Seleccionada" tag="1"/>
+                                <segment label="Fijar como Dirección Por Defecto"/>
+                                <segment label="Borrar Dirección Seleccionada" tag="1"/>
                             </segments>
                         </segmentedCell>
-                        <accessibility description="Modificar Participantes"/>
+                        <accessibility description="Agregar o Eliminar Participantes"/>
                         <connections>
                             <action selector="defaultClicked:" target="-2" id="132"/>
                         </connections>
@@ -278,11 +278,11 @@ Gw
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="153">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="Other views" id="154">
+                            <menu key="menu" title="OtherViews" id="154">
                                 <items>
-                                    <menuItem title="Item1" id="155"/>
-                                    <menuItem title="Item2" id="156"/>
-                                    <menuItem title="Item3" id="157"/>
+                                    <menuItem title="Item 1" id="155"/>
+                                    <menuItem title="Item 2" id="156"/>
+                                    <menuItem title="Item 3" id="157"/>
                                 </items>
                             </menu>
                         </popUpButtonCell>
@@ -296,19 +296,19 @@ Gw
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="196" id="164">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="Other views" autoenablesItems="NO" id="165">
+                            <menu key="menu" title="OtherViews" autoenablesItems="NO" id="165">
                                 <items>
                                     <menuItem title="Click para Administrar Opciones" id="168">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem isSeparatorItem="YES" state="on" id="196"/>
-                                    <menuItem title="Disponibilidad" enabled="NO" id="195">
+                                    <menuItem title="Disponibilidad (Presencia)" enabled="NO" id="195">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem title="Suscribirme a la Disponibilidad del Contacto" tag="1" indentationLevel="2" id="167"/>
                                     <menuItem title="Permitir a Contacto Ver Mi Disponibilidad" tag="2" indentationLevel="2" id="166"/>
                                     <menuItem isSeparatorItem="YES" hidden="YES" id="185"/>
-                                    <menuItem title="Llamadas de Audio" tag="3" hidden="YES" enabled="NO" id="184">
+                                    <menuItem title="Llamadas Activas" tag="3" hidden="YES" enabled="NO" id="184">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem title="Suscribirme a Llamadas Activas del Contacto" tag="4" hidden="YES" indentationLevel="2" id="181"/>
@@ -326,7 +326,7 @@ Gw
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="border" inset="2" autoenablesItems="NO" id="200">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="Other views" autoenablesItems="NO" id="201">
+                            <menu key="menu" title="OtherViews" autoenablesItems="NO" id="201">
                                 <items>
                                     <menuItem title="Audio" tag="1" id="208">
                                         <modifierMask key="keyEquivalentModifierMask"/>

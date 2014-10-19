@@ -95,13 +95,13 @@
                             <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="181" id="177">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="Other views" id="178">
+                                <menu key="menu" title="OtherViews" id="178">
                                     <items>
                                         <menuItem state="on" hidden="YES" id="181">
                                             <attributedString key="attributedTitle"/>
                                         </menuItem>
-                                        <menuItem title="Item2" id="180"/>
-                                        <menuItem title="Item3" id="179"/>
+                                        <menuItem title="Item 2" id="180"/>
+                                        <menuItem title="Item 3" id="179"/>
                                     </items>
                                 </menu>
                             </popUpButtonCell>

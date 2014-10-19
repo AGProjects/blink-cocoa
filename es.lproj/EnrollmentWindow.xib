@@ -82,7 +82,7 @@
                         </connections>
                     </matrix>
                     <button verticalHuggingPriority="750" tag="111" id="25">
-                        <rect key="frame" x="346" y="23" width="96" height="32"/>
+                        <rect key="frame" x="353" y="23" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Siguiente" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="26">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -96,9 +96,9 @@ DQ
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" tag="110" id="27">
-                        <rect key="frame" x="250" y="23" width="96" height="32"/>
+                        <rect key="frame" x="257" y="23" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="push" title="Avanzar" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="28">
+                        <buttonCell key="cell" type="push" title="Saltar" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="28">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                             <string key="keyEquivalent" base64-UTF8="YES">
@@ -117,7 +117,7 @@ Gw
                     <button verticalHuggingPriority="750" id="155">
                         <rect key="frame" x="188" y="58" width="255" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="recessed" title="¿Como utilizo mi propio dominio?" bezelStyle="recessed" alignment="right" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="156">
+                        <buttonCell key="cell" type="recessed" title="¿Cómo utilizo mi propio dominio?" bezelStyle="recessed" alignment="right" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="156">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="smallSystemBold"/>
                         </buttonCell>
@@ -125,10 +125,10 @@ Gw
                             <action selector="howToUseMyOwnDomain:" target="-2" id="158"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" tag="101" setsMaxLayoutWidthAtFirstLayout="YES" id="115">
-                        <rect key="frame" x="91" y="392" width="354" height="28"/>
+                    <textField verticalHuggingPriority="750" tag="101" id="115">
+                        <rect key="frame" x="91" y="392" width="333" height="28"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Para usar SIP necesitas una cuenta. Selecciona una opción debajo." id="116">
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Para usar SIP necesitas una cuenta. Selecciona una opción debajo." id="116">
                             <font key="font" metaFont="smallSystem"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -162,7 +162,7 @@ Gw
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <customView id="113">
-                                            <rect key="frame" x="0.0" y="-1" width="418" height="238"/>
+                                            <rect key="frame" x="0.0" y="-1" width="423" height="238"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textField verticalHuggingPriority="750" tag="11" id="9">
@@ -189,7 +189,7 @@ Gw
                                                 <textField toolTip="Ingresar dirección SIP con el formato usuario@dominio" verticalHuggingPriority="750" tag="13" id="11">
                                                     <rect key="frame" x="155" y="175" width="262" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="user@domain.com" drawsBackground="YES" id="12">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="usuario@cominio.com" drawsBackground="YES" id="12">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -239,7 +239,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="177">
                                                     <rect key="frame" x="153" y="99" width="266" height="14"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Ver ajustes avanzados para más opciones" id="178">
+                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Vea ajustes avanzados para más opciones" id="178">
                                                         <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -262,7 +262,7 @@ Gw
                                                 <textField verticalHuggingPriority="750" tag="21" id="90">
                                                     <rect key="frame" x="155" y="204" width="262" height="22"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Nombre y Apellido" drawsBackground="YES" id="91">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Firstname Lastname" drawsBackground="YES" id="91">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -344,10 +344,11 @@ Gw
                                                     </textFieldCell>
                                                 </textField>
                                                 <textField verticalHuggingPriority="750" tag="29" id="81">
-                                                    <rect key="frame" x="153" y="29" width="266" height="41"/>
+                                                    <rect key="frame" x="152" y="29" width="267" height="41"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="right" title="La dirección de correo electrónico es usada para enviar mensajes de voz y para recuperar contraseñas." id="82">
+                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" id="82">
                                                         <font key="font" metaFont="smallSystem"/>
+                                                        <string key="title">La dirección de correo electrónico es usada para enviar mensajes de voz, notificaciones de llamadas perdidas y para recuperar contraseñas.</string>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
@@ -374,7 +375,7 @@ Gw
                                                     </textFieldCell>
                                                 </textField>
                                                 <textField hidden="YES" verticalHuggingPriority="750" id="75">
-                                                    <rect key="frame" x="170" y="9" width="223" height="14"/>
+                                                    <rect key="frame" x="153" y="9" width="223" height="14"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Creando cuenta..." id="76">
                                                         <font key="font" metaFont="smallSystem"/>
@@ -383,9 +384,9 @@ Gw
                                                     </textFieldCell>
                                                 </textField>
                                                 <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" minValue="16" maxValue="100" doubleValue="16" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" id="74">
-                                                    <rect key="frame" x="399" y="8" width="16" height="16"/>
+                                                    <rect key="frame" x="382" y="8" width="16" height="16"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                                                    <accessibility description="Indicador de Progreso"/>
+                                                    <accessibility description="Progress Indicator"/>
                                                 </progressIndicator>
                                             </subviews>
                                         </customView>

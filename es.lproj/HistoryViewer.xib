@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="5056"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="HistoryViewer">
@@ -26,8 +26,8 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
-        <window title="Visor de Historia" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="historyWindow" animationBehavior="default" id="1">
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="Visor de Historial" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="historyWindow" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="656" y="340" width="755" height="524"/>
@@ -49,7 +49,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="68" id="67" customClass="ParticipantsTableView">
-                                            <rect key="frame" x="0.0" y="0.0" width="180" height="487"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="180" height="36"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -61,7 +61,7 @@
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                     </tableHeaderCell>
-                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" allowsUndo="NO" alignment="left" title="TextCell" id="96" customClass="ContactCell">
+                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" allowsUndo="NO" alignment="left" title="Text Cell" id="96" customClass="ContactCell">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -103,7 +103,7 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" emptySelection="NO" autosaveName="transcriptIndex" headerView="11" id="10" customClass="MyTableView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="565" height="149"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="565" height="19"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <size key="intercellSpacing" width="3" height="2"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -129,7 +129,7 @@
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                             </tableHeaderCell>
-                                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="14">
+                                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="14">
                                                                 <font key="font" metaFont="system"/>
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -143,7 +143,7 @@
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                             </tableHeaderCell>
-                                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="15">
+                                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="15">
                                                                 <font key="font" metaFont="system"/>
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -157,7 +157,7 @@
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                             </tableHeaderCell>
-                                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="TextCell" id="18">
+                                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="18">
                                                                 <font key="font" metaFont="system"/>
                                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -216,7 +216,7 @@
                     <segmentedControl verticalHuggingPriority="750" id="80">
                         <rect key="frame" x="586" y="2" width="129" height="15"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <segmentedCell key="cell" controlSize="mini" state="on" alignment="left" style="rounded" trackingMode="momentary" id="83">
+                        <segmentedCell key="cell" controlSize="mini" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="83">
                             <font key="font" metaFont="miniSystem"/>
                             <segments>
                                 <segment image="begin_arrow" width="30">
@@ -276,13 +276,13 @@
             </view>
             <toolbar key="toolbar" implicitIdentifier="48BE55B7-C662-4483-91B1-686E4E16A638" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="34">
                 <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Filtrar Resultados " paletteLabel="Resultados de Búsqueda" toolTip="Escribe y Presiona Enter" id="112">
+                    <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Filtrar Resultados" paletteLabel="Filtrar Resultados" toolTip="Escriba y Presione Enter" id="112">
                         <size key="minSize" width="97" height="22"/>
                         <size key="maxSize" width="217" height="22"/>
                         <searchField key="view" verticalHuggingPriority="750" id="113">
-                            <rect key="frame" x="5" y="14" width="127" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="127" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduce Dirección" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduzca Dirección" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
                                 <font key="font" metaFont="system"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -304,7 +304,7 @@
                             <action selector="userClickedToolbarItem:" target="-2" id="174"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6F411DA1-8DE1-40E2-908F-C7609724A924" explicitItemIdentifier="smileys" label="Emoticones" paletteLabel="Emoticones" toolTip="Reemplazar Emoticones/Caractéres Especiales" tag="100" image="smiley_on" id="61">
+                    <toolbarItem implicitItemIdentifier="6F411DA1-8DE1-40E2-908F-C7609724A924" explicitItemIdentifier="smileys" label="Emoticones" paletteLabel="Emoticones" toolTip="Reemplazar Emoticones" tag="100" image="smiley_on" id="61">
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="63"/>
                         </connections>
@@ -321,17 +321,17 @@
                         <popUpButton key="view" toolTip="Filtrar por Medio" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Grabaciones de Video" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="7" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="bKw-ae-kJV" id="101">
+                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
-                                <menu key="menu" title="Other views" id="102">
+                                <menu key="menu" title="OtherViews" id="102">
                                     <items>
                                         <menuItem title="Cualquier Medio" id="103"/>
                                         <menuItem title="Llamadas de Audio" tag="1" id="104"/>
                                         <menuItem title="Conversaciones de Texto" tag="2" id="105"/>
                                         <menuItem title="Transferencia de Archivos" tag="3" id="109"/>
                                         <menuItem title="Grabaciones de Audio" tag="4" id="135"/>
-                                        <menuItem title="Grabaciones de Video" state="on" tag="7" id="bKw-ae-kJV"/>
+                                        <menuItem title="Grabaciones de Vídeo" tag="7" id="jPh-Vm-FC4"/>
                                         <menuItem title="Disponibilidad" tag="5" id="136"/>
                                         <menuItem title="Correo de Voz" tag="6" id="137"/>
                                     </items>
@@ -350,19 +350,19 @@
                         <popUpButton key="view" toolTip="Filtrar por Fecha" verticalHuggingPriority="750" id="122">
                             <rect key="frame" x="0.0" y="14" width="172" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Ultimo Día" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" preferredEdge="minX" selectedItem="128" id="123">
+                            <popUpButtonCell key="cell" type="push" title="Último Día" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" preferredEdge="minX" selectedItem="128" id="123">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
-                                <menu key="menu" title="Other views" id="124">
+                                <menu key="menu" title="OtherViews" id="124">
                                     <items>
                                         <menuItem title="Cualquier Fecha" id="127"/>
                                         <menuItem isSeparatorItem="YES" id="190"/>
-                                        <menuItem title="Ultimo Día" state="on" tag="1" id="128"/>
-                                        <menuItem title="Ultima Semana" tag="2" id="129"/>
-                                        <menuItem title="Ultimo Mes" tag="3" id="126"/>
-                                        <menuItem title="Ultimos 3 Meses" tag="4" id="186"/>
-                                        <menuItem title="Ultimos 6 Meses" tag="5" id="187"/>
-                                        <menuItem title="Ultimo Año" tag="6" id="188"/>
+                                        <menuItem title="Último Día" state="on" tag="1" id="128"/>
+                                        <menuItem title="Última Semana" tag="2" id="129"/>
+                                        <menuItem title="Último Mes" tag="3" id="126"/>
+                                        <menuItem title="Últimos 3 Meses" tag="4" id="186"/>
+                                        <menuItem title="Últimos 6 Meses" tag="5" id="187"/>
+                                        <menuItem title="Último Año" tag="6" id="188"/>
                                         <menuItem isSeparatorItem="YES" id="189"/>
                                         <menuItem title="Anterior a Un día" tag="-1" id="191"/>
                                         <menuItem title="Anterior a Una Semana" tag="-2" id="192"/>
@@ -379,13 +379,13 @@
                             <action selector="filterByPeriodChanged:" target="-2" id="132"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Buscar Contenido" paletteLabel="Buscar Contenido" toolTip="Escribe y Presiona Enter" id="45">
+                    <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Buscar Contenido" paletteLabel="Buscar Contenido" toolTip="Escriba y Presione Enter" id="45">
                         <size key="minSize" width="191" height="22"/>
                         <size key="maxSize" width="217" height="26"/>
                         <searchField key="view" verticalHuggingPriority="750" id="43">
                             <rect key="frame" x="0.0" y="14" width="205" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Escribe y Presiona Enter" bezelStyle="round" sendsWholeSearchString="YES" id="44">
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Escriba y Presione Enter" bezelStyle="round" sendsWholeSearchString="YES" id="44">
                                 <font key="font" metaFont="system"/>
                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -421,7 +421,7 @@
         </customObject>
         <menu title="Contacto" autoenablesItems="NO" id="148">
             <items>
-                <menuItem title="Borrar Historia..." tag="1" id="165">
+                <menuItem title="Borrar Historial..." tag="1" id="165">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedContactMenu:" target="-2" id="166"/>

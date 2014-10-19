@@ -70,7 +70,7 @@
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Definir hora de inicio"/>
+                    <accessibility description="Hora de inicio"/>
                     <connections>
                         <accessibilityConnection property="title" destination="17" id="44"/>
                     </connections>
@@ -92,7 +92,7 @@
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Definir hora de finalización"/>
+                    <accessibility description="hora de finalización"/>
                     <connections>
                         <accessibilityConnection property="title" destination="27" id="45"/>
                     </connections>

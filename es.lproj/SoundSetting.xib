@@ -44,14 +44,14 @@
                 <popUpButton verticalHuggingPriority="750" id="4">
                     <rect key="frame" x="-1" y="16" width="211" height="22"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                    <popUpButtonCell key="cell" type="push" title="Item1" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="7" id="5">
+                    <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="7" id="5">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="smallSystem"/>
-                        <menu key="menu" title="Other views" id="6">
+                        <menu key="menu" title="OtherViews" id="6">
                             <items>
-                                <menuItem title="Item1" state="on" id="7"/>
-                                <menuItem title="Item2" id="8"/>
-                                <menuItem title="Item3" id="9"/>
+                                <menuItem title="Item 1" state="on" id="7"/>
+                                <menuItem title="Item 2" id="8"/>
+                                <menuItem title="Item 3" id="9"/>
                             </items>
                         </menu>
                     </popUpButtonCell>

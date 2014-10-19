@@ -67,7 +67,7 @@
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="PbT-Jt-vT9" id="ODJ-4Z-0wL">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="Other views" autoenablesItems="NO" id="eqf-k7-4lX">
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="eqf-k7-4lX">
                                     <items>
                                         <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="ode-SL-AzX"/>
                                         <menuItem title="Mi Fingerprint" tag="1" enabled="NO" id="mB6-M1-KMr">
@@ -79,7 +79,7 @@
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="Hcf-qY-5yO"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Siempre Exigir Encriptación con Este Contacto" tag="3" id="oam-Ba-ulg">
+                                        <menuItem title="Siempre Requerir Encriptación con Éste Contacto" tag="3" id="oam-Ba-ulg">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="71t-bP-LRJ"/>
@@ -89,7 +89,7 @@
                                         <menuItem title="Ningún Fingerprint Descubierto" tag="7" id="EG1-SW-Olu">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="He verificado Fingerprint" tag="5" id="rEQ-Fm-xMH">
+                                        <menuItem title="He verificado el Fingerprint" tag="5" id="rEQ-Fm-xMH">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="eWP-zO-xjG"/>
@@ -116,13 +116,13 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Emoticones" paletteLabel="Emoticones" toolTip="Reemplazar Emoticones/Caractéres Especiales" tag="100" image="smiley_on" id="127">
+                    <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Emoticones" paletteLabel="Emoticones" toolTip="Reemplazar Emoticones" tag="100" image="smiley_on" id="127">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="131"/>
-                    <toolbarItem implicitItemIdentifier="F706FBD6-3282-4E5A-B901-59387DE517EE" explicitItemIdentifier="history" label="Historia" paletteLabel="Historia" toolTip="Mostrar mensajes previamente compartidos" tag="101" image="time" id="128">
+                    <toolbarItem implicitItemIdentifier="F706FBD6-3282-4E5A-B901-59387DE517EE" explicitItemIdentifier="history" label="Historial" paletteLabel="Historial" toolTip="Mostrar mensajes previos" tag="101" image="time" id="128">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="130"/>
                         </connections>

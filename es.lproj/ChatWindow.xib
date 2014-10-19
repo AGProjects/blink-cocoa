@@ -30,8 +30,8 @@
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="72" id="85"/>
-                <outlet property="videoButton" destination="LVX-7f-0mM" id="jSp-m7-PmR"/>
-                <outlet property="videoView" destination="g0V-GA-4Xc" id="EJV-Yq-HjG"/>
+                <outlet property="videoButton" destination="MK1-En-CVo" id="U1Z-Be-b0h"/>
+                <outlet property="videoView" destination="Tr7-Qb-Y9k" id="a2s-Cb-ZEj"/>
                 <outlet property="window" destination="1" id="25"/>
             </connections>
         </customObject>
@@ -78,24 +78,24 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Retener" paletteLabel="Retener" toolTip="Retener/Reanudar" tag="102" image="pause" id="224">
+                    <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Retener" paletteLabel="Retener" toolTip="Retener/Reanudar audio" tag="102" image="pause" id="224">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Grabar" paletteLabel="Grabar" toolTip="Grabar" tag="103" image="record" autovalidates="NO" id="244">
+                    <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Grabar" paletteLabel="Grabar" toolTip="Grabar audio" tag="103" image="record" autovalidates="NO" id="244">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C3E6F7C9-F452-4335-BCFB-4A71AC47C40A" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" toolTip="Agregar Audio" tag="107" image="video" id="MK1-En-CVo">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="n7e-tx-St4"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Mostrar Editor Colaborativo" tag="109" image="editor" id="441">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="DD0C1430-D172-4709-85A2-CB9E7007C7AB" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" toolTip="Add audio session" tag="107" image="video" id="LVX-7f-0mM">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="c7n-Kl-hbM"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
@@ -110,10 +110,10 @@
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="Other views" autoenablesItems="NO" id="545">
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
                                     <items>
                                         <menuItem state="on" image="display" hidden="YES" id="546"/>
                                         <menuItem title="Item2" id="547"/>
@@ -123,7 +123,7 @@
                             </popUpButtonCell>
                         </popUpButton>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Captura" paletteLabel="Captura" toolTip="Enviar Captura de Pantalla" image="screenshot" id="573">
+                    <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Capturar" paletteLabel="Capturar" toolTip="Enviar Captura de Pantalla" image="screenshot" id="573">
                         <size key="minSize" width="48" height="42"/>
                         <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
@@ -132,7 +132,7 @@
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="Other views" autoenablesItems="NO" id="569">
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
                                     <items>
                                         <menuItem state="on" image="screenshot" hidden="YES" id="570"/>
                                         <menuItem title="Enviar Captura de Pantalla con la Ventana Seleccionada..." tag="301" id="571">
@@ -151,7 +151,7 @@
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="574"/>
-                                        <menuItem title="Utilizar Esc para Cancelar" enabled="NO" id="575" userLabel="Menu Item (Use Escape Key to Cancel...)">
+                                        <menuItem title="Utilice Esc para Cancelar" enabled="NO" id="575" userLabel="Menu Item (Use Escape Key to Cancel...)">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                     </items>
@@ -163,12 +163,12 @@
                         <size key="minSize" width="48" height="35"/>
                         <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="660">
-                            <rect key="frame" x="10" y="14" width="54" height="35"/>
+                            <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="Other views" autoenablesItems="NO" id="662">
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
                                     <items>
                                         <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="663"/>
                                         <menuItem title="Mi Fingerprint" tag="1" enabled="NO" id="638">
@@ -180,7 +180,7 @@
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="648"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Siempre Exigir Encriptación con Este Contacto" tag="3" id="643">
+                                        <menuItem title="Siempre Requerir Encriptación con Este Contacto" tag="3" id="643">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="650"/>
@@ -190,7 +190,7 @@
                                         <menuItem title="Ningún Fingerprint Descubierto" tag="7" id="639">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="He verificado Fingerprint" tag="5" id="644">
+                                        <menuItem title="He verificado el Fingerprint" tag="5" id="644">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="649"/>
@@ -223,7 +223,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="444"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="Historia" paletteLabel="Historia" toolTip="Mostrar mensajes previamente compartidos" tag="107" image="time" id="253">
+                    <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="Historial" paletteLabel="Historial" toolTip="Mostrar mensajes previos" tag="107" image="time" id="253">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
@@ -241,7 +241,7 @@
                     <toolbarItem reference="113"/>
                     <toolbarItem reference="224"/>
                     <toolbarItem reference="244"/>
-                    <toolbarItem reference="LVX-7f-0mM"/>
+                    <toolbarItem reference="MK1-En-CVo"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="441"/>
                     <toolbarItem reference="573"/>
@@ -293,7 +293,7 @@
                 <textField verticalHuggingPriority="750" id="241">
                     <rect key="frame" x="44" y="8" width="136" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Estado de Sesión de Audio" bezelStyle="round" id="242">
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Estado de Audio" bezelStyle="round" id="242">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -305,10 +305,10 @@
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="451"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="393"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="17" width="258" height="420"/>
+                                <rect key="frame" x="1" y="17" width="258" height="367"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
@@ -356,10 +356,10 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="452" width="260" height="117"/>
+                            <rect key="frame" x="0.0" y="394" width="260" height="103"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="17" width="258" height="96"/>
+                                <rect key="frame" x="1" y="17" width="258" height="83"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
@@ -406,11 +406,12 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="I3Z-g4-dj1" customClass="BlackView">
+                        <customView id="U2L-3u-ZBI" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="498" width="260" height="72"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="g0V-GA-4Xc" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="520" height="13.5"/>
+                                <customView id="Tr7-Qb-Y9k" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="260" height="85"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -426,7 +427,7 @@
                     </connections>
                 </splitView>
                 <levelIndicator toolTip="Señal de Entrada de MIcrófono" verticalHuggingPriority="750" id="586">
-                    <rect key="frame" x="185.99999937686053" y="9" width="28" height="12"/>
+                    <rect key="frame" x="186" y="9" width="28" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
                         <font key="font" metaFont="miniSystem"/>
@@ -495,7 +496,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="583"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Utilizar Voz Sintetizada Para Avisarme Cuando los Participantes Cambien" tag="326" enabled="NO" indentationLevel="1" id="3Hf-hK-Tfp">
+                <menuItem title="Avíseme Cuando los Participantes Cambien" tag="326" enabled="NO" indentationLevel="1" id="3Hf-hK-Tfp">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="Wl4-Su-Uxa"/>
@@ -514,7 +515,7 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="326"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Quitar de la Conferencia..." tag="310" enabled="NO" indentationLevel="1" id="327">
+                <menuItem title="Eliminar de la Conferencia..." tag="310" enabled="NO" indentationLevel="1" id="327">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="328"/>
@@ -569,13 +570,6 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="453"/>
-                <menuItem title="Desprenderse de Vídeo" tag="327" hidden="YES" enabled="NO" indentationLevel="1" id="9Ic-jd-rRv">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedParticipantMenu:" target="-2" id="8bl-BN-Yqd"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" id="fPS-tz-7Z4"/>
                 <menuItem title="Tamaño de Fuente" tag="500" enabled="NO" id="h3r-um-zSq">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
@@ -595,6 +589,13 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
+                <menuItem title="Separar Vídeo" tag="327" enabled="NO" indentationLevel="1" id="MEi-C1-IuT">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="PtQ-J8-WWQ"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="56r-Xj-CTr"/>
                 <menuItem title="Mostrar Información de la Sesión" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
@@ -656,7 +657,7 @@
                 <menuItem title="Calidad" enabled="NO" id="521">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
-                <menuItem title="Alto - Más Ancho de Banda" tag="401" indentationLevel="2" id="534">
+                <menuItem title="Alto - Resolución nativa" tag="401" indentationLevel="2" id="534">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="561"/>
@@ -674,7 +675,7 @@
                         <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="563"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Area de Pantalla Compartida" enabled="NO" id="513">
+                <menuItem title="Área de Pantalla Compartida" enabled="NO" id="513">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
             </items>
@@ -682,7 +683,6 @@
                 <outlet property="delegate" destination="-2" id="533"/>
             </connections>
         </menu>
-        <menuItem isSeparatorItem="YES" id="uS8-Jc-8ac"/>
     </objects>
     <resources>
         <image name="NSActionTemplate" width="14" height="14"/>
