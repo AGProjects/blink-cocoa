@@ -196,6 +196,7 @@ class ChatController(MediaStream):
     remote_party_history = True
     video_attached = False
     media_started = False
+    closed = False
 
     @classmethod
     def createStream(self):
@@ -619,10 +620,14 @@ class ChatController(MediaStream):
         return False
 
     def chatView_becameIdle_(self, chatView, time):
+        if self.closed:
+            return
         if self.stream:
             self.stream.send_composing_indication("idle", 60, last_active=time)
 
     def chatView_becameActive_(self, chatView, time):
+        if self.closed:
+            return
         if self.stream:
             self.stream.send_composing_indication("active", 60, last_active=time)
             if self.outgoing_message_handler.must_propose_otr:
@@ -630,7 +635,10 @@ class ChatController(MediaStream):
 
 
     def chatViewDidLoad_(self, chatView):
-         self.replay_history()
+        if self.closed:
+            return
+
+        self.replay_history()
 
     def isOutputFrameVisible(self):
         return True if self.outputContainer.frame().size.height > 10 else False
@@ -648,8 +656,9 @@ class ChatController(MediaStream):
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self, scrollToMessageId=None):
-        if not self:
+        if self.closed:
             return
+
         if self.sessionController is None:
             return
 
@@ -1714,6 +1723,7 @@ class ChatController(MediaStream):
     # 4. User clicks on disconnect button: endStream -> reset
 
     def closeTab(self):
+        self.closed = True
         self.sessionController.setVideoConsumer("standalone")
 
         self.endStream(True)
