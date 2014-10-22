@@ -42,6 +42,8 @@ class VideoController(MediaStream):
     statistics_timer = None
     last_stats = None
     initial_full_screen = False
+    media_received = False
+
     paused = False
     # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
     zrtp_supported = False          # stream supports zRTP
@@ -63,6 +65,7 @@ class VideoController(MediaStream):
         self.previous_tx_bytes = 0
         self.all_rx_bytes = 0
         self.initial_full_screen = False
+        self.media_received = False
         self.paused = False
         self.notification_center.add_observer(self, sender=self.stream)
 
@@ -157,6 +160,10 @@ class VideoController(MediaStream):
             if settings.video.full_screen_after_connect:
                 self.initial_full_screen = True
                 self.videoWindowController.goToFullScreen()
+
+        if self.all_rx_bytes > 0 and not self.media_received:
+            self.videoWindowController.hideStatusLabel()
+            self.media_received = True
 
     def togglePause(self):
         if self.stream is None:
@@ -275,6 +282,8 @@ class VideoController(MediaStream):
             self.videoWindowController.showStatusLabel(NSLocalizedString("Ringing...", "Audio status label"))
         elif newstate == STREAM_CONNECTING:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
+        elif newstate == STREAM_CONNECTED:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting For Media...", "Audio status label"))
         elif newstate == STREAM_PROPOSING:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 

@@ -199,6 +199,12 @@ class VideoWidget(NSView):
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
+        if hasattr(self.delegate, "media_received"):
+            if not self.delegate.media_received:
+                NSColor.blackColor().set()
+                NSRectFill(rect)
+                return
+        
         if hasattr(self.delegate, "full_screen_in_progress"):
             if self.delegate.full_screen_in_progress:
                 return
@@ -348,6 +354,10 @@ class VideoWindowController(NSWindowController):
         if self.myVideoView:
             self.myVideoView.reloadCamera()
 
+    @property
+    def media_received(self):
+        return self.streamController.media_received
+    
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
 
@@ -735,12 +745,14 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
         self.showButtons()
-        self.hideStatusLabel()
+        #self.hideStatusLabel()
 
         if self.sessionController.video_consumer == "standalone":
             if self.streamController.status == STREAM_CONNECTED:
                 if self.localVideoWindow and not self.flipped:
                     self.localVideoWindow.window().orderOut_(None)
+                    if self.streamController.media_received:
+                        self.hideStatusLabel()
                     self.window().orderOut_(None)
                     self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
                     self.flipped = True
