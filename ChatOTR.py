@@ -193,11 +193,19 @@ class ChatOtrSmp(NSObject):
             return
 
         if self.response:
-            self.ctx.smpGotSecret(secret, appdata={'stream': self.stream})
-            self.progressBar.setIndeterminate_(False)
-            self.progressBar.setDoubleValue_(6)
-            self.continueButton.setEnabled_(False)
-            self.statusText.setStringValue_('Responding to verification request...')
+            try:
+                self.ctx.smpGotSecret(secret, appdata={'stream': self.stream})
+                self.progressBar.setIndeterminate_(False)
+                self.progressBar.setDoubleValue_(6)
+                self.continueButton.setEnabled_(False)
+                self.statusText.setStringValue_('Responding to verification request...')
+            except potr.context.NotEncryptedError, e:
+                self.statusText.setStringValue_(NSLocalizedString("Chat session is not OTR encrypted", "Label"))
+            except RuntimeError, e:
+                    self.statusText.setStringValue_(NSLocalizedString("OTR encryption error: %s", "Label") % e)
+            except Exception, e:
+                self.statusText.setStringValue_(NSLocalizedString("Error: %s", "Label") % e)
+        
         else:
             try:
                 qtext = self.questionText.stringValue()
