@@ -265,7 +265,7 @@ class ChatController(MediaStream):
 
         self.history = ChatHistory()
         self.backend = SIPManager()
-        self.chatOtrSmpWindow = ChatOtrSmp(self)
+        self.chatOtrSmpWindow = None
         self.init_otr()
 
         if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_chat_history is not None:
@@ -1594,6 +1594,7 @@ class ChatController(MediaStream):
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.chatOtrSmpWindow = ChatOtrSmp(self)
         self.media_started = True
         if self.stream is None or self.stream.msrp is None: # stream may have ended in the mean time
             return
@@ -1786,7 +1787,8 @@ class ChatController(MediaStream):
         self.dealloc_timer = None
 
         # release OTR check window
-        self.chatOtrSmpWindow.close()
+        if self.chatOtrSmpWindow is not None:
+            self.chatOtrSmpWindow.close()
         self.chatOtrSmpWindow = None
 
         # release message handler
