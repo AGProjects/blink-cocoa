@@ -787,7 +787,7 @@ class AudioController(MediaStream):
             return
 
         if self.zrtp_show_verify_phrase:
-            self.elapsed.setStringValue_('Confirm verbally zRTP encryption phrase:')
+            self.elapsed.setStringValue_(NSLocalizedString("Confirm identity phrase:", "Label"))
             return
 
         if self.session.end_time:
