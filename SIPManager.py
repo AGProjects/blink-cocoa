@@ -512,14 +512,14 @@ class SIPManager(object):
             BlinkLogger().log_debug(u"Available video cameras: %s" % ", ".join((camera for camera in self._app.engine.video_devices)))
             if settings.video.device != "system_default" and settings.video.device != self._app.video_device.real_name and self._app.video_device.real_name != None:
                 settings.video.device = self._app.video_device.real_name
-                BlinkLogger().log_info(u"Using video device %s" % self._app.video_device.real_name)
+                BlinkLogger().log_info(u"Using video camera %s" % self._app.video_device.real_name)
             elif settings.video.device is None:
                 devices = list(device for device in self._app.engine.video_devices if device not in ('system_default', None))
                 if devices:
-                    BlinkLogger().log_info(u"Switching video device to %s" % devices[0])
+                    BlinkLogger().log_info(u"Switching video camera to %s" % devices[0])
                     settings.video.device = devices[0]
             else:
-                BlinkLogger().log_info(u"Using video device %s" % self._app.video_device.real_name)
+                BlinkLogger().log_info(u"Using video camera %s" % self._app.video_device.real_name)
 
         settings.save()
 
@@ -546,7 +546,7 @@ class SIPManager(object):
         import signal
         BlinkLogger().log_info(u"A fatal error occurred, forcing termination of Blink")
         os.kill(os.getpid(), signal.SIGTERM)
-
+    
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info(u"Account %s activated" % account.id)
         # Activate BonjourConferenceServer discovery

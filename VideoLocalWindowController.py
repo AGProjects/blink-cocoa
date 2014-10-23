@@ -265,7 +265,7 @@ class VideoLocalWindowController(NSWindowController):
                   self.window().graphicsContext(), 0, 1, 0)
 
         videoDevicesMenu = NSMenu.alloc().init()
-        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
+        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Camera", "Menu item"), "", "")
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 

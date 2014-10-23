@@ -267,7 +267,7 @@ CA
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="s0l-sF-xRK"/>
-                            <menuItem title="Video Devices" tag="500" enabled="NO" id="mbW-k8-Lkd">
+                            <menuItem title="Video Cameras" tag="500" enabled="NO" id="mbW-k8-Lkd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                         </items>
@@ -1293,7 +1293,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
-                            <rect key="frame" x="0.0" y="0.0" width="280" height="312.5"/>
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="313"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="354"/>
@@ -1369,11 +1369,11 @@ ABC</string>
                             </tableHeaderView>
                         </scrollView>
                         <customView id="C73-Qs-jbr" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="314.5" width="280" height="42.5"/>
+                            <rect key="frame" x="0.0" y="315" width="280" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView id="YUX-UC-DK5" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="280" height="56"/>
+                                    <rect key="frame" x="0.0" y="-7" width="280" height="55.5"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>

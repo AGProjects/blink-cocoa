@@ -292,7 +292,7 @@ class LocalVideoView(NSView):
             self.window().graphicsContext(), 0, 1, 0)
 
         videoDevicesMenu = NSMenu.alloc().init()
-        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Device", "Menu item"), "", "")
+        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Camera", "Menu item"), "", "")
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
@@ -323,7 +323,7 @@ class LocalVideoView(NSView):
 
     def changeVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info('Switching to %s video device' % sender.representedObject())
+        BlinkLogger().log_info('Switching to %s video camera' % sender.representedObject())
         settings.video.device = sender.representedObject()
         settings.save()
 
@@ -431,7 +431,7 @@ class LocalVideoView(NSView):
             self.window().setFrameOrigin_(newOrigin)
 
     def getDevice(self):
-        # Find a video device
+        # Find a video camera
         try:
             device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and device.localizedName() == SIPApplication.video_device.real_name).next()
         except StopIteration:
@@ -460,7 +460,7 @@ class LocalVideoView(NSView):
         self.active = True
 
         if self.captureSession is None:
-            # Find a video device
+            # Find a video camera
             device = self.getDevice()
 
             if not device:
