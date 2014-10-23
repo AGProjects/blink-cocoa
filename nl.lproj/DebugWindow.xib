@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="14A389" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
@@ -239,10 +239,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -298,10 +298,10 @@
                                                         <rect key="frame" x="0.0" y="0.0" width="559" height="260"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                         <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="574" height="260"/>
+                                                        <size key="minSize" width="559" height="260"/>
                                                         <size key="maxSize" width="1135" height="10000000"/>
                                                     </textView>
                                                 </subviews>
@@ -582,7 +582,7 @@
                                                 <rect key="frame" x="1" y="264" width="563" height="15"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="179">
+                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="179">
                                                 <rect key="frame" x="566" y="17" width="15" height="246"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
