@@ -47,10 +47,12 @@ class VideoController(MediaStream):
     paused = False
     # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
     zrtp_supported = False          # stream supports zRTP
-    zrtp_active = False             # stream is engaging zRTP
+    #zrtp_active = False             # stream is engaging zRTP
     zrtp_verified = False           # zRTP peer has been verified
     zrtp_is_ok = True               # zRTP is encrypted ok
     zrtp_show_verify_phrase = False # show verify phrase
+    zrtp_sas = None
+    encryption_cipher = None
 
     @classmethod
     def createStream(self):
@@ -68,6 +70,23 @@ class VideoController(MediaStream):
         self.media_received = False
         self.paused = False
         self.notification_center.add_observer(self, sender=self.stream)
+        self.zrtp_supported = False
+        self.zrtp_verified = False
+        self.zrtp_is_ok = False
+        self.zrtp_sas = None
+        self.encryption_cipher = None
+
+    @property
+    def zrtp_active(self):
+        return self.stream.zrtp_active
+
+    @property
+    def encryption_active(self):
+        return self.srtp_active or self.zrtp_active
+
+    @property
+    def srtp_active(self):
+        return self.stream.srtp_active
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -439,5 +458,26 @@ class VideoController(MediaStream):
             if self.statistics_timer.isValid():
                 self.statistics_timer.invalidate()
         self.statistics_timer = None
+
+    def _NH_RTPTransportZRTPSecureOn(self, sender, data):
+        self.zrtp_supported = True
+        self.zrtp_is_ok = True
+        self.encryption_cipher = data.cipher
+    
+    def _NH_RTPTransportZRTPSecureOff(self, sendr, data):
+        self.zrtp_is_ok = False
+    
+    def _NH_RTPTransportZRTPGotSAS(self, sender, data):
+        self.zrtp_verified = data.verified
+        self.zrtp_sas = data.sas
+    
+    def _NH_RTPTransportZRTPNegotiationFailed(self, sender, data):
+        self.zrtp_supported = False
+        self.zrtp_is_ok = False
+    
+    def _NH_RTPTransportZRTPNotSupportedByRemote(self, sender, data):
+        self.zrtp_supported = False
+        self.zrtp_is_ok = False
+
 
 

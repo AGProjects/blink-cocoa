@@ -6,6 +6,7 @@ from AppKit import NSDefaultRunLoopMode, NSForegroundColorAttributeName, NSModal
 from Foundation import (NSAttributedString,
                         NSBezierPath,
                         NSBundle,
+                        NSImage,
                         NSColor,
                         NSDictionary,
                         NSGradient,
@@ -358,7 +359,13 @@ class SessionInfoController(NSObject):
                     pass
 
                 self.audio_codec.setStringValue_(codec)
-                self.audio_srtp_lock.setHidden_(False if self.audio_stream.stream.srtp_active else True)
+                self.audio_srtp_lock.setHidden_(False if self.audio_stream.encryption_active else True)
+                    
+                if self.audio_stream.encryption_active:
+                    if self.audio_stream.zrtp_active:
+                        self.audio_srtp_lock.setImage_(NSImage.imageNamed_("locked-green") if self.audio_stream.zrtp_verified else NSImage.imageNamed_("locked-red"))
+                    else:
+                        self.audio_srtp_lock.setImage_(NSImage.imageNamed_("srtp"))
             else:
                 self.audio_codec.setStringValue_('')
                 self.audio_srtp_lock.setHidden_(True)
@@ -419,7 +426,13 @@ class SessionInfoController(NSObject):
                     pass
 
                 self.video_codec.setStringValue_(codec)
-                self.video_srtp_lock.setHidden_(False if self.video_stream.stream.srtp_active else True)
+                self.video_srtp_lock.setHidden_(False if self.video_stream.encryption_active else True)
+                if self.video_stream.encryption_active:
+                    if self.video_stream.zrtp_active:
+                        self.video_srtp_lock.setImage_(NSImage.imageNamed_("locked-green") if self.video_stream.zrtp_verified else NSImage.imageNamed_("locked-red"))
+                    else:
+                        self.video_srtp_lock.setImage_(NSImage.imageNamed_("srtp"))
+
             else:
                 self.video_codec.setStringValue_('')
                 self.video_srtp_lock.setHidden_(True)
@@ -492,10 +505,13 @@ class SessionInfoController(NSObject):
             elif self.audio_stream.holdByRemote:
                 self.audio_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.audio_stream.status == STREAM_CONNECTED:
-                title = NSLocalizedString("Active", "Label")
-                if self.audio_stream.stream.srtp_active:
-                    title = title + ' ' + NSLocalizedString("Encrypted", "Label")
-                    title = title + ' (SDES)'
+                if self.audio_stream.zrtp_active:
+                    title = 'zRTP (%s)' % self.audio_stream.encryption_cipher
+                elif self.audio_stream.srtp_active:
+                    title = NSLocalizedString("Encrypted", "Label") + ' (SDES)'
+                else:
+                    title = NSLocalizedString("Active", "Label")
+
                 self.audio_status.setStringValue_(title)
             else:
                 self.audio_status.setStringValue_("")
@@ -509,10 +525,12 @@ class SessionInfoController(NSObject):
             elif self.audio_stream and self.audio_stream.holdByRemote:
                 self.video_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.video_stream.status == STREAM_CONNECTED:
-                title = NSLocalizedString("Active", "Label")
-                if self.video_stream.stream.srtp_active:
-                    title = title + ' ' + NSLocalizedString("Encrypted", "Label")
-                    title = title + ' (SDES)'
+                if self.video_stream.zrtp_active:
+                    title = 'zRTP (%s)' % self.video_stream.encryption_cipher
+                elif self.video_stream.srtp_active:
+                    title = NSLocalizedString("Encrypted", "Label") + ' (SDES)'
+                else:
+                    title = NSLocalizedString("Active", "Label")
                 self.video_status.setStringValue_(title)
             else:
                 self.video_status.setStringValue_("")

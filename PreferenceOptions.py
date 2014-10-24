@@ -104,6 +104,7 @@ def formatName(name):
     "nat": "NAT",
     "msrp": "MSRP",
     "srtp": "SRTP",
+    "zrtp": "zRTP",
     "xcap": "XCAP",
     "rtt": "RTT",
     "rls": "RLS",
@@ -870,16 +871,6 @@ class LanguagesOption(PopUpMenuOption):
             self.popup.addItemWithTitle_(NSApp.delegate().supported_languages[key])
             self.popup.lastItem().setRepresentedObject_(key)
 
-class SRTPEncryptionOption(PopUpMenuOption):
-    def __init__(self, object, name, option, description=None):
-        PopUpMenuOption.__init__(self, object, name, option, description=description, useRepresented=True)
-        self.popup.addItemWithTitle_(NSLocalizedString("Optional", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_('optional')
-        self.popup.addItemWithTitle_(NSLocalizedString("Mandatory", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_('mandatory')
-        self.popup.addItemWithTitle_(NSLocalizedString("Disabled", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_('disabled')
-
 class SampleRateOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, description=description)
@@ -1052,6 +1043,24 @@ class VideoQualityOption(PopUpMenuOption):
 
         frame = self.popup.frame()
         frame.size.width = 300
+        self.popup.setFrame_(frame)
+
+
+class EncryptionOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
+        self.addMissingOptions = False
+        self.popup.addItemWithTitle_(NSLocalizedString("Disabled", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('')
+        self.popup.addItemWithTitle_(NSLocalizedString("Optional", "Menu item") + " SDES")
+        self.popup.lastItem().setRepresentedObject_('sdes')
+        self.popup.addItemWithTitle_(NSLocalizedString("Mandatory", "Menu item") + " SDES")
+        self.popup.lastItem().setRepresentedObject_('sdes_mandatory')
+        self.popup.addItemWithTitle_("zRTP")
+        self.popup.lastItem().setRepresentedObject_('zrtp')
+        
+        frame = self.popup.frame()
+        frame.size.width = 150
         self.popup.setFrame_(frame)
 
 
@@ -1898,7 +1907,6 @@ PreferenceOptionTypes = {
 "MSRPConnectionModel" : MSRPConnectionModelOption,
 "SIPAddress" : NullableStringOption,
 "XCAPRoot" : NullableStringOption,
-"SRTPEncryption" : SRTPEncryptionOption,
 "Port" : PortOption,
 "PortRange" : PortRangeOption,
 "PJSIPLogLevel" : NonNegativeIntegerOption,
@@ -1949,7 +1957,8 @@ PreferenceOptionTypes = {
 "logs.trace_sip_in_gui": HiddenOption,
 "msrp.connection_model" : HiddenOption,
 "nat_traversal.stun_server_list" : STUNServerAddressListOption,
-"rtp.use_srtp_without_tls" : HiddenOption,
+"rtp.encryption_type" : EncryptionOption,
+"rtp.zrtp_cache" : HiddenOption,
 "sounds.use_speech_recognition": HiddenOption,
 "sounds.enable_speech_synthesizer": BoolOption,
 "server.collaboration_url" : HiddenOption,
@@ -2076,7 +2085,7 @@ SettingDescription = {
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Label"),
                       'rtp.hangup_on_timeout': NSLocalizedString("Hangup On Timeout", "Label"),
                       'rtp.timeout': NSLocalizedString("Timeout", "Label"),
-                      'rtp.srtp_encryption': NSLocalizedString("sRTP Encryption", "Label"),
+                      'rtp.encryption_type': NSLocalizedString("Encryption", "Label"),
                       'sip.invite_timeout': NSLocalizedString("INVITE Timeout", "Label"),
                       'sip.always_use_my_proxy': NSLocalizedString("Always Use My Proxy", "Label"),
                       'sip.outbound_proxy': NSLocalizedString("Outbound Proxy", "Label"),
@@ -2187,7 +2196,7 @@ AccountSettingsOrder = {
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
                        'pstn': ['dial_plan', 'idd_prefix', 'strip_digits', 'prefix'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
-                       'rtp': ['inband_dtmf', 'hangup_on_timeout', 'srtp_encryption', 'audio_codec_list', 'video_codec_list'],
+                       'rtp': ['encryption_type', 'inband_dtmf', 'hangup_on_timeout', 'audio_codec_list', 'video_codec_list'],
                        'presence': ['enabled', 'enable_on_the_phone', 'disable_location', 'disable_timezone']
                        }
 

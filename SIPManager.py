@@ -452,24 +452,30 @@ class SIPManager(object):
         BlinkLogger().log_debug(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
         BlinkLogger().log_debug(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
 
-        # Although this setting is set at enrollment time, people who have downloaded previous versions will not have it
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
             must_save = False
             if account is not BonjourAccount() and account.sip.primary_proxy is None and account.sip.outbound_proxy and not account.sip.selected_proxy:
                 account.sip.primary_proxy = account.sip.outbound_proxy
-                must_save = True
 
             if account is not BonjourAccount() and settings.tls.verify_server != account.tls.verify_server:
                 account.tls.verify_server = settings.tls.verify_server
-                must_save = True
 
             if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
                 account.tls.certificate = DefaultValue
-                must_save = True
 
-            if must_save:
-                account.save()
+            if account.rtp.encryption_type == '':
+                account.rtp.encryption.enabled = False
+            elif account.rtp.encryption_type == 'sdes':
+                account.rtp.encryption.enabled = True
+                account.rtp.encryption.key_negotiation = 'sdes'
+            elif account.rtp.encryption_type == 'sdes_mandatory':
+                account.rtp.encryption.enabled = True
+                account.rtp.encryption.key_negotiation = 'sdes_mandatory'
+            elif account.rtp.encryption_type == 'zrtp':
+                account.rtp.encryption.enabled = True
+                account.rtp.encryption.key_negotiation = 'zrtp'
+            account.save()
 
         logger = FileLogger()
         logger.start()

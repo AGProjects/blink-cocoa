@@ -10,7 +10,7 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension', 'RTPSettingsExtension'
 
 from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
-from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SRTPEncryption, SIPProxyAddress
+from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SIPProxyAddress
 
 from configuration import KeychainPasswordSetting
 from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername, UserIcon
@@ -81,15 +81,13 @@ class PSTNSettings(SettingsGroup):
 
 class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
-    use_srtp_without_tls = Setting(type=bool, default=True)
+    encryption_type = Setting(type=str, default='zrtp')
     hangup_on_timeout = Setting(type=bool, default=True)
-    srtp_encryption = Setting(type=SRTPEncryption, default='disabled')
 
 
 class BonjourRTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
-    use_srtp_without_tls = Setting(type=bool, default=True)
-    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
+    encryption_type = Setting(type=str, default='')
     hangup_on_timeout = Setting(type=bool, default=True)
 
 

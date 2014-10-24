@@ -853,6 +853,20 @@ class PreferencesController(NSWindowController, object):
                 sender.ldap.transport = 'tls'
                 sender.save()
 
+        if 'rtp.encryption_type' in notification.data.modified:
+            if sender.rtp.encryption_type == '':
+                sender.rtp.encryption.enabled = False
+            elif sender.rtp.encryption_type == 'sdes':
+                sender.rtp.encryption.enabled = True
+                sender.rtp.encryption.key_negotiation = 'sdes'
+            elif sender.rtp.encryption_type == 'sdes_mandatory':
+                sender.rtp.encryption.enabled = True
+                sender.rtp.encryption.key_negotiation = 'sdes_mandatory'
+            elif sender.rtp.encryption_type == 'zrtp':
+                sender.rtp.encryption.enabled = True
+                sender.rtp.encryption.key_negotiation = 'zrtp'
+            sender.save()
+
         if 'sip.always_use_my_proxy' in notification.data.modified:
             account_info = self.selectedAccount()
             if account_info:

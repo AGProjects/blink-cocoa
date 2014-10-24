@@ -106,10 +106,12 @@ class AudioController(MediaStream):
     encryptionMenu = objc.IBOutlet()
     # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
     zrtp_supported = False          # stream supports zRTP
-    zrtp_active = False             # stream is engaging zRTP
+    #zrtp_active = False             # stream is engaging zRTP
     zrtp_verified = False           # zRTP peer has been verified
     zrtp_is_ok = True               # zRTP is encrypted ok
     zrtp_show_verify_phrase = False # show verify phrase
+    zrtp_sas = None
+    encryption_cipher = None
 
     recordingImage = 0
     audioEndTime = None
@@ -166,6 +168,23 @@ class AudioController(MediaStream):
         self.previous_rx_bytes = 0
         self.previous_tx_bytes = 0
         self.timestamp = time.time()
+        self.zrtp_supported = False
+        self.zrtp_verified = False
+        self.zrtp_is_ok = False
+        self.zrtp_sas = None
+        self.encryption_cipher = None
+
+    @property
+    def zrtp_active(self):
+        return self.stream.zrtp_active
+
+    @property
+    def encryption_active(self):
+        return self.srtp_active or self.zrtp_active
+
+    @property
+    def srtp_active(self):
+        return self.stream.srtp_active
 
     def reset(self):
         self.early_media = False
@@ -1134,7 +1153,7 @@ class AudioController(MediaStream):
             else:
                 image = 'unlocked-red'
         else:
-            if self.stream and self.stream.srtp_active:
+            if self.srtp_active:
                 if self.sessionController.account is BonjourAccount():
                     image = 'locked-orange'
                 else:
@@ -1148,10 +1167,12 @@ class AudioController(MediaStream):
         if sender.selectedSegment() == 0:
             self.zRTPConfirmButton.setHidden_(True)
             self.zrtp_show_verify_phrase = False
+            self.stream.zrtp_set_verified(True)
             self.zrtp_verified = True
             self.updateAudioStatusWithCodecInformation()
         elif sender.selectedSegment() == 1:
             self.zrtp_show_verify_phrase = False
+            self.stream.zrtp_set_verified(False)
             self.zrtp_verified = False
             self.end()
             self.hangup_reason = NSLocalizedString("zRTP Verify Failed", "Audio status label")
@@ -1160,26 +1181,31 @@ class AudioController(MediaStream):
         self.updateDuration()
         self.update_encryption_icon()
 
+    def showzRTPSas(self):
+        self.zrtp_show_verify_phrase = True
+        self.zRTPConfirmButton.setHidden_(False)
+        self.updateAudioStatusWithSessionState(self.zrtp_sas or NSLocalizedString("None", "Label"), True)
+
     @objc.IBAction
     def userClickedEncryptionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 21:
             self.zrtp_active = not self.zrtp_active
             if not self.zrtp_verified:
-                self.zrtp_show_verify_phrase = True
-                self.zRTPConfirmButton.setHidden_(False)
-                self.updateAudioStatusWithSessionState('Trojan, Dinosaur', True)
+                self.showzRTPSas()
             self.update_encryption_icon()
         elif tag == 22:
             self.zrtp_verified = not self.zrtp_verified
             if self.zrtp_verified:
+                self.stream.zrtp_set_verified(True)
                 self.zrtp_show_verify_phrase = False
+            else:
+                self.stream.zrtp_set_verified(False)
             self.update_encryption_icon()
         elif tag == 23:
-            self.zRTPConfirmButton.setHidden_(False)
             self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
             if self.zrtp_show_verify_phrase:
-                self.updateAudioStatusWithSessionState('Trojan, Dinosaur', True)
+                self.showzRTPSas()
         elif tag == 24:
             self.zrtp_is_ok = not self.zrtp_is_ok
             self.update_encryption_icon()
@@ -1370,6 +1396,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.notification_center.add_observer(self, sender=self.stream._rtp_transport)
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_audio_codec(self.stream.codec)
         if self.stream.codec == 'opus':
@@ -1449,6 +1476,7 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
+
         self.sessionController.log_info("Audio stream ended")
         if NSApp.delegate().contactsWindowController.window().isKeyWindow():
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
@@ -1554,4 +1582,33 @@ class AudioController(MediaStream):
             pass # there is currently a hack in the middleware which stops the bridge when the audio stream ends
         self.outbound_ringtone = None
 
+    def _NH_RTPTransportZRTPSecureOn(self, sender, data):
+        self.zrtp_supported = True
+        self.zrtp_is_ok = True
+        self.encryption_cipher = data.cipher
+        self.update_encryption_icon()
+        self.sessionController.log_info("zRTP encryption active")
+
+    def _NH_RTPTransportZRTPSecureOff(self, sender, data):
+        self.zrtp_is_ok = False
+        self.update_encryption_icon()
+        self.sessionController.log_info("zRTP encryption disabled")
+
+    def _NH_RTPTransportZRTPGotSAS(self, sender, data):
+        self.zrtp_verified = data.verified
+        self.zrtp_sas = data.sas
+        self.showzRTPSas()
+        self.update_encryption_icon()
+
+    def _NH_RTPTransportZRTPNegotiationFailed(self, sender, data):
+        self.zrtp_supported = False
+        self.zrtp_is_ok = False
+        self.update_encryption_icon()
+        self.sessionController.log_info("zRTP negotiation failed")
+
+    def _NH_RTPTransportZRTPNotSupportedByRemote(self, sender, data):
+        self.zrtp_supported = False
+        self.zrtp_is_ok = False
+        self.update_encryption_icon()
+        self.sessionController.log_info("zRTP encryption is not supported")
 
