@@ -510,7 +510,7 @@ class SessionInfoController(NSObject):
                 elif self.audio_stream.srtp_active:
                     title = NSLocalizedString("Encrypted", "Label") + ' (SDES)'
                 else:
-                    title = NSLocalizedString("Active", "Label")
+                    title = NSLocalizedString("Not Encrypted", "Label")
 
                 self.audio_status.setStringValue_(title)
             else:
@@ -530,7 +530,7 @@ class SessionInfoController(NSObject):
                 elif self.video_stream.srtp_active:
                     title = NSLocalizedString("Encrypted", "Label") + ' (SDES)'
                 else:
-                    title = NSLocalizedString("Active", "Label")
+                    title = NSLocalizedString("Not Encrypted", "Label")
                 self.video_status.setStringValue_(title)
             else:
                 self.video_status.setStringValue_("")

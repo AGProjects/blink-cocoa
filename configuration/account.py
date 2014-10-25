@@ -87,7 +87,7 @@ class RTPSettingsExtension(RTPSettings):
 
 class BonjourRTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
-    encryption_type = Setting(type=str, default='')
+    encryption_type = Setting(type=str, default='zrtp')
     hangup_on_timeout = Setting(type=bool, default=True)
 
 

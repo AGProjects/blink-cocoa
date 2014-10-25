@@ -80,7 +80,7 @@
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Encryptie" image="NSLockUnlockedTemplate" width="20" tag="4">
+                            <segment toolTip="Encryptie" image="unlocked-darkgray" imageScaling="proportionallyUpOrDown" width="20" tag="4">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Doorschakelen" image="transfer" width="20">
@@ -168,7 +168,7 @@
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="326">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment label="Bevestig" width="52" tag="1"/>
+                            <segment label="Bevestig" imageScaling="proportionallyUpOrDown" width="52" tag="1"/>
                             <segment label="Hang op" width="52" tag="2"/>
                         </segments>
                     </segmentedCell>
@@ -263,106 +263,28 @@
         </menu>
         <menu title="zRTP" autoenablesItems="NO" id="202">
             <items>
-                <menuItem title="Encryptie status (SRTP) " enabled="NO" id="241">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="20" id="239"/>
-                <menuItem title="Encrypt met Diffie-Hellman key uitwisseling (zRTP)" tag="21" id="251">
+                <menuItem title="Versleuteld met ZRTP" tag="21" id="251">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="253"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Show confirm identity phrase" tag="23" indentationLevel="1" id="259">
+                <menuItem title="Toon authenticatie tekst..." tag="23" indentationLevel="1" id="259">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="260"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Bevestig de identiteit door het woord met spraak te vergelijken " tag="22" indentationLevel="1" id="261">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="262"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="zRTP is gecompromiteerd (Man-in-the-middle gedetecteerd)" tag="24" indentationLevel="1" id="252">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="254"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Encryption key is known only by the end-points" state="on" tag="25" enabled="NO" indentationLevel="1" id="267">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="268"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Encryption is guranteed end-to-end" state="on" tag="28" enabled="NO" indentationLevel="1" id="300">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="301"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Man-in-the-middle aanvallen worden altijd gedetecteerd" state="on" tag="26" enabled="NO" indentationLevel="1" id="274">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="275"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Over zRTP key uitwisseling" tag="27" indentationLevel="1" id="288">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="289"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="10" id="250"/>
-                <menuItem title="Encrypted using key exchanged over SIP signaling (SDES)" tag="11" enabled="NO" id="263">
+                <menuItem title="Versleuteld met SDES" tag="11" enabled="NO" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="264"/>
                     </connections>
                 </menuItem>
-                <menuItem title="SIP serviceprovider heeft toegang to de encryptiesleutel" state="on" tag="12" enabled="NO" indentationLevel="1" id="265">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="266"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="ISP kan de encryptiesleutel verkrijgen (SIP signalering is niet versleuteld)" state="on" tag="14" enabled="NO" indentationLevel="1" id="278">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="279"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Man-in-the-middle aanvallen kunnen niet betrouwbaar worden gedetecteerd" state="on" tag="13" enabled="NO" indentationLevel="1" id="282">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="283"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Encryption is guaranteed only to the next-hop" state="on" tag="16" enabled="NO" indentationLevel="1" id="298">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="299"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Over SDES key uitwisseling" tag="15" indentationLevel="1" id="290">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="291"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="30" id="292"/>
-                <menuItem title="Mediastream heeft geen ecryptie" tag="31" indentationLevel="1" id="296">
+                <menuItem title="Niet Versleuteld" tag="31" indentationLevel="1" id="296">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="297"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Over SRTP encryptie" tag="39" indentationLevel="1" id="293">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="294"/>
                     </connections>
                 </menuItem>
             </items>
@@ -372,7 +294,6 @@
         </menu>
     </objects>
     <resources>
-        <image name="NSLockUnlockedTemplate" width="9" height="12"/>
         <image name="bluelock" width="15.359999656677246" height="14.880000114440918"/>
         <image name="hangup" width="240" height="240"/>
         <image name="mute" width="24" height="24"/>
@@ -381,5 +302,6 @@
         <image name="record" width="48" height="48"/>
         <image name="srtp" width="15.359999656677246" height="15.359999656677246"/>
         <image name="transfer" width="48" height="48"/>
+        <image name="unlocked-darkgray" width="171" height="170"/>
     </resources>
 </document>

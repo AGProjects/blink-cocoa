@@ -41,11 +41,13 @@ from AppKit import (NSApp,
                     NSViewMaxYMargin,
                     NSViewMinXMargin,
                     NSViewMinYMargin,
-                    NSViewWidthSizable
+                    NSViewWidthSizable,
+                    NSWindowDocumentIconButton
                     )
 
 from Foundation import (NSAttributedString,
                         NSBundle,
+                        NSURL,
                         NSBezierPath,
                         NSUserDefaults,
                         NSData,
@@ -772,6 +774,9 @@ class VideoWindowController(NSWindowController):
         userdef = NSUserDefaults.standardUserDefaults()
         self.must_show_my_video = userdef.boolForKey_("ShowMyVideo")
 
+        if self.streamController.encryption_active:
+            self.showEncryptionLock()
+
     def windowDidBecomeKey_(self, notification):
         if self.closed:
             return
@@ -1239,6 +1244,20 @@ class VideoWindowController(NSWindowController):
         else:
             self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
             self.recordButton.setImage_(RecordingImages[0])
+
+    def showEncryptionLock(self):
+        if not self.window():
+            return
+
+        title = NSLocalizedString("Video with %s", "Window title") % self.title
+        self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
+        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(NSImage.imageNamed_("locked-green"))
+
+    def hideEncryptionLock(self):
+        if not self.window():
+            return
+        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(None)
+
 
 class TitleBarView(NSObject):
     view = objc.IBOutlet()

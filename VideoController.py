@@ -348,6 +348,7 @@ class VideoController(MediaStream):
             self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
+        self.notification_center.add_observer(self, sender=self.stream._rtp_transport)
         self.started = True
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
@@ -463,21 +464,28 @@ class VideoController(MediaStream):
         self.zrtp_supported = True
         self.zrtp_is_ok = True
         self.encryption_cipher = data.cipher
-    
-    def _NH_RTPTransportZRTPSecureOff(self, sendr, data):
+        self.sessionController.log_info("zRTP video encryption active using %s" % self.encryption_cipher)
+        self.videoWindowController.showEncryptionLock()
+
+    def _NH_RTPTransportZRTPSecureOff(self, sender, data):
+        self.zrtp_supported = True
         self.zrtp_is_ok = False
-    
+        self.sessionController.log_info("zRTP video encryption disabled")
+        self.videoWindowController.hideEncryptionLock()
+
     def _NH_RTPTransportZRTPGotSAS(self, sender, data):
+        self.zrtp_supported = True
         self.zrtp_verified = data.verified
         self.zrtp_sas = data.sas
-    
+        self.sessionController.log_info("zRTP video authentication string is: %s" % self.zrtp_sas)
+
     def _NH_RTPTransportZRTPNegotiationFailed(self, sender, data):
-        self.zrtp_supported = False
+        self.zrtp_supported = True
         self.zrtp_is_ok = False
+        self.sessionController.log_info("zRTP video negotiation failed")
     
     def _NH_RTPTransportZRTPNotSupportedByRemote(self, sender, data):
         self.zrtp_supported = False
         self.zrtp_is_ok = False
-
-
+        self.sessionController.log_info("zRTP video encryption is not supported")
 

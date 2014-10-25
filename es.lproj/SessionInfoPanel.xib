@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <deployment defaultVersion="1080" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="SessionInfoController">
@@ -48,7 +48,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Información de la Sesión" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" frameAutosaveName="session-info-panel" animationBehavior="default" id="1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" resizable="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
@@ -172,7 +172,7 @@
                                 <imageView hidden="YES" id="162">
                                     <rect key="frame" x="283" y="6" width="16" height="16"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="bluelock" id="163"/>
+                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="bluelock" id="163"/>
                                     <accessibility description="Encriptación SIP"/>
                                 </imageView>
                                 <textField verticalHuggingPriority="750" id="34">
@@ -221,23 +221,11 @@
                                 <textField verticalHuggingPriority="750" id="146">
                                     <rect key="frame" x="10" y="232" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Estado:" id="149">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Encriptación:" id="149">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
-                                </textField>
-                                <textField verticalHuggingPriority="750" id="147">
-                                    <rect key="frame" x="118" y="232" width="131" height="14"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Activo" id="148">
-                                        <font key="font" metaFont="smallSystem"/>
-                                        <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                    </textFieldCell>
-                                    <connections>
-                                        <accessibilityConnection property="title" destination="146" id="184"/>
-                                    </connections>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="11">
                                     <rect key="frame" x="118" y="196" width="182" height="14"/>
@@ -375,7 +363,7 @@
                                 <imageView hidden="YES" id="164">
                                     <rect key="frame" x="284" y="232" width="14" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="srtp" id="165"/>
+                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="srtp" id="165"/>
                                     <accessibility description="Encriptación RTP"/>
                                 </imageView>
                                 <textField verticalHuggingPriority="750" id="4da-tG-Xxg">
@@ -388,6 +376,18 @@
                                     </textFieldCell>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="KDA-cl-yj8"/>
+                                    </connections>
+                                </textField>
+                                <textField verticalHuggingPriority="750" id="147">
+                                    <rect key="frame" x="118" y="232" width="165" height="14"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="148">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <accessibilityConnection property="title" destination="146" id="184"/>
                                     </connections>
                                 </textField>
                             </subviews>
@@ -486,7 +486,7 @@
                                 <imageView hidden="YES" id="Rab-QC-liv">
                                     <rect key="frame" x="285" y="120" width="14" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="srtp" id="dZc-JY-it3"/>
+                                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="srtp" id="dZc-JY-it3"/>
                                     <accessibility description="Encriptación MSRP"/>
                                 </imageView>
                                 <textField verticalHuggingPriority="750" id="xbX-2w-Kxc">
@@ -581,16 +581,16 @@
                                 <textField verticalHuggingPriority="750" id="8ap-1Q-LQl">
                                     <rect key="frame" x="10" y="120" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Estado:" id="8nz-ln-Syn">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Encriptación:" id="8nz-ln-Syn">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="3Ye-Eh-ZMH">
-                                    <rect key="frame" x="118" y="120" width="131" height="14"/>
+                                    <rect key="frame" x="118" y="120" width="161" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Activo" id="j7G-qQ-LiG">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="j7G-qQ-LiG">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -630,6 +630,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="65"/>
             </connections>
+            <point key="canvasLocation" x="211.5" y="192.5"/>
         </window>
     </objects>
     <resources>

@@ -72,7 +72,7 @@
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="199">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Encriptação" image="NSLockUnlockedTemplate" width="20" tag="4">
+                            <segment toolTip="Encriptação" image="unlocked-darkgray" imageScaling="proportionallyUpOrDown" width="20" tag="4">
                                 <nil key="label"/>
                             </segment>
                             <segment toolTip="Transferir" image="transfer" width="20">
@@ -256,106 +256,28 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
         </menu>
         <menu title="zRTP" autoenablesItems="NO" id="202">
             <items>
-                <menuItem title="Status de Encriptação (SRTP)" enabled="NO" id="241">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="20" id="239"/>
-                <menuItem title="Criptografar utilizando troca de chaves Diffie-Hellman (zRTP)" tag="21" id="251">
+                <menuItem title="Criptografado utilizando ZRTP" tag="21" id="251">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="253"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Exibir frase de confirmação de identidade" tag="23" indentationLevel="1" id="259">
+                <menuItem title="Mostrar texto autenticação..." tag="23" indentationLevel="1" id="259">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="260"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Confirmar Indentidade por comparação de frase verbal" tag="22" indentationLevel="1" id="261">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="262"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="ZRTP foi comprometido (Ataque man-in-the-middle detectado)" tag="24" indentationLevel="1" id="252">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="254"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Chave de Criptografia é conhecida somente pelos saltos finais" state="on" tag="25" enabled="NO" indentationLevel="1" id="267">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="268"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Encriptação é garantida ponta a ponta" state="on" tag="28" enabled="NO" indentationLevel="1" id="300">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="301"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Ataque man-in-the-middle são sempre detectados" state="on" tag="26" enabled="NO" indentationLevel="1" id="274">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="275"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Sobre troca de chaves zRTP" tag="27" indentationLevel="1" id="288">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="289"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="10" id="250"/>
-                <menuItem title="Criptografado utilizando chave trocada por sinalização SIP (SDES)" tag="11" enabled="NO" id="263">
+                <menuItem title="Criptografado utilizando SDES" tag="11" enabled="NO" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="264"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Provedor de Serviço SIP possui acesso a chave de criptografia" state="on" tag="12" enabled="NO" indentationLevel="1" id="265">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="266"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="O Provedor de Serviço pode acessar a chave de criptografia (Sinalização SIP não está criptografada)" state="on" tag="14" enabled="NO" indentationLevel="1" id="278">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="279"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="O ataque man-in-the-middle não pode ser confiávelmente detectado" state="on" tag="13" enabled="NO" indentationLevel="1" id="282">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="283"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Encriptação é garantida somente até o próximo salto" state="on" tag="16" enabled="NO" indentationLevel="1" id="298">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="299"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Sobre troca de chaves SDES" tag="15" indentationLevel="1" id="290">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="291"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="30" id="292"/>
                 <menuItem title="Fluxo de mídia não está criptografado" tag="31" indentationLevel="1" id="296">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="297"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Sobre encriptação SRTP" tag="39" indentationLevel="1" id="293">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="294"/>
                     </connections>
                 </menuItem>
             </items>
@@ -365,7 +287,6 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
         </menu>
     </objects>
     <resources>
-        <image name="NSLockUnlockedTemplate" width="9" height="12"/>
         <image name="bluelock" width="15.359999656677246" height="14.880000114440918"/>
         <image name="hangup" width="240" height="240"/>
         <image name="mute" width="24" height="24"/>
@@ -374,5 +295,6 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
         <image name="record" width="48" height="48"/>
         <image name="srtp" width="15.359999656677246" height="15.359999656677246"/>
         <image name="transfer" width="48" height="48"/>
+        <image name="unlocked-darkgray" width="171" height="170"/>
     </resources>
 </document>

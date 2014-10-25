@@ -8,18 +8,13 @@ from Foundation import (NSBundle,
 from configuration.account import AccountExtension, RTPSettingsExtension
 from sipsimple.account import NATTraversalSettings
 from sipsimple.configuration import Setting
-from sipsimple.configuration.datatypes import SRTPEncryption
 
 
 class NATTraversalSettingsExtensionSIP2SIP(NATTraversalSettings):
     use_ice = Setting(type=bool, default=True)
 
-class RTPSettingsExtensionSIP2SIP(RTPSettingsExtension):
-    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
-
 class AccountExtensionSIP2SIP(AccountExtension):
     nat_traversal = NATTraversalSettingsExtensionSIP2SIP
-    rtp = RTPSettingsExtensionSIP2SIP
 
 def init(delegate):
     delegate.applicationName = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleExecutable"))

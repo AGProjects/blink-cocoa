@@ -11,7 +11,8 @@ from AppKit import (NSAccessibilityChildrenAttribute,
                     NSOnState,
                     NSCommandKeyMask,
                     NSEventTrackingRunLoopMode,
-                    NSLeftMouseUp)
+                    NSLeftMouseUp,
+                    NSSound)
 
 from Foundation import (NSBundle,
                         NSColor,
@@ -104,9 +105,8 @@ class AudioController(MediaStream):
     zRTPConfirmButton = objc.IBOutlet()
 
     encryptionMenu = objc.IBOutlet()
-    # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
+    
     zrtp_supported = False          # stream supports zRTP
-    #zrtp_active = False             # stream is engaging zRTP
     zrtp_verified = False           # zRTP peer has been verified
     zrtp_is_ok = True               # zRTP is encrypted ok
     zrtp_show_verify_phrase = False # show verify phrase
@@ -130,6 +130,7 @@ class AudioController(MediaStream):
     mutedInConference = False
     transferEnabled = False
     duration = 0
+    show_zrtp_ok_status_countdown = 0
 
     recording_path = None
 
@@ -173,6 +174,7 @@ class AudioController(MediaStream):
         self.zrtp_is_ok = False
         self.zrtp_sas = None
         self.encryption_cipher = None
+        self.show_zrtp_ok_status_countdown = 0
 
     @property
     def zrtp_active(self):
@@ -581,6 +583,13 @@ class AudioController(MediaStream):
     def updateAudioStatusWithCodecInformation(self):
         if self.zrtp_show_verify_phrase:
             return
+
+        if self.show_zrtp_ok_status_countdown > 0:
+            self.audioStatus.setTextColor_(NSColor.blueColor())
+            self.audioStatus.setStringValue_(NSLocalizedString("Encrypted with ZRTP", "Audio status label"))
+            self.show_zrtp_ok_status_countdown -= 1
+            return
+        
         if self.transfer_in_progress or self.transferred:
             return
         if self.holdByLocal and not self.answeringMachine:
@@ -806,7 +815,7 @@ class AudioController(MediaStream):
             return
 
         if self.zrtp_show_verify_phrase:
-            self.elapsed.setStringValue_(NSLocalizedString("Confirm identity phrase:", "Label"))
+            self.elapsed.setStringValue_(NSLocalizedString("Authentication String:", "Label"))
             return
 
         if self.session.end_time:
@@ -900,54 +909,23 @@ class AudioController(MediaStream):
 
     def menuWillOpen_(self, menu):
         if menu == self.encryptionMenu:
-            i = 20
-            while True:
-                item = menu.itemWithTag_(i)
-                if not item:
-                    break
-                item.setHidden_(not self.zrtp_supported)
-                i += 1
-
-            i = 10
-
-            while True:
-                item = menu.itemWithTag_(i)
-                if not item:
-                    break
-                item.setHidden_(self.zrtp_active or (self.stream and not self.stream.srtp_active))
-                i += 1
-
+            # sded encrypted
             item = menu.itemWithTag_(11)
-            item.setState_(NSOnState if (self.stream and self.stream.srtp_active) else NSOffState)
-            #item.setEnabled_(self.stream and self.stream.srtp_active)
+            item.setState_(NSOnState if self.srtp_active else NSOffState)
+            item.setHidden_(self.zrtp_active)
 
-            item = menu.itemWithTag_(12)
-            item.setHidden_(self.sessionController.account is BonjourAccount() or self.zrtp_active or not self.stream.srtp_active)
-
-            item = menu.itemWithTag_(14)
-            item.setHidden_(self.session and self.session.transport == "tls")
-
+            #zrtp encrypted
             item = menu.itemWithTag_(21)
             item.setState_(NSOnState if self.zrtp_active else NSOffState)
-            _label = NSLocalizedString("Encrypted", "Menu item") if self.zrtp_active else NSLocalizedString("Encrypt", "Menu item")
-            title = NSLocalizedString("%s using Diffie-Hellman key exchange (zRTP)", "Menu item") % _label
-            item.setTitle_(title)
-
-            item = menu.itemWithTag_(22)
-            item.setState_(NSOnState if self.zrtp_verified else NSOffState)
-            item.setEnabled_(self.zrtp_active and self.zrtp_show_verify_phrase)
-            item.setTitle_(NSLocalizedString("Identity Confirmed", "Menu item") if self.zrtp_verified else NSLocalizedString("Confirm Identity by verbally comparing the phrase", "Menu item"))
+            item.setHidden_(not self.zrtp_active)
 
             item = menu.itemWithTag_(23)
-            item.setTitle_(NSLocalizedString("Show Confirm Identity Phrase", "Menu item") if not self.zrtp_show_verify_phrase else NSLocalizedString("Hide Confirm Identity Phrase", "Menu item" ))
             item.setEnabled_(self.zrtp_active)
+            item.setHidden_(not self.zrtp_active)
 
-            item = menu.itemWithTag_(24)
-            item.setEnabled_(self.zrtp_active)
-            item.setState_(NSOnState if not self.zrtp_is_ok else NSOffState)
-
+            # not encrypted
             item = menu.itemWithTag_(31)
-            item.setHidden_(self.zrtp_active or (self.stream and self.stream.srtp_active))
+            item.setHidden_(self.encryption_active)
 
         elif menu == self.transferMenu:
             while menu.numberOfItems() > 1:
@@ -1157,9 +1135,9 @@ class AudioController(MediaStream):
                 if self.sessionController.account is BonjourAccount():
                     image = 'locked-orange'
                 else:
-                    image = 'NSLockLockedTemplate'
+                    image = 'locked-gray'
             else:
-                image = 'NSLockUnlockedTemplate'
+                image = 'unlocked-darkgray'
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
 
     @objc.IBAction
@@ -1169,7 +1147,8 @@ class AudioController(MediaStream):
             self.zrtp_show_verify_phrase = False
             self.stream.zrtp_set_verified(True)
             self.zrtp_verified = True
-            self.updateAudioStatusWithCodecInformation()
+            #            self.show_zrtp_ok_status_countdown = 4
+            #self.updateAudioStatusWithCodecInformation()
         elif sender.selectedSegment() == 1:
             self.zrtp_show_verify_phrase = False
             self.stream.zrtp_set_verified(False)
@@ -1184,37 +1163,16 @@ class AudioController(MediaStream):
     def showzRTPSas(self):
         self.zrtp_show_verify_phrase = True
         self.zRTPConfirmButton.setHidden_(False)
+        self.elapsed.setStringValue_(NSLocalizedString("Authentication String:", "Label"))
         self.updateAudioStatusWithSessionState(self.zrtp_sas or NSLocalizedString("None", "Label"), True)
 
     @objc.IBAction
     def userClickedEncryptionMenuItem_(self, sender):
         tag = sender.tag()
-        if tag == 21:
-            self.zrtp_active = not self.zrtp_active
-            if not self.zrtp_verified:
-                self.showzRTPSas()
-            self.update_encryption_icon()
-        elif tag == 22:
-            self.zrtp_verified = not self.zrtp_verified
-            if self.zrtp_verified:
-                self.stream.zrtp_set_verified(True)
-                self.zrtp_show_verify_phrase = False
-            else:
-                self.stream.zrtp_set_verified(False)
-            self.update_encryption_icon()
-        elif tag == 23:
+        if tag == 23:
             self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
             if self.zrtp_show_verify_phrase:
                 self.showzRTPSas()
-        elif tag == 24:
-            self.zrtp_is_ok = not self.zrtp_is_ok
-            self.update_encryption_icon()
-        elif tag == 27:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/ZRTP"))
-        elif tag == 15:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/SDES"))
-        elif tag == 39:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol"))
 
 
     @objc.IBAction
@@ -1587,28 +1545,37 @@ class AudioController(MediaStream):
         self.zrtp_is_ok = True
         self.encryption_cipher = data.cipher
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP encryption active")
+        self.sessionController.log_info("zRTP audio encryption active using %s" % self.encryption_cipher)
 
     def _NH_RTPTransportZRTPSecureOff(self, sender, data):
+        NSSound.soundNamed_("zrtp-security-failed").play()
+        self.zrtp_supported = True
         self.zrtp_is_ok = False
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP encryption disabled")
+        self.sessionController.log_info("zRTP audio encryption disabled")
 
     def _NH_RTPTransportZRTPGotSAS(self, sender, data):
+        self.zrtp_supported = True
         self.zrtp_verified = data.verified
         self.zrtp_sas = data.sas
-        self.showzRTPSas()
+        self.sessionController.log_info("zRTP audio authentication string is: %s" % self.zrtp_sas)
+        if not self.zrtp_verified:
+            NSSound.soundNamed_("zrtp-security-failed").play()
+            self.showzRTPSas()
+        else:
+            self.show_zrtp_ok_status_countdown = 4
+            NSSound.soundNamed_("zrtp-securemode").play()
         self.update_encryption_icon()
 
     def _NH_RTPTransportZRTPNegotiationFailed(self, sender, data):
-        self.zrtp_supported = False
+        self.zrtp_supported = True
         self.zrtp_is_ok = False
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP negotiation failed")
+        self.sessionController.log_info("zRTP audio negotiation failed")
 
     def _NH_RTPTransportZRTPNotSupportedByRemote(self, sender, data):
         self.zrtp_supported = False
         self.zrtp_is_ok = False
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP encryption is not supported")
+        self.sessionController.log_info("zRTP audio encryption is not supported")
 

@@ -8,18 +8,13 @@ from Foundation import (NSBundle,
 from configuration.account import AccountExtension, RTPSettingsExtension
 from sipsimple.account import NATTraversalSettings
 from sipsimple.configuration import Setting
-from sipsimple.configuration.datatypes import SRTPEncryption
 
 
 class NATTraversalSettingsExtensionElQuijote(NATTraversalSettings):
     use_ice = Setting(type=bool, default=True)
 
-class RTPSettingsExtensionElQuijote(RTPSettingsExtension):
-    srtp_encryption = Setting(type=SRTPEncryption, default='optional')
-
 class AccountExtensionELQuijote(AccountExtension):
     nat_traversal = NATTraversalSettingsExtensionElQuijote
-    rtp = RTPSettingsExtensionElQuijote
 
 
 def init(delegate):

@@ -626,6 +626,12 @@
 		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
+		1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
+		1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
+		1F52D5B419FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
+		1F52D5B519FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
+		1F52D5B619FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
+		1F52D5B719FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F536AA51591BBDC00A0FE51 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
 		1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
 		1F536AA71591BBDC00A0FE51 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
@@ -2825,6 +2831,7 @@
 		1F4B789719AEAEC200F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
+		1F52D5B119FAF1AF00F44E56 /* locked-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-gray.png"; path = "icons/locked-gray.png"; sourceTree = SOURCE_ROOT; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
 		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F546250158B300A005628D9 /* NicknameController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NicknameController.py; sourceTree = "<group>"; };
@@ -3613,6 +3620,7 @@
 		1FE50E59164D1B6200840B18 /* presence */ = {
 			isa = PBXGroup;
 			children = (
+				1F52D5B119FAF1AF00F44E56 /* locked-gray.png */,
 				1FC38F01192234E1007B0340 /* layers.png */,
 				1F065AFC1929175100E22651 /* layers2.png */,
 				1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */,
@@ -4470,6 +4478,7 @@
 				1F2272EA12B554F50010A8B2 /* dtmf_0_tone.wav in Resources */,
 				1F2272EB12B554F50010A8B2 /* dtmf_1_tone.wav in Resources */,
 				1F194A8319B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
+				1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1F2272EC12B554F50010A8B2 /* dtmf_2_tone.wav in Resources */,
 				1F2272ED12B554F50010A8B2 /* dtmf_3_tone.wav in Resources */,
 				1F2272EE12B554F50010A8B2 /* dtmf_4_tone.wav in Resources */,
@@ -4799,6 +4808,7 @@
 				1F35CFF917894FFF00C6FE38 /* AddParticipantsWindow.xib in Resources */,
 				1F35CFFA17894FFF00C6FE38 /* FileTransferController.py in Resources */,
 				1F35CFFB17894FFF00C6FE38 /* ParticipantsTableView.py in Resources */,
+				1F52D5B519FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1FAE0B1518FD7A2300038AA4 /* pencil_16.png in Resources */,
 				1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
 				1F35CFFC17894FFF00C6FE38 /* hangup_small.png in Resources */,
@@ -5027,6 +5037,7 @@
 				1FAE0B1418FD7A2300038AA4 /* pencil_16.png in Resources */,
 				1F8DC37A135084FA0034815C /* dtmf_4_tone.wav in Resources */,
 				1F8DC37B135084FA0034815C /* dtmf_5_tone.wav in Resources */,
+				1F52D5B419FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1F8DC37C135084FA0034815C /* dtmf_6_tone.wav in Resources */,
 				1F8DC37D135084FA0034815C /* dtmf_7_tone.wav in Resources */,
 				1F447E8018DF3522001EF4C9 /* VideoWindowController.py in Resources */,
@@ -5303,6 +5314,7 @@
 				1FC80E5D192E3E1F00BD62F4 /* answering_machine_tone.wav in Resources */,
 				1FC80E5E192E3E1F00BD62F4 /* dtmf_0_tone.wav in Resources */,
 				1FC80E5F192E3E1F00BD62F4 /* dtmf_1_tone.wav in Resources */,
+				1F52D5B619FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1FC80E60192E3E1F00BD62F4 /* dtmf_2_tone.wav in Resources */,
 				1FC80E61192E3E1F00BD62F4 /* dtmf_3_tone.wav in Resources */,
 				1FC80E62192E3E1F00BD62F4 /* dtmf_4_tone.wav in Resources */,
@@ -5574,6 +5586,7 @@
 				1FCA7DB619546B0B00765366 /* AccountSettings.py in Resources */,
 				1FCA7DB719546B0B00765366 /* AccountSettings.xib in Resources */,
 				1F194A8719B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
+				1F52D5B719FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1FCA7DB819546B0B00765366 /* answering_machine_tone.wav in Resources */,
 				1FCA7DB919546B0B00765366 /* dtmf_0_tone.wav in Resources */,
 				1FCA7DBA19546B0B00765366 /* dtmf_1_tone.wav in Resources */,
@@ -5849,6 +5862,7 @@
 				1F7EAC6118E0FA6500CA7B86 /* paused-red.png in Resources */,
 				2B01284E10939236009B2112 /* AccountSettings.xib in Resources */,
 				1FB9B1191095BFF500284E18 /* answering_machine_tone.wav in Resources */,
+				1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1FB9B11A1095BFF500284E18 /* dtmf_0_tone.wav in Resources */,
 				1FB9B11B1095BFF500284E18 /* dtmf_1_tone.wav in Resources */,
 				1FB9B11C1095BFF500284E18 /* dtmf_2_tone.wav in Resources */,
