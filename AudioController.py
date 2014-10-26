@@ -585,9 +585,10 @@ class AudioController(MediaStream):
             return
 
         if self.show_zrtp_ok_status_countdown > 0:
-            self.audioStatus.setTextColor_(NSColor.blueColor())
-            self.audioStatus.setStringValue_(NSLocalizedString("Encrypted with ZRTP", "Audio status label"))
+            self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
+            self.audioStatus.setStringValue_(NSLocalizedString("Encrypted using ZRTP", "Audio status label"))
             self.show_zrtp_ok_status_countdown -= 1
+            self.audioStatus.sizeToFit()
             return
         
         if self.transfer_in_progress or self.transferred:
@@ -604,16 +605,21 @@ class AudioController(MediaStream):
             elif self.stream.sample_rate and self.stream.codec:
                 sample_rate = self.stream.sample_rate/1000
                 codec = beautify_audio_codec(self.stream.codec)
-                if self.stream.sample_rate >= 32000:
+                if self.zrtp_active:
+                    hd_label = "ZRTP "
+                elif self.srtp_active:
+                    hd_label = "SDES "
+                else:
+                    hd_label = ""
+                
+                if self.stream.sample_rate >= 16000:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    hd_label = 'UWB Audio'
-                elif self.stream.sample_rate >= 16000:
-                    self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(92/256.0, 187/256.0, 92/256.0, 1.0))
-                    hd_label = 'WB Audio'
+                    hd_label += "Wideband"
                 else:
                     self.audioStatus.setTextColor_(NSColor.blackColor())
-                    hd_label = 'PSTN Audio'
-                self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
+                    hd_label += "Narrowband"
+                #self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
+                self.audioStatus.setStringValue_(u"%s (%s)" % (hd_label, codec))
 
         self.audioStatus.sizeToFit()
 
@@ -912,7 +918,7 @@ class AudioController(MediaStream):
             # sded encrypted
             item = menu.itemWithTag_(11)
             item.setState_(NSOnState if self.srtp_active else NSOffState)
-            item.setHidden_(self.zrtp_active)
+            item.setHidden_(self.zrtp_active or not self.encryption_active)
 
             #zrtp encrypted
             item = menu.itemWithTag_(21)
@@ -926,6 +932,7 @@ class AudioController(MediaStream):
             # not encrypted
             item = menu.itemWithTag_(31)
             item.setHidden_(self.encryption_active)
+            item.setEnabled_(False)
 
         elif menu == self.transferMenu:
             while menu.numberOfItems() > 1:
@@ -1132,10 +1139,7 @@ class AudioController(MediaStream):
                 image = 'unlocked-red'
         else:
             if self.srtp_active:
-                if self.sessionController.account is BonjourAccount():
-                    image = 'locked-orange'
-                else:
-                    image = 'locked-gray'
+                image = 'locked-orange'
             else:
                 image = 'unlocked-darkgray'
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
@@ -1370,18 +1374,7 @@ class AudioController(MediaStream):
         if not self.isActive and not self.answeringMachine:
             self.session.hold()
 
-        if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:
-            if self.stream.ice_active:
-                self.audioStatus.setToolTip_('Audio RTP ICE endpoints \nLocal: %s:%d (%s)\nRemote: %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port,
-                    ice_candidates[self.stream.local_rtp_candidate.type.lower()],
-                    self.stream.remote_rtp_address,
-                    self.stream.remote_rtp_port,
-                    ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
-            else:
-                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d' % (self.stream.local_rtp_address,
-                    self.stream.local_rtp_port,
-                    self.stream.remote_rtp_address,
-                    self.stream.remote_rtp_port))
+        self.updateTootip()
 
         self.sessionInfoButton.setEnabled_(True)
         if self.sessionController.postdial_string is not None:
@@ -1390,6 +1383,28 @@ class AudioController(MediaStream):
         if NSApp.delegate().recording_enabled and self.sessionController.account.audio.auto_recording:
             self.startAudioRecording()
 
+    def updateTootip(self):
+        if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:
+            if self.zrtp_active:
+                enc_type = 'ZRTP %s' % self.encryption_cipher
+            elif self.srtp_active:
+                enc_type = 'SDES'
+            else:
+                enc_type = NSLocalizedString("None", "Label")
+            
+            if self.stream.ice_active:
+                self.audioStatus.setToolTip_('Audio RTP ICE endpoints \nLocal: %s:%d (%s)\nRemote: %s:%d (%s)\nEncryption: %s' % (self.stream.local_rtp_address, self.stream.local_rtp_port,
+                    ice_candidates[self.stream.local_rtp_candidate.type.lower()],
+                    self.stream.remote_rtp_address,
+                    self.stream.remote_rtp_port,
+                    ice_candidates[self.stream.remote_rtp_candidate.type.lower()],
+                    enc_type))
+            else:
+                self.audioStatus.setToolTip_('Audio RTP endpoints \nLocal: %s:%d \nRemote: %s:%d\nEncryption: %s' % (self.stream.local_rtp_address,
+                    self.stream.local_rtp_port,
+                    self.stream.remote_rtp_address,
+                    self.stream.remote_rtp_port,
+                  enc_type))
 
     def send_postdial_string_as_dtmf(self):
         time.sleep(2)
@@ -1546,6 +1561,7 @@ class AudioController(MediaStream):
         self.encryption_cipher = data.cipher
         self.update_encryption_icon()
         self.sessionController.log_info("zRTP audio encryption active using %s" % self.encryption_cipher)
+        self.updateTootip()
 
     def _NH_RTPTransportZRTPSecureOff(self, sender, data):
         NSSound.soundNamed_("zrtp-security-failed").play()
@@ -1553,6 +1569,7 @@ class AudioController(MediaStream):
         self.zrtp_is_ok = False
         self.update_encryption_icon()
         self.sessionController.log_info("zRTP audio encryption disabled")
+        self.updateTootip()
 
     def _NH_RTPTransportZRTPGotSAS(self, sender, data):
         self.zrtp_supported = True
