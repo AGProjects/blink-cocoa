@@ -45,9 +45,7 @@ class VideoController(MediaStream):
     media_received = False
 
     paused = False
-    # TODO: set zrtp_supported from a Media notification to enable zRTP UI elements -adi
     zrtp_supported = False          # stream supports zRTP
-    #zrtp_active = False             # stream is engaging zRTP
     zrtp_verified = False           # zRTP peer has been verified
     zrtp_is_ok = True               # zRTP is encrypted ok
     zrtp_show_verify_phrase = False # show verify phrase
@@ -348,7 +346,6 @@ class VideoController(MediaStream):
             self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
-        self.notification_center.add_observer(self, sender=self.stream._rtp_transport)
         self.started = True
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
@@ -406,7 +403,7 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_RINGING)
 
     def _NH_VideoRemovedByRemoteParty(self, sender, data):
-        self.videoWindowController.showStatusLabel()
+        self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if self.stream in data.proposed_streams:
@@ -418,7 +415,7 @@ class VideoController(MediaStream):
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
-            self.videoWindowController.showStatusLabel()
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for Media...", "Label"))
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED):
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
@@ -452,7 +449,7 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionWillEnd(self, sender, data):
-        self.videoWindowController.showStatusLabel()
+        self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
 
     def stopTimers(self):
         if self.statistics_timer is not None:
@@ -460,32 +457,43 @@ class VideoController(MediaStream):
                 self.statistics_timer.invalidate()
         self.statistics_timer = None
 
-    def _NH_RTPTransportZRTPSecureOn(self, sender, data):
+    def _NH_VideoStreamZRTPSecureOn(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_is_ok = True
         self.encryption_cipher = data.cipher
-        self.sessionController.log_info("zRTP video encryption active using %s" % self.encryption_cipher)
-        self.videoWindowController.showEncryptionLock()
+        self.sessionController.log_info("Video ZRTP encryption active using %s" % self.encryption_cipher)
+        self.videoWindowController.update_encryption_icon()
 
-    def _NH_RTPTransportZRTPSecureOff(self, sender, data):
+    def _NH_VideoStreamZRTPSecureOff(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_is_ok = False
-        self.sessionController.log_info("zRTP video encryption disabled")
-        self.videoWindowController.hideEncryptionLock()
+        self.sessionController.log_info("Video ZRTP encryption disabled")
+        self.videoWindowController.update_encryption_icon()
 
-    def _NH_RTPTransportZRTPGotSAS(self, sender, data):
+    def _NH_VideoStreamZRTPGotSAS(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_verified = data.verified
         self.zrtp_sas = data.sas
-        self.sessionController.log_info("zRTP video authentication string is: %s" % self.zrtp_sas)
+        self.sessionController.log_info("Video ZRTP authentication string: %s" % self.zrtp_sas)
+        if not self.zrtp_verified:
+            self.sessionController.log_info("Remote video ZRTP is NOT verified")
+            self.videoWindowController.hideButtons()
+            self.videoWindowController.showZRTPButtons()
+        else:
+            self.sessionController.log_info("Video ZRTP is verified")
 
-    def _NH_RTPTransportZRTPNegotiationFailed(self, sender, data):
+        self.videoWindowController.update_encryption_icon()
+
+    def _NH_VideoStreamZRTPNegotiationFailed(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_is_ok = False
-        self.sessionController.log_info("zRTP video negotiation failed")
-    
-    def _NH_RTPTransportZRTPNotSupportedByRemote(self, sender, data):
+        self.sessionController.log_info("Video ZRTP negotiation failed")
+        self.videoWindowController.update_encryption_icon()
+
+    def _NH_VideoStreamZRTPNotSupportedByRemote(self, sender, data):
         self.zrtp_supported = False
         self.zrtp_is_ok = False
-        self.sessionController.log_info("zRTP video encryption is not supported")
+        self.sessionController.log_info("Video ZRTP encryption is not supported")
+        self.videoWindowController.update_encryption_icon()
+
 

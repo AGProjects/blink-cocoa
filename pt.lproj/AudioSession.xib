@@ -162,7 +162,7 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
                             <segment label="Confirmar" width="52" tag="1"/>
-                            <segment label="Desligar" width="52" tag="2"/>
+                            <segment label="Recusar" width="52" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <connections>

@@ -301,6 +301,9 @@ class VideoWindowController(NSWindowController):
 
     buttonsView = objc.IBOutlet()
     videoView = objc.IBOutlet()
+    zrtpView = objc.IBOutlet()
+    zrtp_sas = objc.IBOutlet()
+    zrtp_buttons = objc.IBOutlet()
     myVideoView = objc.IBOutlet()
     myVideoViewTL = objc.IBOutlet()
     myVideoViewTR = objc.IBOutlet()
@@ -650,19 +653,15 @@ class VideoWindowController(NSWindowController):
         self.disconnectLabel.setStringValue_("")
         self.disconnectLabel.superview().hide()
 
-    def showStatusLabel(self, label=None):
+    def showStatusLabel(self, label):
         self.last_label = label
-        default_label = NSLocalizedString("Video Ended", "Label")
         if self.window():
             self.disconnectLabel.superview().show()
-            self.disconnectLabel.setStringValue_(default_label)
-            if label:
-                self.disconnectLabel.setStringValue_(label)
+            self.disconnectLabel.setStringValue_(label)
             self.disconnectLabel.setHidden_(False)
+
         if self.localVideoWindow and self.localVideoWindow.window():
-            self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(default_label)
-            if label:
-                self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
+            self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
             self.localVideoWindow.window().delegate().disconnectLabel.superview().show()
             self.localVideoWindow.window().delegate().disconnectLabel.setHidden_(False)
 
@@ -747,7 +746,6 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
         self.showButtons()
-        #self.hideStatusLabel()
 
         if self.sessionController.video_consumer == "standalone":
             if self.streamController.status == STREAM_CONNECTED:
@@ -766,7 +764,7 @@ class VideoWindowController(NSWindowController):
                     self.localVideoWindow = VideoLocalWindowController(self)
                     show_last_label = True
                 self.localVideoWindow.show()
-                if show_last_label:
+                if show_last_label and self.last_label:
                     self.showStatusLabel(self.last_label)
         else:
             self.flipped = True
@@ -774,8 +772,7 @@ class VideoWindowController(NSWindowController):
         userdef = NSUserDefaults.standardUserDefaults()
         self.must_show_my_video = userdef.boolForKey_("ShowMyVideo")
 
-        if self.streamController.encryption_active:
-            self.showEncryptionLock()
+        self.update_encryption_icon()
 
     def windowDidBecomeKey_(self, notification):
         if self.closed:
@@ -1036,6 +1033,45 @@ class VideoWindowController(NSWindowController):
     def userClickedFullScreenButton_(self, sender):
         self.toggleFullScreen()
 
+    def confirm_sas(self, skip_other_controller=False):
+        if not self.streamController.zrtp_active:
+            return
+
+        self.streamController.stream.zrtp_set_verified(True)
+        self.streamController.zrtp_verified = True
+        self.showButtons()
+        self.hideZRTPButtons()
+
+        if not skip_other_controller:
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream:
+                audio_stream.confirm_sas(skip_other_controller=True)
+
+        self.update_encryption_icon()
+
+    @objc.IBAction
+    def userClickedzrtpButtons_(self, sender):
+        if sender.selectedSegment() == 0:
+            self.confirm_sas()
+        elif sender.selectedSegment() == 1:
+            self.streamController.stream.zrtp_set_verified(False)
+            self.streamController.zrtp_verified = False
+            self.hideZRTPButtons(self)
+        self.update_encryption_icon()
+
+    def showZRTPButtons(self):
+        self.zrtpView.setHidden_(False)
+        self.zrtpView.show()
+        self.zrtp_sas.setHidden_(False)
+        self.zrtp_sas.setStringValue_(NSLocalizedString("ZRTP Authentication String: %s", "Label") % self.streamController.zrtp_sas)
+        self.zrtp_buttons.setHidden_(False)
+
+    def hideZRTPButtons(self):
+        self.zrtpView.setHidden_(True)
+        self.zrtpView.hide()
+        self.zrtp_sas.setHidden_(True)
+        self.zrtp_buttons.setHidden_(True)
+
     @objc.IBAction
     def userClickedOpenScreenshotFolder_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
@@ -1212,6 +1248,9 @@ class VideoWindowController(NSWindowController):
     def showButtons(self):
         if not self.window():
             return
+        
+        if not self.zrtpView.isHidden():
+            return
 
         if not self.window().isVisible():
             return
@@ -1245,18 +1284,33 @@ class VideoWindowController(NSWindowController):
             self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
             self.recordButton.setImage_(RecordingImages[0])
 
-    def showEncryptionLock(self):
+    def update_encryption_icon(self):
         if not self.window():
             return
+
+        if not self.streamController:
+            return
+
+        if not self.streamController.stream:
+            return
+
+        if self.streamController.zrtp_active:
+            if self.streamController.zrtp_is_ok:
+                if self.streamController.zrtp_verified:
+                    image = 'locked-green'
+                else:
+                    image = 'locked-orange'
+            else:
+                image = 'unlocked-red'
+        else:
+            if self.streamController.srtp_active:
+                image = 'locked-orange'
+            else:
+                image = 'unlocked-darkgray'
 
         title = NSLocalizedString("Video with %s", "Window title") % self.title
         self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
-        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(NSImage.imageNamed_("locked-green"))
-
-    def hideEncryptionLock(self):
-        if not self.window():
-            return
-        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(None)
+        self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(NSImage.imageNamed_(image))
 
 
 class TitleBarView(NSObject):

@@ -26,6 +26,8 @@
                 <outlet property="screenshotButton" destination="BKQ-kq-DFD" id="94c-Ve-GkH"/>
                 <outlet property="videoView" destination="U8k-ux-24e" id="fab-CT-YGl"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
+                <outlet property="zrtpView" destination="llA-12-RYe" id="2Zz-fY-myn"/>
+                <outlet property="zrtp_sas" destination="dG4-kU-iz3" id="XaQ-Oc-Roh"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -35,7 +37,7 @@
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="562" y="346" width="665" height="375"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
             <value key="minSize" type="size" width="200" height="150"/>
             <view key="contentView" id="EiT-Mj-1SZ" customClass="BlackView">
                 <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
@@ -180,6 +182,35 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" alignment="center" title="Info" id="9dh-F9-7hq">
                                     <font key="font" metaFont="system" size="10"/>
+                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                    </view>
+                    <view hidden="YES" focusRingType="none" id="llA-12-RYe" customClass="RoundedCornersView">
+                        <rect key="frame" x="118" y="110" width="428" height="35"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <segmentedControl hidden="YES" verticalHuggingPriority="750" id="dWV-fi-c4u">
+                                <rect key="frame" x="272" y="5" width="149" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="7ag-AA-nO5">
+                                    <font key="font" metaFont="system"/>
+                                    <segments>
+                                        <segment label=" Confirm"/>
+                                        <segment label="Decline" selected="YES" tag="1"/>
+                                    </segments>
+                                </segmentedCell>
+                                <connections>
+                                    <action selector="userClickedzrtpButtons:" target="-2" id="26U-0Z-QlG"/>
+                                </connections>
+                            </segmentedControl>
+                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dG4-kU-iz3">
+                                <rect key="frame" x="11" y="9" width="256" height="18"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="ZRTP Authentication String: saft" id="FPY-UK-0h6">
+                                    <font key="font" metaFont="system"/>
                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>

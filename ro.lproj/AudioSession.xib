@@ -160,7 +160,7 @@
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
                             <segment label="Confirmă" width="52" tag="1"/>
-                            <segment label="Închide" width="52" tag="2"/>
+                            <segment label="Refuză" width="52" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <connections>

@@ -161,7 +161,7 @@
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
                             <segment label="Confirm" width="52" tag="1"/>
-                            <segment label="Hangup" width="52" tag="2"/>
+                            <segment label="Decline" width="52" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <connections>

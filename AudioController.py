@@ -1142,31 +1142,46 @@ class AudioController(MediaStream):
                 image = 'unlocked-darkgray'
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
 
+    def confirm_sas(self, skip_other_controller=False):
+        if not self.zrtp_active:
+            return
+
+        self.zRTPConfirmButton.setHidden_(True)
+        self.zrtp_show_verify_phrase = False
+        self.stream.zrtp_set_verified(True)
+        self.zrtp_verified = True
+        self.update_encryption_icon()
+
+        if not skip_other_controller:
+            video_stream = self.sessionController.streamHandlerOfType("video")
+            if video_stream:
+                video_stream.videoWindowController.confirm_sas(skip_other_controller=True)
+
     @objc.IBAction
     def userClickedZRTPConfirmButton_(self, sender):
         if sender.selectedSegment() == 0:
-            self.zRTPConfirmButton.setHidden_(True)
-            self.zrtp_show_verify_phrase = False
-            self.stream.zrtp_set_verified(True)
-            self.zrtp_verified = True
-            #            self.show_zrtp_ok_status_countdown = 4
-            #self.updateAudioStatusWithCodecInformation()
+            self.confirm_sas()
         elif sender.selectedSegment() == 1:
             self.zrtp_show_verify_phrase = False
             self.stream.zrtp_set_verified(False)
             self.zrtp_verified = False
-            self.end()
-            self.hangup_reason = NSLocalizedString("zRTP Verify Failed", "Audio status label")
-            self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio status label"), True)
+            self.hideZRTPSas()
+            video_stream = self.sessionController.streamHandlerOfType("video")
+            if video_stream:
+                video_stream.videoWindowController.update_encryption_icon()
 
         self.updateDuration()
         self.update_encryption_icon()
 
-    def showzRTPSas(self):
+    def showZRTPSas(self):
         self.zrtp_show_verify_phrase = True
         self.zRTPConfirmButton.setHidden_(False)
         self.elapsed.setStringValue_(NSLocalizedString("Authentication String:", "Label"))
         self.updateAudioStatusWithSessionState(self.zrtp_sas or NSLocalizedString("None", "Label"), True)
+
+    def hideZRTPSas(self):
+        self.zrtp_show_verify_phrase = False
+        self.zRTPConfirmButton.setHidden_(True)
 
     @objc.IBAction
     def userClickedEncryptionMenuItem_(self, sender):
@@ -1174,8 +1189,7 @@ class AudioController(MediaStream):
         if tag == 23:
             self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
             if self.zrtp_show_verify_phrase:
-                self.showzRTPSas()
-
+                self.showZRTPSas()
 
     @objc.IBAction
     def userClickedSegmentButton_(self, sender):
@@ -1356,7 +1370,6 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
-        self.notification_center.add_observer(self, sender=self.stream._rtp_transport)
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_audio_codec(self.stream.codec)
         if self.stream.codec == 'opus':
@@ -1553,44 +1566,46 @@ class AudioController(MediaStream):
             pass # there is currently a hack in the middleware which stops the bridge when the audio stream ends
         self.outbound_ringtone = None
 
-    def _NH_RTPTransportZRTPSecureOn(self, sender, data):
+    def _NH_AudioStreamZRTPSecureOn(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_is_ok = True
         self.encryption_cipher = data.cipher
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP audio encryption active using %s" % self.encryption_cipher)
+        self.sessionController.log_info("ZRTP audio encryption active using %s" % self.encryption_cipher)
         self.updateTootip()
 
-    def _NH_RTPTransportZRTPSecureOff(self, sender, data):
+    def _NH_AudioStreamZRTPSecureOff(self, sender, data):
         NSSound.soundNamed_("zrtp-security-failed").play()
         self.zrtp_supported = True
         self.zrtp_is_ok = False
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP audio encryption disabled")
+        self.sessionController.log_info("Audio ZRTP encryption disabled")
         self.updateTootip()
 
-    def _NH_RTPTransportZRTPGotSAS(self, sender, data):
+    def _NH_AudioStreamZRTPGotSAS(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_verified = data.verified
         self.zrtp_sas = data.sas
-        self.sessionController.log_info("zRTP audio authentication string is: %s" % self.zrtp_sas)
+        self.sessionController.log_info("Audio ZRTP authentication string: %s" % self.zrtp_sas)
         if not self.zrtp_verified:
+            self.sessionController.log_info("Audio ZRTP is NOT verified")
             NSSound.soundNamed_("zrtp-security-failed").play()
-            self.showzRTPSas()
+            self.showZRTPSas()
         else:
+            self.sessionController.log_info("Audio ZRTP is verified")
             self.show_zrtp_ok_status_countdown = 4
             NSSound.soundNamed_("zrtp-securemode").play()
         self.update_encryption_icon()
 
-    def _NH_RTPTransportZRTPNegotiationFailed(self, sender, data):
+    def _NH_AudioStreamZRTPNegotiationFailed(self, sender, data):
         self.zrtp_supported = True
         self.zrtp_is_ok = False
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP audio negotiation failed")
+        self.sessionController.log_info("Audio ZRTP negotiation failed")
 
-    def _NH_RTPTransportZRTPNotSupportedByRemote(self, sender, data):
+    def _NH_AudioStreamZRTPNotSupportedByRemote(self, sender, data):
         self.zrtp_supported = False
         self.zrtp_is_ok = False
         self.update_encryption_icon()
-        self.sessionController.log_info("zRTP audio encryption is not supported")
+        self.sessionController.log_info("Audio ZRTP encryption is not supported")
 
