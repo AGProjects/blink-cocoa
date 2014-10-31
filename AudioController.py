@@ -1142,7 +1142,7 @@ class AudioController(MediaStream):
                 image = 'unlocked-darkgray'
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
 
-    def confirm_sas(self, skip_other_controller=False):
+    def confirm_sas(self):
         if not self.zrtp_active:
             return
 
@@ -1150,28 +1150,35 @@ class AudioController(MediaStream):
         self.zrtp_show_verify_phrase = False
         self.stream.zrtp_set_verified(True)
         self.zrtp_verified = True
+
         self.update_encryption_icon()
 
-        if not skip_other_controller:
-            video_stream = self.sessionController.streamHandlerOfType("video")
-            if video_stream:
-                video_stream.videoWindowController.confirm_sas(skip_other_controller=True)
+    def decline_sas(self):
+        if not self.zrtp_active:
+            return
+
+        self.zrtp_show_verify_phrase = False
+        self.stream.zrtp_set_verified(False)
+        self.zrtp_verified = False
+        self.hideZRTPSas()
+
+        self.update_encryption_icon()
 
     @objc.IBAction
     def userClickedZRTPConfirmButton_(self, sender):
         if sender.selectedSegment() == 0:
             self.confirm_sas()
-        elif sender.selectedSegment() == 1:
-            self.zrtp_show_verify_phrase = False
-            self.stream.zrtp_set_verified(False)
-            self.zrtp_verified = False
-            self.hideZRTPSas()
             video_stream = self.sessionController.streamHandlerOfType("video")
             if video_stream:
-                video_stream.videoWindowController.update_encryption_icon()
+                video_stream.videoWindowController.confirm_sas()
+
+        elif sender.selectedSegment() == 1:
+            self.decline_sas()
+            video_stream = self.sessionController.streamHandlerOfType("video")
+            if video_stream:
+                video_stream.videoWindowController.decline_sas()
 
         self.updateDuration()
-        self.update_encryption_icon()
 
     def showZRTPSas(self):
         self.zrtp_show_verify_phrase = True

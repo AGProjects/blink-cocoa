@@ -1033,7 +1033,7 @@ class VideoWindowController(NSWindowController):
     def userClickedFullScreenButton_(self, sender):
         self.toggleFullScreen()
 
-    def confirm_sas(self, skip_other_controller=False):
+    def confirm_sas(self):
         if not self.streamController.zrtp_active:
             return
 
@@ -1041,23 +1041,30 @@ class VideoWindowController(NSWindowController):
         self.streamController.zrtp_verified = True
         self.showButtons()
         self.hideZRTPButtons()
+        self.update_encryption_icon()
 
-        if not skip_other_controller:
-            audio_stream = self.sessionController.streamHandlerOfType("audio")
-            if audio_stream:
-                audio_stream.confirm_sas(skip_other_controller=True)
-
+    def decline_sas(self):
+        if not self.streamController.zrtp_active:
+            return
+        
+        self.streamController.stream.zrtp_set_verified(False)
+        self.streamController.zrtp_verified = False
+        self.hideZRTPButtons()
         self.update_encryption_icon()
 
     @objc.IBAction
     def userClickedzrtpButtons_(self, sender):
         if sender.selectedSegment() == 0:
             self.confirm_sas()
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream:
+                audio_stream.confirm_sas()
+
         elif sender.selectedSegment() == 1:
-            self.streamController.stream.zrtp_set_verified(False)
-            self.streamController.zrtp_verified = False
-            self.hideZRTPButtons(self)
-        self.update_encryption_icon()
+            self.decline_sas()
+            audio_stream = self.sessionController.streamHandlerOfType("audio")
+            if audio_stream:
+                audio_stream.decline_sas()
 
     def showZRTPButtons(self):
         self.zrtpView.setHidden_(False)
