@@ -283,6 +283,17 @@ class VideoController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSEventTrackingRunLoopMode)
 
+    def sessionStateChanged(self, state, detail):
+        if state == STATE_CONNECTING:
+            self.changeStatus(STREAM_CONNECTING)
+        elif state in (STATE_FAILED, STATE_DNS_FAILED):
+            if detail.startswith("DNS Lookup"):
+                self.videoWindowController.showStatusLabel(NSLocalizedString("DNS Lookup failed", "Audio status label"))
+                self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failed", "Audio status label"))
+            else:
+                self.videoWindowController.showStatusLabel(detail)
+                self.changeStatus(STREAM_FAILED, detail)
+
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
         self.status = newstate
