@@ -507,6 +507,8 @@ class VideoWindowController(NSWindowController):
         self.titleBarView.view.removeFromSuperview()
 
     def rightMouseDown_(self, event):
+        if self.closed:
+            return
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
           NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
@@ -553,7 +555,6 @@ class VideoWindowController(NSWindowController):
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Info", "Menu item"), "userClickedInfoButton:", "")
-
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
     def removeVideo_(self, sender):
@@ -564,17 +565,25 @@ class VideoWindowController(NSWindowController):
             self.sessionController.end()
 
     def mouseDown_(self, event):
+        if self.closed:
+            return
+
         if self.streamController.ended:
             return
         self.initialLocation = event.locationInWindow()
 
     def mouseUp_(self, event):
+        if self.closed:
+            return
         if self.streamController.ended:
             return
+
         if self.myVideoView and self.myVideoView.is_dragging:
             self.myVideoView.goToFinalOrigin()
 
     def mouseDragged_(self, event):
+        if self.closed:
+            return
         if self.streamController.ended:
             return
 
@@ -582,6 +591,8 @@ class VideoWindowController(NSWindowController):
             self.myVideoView.mouseDragged_(event)
 
     def mouseDraggedView_(self, event):
+        if self.closed:
+            return
         if self.streamController.ended:
             return
 
@@ -606,6 +617,8 @@ class VideoWindowController(NSWindowController):
         self.window().setFrameOrigin_(newOrigin)
 
     def updateTrackingAreas(self):
+        if self.closed:
+            return
         if self.tracking_area is not None:
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
@@ -630,6 +643,9 @@ class VideoWindowController(NSWindowController):
         self.is_key_window = True
 
     def keyDown_(self, event):
+        if self.closed:
+            return
+
         if event.keyCode() == 53:
             if self.full_screen:
                 self.toggleFullScreen()
@@ -638,6 +654,9 @@ class VideoWindowController(NSWindowController):
                     self.sessionController.removeVideoFromSession()
 
     def mouseEntered_(self, event):
+        if self.closed:
+            return
+
         if self.streamController.ended:
             return
         self.mouse_in_window = True
@@ -645,6 +664,9 @@ class VideoWindowController(NSWindowController):
         self.showButtons()
 
     def mouseExited_(self, event):
+        if self.closed:
+            return
+
         if self.streamController.ended:
             return
         if self.full_screen or self.full_screen_in_progress:
@@ -701,6 +723,9 @@ class VideoWindowController(NSWindowController):
         self.updateAspectRatio()
 
     def updateAspectRatio(self):
+        if self.closed:
+            return
+
         if not self.window():
             return
         
@@ -799,11 +824,17 @@ class VideoWindowController(NSWindowController):
             self.moveMyVideoView(self.myVideoViewBL)
 
     def moveMyVideoView(self, view):
+        if self.closed:
+            return
+
         self.myVideoView.setFrame_(view.frame())
         self.myVideoView.setAutoresizingMask_(view.autoresizingMask())
         self.myVideoView.setFrameOrigin_(view.frame().origin)
 
     def windowWillResize_toSize_(self, window, frameSize):
+        if self.closed:
+            return frameSize
+
         if self.full_screen_in_progress or self.full_screen:
             return frameSize
 
