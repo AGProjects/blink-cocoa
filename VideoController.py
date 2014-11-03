@@ -488,7 +488,6 @@ class VideoController(MediaStream):
         self.sessionController.log_info("Video ZRTP authentication string: %s" % self.zrtp_sas)
         if not self.zrtp_verified:
             self.sessionController.log_info("Remote video ZRTP is NOT verified")
-            self.videoWindowController.hideButtons()
             self.videoWindowController.showZRTPButtons()
         else:
             self.sessionController.log_info("Video ZRTP is verified")

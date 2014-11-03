@@ -546,6 +546,9 @@ class VideoWindowController(NSWindowController):
         lastItem.setRepresentedObject_(ApplicationData.get('screenshots'))
         lastItem.setEnabled_(True)
         menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("ZRTP Authentication...", "Menu item"), "userClickedZRTPauthentication:", "")
+        lastItem.setEnabled_(self.streamController.zrtp_active)
+        menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
         menu.addItem_(NSMenuItem.separatorItem())
@@ -1072,6 +1075,7 @@ class VideoWindowController(NSWindowController):
         self.zrtp_sas.setHidden_(False)
         self.zrtp_sas.setStringValue_(NSLocalizedString("ZRTP Authentication String: %s", "Label") % self.streamController.zrtp_sas)
         self.zrtp_buttons.setHidden_(False)
+        self.hideButtons()
 
     def hideZRTPButtons(self):
         self.zrtpView.setHidden_(True)
@@ -1100,7 +1104,14 @@ class VideoWindowController(NSWindowController):
     def userClickedInfoButton_(self, sender):
         if self.sessionController and self.sessionController.info_panel is not None:
             self.sessionController.info_panel.toggle()
-    
+
+    @objc.IBAction
+    def userClickedZRTPauthentication_(self, sender):
+        if self.zrtpView.isHidden():
+            self.showZRTPButtons()
+        else:
+            self.hideZRTPButtons()
+
     @objc.IBAction
     def userClickedHoldButton_(self, sender):
         if not self.sessionController:
