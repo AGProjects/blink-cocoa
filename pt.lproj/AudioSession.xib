@@ -156,13 +156,13 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
                     </connections>
                 </button>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="325">
-                    <rect key="frame" x="152" y="3" width="111" height="20"/>
+                    <rect key="frame" x="145" y="3" width="118" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="326">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment label="Confirmar" width="52" tag="1"/>
-                            <segment label="Recusar" width="52" tag="2"/>
+                            <segment label="Confirmar" width="56" tag="1"/>
+                            <segment label="Recusar" width="55" tag="2"/>
                         </segments>
                     </segmentedCell>
                     <connections>

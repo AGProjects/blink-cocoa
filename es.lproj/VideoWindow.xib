@@ -214,13 +214,13 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <segmentedControl hidden="YES" verticalHuggingPriority="750" id="66b-qb-F5A">
-                                <rect key="frame" x="272" y="5" width="149" height="24"/>
+                                <rect key="frame" x="260" y="5" width="169" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                 <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="13U-1c-KuA">
                                     <font key="font" metaFont="system"/>
                                     <segments>
-                                        <segment label=" Confirm"/>
-                                        <segment label="Decline" selected="YES" tag="1"/>
+                                        <segment label="Confirmar"/>
+                                        <segment label="Rechazar" selected="YES" tag="1"/>
                                     </segments>
                                 </segmentedCell>
                                 <connections>
