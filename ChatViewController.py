@@ -482,7 +482,13 @@ class ChatViewController(NSObject):
             else:
                 label = cgi.escape(self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
 
-        script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+        try:
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+        except UnicodeDecodeError:
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, text.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+        except:
+            self.delegate.showSystemMessage("Chat message id %s rendering error: %s" % (msgid, e), ISOTimestamp.now(), True)
+            return
 
         if self.finishedLoading:
             self.executeJavaScript(script)
