@@ -211,7 +211,7 @@
                     </customView>
                     <view hidden="YES" focusRingType="none" id="uAK-G7-wTe" customClass="RoundedCornersView">
                         <rect key="frame" x="118" y="110" width="428" height="35"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <segmentedControl hidden="YES" verticalHuggingPriority="750" id="nxq-10-QLQ">
                                 <rect key="frame" x="272" y="5" width="149" height="24"/>
