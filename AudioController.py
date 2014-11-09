@@ -254,9 +254,24 @@ class AudioController(MediaStream):
         self.transferEnabled = NSApp.delegate().call_transfer_enabled
         self.recordingEnabled = NSApp.delegate().answering_machine_enabled
 
-        self.segmentedButtons.setHidden_(False)
+        self.setSegmentedButtons("normal")
         self.sessionInfoButton.setEnabled_(True)
         return self
+
+    def setSegmentedButtons(self, type):
+        if type == 'zrtp':
+            self.zRTPConfirmButton.setHidden_(False)
+            self.segmentedButtons.setHidden_(True)
+            self.segmentedConferenceButtons.setHidden_(True)
+            self.last_segment_type = type
+        elif type == 'normal':
+            self.zRTPConfirmButton.setHidden_(True)
+            self.segmentedButtons.setHidden_(False)
+            self.segmentedConferenceButtons.setHidden_(True)
+        elif type == 'conference':
+            self.zRTPConfirmButton.setHidden_(True)
+            self.segmentedButtons.setHidden_(True)
+            self.segmentedConferenceButtons.setHidden_(False)
 
     def invalidateTimers(self):
         if self.statistics_timer is not None and self.statistics_timer.isValid():
@@ -327,6 +342,8 @@ class AudioController(MediaStream):
             self.changeStatus(STREAM_IDLE, detail)
 
     def end(self):
+        self.hideZRTPSas()
+
         status = self.status
         if status in [STREAM_IDLE, STREAM_FAILED]:
             self.hangedUp = True
@@ -499,15 +516,13 @@ class AudioController(MediaStream):
             self.unhold()
         self.mutedInConference = False
         NSApp.delegate().contactsWindowController.addAudioSessionToConference(self)
-        self.segmentedButtons.setHidden_(True)
-        self.segmentedConferenceButtons.setHidden_(False)
+        self.setSegmentedButtons("conference")
         self.view.setConferencing_(True)
         self.updateLabelColor()
 
     def removeFromConference(self):
         NSApp.delegate().contactsWindowController.removeAudioSessionFromConference(self)
-        self.segmentedButtons.setHidden_(False)
-        self.segmentedConferenceButtons.setHidden_(True)
+        self.setSegmentedButtons("normal")
 
         if not self.isActive:
             self.hold()
@@ -1146,23 +1161,18 @@ class AudioController(MediaStream):
         if not self.zrtp_active:
             return
 
-        self.zRTPConfirmButton.setHidden_(True)
-        self.zrtp_show_verify_phrase = False
         self.stream.zrtp_set_verified(True)
         self.zrtp_verified = True
 
-        self.update_encryption_icon()
+        self.hideZRTPSas()
 
     def decline_sas(self):
         if not self.zrtp_active:
             return
 
-        self.zrtp_show_verify_phrase = False
         self.stream.zrtp_set_verified(False)
         self.zrtp_verified = False
         self.hideZRTPSas()
-
-        self.update_encryption_icon()
 
     @objc.IBAction
     def userClickedZRTPConfirmButton_(self, sender):
@@ -1182,13 +1192,18 @@ class AudioController(MediaStream):
 
     def showZRTPSas(self):
         self.zrtp_show_verify_phrase = True
-        self.zRTPConfirmButton.setHidden_(False)
-        self.elapsed.setStringValue_(NSLocalizedString("Authentication String:", "Label"))
+        self.setSegmentedButtons("zrtp")
+        self.elapsed.setStringValue_(NSLocalizedString("ZRTP Authentication String:", "Label"))
         self.updateAudioStatusWithSessionState(self.zrtp_sas or NSLocalizedString("None", "Label"), True)
 
     def hideZRTPSas(self):
         self.zrtp_show_verify_phrase = False
-        self.zRTPConfirmButton.setHidden_(True)
+        if self.isConferencing:
+            self.setSegmentedButtons("conference")
+        else:
+            self.setSegmentedButtons("normal")
+
+        self.update_encryption_icon()
 
     @objc.IBAction
     def userClickedEncryptionMenuItem_(self, sender):
