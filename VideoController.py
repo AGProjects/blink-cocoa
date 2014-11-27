@@ -270,7 +270,7 @@ class VideoController(MediaStream):
         if status in [STREAM_IDLE, STREAM_FAILED]:
             self.changeStatus(STREAM_IDLE)
         elif status == STREAM_PROPOSING:
-            self.sessionController.cancelProposal(self.stream)
+            self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
         else:
             self.sessionController.endStream(self)
@@ -296,6 +296,9 @@ class VideoController(MediaStream):
 
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
+        if self.status == newstate:
+            return
+
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
 
@@ -363,7 +366,7 @@ class VideoController(MediaStream):
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
 
         self.changeStatus(STREAM_CONNECTED)
-        self.sessionController.setVideoConsumer()
+        self.sessionController.setVideoConsumer(self.sessionController.video_consumer)
 
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
@@ -428,7 +431,7 @@ class VideoController(MediaStream):
         if self.status != STREAM_CONNECTED:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for Media...", "Label"))
             audio_stream = self.sessionController.streamHandlerOfType("audio")
-            if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED):
+            if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED) and self.sessionController.video_consumer == 'audio':
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):

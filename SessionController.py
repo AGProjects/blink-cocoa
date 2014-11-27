@@ -60,7 +60,7 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
 from HistoryManager import SessionHistoryReplicator, ChatHistoryReplicator
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
-from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED
+from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_CANCELLING
 from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
@@ -256,7 +256,7 @@ class SessionControllersManager(object):
             try:
                 session.reject(488, 'Incompatible media')
             except IllegalStateError, e:
-                print e
+                BlinkLogger().log_error(e)
             return
         elif not streams:
             # Handle initial INVITE with no SDP, offer audio
@@ -267,7 +267,7 @@ class SessionControllersManager(object):
             try:
                 session.reject(603, 'Not Acceptable Here')
             except IllegalStateError, e:
-                print e
+                BlinkLogger().log_error(e)
             nc_title = 'Blocked Contact Rejected'
             nc_body = 'Call from %s refused' % caller_name
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
@@ -281,7 +281,7 @@ class SessionControllersManager(object):
             try:
                 session.reject(603, 'Busy here')
             except IllegalStateError, e:
-                print e
+                BlinkLogger().log_error(e)
             return
 
         # if call waiting is disabled and we have audio calls reject with busy
@@ -291,7 +291,7 @@ class SessionControllersManager(object):
             try:
                 session.reject(486, 'Busy Here')
             except IllegalStateError, e:
-                print e
+                BlinkLogger().log_error(e)
             return
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount():
@@ -303,7 +303,7 @@ class SessionControllersManager(object):
                 try:
                     session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
                 except IllegalStateError, e:
-                    print e
+                    BlinkLogger().log_error(e)
                 return
 
             if session.account.audio.reject_anonymous:
@@ -315,7 +315,7 @@ class SessionControllersManager(object):
                     try:
                         session.reject(603, 'Anonymous Not Acceptable')
                     except IllegalStateError, e:
-                        print e
+                        BlinkLogger().log_error(e)
                     return
 
             if session.account.audio.reject_unauthorized_contacts:
@@ -328,7 +328,7 @@ class SessionControllersManager(object):
                         try:
                             session.reject(603, 'Not Acceptable Here')
                         except IllegalStateError, e:
-                            print e
+                            BlinkLogger().log_error(e)
                         return
                 else:
                     BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
@@ -338,7 +338,7 @@ class SessionControllersManager(object):
                     try:
                         session.reject(603, 'Not Acceptable Here')
                     except IllegalStateError, e:
-                        print e
+                        BlinkLogger().log_error(e)
                     return
 
         # at this stage call is allowed and will alert the user
@@ -1211,7 +1211,7 @@ class SessionController(NSObject):
                 try:
                     self.session.reject(500)
                 except (IllegalDirectionError, IllegalStateError), e:
-                    print e
+                    BlinkLogger().log_error(e)
                 log_data = NotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
                 self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
@@ -1234,10 +1234,8 @@ class SessionController(NSObject):
             return None
 
     def setVideoConsumer(self, type=None):
-        if not type:
-            type = self.video_consumer
-        else:
-            self.video_consumer = type
+        self.log_debug('setVideoConsumer to %s' % type)
+        self.video_consumer = type
 
         audio_stream = self.streamHandlerOfType("audio")
         video_stream = self.streamHandlerOfType("video")
@@ -1273,7 +1271,17 @@ class SessionController(NSObject):
                     contactsWindowController.setVideoProducer(video_stream.stream.producer)
                 else:
                     contactsWindowController.setVideoProducer(SIPApplication.video_device.producer)
- 
+
+        elif self.video_consumer is None:
+            if chat_stream and chatWindowController.selectedSessionController() == self:
+                chatWindowController.setVideoProducer(None)
+        
+            if audio_stream and contactsWindowController.getSelectedAudioSession() == self:
+                contactsWindowController.setVideoProducer(None)
+
+            if video_stream:
+                video_stream.hideVideoWindow()
+
     def end(self):
         if self.state == STATE_DNS_FAILED:
             return
@@ -1339,17 +1347,22 @@ class SessionController(NSObject):
                     return True
                 return False
 
-    def cancelProposal(self, stream):
+    def cancelProposal(self, streamController):
+        self.log_debug("cancelProposal %s" % streamController)
+        stream = streamController.stream
         if self.session is not None:
             if self.canCancelProposal():
-                self.log_info("Cancelling proposal")
+                self.log_info("Cancelling proposal for %s stream" % stream.type)
                 self.cancelledStream = stream
                 try:
                     self.session.cancel_proposal()
+                    streamController.changeStatus(STREAM_CANCELLING)
                     self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session)
+                    self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
                 except IllegalStateError, e:
                     self.log_info("IllegalStateError: %s" % e)
+                    self.session.end()
             else:
                 self.log_info("Cancelling proposal is already in progress")
 
@@ -1518,8 +1531,8 @@ class SessionController(NSObject):
                     NSApp.delegate().contactsWindowController.drawer.close()
 
             else:
-                self.log_debug("%s controller already exists in %s" % (stype, self.streamHandlers))
                 streamController = self.streamHandlerOfType(stype)
+                self.log_debug("%s controller already exists in %s in status %s" % (stype, self.streamHandlers, streamController.status))
                 streamController.resetStream()
 
                 if streamController.status == STREAM_IDLE and len(stype_tuple) == 1:
@@ -1537,6 +1550,7 @@ class SessionController(NSObject):
             if streamController.type not in self.streams_log: # old handler, not dealt with above
                 self.log_debug("%s controller already exists" % streamController.type)
                 streamController.resetStream()
+                streamController.startOutgoing(not new_session, **kwargs)
 
         if new_session or self.state == STATE_IDLE:
             if not self.open_chat_window_only:
@@ -1581,7 +1595,7 @@ class SessionController(NSObject):
         else:
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
-                self.log_info("Proposing %s streams" % ", ".join(stream.type for stream in add_streams))
+                self.log_info("Proposing %s stream%s" % (", ".join(stream.type for stream in add_streams), 's' if len(add_streams) > 1 else ''))
                 try:
                    self.session.add_streams(add_streams)
                    self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
@@ -1593,6 +1607,8 @@ class SessionController(NSObject):
                     return False
             else:
                 self.log_info("A stream proposal is already in progress")
+                log_data = NotificationData(timestamp=datetime.now(), failure_reason='Proposal in progress', proposed_streams=add_streams)
+                self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
                 return False
 
         self.open_chat_window_only = False
@@ -1748,7 +1764,7 @@ class SessionController(NSObject):
             try:
                 self.session.reject_transfer()
             except (IllegalDirectionError, IllegalStateError), e:
-                print e
+                BlinkLogger().log_error(e)
         self.transfer_window = None
 
     def reject(self, code, reason):
@@ -2079,8 +2095,9 @@ class SessionController(NSObject):
                 handler = self.streamHandlerForStream(stream)
                 if handler:
                     handler.changeStatus(STREAM_FAILED, data.reason)
-                NSApp.delegate().contactsWindowController.showWindow_(None)
-                NSApp.delegate().contactsWindowController.showAudioDrawer()
+                if self.video_consumer == 'standalone':
+                    NSApp.delegate().contactsWindowController.showWindow_(None)
+                    NSApp.delegate().contactsWindowController.showAudioDrawer()
             elif stream.type == "screen-sharing":
                 self.log_info("Removing screen sharing stream")
                 handler = self.streamHandlerForStream(stream)

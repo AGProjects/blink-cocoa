@@ -350,7 +350,7 @@ class AudioController(MediaStream):
             self.audioEndTime = time.time()
             self.changeStatus(STREAM_DISCONNECTING)
         elif status == STREAM_PROPOSING:
-            self.sessionController.cancelProposal(self.stream)
+            self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
         else:
             self.sessionController.endStream(self)

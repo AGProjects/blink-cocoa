@@ -172,7 +172,7 @@ class ScreenSharingController(MediaStream):
                 self.statusWindow = None
         elif self.status == STREAM_PROPOSING:
             self.sessionController.log_info("Cancelling screen sharing...")
-            self.sessionController.cancelProposal(self.stream)
+            self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
         elif self.status in (STREAM_CONNECTED, STREAM_INCOMING):
             self.sessionController.log_info("Removing screen sharing...")

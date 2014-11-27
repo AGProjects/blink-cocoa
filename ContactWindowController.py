@@ -1426,7 +1426,7 @@ class ContactWindowController(NSWindowController):
         self.updateParticipantsView()
         session = self.getSelectedAudioSession()
         if session:
-            session.setVideoConsumer()
+            session.setVideoConsumer(session.video_consumer)
 
     def _NH_CFGSettingsObjectWasCreated(self, notification):
         if isinstance(notification.sender, Account):
@@ -2870,7 +2870,7 @@ class ContactWindowController(NSWindowController):
 
             session = self.getSelectedAudioSession()
             if session:
-                session.setVideoConsumer()
+                session.setVideoConsumer(session.video_consumer)
 
         self.recalculateDrawerSplitter()
 
@@ -5669,8 +5669,8 @@ class ContactWindowController(NSWindowController):
             self.setVideoProducer(None)
 
     def setVideoProducer(self, producer=None):
-        self.videoView.setProducer(producer)
-        self.recalculateDrawerSplitter()
+        if self.videoView.setProducer(producer):
+            self.recalculateDrawerSplitter()
 
     @run_in_gui_thread
     def resizeDrawerSplitter(self):
@@ -5740,8 +5740,7 @@ class ContactWindowController(NSWindowController):
 
         if bottom_frame.size.height > parent_frame.size.height - 62 - middle_frame.size.height:
             bottom_frame.size.height = 0
-            if session and session.hasStreamOfType("video"):
-                print 'detach video'
+            if session and session.hasStreamOfType("video") and session.video_consumer == "audio":
                 session.setVideoConsumer("standalone")
 
         top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height

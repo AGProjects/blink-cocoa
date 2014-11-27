@@ -51,12 +51,16 @@ class MediaStream(NSObject):
 
     def changeStatus(self, newstate, fail_reason=None):
         self.sessionController.log_debug("%s changed state to %s" % (self, newstate))
-        self.sessionController.log_debug("Sessions state is %s" % self.sessionController.state)
+        self.sessionController.log_debug("Session state=%s, substate=%s, proposal=%s" % (self.sessionController.state, self.sessionController.sub_state, self.sessionController.inProposal))
         NotificationCenter().post_notification("BlinkStreamHandlerChangedState", sender=self, data=NotificationData(state=newstate, detail=fail_reason))
 
     @property
     def isConnecting(self):
         return self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING, STREAM_PROPOSING, STREAM_CONNECTING, STREAM_INCOMING)
+
+    @property
+    def isCancelling(self):
+        return self.status in (STREAM_CANCELLING)
 
     @property
     def session(self):
@@ -90,5 +94,13 @@ class MediaStream(NSObject):
 
     def _NH_MediaStreamDidFail(self, sender, data):
         self.sessionController.log_debug("MediaStreamDidFail %s" % self)
+
+    def _NH_BlinkStreamHandlersChanged(self, sender, data):
+        if self.status == STREAM_CANCELLING and self.sessionController.sub_state in ("normal", None):
+            self.sessionController.log_debug("Cancelling stream %s timeout" % self)
+            self.sessionController.cancelledStream = None
+            self.changeStatus(STREAM_FAILED, 'timeout')
+
+
 
 

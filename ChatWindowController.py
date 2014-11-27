@@ -393,7 +393,13 @@ class ChatWindowController(NSWindowController):
         if producer is not None:
             self.drawer.open()
         else:
-            self.drawer.close()
+            session = self.selectedSessionController()
+            if session:
+                if not session.remote_focus:
+                    self.drawer.close()
+            else:
+                self.drawer.close()
+        self.refreshDrawer()
 
     def detachVideo(self, sessionController):
         if self.selectedSessionController() == sessionController:
@@ -522,12 +528,26 @@ class ChatWindowController(NSWindowController):
                     else:
                         video_stream = session.streamHandlerOfType("video")
                         audio_stream = session.streamHandlerOfType("audio")
-                        if video_stream and video_stream.isConnecting:
-                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
-                            chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                        elif audio_stream and audio_stream.isConnecting:
-                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
-                            chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                        if video_stream:
+                            if video_stream.isConnecting:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
+                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                            elif video_stream.isCancelling:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Cancelling Video...", "Label"))
+                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                            else:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+                                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                        elif audio_stream:
+                            if audio_stream.isConnecting:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
+                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                            elif audio_stream.isCancelling:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Cancelling Audio...", "Label"))
+                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                            else:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+                                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                         elif chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
                             pass
                         else:
@@ -1929,16 +1949,15 @@ class ChatWindowController(NSWindowController):
 
                 self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
 
-                if video_stream:
-                    if session.video_consumer == "chat":
-                        if self.videoView.aspect_ratio is not None:
-                            bottom_frame.size.height = bottom_frame.size.width / self.videoView.aspect_ratio
-                        else:
-                            bottom_frame.size.height = bottom_frame.size.width / 1.77
-                        top_frame.size.height -= bottom_frame.size.height
+                if video_stream and session.video_consumer == "chat":
+                    if self.videoView.aspect_ratio is not None:
+                        bottom_frame.size.height = bottom_frame.size.width / self.videoView.aspect_ratio
                     else:
-                        bottom_frame.size.height = 0
-            
+                        bottom_frame.size.height = bottom_frame.size.width / 1.77
+
+                    top_frame.size.height -= bottom_frame.size.height
+
+
             chat_stream.drawerSplitterPosition = {'topFrame'     : top_frame,
                                                   'middleFrame'  : middle_frame,
                                                   'bottomFrame'  : bottom_frame
@@ -1979,7 +1998,7 @@ class ChatWindowController(NSWindowController):
             if chat_stream:
                 chat_stream.updateDatabaseRecordingButton()
 
-            session.setVideoConsumer()
+            session.setVideoConsumer(session.video_consumer)
 
             self.refreshDrawer()
             if session.remote_focus or session.hasStreamOfType("video"):

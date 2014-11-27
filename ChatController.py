@@ -461,6 +461,8 @@ class ChatController(MediaStream):
             self.chatWindowController.window().orderOut_(None)
 
     def startOutgoing(self, is_update):
+        self.sessionController.log_debug("Start outgoing...")
+        self.sessionController.video_consumer = "chat"
         self.session_succeeded = False
         self.last_failure_reason = None
         self.notification_center.add_observer(self, sender=self.stream)
@@ -474,6 +476,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
     def startIncoming(self, is_update):
+        self.sessionController.log_debug("Start incoming...")
         self.sessionController.video_consumer = "chat"
         self.session_succeeded = False
         self.last_failure_reason = None
@@ -889,7 +892,7 @@ class ChatController(MediaStream):
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
     def audioButtonEnabled(self):
-        if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING):
+        if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING, STREAM_CANCELLING):
             return False
 
         if self.sessionController.hasStreamOfType("audio"):
@@ -905,6 +908,22 @@ class ChatController(MediaStream):
         else:
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
+    def videoButtonEnabled(self):
+        if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING, STREAM_CANCELLING):
+            return False
+            
+        if self.sessionController.hasStreamOfType("video"):
+            video_stream = self.sessionController.streamHandlerOfType("video")
+            if video_stream.status == STREAM_FAILED:
+                return False
+            if video_stream.status == STREAM_CONNECTED:
+                return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
+            elif video_stream.status in (STREAM_PROPOSING, STREAM_RINGING):
+                return True if self.sessionController.canCancelProposal() else False
+            else:
+                return True if self.sessionController.canProposeMediaStreamChanges() and self.status in (STATE_IDLE, STREAM_CONNECTED) else False
+        else:
+            return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
@@ -1008,7 +1027,6 @@ class ChatController(MediaStream):
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
 
     def validateToolbarButton(self, item):
-
         """
         Called automatically by Cocoa in ChatWindowController to enable/disable each toolbar item
         """
@@ -1032,11 +1050,13 @@ class ChatController(MediaStream):
                 _audio_enabled = self.audioButtonEnabled()
                 return _audio_enabled
             elif identifier == 'hold':
+                _audio_enabled = self.audioButtonEnabled()
                 if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
-                    return True
+                    return True and _audio_enabled
             elif identifier == 'record':
                 return True if self.sessionController.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED and NSApp.delegate().recording_enabled else False
             elif identifier == 'video':
+                _video_enabled = self.videoButtonEnabled()
                 if self.sessionController.hasStreamOfType("video"):
                     video_stream = self.sessionController.streamHandlerOfType("video")
                     if video_stream.status in (STREAM_CONNECTED, STREAM_PROPOSING, STREAM_RINGING):
@@ -1045,7 +1065,7 @@ class ChatController(MediaStream):
                         item.setImage_(NSImage.imageNamed_("video"))
                 else:
                     item.setImage_(NSImage.imageNamed_("video"))
-                return True
+                return _video_enabled
             elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                 return True
             elif identifier == 'smileys':
@@ -1125,6 +1145,7 @@ class ChatController(MediaStream):
                 if self.sessionController.hasStreamOfType("video"):
                     if video_stream.status == STREAM_PROPOSING:
                         self.sessionController.cancelProposal(video_stream)
+                        self.sessionController.setVideoConsumer(None)
                     else:
                         if video_stream.status == STREAM_CONNECTED:
                             self.sessionController.removeVideoFromSession()
@@ -1708,7 +1729,7 @@ class ChatController(MediaStream):
 
     def endStream(self, closeTab=False):
         if self.status == STREAM_PROPOSING:
-            self.sessionController.cancelProposal(self.stream)
+            self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
         else:
             if closeTab:
@@ -1759,6 +1780,7 @@ class ChatController(MediaStream):
         self.previous_is_encrypted = False
         self.setScreenSharingToolbarIcon()
         self.resetEditorToolbarIcon()
+        self.chatViewController.loadingTextIndicator.setStringValue_("")
 
         # save chat view so we can print it when session is over
         self.sessionController.chatPrintView = self.chatViewController.outputView
