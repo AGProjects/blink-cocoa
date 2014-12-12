@@ -143,9 +143,9 @@ class EnrollmentController(NSObject):
     def validate(self):
         if self.radioMatrix.selectedCell().tag() == 1:
             # Login
-            display_name = unicode(self.displayNameText.stringValue())
-            address = unicode(self.addressText.stringValue())
-            password = unicode(self.passwordText.stringValue())
+            display_name = unicode(self.displayNameText.stringValue().strip())
+            address = unicode(self.addressText.stringValue().strip())
+            password = unicode(self.passwordText.stringValue().strip())
 
             if not address or "@" not in address:
                 NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com", "Label"),
@@ -164,10 +164,10 @@ class EnrollmentController(NSObject):
             return True
         else:
             # Enroll
-            display_name = unicode(self.newDisplayNameText.stringValue()).strip()
-            username = unicode(self.newUsernameText.stringValue())
-            password = unicode(self.newPasswordText.stringValue())
-            password2 = unicode(self.newConfirmText.stringValue())
+            display_name = unicode(self.newDisplayNameText.stringValue().strip())
+            username = unicode(self.newUsernameText.stringValue().strip())
+            password = unicode(self.newPasswordText.stringValue().strip())
+            password2 = unicode(self.newConfirmText.stringValue().strip())
             email = unicode(self.newEmailText.stringValue())
 
             if not display_name:
@@ -202,9 +202,9 @@ class EnrollmentController(NSObject):
 
     def addExistingAccount(self):
         try:
-            display_name = unicode(self.displayNameText.stringValue())
-            address = unicode(self.addressText.stringValue())
-            password = unicode(self.passwordText.stringValue())
+            display_name = unicode(self.displayNameText.stringValue().strip())
+            address = unicode(self.addressText.stringValue().strip())
+            password = unicode(self.passwordText.stringValue().strip())
             sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
 
             account = Account(str(address))
@@ -256,9 +256,9 @@ class EnrollmentController(NSObject):
 
     def createNewAccount(self):
         sip_address = None
-        display_name = unicode(self.newDisplayNameText.stringValue())
-        username = unicode(self.newUsernameText.stringValue())
-        password = unicode(self.newPasswordText.stringValue())
+        display_name = unicode(self.newDisplayNameText.stringValue().strip())
+        username = unicode(self.newUsernameText.stringValue().strip())
+        password = unicode(self.newPasswordText.stringValue().strip())
         email = unicode(self.newEmailText.stringValue())
 
         self.progressIndicator.setHidden_(False)
