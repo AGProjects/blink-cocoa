@@ -1999,7 +1999,9 @@ class OutgoingMessageHandler(NSObject):
                     message.status = 'failed'
                     self.delegate.showSystemMessage(self.delegate.sessionController.call_id, "Remote party has not started OTR protocol", ISOTimestamp.now(), True)
             except potr.context.NotEncryptedError, e:
-                self.delegate.sessionController.log_error('Chat message was not send. Either end your private OTR conversation, or restart it')
+                txt = 'Chat message was not sent. Either end your private OTR conversation, or restart it'
+                self.delegate.showSystemMessage(self.delegate.sessionController.call_id, txt, ISOTimestamp.now(), True)
+                self.delegate.sessionController.log_error(txt)
                 return False
             except ChatStreamError, e:
                 self.delegate.sessionController.log_error(u"Error sending chat message %s: %s" % (msgid, e))
