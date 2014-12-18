@@ -36,7 +36,7 @@ class MusicApplications(object):
             return
         self.is_pausing = True
         self.itunes.pause()
-        #self.spotify.pause()
+        self.spotify.pause()
         #self.vlc.pause()
         self.is_pausing = False
         self.notification_center.post_notification('MusicPauseDidExecute', sender=self)
@@ -49,7 +49,7 @@ class MusicApplications(object):
         self.must_pause = False
         self.is_resuming = True
         self.itunes.resume()
-        #self.spotify.resume()
+        self.spotify.resume()
         #self.vlc.resume()
         self.is_resuming = False
 
