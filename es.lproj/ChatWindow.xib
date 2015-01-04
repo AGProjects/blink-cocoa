@@ -110,7 +110,7 @@
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
@@ -129,7 +129,7 @@
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
@@ -165,7 +165,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -427,7 +427,7 @@
                     </connections>
                 </splitView>
                 <levelIndicator toolTip="Señal de Entrada de MIcrófono" verticalHuggingPriority="750" id="586">
-                    <rect key="frame" x="186" y="9" width="28" height="12"/>
+                    <rect key="frame" x="185.99999937686053" y="9" width="28" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
                         <font key="font" metaFont="miniSystem"/>
@@ -587,6 +587,10 @@
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="tAU-7A-2I0"/>
                     </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="pXO-UP-qob"/>
+                <menuItem title="Notificaciones Silenciado" tag="328" indentationLevel="1" id="jlU-NX-JOV">
+                    <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
                 <menuItem title="Separar Vídeo" tag="327" enabled="NO" indentationLevel="1" id="MEi-C1-IuT">

@@ -167,6 +167,7 @@ class ChatController(MediaStream):
     finishedLoading = False
     showHistoryEntries = 50
     mustShowUnreadMessages = False
+    silence_notifications = False # don't send GUI notifications if active chat is not active
 
     history = None
     handler = None
@@ -226,6 +227,8 @@ class ChatController(MediaStream):
         self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
 
         self.require_encryption = self.sessionController.contact.contact.require_encryption if self.sessionController.contact is not None else True
+        self.silence_notifications = self.sessionController.contact.contact.silence_notifications if self.sessionController.contact is not None else False
+        
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.add_observer(self, name='ChatReplicationJournalEntryReceived')
@@ -276,6 +279,12 @@ class ChatController(MediaStream):
         self.updateDatabaseRecordingButton()
 
         return self
+
+    def toggle_silence_notifications(self):
+        if self.sessionController.contact:
+            self.sessionController.contact.contact.silence_notifications = not self.sessionController.contact.contact.silence_notifications
+
+        self.silence_notifications = not self.silence_notifications
 
     def updateDatabaseRecordingButton(self):
         settings = SIPSimpleSettings()
@@ -1476,7 +1485,8 @@ class ChatController(MediaStream):
             tab = None
 
             # FancyTabViewSwitcher will set unfocused tab item views as Hidden
-            if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor():
+            if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor() and not self.silence_notifications:
+
                 try:
                     NSApp.requestUserAttention_(NSInformationalRequest)
                     nc_title = NSLocalizedString("Chat Message Received", "Window title")

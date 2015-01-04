@@ -111,6 +111,7 @@ CONFERENCE_ROOM_MENU_START_AUDIO_SESSION = 320
 CONFERENCE_ROOM_MENU_START_CHAT_SESSION = 321
 CONFERENCE_ROOM_MENU_START_VIDEO_SESSION = 322
 CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION = 327
+CONFERENCE_ROOM_MENU_SILENCE_NOTIFICATIONS = 328
 CONFERENCE_ROOM_MENU_SEND_FILES = 323
 CONFERENCE_ROOM_MENU_VIEW_SCREEN = 324
 CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO = 400
@@ -1480,6 +1481,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             tag = sender.tag()
+            chat_stream = session.streamHandlerOfType("chat")
 
             row = self.participantsTableView.selectedRow()
             try:
@@ -1545,6 +1547,10 @@ class ChatWindowController(NSWindowController):
                     session.setVideoConsumer("chat")
                 
                 self.refresh_drawer_counter += 1
+            elif tag == CONFERENCE_ROOM_MENU_SILENCE_NOTIFICATIONS:
+                if chat_stream:
+                    chat_stream.toggle_silence_notifications()
+                    self.refreshDrawer()
 
             elif tag == CONFERENCE_ROOM_MENU_START_CHAT_SESSION:
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="chat", local_uri=session.account.id)
@@ -1688,8 +1694,11 @@ class ChatWindowController(NSWindowController):
         audio_stream = None
 
         if session:
+            chat_stream = session.streamHandlerOfType("chat")
+
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION).setEnabled_(session.hasStreamOfType("video"))
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION).setTitle_(NSLocalizedString("Detach Video", "Label") if session.video_consumer == "chat" else NSLocalizedString("Attach Video", "Label"))
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SILENCE_NOTIFICATIONS).setState_(NSOnState if chat_stream.silence_notifications else NSOffState)
 
         participants, self.participants = self.participants, []
         for item in set(participants).difference(session.invited_participants if session else []):
@@ -1755,8 +1764,6 @@ class ChatWindowController(NSWindowController):
                 own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
-
-            chat_stream = session.streamHandlerOfType("chat")
 
             if session.hasStreamOfType("audio"):
                 audio_stream = session.streamHandlerOfType("audio")

@@ -105,7 +105,7 @@
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OutrasVisões" autoenablesItems="NO" id="545">
@@ -124,7 +124,7 @@
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OutrasVisões" autoenablesItems="NO" id="569">
@@ -160,7 +160,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="9" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OutrasVisões" autoenablesItems="NO" id="662">
@@ -410,7 +410,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView id="n7O-cC-WH5" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="520" height="13.5"/>
+                                    <rect key="frame" x="0.0" y="-7" width="780" height="13.5"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -568,11 +568,18 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="581"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" id="453"/>
-                <menuItem title="Destacar Vídeo" tag="327" hidden="YES" enabled="NO" indentationLevel="1" id="Qdz-fL-Gnp">
+                <menuItem isSeparatorItem="YES" id="AYf-t0-Eaq"/>
+                <menuItem title="Notificações Mudos" tag="328" hidden="YES" enabled="NO" indentationLevel="1" id="Qdz-fL-Gnp">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="nhk-zE-d2A"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="453"/>
+                <menuItem title="Destacar Vídeo" tag="327" hidden="YES" enabled="NO" indentationLevel="1" id="Ect-yi-x0j">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="uuQ-Pa-Pnr"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="b1h-xn-Kti"/>
