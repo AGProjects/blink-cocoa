@@ -49,7 +49,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
                     </imageView>
-                    <customView hidden="YES" id="gXK-wO-PCf" customClass="RoundedCornersView">
+                    <customView id="gXK-wO-PCf" customClass="RoundedCornersView">
                         <rect key="frame" x="118" y="163" width="428" height="49"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <subviews>

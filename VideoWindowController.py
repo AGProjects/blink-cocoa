@@ -562,7 +562,8 @@ class VideoWindowController(NSWindowController):
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
     def removeVideo_(self, sender):
-        self.streamController.sessionController.removeVideoFromSession()
+        self.removeVideo()
+        #self.streamController.sessionController.removeVideoFromSession()
 
     def hangup_(self, sender):
         if self.sessionController:

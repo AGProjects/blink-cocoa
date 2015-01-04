@@ -1397,14 +1397,21 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkChatWindowClosed(self, notification):
         session = self.getSelectedAudioSession()
-        if session and session.hasStreamOfType("video"):
-            if session.video_consumer == "audio":
-                self.showAudioDrawer()
-        else:
+        if not session:
+            return
+
+        if session.hasStreamOfType("video") and session.video_consumer == "audio":
+            self.showAudioDrawer()
+        elif session.hasStreamOfType("audio"):
             self.showAudioDrawer()
 
     def _NH_BlinkVideoWindowClosed(self, notification):
-        self.showAudioDrawer()
+        session = self.getSelectedAudioSession()
+        if not session:
+            return
+
+        if session.hasStreamOfType("audio"):
+            self.showAudioDrawer()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
         self.refreshContactsList(notification.sender)
