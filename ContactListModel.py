@@ -3167,10 +3167,8 @@ class ContactListModel(CustomListModel):
         self.outgoing_calls_group.setInitialPeriod(settings.contacts.outgoing_calls_period)
         self.outgoing_calls_group.load_group()
 
-        addressbook_manager = AddressbookManager()
-        with addressbook_manager.transaction():
-            if NSApp.delegate().contactsWindowController.first_run:
-                self.createInitialGroupAndContacts()
+        if NSApp.delegate().contactsWindowController.first_run:
+            self.createInitialGroupAndContacts()
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
@@ -3825,6 +3823,12 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @run_in_thread('file-io')
+    def _atomic_update(self, save=(), delete=()):
+        with AddressbookManager.transaction():
+            [item.save() for item in save]
+            [item.delete() for item in delete]
+
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
 
@@ -3857,32 +3861,27 @@ class ContactListModel(CustomListModel):
     def createInitialGroupAndContacts(self):
         BlinkLogger().log_debug(u"Creating initial contacts")
 
+        test_contacts = [dict(id='test_call',       name='Test Call',       preferred_media='audio+chat', uri='echo@conference.sip2sip.info'),
+                         dict(id='test_conference', name='Test Conference', preferred_media='audio+chat', uri='test@conference.sip2sip.info')]
+
+        def create_contact(id, name, preferred_media, uri, icon):
+            contact = Contact(id)
+            contact.name = name
+            contact.preferred_media = preferred_media
+            contact.uris = [ContactURI(uri=uri, type='SIP')]
+            icon = NSImage.alloc().initWithContentsOfFile_(NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri))
+            avatar = PresenceContactAvatar(icon)
+            avatar.path = os.path.join(avatar.base_path, '%s.tiff' % id)
+            avatar.save()
+            return contact
+
         group = Group(id='test')
         group.name = 'Test'
         group.expanded = True
+        group.contacts = [create_contact(**entry) for entry in test_contacts]
 
-        test_contacts = {
-                        "echo@conference.sip2sip.info": { 'name': "Test Call", 'preferred_media': "audio", 'id': 'test_microphone' }
-        }
-
-        for uri, data in test_contacts.iteritems():
-            path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
-            icon = NSImage.alloc().initWithContentsOfFile_(path)
-            # Save avatar with appropriate name
-            avatar = PresenceContactAvatar(icon)
-            avatar.path = os.path.join(avatar.base_path, '%s.tiff' % data['id'])
-            avatar.save()
-
-            contact = Contact(id=data['id'])
-            contact_uri = ContactURI(uri=uri, type='SIP')
-            contact.uris.add(contact_uri)
-            contact.uris.default = contact_uri
-            contact.name = data['name']
-            contact.preferred_media = data['preferred_media']
-            contact.save()
-            group.contacts.add(contact)
-
-        group.save()
+        modified_items = list(group.contacts) + [group]
+        self._atomic_update(save=modified_items)
 
     def moveBonjourGroupFirst(self):
         if self.bonjour_group in self.groupsList:
