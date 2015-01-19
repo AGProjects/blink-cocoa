@@ -341,6 +341,12 @@ class SessionControllersManager(object):
                         BlinkLogger().log_error(e)
                     return
 
+        # save session subject
+        try:
+            session.subject = data.headers['Subject'].body
+        except KeyError:
+            session.subject = None
+
         # at this stage call is allowed and will alert the user
         self.incomingSessions.add(session)
 
