@@ -3864,7 +3864,7 @@ class ContactListModel(CustomListModel):
         test_contacts = [dict(id='test_call',       name='Test Call',       preferred_media='audio+chat', uri='echo@conference.sip2sip.info'),
                          dict(id='test_conference', name='Test Conference', preferred_media='audio+chat', uri='test@conference.sip2sip.info')]
 
-        def create_contact(id, name, preferred_media, uri, icon):
+        def create_contact(id, name, preferred_media, uri):
             contact = Contact(id)
             contact.name = name
             contact.preferred_media = preferred_media
