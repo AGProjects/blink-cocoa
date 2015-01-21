@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <deployment defaultVersion="1080" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="DebugWindow">
             <connections>
                 <outlet property="activityInfoLabel" destination="275" id="277"/>
                 <outlet property="activityTextView" destination="19" id="73"/>
+                <outlet property="autoScrollCheckbox" destination="yxU-Br-7fi" id="BzH-Vj-6dB"/>
                 <outlet property="filterNotificationsSearchBox" destination="251" id="253"/>
                 <outlet property="filterSipApplication" destination="281" id="288"/>
                 <outlet property="msrpInfoLabel" destination="266" id="268"/>
@@ -34,7 +35,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Blink Logs" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="DebugWindow" animationBehavior="default" id="1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
@@ -508,7 +509,7 @@
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="reverseSequential" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" autosaveName="NotificationTrace" rowHeight="14" headerView="182" id="181">
-                                                        <rect key="frame" x="0.0" y="0.0" width="575" height="244"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="575" height="16"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <size key="intercellSpacing" width="3" height="2"/>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -986,6 +987,14 @@
                             <outlet property="delegate" destination="-2" id="190"/>
                         </connections>
                     </tabView>
+                    <button id="yxU-Br-7fi">
+                        <rect key="frame" x="0.0" y="-1" width="66" height="22"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="check" title="Autoscroll" bezelStyle="regularSquare" imagePosition="left" controlSize="mini" state="on" inset="2" id="lbX-Ct-Ujc">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                        </buttonCell>
+                    </button>
                 </subviews>
             </view>
             <connections>

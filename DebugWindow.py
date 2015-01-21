@@ -81,6 +81,7 @@ class DebugWindow(NSObject):
     notificationsInfoLabel = objc.IBOutlet()
     pjsipInfoLabel = objc.IBOutlet()
     filterSipApplication = objc.IBOutlet()
+    autoScrollCheckbox = objc.IBOutlet()
 
     sipInCount = 0
     sipOutCount = 0
@@ -271,7 +272,6 @@ class DebugWindow(NSObject):
 
         settings.save()
 
-
     @objc.IBAction
     def filterSipApplicationClicked_(self, sender):
         tag = sender.selectedItem().tag()
@@ -360,12 +360,15 @@ class DebugWindow(NSObject):
         else:
             textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_(line+"\n"))
 
-        textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
 
     def append_error_line(self, textView, line):
         red = NSDictionary.dictionaryWithObject_forKey_(NSColor.redColor(), NSForegroundColorAttributeName)
         textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", red))
-        textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
+
+        if self.autoScrollCheckbox.state() == NSOnState:
+            textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -412,7 +415,8 @@ class DebugWindow(NSObject):
 
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def renderVideo(self, session):
         try:
@@ -445,7 +449,8 @@ class DebugWindow(NSObject):
 
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     @allocate_autorelease_pool
     def renderSIP(self, notification):
@@ -550,7 +555,8 @@ class DebugWindow(NSObject):
 
         self.sipTextView.textStorage().appendAttributedString_(text)
         self.sipTextView.textStorage().appendAttributedString_(self.newline)
-        self.sipTextView.scrollRangeToVisible_(NSMakeRange(self.sipTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.sipTextView.scrollRangeToVisible_(NSMakeRange(self.sipTextView.textStorage().length()-1, 1))
 
     def renderDNS(self, text):
         settings = SIPSimpleSettings()
@@ -625,13 +631,15 @@ class DebugWindow(NSObject):
         text = '%s Audio call quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_AudioSessionQualityRestored(self, notification):
         text = '%s Audio call quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_MSRPTransportTrace(self, notification):
         settings = SIPSimpleSettings()
@@ -711,7 +719,8 @@ class DebugWindow(NSObject):
             text += '%s RTP audio stream is encrypted\n' % notification.datetime
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
@@ -738,7 +747,8 @@ class DebugWindow(NSObject):
             text += '\t%s\n' % check
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_VideoStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
@@ -765,7 +775,8 @@ class DebugWindow(NSObject):
             text += '\t%s\n' % check
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_AudioStreamICENegotiationDidFail(self, notification):
         data = notification.data
@@ -773,7 +784,8 @@ class DebugWindow(NSObject):
         text = '%s Audio ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_VideoStreamICENegotiationDidFail(self, notification):
         data = notification.data
@@ -781,7 +793,8 @@ class DebugWindow(NSObject):
         text = '%s Video ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     def _NH_SIPEngineLog(self, notification):
         if self.pjsipCheckBox.state() == NSOnState:
