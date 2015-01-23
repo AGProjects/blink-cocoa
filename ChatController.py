@@ -46,7 +46,12 @@ from Foundation import (NSAttributedString,
                         NSUserDefaults,
                         NSZeroSize,
                         NSURL,
-                        NSWorkspace)
+                        NSWorkspace,
+                        NSDownloadsDirectory,
+                        NSSearchPathForDirectoriesInDomains,
+                        NSUserDomainMask
+                        )
+
 from Quartz import (CGDisplayBounds,
                     CGImageGetWidth,
                     CGMainDisplayID,
@@ -351,6 +356,9 @@ class ChatController(MediaStream):
 
     @property
     def otr_status(self):
+        if not self.otr_account:
+            return (False, False, False)
+
         ctx = self.otr_account.getContext(self.sessionController.call_id)
         finished = ctx.state == potr.context.STATE_FINISHED
         encrypted = finished or ctx.state == potr.context.STATE_ENCRYPTED
@@ -1395,6 +1403,46 @@ class ChatController(MediaStream):
                 pass
                 # TODO: update icons for the contacts in the drawer
             return
+
+        # render images sent inline
+        def filename_generator(name):
+            yield name
+            from itertools import count
+            prefix, extension = os.path.splitext(name)
+            for x in count(1):
+                yield "%s-%d%s" % (prefix, x, extension)
+    
+        if message.content_type.startswith("image/"):
+            try:
+                file_extension = message.content_type.split("/")[1]
+            except IndexError:
+                pass
+            else:
+                download_folder = unicodedata.normalize('NFC', NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, True)[0])
+                file_base = 'blink-inline-image'
+                for file_name in filename_generator(os.path.join(download_folder, file_base)):
+                    if not os.path.exists(file_name) and not os.path.exists(file_name + "." + file_extension):
+                        file_path = file_name + "." + file_extension
+                        break
+
+                self.sessionController.log_info('Image %s received inline' % file_path)
+                fd = open(file_path, "w+")
+                fd.write(message.body)
+                fd.close()
+
+                image = NSImage.alloc().initWithContentsOfFile_(file_path)
+                if image:
+                    try:
+                        w = image.size().width
+                        width = w if w and w < 600 else '100%'
+                    except Exception:
+                        width = '100%'
+
+                    text = '''<img src="%s" border=0 width=%s>''' % (file_path, width)
+                    name = self.sessionController.getTitleShort()
+                    icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+                    
+                    self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
 
         if not message.content_type.startswith("text/"):
             return
