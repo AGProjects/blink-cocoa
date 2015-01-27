@@ -2,8 +2,8 @@
 
 Usage:
 
-sudo python AddressBookEmail-plugin-setup.py py2app
-sudo mv dist/BlinkProEmailAddressDialer.bundle ~/Library/Address\ Book\ Plug-Ins/
+python AddressBookEmail-plugin-setup.py py2app --semi-standalone
+mv dist/BlinkProEmailAddressDialer.bundle ~/Library/Address\ Book\ Plug-Ins/
 
 """
 

@@ -2,8 +2,8 @@
 
 Usage:
 
-sudo python AddressBookTel-plugin-setup.py py2app
-sudo mv dist/BlinkProTelephoneNumberDialer.bundle ~/Library/Address\ Book\ Plug-Ins/
+python AddressBookTel-plugin-setup.py py2app --semi-standalone
+mv dist/BlinkProTelephoneNumberDialer.bundle ~/Library/Address\ Book\ Plug-Ins/
 
 """
 

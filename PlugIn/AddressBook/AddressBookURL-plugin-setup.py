@@ -2,8 +2,8 @@
 
 Usage:
 
-sudo python AddressBookURL-plugin-setup.py py2app
-sudo mv dist/BlinkProURLAddressDialer.bundle ~/Library/Address\ Book\ Plug-Ins/
+python AddressBookURL-plugin-setup.py py2app --semi-standalone
+mv dist/BlinkProURLAddressDialer.bundle ~/Library/Address\ Book\ Plug-Ins/
 
 """
 
