@@ -2017,9 +2017,6 @@ class ChatWindowController(NSWindowController):
                 NSApp.delegate().contactsWindowController.drawer.close()
                 self.participantsTableView.deselectAll_(self)
                 self.conferenceFilesTableView.deselectAll_(self)
-            else:
-                pass
-                #self.drawer.close()
 
             if session.hasStreamOfType("audio") and not session.inProposal:
                 audio_stream = session.streamHandlerOfType("audio")
