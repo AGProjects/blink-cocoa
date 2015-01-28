@@ -1533,7 +1533,7 @@ class ChatController(MediaStream):
             tab = None
 
             # FancyTabViewSwitcher will set unfocused tab item views as Hidden
-            if not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor() and not self.silence_notifications:
+            if (not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor()) and not self.silence_notifications:
 
                 try:
                     NSApp.requestUserAttention_(NSInformationalRequest)
