@@ -1757,8 +1757,8 @@ class ChatHistoryReplicator(object):
 
         if notify_data:
             for key in notify_data.keys():
-                log_text = '%d new chat messages for %s retrieved from chat history server' % (notify_data[key], key)
-                BlinkLogger().log_debug(log_text)
+                log_text = '%d new chat messages for %s replicated from chat history server' % (notify_data[key], key)
+                BlinkLogger().log_info(log_text)
         else:
             BlinkLogger().log_debug('Local chat history is in sync with chat history server for %s' % account)
 
