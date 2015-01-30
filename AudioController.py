@@ -632,17 +632,13 @@ class AudioController(MediaStream):
             elif self.stream.sample_rate and self.stream.codec:
                 sample_rate = self.stream.sample_rate/1000
                 codec = beautify_audio_codec(self.stream.codec)
-                if self.zrtp_active:
-                    hd_label = "ZRTP "
-                else:
-                    hd_label = ""
                 
                 if self.stream.sample_rate >= 16000:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    hd_label += NSLocalizedString("Wideband", "Label")
+                    hd_label = NSLocalizedString("Wideband", "Label")
                 else:
                     self.audioStatus.setTextColor_(NSColor.blackColor())
-                    hd_label += NSLocalizedString("Narrowband", "Label")
+                    hd_label = NSLocalizedString("Narrowband", "Label")
                 #self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
                 self.audioStatus.setStringValue_(u"%s (%s)" % (hd_label, codec))
 
