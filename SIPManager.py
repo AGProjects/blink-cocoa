@@ -466,9 +466,9 @@ class SIPManager(object):
 
             if account.rtp.encryption_type == '':
                 account.rtp.encryption.enabled = False
-            elif account.rtp.encryption_type == 'sdes':
+            elif account.rtp.encryption_type == 'sdes_optional':
                 account.rtp.encryption.enabled = True
-                account.rtp.encryption.key_negotiation = 'sdes'
+                account.rtp.encryption.key_negotiation = 'sdes_optional'
             elif account.rtp.encryption_type == 'sdes_mandatory':
                 account.rtp.encryption.enabled = True
                 account.rtp.encryption.key_negotiation = 'sdes_mandatory'

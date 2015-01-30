@@ -1053,10 +1053,10 @@ class EncryptionOption(PopUpMenuOption):
         self.popup.addItemWithTitle_(NSLocalizedString("Disabled", "Menu item"))
         self.popup.lastItem().setRepresentedObject_('')
         self.popup.addItemWithTitle_(NSLocalizedString("Optional", "Menu item") + " SDES")
-        self.popup.lastItem().setRepresentedObject_('sdes')
+        self.popup.lastItem().setRepresentedObject_('sdes_optional')
         self.popup.addItemWithTitle_(NSLocalizedString("Mandatory", "Menu item") + " SDES")
         self.popup.lastItem().setRepresentedObject_('sdes_mandatory')
-        self.popup.addItemWithTitle_("zRTP")
+        self.popup.addItemWithTitle_("ZRTP")
         self.popup.lastItem().setRepresentedObject_('zrtp')
         
         frame = self.popup.frame()

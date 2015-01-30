@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14B25" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1080" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
@@ -275,6 +274,12 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="260"/>
                     </connections>
                 </menuItem>
+                <menuItem title="Opslaan naam..." tag="24" indentationLevel="1" id="AY4-Ht-0R5">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="Yi3-te-9Yo"/>
+                    </connections>
+                </menuItem>
                 <menuItem title="Versleuteld met SDES" tag="11" enabled="NO" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
@@ -291,6 +296,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="204"/>
             </connections>
+            <point key="canvasLocation" x="25.5" y="428.5"/>
         </menu>
     </objects>
     <resources>

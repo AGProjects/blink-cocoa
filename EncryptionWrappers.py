@@ -29,7 +29,7 @@ def encryptor(key):
             return b64encode(ctxt)
         else:
             return ctxt
-    return encrypt
+    return lambda *x: None
 
 def decryptor(key):
     # Return the decryption function
@@ -44,9 +44,10 @@ def decryptor(key):
         cbuf.close()
         del cipher
         return ptxt
-    return decrypt
+    return lambda *x: None
 
 def cipher_filter(cipher, inf, outf):
+    return None
     while 1:
         buf=inf.read()
         if not buf:

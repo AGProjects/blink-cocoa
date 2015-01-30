@@ -1072,38 +1072,17 @@ class VideoWindowController(NSWindowController):
     def userClickedFullScreenButton_(self, sender):
         self.toggleFullScreen()
 
-    def confirm_sas(self):
-        if not self.streamController.zrtp_active:
-            return
-
-        self.streamController.stream.zrtp_set_verified(True)
-        self.streamController.zrtp_verified = True
-        self.showButtons()
-        self.hideZRTPButtons()
-        self.update_encryption_icon()
-
-    def decline_sas(self):
-        if not self.streamController.zrtp_active:
-            return
-        
-        self.streamController.stream.zrtp_set_verified(False)
-        self.streamController.zrtp_verified = False
-        self.hideZRTPButtons()
-        self.update_encryption_icon()
-
     @objc.IBAction
     def userClickedzrtpButtons_(self, sender):
+        if not self.streamController.zrtp_active:
+            return
         if sender.selectedSegment() == 0:
-            self.confirm_sas()
-            audio_stream = self.sessionController.streamHandlerOfType("audio")
-            if audio_stream:
-                audio_stream.confirm_sas()
-
+            self.streamController.confirm_sas()
+            self.showButtons()
         elif sender.selectedSegment() == 1:
-            self.decline_sas()
-            audio_stream = self.sessionController.streamHandlerOfType("audio")
-            if audio_stream:
-                audio_stream.decline_sas()
+            self.streamController.decline_sas()
+        self.hideZRTPButtons()
+        self.update_encryption_icon()
 
     def showZRTPButtons(self):
         self.zrtpView.setHidden_(False)
@@ -1349,18 +1328,14 @@ class VideoWindowController(NSWindowController):
             return
 
         if self.streamController.zrtp_active:
-            if self.streamController.zrtp_is_ok:
-                if self.streamController.zrtp_verified:
-                    image = 'locked-green'
-                else:
-                    image = 'locked-orange'
+            if self.streamController.zrtp_verified:
+                image = 'locked-green'
             else:
-                image = 'unlocked-red'
-        else:
-            if self.streamController.srtp_active:
                 image = 'locked-orange'
-            else:
-                image = 'unlocked-darkgray'
+        elif self.streamController.srtp_active:
+            image = 'locked-orange'
+        else:
+            image = 'unlocked-darkgray'
 
         title = NSLocalizedString("Video with %s", "Window title") % self.title
         self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
