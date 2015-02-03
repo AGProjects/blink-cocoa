@@ -952,6 +952,7 @@ class SessionController(NSObject):
     screensharing_urls = {}
     cancelled_during_dns_lookup = False
     retries = 0
+    contactDisplayName = None
 
     @property
     def sessionControllersManager(self):
@@ -962,7 +963,7 @@ class SessionController(NSObject):
         assert isinstance(target_uri, SIPURI)
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.contactDisplayName = display_name
+        self.updateDisplayName(self.contactDisplayName)
         self.remoteParty = display_name or format_identity_to_string(target_uri, format='compact')
         self.remotePartyObject = target_uri
         self.account = account
@@ -1008,7 +1009,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.contactDisplayName = None
+        self.updateDisplayName(None)
         self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
         self.remotePartyObject = session.remote_identity
         self.account = session.account
@@ -1059,7 +1060,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.contactDisplayName = None
+        self.updateDisplayName(None)
         self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
         self.remotePartyObject = session.remote_identity
         self.account = session.account
@@ -1126,6 +1127,11 @@ class SessionController(NSObject):
             self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+
+    def updateDisplayName(self, display_name):
+        self.contactDisplayName = display_name
+        if display_name is not None:
+            self.notification_center.post_notification("BlinkSessionChangedDisplayName", sender=self)
 
     def deallocTimer_(self, timer):
         self.resetSession()

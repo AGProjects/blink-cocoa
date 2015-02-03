@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1080" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
@@ -27,6 +26,7 @@
                 <outlet property="videoView" destination="U8k-ux-24e" id="fab-CT-YGl"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
                 <outlet property="zrtpView" destination="llA-12-RYe" id="2Zz-fY-myn"/>
+                <outlet property="zrtp_buttons" destination="dWV-fi-c4u" id="0tJ-jL-HYR"/>
                 <outlet property="zrtp_sas" destination="dG4-kU-iz3" id="XaQ-Oc-Roh"/>
             </connections>
         </customObject>

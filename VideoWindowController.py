@@ -519,6 +519,15 @@ class VideoWindowController(NSWindowController):
           self.window().graphicsContext(), 0, 1, 0)
 
         menu = NSMenu.alloc().init()
+        if self.streamController.zrtp_active:
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Encrypted using ZRTP", "Menu item"), "", "")
+            lastItem.setEnabled_(False)
+            
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Peer Verified", "Menu item") + ", " + NSLocalizedString("Authentication String: '%s'", "Menu item") % self.streamController.zrtp_sas, "userClickedZRTPauthentication:", "")
+            lastItem.setIndentationLevel_(1)
+            lastItem.setState_(NSOnState if self.streamController.zrtp_verified else NSOffState)
+            menu.addItem_(NSMenuItem.separatorItem())
+
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "removeVideo:", "")
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hangup", "Menu item"), "hangup:", "")
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hold", "Menu item"), "userClickedHoldButton:", "")
@@ -529,7 +538,6 @@ class VideoWindowController(NSWindowController):
                     lastItem.setTitle_(NSLocalizedString("Unhold", "Label"))
                 else:
                     lastItem.setTitle_(NSLocalizedString("Hold", "Label"))
-
 
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Mute", "Menu item"), "userClickedMuteButton:", "")
         lastItem.setState_(NSOnState if SIPManager().is_muted() else NSOffState)
@@ -551,9 +559,7 @@ class VideoWindowController(NSWindowController):
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Open Screenshots Folder", "Menu item"), "userClickedOpenScreenshotFolder:", "")
         lastItem.setRepresentedObject_(ApplicationData.get('screenshots'))
         lastItem.setEnabled_(True)
-        menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("ZRTP Authentication...", "Menu item"), "userClickedZRTPauthentication:", "")
-        lastItem.setEnabled_(self.streamController.zrtp_active)
+
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
         lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
@@ -680,8 +686,9 @@ class VideoWindowController(NSWindowController):
         self.startMouseOutTimer()
 
     def hideStatusLabel(self):
-        self.disconnectLabel.setStringValue_("")
-        self.disconnectLabel.superview().hide()
+        if self.disconnectLabel:
+            self.disconnectLabel.setStringValue_("")
+            self.disconnectLabel.superview().hide()
 
     def showStatusLabel(self, label):
         self.last_label = label
@@ -1122,10 +1129,15 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedZRTPauthentication_(self, sender):
-        if self.zrtpView.isHidden():
-            self.showZRTPButtons()
-        else:
-            self.hideZRTPButtons()
+        if not self.streamController.zrtp_active:
+            return
+
+        self.streamController.stream.encryption.zrtp.verified = not self.streamController.stream.encryption.zrtp.verified
+        
+        #if self.zrtpView.isHidden():
+        #    self.showZRTPButtons()
+        #else:
+        #    self.hideZRTPButtons()
 
     @objc.IBAction
     def userClickedHoldButton_(self, sender):

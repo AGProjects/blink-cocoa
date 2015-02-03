@@ -944,7 +944,9 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(23)
             item.setEnabled_(self.zrtp_active)
             item.setHidden_(not self.zrtp_active)
-
+            item.setState_(NSOnState if self.zrtp_verified else NSOffState)
+            item.setTitle_(NSLocalizedString("Peer Verified", "Menu item") + ", " + NSLocalizedString("Authentication String: '%s'", "Menu item") % self.zrtp_sas)
+    
             item = menu.itemWithTag_(24)
             item.setEnabled_(self.zrtp_active)
             item.setHidden_(not self.zrtp_active)
@@ -1194,19 +1196,21 @@ class AudioController(MediaStream):
 
     @objc.IBAction
     def userPressedEnterZrtpLabel_(self, sender):
-        self.label.setStringValue_(self.zrtpLabel.stringValue())
         self.zrtpLabel.setHidden_(True)
-
         if self.zrtp_active:
-            self.stream.encryption.zrtp.peer_name = self.zrtpLabel.stringValue().encode('utf-8')
+            display_name = self.zrtpLabel.stringValue()
+            self.label.setStringValue_(display_name)
+            self.stream.encryption.zrtp.peer_name = display_name.encode('utf-8')
+            self.sessionController.updateDisplayName(display_name)
 
     @objc.IBAction
     def userClickedEncryptionMenuItem_(self, sender):
         tag = sender.tag()
         if tag == 23:
-            self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
-            if self.zrtp_show_verify_phrase:
-                self.showZRTPSas()
+            self.stream.encryption.zrtp.verified = not self.stream.encryption.zrtp.verified
+            #self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
+            #if self.zrtp_show_verify_phrase:
+            #    self.showZRTPSas()
         if tag == 24:
             self.zrtpLabel.setHidden_(False)
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(self.zrtpLabel)
@@ -1591,9 +1595,15 @@ class AudioController(MediaStream):
         self.updateTootip()
         peer_name = self.stream.encryption.zrtp.peer_name.decode('utf-8') if self.stream.encryption.zrtp.peer_name else None
         self.sessionController.log_info("ZRTP peer name for %s is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
+
         if peer_name:
-            self.zrtpLabel.setStringValue_(peer_name)
-            self.label.setStringValue_(peer_name)
+            self.sessionController.updateDisplayName(peer_name)
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionChangedDisplayName(self, sender, data):
+        peer_name = self.sessionController.getTitleShort()
+        self.zrtpLabel.setStringValue_(peer_name)
+        self.label.setStringValue_(peer_name)
 
     @run_in_gui_thread
     def _NH_AudioStreamDidNotEnableEncryption(self, sender, data):
@@ -1614,6 +1624,9 @@ class AudioController(MediaStream):
             self.sessionController.log_info("Audio ZRTP is verified")
             self.show_zrtp_ok_status_countdown = 4
             NSSound.soundNamed_("zrtp-securemode").play()
+
+        self.segmentedButtons.cell().setToolTip_forSegment_(NSLocalizedString("To verify remote peer, compare verbally this authentication string: '%s'", "Audio call tooltip") % data.sas, self.encryption_segment)
+
         self.update_encryption_icon()
 
     def _NH_AudioStreamZRTPVerifiedStateChanged(self, sender, data):

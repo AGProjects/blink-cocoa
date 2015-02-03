@@ -1658,6 +1658,10 @@ class ChatController(MediaStream):
         if self.sessionController.remote_focus:
             self.chatWindowController.drawer.open()
 
+    @run_in_gui_thread
+    def _NH_BlinkSessionChangedDisplayName(self, sender, data):
+        self.chatWindowController.updateTitle()
+
     def _NH_BlinkProposalDidFail(self, sender, data):
         if self.last_failure_reason != data.failure_reason:
             message = NSLocalizedString("Proposal failed", "Label")

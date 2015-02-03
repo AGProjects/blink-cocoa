@@ -43,6 +43,7 @@ class VideoController(MediaStream):
     last_stats = None
     initial_full_screen = False
     media_received = False
+    on_hold = False
 
     paused = False
 
@@ -365,16 +366,26 @@ class VideoController(MediaStream):
         self.ice_negotiation_status = 'Success'
 
     @run_in_gui_thread
-    def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
-        if not self.videoWindowController.window():
-            return
+    def _NH_BlinkSessionChangedDisplayName(self, sender, data):
+        self.videoWindowController.title = self.sessionController.getTitleShort()
+        self.updateControllerTitle()
 
-        if data.on_hold:
+    def updateControllerTitle(self):
+        if self.on_hold:
             self.videoWindowController.window().setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
             self.videoWindowController.showStatusLabel(NSLocalizedString("On Hold", "Label"))
         else:
             self.videoWindowController.hideStatusLabel()
             self.videoWindowController.window().setTitle_(self.videoWindowController.title)
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
+        if not self.videoWindowController.window():
+            return
+
+        self.on_hold = data.on_hold
+
+        self.updateControllerTitle()
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.started = True
