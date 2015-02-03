@@ -103,15 +103,15 @@ def normalize_sip_uri_for_outgoing_session(target_uri, account):
     return target_uri
 
 
-def format_identity_to_string(identity, check_contact=False, format='AOR'):
+def format_identity_to_string(identity, check_contact=False, format='aor'):
     """
     Takes a SIPURI, Account, FromHeader, ToHeader, CPIMIdentity object and
-    returns either an AOR (user@domain), compact (username of phone number) or full (Display Name <user@domain>)
+    returns either an aor (user@domain), compact (username of phone number) or full (Display Name <user@domain>)
     """
     port = 5060
     transport = 'udp'
     if isinstance(identity, (SIPURI, FrozenSIPURI)):
-        if format == 'AOR':
+        if format == 'aor':
             return u"%s@%s" % (identity.user, identity.host)
 
         user = identity.user
@@ -124,7 +124,7 @@ def format_identity_to_string(identity, check_contact=False, format='AOR'):
         if identity.transport != 'udp':
             transport = identity.transport
     else:
-        if format == 'AOR':
+        if format == 'aor':
             return u"%s@%s" % (identity.uri.user, identity.uri.host)
 
         user = identity.uri.user
