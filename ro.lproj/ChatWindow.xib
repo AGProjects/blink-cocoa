@@ -30,8 +30,8 @@
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="72" id="85"/>
-                <outlet property="videoButton" destination="yJz-hO-yFQ" id="47j-zT-iMH"/>
-                <outlet property="videoView" destination="GTn-A6-kxv" id="c4v-dG-m9t"/>
+                <outlet property="videoButton" destination="MK1-En-CVo" id="U1Z-Be-b0h"/>
+                <outlet property="videoView" destination="Tr7-Qb-Y9k" id="a2s-Cb-ZEj"/>
                 <outlet property="window" destination="1" id="25"/>
             </connections>
         </customObject>
@@ -88,6 +88,11 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C3E6F7C9-F452-4335-BCFB-4A71AC47C40A" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Adaugă audio" tag="107" image="video" id="MK1-En-CVo">
+                        <connections>
+                            <action selector="userClickedToolbarButton:" target="-2" id="n7e-tx-St4"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Arată Editorul Colaborativ" tag="109" image="editor" id="441">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
@@ -105,7 +110,7 @@
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
@@ -122,9 +127,9 @@
                         <size key="minSize" width="48" height="42"/>
                         <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
-                            <rect key="frame" x="4" y="14" width="54" height="42"/>
+                            <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="screenshot" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="569">
@@ -158,9 +163,9 @@
                         <size key="minSize" width="48" height="35"/>
                         <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="660">
-                            <rect key="frame" x="0.0" y="14" width="54" height="35"/>
+                            <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -229,11 +234,6 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="449"/>
-                    <toolbarItem implicitItemIdentifier="4DBB7FC7-D042-4D9E-856D-686EB57A2623" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Add audio session" tag="107" image="video" id="yJz-hO-yFQ">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="C7d-UJ-zsC"/>
-                        </connections>
-                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="81"/>
@@ -241,7 +241,7 @@
                     <toolbarItem reference="113"/>
                     <toolbarItem reference="224"/>
                     <toolbarItem reference="244"/>
-                    <toolbarItem reference="yJz-hO-yFQ"/>
+                    <toolbarItem reference="MK1-En-CVo"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="441"/>
                     <toolbarItem reference="573"/>
@@ -305,10 +305,10 @@
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="463"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="393"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="17" width="258" height="431.5"/>
+                                <rect key="frame" x="1" y="17" width="258" height="367"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
@@ -356,10 +356,10 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="464" width="260" height="105"/>
+                            <rect key="frame" x="0.0" y="394" width="260" height="103"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="17" width="258" height="84.5"/>
+                                <rect key="frame" x="1" y="17" width="258" height="83"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
@@ -406,11 +406,12 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="hSJ-Y2-CHr" customClass="BlackView">
+                        <customView id="U2L-3u-ZBI" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="498" width="260" height="72"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="GTn-A6-kxv" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="780" height="13.5"/>
+                                <customView id="Tr7-Qb-Y9k" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="260" height="85"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -426,7 +427,7 @@
                     </connections>
                 </splitView>
                 <levelIndicator toolTip="Semnal Intrare Microfon" verticalHuggingPriority="750" id="586">
-                    <rect key="frame" x="186" y="9" width="27.5" height="12"/>
+                    <rect key="frame" x="186" y="9" width="28" height="12"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
                         <font key="font" metaFont="miniSystem"/>
@@ -569,15 +570,6 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="453"/>
-                <menuItem title="Oprește Notificările" tag="328" keyEquivalent="s" indentationLevel="1" id="jFM-yP-y7U"/>
-                <menuItem isSeparatorItem="YES" id="Hjl-QI-0IA"/>
-                <menuItem title="Detașează Video" tag="327" hidden="YES" enabled="NO" indentationLevel="1" id="U4u-Zo-wWy">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedParticipantMenu:" target="-2" id="S0q-pd-OoD"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" id="plb-3U-Tgf"/>
                 <menuItem title="Mărimea Fontului" tag="500" enabled="NO" id="h3r-um-zSq">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
@@ -597,6 +589,20 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
+                <menuItem title="Anulează Notificările" tag="328" indentationLevel="1" id="ybY-7M-Pc8">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="yfD-RU-ENS"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="I0c-60-VHE"/>
+                <menuItem title="Detașează Video" tag="327" enabled="NO" indentationLevel="1" id="MEi-C1-IuT">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="PtQ-J8-WWQ"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="56r-Xj-CTr"/>
                 <menuItem title="Arată Informații Despre Apel" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
@@ -684,7 +690,6 @@
                 <outlet property="delegate" destination="-2" id="533"/>
             </connections>
         </menu>
-        <menuItem isSeparatorItem="YES" id="uS8-Jc-8ac"/>
     </objects>
     <resources>
         <image name="NSActionTemplate" width="14" height="14"/>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
+        <deployment defaultVersion="1080" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
@@ -25,9 +26,9 @@
                 <outlet property="screenshotButton" destination="BKQ-kq-DFD" id="94c-Ve-GkH"/>
                 <outlet property="videoView" destination="U8k-ux-24e" id="fab-CT-YGl"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="jJo-ta-uBb"/>
-                <outlet property="zrtpView" destination="llA-12-RYe" id="2Zz-fY-myn"/>
-                <outlet property="zrtp_buttons" destination="dWV-fi-c4u" id="0tJ-jL-HYR"/>
-                <outlet property="zrtp_sas" destination="dG4-kU-iz3" id="XaQ-Oc-Roh"/>
+                <outlet property="zrtpView" destination="uAK-G7-wTe" id="dsY-Bp-ur8"/>
+                <outlet property="zrtp_buttons" destination="nxq-10-QLQ" id="aza-bA-WYB"/>
+                <outlet property="zrtp_sas" destination="9BZ-uf-oOP" id="aBz-eh-qdA"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -37,7 +38,7 @@
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="562" y="346" width="665" height="375"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <value key="minSize" type="size" width="200" height="150"/>
             <view key="contentView" id="EiT-Mj-1SZ" customClass="BlackView">
                 <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
@@ -55,7 +56,7 @@
                             <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="eVG-9y-W1v">
                                 <rect key="frame" x="-117" y="4" width="663" height="39"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" alignment="center" title="Video Ended" id="MzQ-vj-Ben">
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" alignment="center" title="Video Terminat" id="MzQ-vj-Ben">
                                     <font key="font" metaFont="system" size="28"/>
                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -188,35 +189,6 @@
                             </textField>
                         </subviews>
                     </view>
-                    <view hidden="YES" focusRingType="none" id="llA-12-RYe" customClass="RoundedCornersView">
-                        <rect key="frame" x="118" y="110" width="428" height="35"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <subviews>
-                            <segmentedControl hidden="YES" verticalHuggingPriority="750" id="dWV-fi-c4u">
-                                <rect key="frame" x="273" y="5" width="148" height="24"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="7ag-AA-nO5">
-                                    <font key="font" metaFont="system"/>
-                                    <segments>
-                                        <segment label="Confirmă"/>
-                                        <segment label="Refuză" selected="YES" tag="1"/>
-                                    </segments>
-                                </segmentedCell>
-                                <connections>
-                                    <action selector="userClickedzrtpButtons:" target="-2" id="26U-0Z-QlG"/>
-                                </connections>
-                            </segmentedControl>
-                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="dG4-kU-iz3">
-                                <rect key="frame" x="11" y="9" width="256" height="18"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="ZRTP Authentication String: saft" id="FPY-UK-0h6">
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                        </subviews>
-                    </view>
                     <customView id="g4v-Xf-ipS" customClass="LocalVideoView">
                         <rect key="frame" x="10" y="281" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -237,6 +209,35 @@
                         <rect key="frame" x="10" y="281" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </customView>
+                    <view hidden="YES" focusRingType="none" id="uAK-G7-wTe" customClass="RoundedCornersView">
+                        <rect key="frame" x="118" y="110" width="428" height="35"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <segmentedControl hidden="YES" verticalHuggingPriority="750" id="nxq-10-QLQ">
+                                <rect key="frame" x="272" y="5" width="149" height="24"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="MRH-jC-YWD">
+                                    <font key="font" metaFont="system"/>
+                                    <segments>
+                                        <segment label="Confirmă"/>
+                                        <segment label="Refuză" selected="YES" tag="1"/>
+                                    </segments>
+                                </segmentedCell>
+                                <connections>
+                                    <action selector="userClickedzrtpButtons:" target="-2" id="pMe-dt-4di"/>
+                                </connections>
+                            </segmentedControl>
+                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="9BZ-uf-oOP">
+                                <rect key="frame" x="11" y="9" width="256" height="18"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Textul de autentificare: xxxx" id="L7m-3G-DoO">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                    </view>
                 </subviews>
             </view>
             <connections>

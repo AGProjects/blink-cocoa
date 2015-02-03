@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="5056"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="HistoryViewer">
@@ -26,7 +26,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Istoria Conversațiilor" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="historyWindow" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
@@ -49,7 +49,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="68" id="67" customClass="ParticipantsTableView">
-                                            <rect key="frame" x="0.0" y="0.0" width="180" height="487"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="180" height="36"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -103,7 +103,7 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" emptySelection="NO" autosaveName="transcriptIndex" headerView="11" id="10" customClass="MyTableView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="565" height="149"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="565" height="19"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <size key="intercellSpacing" width="3" height="2"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -216,7 +216,7 @@
                     <segmentedControl verticalHuggingPriority="750" id="80">
                         <rect key="frame" x="586" y="2" width="129" height="15"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <segmentedCell key="cell" controlSize="mini" state="on" alignment="left" style="rounded" trackingMode="momentary" id="83">
+                        <segmentedCell key="cell" controlSize="mini" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="83">
                             <font key="font" metaFont="miniSystem"/>
                             <segments>
                                 <segment image="begin_arrow" width="30">
@@ -280,7 +280,7 @@
                         <size key="minSize" width="97" height="22"/>
                         <size key="maxSize" width="217" height="22"/>
                         <searchField key="view" verticalHuggingPriority="750" id="113">
-                            <rect key="frame" x="10" y="14" width="127" height="22"/>
+                            <rect key="frame" x="0.0" y="14" width="127" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" borderStyle="bezel" placeholderString="Introduce o Adresă" allowsEditingTextAttributes="YES" bezelStyle="round" sendsSearchStringImmediately="YES" id="114">
                                 <font key="font" metaFont="system"/>
@@ -321,17 +321,17 @@
                         <popUpButton key="view" toolTip="Filtreză Dupa Canal" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="push" title="Înregistrări Video" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="7" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" selectedItem="L1M-Bo-eaH" id="101">
+                            <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="center" controlSize="small" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyUpOrDown" inset="2" preferredEdge="minX" id="101">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="smallSystem"/>
                                 <menu key="menu" title="OtherViews" id="102">
                                     <items>
                                         <menuItem title="Orice Canal" id="103"/>
                                         <menuItem title="Apeluri Audio" tag="1" id="104"/>
-                                        <menuItem title="Conversații Text" state="on" tag="2" id="105"/>
+                                        <menuItem title="Conversații Text" tag="2" id="105"/>
                                         <menuItem title="Transfer Fișiere" tag="3" id="109"/>
                                         <menuItem title="Înregistrări Audio" tag="4" id="135"/>
-                                        <menuItem title="Înregistrări Video" state="on" tag="7" id="L1M-Bo-eaH"/>
+                                        <menuItem title="Înregistrări Video" tag="7" id="jPh-Vm-FC4"/>
                                         <menuItem title="Disponibilitate" tag="5" id="136"/>
                                         <menuItem title="Mesaje Vocale" tag="6" id="137"/>
                                     </items>

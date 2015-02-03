@@ -228,9 +228,9 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="147">
-                                    <rect key="frame" x="118" y="232" width="165" height="14"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="148">
+                                    <rect key="frame" x="118" y="232" width="131" height="14"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Activ" id="148">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -548,7 +548,7 @@
                                 <textField verticalHuggingPriority="750" id="eOO-yL-9Yk">
                                     <rect key="frame" x="118" y="102" width="131" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="OPUS" id="1OQ-rw-a1C">
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="H.264" id="1OQ-rw-a1C">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -588,9 +588,9 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="3Ye-Eh-ZMH">
-                                    <rect key="frame" x="118" y="120" width="161" height="14"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="j7G-qQ-LiG">
+                                    <rect key="frame" x="118" y="120" width="131" height="14"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Activ" id="j7G-qQ-LiG">
                                         <font key="font" metaFont="smallSystem"/>
                                         <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -630,7 +630,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="65"/>
             </connections>
-            <point key="canvasLocation" x="211.5" y="192.5"/>
+            <point key="canvasLocation" x="139.5" y="148.5"/>
         </window>
     </objects>
     <resources>

@@ -529,7 +529,7 @@ CA
                     <searchField toolTip="Poți introduce text pentru a căuta contacte sau pentru a porni un apel către o adresa arbitrară." verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" alignment="left" placeholderString="Caută Contacte sau Apelează Adrese" bezelStyle="round" recentsAutosaveName="" id="464">
+                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Caută Contacte sau Apelează Adrese" bezelStyle="round" recentsAutosaveName="" id="464">
                             <font key="font" metaFont="cellTitle"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1292,7 +1292,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
-                            <rect key="frame" x="0.0" y="0.0" width="280" height="299"/>
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="318"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="354"/>
@@ -1314,7 +1314,7 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="545">
-                                <rect key="frame" x="203" y="1" width="15" height="251.5"/>
+                                <rect key="frame" x="203" y="0.5" width="15" height="252"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <accessibility description="Listă Convorbiri Audio"/>
@@ -1367,12 +1367,12 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="23e-w5-Y33" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="301" width="280" height="56"/>
+                        <customView id="C73-Qs-jbr" customClass="BlackView">
+                            <rect key="frame" x="0.0" y="320" width="280" height="37"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="fsu-qd-wIM" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="280" height="69.5"/>
+                                <customView id="YUX-UC-DK5" customClass="VideoWidget">
+                                    <rect key="frame" x="0.0" y="-7" width="280" height="50"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -1393,7 +1393,7 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <button toolTip="Închide Toate Convorbirile Audio" verticalHuggingPriority="750" tag="10" id="512">
-                            <rect key="frame" x="9" y="0.0" width="90.5" height="25"/>
+                            <rect key="frame" x="9" y="0.0" width="91" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Închide Tot" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -1405,7 +1405,7 @@ ABC</string>
                             </connections>
                         </button>
                         <button toolTip="Pornește o conferință cu mai mulți participanți." verticalHuggingPriority="750" tag="11" id="587">
-                            <rect key="frame" x="107.5" y="0.0" width="94.5" height="25"/>
+                            <rect key="frame" x="107.5" y="0.0" width="95" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Conferință" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1417,7 +1417,7 @@ ABC</string>
                             </connections>
                         </button>
                         <levelIndicator toolTip="Semnal Intrare Microfon" verticalHuggingPriority="750" id="1820">
-                            <rect key="frame" x="214" y="8" width="27.5" height="12"/>
+                            <rect key="frame" x="214" y="8" width="28" height="12"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="1821">
                                 <font key="font" metaFont="miniSystem"/>
@@ -1587,7 +1587,7 @@ ABC</string>
                 <outlet property="statusBarMenu" destination="1745" id="1762"/>
                 <outlet property="useSpeechRecognitionMenuItem" destination="Ked-li-VeB" id="yGP-TV-FPu"/>
                 <outlet property="useSpeechSynthesisMenuItem" destination="mk1-bq-3CO" id="AYH-dK-kdp"/>
-                <outlet property="videoView" destination="fsu-qd-wIM" id="UDa-XX-ci6"/>
+                <outlet property="videoView" destination="YUX-UC-DK5" id="YGb-F8-Wfh"/>
                 <outlet property="window" destination="371" id="406"/>
                 <outlet property="windowMenu" destination="24" id="1595"/>
             </connections>
@@ -1742,6 +1742,7 @@ ABC</string>
             </items>
         </menu>
         <menuItem title="Înregistrări" id="1090">
+            <modifierMask key="keyEquivalentModifierMask"/>
             <menu key="submenu" title="Înregistrări" autoenablesItems="NO" id="1091">
                 <items>
                     <menuItem isSeparatorItem="YES" id="1092"/>

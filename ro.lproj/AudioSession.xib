@@ -19,7 +19,7 @@
                 <outlet property="transferMenu" destination="93" id="106"/>
                 <outlet property="view" destination="1" id="40"/>
                 <outlet property="zRTPConfirmButton" destination="325" id="328"/>
-                <outlet property="zrtpLabel" destination="YUF-Fq-FN7" id="0Zl-gu-TLI"/>
+                <outlet property="zrtpLabel" destination="Thv-hs-bTF" id="RCb-wP-fiZ"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -55,10 +55,18 @@
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="72">
                         <font key="font" metaFont="smallSystem"/>
                         <segments>
-                            <segment toolTip="Taie sonorul" image="mute" width="20" tag="3"/>
-                            <segment toolTip="Pauză" image="pause" width="20"/>
-                            <segment toolTip="Înregistrează" image="record" width="20" tag="1"/>
-                            <segment toolTip="Închide" image="hangup" width="20" tag="2"/>
+                            <segment toolTip="Taie sonorul" image="mute" width="20" tag="3">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Pauză" image="pause" width="20">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Înregistrează" image="record" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Închide" image="hangup" width="20" tag="2">
+                                <nil key="label"/>
+                            </segment>
                         </segments>
                     </segmentedCell>
                     <accessibility description="Butoane Control Apel"/>
@@ -154,7 +162,7 @@
                     </connections>
                 </button>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" id="325">
-                    <rect key="frame" x="152" y="3" width="111" height="20"/>
+                    <rect key="frame" x="152" y="2" width="111" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="326">
                         <font key="font" metaFont="smallSystem"/>
@@ -167,17 +175,17 @@
                         <action selector="userClickedZRTPConfirmButton:" target="-2" id="327"/>
                     </connections>
                 </segmentedControl>
-                <textField hidden="YES" verticalHuggingPriority="750" id="YUF-Fq-FN7">
+                <textField hidden="YES" verticalHuggingPriority="750" id="Thv-hs-bTF">
                     <rect key="frame" x="6" y="35" width="223" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" state="on" borderStyle="bezel" alignment="left" drawsBackground="YES" usesSingleLineMode="YES" id="vC9-Da-9Dh">
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" state="on" borderStyle="bezel" alignment="left" title="ZRTP label" drawsBackground="YES" usesSingleLineMode="YES" id="kcB-3U-zAF">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                     <connections>
-                        <action selector="userPressedEnterZrtpLabel:" target="-2" id="ubn-2r-kO9"/>
-                        <outlet property="delegate" destination="-2" id="bT3-qF-fJ5"/>
+                        <action selector="userPressedEnterZrtpLabel:" target="-2" id="cO1-b3-cfQ"/>
+                        <outlet property="delegate" destination="-2" id="HKP-CD-rsB"/>
                     </connections>
                 </textField>
             </subviews>
@@ -200,10 +208,10 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="108"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Detașează Video" tag="16" enabled="NO" id="HhO-fC-5Uh">
+                <menuItem title="Detașează Video" tag="16" enabled="NO" id="34B-wV-Pxn">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="Rx5-bD-rEi"/>
+                        <action selector="userClickedSessionMenuItem:" target="-2" id="yFh-OP-Ek9"/>
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
@@ -273,16 +281,16 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="253"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Arată fraza de autentificare" tag="23" indentationLevel="1" id="259">
+                <menuItem title="Confirmă textul de autentificare..." tag="23" id="cFc-Fv-q5V">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="260"/>
+                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="kTX-Xs-mmh"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Salvează numele..." tag="24" indentationLevel="1" id="F44-6q-7sm">
+                <menuItem title="Salvează Numele Interlocutorului..." tag="24" id="vKR-n2-pM7">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="EtU-L8-sVL"/>
+                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="KiM-S2-9Ua"/>
                     </connections>
                 </menuItem>
                 <menuItem title="Criptat cu SDES" tag="11" enabled="NO" id="263">
@@ -291,7 +299,7 @@
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="264"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Canalul audio nu este criptat" tag="31" indentationLevel="1" id="296">
+                <menuItem title="Canalul audio nu este criptat" tag="31" id="296">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="userClickedEncryptionMenuItem:" target="-2" id="297"/>
@@ -301,7 +309,6 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="204"/>
             </connections>
-            <point key="canvasLocation" x="71" y="266.5"/>
         </menu>
     </objects>
     <resources>

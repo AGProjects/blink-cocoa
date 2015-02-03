@@ -9,7 +9,7 @@
             <connections>
                 <outlet property="activityInfoLabel" destination="275" id="277"/>
                 <outlet property="activityTextView" destination="19" id="73"/>
-                <outlet property="autoScrollCheckbox" destination="A9y-TE-N7V" id="5c9-8K-tac"/>
+                <outlet property="autoScrollCheckbox" destination="yxU-Br-7fi" id="BzH-Vj-6dB"/>
                 <outlet property="filterNotificationsSearchBox" destination="251" id="253"/>
                 <outlet property="filterSipApplication" destination="281" id="288"/>
                 <outlet property="msrpInfoLabel" destination="266" id="268"/>
@@ -987,10 +987,10 @@
                             <outlet property="delegate" destination="-2" id="190"/>
                         </connections>
                     </tabView>
-                    <button id="A9y-TE-N7V">
-                        <rect key="frame" x="0.0" y="0.0" width="66" height="22"/>
+                    <button id="yxU-Br-7fi">
+                        <rect key="frame" x="0.0" y="-1" width="66" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="check" title="Autoscroll" bezelStyle="regularSquare" imagePosition="left" controlSize="mini" state="on" inset="2" id="R1B-g4-Zr4">
+                        <buttonCell key="cell" type="check" title="Autoscrolează" bezelStyle="regularSquare" imagePosition="left" controlSize="mini" state="on" inset="2" id="lbX-Ct-Ujc">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
