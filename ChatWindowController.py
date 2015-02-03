@@ -348,8 +348,11 @@ class ChatWindowController(NSWindowController):
                 chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
         self.updateTitle()
-        if session.remote_focus:
+        if session.remote_focus or session.hasStreamOfType("video"):
             self.drawer.open()
+        else:
+            self.drawer.close()
+
         if session.mustCloseAudioDrawer:
             NSApp.delegate().contactsWindowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
@@ -391,15 +394,14 @@ class ChatWindowController(NSWindowController):
     def setVideoProducer(self, producer=None):
         self.videoView.setProducer(producer)
         self.refresh_drawer_counter += 1
-        if producer is not None:
-            self.drawer.open()
-        else:
-            session = self.selectedSessionController()
-            if session:
-                if not session.remote_focus:
-                    self.drawer.close()
+        session = self.selectedSessionController()
+        if session:
+            if session.remote_focus or session.hasStreamOfType("video"):
+                self.drawer.open()
             else:
                 self.drawer.close()
+        else:
+            self.drawer.close()
         self.refreshDrawer()
 
     def detachVideo(self, sessionController):
