@@ -18,8 +18,6 @@
                 <outlet property="tlsIcon" destination="23" id="42"/>
                 <outlet property="transferMenu" destination="93" id="106"/>
                 <outlet property="view" destination="1" id="40"/>
-                <outlet property="zRTPConfirmButton" destination="325" id="328"/>
-                <outlet property="zrtpLabel" destination="HTm-iH-uEo" id="vBp-Yd-9g8"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -162,33 +160,6 @@
                         <action selector="userClickedSessionInfoButton:" target="-2" id="169"/>
                     </connections>
                 </button>
-                <segmentedControl hidden="YES" verticalHuggingPriority="750" id="325">
-                    <rect key="frame" x="145" y="3" width="118" height="20"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="326">
-                        <font key="font" metaFont="smallSystem"/>
-                        <segments>
-                            <segment label="Confirmar" width="56" tag="1"/>
-                            <segment label="Rechazar" width="55" tag="2"/>
-                        </segments>
-                    </segmentedCell>
-                    <connections>
-                        <action selector="userClickedZRTPConfirmButton:" target="-2" id="327"/>
-                    </connections>
-                </segmentedControl>
-                <textField hidden="YES" verticalHuggingPriority="750" id="HTm-iH-uEo">
-                    <rect key="frame" x="6" y="35" width="223" height="18"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" state="on" borderStyle="bezel" alignment="left" title="ZRTP label" drawsBackground="YES" usesSingleLineMode="YES" id="Jn5-dY-LYI">
-                        <font key="font" metaFont="smallSystem"/>
-                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                    <connections>
-                        <action selector="userPressedEnterZrtpLabel:" target="-2" id="cBS-Wb-TwQ"/>
-                        <outlet property="delegate" destination="-2" id="ADW-zo-dJk"/>
-                    </connections>
-                </textField>
             </subviews>
             <connections>
                 <outlet property="menu" destination="53" id="57"/>
@@ -276,24 +247,6 @@
         </menu>
         <menu title="zRTP" autoenablesItems="NO" id="202">
             <items>
-                <menuItem title="Encriptado usando ZRTP" tag="21" id="251">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="253"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Mostrar el texto de autenticación..." tag="23" indentationLevel="1" id="Q6e-bZ-pbV">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="JsK-ad-ioF"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Guardar nombre..." tag="24" indentationLevel="1" id="259">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedEncryptionMenuItem:" target="-2" id="260"/>
-                    </connections>
-                </menuItem>
                 <menuItem title="Encriptado usando SDES" tag="11" enabled="NO" id="263">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>

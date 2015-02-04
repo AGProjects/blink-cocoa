@@ -429,7 +429,6 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
-
     def _NH_MediaStreamDidEnd(self, sender, data):
         if data.error is not None:
             self.sessionController.log_info(u"Video call failed: %s" % data.error)

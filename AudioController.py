@@ -64,6 +64,8 @@ from HistoryManager import ChatHistory
 from SessionInfoController import ice_candidates
 from MediaStream import MediaStream, STREAM_IDLE, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_FAILED, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_CONNECTED, STREAM_CONNECTING
 from MediaStream import STATE_CONNECTING, STATE_FAILED, STATE_DNS_FAILED, STATE_FINISHED
+from ZRTPAuthentication import ZRTPAuthentication
+
 from resources import Resources
 from util import allocate_autorelease_pool, beautify_audio_codec, format_identity_to_string, normalize_sip_uri_for_outgoing_session, translate_alpha2digit, run_in_gui_thread
 
@@ -99,12 +101,8 @@ class AudioController(MediaStream):
     segmentedButtons = objc.IBOutlet()
     segmentedConferenceButtons = objc.IBOutlet()
 
-    zrtpLabel = objc.IBOutlet()
-
     transferMenu = objc.IBOutlet()
     sessionMenu = objc.IBOutlet()
-
-    zRTPConfirmButton = objc.IBOutlet()
 
     encryptionMenu = objc.IBOutlet()
 
@@ -121,6 +119,7 @@ class AudioController(MediaStream):
     transfer_in_progress = False
     answeringMachine = None
     outbound_ringtone = None
+    zrtp_controller = None
 
     holdByRemote = False
     holdByLocal = False
@@ -263,17 +262,10 @@ class AudioController(MediaStream):
         return self
 
     def setSegmentedButtons(self, type):
-        if type == 'zrtp':
-            self.zRTPConfirmButton.setHidden_(False)
-            self.segmentedButtons.setHidden_(True)
-            self.segmentedConferenceButtons.setHidden_(True)
-            self.last_segment_type = type
-        elif type == 'normal':
-            self.zRTPConfirmButton.setHidden_(True)
+        if type == 'normal':
             self.segmentedButtons.setHidden_(False)
             self.segmentedConferenceButtons.setHidden_(True)
         elif type == 'conference':
-            self.zRTPConfirmButton.setHidden_(True)
             self.segmentedButtons.setHidden_(True)
             self.segmentedConferenceButtons.setHidden_(False)
 
@@ -317,7 +309,6 @@ class AudioController(MediaStream):
             self.answeringMachine.start()
 
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        self.zrtpLabel.setStringValue_(self.label.stringValue())
         
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         self.updateTLSIcon()
@@ -329,7 +320,6 @@ class AudioController(MediaStream):
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        self.zrtpLabel.setStringValue_(self.label.stringValue())
         self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
@@ -349,8 +339,6 @@ class AudioController(MediaStream):
             self.changeStatus(STREAM_IDLE, detail)
 
     def end(self):
-        self.zrtpLabel.setHidden_(True)
-        self.hideZRTPSas()
 
         status = self.status
         if status in [STREAM_IDLE, STREAM_FAILED]:
@@ -479,7 +467,6 @@ class AudioController(MediaStream):
             self.answeringMachine.mute_output()
         else:
             self.hold()
-        self.zrtpLabel.setHidden_(True)
 
     def sessionBoxDidAddConferencePeer(self, sender, peer):
         if self == peer:
@@ -515,9 +502,6 @@ class AudioController(MediaStream):
             self.addToConference()
             peer.addToConference()
             return True
-
-    def controlTextDidEndEditing_(self, notification):
-        self.zrtpLabel.setHidden_(True)
 
     def sessionBoxDidRemoveFromConference(self, sender):
         self.sessionController.log_info(u"Removed %s from conference through drag&drop" % self.sessionController.getTitle())
@@ -662,18 +646,11 @@ class AudioController(MediaStream):
             frame.origin.x = NSMaxX(self.tlsIcon.frame())
             self.label.setFrame_(frame)
             
-            frame = self.zrtpLabel.frame()
-            frame.origin.x = NSMaxX(self.tlsIcon.frame()) + 2
-            self.zrtpLabel.setFrame_(frame)
             self.tlsIcon.setHidden_(False)
         else:
             frame = self.label.frame()
             frame.origin.x = NSMinX(self.tlsIcon.frame())
             self.label.setFrame_(frame)
-
-            frame = self.zrtpLabel.frame()
-            frame.origin.x = NSMinX(self.tlsIcon.frame())
-            self.zrtpLabel.setFrame_(frame)
             self.tlsIcon.setHidden_(True)
 
     def changeStatus(self, newstate, fail_reason=None):
@@ -930,26 +907,10 @@ class AudioController(MediaStream):
             self.info.setStringValue_("")
 
     def menuWillOpen_(self, menu):
-        self.zrtpLabel.setHidden_(True)
         if menu == self.encryptionMenu:
             # sded encrypted
             item = menu.itemWithTag_(11)
             item.setHidden_(self.zrtp_active or not self.encryption_active)
-
-            #zrtp encrypted
-            item = menu.itemWithTag_(21)
-            item.setHidden_(not self.zrtp_active)
-            item.setEnabled_(False)
-
-            item = menu.itemWithTag_(23)
-            item.setEnabled_(self.zrtp_active)
-            item.setHidden_(not self.zrtp_active)
-            item.setState_(NSOnState if self.zrtp_verified else NSOffState)
-            item.setTitle_(NSLocalizedString("Peer Verified", "Menu item") + ", " + NSLocalizedString("Authentication String: '%s'", "Menu item") % self.zrtp_sas)
-    
-            item = menu.itemWithTag_(24)
-            item.setEnabled_(self.zrtp_active)
-            item.setHidden_(not self.zrtp_active)
 
             # not encrypted
             item = menu.itemWithTag_(31)
@@ -1163,59 +1124,6 @@ class AudioController(MediaStream):
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
 
     @objc.IBAction
-    def userClickedZRTPConfirmButton_(self, sender):
-        self.updateDuration()
-        if not self.zrtp_active:
-            return
-        if sender.selectedSegment() == 0:
-            try:
-                self.stream.encryption.zrtp.verified = True
-            except Exception:
-                pass
-        elif sender.selectedSegment() == 1:
-            try:
-                self.stream.encryption.zrtp.verified = False
-            except Exception:
-                pass
-        self.hideZRTPSas()
-
-    def showZRTPSas(self):
-        self.zrtp_show_verify_phrase = True
-        self.setSegmentedButtons("zrtp")
-        self.elapsed.setStringValue_(NSLocalizedString("ZRTP Authentication String:", "Label"))
-        self.updateAudioStatusWithSessionState(self.zrtp_sas or NSLocalizedString("None", "Label"), True)
-
-    def hideZRTPSas(self):
-        self.zrtp_show_verify_phrase = False
-        if self.isConferencing:
-            self.setSegmentedButtons("conference")
-        else:
-            self.setSegmentedButtons("normal")
-
-        self.update_encryption_icon()
-
-    @objc.IBAction
-    def userPressedEnterZrtpLabel_(self, sender):
-        self.zrtpLabel.setHidden_(True)
-        if self.zrtp_active:
-            display_name = self.zrtpLabel.stringValue()
-            self.label.setStringValue_(display_name)
-            self.stream.encryption.zrtp.peer_name = display_name.encode('utf-8')
-            self.sessionController.updateDisplayName(display_name)
-
-    @objc.IBAction
-    def userClickedEncryptionMenuItem_(self, sender):
-        tag = sender.tag()
-        if tag == 23:
-            self.stream.encryption.zrtp.verified = not self.stream.encryption.zrtp.verified
-            #self.zrtp_show_verify_phrase = not self.zrtp_show_verify_phrase
-            #if self.zrtp_show_verify_phrase:
-            #    self.showZRTPSas()
-        if tag == 24:
-            self.zrtpLabel.setHidden_(False)
-            NSApp.delegate().contactsWindowController.window().makeFirstResponder_(self.zrtpLabel)
-
-    @objc.IBAction
     def userClickedSegmentButton_(self, sender):
         segment = sender.selectedSegment()
         action = None
@@ -1268,6 +1176,11 @@ class AudioController(MediaStream):
                     sender.window().graphicsContext(), 0, 1, 0)
             NSMenu.popUpContextMenu_withEvent_forView_(self.transferMenu, event, sender)
         elif action == 'zrtp':
+            if self.zrtp_controller is None:
+                self.zrtp_controller = ZRTPAuthentication(self)
+            self.zrtp_controller.open()
+
+            return
             point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
             point.y -= NSHeight(sender.frame())
             event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
@@ -1475,6 +1388,9 @@ class AudioController(MediaStream):
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
+        if self.zrtp_controller:
+            self.zrtp_controller.close()
+            self.zrtp_controller = None
 
     @run_in_gui_thread
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -1602,7 +1518,6 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
         peer_name = self.sessionController.getTitleShort()
-        self.zrtpLabel.setStringValue_(peer_name)
         self.label.setStringValue_(peer_name)
 
     @run_in_gui_thread
@@ -1618,14 +1533,12 @@ class AudioController(MediaStream):
     def _NH_AudioStreamZRTPReceivedSAS(self, sender, data):
         self.sessionController.log_info("Audio ZRTP authentication string: %s" % data.sas)
         if not data.verified:
-            self.sessionController.log_info("Audio ZRTP is NOT verified")
+            self.sessionController.log_info("ZRTP peer is NOT verified")
             NSSound.soundNamed_("zrtp-security-failed").play()
         else:
-            self.sessionController.log_info("Audio ZRTP is verified")
+            self.sessionController.log_info("ZRTP peer is verified")
             self.show_zrtp_ok_status_countdown = 4
             NSSound.soundNamed_("zrtp-securemode").play()
-
-        self.segmentedButtons.cell().setToolTip_forSegment_(NSLocalizedString("To verify remote peer, compare verbally this authentication string: '%s'", "Audio call tooltip") % data.sas, self.encryption_segment)
 
         self.update_encryption_icon()
 

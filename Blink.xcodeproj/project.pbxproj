@@ -236,6 +236,18 @@
 		1F22737412B5558A0010A8B2 /* libgpg-error.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722812B554000010A8B2 /* libgpg-error.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F22737712B5558A0010A8B2 /* liblzo.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722B12B554000010A8B2 /* liblzo.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F22737812B5558A0010A8B2 /* libtasn1.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F22722C12B554000010A8B2 /* libtasn1.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F22764A1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
+		1F22764B1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
+		1F22764C1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
+		1F22764D1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
+		1F22764E1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
+		1F22764F1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
+		1F2276511A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
+		1F2276521A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
+		1F2276531A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
+		1F2276541A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
+		1F2276551A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
+		1F2276561A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
 		1F24367F1912B23700E71253 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
 		1F2436801912B23700E71253 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
 		1F2436811912B23700E71253 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
@@ -2882,6 +2894,12 @@
 		1F22722812B554000010A8B2 /* libgpg-error.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libgpg-error.0.dylib"; path = "Distribution/Frameworks/libgpg-error.0.dylib"; sourceTree = "<group>"; };
 		1F22722B12B554000010A8B2 /* liblzo.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblzo.1.dylib; path = Distribution/Frameworks/liblzo.1.dylib; sourceTree = "<group>"; };
 		1F22722C12B554000010A8B2 /* libtasn1.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.3.dylib; path = Distribution/Frameworks/libtasn1.3.dylib; sourceTree = "<group>"; };
+		1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ZRTPAuthentication.py; sourceTree = "<group>"; };
+		1F2276571A823D6E00CA9A73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ZRTPAuthentication.xib; sourceTree = "<group>"; };
+		1F2276591A823D7100CA9A73 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ZRTPAuthentication.xib; sourceTree = "<group>"; };
+		1F22765A1A823D7400CA9A73 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ZRTPAuthentication.xib; sourceTree = "<group>"; };
+		1F22765B1A823D7500CA9A73 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ZRTPAuthentication.xib; sourceTree = "<group>"; };
+		1F22765C1A823D7700CA9A73 /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ZRTPAuthentication.xib; sourceTree = "<group>"; };
 		1F2436831912B23700E71253 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F2436891913CD7C00E71253 /* branding.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = branding.py; sourceTree = "<group>"; };
 		1F2489DF13FE781F007CDFD5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AudioSession.xib; sourceTree = "<group>"; };
@@ -3629,6 +3647,15 @@
 			name = PythonPackages;
 			sourceTree = "<group>";
 		};
+		1F2276501A823D5900CA9A73 /* ZRTP */ = {
+			isa = PBXGroup;
+			children = (
+				1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */,
+				1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */,
+			);
+			name = ZRTP;
+			sourceTree = "<group>";
+		};
 		1F2615A712BD8FFA00B402E1 /* Conference */ = {
 			isa = PBXGroup;
 			children = (
@@ -4185,6 +4212,7 @@
 				2B0CE72710CD822100325F30 /* SMS */,
 				2BC09104106884CE0069AB9A /* ScreenSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
+				1F2276501A823D5900CA9A73 /* ZRTP */,
 			);
 			name = Sessions;
 			sourceTree = "<group>";
@@ -4596,6 +4624,7 @@
 				1F2272E112B554F50010A8B2 /* hangup.png in Resources */,
 				1F2272E212B554F50010A8B2 /* belloff.png in Resources */,
 				1F2272E312B554F50010A8B2 /* bellon.png in Resources */,
+				1F2276521A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1F2272E412B554F50010A8B2 /* AudioController.py in Resources */,
 				1F2272E612B554F50010A8B2 /* MediaStream.py in Resources */,
 				1F2272E712B554F50010A8B2 /* AccountSettings.py in Resources */,
@@ -4684,6 +4713,7 @@
 				1F29D0FE1906D55E0051B1BC /* video-paused.png in Resources */,
 				1F6C0DBF190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
 				1F2747D31388FC5C0052C384 /* restore.png in Resources */,
+				1F22764B1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
 				1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */,
 				1F8A7631138A982E007E84C0 /* mute-white.png in Resources */,
 				1FCF118F1390EDE7001D1CAF /* chat.png in Resources */,
@@ -4990,11 +5020,13 @@
 				1F35D02C17894FFF00C6FE38 /* help.png in Resources */,
 				1F35D02D17894FFF00C6FE38 /* start_chat.png in Resources */,
 				1F35D02E17894FFF00C6FE38 /* stop_chat.png in Resources */,
+				1F2276541A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1F35D02F17894FFF00C6FE38 /* display_16.png in Resources */,
 				1F35D03017894FFF00C6FE38 /* display_red.png in Resources */,
 				1F35D03117894FFF00C6FE38 /* display_red_16.png in Resources */,
 				1F35D03217894FFF00C6FE38 /* shrinktofit.png in Resources */,
 				1F35D03317894FFF00C6FE38 /* shrinktofit-pressed.png in Resources */,
+				1F22764D1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
 				1F4B789F19AEAED300F854CB /* VideoLocalWindow.xib in Resources */,
 				1F35D03417894FFF00C6FE38 /* ConferenceScreenSharing.py in Resources */,
 				1F35D03517894FFF00C6FE38 /* ConferenceScreenSharing.xib in Resources */,
@@ -5143,6 +5175,7 @@
 				1F8DC36B135084FA0034815C /* incoming_file.png in Resources */,
 				1F8DC36C135084FA0034815C /* upfile.png in Resources */,
 				1F8DC36D135084FA0034815C /* hangup.png in Resources */,
+				1F2276531A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1F8DC36E135084FA0034815C /* belloff.png in Resources */,
 				1F774C6919CB169800240DC1 /* video-active.png in Resources */,
 				1F8DC36F135084FA0034815C /* bellon.png in Resources */,
@@ -5268,6 +5301,7 @@
 				1FD99704142DEFD100EE171F /* stop_chat.png in Resources */,
 				1F9406C014307D180053D741 /* display_16.png in Resources */,
 				1FFB386A1432026D003B29ED /* display_red.png in Resources */,
+				1F22764C1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
 				1FFB38D7143209E0003B29ED /* display_red_16.png in Resources */,
 				1FC9FE9714378A450056B3A8 /* shrinktofit.png in Resources */,
 				1FC9FEF414379AC50056B3A8 /* shrinktofit-pressed.png in Resources */,
@@ -5541,11 +5575,13 @@
 				1FC80EC7192E3E1F00BD62F4 /* panel-info.png in Resources */,
 				1FC80EC8192E3E1F00BD62F4 /* screenshot.png in Resources */,
 				1F0D4A3B19BF351D002AB989 /* VideoRecorder.py in Resources */,
+				1F2276551A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1FC80EC9192E3E1F00BD62F4 /* help.png in Resources */,
 				1FC80ECA192E3E1F00BD62F4 /* start_chat.png in Resources */,
 				1FC80ECB192E3E1F00BD62F4 /* stop_chat.png in Resources */,
 				1FC80ECC192E3E1F00BD62F4 /* VideoWindowController.py in Resources */,
 				1FC80ECD192E3E1F00BD62F4 /* display_16.png in Resources */,
+				1F22764E1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
 				1FC80ECE192E3E1F00BD62F4 /* display_red.png in Resources */,
 				1FC80ECF192E3E1F00BD62F4 /* display_red_16.png in Resources */,
 				1FC80ED0192E3E1F00BD62F4 /* shrinktofit.png in Resources */,
@@ -5694,6 +5730,7 @@
 				1FCA7DAB19546B0B00765366 /* AnsweringMachine.py in Resources */,
 				1FCA7DAC19546B0B00765366 /* FileTransferSession.py in Resources */,
 				1FCA7DAD19546B0B00765366 /* About.xib in Resources */,
+				1F2276561A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1FCA7DAE19546B0B00765366 /* voicemail.png in Resources */,
 				1FCA7DAF19546B0B00765366 /* incoming_file.png in Resources */,
 				1FCA7DB019546B0B00765366 /* upfile.png in Resources */,
@@ -5819,6 +5856,7 @@
 				1FCA7E2719546B0B00765366 /* stop_chat.png in Resources */,
 				1FCA7E2819546B0B00765366 /* VideoWindowController.py in Resources */,
 				1FCA7E2919546B0B00765366 /* display_16.png in Resources */,
+				1F22764F1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
 				1FCA7E2A19546B0B00765366 /* display_red.png in Resources */,
 				1FCA7E2B19546B0B00765366 /* display_red_16.png in Resources */,
 				1FCA7E2C19546B0B00765366 /* shrinktofit.png in Resources */,
@@ -5972,6 +6010,7 @@
 				2B0C236C107BB2FB008266C7 /* upfile.png in Resources */,
 				1F774C6719CB169800240DC1 /* video-active.png in Resources */,
 				2BF42B54107D7DFF00F04A6C /* hangup.png in Resources */,
+				1F2276511A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				2BF42BA4107D8B4D00F04A6C /* belloff.png in Resources */,
 				2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */,
 				2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */,
@@ -6060,6 +6099,7 @@
 				DE5E4A0D1374510C00D4F8BC /* ConferenceFileCell.py in Resources */,
 				1F29D0FD1906D55E0051B1BC /* video-paused.png in Resources */,
 				1F6C0DBE190EBD8F00E79D90 /* VideoTitleBarView.xib in Resources */,
+				1F22764A1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
 				1FA6252013828E2500DFC8E3 /* editor.png in Resources */,
 				1F6EF7FF18E637E0008592D2 /* VideoLocalWindowController.py in Resources */,
 				1F27467B1388755F0052C384 /* fullscreen.png in Resources */,
@@ -6261,6 +6301,18 @@
 				1F889B7119EEC56400772E1F /* nl */,
 			);
 			name = VideoLocalTitleBarView.xib;
+			sourceTree = "<group>";
+		};
+		1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F2276571A823D6E00CA9A73 /* en */,
+				1F2276591A823D7100CA9A73 /* ro */,
+				1F22765A1A823D7400CA9A73 /* es */,
+				1F22765B1A823D7500CA9A73 /* pt */,
+				1F22765C1A823D7700CA9A73 /* nl */,
+			);
+			name = ZRTPAuthentication.xib;
 			sourceTree = "<group>";
 		};
 		1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */ = {

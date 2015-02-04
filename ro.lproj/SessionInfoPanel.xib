@@ -344,7 +344,7 @@
                                     </connections>
                                 </textField>
                                 <customView id="156" customClass="CBGraphView">
-                                    <rect key="frame" x="119" y="122" width="173" height="48"/>
+                                    <rect key="frame" x="119" y="123" width="173" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="23" id="193"/>
@@ -510,14 +510,14 @@
                                     </connections>
                                 </textField>
                                 <customView id="tip-VP-vYg" customClass="CBGraphView">
-                                    <rect key="frame" x="120" y="14" width="86" height="48"/>
+                                    <rect key="frame" x="120" y="13" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="3z3-o5-eEg"/>
                                     </connections>
                                 </customView>
                                 <customView id="Eil-10-Ryj" customClass="CBGraphView">
-                                    <rect key="frame" x="206" y="14" width="86" height="48"/>
+                                    <rect key="frame" x="206" y="13" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="flm-Rr-cuj"/>

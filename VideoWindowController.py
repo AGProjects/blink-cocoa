@@ -103,6 +103,8 @@ from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, 
 from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
 from VideoLocalWindowController import VideoLocalWindowController
 from SIPManager import SIPManager
+from ZRTPAuthentication import ZRTPAuthentication
+
 from util import allocate_autorelease_pool, run_in_gui_thread
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
@@ -291,6 +293,7 @@ class VideoWindowController(NSWindowController):
     dragMyVideoViewWithinWindow = True
     closed = False
     window_too_small = False
+    zrtp_controller = None
 
     holdButton = objc.IBOutlet()
     hangupButton = objc.IBOutlet()
@@ -305,9 +308,6 @@ class VideoWindowController(NSWindowController):
 
     buttonsView = objc.IBOutlet()
     videoView = objc.IBOutlet()
-    zrtpView = objc.IBOutlet()
-    zrtp_sas = objc.IBOutlet()
-    zrtp_buttons = objc.IBOutlet()
     myVideoView = objc.IBOutlet()
     myVideoViewTL = objc.IBOutlet()
     myVideoViewTR = objc.IBOutlet()
@@ -523,9 +523,8 @@ class VideoWindowController(NSWindowController):
             lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Encrypted using ZRTP", "Menu item"), "", "")
             lastItem.setEnabled_(False)
             
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Peer Verified", "Menu item") + ", " + NSLocalizedString("Authentication String: '%s'", "Menu item") % self.streamController.zrtp_sas, "userClickedZRTPauthentication:", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Verify Peer...", "Menu item"), "userClickedVerifyPeer:", "")
             lastItem.setIndentationLevel_(1)
-            lastItem.setState_(NSOnState if self.streamController.zrtp_verified else NSOffState)
             menu.addItem_(NSMenuItem.separatorItem())
 
         menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove Video", "Menu item"), "removeVideo:", "")
@@ -1013,6 +1012,10 @@ class VideoWindowController(NSWindowController):
         if self.myVideoView:
             self.myVideoView.close()
 
+        if self.zrtp_controller:
+            self.zrtp_controller.close()
+            self.zrtp_controller = None
+
         self.hideButtons()
         self.stopRecordingTimer()
         self.goToWindowMode()
@@ -1080,32 +1083,6 @@ class VideoWindowController(NSWindowController):
         self.toggleFullScreen()
 
     @objc.IBAction
-    def userClickedzrtpButtons_(self, sender):
-        if not self.streamController.zrtp_active:
-            return
-        if sender.selectedSegment() == 0:
-            self.streamController.confirm_sas()
-            self.showButtons()
-        elif sender.selectedSegment() == 1:
-            self.streamController.decline_sas()
-        self.hideZRTPButtons()
-        self.update_encryption_icon()
-
-    def showZRTPButtons(self):
-        self.zrtpView.setHidden_(False)
-        self.zrtpView.show()
-        self.zrtp_sas.setHidden_(False)
-        self.zrtp_sas.setStringValue_(NSLocalizedString("ZRTP Authentication String: %s", "Label") % self.streamController.zrtp_sas)
-        self.zrtp_buttons.setHidden_(False)
-        self.hideButtons()
-
-    def hideZRTPButtons(self):
-        self.zrtpView.setHidden_(True)
-        self.zrtpView.hide()
-        self.zrtp_sas.setHidden_(True)
-        self.zrtp_buttons.setHidden_(True)
-
-    @objc.IBAction
     def userClickedOpenScreenshotFolder_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
@@ -1128,16 +1105,13 @@ class VideoWindowController(NSWindowController):
             self.sessionController.info_panel.toggle()
 
     @objc.IBAction
-    def userClickedZRTPauthentication_(self, sender):
+    def userClickedVerifyPeer_(self, sender):
         if not self.streamController.zrtp_active:
             return
 
-        self.streamController.stream.encryption.zrtp.verified = not self.streamController.stream.encryption.zrtp.verified
-        
-        #if self.zrtpView.isHidden():
-        #    self.showZRTPButtons()
-        #else:
-        #    self.hideZRTPButtons()
+        if self.zrtp_controller is None:
+            self.zrtp_controller = ZRTPAuthentication(self.streamController)
+        self.zrtp_controller.open()
 
     @objc.IBAction
     def userClickedHoldButton_(self, sender):
@@ -1292,9 +1266,6 @@ class VideoWindowController(NSWindowController):
 
     def showButtons(self):
         if not self.window():
-            return
-        
-        if not self.zrtpView.isHidden():
             return
 
         if not self.window().isVisible():
