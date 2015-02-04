@@ -1266,8 +1266,8 @@ class SessionController(NSObject):
         elif self.video_consumer == "chat":
             if audio_stream and contactsWindowController.getSelectedAudioSession() == self:
                 contactsWindowController.setVideoProducer(None)
-            chatWindowController.drawer.open()
             if video_stream:
+                chatWindowController.drawer.open()
                 video_stream.hideVideoWindow()
                 if video_stream.status == STREAM_CONNECTED:
                     chatWindowController.setVideoProducer(video_stream.stream.producer)
