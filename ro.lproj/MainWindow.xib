@@ -1332,7 +1332,7 @@ ABC</string>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
                                             <tableColumn identifier="participant" width="275" minWidth="40" maxWidth="1000" id="1539">
-                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participanții Distanți">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participanți Prezenți">
                                                     <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -1345,7 +1345,7 @@ ABC</string>
                                                 <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                             </tableColumn>
                                         </tableColumns>
-                                        <accessibility description="Participanții Prezenți "/>
+                                        <accessibility description="Participanți Prezenți "/>
                                         <connections>
                                             <outlet property="dataSource" destination="389" id="1546"/>
                                             <outlet property="delegate" destination="389" id="1547"/>
