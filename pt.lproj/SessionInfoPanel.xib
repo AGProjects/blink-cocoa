@@ -411,7 +411,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="94">
-                                    <rect key="frame" x="116" y="32" width="171" height="14"/>
+                                    <rect key="frame" x="116" y="32" width="185" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="131">
                                         <font key="font" metaFont="smallSystem"/>
