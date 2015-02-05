@@ -161,10 +161,10 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
         notification_center.add_observer(self, name="AudioSessionQualityRestored")
-        notification_center.add_observer(self, name="AudioStreamICENegotiationDidSucceed")
-        notification_center.add_observer(self, name="AudioStreamICENegotiationDidFail")
-        notification_center.add_observer(self, name="VideoStreamICENegotiationDidSucceed")
-        notification_center.add_observer(self, name="VideoStreamICENegotiationDidFail")
+        notification_center.add_observer(self, name="RTPStreamICENegotiationDidSucceed")
+        notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
+        notification_center.add_observer(self, name="RTPStreamICENegotiationDidSucceed")
+        notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
 
         if settings.logs.trace_notifications_in_gui:
             notification_center.add_observer(self)
@@ -336,10 +336,10 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.discard_observer(self, name="AudioSessionHasQualityIssues")
         notification_center.discard_observer(self, name="AudioSessionQualityRestored")
-        notification_center.discard_observer(self, name="AudioStreamICENegotiationDidSucceed")
-        notification_center.discard_observer(self, name="AudioStreamICENegotiationDidFail")
-        notification_center.discard_observer(self, name="VideoStreamICENegotiationDidSucceed")
-        notification_center.discard_observer(self, name="VideoStreamICENegotiationDidFail")
+        notification_center.discard_observer(self, name="RTPStreamICENegotiationDidSucceed")
+        notification_center.discard_observer(self, name="RTPStreamICENegotiationDidFail")
+        notification_center.discard_observer(self, name="RTPStreamICENegotiationDidSucceed")
+        notification_center.discard_observer(self, name="RTPStreamICENegotiationDidFail")
 
         # Observers added when settings change
         notification_center.discard_observer(self, name="SIPEngineSIPTrace")
@@ -703,7 +703,7 @@ class DebugWindow(NSObject):
         text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
         self.append_line(self.msrpTextView, text)
 
-    def _NH_AudioStreamDidChangeRTPParameters(self, notification):
+    def _NH_RTPStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
 
         text = u'%s Audio call to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
@@ -722,7 +722,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
-    def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
+    def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
         stream = notification.sender
 
@@ -750,7 +750,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
-    def _NH_VideoStreamICENegotiationDidSucceed(self, notification):
+    def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
         stream = notification.sender
 
@@ -778,7 +778,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
-    def _NH_AudioStreamICENegotiationDidFail(self, notification):
+    def _NH_RTPStreamICENegotiationDidFail(self, notification):
         data = notification.data
 
         text = '%s Audio ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
@@ -787,7 +787,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
-    def _NH_VideoStreamICENegotiationDidFail(self, notification):
+    def _NH_RTPStreamICENegotiationDidFail(self, notification):
         data = notification.data
 
         text = '%s Video ICE negotiation failed: %s\n' % (notification.datetime, data.reason)

@@ -339,12 +339,12 @@ class VideoController(MediaStream):
     def _NH_MediaStreamDidInitialize(self, sender, data):
         pass
 
-    def _NH_VideoStreamICENegotiationDidFail(self, sender, data):
+    def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
         self.ice_negotiation_status = data.reason
 
     @run_in_gui_thread
-    def _NH_VideoStreamICENegotiationStateDidChange(self, sender, data):
+    def _NH_RTPStreamICENegotiationStateDidChange(self, sender, data):
         if data.state == 'GATHERING':
             self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
         elif data.state == 'NEGOTIATION_START':
@@ -358,7 +358,7 @@ class VideoController(MediaStream):
         elif data.state == 'FAILED':
             self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"))
 
-    def _NH_VideoStreamICENegotiationDidSucceed(self, sender, data):
+    def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation succeeded')
         self.sessionController.log_info(u'Video RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, ice_candidates[self.stream.local_rtp_candidate.type.lower()], self.stream.remote_rtp_address, self.stream.remote_rtp_port,
             ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
@@ -498,21 +498,21 @@ class VideoController(MediaStream):
                 self.statistics_timer.invalidate()
         self.statistics_timer = None
 
-    def _NH_VideoStreamDidEnableEncryption(self, sender, data):
+    def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
         if sender.encryption.type != 'ZRTP':
             return
         self.videoWindowController.update_encryption_icon()
 
-    def _NH_VideoStreamDidNotEncryption(self, sender, data):
+    def _NH_RTPStreamDidNotEncryption(self, sender, data):
         self.sessionController.log_info("Video encryption not enabled: %s" % data.reason)
         if sender.encryption.type != 'ZRTP':
             return
         self.videoWindowController.update_encryption_icon()
 
-    def _NH_VideoStreamZRTPReceivedSAS(self, sender, data):
+    def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
         self.videoWindowController.update_encryption_icon()
 
-    def _NH_VideoStreamZRTPVerifiedStateChanged(self, sender, data):
+    def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         self.videoWindowController.update_encryption_icon()
 

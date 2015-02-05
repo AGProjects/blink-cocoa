@@ -572,26 +572,26 @@ class SessionInfoController(NSObject):
              pass
 
     @run_in_gui_thread
-    def _NH_AudioStreamICENegotiationDidFail(self, notification):
+    def _NH_RTPStreamICENegotiationDidFail(self, notification):
         if self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
 
     @run_in_gui_thread
-    def _NH_AudioStreamICENegotiationDidSucceed(self, notification):
+    def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         if self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
 
     @run_in_gui_thread
-    def _NH_VideoStreamICENegotiationDidFail(self, notification):
+    def _NH_RTPStreamICENegotiationDidFail(self, notification):
         if self.video_stream is not None:
             self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
 
     @run_in_gui_thread
-    def _NH_VideoStreamICENegotiationDidSucceed(self, notification):
+    def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         if self.video_stream is not None:
             self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
 
-    def _NH_AudioStreamDidChangeHoldState(self, notification):
+    def _NH_RTPStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
 
     def show(self):

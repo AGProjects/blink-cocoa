@@ -1231,21 +1231,21 @@ class AudioController(MediaStream):
         handler(notification.sender, notification.data)
 
     @run_in_gui_thread
-    def _NH_AudioStreamDidTimeout(self, sender, data):
+    def _NH_RTPStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
             self.sessionController.log_info(u'Audio stream timeout')
             self.hangup_reason = NSLocalizedString("Audio Timeout", "Audio status label")
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()
 
-    def _NH_AudioStreamICENegotiationDidFail(self, sender, data):
+    def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Audio ICE negotiation failed: %s' % data.reason)
         self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
         self.ice_negotiation_status = data.reason
         # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
         #self.end()
 
-    def _NH_AudioStreamICENegotiationDidSucceed(self, sender, data):
+    def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Audio ICE negotiation succeeded')
         self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
                                                                                              self.stream.local_rtp_port,
@@ -1269,12 +1269,12 @@ class AudioController(MediaStream):
         elif not sender.isConferencing:
             self.hold()
 
-    def _NH_AudioStreamDidStartRecordingAudio(self, sender, data):
+    def _NH_RTPStreamDidStartRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.conference_record_segment)
 
-    def _NH_AudioStreamDidStopRecordingAudio(self, sender, data):
+    def _NH_RTPStreamDidStopRecordingAudio(self, sender, data):
         self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
@@ -1286,7 +1286,7 @@ class AudioController(MediaStream):
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
     @run_in_gui_thread
-    def _NH_AudioStreamDidChangeHoldState(self, sender, data):
+    def _NH_RTPStreamDidChangeHoldState(self, sender, data):
         self.sessionController.log_info(u"%s requested %s"%(data.originator.title(),(data.on_hold and "hold" or "unhold")))
         if data.originator != "local":
             self.holdByRemote = data.on_hold
@@ -1411,7 +1411,7 @@ class AudioController(MediaStream):
                     self.changeStatus(STREAM_IDLE, NSLocalizedString("Session Ended", "Audio status label"))
 
     @run_in_gui_thread
-    def _NH_AudioStreamICENegotiationStateDidChange(self, sender, data):
+    def _NH_RTPStreamICENegotiationStateDidChange(self, sender, data):
         if data.state == 'GATHERING':
             self.updateAudioStatusWithSessionState(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
         elif data.state == 'NEGOTIATION_START':
@@ -1501,7 +1501,7 @@ class AudioController(MediaStream):
         self.outbound_ringtone = None
 
     @run_in_gui_thread
-    def _NH_AudioStreamDidEnableEncryption(self, sender, data):
+    def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.update_encryption_icon()
         self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
 
@@ -1510,7 +1510,8 @@ class AudioController(MediaStream):
 
         self.updateTootip()
         peer_name = self.stream.encryption.zrtp.peer_name.decode('utf-8') if self.stream.encryption.zrtp.peer_name else None
-        self.sessionController.log_info("ZRTP peer name for %s is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
+        self.sessionController.log_info("ZRTP peer %s name is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
+        self.sessionController.log_info("ZRTP peer %s is %s" % (self.stream.encryption.zrtp.peer_id, 'verified' if self.stream.encryption.zrtp.verified else 'not verified'))
 
         if peer_name:
             self.sessionController.updateDisplayName(peer_name)
@@ -1521,17 +1522,17 @@ class AudioController(MediaStream):
         self.label.setStringValue_(peer_name)
 
     @run_in_gui_thread
-    def _NH_AudioStreamDidNotEnableEncryption(self, sender, data):
+    def _NH_RTPStreamDidNotEnableEncryption(self, sender, data):
         self.update_encryption_icon()
         if sender.encryption.type != 'ZRTP':
             return
         NSSound.soundNamed_("zrtp-security-failed").play()
-        self.sessionController.log_info("Audio ZRTP encryption disabled: %s" % data.reason)
+        self.sessionController.log_info("ZRTP encryption disabled: %s" % data.reason)
         self.updateTootip()
 
     @run_in_gui_thread
-    def _NH_AudioStreamZRTPReceivedSAS(self, sender, data):
-        self.sessionController.log_info("Audio ZRTP authentication string: %s" % data.sas)
+    def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
+        self.sessionController.log_info("ZRTP authentication string: %s" % data.sas)
         if not data.verified:
             self.sessionController.log_info("ZRTP peer is NOT verified")
             NSSound.soundNamed_("zrtp-security-failed").play()
@@ -1542,6 +1543,6 @@ class AudioController(MediaStream):
 
         self.update_encryption_icon()
 
-    def _NH_AudioStreamZRTPVerifiedStateChanged(self, sender, data):
+    def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         self.update_encryption_icon()
 

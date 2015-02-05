@@ -83,7 +83,7 @@ class Ringer(object):
         self.owner = owner
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
-        notification_center.add_observer(self, name="AudioStreamDidChangeHoldState")
+        notification_center.add_observer(self, name="RTPStreamDidChangeHoldState")
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.add_observer(self, name="ConferenceHasAddedAudio")
@@ -111,7 +111,7 @@ class Ringer(object):
     def stop(self):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, name="BlinkFileTransferDidEnd")
-        notification_center.remove_observer(self, name="AudioStreamDidChangeHoldState")
+        notification_center.remove_observer(self, name="RTPStreamDidChangeHoldState")
         notification_center.remove_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.remove_observer(self, name="ChatViewControllerDidDisplayMessage")
         notification_center.remove_observer(self, name="ConferenceHasAddedAudio")
@@ -426,7 +426,7 @@ class Ringer(object):
         self.outgoing_ringing_sessions.add(session)
         self.update_playing_ringtones()
 
-    def _NH_AudioStreamDidChangeHoldState(self, notification):
+    def _NH_RTPStreamDidChangeHoldState(self, notification):
         data = notification.data
         settings = SIPSimpleSettings()
         session = notification.sender.session

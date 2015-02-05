@@ -29,7 +29,7 @@ class ZRTPAuthentication(NSObject):
     def userPressedZRTPPeerName_(self, sender):
         self.stream.encryption.zrtp.peer_name = self.peerName.stringValue().encode('utf-8')
         self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
-        self.window.makeFirstResponder_(None)
+        self.window.makeFirstResponder_(self.validateButton)
 
     def open(self):
         self.sasLabel.setStringValue_(self.stream.encryption.zrtp.sas)
