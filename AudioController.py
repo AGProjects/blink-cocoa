@@ -1139,7 +1139,7 @@ class AudioController(MediaStream):
                 action = 'mute_conference'
         elif sender == self.segmentedButtons:
             if segment == self.encryption_segment:
-                action = 'zrtp'
+                action = 'enc'
             elif segment == self.hold_segment:
                 action = 'hold'
             elif segment == self.transfer_segment:
@@ -1175,18 +1175,18 @@ class AudioController(MediaStream):
                     NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                     sender.window().graphicsContext(), 0, 1, 0)
             NSMenu.popUpContextMenu_withEvent_forView_(self.transferMenu, event, sender)
-        elif action == 'zrtp':
-            if self.zrtp_controller is None:
-                self.zrtp_controller = ZRTPAuthentication(self)
-            self.zrtp_controller.open()
-
-            return
-            point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
-            point.y -= NSHeight(sender.frame())
-            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                      NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                      sender.window().graphicsContext(), 0, 1, 0)
-            NSMenu.popUpContextMenu_withEvent_forView_(self.encryptionMenu, event, sender)
+        elif action == 'enc':
+            if self.zrtp_active:
+                if self.zrtp_controller is None:
+                    self.zrtp_controller = ZRTPAuthentication(self)
+                self.zrtp_controller.open()
+            else:
+                point = sender.window().convertScreenToBase_(NSEvent.mouseLocation())
+                point.y -= NSHeight(sender.frame())
+                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                          NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
+                          sender.window().graphicsContext(), 0, 1, 0)
+                NSMenu.popUpContextMenu_withEvent_forView_(self.encryptionMenu, event, sender)
         elif action == 'take_over_answering_machine':
             if self.holdByLocal:
                 self.view.setSelected_(True)
