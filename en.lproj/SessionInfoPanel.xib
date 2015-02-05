@@ -587,7 +587,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="3Ye-Eh-ZMH">
-                                    <rect key="frame" x="118" y="120" width="161" height="14"/>
+                                    <rect key="frame" x="118" y="120" width="170" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="j7G-qQ-LiG">
                                         <font key="font" metaFont="smallSystem"/>
