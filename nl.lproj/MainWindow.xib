@@ -151,7 +151,7 @@
                                     <action selector="addContact:" target="389" id="1599"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Toevoegen geblokkeerd contact..." id="1804">
+                            <menuItem title="Voeg geblokkeerd contact toe..." id="1804">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="blockContact:" target="389" id="1806"/>
@@ -177,13 +177,13 @@ CA
                                     <action selector="deleteItem:" target="-1" id="1708"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Contact Availability" tag="50" id="1731">
+                            <menuItem title="Toon bechibaarheid contact" tag="50" id="1731">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showPresenceInfo:" target="389" id="1734"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Pending Requests" tag="51" id="1813">
+                            <menuItem title="Toon wachtende verzoeken" tag="51" id="1813">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showPendingRequests:" target="389" id="1815"/>
@@ -219,7 +219,7 @@ CA
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1601"/>
-                            <menuItem title="Backup Contacts and Groups" tag="60" id="1638">
+                            <menuItem title="Backup contacten en groepen" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="backupContacts:" target="389" id="1639"/>
@@ -525,10 +525,10 @@ CA
                             <action selector="accountSelectionChanged:" target="389" id="667"/>
                         </connections>
                     </popUpButton>
-                    <searchField toolTip="You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number." verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
+                    <searchField toolTip="Voer tekst in om te zoeken naar contacten of druk op enter om een gesprek te starten naar een adres of telefoonnummer." verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search Contacts or Enter Address" bezelStyle="round" recentsAutosaveName="" id="464">
+                        <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Zoek contacten of voer een adres in" bezelStyle="round" recentsAutosaveName="" id="464">
                             <font key="font" metaFont="cellTitle"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

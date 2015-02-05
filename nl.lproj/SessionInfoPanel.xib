@@ -411,7 +411,7 @@
                                     </textFieldCell>
                                 </textField>
                                 <textField verticalHuggingPriority="750" id="94">
-                                    <rect key="frame" x="116" y="32" width="185" height="14"/>
+                                    <rect key="frame" x="116" y="32" width="171" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="131">
                                         <font key="font" metaFont="smallSystem"/>
@@ -510,14 +510,14 @@
                                     </connections>
                                 </textField>
                                 <customView id="tip-VP-vYg" customClass="CBGraphView">
-                                    <rect key="frame" x="120" y="13" width="86" height="48"/>
+                                    <rect key="frame" x="120" y="14" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="3z3-o5-eEg"/>
                                     </connections>
                                 </customView>
                                 <customView id="Eil-10-Ryj" customClass="CBGraphView">
-                                    <rect key="frame" x="206" y="13" width="86" height="48"/>
+                                    <rect key="frame" x="206" y="14" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="flm-Rr-cuj"/>
@@ -629,7 +629,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="65"/>
             </connections>
-            <point key="canvasLocation" x="139.5" y="148.5"/>
+            <point key="canvasLocation" x="48.5" y="79.5"/>
         </window>
     </objects>
     <resources>
