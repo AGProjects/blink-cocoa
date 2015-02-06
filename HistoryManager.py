@@ -1184,6 +1184,8 @@ class SessionHistoryReplicator(object):
     def syncServerHistoryWithLocalHistory(self, account, calls):
         if calls is None:
             return
+        received_synced = 0
+        placed_synced = 0
 
         notification_center = NotificationCenter()
         try:
@@ -1232,6 +1234,7 @@ class SessionHistoryReplicator(object):
                         success = 'completed' if duration > 0 else 'missed'
 
                         BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
+                        received_synced += 1
                         self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '')
                         if 'audio' in media:
                             direction = 'incoming'
@@ -1323,6 +1326,7 @@ class SessionHistoryReplicator(object):
                             success = 'cancelled' if status == "487" else 'failed'
 
                         BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
+                        placed_synced += 1
                         self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '')
                         if 'audio' in media:
                             local_uri = local_uri
@@ -1351,6 +1355,12 @@ class SessionHistoryReplicator(object):
             import traceback
             print traceback.print_exc()
 
+        if placed_synced:
+            BlinkLogger().log_info(u"%d placed calls synced from server history" % placed_synced)
+
+        if received_synced:
+            BlinkLogger().log_info(u"%d received calls synced from server history" % received_synced)
+    
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
