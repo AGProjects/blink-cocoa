@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1080" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatWindowController">
@@ -410,7 +410,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView id="n7O-cC-WH5" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="780" height="13.5"/>
+                                    <rect key="frame" x="0.0" y="-7" width="1040" height="13.5"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -569,20 +569,6 @@
                     </connections>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="AYf-t0-Eaq"/>
-                <menuItem title="Notificações Mudos" tag="328" hidden="YES" enabled="NO" indentationLevel="1" id="Qdz-fL-Gnp">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedParticipantMenu:" target="-2" id="nhk-zE-d2A"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" id="453"/>
-                <menuItem title="Destacar Vídeo" tag="327" hidden="YES" enabled="NO" indentationLevel="1" id="Ect-yi-x0j">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedParticipantMenu:" target="-2" id="uuQ-Pa-Pnr"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" id="b1h-xn-Kti"/>
                 <menuItem title="Tamanho da Letra" tag="500" enabled="NO" id="h3r-um-zSq">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
@@ -601,8 +587,22 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="tAU-7A-2I0"/>
                     </connections>
                 </menuItem>
+                <menuItem isSeparatorItem="YES" id="453"/>
+                <menuItem title="Notificações Mudos" tag="328" hidden="YES" enabled="NO" id="Qdz-fL-Gnp">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="nhk-zE-d2A"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="b1h-xn-Kti"/>
+                <menuItem title="Destacar Vídeo" tag="327" hidden="YES" enabled="NO" id="Ect-yi-x0j">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="userClickedParticipantMenu:" target="-2" id="uuQ-Pa-Pnr"/>
+                    </connections>
+                </menuItem>
                 <menuItem isSeparatorItem="YES" id="zk9-rm-7Ub"/>
-                <menuItem title="Exibir Informações da Sessão" tag="400" keyEquivalent="i" indentationLevel="1" id="454">
+                <menuItem title="Exibir Informações da Sessão" tag="400" keyEquivalent="i" id="454">
                     <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                     <connections>
                         <action selector="userClickedParticipantMenu:" target="-2" id="455"/>
