@@ -43,7 +43,6 @@ class VideoController(MediaStream):
     last_stats = None
     initial_full_screen = False
     media_received = False
-    on_hold = False
 
     paused = False
 
@@ -367,25 +366,8 @@ class VideoController(MediaStream):
 
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
-        self.videoWindowController.title = self.sessionController.getTitleShort()
-        self.updateControllerTitle()
-
-    def updateControllerTitle(self):
-        if self.on_hold:
-            self.videoWindowController.window().setTitle_(self.videoWindowController.title + " (" + NSLocalizedString("On Hold", "Label") + ")")
-            self.videoWindowController.showStatusLabel(NSLocalizedString("On Hold", "Label"))
-        else:
-            self.videoWindowController.hideStatusLabel()
-            self.videoWindowController.window().setTitle_(self.videoWindowController.title)
-
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidChangeHoldState(self, sender, data):
-        if not self.videoWindowController.window():
-            return
-
-        self.on_hold = data.on_hold
-
-        self.updateControllerTitle()
+        self.videoWindowController.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.titleShort
+        self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.started = True
@@ -500,8 +482,6 @@ class VideoController(MediaStream):
 
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
-        if sender.encryption.type != 'ZRTP':
-            return
         self.videoWindowController.update_encryption_icon()
 
     def _NH_RTPStreamDidNotEncryption(self, sender, data):

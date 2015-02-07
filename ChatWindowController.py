@@ -300,13 +300,13 @@ class ChatWindowController(NSWindowController):
         return False
 
     def _findInactiveSessionCompatibleWith_(self, session):
-        session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteSIPAddress)
+        session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteAOR)
         for k, s in self.sessions.iteritems():
             if s == session or s.identifier == session.identifier:
                 return k, s
             if not s.isActive():
-                contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(s.remoteSIPAddress)
-                if s.remoteSIPAddress==session.remoteSIPAddress or session_contact==contact!=None:
+                contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(s.remoteAOR)
+                if s.remoteAOR==session.remoteAOR or session_contact==contact!=None:
                     return k, s
         else:
             return None, None
@@ -321,7 +321,7 @@ class ChatWindowController(NSWindowController):
                     self.sessions[newSession.identifier] = newSession
 
                     item.setView_(newSession.streamHandlerOfType("chat").getContentView())
-                    item.setLabel_(newSession.getTitleShort())
+                    item.setLabel_(newSession.titleShort)
                     self.tabView.selectTabViewItem_(item)
                     item.setIdentifier_(newSession.identifier)
                     ok = True
@@ -333,7 +333,7 @@ class ChatWindowController(NSWindowController):
         tabItem = NSTabViewItem.alloc().initWithIdentifier_(session.identifier)
         self.stream_controllers[tabItem] = session.streamHandlerOfType("chat")
         tabItem.setView_(view)
-        tabItem.setLabel_(session.getTitleShort())
+        tabItem.setLabel_(session.titleShort)
         self.tabSwitcher.addTabViewItem_(tabItem)
         self.tabSwitcher.selectLastTabViewItem_(None)
 
@@ -437,9 +437,9 @@ class ChatWindowController(NSWindowController):
                     title = u"%s" % session.subject
                 else:
                     conf_desc = session.conference_info.conference_description
-                    title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+                    title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remoteIdentity)) if conf_desc.display_text else u"%s" % session.titleLong
             else:
-                title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
+                title = u"%s" % session.titleShort if isinstance(session.account, BonjourAccount) else u"%s" % session.titleLong
         return title
 
     def noteSession_isComposing_(self, session, flag):
@@ -764,8 +764,8 @@ class ChatWindowController(NSWindowController):
         if session.hasStreamOfType("audio"):
             media_type.append("audio")
 
-        if format_identity_to_string(session.remotePartyObject) not in participants:
-            participants.append(format_identity_to_string(session.remotePartyObject))
+        if format_identity_to_string(session.remoteIdentity) not in participants:
+            participants.append(format_identity_to_string(session.remoteIdentity))
 
         conference = NSApp.delegate().contactsWindowController.showJoinConferenceWindow(participants=participants, media_type=media_type, autostart=True)
         if conference is not None:
@@ -821,7 +821,7 @@ class ChatWindowController(NSWindowController):
 
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
-            remote_uri = format_identity_to_string(session.remotePartyObject)
+            remote_uri = format_identity_to_string(session.remoteIdentity)
 
             hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
@@ -1041,7 +1041,7 @@ class ChatWindowController(NSWindowController):
             if session.remote_focus:
                 participants = NSApp.delegate().contactsWindowController.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
                 if participants is not None:
-                    remote_uri = format_identity_to_string(session.remotePartyObject)
+                    remote_uri = format_identity_to_string(session.remoteIdentity)
                     # prevent loops
                     if remote_uri in participants:
                         participants.remove(remote_uri)
@@ -1212,7 +1212,7 @@ class ChatWindowController(NSWindowController):
             if selectedSession:
                 chat_stream = selectedSession.streamHandlerOfType("chat")
                 if chat_stream:
-                    display_name = selectedSession.getTitleShort()
+                    display_name = selectedSession.titleShort
                     if selectedSession.session.remote_focus:
                         item.setHidden_(True)
                     else:
@@ -1273,7 +1273,7 @@ class ChatWindowController(NSWindowController):
                             item = menu.itemWithTag_(7)
                             item.setHidden_(False)
 
-                            fingerprint_verified = chat_stream.otr_account.getTrust(selectedSession.remoteSIPAddress, str(fingerprint))
+                            fingerprint_verified = chat_stream.otr_account.getTrust(selectedSession.remoteAOR, str(fingerprint))
                             item.setEnabled_(False)
                             _t = NSLocalizedString("%s's fingerprint is ", "Menu item") % display_name
                             item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
@@ -1309,8 +1309,8 @@ class ChatWindowController(NSWindowController):
                     'subject' : 'Invitation to Conference',
                     'body'    : 'Hello,\n\n' +
                                 'You can use a SIP or XMPP client to connect to the room at the following address:\n\n' +
-                                'sip:%s\n' % session.remoteSIPAddress +
-                                'xmpp:%s\n' % session.remoteSIPAddress
+                                'sip:%s\n' % session.remoteAOR +
+                                'xmpp:%s\n' % session.remoteAOR
                     }
                 item.setRepresentedObject_(object)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(True if session.session is not None and session.session.state is not None else False)
@@ -1337,7 +1337,7 @@ class ChatWindowController(NSWindowController):
         elif menu == self.screenShareMenu:
             selectedSession = self.selectedSessionController()
             if selectedSession:
-                title = selectedSession.getTitleShort()
+                title = selectedSession.titleShort
                 if selectedSession.hasStreamOfType("screen-sharing"):
                     menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red"))
                     screen_sharing_stream = selectedSession.streamHandlerOfType("screen-sharing")
@@ -1498,7 +1498,7 @@ class ChatWindowController(NSWindowController):
             if tag == CONFERENCE_ROOM_MENU_ADD_CONTACT:
                 NSApp.delegate().contactsWindowController.addContact(uris=[(uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT:
-                remote_uri = format_identity_to_string(session.remotePartyObject)
+                remote_uri = format_identity_to_string(session.remoteIdentity)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
@@ -1528,7 +1528,7 @@ class ChatWindowController(NSWindowController):
                 url_string = CFURLCreateStringByAddingPercentEscapes(None, mailtoLink, None, None, kCFStringEncodingUTF8). autorelease();
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url_string))
             elif tag == CONFERENCE_ROOM_MENU_COPY_ROOM_TO_CLIPBOARD:
-                remote_uri = format_identity_to_string(session.remotePartyObject)
+                remote_uri = format_identity_to_string(session.remoteIdentity)
                 pb = NSPasteboard.generalPasteboard()
                 pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)
                 pb.setString_forType_(remote_uri, NSStringPboardType)
@@ -1647,7 +1647,7 @@ class ChatWindowController(NSWindowController):
             file = conference_file.file
             if file.status != 'OK':
                 return
-            session.log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteSIPAddress))
+            session.log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteAOR))
             transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
             transfer_handler.start()
 
@@ -1752,13 +1752,13 @@ class ChatWindowController(NSWindowController):
                 presence_contact = None
 
             if not presence_contact:
-                presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteSIPAddress)
+                presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteAOR)
 
             if presence_contact:
-                contact = BlinkConferenceContact(session.remoteSIPAddress, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
+                contact = BlinkConferenceContact(session.remoteAOR, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
             else:
-                uri = format_identity_to_string(session.remotePartyObject)
-                display_name = session.getTitleShort()
+                uri = format_identity_to_string(session.remoteIdentity)
+                display_name = session.titleShort
                 contact = BlinkConferenceContact(uri, name=display_name)
             self.participants.append(contact)
         elif session is not None and session.session is not None:
@@ -1799,16 +1799,16 @@ class ChatWindowController(NSWindowController):
                     presence_contact = None
 
                 if not presence_contact:
-                    presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteSIPAddress)
+                    presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteAOR)
 
                 icon = None
                 if chat_stream.remoteIcon:
                     icon = chat_stream.remoteIcon
                 if presence_contact:
-                    contact = BlinkConferenceContact(session.remoteSIPAddress, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
+                    contact = BlinkConferenceContact(session.remoteAOR, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                 else:
-                    uri = format_identity_to_string(session.remotePartyObject)
-                    display_name = session.getTitleShort()
+                    uri = format_identity_to_string(session.remoteIdentity)
+                    display_name = session.titleShort
                     contact = BlinkConferenceContact(uri, name=display_name, icon=icon)
 
                 if session.state == STATE_DNS_LOOKUP:
@@ -1925,7 +1925,7 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
             hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
-            remote_uri = format_identity_to_string(session.remotePartyObject)
+            remote_uri = format_identity_to_string(session.remoteIdentity)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT).setEnabled_(False if hasContactMatchingURI(remote_uri) else True)
 
             column_header_title = NSLocalizedString("Participants", "Label")
@@ -2175,7 +2175,7 @@ class ChatWindowController(NSWindowController):
             return False
 
         # do not invite remote party itself
-        remote_uri = format_identity_to_string(session.remotePartyObject)
+        remote_uri = format_identity_to_string(session.remoteIdentity)
         if uri == remote_uri:
             return False
 

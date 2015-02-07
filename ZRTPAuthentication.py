@@ -27,8 +27,11 @@ class ZRTPAuthentication(NSObject):
 
     @objc.IBAction
     def userPressedZRTPPeerName_(self, sender):
-        self.stream.encryption.zrtp.peer_name = self.peerName.stringValue().encode('utf-8')
-        self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
+        if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active:
+            name = self.peerName.stringValue().encode('utf-8')
+            if name != self.stream.encryption.zrtp.peer_name:
+                self.stream.encryption.zrtp.peer_name = name
+                self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
         self.window.makeFirstResponder_(self.validateButton)
 
     def open(self):
@@ -36,7 +39,7 @@ class ZRTPAuthentication(NSObject):
         self.cipherLabel.setStringValue_(NSLocalizedString("Encrypted using %s", "Label") % self.stream.encryption.cipher)
         if self.stream.encryption.zrtp.peer_name:
             self.peerName.setStringValue_(self.stream.encryption.zrtp.peer_name.decode('utf-8'))
-        self.window.setTitle_(NSLocalizedString("ZRTP with %s", "Label") % self.streamController.sessionController.remoteSIPAddress)
+        self.window.setTitle_(NSLocalizedString("ZRTP with %s", "Label") % self.streamController.sessionController.remoteAOR)
         self.window.makeKeyAndOrderFront_(self.validateButton)
 
     def close(self):
@@ -48,6 +51,10 @@ class ZRTPAuthentication(NSObject):
     def validateClicked_(self, sender):
         if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active:
             self.stream.encryption.zrtp.verified = True
+            name = self.peerName.stringValue().encode('utf-8')
+            if name != self.stream.encryption.zrtp.peer_name:
+                self.stream.encryption.zrtp.peer_name = name
+                self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
         self.window.orderOut_(self)
 
     @objc.IBAction

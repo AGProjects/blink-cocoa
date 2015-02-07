@@ -229,7 +229,7 @@ class SMSWindowController(NSWindowController):
         return True
 
     def tabView_didSelectTabViewItem_(self, sender, item):
-        self.window().setTitle_(self.getTitle())
+        self.window().setTitle_(self.titleLong)
         if self.unreadMessageCounts.has_key(item.identifier()):
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())

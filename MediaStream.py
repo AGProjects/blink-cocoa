@@ -70,10 +70,6 @@ class MediaStream(NSObject):
     def sessionControllersManager(self):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
-    @property
-    def remoteParty(self):
-        return self.sessionController.remoteParty if self.sessionController else '?'
-
     def reset(self):
         self.status = STREAM_IDLE
 

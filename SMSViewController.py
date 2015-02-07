@@ -352,7 +352,7 @@ class SMSViewController(NSObject):
 
 
     def notify_changed_fingerprint(self):
-        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % self.windowController.getTitle()
+        log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % self.windowController.titleLong
         self.log_info(log_text)
 
         self.chatViewController.showSystemMessage(self.session_id, log_text, ISOTimestamp.now(), True)
@@ -360,7 +360,7 @@ class SMSViewController(NSObject):
         NSApp.delegate().contactsWindowController.speak_text(log_text)
 
         nc_title = NSLocalizedString("Encryption Warning", "Label")
-        nc_subtitle = self.getTitle()
+        nc_subtitle = self.titleLong
         nc_body = NSLocalizedString("Encryption fingerprint has changed", "Label")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 

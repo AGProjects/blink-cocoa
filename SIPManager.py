@@ -526,7 +526,6 @@ class SIPManager(object):
                     settings.video.device = devices[0]
             else:
                 BlinkLogger().log_info(u"Using video camera %s" % self._app.video_device.real_name)
-
         settings.save()
 
         bonjour_account = BonjourAccount()

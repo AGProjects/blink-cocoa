@@ -68,7 +68,7 @@ class AudioSession(NSView):
         if self.delegate is None:
             return
         pb = NSPasteboard.generalPasteboard()
-        copy_text = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=True, format='full')
+        copy_text = format_identity_to_string(self.delegate.sessionController.remoteIdentity, check_contact=True, format='full')
         pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)
         pb.setString_forType_(copy_text, NSStringPboardType)
 
@@ -131,7 +131,7 @@ class AudioSession(NSView):
 
         NSColor.blackColor().set()
         point = NSMakePoint(8, NSMaxY(frame)-20)
-        uri = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=False, format='compact')
+        uri = format_identity_to_string(self.delegate.sessionController.remoteIdentity, check_contact=False, format='compact')
         NSString.stringWithString_(uri).drawAtPoint_withAttributes_(point,
               NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(12), NSFontAttributeName))
         point = NSMakePoint(8, 6)
@@ -175,7 +175,7 @@ class AudioSession(NSView):
             pos.y -= image.size().height/2
             pboard = NSPasteboard.pasteboardWithName_(NSDragPboard)
             pboard.declareTypes_owner_(NSArray.arrayWithObject_("x-blink-audio-session"), self)
-            uri = format_identity_to_string(self.delegate.sessionController.remotePartyObject, check_contact=False, format='compact')
+            uri = format_identity_to_string(self.delegate.sessionController.remoteIdentity, check_contact=False, format='compact')
             pboard.setString_forType_(uri, "x-blink-audio-session")
             self.window().dragImage_at_offset_event_pasteboard_source_slideBack_(image,
                     pos, NSZeroPoint, event, pboard, self, False)

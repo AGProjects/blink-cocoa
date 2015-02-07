@@ -218,9 +218,9 @@ class AudioController(MediaStream):
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)
-        item.setTitle_(NSLocalizedString("Add %s to Contacts", "Audio contextual menu") % format_identity_to_string(self.sessionController.remotePartyObject))
+        item.setTitle_(NSLocalizedString("Add %s to Contacts", "Audio contextual menu") % format_identity_to_string(self.sessionController.remoteIdentity))
 
-        _label = format_identity_to_string(self.sessionController.remotePartyObject)
+        _label = format_identity_to_string(self.sessionController.remoteIdentity)
         self.view.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Session to %s", "Accesibility outlet description") % _label, NSAccessibilityTitleAttribute)
 
         segmentChildren = NSAccessibilityUnignoredDescendant(self.segmentedButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute);
@@ -308,9 +308,8 @@ class AudioController(MediaStream):
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
 
-        self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        
-        self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
+        self.label.setStringValue_(self.sessionController.titleShort)
+        self.label.setToolTip_(self.sessionController.remoteAOR)
         self.updateTLSIcon()
         NSApp.delegate().contactsWindowController.showAudioSession(self, add_to_conference=add_to_conference)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
@@ -319,8 +318,8 @@ class AudioController(MediaStream):
         self.sessionController.log_debug(u"Start outgoing %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.label.setStringValue_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='compact'))
-        self.label.setToolTip_(format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True))
+        self.label.setStringValue_(self.sessionController.titleShort)
+        self.label.setToolTip_(self.sessionController.remoteAOR)
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
@@ -473,7 +472,7 @@ class AudioController(MediaStream):
             return
 
         if type(peer) == str:
-            self.sessionController.log_info(u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.getTitle(),
+            self.sessionController.log_info(u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.titleLong,
                   peer))
             # start Audio call to peer and add it to conference
             self.view.setConferencing_(True)
@@ -488,8 +487,8 @@ class AudioController(MediaStream):
 
             return False
         else:
-            self.sessionController.log_info(u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.getTitle(),
-                  peer.sessionController.getTitle()))
+            self.sessionController.log_info(u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.titleLong,
+                  peer.sessionController.titleLong))
             # if conference already exists and neither self nor peer are part of it:
             #     return False
             # else conference the sessions
@@ -504,7 +503,7 @@ class AudioController(MediaStream):
             return True
 
     def sessionBoxDidRemoveFromConference(self, sender):
-        self.sessionController.log_info(u"Removed %s from conference through drag&drop" % self.sessionController.getTitle())
+        self.sessionController.log_info(u"Removed %s from conference through drag&drop" % self.sessionController.titleLong)
         self.removeFromConference()
 
     def addToConference(self):
@@ -568,7 +567,7 @@ class AudioController(MediaStream):
                 self.recordingImage = 0
 
         if self.stream and self.stream.codec and self.stream.sample_rate:
-            if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.session.remote_identity.uri.user.isdigit():
+            if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.remoteIdentity.user.isdigit():
                 self.audioStatus.setTextColor_(NSColor.orangeColor())
                 self.audioStatus.setStringValue_(NSLocalizedString("Enter DTMF using keyboard", "Audio status label"))
                 self.audioStatus.sizeToFit()
@@ -921,7 +920,7 @@ class AudioController(MediaStream):
             while menu.numberOfItems() > 1:
                 menu.removeItemAtIndex_(1)
             for session_controller in (s for s in self.sessionControllersManager.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
-                item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.getTitleFull(), "userClickedTransferMenuItem:", "")
+                item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.titleLong, "userClickedTransferMenuItem:", "")
                 item.setIndentationLevel_(1)
                 item.setTarget_(self)
                 item.setRepresentedObject_(session_controller)
@@ -988,7 +987,7 @@ class AudioController(MediaStream):
             d_item.setEnabled_(video_stream and video_stream.status == STREAM_CONNECTED and self.sessionController.video_consumer == "audio")
             d_item.setHidden_(not(video_stream and self.sessionController.video_consumer == "audio"))
 
-            title = self.sessionController.getTitleShort()
+            title = self.sessionController.titleShort
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
             item.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
@@ -1074,8 +1073,8 @@ class AudioController(MediaStream):
         elif tag == 16: # detach video
             self.sessionController.setVideoConsumer("standalone")
         elif tag == 20: # add to contacts
-            if hasattr(self.sessionController.remotePartyObject, "display_name"):
-                display_name = self.sessionController.remotePartyObject.display_name
+            if hasattr(self.sessionController.remoteIdentity, "display_name"):
+                display_name = self.sessionController.remoteIdentity.display_name
             else:
                 display_name = None
             NSApp.delegate().contactsWindowController.addContact(uris=[(self.sessionController.target_uri, 'sip')], name=display_name)
@@ -1091,7 +1090,7 @@ class AudioController(MediaStream):
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
         target_session_controller = sender.representedObject()
-        self.sessionController.log_info(u'Initiating call transfer from %s to %s' % (self.sessionController.getTitleFull(), target_session_controller.getTitleFull()))
+        self.sessionController.log_info(u'Initiating call transfer from %s to %s' % (self.sessionController.titleLong, target_session_controller.titleLong))
         try:
             target_contact_uri = target_session_controller.session._invitation.remote_contact_header.uri
         except AttributeError:
@@ -1103,7 +1102,7 @@ class AudioController(MediaStream):
     @objc.IBAction
     def userClickedBlindTransferMenuItem_(self, sender):
         uri = sender.representedObject()
-        self.sessionController.log_info(u'Initiating blind call transfer from %s to %s' % (self.sessionController.getTitleFull(), uri))
+        self.sessionController.log_info(u'Initiating blind call transfer from %s to %s' % (self.sessionController.titleLong, uri))
         self.transferSession(uri)
 
     @objc.IBAction
@@ -1281,7 +1280,7 @@ class AudioController(MediaStream):
         self.addRecordingToHistory(data.filename)
 
         nc_title = NSLocalizedString("Audio Call Recorded", "System notification title")
-        nc_subtitle = format_identity_to_string(self.sessionController.remotePartyObject, check_contact=True, format='full')
+        nc_subtitle = format_identity_to_string(self.sessionController.remoteIdentity, check_contact=True, format='full')
         nc_body = NSLocalizedString("This audio call has been recorded", "System notification body")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
@@ -1510,15 +1509,15 @@ class AudioController(MediaStream):
 
         self.updateTootip()
         peer_name = self.stream.encryption.zrtp.peer_name.decode('utf-8') if self.stream.encryption.zrtp.peer_name else None
-        self.sessionController.log_info("ZRTP peer %s name is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
-        self.sessionController.log_info("ZRTP peer %s is %s" % (self.stream.encryption.zrtp.peer_id, 'verified' if self.stream.encryption.zrtp.verified else 'not verified'))
+        self.sessionController.log_info("ZRTP audio peer %s name is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
+        self.sessionController.log_info("ZRTP audio peer %s is %s" % (self.stream.encryption.zrtp.peer_id, 'verified' if self.stream.encryption.zrtp.verified else 'not verified'))
 
         if peer_name:
             self.sessionController.updateDisplayName(peer_name)
 
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
-        peer_name = self.sessionController.getTitleShort()
+        peer_name = self.sessionController.titleShort
         self.label.setStringValue_(peer_name)
 
     @run_in_gui_thread
@@ -1532,12 +1531,10 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
-        self.sessionController.log_info("ZRTP authentication string: %s" % data.sas)
+        self.sessionController.log_info("ZRTP authentication string is '%s'" % data.sas)
         if not data.verified:
-            self.sessionController.log_info("ZRTP peer is NOT verified")
             NSSound.soundNamed_("zrtp-security-failed").play()
         else:
-            self.sessionController.log_info("ZRTP peer is verified")
             self.show_zrtp_ok_status_countdown = 4
             NSSound.soundNamed_("zrtp-securemode").play()
 

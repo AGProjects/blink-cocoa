@@ -925,7 +925,6 @@ class SessionController(NSObject):
     sub_state = None
     routes = None
     target_uri = None
-    remoteParty = None
     endingBy = None
     answeringMachineMode = False
     failureReason = None
@@ -952,7 +951,7 @@ class SessionController(NSObject):
     screensharing_urls = {}
     cancelled_during_dns_lookup = False
     retries = 0
-    contactDisplayName = None
+    display_name = None
 
     @property
     def sessionControllersManager(self):
@@ -963,13 +962,11 @@ class SessionController(NSObject):
         assert isinstance(target_uri, SIPURI)
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.updateDisplayName(self.contactDisplayName)
-        self.remoteParty = display_name or format_identity_to_string(target_uri, format='compact')
-        self.remotePartyObject = target_uri
+        self.display_name = display_name
+        self.remoteIdentity = target_uri
         self.account = account
         self.target_uri = target_uri
         self.postdial_string = None
-        self.remoteSIPAddress = format_identity_to_string(target_uri)
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
         self.streamHandlers = []
@@ -991,7 +988,7 @@ class SessionController(NSObject):
         self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
         self.try_next_hop = False
-        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
@@ -1009,14 +1006,11 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.updateDisplayName(None)
-        self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
-        self.remotePartyObject = session.remote_identity
+        self.remoteIdentity = session.remote_identity
         self.account = session.account
         self.session = session
         self.target_uri = SIPURI.new(session.remote_identity.uri if session.account is not BonjourAccount() else session._invitation.remote_contact_header.uri)
         self.postdial_string = None
-        self.remoteSIPAddress = format_identity_to_string(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
@@ -1040,7 +1034,7 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.call_id = session._invitation.call_id
-        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
         self.initInfoPanel()
 
         # used for accounting
@@ -1060,14 +1054,11 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.updateDisplayName(None)
-        self.remoteParty = format_identity_to_string(session.remote_identity, format='compact')
-        self.remotePartyObject = session.remote_identity
+        self.remoteIdentity = session.remote_identity
+        self.target_uri = SIPURI.new(session.remote_identity.uri)
         self.account = session.account
         self.session = session
-        self.target_uri = SIPURI.new(session.remote_identity.uri)
         self.postdial_string = None
-        self.remoteSIPAddress = format_identity_to_string(self.target_uri)
         self.streamHandlers = []
         SessionIdentifierSerial += 1
         self.identifier = SessionIdentifierSerial
@@ -1091,7 +1082,7 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         self.try_next_hop = False
         self.initInfoPanel()
-        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
 
         # used for accounting
         self.history_id = str(uuid.uuid1())
@@ -1114,6 +1105,10 @@ class SessionController(NSObject):
 
         return self
 
+    @property
+    def remoteAOR(self):
+        return format_identity_to_string(self.target_uri)
+
     def startDeallocTimer(self):
         self.notification_center.remove_observer(self, sender=self)
         self.notification_center.remove_observer(self, name='SystemWillSleep')
@@ -1129,7 +1124,7 @@ class SessionController(NSObject):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def updateDisplayName(self, display_name):
-        self.contactDisplayName = display_name
+        self.display_name = display_name
         if display_name is not None:
             self.notification_center.post_notification("BlinkSessionChangedDisplayName", sender=self)
 
@@ -1144,13 +1139,13 @@ class SessionController(NSObject):
         objc.super(SessionController, self).dealloc()
 
     def log_info(self, text):
-        BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
+        BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     def log_debug(self, text):
-        BlinkLogger().log_debug(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
+        BlinkLogger().log_debug(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     def log_error(self, text):
-        BlinkLogger().log_error(u"[Session %d with %s] %s" % (self.identifier, self.remoteSIPAddress, text))
+        BlinkLogger().log_error(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     def isActive(self):
         return self.state in (STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP)
@@ -1431,7 +1426,7 @@ class SessionController(NSObject):
         self.notify_when_participants_changed = False
         self.screensharing_urls = {}
 
-        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteSIPAddress)
+        self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
         for item in self.invited_participants:
             item.destroy()
         self.invited_participants = []
@@ -1683,20 +1678,19 @@ class SessionController(NSObject):
             screenSharingStream = self.streamHandlerOfType("screen-sharing")
             self.endStream(screenSharingStream)
 
-    def getTitle(self):
-        return format_identity_to_string(self.remotePartyObject, format='full')
-
-    def getTitleFull(self):
-        if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
-            return "%s <%s>" % (self.contactDisplayName, format_identity_to_string(self.remotePartyObject, format='aor'))
+    @property
+    def titleLong(self):
+        if self.display_name and self.display_name != 'None' and not self.display_name.startswith('sip:') and not self.display_name.startswith('sips:'):
+            return "%s <%s>" % (self.display_name, format_identity_to_string(self.remoteIdentity, format='aor'))
         else:
-            return self.getTitle()
+            return format_identity_to_string(self.remoteIdentity, format='full', check_contact=True)
 
-    def getTitleShort(self):
-        if self.contactDisplayName and self.contactDisplayName != 'None' and not self.contactDisplayName.startswith('sip:') and not self.contactDisplayName.startswith('sips:'):
-            return self.contactDisplayName
+    @property
+    def titleShort(self):
+        if self.display_name and self.display_name != 'None' and not self.display_name.startswith('sip:') and not self.display_name.startswith('sips:'):
+            return self.display_name
         else:
-            return format_identity_to_string(self.remotePartyObject, format='compact')
+            return format_identity_to_string(self.remoteIdentity, format='compact', check_contact=True)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
@@ -1848,7 +1842,6 @@ class SessionController(NSObject):
         self.transport = '%s:%s' % (self.session.transport, str(self.session.peer_address))
         self.log_info("Next SIP hop is %s" % self.transport)
         self.notification_center.add_observer(self, sender=self.session._invitation)
-        self.remoteParty = format_identity_to_string(self.session.remote_identity)
         self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         self.log_info("Session started with %s" % ", ".join(stream.type for stream in data.streams))
@@ -1866,7 +1859,7 @@ class SessionController(NSObject):
         # generate a unique id for the collaboration editor without digits, they don't work for some cloudy reason
         # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path -adi
         hash = hashlib.sha1()
-        id = '%s' % (self.remoteSIPAddress) if self.remote_focus else self.session._invitation.call_id
+        id = '%s' % (self.remoteAOR) if self.remote_focus else self.session._invitation.call_id
         hash.update(id)
         self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
@@ -1950,9 +1943,8 @@ class SessionController(NSObject):
             if ret == NSAlertDefaultReturn:
                 target_uri = SIPURI.new(redirect_to)
 
-                self.remotePartyObject = target_uri
+                self.remoteIdentity = target_uri
                 self.target_uri = target_uri
-                self.remoteSIPAddress = format_identity_to_string(target_uri)
 
                 if len(oldSession.proposed_streams) == 1:
                     self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)

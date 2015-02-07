@@ -1534,7 +1534,7 @@ class ContactWindowController(NSWindowController):
             self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
 
         data = notification.data.chat_message
-        hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteSIPAddress == data['remote_uri'])
+        hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteAOR == data['remote_uri'])
 
         if not hasChat:
             self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
@@ -5385,7 +5385,7 @@ class ContactWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_SEND_FILES).setEnabled_(False)
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
-            remote_uri = format_identity_to_string(session.remotePartyObject)
+            remote_uri = format_identity_to_string(session.remoteIdentity)
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (self.hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
@@ -5442,7 +5442,7 @@ class ContactWindowController(NSWindowController):
                         table.setDropRow_dropOperation_(self.numberOfRowsInTableView_(table), NSTableViewDropAbove)
 
                         # do not invite remote party itself
-                        remote_uri = format_identity_to_string(session.remotePartyObject)
+                        remote_uri = format_identity_to_string(session.remoteIdentity)
                         if uri == remote_uri:
                             return NSDragOperationNone
                         # do not invite users already invited
@@ -5594,7 +5594,7 @@ class ContactWindowController(NSWindowController):
             if tag == PARTICIPANTS_MENU_ADD_CONTACT:
                 self.addContact(uris=[(uri, 'sip')], name=display_name)
             elif tag == PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT:
-                remote_uri = format_identity_to_string(session.remotePartyObject)
+                remote_uri = format_identity_to_string(session.remoteIdentity)
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
@@ -5770,7 +5770,7 @@ class ContactWindowController(NSWindowController):
                 participants = self.showAddParticipantsWindow(target=self.getConferenceTitle(), default_domain=session.account.id.domain)
                 self.addParticipantsWindow = None
                 if participants is not None:
-                    remote_uri = format_identity_to_string(session.remotePartyObject)
+                    remote_uri = format_identity_to_string(session.remoteIdentity)
                     # prevent loops
                     if remote_uri in participants:
                         participants.remove(remote_uri)
@@ -5802,9 +5802,9 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remotePartyObject)) if conf_desc.display_text else u"%s" % session.getTitleFull()
+                title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remoteIdentity)) if conf_desc.display_text else u"%s" % session.titleLong
             else:
-                title = u"%s" % session.getTitleShort() if isinstance(session.account, BonjourAccount) else u"%s" % session.getTitleFull()
+                title = u"%s" % session.titleShort if isinstance(session.account, BonjourAccount) else u"%s" % session.titleLong
         return title
 
 

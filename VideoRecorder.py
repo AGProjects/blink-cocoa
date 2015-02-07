@@ -41,7 +41,7 @@ class VideoRecorder(object):
     def __init__(self, videoController=None):
         self.videoController = videoController
         settings = SIPSimpleSettings()
-        filename = "%s-%s.mp4" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), self.sessionController.remoteSIPAddress)
+        filename = "%s-%s.mp4" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), self.sessionController.remoteAOR)
         path = os.path.join(settings.audio.directory.normalized, self.sessionController.account.id)
         self.recording_path=os.path.join(path, filename)
 

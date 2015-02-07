@@ -149,10 +149,10 @@ class ChatOtrSmp(NSObject):
         self.statusText.setStringValue_('')
         self.progressBar.startAnimation_(None)
         if type == 'chat':
-            _t = self.controller.sessionController.getTitleShort()
+            _t = self.controller.sessionController.titleShort
             self.window.setTitle_(NSLocalizedString("Identity Verification for %s", "Window title") % _t)
             self.stream = self.controller.stream
-            self.remote_address = self.controller.sessionController.remoteSIPAddress
+            self.remote_address = self.controller.sessionController.remoteAOR
             self.otr_context_id = self.controller.sessionController.call_id
         elif type == 'sms':
             _t = format_identity_to_string(self.controller.target_uri)

@@ -282,7 +282,7 @@ class SessionInfoController(NSObject):
             self.resetSession()
         else:
             self.updateSessionStatus()
-            self.remote_party.setStringValue_(self.sessionController.getTitleFull())
+            self.remote_party.setStringValue_(self.sessionController.titleLong)
             self.account.setStringValue_(str(self.sessionController.account.id))
             if self.sessionController.conference_info is not None and self.sessionController.remote_focus:
                 pass

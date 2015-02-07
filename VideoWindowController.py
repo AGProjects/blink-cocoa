@@ -337,7 +337,7 @@ class VideoWindowController(NSWindowController):
     def __init__(self, streamController):
         self.streamController = streamController
         BlinkLogger().log_debug('Init %s' % self)
-        self.title = self.sessionController.getTitleShort()
+        self.title = self.sessionController.titleShort
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
         self.flipWnd.setDuration_(2.4)

@@ -228,7 +228,7 @@ class ChatController(MediaStream):
         self.previous_is_encrypted = False
         self.history_msgid_list=set()
 
-        self.remote_uri = format_identity_to_string(self.sessionController.remotePartyObject)
+        self.remote_uri = self.sessionController.remoteAOR
         self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
 
         self.require_encryption = self.sessionController.contact.contact.require_encryption if self.sessionController.contact is not None else True
@@ -293,7 +293,7 @@ class ChatController(MediaStream):
 
     def updateDatabaseRecordingButton(self):
         settings = SIPSimpleSettings()
-        remote = format_identity_to_string(self.sessionController.remotePartyObject, format='full')
+        remote = self.sessionController.remoteAOR
 
         if self.remote_party_history and not self.disable_chat_history:
             self.privateLabel.setHidden_(True)
@@ -571,11 +571,11 @@ class ChatController(MediaStream):
         elif tag == 5: # verified
             fingerprint = ctx.getCurrentKey()
             if fingerprint:
-                otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteAOR, str(fingerprint))
                 if otr_fingerprint_verified:
-                    self.otr_account.removeFingerprint(self.sessionController.remoteSIPAddress, str(fingerprint))
+                    self.otr_account.removeFingerprint(self.sessionController.remoteAOR, str(fingerprint))
                 else:
-                    self.otr_account.setTrust(self.sessionController.remoteSIPAddress, str(fingerprint), 'verified')
+                    self.otr_account.setTrust(self.sessionController.remoteAOR, str(fingerprint), 'verified')
 
         elif tag == 9: # SMP window
             self.chatOtrSmpWindow.show()
@@ -620,14 +620,14 @@ class ChatController(MediaStream):
 
             if text:
                 self.chatViewController.inputText.setString_("")
-                recipient = '%s <sip:%s>' % (self.sessionController.contactDisplayName, format_identity_to_string(self.sessionController.remotePartyObject))
+                recipient = '%s <sip:%s>' % (self.sessionController.display_name, self.sessionController.remoteAOR)
                 try:
                     identity = CPIMIdentity.parse(recipient)
                 except ValueError:
                     identity = None
 
                 if self.outgoing_message_handler.send(text, recipient=identity, content_type=content_type):
-                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 self.sessionController.log_info(u"Session not established, starting it")
@@ -864,14 +864,14 @@ class ChatController(MediaStream):
             self.chatWindowController.noteNewMessageForSession_(self.sessionController)
 
     def notify_changed_fingerprint(self):
-        _t = self.sessionController.getTitleShort()
+        _t = self.sessionController.titleShort
         log_text = NSLocalizedString("%s changed encryption fingerprint. Please verify it again.", "Label") % _t
         self.showSystemMessage(log_text, ISOTimestamp.now(), True)
 
         NSApp.delegate().contactsWindowController.speak_text(log_text)
 
         nc_title = NSLocalizedString("Encryption Warning", "Label")
-        nc_subtitle = self.sessionController.getTitleShort()
+        nc_subtitle = self.sessionController.titleShort
         nc_body = NSLocalizedString("Encryption fingerprint has changed", "Label")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
@@ -880,11 +880,11 @@ class ChatController(MediaStream):
             if self.is_encrypted:
                 ctx = self.otr_account.getContext(self.sessionController.call_id)
                 fingerprint = ctx.getCurrentKey()
-                otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteAOR, str(fingerprint))
                 if otr_fingerprint_verified or self.sessionController.account is BonjourAccount():
                     self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
                 else:
-                    if self.otr_account.getTrusts(self.sessionController.remoteSIPAddress):
+                    if self.otr_account.getTrusts(self.sessionController.remoteAOR):
                         self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-red"))
                         try:
                             self.new_fingerprints[str(fingerprint)]
@@ -1378,14 +1378,14 @@ class ChatController(MediaStream):
                 if not self.disable_chat_history:
                     log = NSLocalizedString("Remote chat history disabled", "Label")
                     nc_title = NSLocalizedString("Chat History", "System notification title")
-                    nc_subtitle = self.sessionController.getTitleShort()
+                    nc_subtitle = self.sessionController.titleShort
                     NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
             else:
                 self.remote_party_history = True
                 if not self.disable_chat_history:
                     log = NSLocalizedString("Remote chat history enabled", "Label")
                     nc_title = NSLocalizedString("Chat History", "System notification title")
-                    nc_subtitle = self.sessionController.getTitleShort()
+                    nc_subtitle = self.sessionController.titleShort
                     NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
 
             self.sessionController.log_info(log)
@@ -1439,8 +1439,8 @@ class ChatController(MediaStream):
                         width = '100%'
 
                     text = '''<img src="%s" border=0 width=%s>''' % (file_path, width)
-                    name = self.sessionController.getTitleShort()
-                    icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+                    name = self.sessionController.titleShort
+                    icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
                     
                     self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, text, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
 
@@ -1471,7 +1471,7 @@ class ChatController(MediaStream):
                             if self.is_encrypted:
                                 encryption = 'verified'
                         else:
-                            otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteSIPAddress, str(fingerprint))
+                            otr_fingerprint_verified = self.otr_account.getTrust(self.sessionController.remoteAOR, str(fingerprint))
                             if otr_fingerprint_verified:
                                 encryption = 'verified'
                             else:
@@ -1544,7 +1544,7 @@ class ChatController(MediaStream):
                 except Exception, e:
                     pass
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(self.sessionController.remotePartyObject, format='full'), local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
 
             # disable composing indicator
             if self.remoteTypingTimer:
@@ -1589,7 +1589,7 @@ class ChatController(MediaStream):
         if not settings.file_transfer.render_incoming_image_in_chat_window and not settings.file_transfer.render_incoming_video_in_chat_window:
             return
 
-        if self.sessionController.remoteSIPAddress != sender.remote_identity:
+        if self.sessionController.remoteAOR != sender.remote_identity:
             NSApp.delegate().contactsWindowController.showFileTransfers_(None)
             return
 
@@ -1608,8 +1608,8 @@ class ChatController(MediaStream):
 
         if self.status == STREAM_CONNECTED:
             if sender.direction == 'incoming':
-                name = self.sessionController.getTitleShort()
-                icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(self.sessionController.session.remote_identity))
+                name = self.sessionController.titleShort
+                icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
             else:
                 name = None
                 icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
@@ -1730,7 +1730,7 @@ class ChatController(MediaStream):
             self.changeStatus(STREAM_FAILED, data.error)
         else:
             if self.media_started:
-                msg = NSLocalizedString("%s left the conversation", "Label") % self.sessionController.getTitleShort()
+                msg = NSLocalizedString("%s left the conversation", "Label") % self.sessionController.titleShort
                 self.showSystemMessage(msg, ISOTimestamp.now(), False)
             self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
             self.sessionController.log_info(u"Chat session ended")
@@ -1958,7 +1958,7 @@ class OutgoingMessageHandler(NSObject):
             self.history = ChatHistory()
             self.delegate = chatView
             self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
-            self.remote_uri = format_identity_to_string(self.delegate.delegate.sessionController.remotePartyObject)
+            self.remote_uri = self.delegate.delegate.sessionController.remoteAOR
         return self
 
     def dealloc(self):
@@ -2046,7 +2046,7 @@ class OutgoingMessageHandler(NSObject):
                             if self.delegate.delegate.is_encrypted:
                                 message.encryption = 'verified'
                         else:
-                            otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteSIPAddress, str(fingerprint))
+                            otr_fingerprint_verified = self.delegate.delegate.otr_account.getTrust(self.delegate.sessionController.remoteAOR, str(fingerprint))
                             if otr_fingerprint_verified:
                                 message.encryption = 'verified'
                             else:
