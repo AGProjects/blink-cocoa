@@ -2037,7 +2037,7 @@ class SessionController(NSObject):
 
             if session.account is BonjourAccount():
                 if stream_type_list == ['chat']:
-                    self.log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
+                    self.log_info(u"Automatically accepting addition of chat session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(streams)
                     return
                 elif 'audio' in stream_type_list and session.account.audio.auto_accept:
@@ -2045,9 +2045,15 @@ class SessionController(NSObject):
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
                         accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
-                        self.log_info(u"Automatically accepting Bonjour audio and chat session from %s" % format_identity_to_string(session.remote_identity))
+                        self.log_info(u"Automatically accepting addition of audio and chat session from %s" % format_identity_to_string(session.remote_identity))
                         self.acceptIncomingProposal(accepted_streams)
                         return
+                elif 'video' in stream_type_list and session.account.audio.auto_accept and settings.video.enable_when_auto_answer:
+                    session_manager = SessionManager()
+                    self.log_info(u"Automatically accepting addition of video session from %s" % format_identity_to_string(session.remote_identity))
+                    accepted_streams = [s for s in streams if s.type in ("video")]
+                    self.acceptIncomingProposal(accepted_streams)
+                    return
 
             if self.contact:
                 if settings.chat.auto_accept and stream_type_list == ['chat']:
