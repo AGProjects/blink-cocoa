@@ -29,7 +29,6 @@ from Foundation import (NSBundle,
                         NSObject,
                         NSColor,
                         NSMakeRect,
-                        NSTimer,
                         NSEvent,
                         NSScreen,
                         NSDate,
@@ -174,7 +173,7 @@ class VideoLocalWindowController(NSWindowController):
             BlinkLogger().log_info(log)
 
     def dealloc(self):
-        self.log_debug('Dealloc %s' % self)
+        self.log_debug('Dealloc local %s' % self)
         self.videoWindowController = None
         objc.super(VideoLocalWindowController, self).dealloc()
 
@@ -203,11 +202,6 @@ class VideoLocalWindowController(NSWindowController):
             return True
 
         return True
-
-    def fade_(self, timer):
-        self.titleBarView.close()
-        self.videoView.close()
-        self.window().close()
 
     def mouseDown_(self, event):
         self.initialLocation = event.locationInWindow()
@@ -247,13 +241,15 @@ class VideoLocalWindowController(NSWindowController):
         self.window().close()
 
     def close(self):
-        self.log_debug('Close %s' % self)
+        self.log_debug('Close local %s' % self)
         self.finished = True
         if self.tracking_area is not None:
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
 
-        timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "fade:", None, False)
+        self.titleBarView.close()
+        self.videoView.close()
+        self.window().close()
 
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
         self.notification_center = None

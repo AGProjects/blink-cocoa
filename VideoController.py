@@ -193,10 +193,12 @@ class VideoController(MediaStream):
             settings = SIPSimpleSettings()
             if settings.video.full_screen_after_connect:
                 self.initial_full_screen = True
-                self.videoWindowController.goToFullScreen()
+                if self.videoWindowController:
+                    self.videoWindowController.goToFullScreen()
 
         if self.all_rx_bytes > 0 and not self.media_received:
-            self.videoWindowController.hideStatusLabel()
+            if self.videoWindowController:
+                self.videoWindowController.hideStatusLabel()
             self.media_received = True
 
     def togglePause(self):
@@ -220,23 +222,26 @@ class VideoController(MediaStream):
             self.videoWindowController.show()
 
     def hideVideoWindow(self):
-        if self.videoWindowController and self.videoWindowController.window():
-            self.videoWindowController.videoView.setProducer(None)
-            if self.videoWindowController.full_screen or self.videoWindowController.full_screen_in_progress:
-                self.videoWindowController.must_hide_after_exit_full_screen = True
-                self.videoWindowController.goToWindowMode()
-            else:
-                self.videoWindowController.window().orderOut_(None)
+        if self.videoWindowController:
+            if self.videoWindowController.window():
+                self.videoWindowController.videoView.setProducer(None)
+                if self.videoWindowController.full_screen or self.videoWindowController.full_screen_in_progress:
+                    self.videoWindowController.must_hide_after_exit_full_screen = True
+                    self.videoWindowController.goToWindowMode()
+                else:
+                    self.videoWindowController.window().orderOut_(None)
 
     def hide(self):
         if self.videoWindowController:
             self.videoWindowController.hide()
 
     def goToFullScreen(self):
-        self.videoWindowController.goToFullScreen()
+        if self.videoWindowController:
+            self.videoWindowController.goToFullScreen()
 
     def startOutgoing(self, is_update):
-        self.videoWindowController.initLocalVideoWindow()
+        if self.videoWindowController:
+            self.videoWindowController.initLocalVideoWindow()
 
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
@@ -256,8 +261,6 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
-
-        self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
         self.videoWindowController.release()
         self.videoWindowController = None
         self.stream = None
@@ -266,8 +269,6 @@ class VideoController(MediaStream):
         objc.super(VideoController, self).dealloc()
 
     def deallocTimer_(self, timer):
-        self.notification_center.discard_observer(self, sender=self.sessionController)
-        self.notification_center.discard_observer(self, sender=self.stream)
         self.release()
 
     def end(self):
@@ -294,7 +295,15 @@ class VideoController(MediaStream):
             self.changeStatus(STREAM_IDLE)
 
         self.removeFromSession()
+
+        self.videoRecorder.stop()
+        self.videoRecorder = None
+
         self.videoWindowController.close()
+
+        self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
+        self.notification_center.discard_observer(self, sender=self.sessionController)
+        self.notification_center.discard_observer(self, sender=self.stream)
 
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
@@ -305,7 +314,8 @@ class VideoController(MediaStream):
             self.changeStatus(STREAM_CONNECTING)
         elif state in (STATE_FAILED, STATE_DNS_FAILED):
             if detail.startswith("DNS Lookup"):
-                self.videoWindowController.showStatusLabel(NSLocalizedString("DNS Lookup failed", "Audio status label"))
+                if self.videoWindowController:
+                    self.videoWindowController.showStatusLabel(NSLocalizedString("DNS Lookup failed", "Audio status label"))
                 self.changeStatus(STREAM_FAILED, NSLocalizedString("DNS Lookup failed", "Audio status label"))
             else:
                 self.videoWindowController.showStatusLabel(detail)
@@ -324,16 +334,17 @@ class VideoController(MediaStream):
             if self.videoWindowController and self.videoWindowController.localVideoWindow:
                 self.videoWindowController.localVideoWindow.cancelButton.setHidden_(True)
 
-        if newstate == STREAM_WAITING_DNS_LOOKUP:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Finding Destination...", "Audio status label"))
-        elif newstate == STREAM_RINGING:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Ringing...", "Audio status label"))
-        elif newstate == STREAM_CONNECTING:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
-        elif newstate == STREAM_CONNECTED:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting For Media...", "Audio status label"))
-        elif newstate == STREAM_PROPOSING:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
+        if self.videoWindowController:
+            if newstate == STREAM_WAITING_DNS_LOOKUP:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Finding Destination...", "Audio status label"))
+            elif newstate == STREAM_RINGING:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Ringing...", "Audio status label"))
+            elif newstate == STREAM_CONNECTING:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
+            elif newstate == STREAM_CONNECTED:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting For Media...", "Audio status label"))
+            elif newstate == STREAM_PROPOSING:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 
     def _NH_MediaStreamDidInitialize(self, sender, data):
         pass
@@ -344,18 +355,19 @@ class VideoController(MediaStream):
 
     @run_in_gui_thread
     def _NH_RTPStreamICENegotiationStateDidChange(self, sender, data):
-        if data.state == 'GATHERING':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
-        elif data.state == 'NEGOTIATION_START':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
-        elif data.state == 'NEGOTIATING':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Negotiating ICE...", "Audio status label"))
-        elif data.state == 'GATHERING_COMPLETE':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering Complete", "Audio status label"))
-        elif data.state == 'RUNNING':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Succeeded", "Audio status label"))
-        elif data.state == 'FAILED':
-            self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"))
+        if self.videoWindowController:
+            if data.state == 'GATHERING':
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
+            elif data.state == 'NEGOTIATION_START':
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
+            elif data.state == 'NEGOTIATING':
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Negotiating ICE...", "Audio status label"))
+            elif data.state == 'GATHERING_COMPLETE':
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Gathering Complete", "Audio status label"))
+            elif data.state == 'RUNNING':
+                self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Succeeded", "Audio status label"))
+            elif data.state == 'FAILED':
+                self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"))
 
     def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation succeeded')
@@ -366,8 +378,9 @@ class VideoController(MediaStream):
 
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
-        self.videoWindowController.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.titleShort
-        self.videoWindowController.window().setTitle_(self.videoWindowController.title)
+        if self.videoWindowController:
+            self.videoWindowController.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.titleShort
+            self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
     def _NH_MediaStreamDidStart(self, sender, data):
         self.started = True
@@ -386,7 +399,6 @@ class VideoController(MediaStream):
         self.sessionController.log_info(u"Video call failed: %s" % data.reason)
 
         self.stopTimers()
-        self.videoWindowController.close()
         self.changeStatus(STREAM_FAILED, data.reason)
 
         self.ice_negotiation_status = None
@@ -401,9 +413,8 @@ class VideoController(MediaStream):
 
     def _NH_MediaStreamWillEnd(self, sender, data):
         self.stopTimers()
-        self.videoRecorder.stop()
-        self.videoWindowController.close()
-
+        if self.videoWindowController:
+            self.videoWindowController.goToWindowMode()
         self.ice_negotiation_status = None
         self.rtt_history = None
         self.loss_history = None
@@ -426,11 +437,13 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_RINGING)
 
     def _NH_VideoRemovedByRemoteParty(self, sender, data):
-        self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
+        if self.videoWindowController:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
 
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if self.stream in data.proposed_streams:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Proposal rejected", "Label"))
+            if self.videoWindowController:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Proposal rejected", "Label"))
 
     def _NH_BlinkWillCancelProposal(self, sender, data):
         self.sessionController.log_info(u"Video proposal cancelled")
@@ -438,7 +451,8 @@ class VideoController(MediaStream):
 
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
-            self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for Media...", "Label"))
+            if self.videoWindowController:
+                self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for Media...", "Label"))
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED) and self.sessionController.video_consumer == 'audio':
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
@@ -467,12 +481,14 @@ class VideoController(MediaStream):
                 elif data.code >= 500 and data.code < 600:
                     reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
 
-        self.videoWindowController.showStatusLabel(reason)
+        if self.videoWindowController:
+            self.videoWindowController.showStatusLabel(reason)
         self.stopTimers()
         self.changeStatus(STREAM_FAILED)
 
     def _NH_BlinkSessionWillEnd(self, sender, data):
-        self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
+        if self.videoWindowController:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
 
     def stopTimers(self):
         if self.statistics_timer is not None:
@@ -482,17 +498,21 @@ class VideoController(MediaStream):
 
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
-        self.videoWindowController.update_encryption_icon()
+        if self.videoWindowController:
+            self.videoWindowController.update_encryption_icon()
 
     def _NH_RTPStreamDidNotEncryption(self, sender, data):
         self.sessionController.log_info("Video encryption not enabled: %s" % data.reason)
         if sender.encryption.type != 'ZRTP':
             return
-        self.videoWindowController.update_encryption_icon()
+        if self.videoWindowController:
+            self.videoWindowController.update_encryption_icon()
 
     def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
-        self.videoWindowController.update_encryption_icon()
+        if self.videoWindowController:
+            self.videoWindowController.update_encryption_icon()
 
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
-        self.videoWindowController.update_encryption_icon()
+        if self.videoWindowController:
+            self.videoWindowController.update_encryption_icon()
 

@@ -330,13 +330,14 @@ class VideoWindowController(NSWindowController):
     recording_timer = None
     must_show_my_video = False
     must_hide_after_exit_full_screen = False
+    will_close = False
     
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
     def __init__(self, streamController):
         self.streamController = streamController
-        BlinkLogger().log_debug('Init %s' % self)
+        self.sessionController.log_debug('Init %s' % self)
         self.title = self.sessionController.titleShort
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
@@ -431,9 +432,9 @@ class VideoWindowController(NSWindowController):
         if self.aspect_ratio is not None:
             return
 
-        BlinkLogger().log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
+        self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
         self.aspect_ratio = floor((float(width) / height) * 100)/100
-        BlinkLogger().log_info('Remote aspect ratio is %s' % self.aspect_ratio)
+        self.sessionController.log_info('Remote aspect ratio is %s' % self.aspect_ratio)
 
         found = False
         for ratio in self.valid_aspect_ratios:
@@ -475,7 +476,7 @@ class VideoWindowController(NSWindowController):
         NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
         self.window().center()
         self.window().setDelegate_(self)
-        BlinkLogger().log_debug('Init %s in %s' % (self.window(), self))
+        self.sessionController.log_debug('Init %s in %s' % (self.window(), self))
         self.window().makeFirstResponder_(self.videoView)
         self.window().setAcceptsMouseMovedEvents_(True)
         self.window().setTitle_(title)
@@ -567,8 +568,8 @@ class VideoWindowController(NSWindowController):
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
     def removeVideo_(self, sender):
+        self.will_close = True
         self.removeVideo()
-        #self.streamController.sessionController.removeVideoFromSession()
 
     def hangup_(self, sender):
         if self.sessionController:
@@ -629,15 +630,19 @@ class VideoWindowController(NSWindowController):
     def updateTrackingAreas(self):
         if self.closed:
             return
-        if self.tracking_area is not None:
-            self.window().contentView().removeTrackingArea_(self.tracking_area)
-            self.tracking_area = None
+
+        self.closeTrackingAreas()
 
         rect = NSZeroRect
         rect.size = self.window().contentView().frame().size
         self.tracking_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(rect,
                                                                                          NSTrackingMouseEnteredAndExited|NSTrackingActiveAlways, self, None)
         self.window().contentView().addTrackingArea_(self.tracking_area)
+
+    def closeTrackingAreas(self):
+        if self.tracking_area is not None:
+            self.window().contentView().removeTrackingArea_(self.tracking_area)
+            self.tracking_area = None
 
     @property
     def sessionController(self):
@@ -729,7 +734,7 @@ class VideoWindowController(NSWindowController):
             except KeyError:
                 desc = "%.2f" % self.aspect_ratio
 
-            BlinkLogger().log_info("Aspect ratio set to %s" % desc)
+            self.sessionController.log_info("Aspect ratio set to %s" % desc)
 
         self.updateAspectRatio()
 
@@ -777,7 +782,10 @@ class VideoWindowController(NSWindowController):
         if self.closed:
             return
 
-        BlinkLogger().log_debug("Show %s" % self)
+        if self.will_close:
+            return
+
+        self.sessionController.log_debug("Show %s" % self)
         self.init_window()
 
         if self.sessionController.video_consumer == "standalone":
@@ -909,7 +917,7 @@ class VideoWindowController(NSWindowController):
     
     @run_in_gui_thread
     def goToFullScreen(self):
-        BlinkLogger().log_debug('goToFullScreen %s' % self)
+        self.sessionController.log_debug('goToFullScreen %s' % self)
         if not self.full_screen:
             self.window().toggleFullScreen_(None)
 
@@ -921,7 +929,7 @@ class VideoWindowController(NSWindowController):
 
     @run_in_gui_thread
     def toggleFullScreen(self):
-        BlinkLogger().log_debug('toggleFullScreen %s' % self)
+        self.sessionController.log_debug('toggleFullScreen %s' % self)
 
         if self.full_screen_in_progress:
             return
@@ -941,7 +949,7 @@ class VideoWindowController(NSWindowController):
         self.full_screen_in_progress = True
 
     def windowDidEnterFullScreen_(self, notification):
-        BlinkLogger().log_debug('windowDidEnterFullScreen_ %s' % self)
+        self.sessionController.log_debug('windowDidEnterFullScreen_ %s' % self)
         if self.streamController.ended:
             self.window().orderOut_(self)
             return
@@ -959,7 +967,7 @@ class VideoWindowController(NSWindowController):
             self.window().setLevel_(NSNormalWindowLevel)
 
     def windowDidExitFullScreen_(self, notification):
-        BlinkLogger().log_debug('windowDidExitFullScreen %s' % self)
+        self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
         self.fullScreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
         self.showTitleBar()
 
@@ -968,8 +976,9 @@ class VideoWindowController(NSWindowController):
 
         self.recordButton.setEnabled_(False)
 
-        if self.streamController.videoRecorder.isRecording():
-            self.streamController.videoRecorder.pause()
+        if self.streamController.videoRecorder:
+            if self.streamController.videoRecorder.isRecording():
+                self.streamController.videoRecorder.pause()
 
         if self.show_window_after_full_screen_ends is not None:
             self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
@@ -986,7 +995,8 @@ class VideoWindowController(NSWindowController):
         self.updateAspectRatio()
 
     def windowWillClose_(self, sender):
-        BlinkLogger().log_debug('windowWillClose %s' % self)
+        self.sessionController.log_debug('windowWillClose %s' % self)
+        self.will_close = True
         #NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         if self.sessionController:
             self.sessionController.removeVideoFromSession()
@@ -994,14 +1004,15 @@ class VideoWindowController(NSWindowController):
                 NotificationCenter().post_notification("BlinkVideoWindowClosed", sender=self)
 
     def windowShouldClose_(self, sender):
+        self.sessionController.log_debug('windowShouldClose_ %s' % self)
         return True
 
     @run_in_gui_thread
     def close(self):
-        BlinkLogger().log_debug('Close %s' % self)
         if self.closed:
             return
 
+        self.sessionController.log_debug('Close remote %s' % self)
         self.closed = True
         self.notification_center.discard_observer(self, sender=self.streamController.videoRecorder)
         self.notification_center.discard_observer(self, name='BlinkMuteChangedState')
@@ -1021,23 +1032,21 @@ class VideoWindowController(NSWindowController):
         self.goToWindowMode()
         self.stopIdleTimer()
         self.stopMouseOutTimer()
-
-        if self.window():
-            timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "fade:", None, False)
-
+        self.closeTrackingAreas()
         if self.localVideoWindow:
             self.localVideoWindow.close()
+            self.localVideoWindow = None
 
-    def fade_(self, timer):
-        self.titleBarView.close()
-        self.videoView.close()
-        self.window().close()
+        if self.window():
+            self.titleBarView.close()
+            self.videoView.close()
+            self.window().close()
 
     def dealloc(self):
-        BlinkLogger().log_debug("Dealloc %s" % self)
+        self.sessionController.log_debug("Dealloc %s" % self)
         self.flipWnd = None
+
         self.tracking_area = None
-        self.localVideoWindow = None
         self.streamController = None
         objc.super(VideoWindowController, self).dealloc()
 
@@ -1097,7 +1106,8 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedRecordButton_(self, sender):
-        self.streamController.videoRecorder.toggleRecording()
+        if self.streamController.videoRecorder:
+            self.streamController.videoRecorder.toggleRecording()
 
     @objc.IBAction
     def userClickedInfoButton_(self, sender):
@@ -1179,7 +1189,7 @@ class VideoWindowController(NSWindowController):
         screenshot_task.setArguments_(['-tpng', filename])
         screenshot_task.launch()
         NSSound.soundNamed_("Grab").play()
-        BlinkLogger().log_info("Screenshot saved in %s" % filename)
+        self.sessionController.log_info("Screenshot saved in %s" % filename)
 
     def screenshot_filename(self, for_remote=False):
         screenshots_folder = ApplicationData.get('screenshots')
@@ -1206,7 +1216,7 @@ class VideoWindowController(NSWindowController):
         
         self.screenshot_task.launch()
         NSSound.soundNamed_("Grab").play()
-        BlinkLogger().log_info("Screenshot saved in %s" % filename)
+        self.sessionController.log_info("Screenshot saved in %s" % filename)
 
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
@@ -1262,7 +1272,10 @@ class VideoWindowController(NSWindowController):
         self.aspectButton.setHidden_(True)
         self.screenshotButton.setHidden_(True)
         self.myvideoButton.setHidden_(True)
-        self.recordButton.setHidden_(not self.streamController.videoRecorder.isRecording())
+        if self.streamController.videoRecorder:
+            self.recordButton.setHidden_(not self.streamController.videoRecorder.isRecording())
+        else:
+            self.recordButton.setHidden_(True)
 
     def showButtons(self):
         if not self.window():
@@ -1290,6 +1303,9 @@ class VideoWindowController(NSWindowController):
 
     def updateRecordingTimer_(self, timer):
         self.recordButton.setEnabled_(self.full_screen)
+        if not self.streamController.videoRecorder:
+            return
+
         if self.streamController.videoRecorder.isRecording():
             self.recordButton.setToolTip_(NSLocalizedString("Stop Recording", "Label"))
             self.recordingImage += 1
