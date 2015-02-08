@@ -1471,8 +1471,8 @@ class ChatHistoryReplicator(object):
             for key in self.outgoing_entries.keys():
                 if len(self.outgoing_entries[key]):
                     BlinkLogger().log_debug(u"%d new chat entries not yet replicated to chat history server for account %s" % (len(self.outgoing_entries[key]), key))
-            else:
-                BlinkLogger().log_debug(u"No pending chat entries for chat history server of account %s" % (len(self.outgoing_entries[key]), key))
+                else:
+                    BlinkLogger().log_debug(u"No pending chat entries for chat history server of account %s" % key)
 
         try:
             with open(ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle'), 'r') as f:
