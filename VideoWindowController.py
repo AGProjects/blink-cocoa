@@ -700,7 +700,6 @@ class VideoWindowController(NSWindowController):
             self.disconnectLabel.superview().show()
             self.disconnectLabel.setStringValue_(label)
             self.disconnectLabel.setHidden_(False)
-
         if self.localVideoWindow and self.localVideoWindow.window():
             self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
             self.localVideoWindow.window().delegate().disconnectLabel.superview().show()
@@ -1035,7 +1034,6 @@ class VideoWindowController(NSWindowController):
         self.closeTrackingAreas()
         if self.localVideoWindow:
             self.localVideoWindow.close()
-            self.localVideoWindow = None
 
         if self.window():
             self.titleBarView.close()
@@ -1048,6 +1046,7 @@ class VideoWindowController(NSWindowController):
 
         self.tracking_area = None
         self.streamController = None
+        self.localVideoWindow = None
         objc.super(VideoWindowController, self).dealloc()
 
     def toogleAlwaysOnTop(self):

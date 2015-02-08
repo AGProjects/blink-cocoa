@@ -34,6 +34,7 @@ from Foundation import (NSBundle,
                         NSDate,
                         NSMenu,
                         NSMenuItem,
+                        NSTimer,
                         NSZeroRect,
                         NSTrackingArea,
                         NSLocalizedString
@@ -247,13 +248,16 @@ class VideoLocalWindowController(NSWindowController):
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
 
-        self.titleBarView.close()
-        self.videoView.close()
-        self.window().close()
+        timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2, self, "fade:", None, False)
 
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
         self.notification_center = None
 
+    def fade_(self, timer):
+        self.titleBarView.close()
+        self.videoView.close()
+        self.window().close()
+    
     def rightMouseDown_(self, event):
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(

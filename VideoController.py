@@ -261,11 +261,14 @@ class VideoController(MediaStream):
 
     def dealloc(self):
         self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.notification_center.discard_observer(self, sender=self.sessionController)
+        self.notification_center.discard_observer(self, sender=self.stream)
         self.videoWindowController.release()
         self.videoWindowController = None
+        self.videoRecorder = None
         self.stream = None
-        self.notification_center = None
         self.sessionController = None
+        self.notification_center = None
         objc.super(VideoController, self).dealloc()
 
     def deallocTimer_(self, timer):
@@ -297,13 +300,10 @@ class VideoController(MediaStream):
         self.removeFromSession()
 
         self.videoRecorder.stop()
-        self.videoRecorder = None
 
         self.videoWindowController.close()
 
         self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
-        self.notification_center.discard_observer(self, sender=self.sessionController)
-        self.notification_center.discard_observer(self, sender=self.stream)
 
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
@@ -480,9 +480,8 @@ class VideoController(MediaStream):
                     reason = NSLocalizedString("User Unreachable", "Label")
                 elif data.code >= 500 and data.code < 600:
                     reason = NSLocalizedString("Server Failure (%s)" % data.code, "Label")
-
-        if self.videoWindowController:
-            self.videoWindowController.showStatusLabel(reason)
+            if self.videoWindowController:
+                self.videoWindowController.showStatusLabel(reason)
         self.stopTimers()
         self.changeStatus(STREAM_FAILED)
 
