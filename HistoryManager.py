@@ -12,7 +12,7 @@ from AppKit import (NSApp,
                     NSURL,
                     NSURLConnection,
                     NSURLCredential,
-                    NSURLCredentialPersistenceForSession,
+                    NSURLCredentialPersistenceNone,
                     NSURLRequest,
                     NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 
@@ -1382,10 +1382,10 @@ class SessionHistoryReplicator(object):
                     self.last_calls_connections[key]['authRequestCount'] = 1
 
                 if self.last_calls_connections[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
-                    BlinkLogger().log_error(u"Error: invalid web authentication when retrieving call history for account %s" % key)
+                    BlinkLogger().log_error(u"Error: invalid web authentication when retrieving call history of %s" % key)
 
 
 class ChatHistoryReplicator(object):
@@ -2071,7 +2071,7 @@ class ChatHistoryReplicator(object):
                     self.connections_for_outgoing_replication[key]['authRequestCount'] = 1
 
                 if self.connections_for_outgoing_replication[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
                     BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
@@ -2092,7 +2092,7 @@ class ChatHistoryReplicator(object):
                     self.connections_for_incoming_replication[key]['authRequestCount'] = 1
 
                 if self.connections_for_incoming_replication[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
                     BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
@@ -2113,7 +2113,7 @@ class ChatHistoryReplicator(object):
                     self.connections_for_delete_replication[key]['authRequestCount'] = 1
 
                 if self.connections_for_delete_replication[key]['authRequestCount'] < 2:
-                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
+                    credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
                     BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
