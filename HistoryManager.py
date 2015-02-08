@@ -1460,12 +1460,21 @@ class ChatHistoryReplicator(object):
                 self.outgoing_entries = cPickle.load(f)
         except Exception:
             pass
+        else:
+            if len(self.outgoing_entries.keys()):
+                for key in self.outgoing_entries.keys():
+                    BlinkLogger().log_debug(u"%d new chat entries not yet replicated to chat history server for account %s" % (len(self.outgoing_entries[key]), key))
+            else:
+                BlinkLogger().log_debug(u"No pending chat entries for chat history server of account %s" % (len(self.outgoing_entries[key]), key))
 
         try:
             with open(ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle'), 'r') as f:
                 self.for_delete_entries = cPickle.load(f)
         except Exception:
             pass
+        else:
+            for key in self.for_delete_entries.keys():
+                BlinkLogger().log_debug(u"%d chat deleted entries not yet replicated to chat history server of account %s" % (len(self.for_delete_entries[key]), key))
 
         try:
             with open(ApplicationData.get('chat_replication/chat_replication_timestamp.pickle'), 'r') as f:
