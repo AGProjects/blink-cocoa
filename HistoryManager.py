@@ -1419,6 +1419,8 @@ class ChatHistoryReplicator(object):
         path = ApplicationData.get('chat_replication')
         makedirs(path)
 
+        valid_accounts = list(account.id for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.server.settings_url)
+        
         try:
             with open(ApplicationData.get('chat_replication_journal.pickle')): pass
         except IOError:
@@ -1461,8 +1463,13 @@ class ChatHistoryReplicator(object):
         except Exception:
             pass
         else:
-            if len(self.outgoing_entries.keys()):
-                for key in self.outgoing_entries.keys():
+            replication_accounts = self.outgoing_entries.keys()
+            for key in replication_accounts:
+                if key not in valid_accounts:
+                    del self.outgoing_entries[key]
+
+            for key in self.outgoing_entries.keys():
+                if len(self.outgoing_entries[key]):
                     BlinkLogger().log_debug(u"%d new chat entries not yet replicated to chat history server for account %s" % (len(self.outgoing_entries[key]), key))
             else:
                 BlinkLogger().log_debug(u"No pending chat entries for chat history server of account %s" % (len(self.outgoing_entries[key]), key))
@@ -1473,6 +1480,11 @@ class ChatHistoryReplicator(object):
         except Exception:
             pass
         else:
+            replication_accounts = self.for_delete_entries.keys()
+            for key in replication_accounts:
+                if key not in valid_accounts:
+                    del self.for_delete_entries[key]
+
             for key in self.for_delete_entries.keys():
                 BlinkLogger().log_debug(u"%d chat deleted entries not yet replicated to chat history server of account %s" % (len(self.for_delete_entries[key]), key))
 

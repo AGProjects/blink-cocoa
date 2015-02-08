@@ -122,8 +122,6 @@ class SessionControllersManager(object):
         self.redial_uri = None
 
         SessionHistoryReplicator()
-        ChatHistoryReplicator()
-
 
     @property
     def pause_music(self):
@@ -162,6 +160,7 @@ class SessionControllersManager(object):
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.ringer = Ringer(self)
         self.get_redial_uri_from_history()
+        ChatHistoryReplicator()
 
     @run_in_green_thread
     def get_redial_uri_from_history(self):
