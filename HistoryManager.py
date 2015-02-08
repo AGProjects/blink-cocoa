@@ -1088,6 +1088,7 @@ class SessionHistoryReplicator(object):
         query_string = "action=get_history&realm=%s" % account.id.domain
         url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         nsurl = NSURL.URLWithString_(url)
+        BlinkLogger().log_debug(u"Retrieving calls history for %s from %s" % (account.id, url))
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(300, self, "updateGetCallsTimer:", None, True)
@@ -1190,6 +1191,7 @@ class SessionHistoryReplicator(object):
         notification_center = NotificationCenter()
         try:
             if calls['received']:
+                BlinkLogger().log_debug(u"%d received calls retrieved from call history server of %s" % (len(calls['received']),account.id))
                 for call in calls['received']:
                     direction = 'incoming'
                     local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
@@ -1382,6 +1384,8 @@ class SessionHistoryReplicator(object):
                 if self.last_calls_connections[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+                else:
+                    BlinkLogger().log_error(u"Error: invalid web authentication when retrieving call history for account %s" % key)
 
 
 class ChatHistoryReplicator(object):
@@ -2069,6 +2073,8 @@ class ChatHistoryReplicator(object):
                 if self.connections_for_outgoing_replication[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+                else:
+                    BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
 
         try:
             key = (account for account in self.connections_for_incoming_replication.keys() if self.connections_for_incoming_replication[account]['connection'] == connection).next()
@@ -2088,6 +2094,8 @@ class ChatHistoryReplicator(object):
                 if self.connections_for_incoming_replication[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+                else:
+                    BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
 
         try:
             key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
@@ -2107,3 +2115,5 @@ class ChatHistoryReplicator(object):
                 if self.connections_for_delete_replication[key]['authRequestCount'] < 2:
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceForSession)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
+                else:
+                    BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
