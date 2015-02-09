@@ -11,6 +11,7 @@ import potr
 import potr.crypt
 import potr.context
 import os
+import shutil
 
 from application.system import makedirs
 from sipsimple.streams import ChatStreamError
@@ -55,16 +56,46 @@ class BlinkOtrAccount(potr.context.Account):
     def __init__(self, peer_options={}):
         self.peer_options = DEFAULT_OTR_FLAGS.copy()
         self.peer_options.update(peer_options)
-        path = ApplicationData.get('chat')
-        makedirs(path)
 
         super(BlinkOtrAccount, self).__init__('blink', 'sip', '1024', privkey=None)
         self.defaultQuery = b'?OTRv{versions}?\n{accountname} has requested ' \
                             b'end-to-end encryption but this ' \
                             b'software does not support this feature. ';
 
-        self.keyFilePath = ApplicationData.get('chat/private_key.dsa')
-        self.trustedPeersPath = ApplicationData.get('chat/trusted_peers')
+        path = ApplicationData.get('chat_otr')
+        makedirs(path)
+
+        try:
+            with open(ApplicationData.get('chat/private_key.dsa')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('chat/private_key.dsa')
+            dst = ApplicationData.get('chat_otr/private_key.dsa')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        try:
+            with open(ApplicationData.get('chat/trusted_peers')): pass
+        except IOError:
+            pass
+        else:
+            src = ApplicationData.get('chat/trusted_peers')
+            dst = ApplicationData.get('chat_otr/trusted_peers')
+            try:
+                shutil.move(src, dst)
+            except shutil.Error:
+                pass
+
+        try:
+            os.rmdir(ApplicationData.get('chat'))
+        except (OSError, IOError):
+            pass
+    
+        self.keyFilePath = ApplicationData.get('chat_otr/private_key.dsa')
+        self.trustedPeersPath = ApplicationData.get('chat_otr/trusted_peers')
 
     def dropPrivkey(self):
         if os.path.exists(self.keyFilePath):
