@@ -46,7 +46,7 @@ from twisted.internet.threads import deferToThreadPool
 from twisted.python.threadpool import ThreadPool
 
 from BlinkLogger import BlinkLogger
-from EncryptionWrappers import encryptor, decryptor
+from EncryptionWrappers import encrypt, decrypt
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
 
@@ -1580,8 +1580,7 @@ class ChatHistoryReplicator(object):
             replication_password = acc.chat.replication_password
             if replication_password:
                 try:
-                    encryptor_function = encryptor(replication_password)
-                    entry = encryptor_function(entry, b64_encode=True)
+                    entry = encrypt(entry, replication_password).encode('base64')
                 except Exception, e:
                     BlinkLogger().log_debug(u"Failed to encrypt replication data for %s: %s" % (account, e))
                     return
@@ -1736,9 +1735,8 @@ class ChatHistoryReplicator(object):
                 return
 
             if replication_password:
-                decryptor_function = decryptor(replication_password)
                 try:
-                    data = decryptor_function(data, b64_decode=True)
+                    data = decrypt(data.decode('base64'), replication_password)
                 except Exception, e:
                     BlinkLogger().log_debug(u"Failed to decrypt chat history server journal id %s for %s: %s" % (journal_id, account, e))
                     continue
