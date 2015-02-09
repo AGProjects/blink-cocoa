@@ -39,6 +39,9 @@ class ZRTPAuthentication(NSObject):
         self.cipherLabel.setStringValue_(NSLocalizedString("Encrypted using %s", "Label") % self.stream.encryption.cipher)
         if self.stream.encryption.zrtp.peer_name:
             self.peerName.setStringValue_(self.stream.encryption.zrtp.peer_name.decode('utf-8'))
+        else:
+            self.peerName.setStringValue_(self.streamController.sessionController.titleShort)
+        
         self.window.setTitle_(NSLocalizedString("ZRTP with %s", "Label") % self.streamController.sessionController.remoteAOR)
         self.window.makeKeyAndOrderFront_(self.validateButton)
 
