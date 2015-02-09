@@ -1744,7 +1744,7 @@ class ChatHistoryReplicator(object):
             try:
                 data = cjson.decode(data)
             except (TypeError, cjson.DecodeError), e:
-                BlinkLogger().log_error("Failed to decode chat history server journal id %s for %s: %s" % (journal_id, account, e))
+                BlinkLogger().log_debug("Failed to decode chat history server journal id %s for %s: %s" % (journal_id, account, e))
                 continue
 
             if data['msgid'] not in self.last_journal_timestamp[account]['msgid_list']:
