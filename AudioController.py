@@ -1268,12 +1268,12 @@ class AudioController(MediaStream):
         elif not sender.isConferencing:
             self.hold()
 
-    def _NH_RTPStreamDidStartRecordingAudio(self, sender, data):
+    def _NH_RTPStreamDidStartRecording(self, sender, data):
         self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.conference_record_segment)
 
-    def _NH_RTPStreamDidStopRecordingAudio(self, sender, data):
+    def _NH_RTPStreamDidStopRecording(self, sender, data):
         self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)

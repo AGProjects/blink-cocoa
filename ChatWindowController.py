@@ -182,8 +182,8 @@ class ChatWindowController(NSWindowController):
             NSBundle.loadNibNamed_owner_("ChatWindow", self)
 
             self.notification_center = NotificationCenter()
-            self.notification_center.add_observer(self, name="RTPStreamDidStartRecordingAudio")
-            self.notification_center.add_observer(self, name="RTPStreamDidStopRecordingAudio")
+            self.notification_center.add_observer(self, name="RTPStreamDidStartRecording")
+            self.notification_center.add_observer(self, name="RTPStreamDidStopRecording")
             self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
             self.notification_center.add_observer(self, name="BlinkAudioStreamChangedHoldState")
             self.notification_center.add_observer(self, name="BlinkShouldTerminate")
@@ -603,10 +603,10 @@ class ChatWindowController(NSWindowController):
     def _NH_BlinkVideoExitedFullScreen(self, sender, data):
         self.toolbar.setVisible_(True)
 
-    def _NH_RTPStreamDidStartRecordingAudio(self, sender, data):
+    def _NH_RTPStreamDidStartRecording(self, sender, data):
         self.revalidateToolbar()
 
-    def _NH_RTPStreamDidStopRecordingAudio(self, sender, data):
+    def _NH_RTPStreamDidStopRecording(self, sender, data):
         self.revalidateToolbar()
 
     def _NH_BlinkGotProposal(self, sender, data):
