@@ -1358,10 +1358,10 @@ class SessionHistoryReplicator(object):
             print traceback.print_exc()
 
         if placed_synced:
-            BlinkLogger().log_info(u"%d placed calls synced from server history" % placed_synced)
+            BlinkLogger().log_info(u"%d placed calls synced from server history of %s" % (placed_synced, account))
 
         if received_synced:
-            BlinkLogger().log_info(u"%d received calls synced from server history" % received_synced)
+            BlinkLogger().log_info(u"%d received calls synced from server history of %s" % (received_synced, account))
     
 
     # NSURLConnection delegate method
