@@ -131,11 +131,15 @@ class VideoWidget(NSView):
     _frame = None
     renderer = None
     aspect_ratio = None
+    visible = True
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
 
     def acceptsFirstResponder(self):
+        return True
+
+    def acceptsFirstMouse(self):
         return True
 
     def canBecomeKeyView(self):
@@ -210,6 +214,9 @@ class VideoWidget(NSView):
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
+        if not self.visible:
+            return
+
         if self.delegate.full_screen_in_progress:
             return
 
@@ -225,8 +232,26 @@ class VideoWidget(NSView):
                                                                                 kCGColorSpaceGenericRGB)
 
         context = NSGraphicsContext.currentContext().CIContext()
-        context.drawImage_inRect_fromRect_(image, self.frame(), image.extent())
+        context.drawImage_inRect_fromRect_(image, rect, image.extent())
 
+    def show(self):
+        BlinkLogger().log_debug('Show %s' % self)
+        self.visible = True
+        self.setNeedsDisplay_(True)
+    
+    def toggle(self):
+        if self.visible:
+            self.hide()
+        else:
+            self.show()
+    
+    def hide(self):
+        BlinkLogger().log_debug('Hide %s' % self)
+        self.visible = False
+        self.setNeedsDisplay_(True)
+
+
+class remoteVideoWidget(VideoWidget):
     def draggingEntered_(self, sender):
         pboard = sender.draggingPasteboard()
         if pboard.types().containsObject_(NSFilenamesPboardType):
@@ -237,7 +262,7 @@ class VideoWidget(NSView):
                     return NSDragOperationNone
             return NSDragOperationCopy
         return NSDragOperationNone
-
+    
     def prepareForDragOperation_(self, sender):
         pboard = sender.draggingPasteboard()
         if pboard.types().containsObject_(NSFilenamesPboardType):
@@ -247,21 +272,20 @@ class VideoWidget(NSView):
                     return False
             return True
         return False
-
+    
     def performDragOperation_(self, sender):
         pboard = sender.draggingPasteboard()
         if pboard.types().containsObject_(NSFilenamesPboardType):
             filenames = pboard.propertyListForType_(NSFilenamesPboardType)
             return self.sendFiles(filenames)
         return False
-
+    
     def sendFiles(self, fnames):
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
         if filenames and hasattr(self.delegate, "sessionController"):
             self.delegate.sessionController.sessionControllersManager.send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
             return True
         return False
-
 
 class myVideoWidget(VideoWidget):
     initialLocation = None
@@ -272,11 +296,7 @@ class myVideoWidget(VideoWidget):
     final_origin = None
     temp_origin = None
     is_dragging = False
-    visible = True
-
-    def keyDown_(self, event):
-        if event.keyCode() == 53:
-            self.window().hide()
+    allow_drag = True
 
     def rightMouseDown_(self, event):
         if not self.visible:
@@ -321,24 +341,32 @@ class myVideoWidget(VideoWidget):
         settings.save()
 
     def mouseDown_(self, event):
+        if not self.allow_drag:
+            return
+
         self.initialLocation = event.locationInWindow()
         self.initialOrigin = self.frame().origin
         self.final_origin = None
 
     def mouseUp_(self, event):
+        if not self.allow_drag:
+            return
+
         self.is_dragging = False
         self.goToFinalOrigin()
 
     def goToFinalOrigin(self):
-        if self.final_origin:
-            self.setFrameOrigin_(self.final_origin)
-            self.start_origin = None
-            self.final_origin = None
+        if not self.allow_drag:
+            return
 
-    def acceptsFirstMouse(self):
-        return True
+        self.setFrameOrigin_(self.final_origin)
+        self.start_origin = None
+        self.final_origin = None
 
     def performDrag(self):
+        if not self.allow_drag:
+            return
+        
         if not self.currentLocation:
             return
 
@@ -405,45 +433,6 @@ class myVideoWidget(VideoWidget):
         self.currentLocation = event.locationInWindow()
         self.performDrag()
 
-    def show(self):
-        BlinkLogger().log_debug('Show %s' % self)
-        self.visible = True
-
-    def toggle(self):
-        if self.visible:
-            self.hide()
-            NSUserDefaults.standardUserDefaults().setValue_forKey_(False, "ShowMyVideo")
-        else:
-            NSUserDefaults.standardUserDefaults().setBool_forKey_(True, "ShowMyVideo")
-            self.show()
-    
-    def hide(self):
-        BlinkLogger().log_debug('Hide %s' % self)
-        self.visible = False
-        self.setNeedsDisplay_(True)
-
-    def drawRect_(self, rect):
-        if self.delegate.full_screen_in_progress:
-            return
-
-        if not self.visible:
-            return
-
-        frame = self._frame
-        if frame is None:
-            return
-
-        data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame.data, len(frame.data), False)
-        image = CIImage.imageWithBitmapData_bytesPerRow_size_format_colorSpace_(data,
-                                                                            frame.width * 4,
-                                                                            frame.size,
-                                                                            kCIFormatARGB8,
-                                                                            kCGColorSpaceGenericRGB)
-        
-        context = NSGraphicsContext.currentContext().CIContext()
-        context.drawImage_inRect_fromRect_(image, rect, image.extent())
-
-
 class VideoWindowController(NSWindowController):
     implements(IObserver)
 
@@ -480,7 +469,6 @@ class VideoWindowController(NSWindowController):
     fullScreenButton = objc.IBOutlet()
     aspectButton = objc.IBOutlet()
     screenshotButton = objc.IBOutlet()
-    myvideoButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
 
     buttonsView = objc.IBOutlet()
@@ -527,7 +515,7 @@ class VideoWindowController(NSWindowController):
         if self.sessionController.video_consumer == "standalone":
             sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
             other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
-            if not other_video_sessions and not NSApp.delegate().contactsWindowController.localVideoVisible():
+            if not other_video_sessions:
                 self.localVideoWindow = VideoLocalWindowController(self)
 
     def _NH_BlinkMuteChangedState(self, sender, data):
@@ -582,7 +570,6 @@ class VideoWindowController(NSWindowController):
         self.muteButton.setToolTip_(NSLocalizedString("Mute", "Label"))
         self.aspectButton.setToolTip_(NSLocalizedString("Aspect", "Label"))
         self.screenshotButton.setToolTip_(NSLocalizedString("Screenshot", "Label"))
-        self.myvideoButton.setToolTip_(NSLocalizedString("My Video", "Label"))
         self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
         self.fullScreenButton.setToolTip_(NSLocalizedString("Full Screen", "Label"))
 
@@ -732,9 +719,6 @@ class VideoWindowController(NSWindowController):
         lastItem.setRepresentedObject_(ApplicationData.get('screenshots'))
         lastItem.setEnabled_(True)
 
-        menu.addItem_(NSMenuItem.separatorItem())
-        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
-        lastItem.setState_(NSOnState if self.myVideoView.visible else NSOffState)
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Info", "Menu item"), "userClickedInfoButton:", "")
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
@@ -1164,7 +1148,6 @@ class VideoWindowController(NSWindowController):
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
         self.will_close = True
-        #NSApp.delegate().contactsWindowController.hideLocalVideoWindow()
         if self.sessionController:
             self.sessionController.removeVideoFromSession()
             if not self.sessionController.hasStreamOfType("chat"):
@@ -1344,10 +1327,6 @@ class VideoWindowController(NSWindowController):
         self.streamController.togglePause()
 
     @objc.IBAction
-    def userClickedMyVideoButton_(self, sender):
-        self.myVideoView.toggle()
-
-    @objc.IBAction
     def userClickedScreenshotButton_(self, sender):
         filename = self.screenshot_filename()
         screenshot_task = NSTask.alloc().init()
@@ -1437,7 +1416,6 @@ class VideoWindowController(NSWindowController):
         self.muteButton.setHidden_(True)
         self.aspectButton.setHidden_(True)
         self.screenshotButton.setHidden_(True)
-        self.myvideoButton.setHidden_(True)
         if self.streamController.videoRecorder:
             self.recordButton.setHidden_(not self.streamController.videoRecorder.isRecording())
         else:
@@ -1464,7 +1442,6 @@ class VideoWindowController(NSWindowController):
         self.muteButton.setHidden_(False)
         self.aspectButton.setHidden_(False)
         self.screenshotButton.setHidden_(False)
-        self.myvideoButton.setHidden_(False)
         self.recordButton.setHidden_(False)
 
     def updateRecordingTimer_(self, timer):

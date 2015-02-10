@@ -1073,14 +1073,7 @@ class VideoDeviceOption(PopUpMenuOption):
         frame.size.width = 300
         self.popup.setFrame_(frame)
 
-        self.myVideoButton = NSButton.alloc().initWithFrame_(NSMakeRect(0, 24, 90, 24))
-        self.popup.superview().addSubview_(self.myVideoButton)
-        self.myVideoButton.setBezelStyle_(NSRoundedBezelStyle)
-        self.myVideoButton.setTitle_(NSLocalizedString("My Video", "Button title"))
-        self.myVideoButton.setTarget_(NSApp.delegate().contactsWindowController)
-        self.myVideoButton.setAction_("toggleLocalVideoWindow:")
-        self.myVideoButton.cell().setControlSize_(NSSmallControlSize)
-        self.myVideoButton.cell().setFont_(NSFont.systemFontOfSize_(10))
+        # TODO: show local video
 
     def refresh(self):
         self.popup.removeAllItems()

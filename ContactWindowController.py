@@ -235,7 +235,6 @@ class ContactWindowController(NSWindowController):
     fileTransfersWindow = None
 
     debugWindow = None
-    localVideoWindow = None
 
     loaded = False
     collapsedState = False
@@ -1358,10 +1357,6 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationWillEnd(self, notification):
         self.conference_timer.invalidate()
         self.purge_presence_timer.invalidate()
-
-        if self.localVideoWindow:
-            self.localVideoWindow.close()
-            self.localVideoWindow = None
 
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
@@ -2911,29 +2906,6 @@ class ContactWindowController(NSWindowController):
         settings.sounds.use_speech_recognition = not settings.sounds.use_speech_recognition
         settings.save()
 
-    def localVideoVisible(self):
-        if not self.localVideoWindow:
-            return False
-        else:
-            return self.localVideoWindow.visible
-
-    @objc.IBAction
-    def toggleLocalVideoWindow_(self, sender):
-        if self.localVideoVisible():
-            self.hideLocalVideoWindow()
-        else:
-            self.showLocalVideoWindow()
-
-    def hideLocalVideoWindow(self):
-        if self.localVideoVisible():
-            self.localVideoWindow.hide()
-
-    def showLocalVideoWindow(self):
-        if self.localVideoWindow is None:
-            self.localVideoWindow = MyVideoWindowController()
-
-        self.localVideoWindow.show()
-
     @objc.IBAction
     def displayNameChanged_(self, sender):
         name = unicode(self.nameText.stringValue())
@@ -3597,14 +3569,6 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(bool(not isinstance(account, BonjourAccount) and account.server.settings_url))
         else:
             item.setEnabled_(False)
-
-        item = self.windowMenu.itemWithTag_(50)
-        if self.sessionControllersManager.isMediaTypeSupported('video'):
-            item.setHidden_(False)
-            item.setState_(NSOnState if self.localVideoVisible() else NSOffState)
-            item.setEnabled_(True if settings.video.device is not None else False)
-        else:
-            item.setHidden_(True)
 
     def updateChatMenu(self):
         settings = SIPSimpleSettings()

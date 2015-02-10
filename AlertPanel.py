@@ -325,10 +325,6 @@ class AlertPanel(NSObject, object):
             screenIcon.setHidden_(False)
 
         if 'video' in stream_types:
-            #have_video_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'video' in (stream.type for stream in s.streams))
-            #if not have_video_call:
-            #    NSApp.delegate().contactsWindowController.showLocalVideoWindow()
-
             frame = videoIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount

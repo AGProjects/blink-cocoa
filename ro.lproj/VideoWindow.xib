@@ -21,7 +21,6 @@
                 <outlet property="myVideoViewBR" destination="7AV-gS-EuK" id="m6z-y2-pPh"/>
                 <outlet property="myVideoViewTL" destination="clN-w5-T4L" id="kkW-v7-gsR"/>
                 <outlet property="myVideoViewTR" destination="fxb-9f-6dz" id="AmG-Cd-P9D"/>
-                <outlet property="myvideoButton" destination="3wA-h2-aKT" id="NAO-CM-QAd"/>
                 <outlet property="recordButton" destination="IeQ-BC-f6X" id="Lm1-nw-jL5"/>
                 <outlet property="screenshotButton" destination="BKQ-kq-DFD" id="94c-Ve-GkH"/>
                 <outlet property="videoView" destination="U8k-ux-24e" id="fab-CT-YGl"/>
@@ -41,7 +40,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="VideoWidget">
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="remoteVideoWidget">
                         <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
@@ -61,8 +60,28 @@
                             </textField>
                         </subviews>
                     </customView>
+                    <customView id="g4v-Xf-ipS" customClass="myVideoWidget">
+                        <rect key="frame" x="10" y="281" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    </customView>
+                    <customView id="fxb-9f-6dz">
+                        <rect key="frame" x="505" y="281" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    </customView>
+                    <customView id="7AV-gS-EuK">
+                        <rect key="frame" x="505" y="10" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                    </customView>
+                    <customView id="Mbl-8w-9fs">
+                        <rect key="frame" x="10" y="10" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    </customView>
+                    <customView id="clN-w5-T4L">
+                        <rect key="frame" x="10" y="281" width="150" height="84"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    </customView>
                     <view focusRingType="none" id="Y9H-en-cNJ" customClass="RoundedCornersView">
-                        <rect key="frame" x="182" y="13" width="300" height="35"/>
+                        <rect key="frame" x="196" y="10" width="272" height="35"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <button id="qgv-hv-8jn">
@@ -153,17 +172,6 @@
                                     <action selector="userClickedRecordButton:" target="-2" id="EHq-ZX-Lq4"/>
                                 </connections>
                             </button>
-                            <button id="3wA-h2-aKT">
-                                <rect key="frame" x="272" y="5" width="28" height="24"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="Y0Y-Hf-Z5P">
-                                    <behavior key="behavior" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="userClickedMyVideoButton:" target="-2" id="bdT-zK-7by"/>
-                                </connections>
-                            </button>
                             <button id="BKQ-kq-DFD">
                                 <rect key="frame" x="206" y="5" width="46" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -186,26 +194,6 @@
                             </textField>
                         </subviews>
                     </view>
-                    <customView id="g4v-Xf-ipS" customClass="myVideoWidget">
-                        <rect key="frame" x="10" y="281" width="150" height="84"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    </customView>
-                    <customView id="fxb-9f-6dz">
-                        <rect key="frame" x="505" y="281" width="150" height="84"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    </customView>
-                    <customView id="7AV-gS-EuK">
-                        <rect key="frame" x="505" y="10" width="150" height="84"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                    </customView>
-                    <customView id="Mbl-8w-9fs">
-                        <rect key="frame" x="10" y="10" width="150" height="84"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    </customView>
-                    <customView id="clN-w5-T4L">
-                        <rect key="frame" x="10" y="281" width="150" height="84"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    </customView>
                 </subviews>
             </view>
             <connections>
@@ -218,7 +206,6 @@
         <image name="aspect_ratio" width="79.680000305175781" height="79.680000305175781"/>
         <image name="fullscreen" width="128" height="128"/>
         <image name="hangup" width="240" height="240"/>
-        <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
         <image name="mute-white" width="24" height="24"/>
         <image name="pause-white" width="48" height="48"/>
         <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
