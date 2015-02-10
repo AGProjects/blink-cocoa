@@ -243,7 +243,13 @@ class VideoLocalWindowController(NSWindowController):
 
     def close(self):
         self.log_debug('Close local %s' % self)
+        if self.finished:
+            return
+
         self.finished = True
+    
+        if self.window():
+            self.window().close()
         if self.tracking_area is not None:
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
@@ -302,7 +308,7 @@ class VideoLocalWindowController(NSWindowController):
         handler(notification)
 
     def _NH_VideoDeviceDidChangeCamera(self, notification):
-        self.videoView.setProducer(SIPApplication.video_device.producer)
+        self.videoView.setProducer(notification.data.new_camera)
 
 
 class LocalTitleBarView(NSObject):

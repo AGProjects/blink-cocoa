@@ -91,10 +91,12 @@ import unicodedata
 from math import floor
 from dateutil.tz import tzlocal
 
+
 from application.notification import NotificationCenter
 from resources import ApplicationData
+from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import VideoCamera, FrameBufferVideoRenderer
+from sipsimple.core import VideoCamera, Engine, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
 from util import format_identity_to_string
 
@@ -158,6 +160,7 @@ class VideoWidget(NSView):
 
     def close(self):
         BlinkLogger().log_debug("Close %s" % self)
+        self.setProducer(None)
         if  self.renderer is not None:
             self.renderer.close()
             self.renderer = None
@@ -207,15 +210,8 @@ class VideoWidget(NSView):
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
-        if hasattr(self.delegate, "media_received"):
-            if not self.delegate.media_received:
-                NSColor.blackColor().set()
-                NSRectFill(rect)
-                return
-        
-        if hasattr(self.delegate, "full_screen_in_progress"):
-            if self.delegate.full_screen_in_progress:
-                return
+        if self.delegate.full_screen_in_progress:
+            return
 
         frame = self._frame
         if frame is None:
@@ -265,6 +261,187 @@ class VideoWidget(NSView):
             self.delegate.sessionController.sessionControllersManager.send_files_to_contact(self.delegate.sessionController.account, self.delegate.sessionController.target_uri, filenames)
             return True
         return False
+
+
+class myVideoWidget(VideoWidget):
+    initialLocation = None
+    initialOrigin = None
+    auto_rotate_menu_enabled = True
+    
+    start_origin = None
+    final_origin = None
+    temp_origin = None
+    is_dragging = False
+    visible = True
+
+    def keyDown_(self, event):
+        if event.keyCode() == 53:
+            self.window().hide()
+
+    def rightMouseDown_(self, event):
+        if not self.visible:
+            return
+
+        point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
+        event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+            NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(),
+            self.window().graphicsContext(), 0, 1, 0)
+
+        videoDevicesMenu = NSMenu.alloc().init()
+        lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Select Video Camera", "Menu item"), "", "")
+        lastItem.setEnabled_(False)
+        videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+
+        i = 0
+        for item in Engine().video_devices:
+            if item not in (None, 'system_default'):
+                i += 1
+            lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
+            lastItem.setRepresentedObject_(item)
+            if SIPApplication.video_device.real_name == item:
+                lastItem.setState_(NSOnState)
+
+        if i > 1 and self.auto_rotate_menu_enabled:
+            videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
+            settings = SIPSimpleSettings()
+            lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Auto Rotate Cameras", "Menu item"), "toggleAutoRotate:", "")
+            lastItem.setState_(NSOnState if settings.video.auto_rotate_cameras else NSOffState)
+
+        NSMenu.popUpContextMenu_withEvent_forView_(videoDevicesMenu, event, self)
+
+    def toggleAutoRotate_(self, sender):
+        settings = SIPSimpleSettings()
+        settings.video.auto_rotate_cameras = not settings.video.auto_rotate_cameras
+        settings.save()
+
+    def changeVideoDevice_(self, sender):
+        settings = SIPSimpleSettings()
+        BlinkLogger().log_info('Switching to %s video camera' % sender.representedObject())
+        settings.video.device = sender.representedObject()
+        settings.save()
+
+    def mouseDown_(self, event):
+        self.initialLocation = event.locationInWindow()
+        self.initialOrigin = self.frame().origin
+        self.final_origin = None
+
+    def mouseUp_(self, event):
+        self.is_dragging = False
+        self.goToFinalOrigin()
+
+    def goToFinalOrigin(self):
+        if self.final_origin:
+            self.setFrameOrigin_(self.final_origin)
+            self.start_origin = None
+            self.final_origin = None
+
+    def acceptsFirstMouse(self):
+        return True
+
+    def performDrag(self):
+        if not self.currentLocation:
+            return
+
+        newOrigin = self.frame().origin
+        offset_x =  self.initialLocation.x - self.initialOrigin.x
+        offset_y =  self.initialLocation.y - self.initialOrigin.y
+        newOrigin.x = self.currentLocation.x - offset_x
+        newOrigin.y = self.currentLocation.y - offset_y
+
+        if newOrigin.x < 10:
+            newOrigin.x = 10
+
+        if newOrigin.y < 10:
+            newOrigin.y = 10
+
+        if self.window().delegate().full_screen:
+            parentFrame = NSScreen.mainScreen().visibleFrame()
+        else:
+            parentFrame = self.window().frame()
+
+        if newOrigin.x > parentFrame.size.width - 10 - self.frame().size.width:
+            newOrigin.x = parentFrame.size.width - 10 - self.frame().size.width
+
+        if newOrigin.y > parentFrame.size.height - 30 - self.frame().size.height:
+            newOrigin.y = parentFrame.size.height - 30 - self.frame().size.height
+
+        if ((newOrigin.y + self.frame().size.height) > (parentFrame.origin.y + parentFrame.size.height)):
+            newOrigin.y = parentFrame.origin.y + (parentFrame.size.height - self.frame().size.height)
+
+        if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
+            letter2 = "R"
+        else:
+            letter2 = "L"
+
+        if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
+            letter1 = "B"
+        else:
+            letter1 = "T"
+
+        finalFrame = "myVideoView" + letter1 + letter2
+        self.start_origin = newOrigin
+        self.final_origin = getattr(self.window().delegate(), finalFrame).frame().origin
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
+        self.setFrameOrigin_(newOrigin)
+
+    def snapToCorner(self):
+        newOrigin = self.frame().origin
+        if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
+            letter2 = "R"
+        else:
+            letter2 = "L"
+
+        if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
+            letter1 = "B"
+        else:
+            letter1 = "T"
+
+        finalFrame = "myVideoView" + letter1 + letter2
+        self.setFrameOrigin_(getattr(self.window().delegate(), finalFrame).frame().origin)
+        NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
+
+    def mouseDragged_(self, event):
+        self.is_dragging = True
+        self.currentLocation = event.locationInWindow()
+        self.performDrag()
+
+    def show(self):
+        BlinkLogger().log_debug('Show %s' % self)
+        self.visible = True
+
+    def toggle(self):
+        if self.visible:
+            self.hide()
+            NSUserDefaults.standardUserDefaults().setValue_forKey_(False, "ShowMyVideo")
+        else:
+            NSUserDefaults.standardUserDefaults().setBool_forKey_(True, "ShowMyVideo")
+            self.show()
+    
+    def hide(self):
+        BlinkLogger().log_debug('Hide %s' % self)
+        self.visible = False
+        self.setNeedsDisplay_(True)
+
+    def drawRect_(self, rect):
+        if self.delegate.full_screen_in_progress:
+            return
+
+        if not self.visible:
+            return
+
+        frame = self._frame
+        if frame is None:
+            return
+
+        data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame.data, len(frame.data), False)
+        image = CIImage.imageWithBitmapData_bytesPerRow_size_format_colorSpace_(data,
+                                                                            frame.width * 4,
+                                                                            frame.size,
+                                                                            kCIFormatARGB8,
+                                                                            kCGColorSpaceGenericRGB)
+        
+        context = NSGraphicsContext.currentContext().CIContext()
+        context.drawImage_inRect_fromRect_(image, rect, image.extent())
 
 
 class VideoWindowController(NSWindowController):
@@ -328,7 +505,6 @@ class VideoWindowController(NSWindowController):
     is_key_window = False
     visible_buttons = True
     recording_timer = None
-    must_show_my_video = False
     must_hide_after_exit_full_screen = False
     will_close = False
     
@@ -361,8 +537,7 @@ class VideoWindowController(NSWindowController):
         self.updateHoldButton()
 
     def _NH_VideoDeviceDidChangeCamera(self, sender, data):
-        if self.myVideoView:
-            self.myVideoView.reloadCamera()
+        self.myVideoView.setProducer(data.new_camera)
 
     @property
     def media_received(self):
@@ -460,9 +635,6 @@ class VideoWindowController(NSWindowController):
         self.window().center()
         if self.initial_aspect_ratio is None:
             self.initial_aspect_ratio = self.aspect_ratio
-
-        if self.myVideoView.visible():
-            self.myVideoView.show()
 
     def init_window(self):
         if self.window() is not None:
@@ -562,7 +734,7 @@ class VideoWindowController(NSWindowController):
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("My Video", "Menu item"), "userClickedMyVideoButton:", "")
-        lastItem.setState_(NSOnState if self.myVideoView.visible() else NSOffState)
+        lastItem.setState_(NSOnState if self.myVideoView.visible else NSOffState)
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Info", "Menu item"), "userClickedInfoButton:", "")
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
@@ -789,6 +961,7 @@ class VideoWindowController(NSWindowController):
 
         if self.sessionController.video_consumer == "standalone":
             self.videoView.setProducer(self.streamController.stream.producer)
+            self.myVideoView.setProducer(SIPApplication.video_device.producer)
 
         self.updateAspectRatio()
         self.showButtons()
@@ -816,18 +989,13 @@ class VideoWindowController(NSWindowController):
             self.flipped = True
 
         userdef = NSUserDefaults.standardUserDefaults()
-        self.must_show_my_video = userdef.boolForKey_("ShowMyVideo")
 
         self.update_encryption_icon()
 
     def windowDidBecomeKey_(self, notification):
         if self.closed:
             return
-
-        if self.myVideoView.active or self.must_show_my_video:
-            self.myVideoView.show()
-            self.repositionMyVideo()
-            self.must_show_my_video = False
+        self.repositionMyVideo()
 
     def repositionMyVideo(self):
         userdef = NSUserDefaults.standardUserDefaults()
@@ -958,7 +1126,7 @@ class VideoWindowController(NSWindowController):
         self.stopMouseOutTimer()
         self.fullScreenButton.setImage_(NSImage.imageNamed_("restore"))
 
-        #NSApp.delegate().contactsWindowController.showLocalVideoWindow()
+        self.repositionMyVideo()
 
         self.showButtons()
 
@@ -1178,7 +1346,6 @@ class VideoWindowController(NSWindowController):
     @objc.IBAction
     def userClickedMyVideoButton_(self, sender):
         self.myVideoView.toggle()
-        self.repositionMyVideo()
 
     @objc.IBAction
     def userClickedScreenshotButton_(self, sender):

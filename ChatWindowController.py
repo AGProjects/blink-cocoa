@@ -160,6 +160,7 @@ class ChatWindowController(NSWindowController):
     conferenceFilesView = objc.IBOutlet()
     participantsView = objc.IBOutlet()
     refresh_drawer_counter = 1
+    full_screen_in_progress = False
 
     contact_timer = None
 

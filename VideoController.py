@@ -196,10 +196,6 @@ class VideoController(MediaStream):
                 if self.videoWindowController:
                     self.videoWindowController.goToFullScreen()
 
-        if self.all_rx_bytes > 0 and not self.media_received:
-            if self.videoWindowController:
-                self.videoWindowController.hideStatusLabel()
-            self.media_received = True
 
     def togglePause(self):
         if self.stream is None:
@@ -375,6 +371,11 @@ class VideoController(MediaStream):
             ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
 
         self.ice_negotiation_status = 'Success'
+
+    def _NH_VideoStreamReceivedKeyFrame(self, sender, data):
+        self.media_received = True
+        if self.videoWindowController:
+            self.videoWindowController.hideStatusLabel()
 
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):

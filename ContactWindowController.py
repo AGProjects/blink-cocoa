@@ -348,7 +348,8 @@ class ContactWindowController(NSWindowController):
     last_status_per_device =  {}
     created_accounts = set()
     purge_presence_timer = None
-
+    full_screen_in_progress = False
+    
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
 
