@@ -132,10 +132,10 @@ class AnsweringMachine(object):
         notification_center = NotificationCenter()
         notification_center.remove_observer(self, sender=self.stream)
 
-    def _NH_RTPStreamDidStartRecording(self, notification):
+    def _NH_AudioStreamDidStartRecording(self, notification):
         BlinkLogger().log_info(u"Recording message from %s" % self.session.remote_identity)
 
-    def _NH_RTPStreamDidStopRecording(self, notification):
+    def _NH_AudioStreamDidStopRecording(self, notification):
         BlinkLogger().log_info(u"Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
         self.addAnsweringMachineRecordingToHistory(notification.data.filename, self.duration)
         data = NotificationData(filename=notification.data.filename)
