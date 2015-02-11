@@ -145,7 +145,7 @@ class FancyTabItem(NSView):
         image = NSImage.alloc().initWithSize_(rep.size())
         image.addRepresentation_(rep)
         image.lockFocus()
-        tabImage.compositeToPoint_operation_fraction_(NSZeroPoint, NSCompositeSourceOver, 1.0)
+        tabImage.drawAtPoint_fromRect_operation_fraction_(NSZeroPoint,  NSZeroRect, NSCompositeSourceOver, 1.0)
         image.unlockFocus()
 
         return image
