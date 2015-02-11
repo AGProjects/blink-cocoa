@@ -5673,6 +5673,9 @@ class ContactWindowController(NSWindowController):
         top_frame = self.sessionsView.frame()
         middle_frame = self.participantsView.frame()
         bottom_frame = self.videoView.superview().frame()
+        h1 = top_frame.size.height
+        h2 = middle_frame.size.height
+        h3 = bottom_frame.size.height
 
         must_resize = False
         session = self.getSelectedAudioSession()
@@ -5680,42 +5683,44 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.hasStreamOfType("video") and session.video_consumer == "audio":
                 if self.videoView.aspect_ratio is not None:
-                    new_height = bottom_frame.size.width / self.videoView.aspect_ratio
-                    if new_height != bottom_frame.size.height:
-                        bottom_frame.size.height = new_height
+                    new_height = int(bottom_frame.size.width / self.videoView.aspect_ratio)
+                    if new_height != h3:
+                        h3 = new_height
                         must_resize = True
                 else:
-                    new_height = bottom_frame.size.width / 1.77
-                    if new_height != bottom_frame.size.height:
-                        bottom_frame.size.height = new_height
+                    new_height = int(h3 / 1.77)
+                    if new_height != h3:
+                        h3 = new_height
                         must_resize = True
             else:
-                new_height = 0
-                if new_height != bottom_frame.size.height:
-                    bottom_frame.size.height = new_height
+                if h3 > 0:
+                    h3 = 0
                     must_resize = True
         else:
-            new_height = 0
-            if new_height != bottom_frame.size.height:
-                bottom_frame.size.height = new_height
+            if h3 > 0:
+                h3 = 0
                 must_resize = True
 
         # we have conference participants
-        if len(self.participants) and middle_frame.size.height < 30:
-            new_height = 170
+        if len(self.participants):
+            if h2 == 0:
+                h2 = 170
+                must_resize = True
         else:
-            new_height = 0
+            if h2 != 0:
+                h2 = 0
+                must_resize = True
 
-        if new_height != middle_frame.size.height:
-            middle_frame.size.height = new_height
-            must_resize = True
-
-        if bottom_frame.size.height > parent_frame.size.height - 62 - middle_frame.size.height:
-            bottom_frame.size.height = 0
+        if h3 > parent_frame.size.height - 62 - h2:
+            h3 = 0
             if session and session.hasStreamOfType("video") and session.video_consumer == "audio":
                 session.setVideoConsumer("standalone")
 
-        top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
+        h1 = parent_frame.size.height - h2 - h3
+
+        top_frame.size.height = h1
+        middle_frame.size.height = h2
+        bottom_frame.size.height = h3
 
         self.drawerSplitterPosition = { 'topFrame':    top_frame,
                                         'middleFrame': middle_frame,
