@@ -1007,6 +1007,35 @@
 		1FAA9E931A8D4A8400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; };
 		1FAA9E941A8D4A8400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; };
 		1FAA9E951A8D4A8400BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; };
+		1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; };
+		1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; };
+		1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; };
+		1FAA9E991A8E0E1D00BB3ED9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE81A8CDE660071D4B2 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9E9A1A8E0E1D00BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9E9B1A8E0E1D00BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9E9C1A8E0E1D00BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9E9D1A8E0E1D00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9E9E1A8E0E1D00BB3ED9 /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEC1A8CDE670071D4B2 /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9E9F1A8E0E1D00BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA01A8E0E1D00BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA11A8E0E1D00BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA21A8E0E1D00BB3ED9 /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA31A8E0E1D00BB3ED9 /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA41A8E0E1D00BB3ED9 /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA51A8E0E1D00BB3ED9 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA61A8E0E2400BB3ED9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE81A8CDE660071D4B2 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA71A8E0E2400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA81A8E0E2400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EA91A8E0E2400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EAA1A8E0E2400BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EAB1A8E0E2400BB3ED9 /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEC1A8CDE670071D4B2 /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EAC1A8E0E2400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EAD1A8E0E2400BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EAE1A8E0E2400BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EAF1A8E0E2400BB3ED9 /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EB01A8E0E2400BB3ED9 /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EB11A8E0E2400BB3ED9 /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FAA9EB21A8E0E2500BB3ED9 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022F18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
@@ -1798,9 +1827,9 @@
 		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
-		1FD6D5A51A7B7F7000E0FAFA /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5A91A7B7F7000E0FAFA /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5AC1A7B7F7100E0FAFA /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FD6D5A51A7B7F7000E0FAFA /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; };
+		1FD6D5A91A7B7F7000E0FAFA /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; };
+		1FD6D5AC1A7B7F7100E0FAFA /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; };
 		1FD6D5B61A7B7F7100E0FAFA /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FD6D5B91A7BD57200E0FAFA /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; };
 		1FD6D5BC1A7BD57200E0FAFA /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; };
@@ -2156,11 +2185,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
+				1FD6D5D81A7BD68700E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
 				1FAA9E8A1A8D4A7300BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
 				1FAA9E8B1A8D4A7300BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
 				1FAA9E8C1A8D4A7300BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
 				1FAA9E8D1A8D4A7300BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FD6D5D81A7BD68700E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
 				1FAA9E8E1A8D4A7300BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
 				1FAA9E8F1A8D4A7300BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
 				1FD6D5CC1A7BD68700E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
@@ -2269,11 +2299,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
+				1FD6D5C51A7BD57200E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
 				1FAA9E841A8D493700BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
 				1FAA9E851A8D493700BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
 				1FAA9E861A8D493700BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
 				1FAA9E871A8D493700BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FD6D5C51A7BD57200E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
 				1FAA9E881A8D493700BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
 				1FAA9E891A8D493700BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
 				1FD6D5B91A7BD57200E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
@@ -2383,11 +2414,12 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
+				1FD6D5EB1A7BD69B00E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
 				1FAA9E901A8D4A8400BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
 				1FAA9E911A8D4A8400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
 				1FAA9E921A8D4A8400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
 				1FAA9E931A8D4A8400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FD6D5EB1A7BD69B00E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
 				1FAA9E941A8D4A8400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
 				1FAA9E951A8D4A8400BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
 				1FD6D5DF1A7BD69A00E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
@@ -2496,6 +2528,19 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FAA9E991A8E0E1D00BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
+				1FAA9E9A1A8E0E1D00BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
+				1FAA9E9B1A8E0E1D00BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
+				1FAA9E9C1A8E0E1D00BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
+				1FAA9E9D1A8E0E1D00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
+				1FAA9E9E1A8E0E1D00BB3ED9 /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9E9F1A8E0E1D00BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
+				1FAA9EA01A8E0E1D00BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
+				1FAA9EA11A8E0E1D00BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */,
+				1FAA9EA21A8E0E1D00BB3ED9 /* libavformat.56.dylib in Copy Frameworks */,
+				1FAA9EA31A8E0E1D00BB3ED9 /* libavutil.54.dylib in Copy Frameworks */,
+				1FAA9EA41A8E0E1D00BB3ED9 /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9EA51A8E0E1D00BB3ED9 /* libpython2.7.dylib in Copy Frameworks */,
 				1F58A9D119321ECB00460853 /* Sparkle.framework in Copy Frameworks */,
 				1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */,
 			);
@@ -2599,6 +2644,19 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FAA9EA61A8E0E2400BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
+				1FAA9EA71A8E0E2400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
+				1FAA9EA81A8E0E2400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
+				1FAA9EA91A8E0E2400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
+				1FAA9EAA1A8E0E2400BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
+				1FAA9EAB1A8E0E2400BB3ED9 /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9EAC1A8E0E2400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
+				1FAA9EAD1A8E0E2400BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
+				1FAA9EAE1A8E0E2400BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */,
+				1FAA9EAF1A8E0E2400BB3ED9 /* libavformat.56.dylib in Copy Frameworks */,
+				1FAA9EB01A8E0E2400BB3ED9 /* libavutil.54.dylib in Copy Frameworks */,
+				1FAA9EB11A8E0E2400BB3ED9 /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9EB21A8E0E2500BB3ED9 /* libpython2.7.dylib in Copy Frameworks */,
 				1FCA7EBD19546B0B00765366 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
