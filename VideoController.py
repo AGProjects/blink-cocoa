@@ -116,9 +116,9 @@ class VideoController(MediaStream):
         self.videoRecorder = VideoRecorder(self)
         self.videoWindowController = VideoWindowController(self)
 
-        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0, 'fps': 0}
+        self.statistics = {'loss_rx': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0, 'fps': 0}
         # 5 minutes of history data for Session Info graphs
-        self.loss_history = deque(maxlen=300)
+        self.loss_rx_history = deque(maxlen=300)
         self.rtt_history = deque(maxlen=300)
         self.jitter_history = deque(maxlen=300)
         self.rx_speed_history = deque(maxlen=300)
@@ -141,8 +141,8 @@ class VideoController(MediaStream):
             rx_packets = stats['rx']['packets'] - self.last_stats['rx']['packets']
             self.all_rx_bytes =+ stats['rx']['bytes']
             rx_lost_packets = stats['rx']['packets_lost'] - self.last_stats['rx']['packets_lost']
-            loss = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
-            self.statistics['loss'] = loss
+            loss_rx = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
+            self.statistics['loss_rx'] = loss_rx
             self.statistics['jitter'] = jitter
             self.statistics['rtt'] = rtt
             try:
@@ -174,14 +174,14 @@ class VideoController(MediaStream):
             # summarize statistics
             jitter = self.statistics['jitter']
             rtt = self.statistics['rtt']
-            loss = self.statistics['loss']
+            loss_rx = self.statistics['loss_rx']
 
             if self.jitter_history is not None:
                 self.jitter_history.append(jitter)
             if self.rtt_history is not None:
                 self.rtt_history.append(rtt)
-            if self.loss_history is not None:
-                self.loss_history.append(loss)
+            if self.loss_rx_history is not None:
+                self.loss_rx_history.append(loss_rx)
             if self.rx_speed_history is not None:
                 self.rx_speed_history.append(self.statistics['rx_bytes'] * 8)
             if self.tx_speed_history is not None:
@@ -404,7 +404,7 @@ class VideoController(MediaStream):
 
         self.ice_negotiation_status = None
         self.rtt_history = None
-        self.loss_history = None
+        self.loss_rx_history = None
         self.jitter_history = None
         self.rx_speed_history = None
         self.tx_speed_history = None
@@ -418,7 +418,7 @@ class VideoController(MediaStream):
             self.videoWindowController.goToWindowMode()
         self.ice_negotiation_status = None
         self.rtt_history = None
-        self.loss_history = None
+        self.loss_rx_history = None
         self.jitter_history = None
         self.rx_speed_history = None
         self.tx_speed_history = None

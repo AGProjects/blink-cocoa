@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="SessionInfoController">
@@ -10,8 +10,10 @@
                 <outlet property="audioBox" destination="31" id="91"/>
                 <outlet property="audio_codec" destination="17" id="54"/>
                 <outlet property="audio_ice_negotiation" destination="69" id="77"/>
-                <outlet property="audio_packet_loss" destination="29" id="50"/>
-                <outlet property="audio_packet_loss_graph" destination="157" id="160"/>
+                <outlet property="audio_packet_loss_rx" destination="29" id="w9i-cJ-xEl"/>
+                <outlet property="audio_packet_loss_rx_graph" destination="157" id="8N1-0I-Qp6"/>
+                <outlet property="audio_packet_loss_tx" destination="mjA-iW-L5l" id="YI6-b8-mdf"/>
+                <outlet property="audio_packet_loss_tx_graph" destination="9fV-Mb-6tm" id="2af-qK-wWC"/>
                 <outlet property="audio_remote_endpoint" destination="11" id="67"/>
                 <outlet property="audio_rtt" destination="27" id="161"/>
                 <outlet property="audio_rtt_graph" destination="156" id="159"/>
@@ -319,6 +321,18 @@
                                         <accessibilityConnection property="title" destination="25" id="197"/>
                                     </connections>
                                 </textField>
+                                <textField verticalHuggingPriority="750" id="mjA-iW-L5l">
+                                    <rect key="frame" x="10" y="70" width="106" height="14"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="0%" id="Ab1-Dq-B6K">
+                                        <font key="font" metaFont="smallSystem"/>
+                                        <color key="textColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                    </textFieldCell>
+                                    <connections>
+                                        <accessibilityConnection property="title" destination="25" id="BxQ-T1-7PQ"/>
+                                    </connections>
+                                </textField>
                                 <textField verticalHuggingPriority="750" id="9sR-pG-xts">
                                     <rect key="frame" x="10" y="31" width="106" height="14"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -351,21 +365,21 @@
                                     </connections>
                                 </customView>
                                 <customView id="157" customClass="CBGraphView">
-                                    <rect key="frame" x="119" y="68" width="173" height="48"/>
+                                    <rect key="frame" x="119" y="67" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="194"/>
                                     </connections>
                                 </customView>
                                 <customView id="uWH-ck-ghj" customClass="CBGraphView">
-                                    <rect key="frame" x="120" y="14" width="86" height="48"/>
+                                    <rect key="frame" x="120" y="12" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="Qxm-kL-XgV"/>
                                     </connections>
                                 </customView>
                                 <customView id="WYs-VK-9e3" customClass="CBGraphView">
-                                    <rect key="frame" x="206" y="14" width="86" height="48"/>
+                                    <rect key="frame" x="206" y="12" width="86" height="48"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                     <connections>
                                         <accessibilityConnection property="title" destination="25" id="cZt-ik-erM"/>
@@ -389,6 +403,13 @@
                                         <accessibilityConnection property="title" destination="25" id="KDA-cl-yj8"/>
                                     </connections>
                                 </textField>
+                                <customView id="9fV-Mb-6tm" customClass="CBGraphView">
+                                    <rect key="frame" x="206" y="67" width="86" height="48"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                    <connections>
+                                        <accessibilityConnection property="title" destination="25" id="JJP-zl-zC7"/>
+                                    </connections>
+                                </customView>
                             </subviews>
                         </view>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>

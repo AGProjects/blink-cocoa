@@ -205,6 +205,9 @@ class VideoWidget(NSView):
             self.delegate.mouseDraggedView_(event)
 
     def handle_frame(self, frame):
+        if not self.visible:
+            return
+
         if self.aspect_ratio is None:
             self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
             if hasattr(self.delegate, "init_aspect_ratio"):

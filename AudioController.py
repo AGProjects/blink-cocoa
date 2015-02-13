@@ -199,9 +199,10 @@ class AudioController(MediaStream):
         self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
         scontroller.log_debug(u"Creating %s" % self)
 
-        self.statistics = {'loss': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
+        self.statistics = {'loss_rx': 0, 'loss_tx': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
         # 5 minutes of history data for Session Info graphs
-        self.loss_history = deque(maxlen=300)
+        self.loss_rx_history = deque(maxlen=300)
+        self.loss_tx_history = deque(maxlen=300)
         self.rtt_history = deque(maxlen=300)
         self.jitter_history = deque(maxlen=300)
         self.rx_speed_history = deque(maxlen=300)
@@ -778,10 +779,17 @@ class AudioController(MediaStream):
         if stats is not None and self.last_stats is not None:
             jitter = stats['rx']['jitter']['last'] / 1000.0 + stats['tx']['jitter']['last'] / 1000.0
             rtt = stats['rtt']['last'] / 1000 / 2
+
             rx_packets = stats['rx']['packets'] - self.last_stats['rx']['packets']
             rx_lost_packets = stats['rx']['packets_lost'] - self.last_stats['rx']['packets_lost']
-            loss = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
-            self.statistics['loss'] = loss
+            loss_rx = 100.0 * rx_lost_packets / rx_packets if rx_packets else 0
+
+            tx_packets = stats['tx']['packets'] - self.last_stats['tx']['packets']
+            tx_lost_packets = stats['tx']['packets_lost'] - self.last_stats['tx']['packets_lost']
+            loss_tx = 100.0 * tx_lost_packets / tx_packets if tx_packets else 0
+
+            self.statistics['loss_rx'] = loss_rx
+            self.statistics['loss_tx'] = loss_tx
             self.statistics['jitter'] = jitter
             self.statistics['rtt'] = rtt
 
@@ -857,14 +865,17 @@ class AudioController(MediaStream):
 
             jitter = self.statistics['jitter']
             rtt = self.statistics['rtt']
-            loss = self.statistics['loss']
+            loss_rx = self.statistics['loss_rx']
+            loss_tx = self.statistics['loss_tx']
 
             if self.jitter_history is not None:
                 self.jitter_history.append(jitter)
             if self.rtt_history is not None:
                 self.rtt_history.append(rtt)
-            if self.loss_history is not None:
-                self.loss_history.append(loss)
+            if self.loss_rx_history is not None:
+                self.loss_rx_history.append(loss_rx)
+            if self.loss_tx_history is not None:
+                self.loss_tx_history.append(loss_tx)
             if self.rx_speed_history is not None:
                 self.rx_speed_history.append(self.statistics['rx_bytes'] * 8)
             if self.tx_speed_history is not None:
@@ -873,7 +884,7 @@ class AudioController(MediaStream):
             text = ""
             qos_data = NotificationData()
             qos_data.latency = '0ms'
-            qos_data.packet_loss = '0%'
+            qos_data.packet_loss_rx = '0%'
             send_qos_notify = False
             if rtt > settings.gui.rtt_threshold:
                 if rtt > 1000:
@@ -886,9 +897,9 @@ class AudioController(MediaStream):
                     send_qos_notify = True
                     qos_data.latency = '%sms' % rtt
 
-            if loss > 3:
-                text += " " + NSLocalizedString("%d%% Loss", "Label") % loss
-                qos_data.packet_loss = '%d%%' % loss
+            if loss_rx > 3:
+                text += " " + NSLocalizedString("%d%% Loss", "Label") % loss_rx + ' RX'
+                qos_data.packet_loss_rx = '%d%%' % loss_rx
                 send_qos_notify = True
 
             if send_qos_notify:
@@ -1367,7 +1378,8 @@ class AudioController(MediaStream):
         self.holdByLocal = False
         self.holdByRemote = False
         self.rtt_history = None
-        self.loss_history = None
+        self.loss_rx_history = None
+        self.loss_tx_history = None
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
@@ -1383,7 +1395,8 @@ class AudioController(MediaStream):
         self.holdByLocal = False
         self.holdByRemote = False
         self.rtt_history = None
-        self.loss_history = None
+        self.loss_rx_history = None
+        self.loss_tx_history = None
         self.jitter_history = None
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
