@@ -58,7 +58,7 @@ class BlinkOtrAccount(potr.context.Account):
         self.peer_options.update(peer_options)
 
         super(BlinkOtrAccount, self).__init__('blink', 'sip', '1024', privkey=None)
-        self.defaultQuery = b'?OTRv{versions}?\n{accountname} has requested ' \
+        self.defaultQuery = b'?OTRv{versions}?\nI have requested ' \
                             b'end-to-end encryption but this ' \
                             b'software does not support this feature. ';
 
