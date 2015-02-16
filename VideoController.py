@@ -337,7 +337,8 @@ class VideoController(MediaStream):
             elif newstate == STREAM_CONNECTING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
             elif newstate == STREAM_CONNECTED:
-                self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting For Media...", "Audio status label"))
+                if not self.media_received:
+                    self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting For Media...", "Audio status label"))
             elif newstate == STREAM_PROPOSING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 
@@ -453,7 +454,8 @@ class VideoController(MediaStream):
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
             if self.videoWindowController:
-                self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for Media...", "Label"))
+                if not self.media_received:
+                    self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for Media...", "Label"))
             audio_stream = self.sessionController.streamHandlerOfType("audio")
             if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED) and self.sessionController.video_consumer == 'audio':
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
