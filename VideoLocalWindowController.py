@@ -144,10 +144,6 @@ class VideoLocalWindowController(NSWindowController):
         self.sessionController.info_panel.toggle()
 
     @property
-    def stream(self):
-        return self.videoWindowController.streamController.stream
-
-    @property
     def streamController(self):
         if self.videoWindowController:
             return self.videoWindowController.streamController
