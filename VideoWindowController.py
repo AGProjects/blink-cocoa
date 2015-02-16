@@ -457,6 +457,7 @@ class VideoWindowController(NSWindowController):
     closed = False
     window_too_small = False
     zrtp_controller = None
+    local_video_hidden = False
 
     holdButton = objc.IBOutlet()
     hangupButton = objc.IBOutlet()
@@ -718,6 +719,9 @@ class VideoWindowController(NSWindowController):
 
         menu.addItem_(NSMenuItem.separatorItem())
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Info", "Menu item"), "userClickedInfoButton:", "")
+        menu.addItem_(NSMenuItem.separatorItem())
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Local Video", "Menu item"), "userClickedLocalVideo:", "")
+        lastItem.setState_(NSOffState if self.local_video_hidden else NSOnState)
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self.window().contentView())
 
     def removeVideo_(self, sender):
@@ -946,6 +950,7 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
         self.showButtons()
+        self.repositionMyVideo()
 
         if self.sessionController.video_consumer == "standalone":
             if self.streamController.status == STREAM_CONNECTED:
@@ -1018,7 +1023,8 @@ class VideoWindowController(NSWindowController):
         else:
             self.window_too_small = False
             self.showButtons()
-            self.myVideoView.show()
+            if not self.local_video_hidden:
+                self.myVideoView.show()
         return scaledSize
 
     def windowDidResize_(self, notification):
@@ -1233,6 +1239,14 @@ class VideoWindowController(NSWindowController):
         except (StopIteration, KeyError):
             secondaryScreen = None
         return secondaryScreen
+
+    @objc.IBAction
+    def userClickedLocalVideo_(self, sender):
+        self.local_video_hidden = not self.local_video_hidden
+        if self.local_video_hidden:
+            self.myVideoView.hide()
+        else:
+            self.myVideoView.show()
 
     @objc.IBAction
     def userClickedFullScreenButton_(self, sender):
