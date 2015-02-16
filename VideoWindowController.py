@@ -131,7 +131,6 @@ class VideoWidget(NSView):
     _frame = None
     renderer = None
     aspect_ratio = None
-    visible = True
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
@@ -205,7 +204,7 @@ class VideoWidget(NSView):
             self.delegate.mouseDraggedView_(event)
 
     def handle_frame(self, frame):
-        if not self.visible:
+        if self.isHidden():
             return
 
         if self.aspect_ratio is None:
@@ -217,9 +216,6 @@ class VideoWidget(NSView):
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
-        if not self.visible:
-            return
-
         if self.delegate.full_screen_in_progress:
             return
 
@@ -239,19 +235,17 @@ class VideoWidget(NSView):
 
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
-        self.visible = True
-        self.setNeedsDisplay_(True)
-    
+        self.setHidden_(False)
+
     def toggle(self):
-        if self.visible:
+        if not self.isHidden():
             self.hide()
         else:
             self.show()
     
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
-        self.visible = False
-        self.setNeedsDisplay_(True)
+        self.setHidden_(True)
 
 
 class remoteVideoWidget(VideoWidget):
@@ -302,7 +296,7 @@ class myVideoWidget(VideoWidget):
     allow_drag = True
 
     def rightMouseDown_(self, event):
-        if not self.visible:
+        if self.isHidden():
             return
 
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
