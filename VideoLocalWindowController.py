@@ -244,8 +244,6 @@ class VideoLocalWindowController(NSWindowController):
 
         self.finished = True
     
-        if self.window():
-            self.window().close()
         if self.tracking_area is not None:
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
