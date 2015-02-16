@@ -189,7 +189,7 @@ class AudioController(MediaStream):
 
     @property
     def srtp_active(self):
-        return self.stream.encryption.type == 'SRTP-SDES' and self.stream.encryption.active
+        return self.stream.encryption.type == 'SRTP/SDES' and self.stream.encryption.active
 
     def reset(self):
         self.early_media = False
