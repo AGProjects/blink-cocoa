@@ -1526,23 +1526,17 @@ class TitleBarView(NSObject):
 
 
 class RoundedCornersView(NSView):
-    hidden = False
     
     def hide(self):
-        self.hidden = True
-        self.setNeedsDisplay_(True)
+        self.setHidden_(True)
     
     def show(self):
-        self.hidden = False
-        self.setNeedsDisplay_(True)
+        self.setHidden_(False)
     
     def drawRect_(self, dirtyRect):
         path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(dirtyRect, 7.0, 7.0)
         path.addClip()
-        if self.hidden:
-            NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.0).setFill()
-        else:
-            NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.3).setFill()
+        NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.3).setFill()
         NSRectFillUsingOperation(dirtyRect, NSCompositeSourceOver)
         objc.super(RoundedCornersView, self).drawRect_(dirtyRect)
 
