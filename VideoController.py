@@ -43,7 +43,8 @@ class VideoController(MediaStream):
     last_stats = None
     initial_full_screen = False
     media_received = False
-
+    waiting_label = NSLocalizedString("Waiting For Media...", "Audio status label")
+    
     paused = False
 
     @classmethod
@@ -196,6 +197,14 @@ class VideoController(MediaStream):
                 if self.videoWindowController:
                     self.videoWindowController.goToFullScreen()
 
+        if self.all_rx_bytes > 200000 and not self.media_received:
+            self.sessionController.log_info(u'Video channel received data')
+            self.markMediaReceived()
+
+    def markMediaReceived(self):
+        self.media_received = True
+        if self.videoWindowController and self.videoWindowController.disconnectLabel.stringValue() == self.waiting_label:
+            self.videoWindowController.hideStatusLabel()
 
     def togglePause(self):
         if self.stream is None:
@@ -338,7 +347,7 @@ class VideoController(MediaStream):
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
             elif newstate == STREAM_CONNECTED:
                 if not self.media_received:
-                    self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting For Media...", "Audio status label"))
+                    self.videoWindowController.showStatusLabel(self.waiting_label)
             elif newstate == STREAM_PROPOSING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 
@@ -373,9 +382,9 @@ class VideoController(MediaStream):
         self.ice_negotiation_status = 'Success'
 
     def _NH_VideoStreamReceivedKeyFrame(self, sender, data):
-        self.media_received = True
-        if self.videoWindowController:
-            self.videoWindowController.hideStatusLabel()
+        if not self.media_received:
+            self.sessionController.log_info(u'Video channel received key frame')
+            self.markMediaReceived()
 
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
