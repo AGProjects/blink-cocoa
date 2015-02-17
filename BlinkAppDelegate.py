@@ -365,6 +365,8 @@ class BlinkAppDelegate(NSObject):
         app = SIPApplication()
         app.stop()
 
+        import Profiler
+        Profiler.stop(os.path.join(ApplicationData.directory, 'logs', 'profiler.stats'))
         return False
 
     @allocate_autorelease_pool

@@ -65,8 +65,11 @@ import ContactWindowController
 import signal
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
+# Start profiling, if applicable
+import Profiler
+Profiler.start()
+
 # pass control to AppKit
 from PyObjCTools import AppHelper
 AppHelper.runEventLoop()
-
 

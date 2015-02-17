@@ -2063,6 +2063,12 @@
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		DE0C40EB1A8E03B40008685F /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; };
+		DE2607221A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
+		DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
+		DE2607241A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
+		DE2607251A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
+		DE2607261A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
+		DE2607271A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE3A673013A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673113A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673213A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
@@ -3351,6 +3357,7 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.1.dylib; path = Distribution/Frameworks/libswresample.1.dylib; sourceTree = "<group>"; };
+		DE2607211A93A9D6004FAEF8 /* Profiler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiler.py; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
 		DE4E6F0F174F9C0900E1D5F9 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
@@ -4129,6 +4136,7 @@
 				2BAF39C30FE1B0CF0040117A /* Main.py */,
 				1F5BC16917E5FE7300D1D8BE /* Updater.xib */,
 				1FBF2B4417915410002E110B /* Updater.py */,
+				DE2607211A93A9D6004FAEF8 /* Profiler.py */,
 				2BAF38250FE088E80040117A /* BlinkAppDelegate.py */,
 				2BAF38270FE088E80040117A /* SIPManager.py */,
 				2B2400FE1018AB9400079580 /* util.py */,
@@ -4442,6 +4450,7 @@
 				1F22729B12B554F50010A8B2 /* SessionController.py in Resources */,
 				1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */,
 				1F22729D12B554F50010A8B2 /* Contact.xib in Resources */,
+				DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */,
 				1FB3AE7518F1E73E001C612B /* close.png in Resources */,
 				1F22729E12B554F50010A8B2 /* EnrollmentWindow.xib in Resources */,
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
@@ -4764,6 +4773,7 @@
 				1F35CFAB17894FFF00C6FE38 /* record.png in Resources */,
 				1F35CFAC17894FFF00C6FE38 /* recording1.png in Resources */,
 				1F35CFAD17894FFF00C6FE38 /* recording2.png in Resources */,
+				DE2607251A93A9D6004FAEF8 /* Profiler.py in Resources */,
 				1F35CFAE17894FFF00C6FE38 /* recording3.png in Resources */,
 				1F35CFAF17894FFF00C6FE38 /* mic.png in Resources */,
 				1F35CFB017894FFF00C6FE38 /* speaker.png in Resources */,
@@ -5210,6 +5220,7 @@
 				1FA490861549631A0011EE27 /* AddressBookEmail-plugin.py in Resources */,
 				1FA490891549631A0011EE27 /* AddressBookTel-plugin-setup.py in Resources */,
 				1FA4908C1549631A0011EE27 /* AddressBookTel-plugin.py in Resources */,
+				DE2607241A93A9D6004FAEF8 /* Profiler.py in Resources */,
 				1FA4908F1549631A0011EE27 /* AddressBookURL-plugin-setup.py in Resources */,
 				1FA490921549631A0011EE27 /* AddressBookURL-plugin.py in Resources */,
 				1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */,
@@ -5319,6 +5330,7 @@
 				1FC80E39192E3E1F00BD62F4 /* PhotoPicker.xib in Resources */,
 				1FC80E3A192E3E1F00BD62F4 /* PhotoPicker.py in Resources */,
 				1FC80E3B192E3E1F00BD62F4 /* SoundSetting.xib in Resources */,
+				DE2607261A93A9D6004FAEF8 /* Profiler.py in Resources */,
 				1FC80E3C192E3E1F00BD62F4 /* audio.png in Resources */,
 				1FC80E3D192E3E1F00BD62F4 /* display.png in Resources */,
 				1FC80E3E192E3E1F00BD62F4 /* record.png in Resources */,
@@ -5765,6 +5777,7 @@
 				1FCA7E3C19546B0B00765366 /* AddressBookEmail-plugin-setup.py in Resources */,
 				1FCA7E3D19546B0B00765366 /* AddressBookEmail-plugin.py in Resources */,
 				1FCA7E3E19546B0B00765366 /* AddressBookTel-plugin-setup.py in Resources */,
+				DE2607271A93A9D6004FAEF8 /* Profiler.py in Resources */,
 				1FCA7E3F19546B0B00765366 /* AddressBookTel-plugin.py in Resources */,
 				1FCA7E4019546B0B00765366 /* AddressBookURL-plugin-setup.py in Resources */,
 				1FCA7E4119546B0B00765366 /* AddressBookURL-plugin.py in Resources */,
@@ -5828,6 +5841,7 @@
 				2BEFC12E0FD0BE4700447EFB /* SessionController.py in Resources */,
 				2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */,
 				1F24368A1913CD7D00E71253 /* branding.py in Resources */,
+				DE2607221A93A9D6004FAEF8 /* Profiler.py in Resources */,
 				2BAF381A0FE088C70040117A /* Contact.xib in Resources */,
 				1FB3AE7418F1E73E001C612B /* close.png in Resources */,
 				2BAF381B0FE088C70040117A /* EnrollmentWindow.xib in Resources */,
