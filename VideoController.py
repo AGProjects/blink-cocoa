@@ -256,7 +256,15 @@ class VideoController(MediaStream):
             self.changeStatus(STREAM_PROPOSING)
         else:
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
-    
+
+        self.wait_for_camera_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "localVideoReadyTimer:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.wait_for_camera_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.wait_for_camera_timer, NSEventTrackingRunLoopMode)
+
+    def localVideoReadyTimer_(self, timer):
+        self.notification_center.post_notification("BlinkLocalVideoReady", sender=self.sessionController)
+        self.wait_for_camera_timer = None
+
     def startIncoming(self, is_update):
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
@@ -282,9 +290,13 @@ class VideoController(MediaStream):
     def end(self):
         if self.ended:
             return
-
+    
         self.sessionController.log_debug(u"End %s" % self)
         self.ended = True
+
+        if self.sessionController.waitingForLocalVideo:
+            self.stop_wait_for_camera_timer()
+            self.sessionController.cancelBeforeDNSLookup()
 
         if self.sessionController.video_consumer == "audio":
             NSApp.delegate().contactsWindowController.detachVideo(self.sessionController)
@@ -478,7 +490,7 @@ class VideoController(MediaStream):
                 if data.code == 486:
                     reason = NSLocalizedString("Busy Here", "Label")
                 elif data.code == 487:
-                    reason = NSLocalizedString("Call Cancelled", "Label")
+                    reason = NSLocalizedString("Session Cancelled", "Label")
                 elif data.code == 603:
                     reason = NSLocalizedString("Call Declined", "Label")
                 elif data.code == 408:
@@ -505,7 +517,13 @@ class VideoController(MediaStream):
         if self.statistics_timer is not None:
             if self.statistics_timer.isValid():
                 self.statistics_timer.invalidate()
-        self.statistics_timer = None
+            self.statistics_timer = None
+
+    def stop_wait_for_camera_timer(self):
+        if self.wait_for_camera_timer is not None:
+            if self.wait_for_camera_timer.isValid():
+                self.wait_for_camera_timer.invalidate()
+            self.wait_for_camera_timer = None
 
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))

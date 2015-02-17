@@ -930,6 +930,7 @@ class SessionController(NSObject):
     inProposal = False
     proposalOriginator = None
     waitingForITunes = False
+    waitingForLocalVideo = False
     streamHandlers = None
     chatPrintView = None
     collaboration_form_id = None
@@ -1424,6 +1425,7 @@ class SessionController(NSObject):
         self.previous_conference_users = None
         self.notify_when_participants_changed = False
         self.screensharing_urls = {}
+        self.waitingForLocalVideo = False
 
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
         for item in self.invited_participants:
@@ -1596,7 +1598,11 @@ class SessionController(NSObject):
                         self.setRoutesFailed("No Internet connection")
                         self.changeSessionState(STATE_FAILED, NSLocalizedString("No Internet connection", "Label"))
                     else:
-                        self.lookup_destination(self.target_uri)
+                        # used to start DNS lookup here, but not we are waiting for local camera
+                        if any(streamHandler.stream.type=='video' for streamHandler in self.streamHandlers):
+                            self.waitingForLocalVideo = True
+                        else:
+                            self.lookup_destination(self.target_uri)
 
         else:
             if self.canProposeMediaStreamChanges():
@@ -1700,10 +1706,20 @@ class SessionController(NSObject):
 
     @allocate_autorelease_pool
     @run_in_gui_thread
+    def cancelBeforeDNSLookup(self):
+        self.log_info("Session cancelled before DNS lookup")
+        self.notification_center.post_notification("BlinkSessionCancelledBeforeDNSLookup", sender=self)
+
+    def _NH_BlinkSessionCancelledBeforeDNSLookup(self, sender, data):
+        log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=487, originator='local', reason='Session Cancelled', failure_reason='Session Cancelled', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
+        self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.log_debug("setRoutesResolved: %s" % routes)
         self.routes = routes
-        if not self.waitingForITunes:
+        if not self.waitingForITunes and not self.waitingForLocalVideo:
             self.connectSession()
 
     def connectSession(self):
@@ -1809,9 +1825,16 @@ class SessionController(NSObject):
     def _NH_MusicPauseDidExecute(self, sender, data):
         if not self.waitingForITunes:
             return
+
         self.waitingForITunes = False
+
         if self.routes:
             self.connectSession()
+
+    def _NH_BlinkLocalVideoReady(self, sender, data):
+        self.waitingForLocalVideo = False
+        if not self.ended:
+            self.lookup_destination(self.target_uri)
 
     def musicTimer_(self, timer):
         if not self.waitingForITunes:

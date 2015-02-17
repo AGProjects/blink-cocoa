@@ -1437,6 +1437,9 @@ class AudioController(MediaStream):
         elif data.state == 'FAILED':
             self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
 
+    def _NH_BlinkSessionCancelledBeforeDNSLookup(self, sender, data):
+        self.end()
+
     def _NH_BlinkSessionDidStart(self, sender, data):
         self.stopRinging()
 

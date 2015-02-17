@@ -51,7 +51,7 @@
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="performClose:" target="QvC-M9-y7g" id="ouW-vW-PqQ"/>
+                            <action selector="userClickedCancelButton:" target="-2" id="i7l-57-R8O"/>
                         </connections>
                     </button>
                 </subviews>

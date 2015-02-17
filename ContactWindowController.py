@@ -129,7 +129,7 @@ from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
-from MediaStream import STREAM_CONNECTED
+from MediaStream import STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
 from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
@@ -1407,7 +1407,9 @@ class ContactWindowController(NSWindowController):
             return
 
         if session.hasStreamOfType("audio"):
-            self.showAudioDrawer()
+            audio_stream = session.streamHandlerOfType("audio")
+            if audio_stream.status in (STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING):
+                self.showAudioDrawer()
 
     def _NH_BlinkContactsHaveChanged(self, notification):
         self.refreshContactsList(notification.sender)

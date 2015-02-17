@@ -857,6 +857,7 @@ class VideoWindowController(NSWindowController):
             self.disconnectLabel.superview().show()
             self.disconnectLabel.setStringValue_(label)
             self.disconnectLabel.setHidden_(False)
+
         if self.localVideoWindow and self.localVideoWindow.window():
             self.localVideoWindow.window().delegate().disconnectLabel.setStringValue_(label)
             self.localVideoWindow.window().delegate().disconnectLabel.superview().show()

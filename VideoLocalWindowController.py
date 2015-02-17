@@ -52,7 +52,7 @@ from sipsimple.threading import run_in_thread
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 
-from MediaStream import STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP
+from MediaStream import STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING, STREAM_CONNECTING
 from util import run_in_gui_thread
 from sipsimple.core import VideoCamera
 
@@ -123,7 +123,7 @@ class VideoLocalWindowController(NSWindowController):
         self.window().setFrame_display_(frame, True)
 
         self.show()
-
+    
     def show(self):
         if self.aspect_ratio:
             self.window().center()
@@ -221,6 +221,11 @@ class VideoLocalWindowController(NSWindowController):
 
         self.window().setFrameOrigin_(newOrigin);
 
+    @objc.IBAction
+    def userClickedCancelButton_(self, sender):
+        self.videoWindowController.showStatusLabel(NSLocalizedString("Session Cancelled", "Label"))
+        self.window().performClose_(sender)
+
     def windowWillClose_(self, sender):
         if self.streamController.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self.streamController)
@@ -248,7 +253,7 @@ class VideoLocalWindowController(NSWindowController):
             self.window().contentView().removeTrackingArea_(self.tracking_area)
             self.tracking_area = None
 
-        timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2, self, "fade:", None, False)
+        timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "fade:", None, False)
 
         self.notification_center.remove_observer(self, name="VideoDeviceDidChangeCamera")
         self.notification_center = None
