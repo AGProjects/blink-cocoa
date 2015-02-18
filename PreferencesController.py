@@ -885,12 +885,10 @@ class PreferencesController(NSWindowController, object):
                     self.selected_proxy_radio_button.selectCellWithTag_(sender.sip.selected_proxy)
 
         if 'audio.sound_card_delay' in notification.data.modified:
-            settings = SIPSimpleSettings()
             settings.audio.echo_canceller.tail_length = settings.audio.sound_card_delay
             settings.save()
 
         if 'audio.sample_rate' in notification.data.modified:
-            settings = SIPSimpleSettings()
             spectrum = settings.audio.sample_rate/1000/2 if int(settings.audio.sample_rate)/1000/2 < 20 else 20
             rate = settings.audio.sample_rate/1000
             help_line = NSLocalizedString("Audio sample rate is set to %dkHz", "Preferences text label") % rate + NSLocalizedString(" covering 0-%dkHz spectrum", "Preferences text label") % spectrum
@@ -898,12 +896,19 @@ class PreferencesController(NSWindowController, object):
                 help_line += ".\n" + NSLocalizedString("For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
 
+        if notification.data.modified.has_key("logs.profiler"):
+            NSRunAlertPanel(NSLocalizedString("Restart Required", "Window title"), NSLocalizedString("You must restart the software to apply this change", "Label"), NSLocalizedString("OK", "Button title"), None, None)
+
         if notification.data.modified.has_key("audio.input_device"):
             self.update_per_device_aec()
 
         if notification.data.modified.has_key("audio.output_device"):
             self.update_per_device_aec()
 
+        if 'logs.profiler' in notification.data.modified:
+            userdef = NSUserDefaults.standardUserDefaults()
+            userdef.setBool_forKey_(settings.logs.profiler, "EnableProfiler")
+        
         if 'audio.enable_aec' in notification.data.modified:
             settings = SIPSimpleSettings()
             settings.audio.echo_canceller.enabled = settings.audio.enable_aec

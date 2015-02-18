@@ -4,8 +4,10 @@
 import cProfile
 import os
 
+from Foundation import NSUserDefaults
 
-do_profile = 'BLINK_DO_PROFILE' in os.environ
+
+do_profile = NSUserDefaults.standardUserDefaults().boolForKey_("EnableProfiler")
 pr = None
 
 
