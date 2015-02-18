@@ -856,6 +856,9 @@ class PreferencesController(NSWindowController, object):
         if 'rtp.encryption_type' in notification.data.modified:
             if sender.rtp.encryption_type == '':
                 sender.rtp.encryption.enabled = False
+            elif sender.rtp.encryption_type == 'opportunistic':
+                sender.rtp.encryption.enabled = True
+                sender.rtp.encryption.key_negotiation = 'opportunistic'
             elif sender.rtp.encryption_type == 'sdes_optional':
                 sender.rtp.encryption.enabled = True
                 sender.rtp.encryption.key_negotiation = 'sdes_optional'

@@ -1052,6 +1052,8 @@ class EncryptionOption(PopUpMenuOption):
         self.addMissingOptions = False
         self.popup.addItemWithTitle_(NSLocalizedString("Disabled", "Menu item"))
         self.popup.lastItem().setRepresentedObject_('')
+        self.popup.addItemWithTitle_("Opportunistic")
+        self.popup.lastItem().setRepresentedObject_('opportunistic')
         self.popup.addItemWithTitle_(NSLocalizedString("Optional", "Menu item") + " SDES")
         self.popup.lastItem().setRepresentedObject_('sdes_optional')
         self.popup.addItemWithTitle_(NSLocalizedString("Mandatory", "Menu item") + " SDES")
