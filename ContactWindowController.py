@@ -1787,8 +1787,8 @@ class ContactWindowController(NSWindowController):
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
         return self.model.getFirstContactFromAllContactsGroupMatchingURI(uri, exact_match)
 
-    def hasContactMatchingURI(self, uri, exact_match=False):
-        return self.model.hasContactMatchingURI(uri, exact_match)
+    def hasContactMatchingURI(self, uri, exact_match=False, skip_system_address_book=False):
+        return self.model.hasContactMatchingURI(uri, exact_match, skip_system_address_book)
 
     def iconPathForURI(self, uri, is_focus=False):
         if AccountManager().has_account(uri):
@@ -4327,7 +4327,7 @@ class ContactWindowController(NSWindowController):
         if isinstance(item, BlinkPendingWatcher):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s Subscribed To My Availability", "Menu item") % item.uri, "", "")
             lastItem.setEnabled_(False)
-            if not self.hasContactMatchingURI(item.uri, exact_match=True):
+            if not self.hasContactMatchingURI(item.uri, exact_match=True, skip_system_address_book=True):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Accept Request and Create Contact...", "Menu item"), "createPresenceContactFromOtherContact:", "")
                 lastItem.setIndentationLevel_(1)
                 lastItem.setRepresentedObject_(item)

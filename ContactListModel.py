@@ -2701,7 +2701,7 @@ class ContactListModel(CustomListModel):
         if settings.contacts.enable_address_book:
             self.addressbook_group.loadAddressBook(notification.userInfo())
 
-    def hasContactMatchingURI(self, uri, exact_match=False):
+    def hasContactMatchingURI(self, uri, exact_match=False, skip_system_address_book=False):
         # add System AB group at the end so that we find contacts there as a last resort
         groupsList = self.groupsList[:]
         try:
@@ -2709,7 +2709,8 @@ class ContactListModel(CustomListModel):
         except ValueError:
             pass
         else:
-            groupsList.append(self.addressbook_group)
+            if not skip_system_address_book:
+                groupsList.append(self.addressbook_group)
 
         return any(blink_contact.matchesURI(uri, exact_match) for group in groupsList if not group.ignore_search for blink_contact in group.contacts)
 
