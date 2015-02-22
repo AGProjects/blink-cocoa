@@ -357,12 +357,12 @@ class SessionInfoController(NSObject):
 
             self.audio_rtt.setStringValue_(text)
 
-            if self.audio_stream.statistics['loss_rx']:
+            if self.audio_stream.statistics['loss_rx'] > 3:
                 self.audio_packet_loss_rx.setStringValue_('Local: %.1f %%' % self.audio_stream.statistics['loss_rx'])
             else:
                 self.audio_packet_loss_rx.setStringValue_('')
 
-            if self.audio_stream.statistics['loss_tx']:
+            if self.audio_stream.statistics['loss_tx'] > 3:
                 self.audio_packet_loss_tx.setStringValue_('Remote: %.1f %%' % self.audio_stream.statistics['loss_tx'])
             else:
                 self.audio_packet_loss_tx.setStringValue_('')
