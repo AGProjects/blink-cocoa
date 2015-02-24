@@ -445,10 +445,6 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         self.debug = settings.gui.extended_debug
-        settings = SIPSimpleSettings()
-        settings.logs.profiler = NSUserDefaults.standardUserDefaults().boolForKey_("EnableProfiler")
-        if settings.logs.profiler:
-            BlinkLogger().log_info(u"Profiler is enabled. Turn it off when done profiling. ")
 
         call_in_thread('file-io', self.purge_temporary_files)
 

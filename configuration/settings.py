@@ -17,7 +17,7 @@ except ImportError:
     video_support = False
     pass
 
-from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings, RuntimeSetting
+from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
@@ -108,9 +108,6 @@ class LogsSettingsExtension(LogsSettings):
     trace_notifications = Setting(type=bool, default=False)
     trace_notifications_in_gui = Setting(type=bool, default=False)
     trace_notifications_to_file = Setting(type=bool, default=False)
-
-    profiler = RuntimeSetting(type=bool, default=False)
-
 
 class ServerSettings(SettingsGroup):
     enrollment_url = Setting(type=HTTPURL, default="https://blink.sipthor.net/enrollment.phtml")
