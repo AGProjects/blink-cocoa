@@ -54,7 +54,8 @@ class SMSWindowController(NSWindowController):
             return activeTab.identifier()
         return None
 
-    def getTitle(self):
+    @property
+    def titleLong(self):
         session = self.selectedSessionController()
         if session:
             display_name = session.display_name
