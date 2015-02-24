@@ -148,7 +148,7 @@ class BlinkChatStream(ChatStream):
 
     def _create_local_media(self, uri_path):
         local_media = super(BlinkChatStream, self)._create_local_media(uri_path)
-        local_media.attributes.append(SDPAttribute('features', 'history-control icon'))
+        local_media.attributes.append(SDPAttribute('blink-features', 'history-control icon'))
         return local_media
 
 
@@ -381,14 +381,14 @@ class ChatController(MediaStream):
     @property
     def send_icon_allowed(self):
         try:
-            return 'icon' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('features')))
+            return 'icon' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('blink-features')))
         except AttributeError:
             return False
 
     @property
     def history_control_allowed(self):
         try:
-            return 'history-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('features')))
+            return 'history-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('blink-features')))
         except AttributeError:
             return False
 
