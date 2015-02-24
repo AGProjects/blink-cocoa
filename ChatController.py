@@ -144,6 +144,8 @@ kCGWindowImageDefault = 0
 
 
 class BlinkChatStream(ChatStream):
+    priority = ChatStream.priority + 1
+
     def _create_local_media(self, uri_path):
         local_media = super(BlinkChatStream, self)._create_local_media(uri_path)
         local_media.attributes.append(SDPAttribute('features', 'history-control icon'))
