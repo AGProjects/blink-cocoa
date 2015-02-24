@@ -293,6 +293,7 @@ class AlertPanel(NSObject, object):
 
         typeCount = 0
         if 'audio' in stream_types:
+            # TODO: use stream._incoming_stream_encryption to alert user about remote encryption capabilities
             frame = audioIcon.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
