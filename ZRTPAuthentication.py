@@ -27,7 +27,7 @@ class ZRTPAuthentication(NSObject):
 
     @objc.IBAction
     def userPressedZRTPPeerName_(self, sender):
-        if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active:
+        if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active and not self.streamController.sessionController.remote_focus:
             name = self.peerName.stringValue().encode('utf-8')
             if name != self.stream.encryption.zrtp.peer_name:
                 self.stream.encryption.zrtp.peer_name = name
@@ -37,12 +37,19 @@ class ZRTPAuthentication(NSObject):
     def open(self):
         self.sasLabel.setStringValue_(self.stream.encryption.zrtp.sas)
         self.cipherLabel.setStringValue_(NSLocalizedString("Encrypted using %s", "Label") % self.stream.encryption.cipher)
-        if self.stream.encryption.zrtp.peer_name:
-            self.peerName.setStringValue_(self.stream.encryption.zrtp.peer_name.decode('utf-8'))
-        else:
+        if self.streamController.sessionController.remote_focus:
+            self.peerName.setEnabled_(False)
             self.peerName.setStringValue_(self.streamController.sessionController.titleShort)
+        else:
+            if self.stream.encryption.zrtp.peer_name:
+                self.peerName.setStringValue_(self.stream.encryption.zrtp.peer_name.decode('utf-8'))
+            else:
+                self.peerName.setStringValue_(self.streamController.sessionController.titleShort)
         
         self.window.setTitle_(NSLocalizedString("ZRTP with %s", "Label") % self.streamController.sessionController.remoteAOR)
+
+        self.validateButton.setTitle_(NSLocalizedString("Invalidate", "Label") if self.stream.encryption.zrtp.verified else NSLocalizedString("Validate", "Label"))
+
         self.window.makeKeyAndOrderFront_(self.validateButton)
 
     def close(self):
@@ -52,12 +59,13 @@ class ZRTPAuthentication(NSObject):
 
     @objc.IBAction
     def validateClicked_(self, sender):
-        if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active:
-            self.stream.encryption.zrtp.verified = True
-            name = self.peerName.stringValue().encode('utf-8')
-            if name != self.stream.encryption.zrtp.peer_name:
-                self.stream.encryption.zrtp.peer_name = name
-                self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
+        if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active :
+            self.stream.encryption.zrtp.verified = not self.stream.encryption.zrtp.verified
+            if not self.streamController.sessionController.remote_focus:
+                name = self.peerName.stringValue().encode('utf-8')
+                if name != self.stream.encryption.zrtp.peer_name:
+                    self.stream.encryption.zrtp.peer_name = name
+                    self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
         self.window.orderOut_(self)
 
     @objc.IBAction

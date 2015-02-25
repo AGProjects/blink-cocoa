@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ZRTPAuthentication">
@@ -16,7 +16,7 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Criptare ZRTP" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="zrtp_encryption" animationBehavior="default" id="QvC-M9-y7g" customClass="NSPanel">
-            <windowStyleMask key="styleMask" titled="YES" miniaturizable="YES" resizable="YES" utility="YES" HUD="YES"/>
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" utility="YES" HUD="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="467" y="259" width="304" height="238"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
@@ -69,26 +69,6 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aAn-1O-0SX">
-                        <rect key="frame" x="10" y="13" width="80" height="17"/>
-                        <buttonCell key="cell" type="inline" title="Închide" bezelStyle="inline" alignment="center" refusesFirstResponder="YES" borderStyle="border" inset="2" id="Nwf-UW-0et">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="smallSystemBold"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="closeClicked:" target="-2" id="3On-n0-afk"/>
-                        </connections>
-                    </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sWA-pQ-3aH">
-                        <rect key="frame" x="213" y="13" width="80" height="17"/>
-                        <buttonCell key="cell" type="inline" title="Verifică" bezelStyle="inline" alignment="center" borderStyle="border" inset="2" id="Ebf-qh-56o">
-                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="smallSystemBold"/>
-                        </buttonCell>
-                        <connections>
-                            <action selector="validateClicked:" target="-2" id="PVh-jj-s2r"/>
-                        </connections>
-                    </button>
                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aRH-Vw-Sqv">
                         <rect key="frame" x="10" y="54" width="285" height="77"/>
                         <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="justified" id="kPK-IB-Wms">
@@ -98,6 +78,16 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sWA-pQ-3aH">
+                        <rect key="frame" x="101" y="19" width="100" height="17"/>
+                        <buttonCell key="cell" type="inline" title="Validează" bezelStyle="inline" alignment="center" borderStyle="border" inset="2" id="Ebf-qh-56o">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="smallSystemBold"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="validateClicked:" target="-2" id="PVh-jj-s2r"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <point key="canvasLocation" x="211" y="160"/>
