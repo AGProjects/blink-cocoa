@@ -379,6 +379,13 @@ class ChatController(MediaStream):
             return False
 
     @property
+    def zrtp_sas_allowed(self):
+        try:
+            return 'com.ag-projects.zrtp-sas' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+        except AttributeError:
+            return False
+
+    @property
     def send_icon_allowed(self):
         try:
             return 'icon' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('blink-features')))
@@ -530,17 +537,19 @@ class ChatController(MediaStream):
             self.stream.send_message(text, content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
 
     def sendZRTPSas(self):
+        if not self.zrtp_sas_allowed:
+            return
+
         session = self.sessionController.session
-        if session.remote_focus:
-            try:
-                audio_stream = next(stream for stream in session.streams if stream.type=='audio' and stream.encryption.type=='ZRTP' and stream.encryption.active)
-            except StopIteration:
-                return
-            full_local_path = self.stream.msrp.full_local_path
-            full_remote_path = self.stream.msrp.full_remote_path
-            sas = audio_stream.encryption.zrtp.sas
-            if sas and all(len(path)==1 for path in (full_local_path, full_remote_path)):
-                self.stream.send_message(sas, 'application/blink-zrtp-sas')
+        try:
+            audio_stream = next(stream for stream in session.streams if stream.type=='audio' and stream.encryption.type=='ZRTP' and stream.encryption.active)
+        except StopIteration:
+            return
+        full_local_path = self.stream.msrp.full_local_path
+        full_remote_path = self.stream.msrp.full_remote_path
+        sas = audio_stream.encryption.zrtp.sas
+        if sas and all(len(path)==1 for path in (full_local_path, full_remote_path)):
+            self.stream.send_message(sas, 'application/blink-zrtp-sas')
 
     def setNickname(self, nickname):
         if self.stream and self.stream.nickname_allowed:
