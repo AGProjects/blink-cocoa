@@ -1556,6 +1556,19 @@ class AudioController(MediaStream):
 
         self.update_encryption_icon()
 
+        # Send the SAS as a chat message if applicable
+        session = sender.session
+        if session.remote_focus:
+            try:
+                chat_stream = next(stream for stream in session.streams if stream.type=='chat')
+            except StopIteration:
+                pass
+            else:
+                full_local_path = chat_stream.msrp.full_local_path
+                full_remote_path = chat_stream.msrp.full_remote_path
+                if all(len(path)==1 for path in (full_local_path, full_remote_path)):
+                    chat_stream.send_message(data.sas, 'application/blink-zrtp-sas')
+
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         self.update_encryption_icon()
 

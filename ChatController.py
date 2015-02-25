@@ -529,6 +529,19 @@ class ChatController(MediaStream):
             text = 'enabled' if not self.disable_chat_history else 'disabled'
             self.stream.send_message(text, content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
 
+    def sendZRTPSas(self):
+        session = self.sessionController.session
+        if session.remote_focus:
+            try:
+                audio_stream = next(stream for stream in session.streams if stream.type=='audio' and stream.encryption.type=='ZRTP' and stream.encryption.active)
+            except StopIteration:
+                return
+            full_local_path = self.stream.msrp.full_local_path
+            full_remote_path = self.stream.msrp.full_remote_path
+            sas = audio_stream.encryption.zrtp.sas
+            if sas and all(len(path)==1 for path in (full_local_path, full_remote_path)):
+                self.stream.send_message(sas, 'application/blink-zrtp-sas')
+
     def setNickname(self, nickname):
         if self.stream and self.stream.nickname_allowed:
             try:
@@ -1707,6 +1720,7 @@ class ChatController(MediaStream):
 
         self.sendOwnIcon()
         self.sendLoggingState()
+        self.sendZRTPSas()
 
     def _NH_MediaStreamDidInitialize(self, sender, data):
         self.sessionController.log_info(u"Chat stream initialized")
