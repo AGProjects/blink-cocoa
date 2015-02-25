@@ -53,7 +53,7 @@ from AudioController import AudioController
 from AccountSettings import AccountSettings
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkPresenceContact
-from ChatController import ChatController
+from ChatController import ChatController, BlinkChatStream
 from ScreenSharingController import ScreenSharingController, ScreenSharingServerController, ScreenSharingViewerController
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
