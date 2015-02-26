@@ -1558,7 +1558,7 @@ class AudioController(MediaStream):
 
         # Send the SAS as a chat message if applicable
         handler = self.sessionController.streamHandlerOfType('chat')
-        if handler.zrtp_sas_allowed:
+        if handler is not None and handler.zrtp_sas_allowed:
             chat_stream = handler.stream
             full_local_path = chat_stream.msrp.full_local_path
             full_remote_path = chat_stream.msrp.full_remote_path
