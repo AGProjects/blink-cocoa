@@ -153,7 +153,6 @@ class ChatWindowController(NSWindowController):
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
     audioStatus = objc.IBOutlet()
-    micLevelIndicator = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
     videoView = objc.IBOutlet()
 
@@ -1901,12 +1900,10 @@ class ChatWindowController(NSWindowController):
                     self.audioStatus.setStringValue_(NSLocalizedString("Hold by Remote", "Audio status label"))
                     self.audioStatus.setHidden_(False)
                 elif audio_stream.status ==  STREAM_CONNECTED:
-                    if audio_stream.stream.sample_rate >= 32000:
-                        hd_label = 'UWB Audio'
-                    elif audio_stream.stream.sample_rate >= 16000:
-                        hd_label = 'WB Audio'
+                    if audio_stream.stream.sample_rate >= 16000:
+                        hd_label = NSLocalizedString("Wideband", "Label")
                     else:
-                        hd_label = 'PSTN Audio'
+                        hd_label = NSLocalizedString("Narrowband", "Label")
 
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     self.audioStatus.setStringValue_(u"%s (%s)" % (hd_label, beautify_audio_codec(audio_stream.stream.codec)))

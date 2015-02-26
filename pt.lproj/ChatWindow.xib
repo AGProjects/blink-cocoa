@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
     </dependencies>
     <objects>
@@ -18,7 +17,6 @@
                 <outlet property="editorButton" destination="441" id="448"/>
                 <outlet property="encryptionIconMenuItem" destination="663" id="669"/>
                 <outlet property="encryptionMenu" destination="662" id="668"/>
-                <outlet property="micLevelIndicator" destination="586" id="589"/>
                 <outlet property="muteButton" destination="220" id="222"/>
                 <outlet property="participantMenu" destination="226" id="233"/>
                 <outlet property="participantsTableView" destination="383" id="402"/>
@@ -291,7 +289,7 @@
                     </connections>
                 </button>
                 <textField verticalHuggingPriority="750" id="241">
-                    <rect key="frame" x="44" y="8" width="136" height="14"/>
+                    <rect key="frame" x="44" y="8" width="171" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Status do Áudio" bezelStyle="round" id="242">
                         <font key="font" metaFont="smallSystem"/>
@@ -410,7 +408,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView id="n7O-cC-WH5" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="1040" height="13.5"/>
+                                    <rect key="frame" x="0.0" y="-7" width="1300" height="13.5"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -425,14 +423,6 @@
                         <outlet property="delegate" destination="-2" id="439"/>
                     </connections>
                 </splitView>
-                <levelIndicator toolTip="Sinal de Entrada do Microfone" verticalHuggingPriority="750" id="586">
-                    <rect key="frame" x="185.99999937686053" y="9" width="28" height="12"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                    <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="587">
-                        <font key="font" metaFont="miniSystem"/>
-                    </levelIndicatorCell>
-                    <accessibility description="Sinal de Entrada do Microfone"/>
-                </levelIndicator>
             </subviews>
         </customView>
         <drawer preferredEdge="minX" trailingOffset="15" id="136">
