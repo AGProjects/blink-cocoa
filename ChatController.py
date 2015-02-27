@@ -1577,7 +1577,7 @@ class ChatController(MediaStream):
             self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
 
             # save to history
-            if 'Welcome to SylkServer!' not in text:
+            if 'Welcome to SylkServer!' not in text 'Received ZRTP Short Authentication String' not in text:
                 message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, text=text, private=private, status="delivered", content_type='html' if is_html else 'text', encryption=encryption)
                 self.outgoing_message_handler.add_to_history(message)
 
