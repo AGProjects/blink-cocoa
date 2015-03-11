@@ -81,13 +81,13 @@ class PSTNSettings(SettingsGroup):
 
 class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
-    encryption_type = Setting(type=str, default='zrtp')
+    encryption_type = Setting(type=str, default='opportunistic')
     hangup_on_timeout = Setting(type=bool, default=True)
 
 
 class BonjourRTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
-    encryption_type = Setting(type=str, default='zrtp')
+    encryption_type = Setting(type=str, default='opportunistic')
     hangup_on_timeout = Setting(type=bool, default=True)
 
 
