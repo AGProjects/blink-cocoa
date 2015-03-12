@@ -1233,7 +1233,6 @@
 		1FC80E8B192E3E1F00BD62F4 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1FC80E8C192E3E1F00BD62F4 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		1FC80E8E192E3E1F00BD62F4 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
-		1FC80E8F192E3E1F00BD62F4 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
 		1FC80E90192E3E1F00BD62F4 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1FC80E91192E3E1F00BD62F4 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1FC80E92192E3E1F00BD62F4 /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
@@ -1572,7 +1571,6 @@
 		1FCA7DE619546B0B00765366 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
 		1FCA7DE719546B0B00765366 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
 		1FCA7DE919546B0B00765366 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
-		1FCA7DEA19546B0B00765366 /* 4444@sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */; };
 		1FCA7DEB19546B0B00765366 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1FCA7DEC19546B0B00765366 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
 		1FCA7DED19546B0B00765366 /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
@@ -2799,11 +2797,6 @@
 		1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		1F0F2AA115456DAD00ECB98E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		1F0F2AA215456DAD00ECB98E /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
-		1F0F2AA615456DAD00ECB98E /* BlinkPlugin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "BlinkPlugin-Info.plist"; sourceTree = "<group>"; };
-		1F0F2AA815456DAD00ECB98E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		1F0F2AAA15456DAD00ECB98E /* BlinkPlugin-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlinkPlugin-Prefix.pch"; sourceTree = "<group>"; };
-		1F0F2AAB15456DAD00ECB98E /* BlinkPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlinkPlugin.h; sourceTree = "<group>"; };
-		1F0F2AAC15456DAD00ECB98E /* BlinkPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlinkPlugin.m; sourceTree = "<group>"; };
 		1F1425591905335300CFEC42 /* aspect_ratio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = aspect_ratio.png; path = icons/aspect_ratio.png; sourceTree = SOURCE_ROOT; };
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F17D30F17F9825D00CB74EC /* database-local-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-local-off.png"; path = "icons/database-local-off.png"; sourceTree = SOURCE_ROOT; };
@@ -2834,7 +2827,6 @@
 		1F29D0EB1905BD670051B1BC /* sip2sip.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = sip2sip.icns; sourceTree = "<group>"; };
 		1F29D0FC1906D55E0051B1BC /* video-paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-paused.png"; path = "icons/video-paused.png"; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
-		1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "4444@sip2sip.info.tiff"; path = "icons/4444@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F32884E17DB8192003A7F12 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
@@ -3334,7 +3326,6 @@
 		2BD011E110D8198400D27A92 /* ChatView.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = ChatView.html; sourceTree = "<group>"; };
 		2BD014EB10DB239B00D27A92 /* smiley_off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_off.png; path = icons/smiley_off.png; sourceTree = "<group>"; };
 		2BD014EC10DB239B00D27A92 /* smiley_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_on.png; path = icons/smiley_on.png; sourceTree = "<group>"; };
-		2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "3333@sip2sip.info.tiff"; path = "icons/3333@sip2sip.info.tiff"; sourceTree = "<group>"; };
 		2BDAE17211113B8200AC1D7A /* audio_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_small.png; path = icons/audio_small.png; sourceTree = "<group>"; };
 		2BE7632A10732DC000A1DF24 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/About.xib; sourceTree = "<group>"; };
 		2BEFC12D0FD0BE4700447EFB /* SessionController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionController.py; sourceTree = "<group>"; };
@@ -3509,26 +3500,6 @@
 				1FA4907A154963040011EE27 /* AddressBook */,
 			);
 			name = Plugins;
-			sourceTree = "<group>";
-		};
-		1F0F2AA415456DAD00ECB98E /* BlinkPlugin */ = {
-			isa = PBXGroup;
-			children = (
-				1F0F2AAB15456DAD00ECB98E /* BlinkPlugin.h */,
-				1F0F2AAC15456DAD00ECB98E /* BlinkPlugin.m */,
-				1F0F2AA515456DAD00ECB98E /* Supporting Files */,
-			);
-			path = BlinkPlugin;
-			sourceTree = "<group>";
-		};
-		1F0F2AA515456DAD00ECB98E /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				1F0F2AA615456DAD00ECB98E /* BlinkPlugin-Info.plist */,
-				1F0F2AA715456DAD00ECB98E /* InfoPlist.strings */,
-				1F0F2AAA15456DAD00ECB98E /* BlinkPlugin-Prefix.pch */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		1F226DE312B54FBE0010A8B2 /* Dependencies */ = {
@@ -3713,7 +3684,6 @@
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
-				1F0F2AA415456DAD00ECB98E /* BlinkPlugin */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
 			name = MacSip;
@@ -3865,8 +3835,6 @@
 				1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */,
 				1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */,
 				1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */,
-				1F2BDEFD1147CFD500772C04 /* 4444@sip2sip.info.tiff */,
-				2BD66FD2112850DD003F32B9 /* 3333@sip2sip.info.tiff */,
 				2BDAE17211113B8200AC1D7A /* audio_small.png */,
 				2BD014EB10DB239B00D27A92 /* smiley_off.png */,
 				2BD014EC10DB239B00D27A92 /* smiley_on.png */,
@@ -5415,7 +5383,6 @@
 				1FC80E8C192E3E1F00BD62F4 /* SMSViewController.py in Resources */,
 				1F08DB1A193DEDB200187373 /* offline.aif in Resources */,
 				1FC80E8E192E3E1F00BD62F4 /* PresenceOfflineWindow.xib in Resources */,
-				1FC80E8F192E3E1F00BD62F4 /* 4444@sip2sip.info.tiff in Resources */,
 				1FC80E90192E3E1F00BD62F4 /* 200901@login.zipdx.com.tiff in Resources */,
 				1FC80E91192E3E1F00BD62F4 /* blink-full-72dpi.tif in Resources */,
 				1FC80E92192E3E1F00BD62F4 /* ConferenceController.py in Resources */,
@@ -5691,7 +5658,6 @@
 				1FCA7DE619546B0B00765366 /* SMSViewController.py in Resources */,
 				1FCA7DE719546B0B00765366 /* offline.aif in Resources */,
 				1FCA7DE919546B0B00765366 /* PresenceOfflineWindow.xib in Resources */,
-				1FCA7DEA19546B0B00765366 /* 4444@sip2sip.info.tiff in Resources */,
 				1FCA7DEB19546B0B00765366 /* 200901@login.zipdx.com.tiff in Resources */,
 				1FCA7DEC19546B0B00765366 /* blink-full-72dpi.tif in Resources */,
 				1FCA7DED19546B0B00765366 /* ConferenceController.py in Resources */,
@@ -6183,14 +6149,6 @@
 				1FCEFA4919EBF9DE00E9647D /* nl */,
 			);
 			name = ConferenceConfigurationPanel.xib;
-			sourceTree = "<group>";
-		};
-		1F0F2AA715456DAD00ECB98E /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1F0F2AA815456DAD00ECB98E /* en */,
-			);
-			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 		1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */ = {
