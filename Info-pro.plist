@@ -42,13 +42,15 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>15343</string>
+	<string>15370</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>NSMainNibFile</key>
 	<string>MainWindow</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.9.0</string>
 	<key>NSUbiquitousDisplaySet</key>
 	<string>com.agprojects.Blink</string>
 </dict>

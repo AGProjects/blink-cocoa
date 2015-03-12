@@ -51,6 +51,8 @@
 	<string>MainWindow</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.9.0</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/BlinkAppcast.xml</string>
 </dict>

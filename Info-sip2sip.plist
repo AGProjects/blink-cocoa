@@ -20,6 +20,8 @@
 	<string>$(TARGET_NAME) </string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.9.0</string>
 	<key>CFBundleShortVersionString</key>
 	<string>3.0.4</string>
 	<key>CFBundleSignature</key>
