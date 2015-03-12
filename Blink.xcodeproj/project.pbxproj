@@ -2191,8 +2191,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
 				1FD6D5D81A7BD68700E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
 				1FAA9E8A1A8D4A7300BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
 				1FAA9E8B1A8D4A7300BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
 				1FAA9E8C1A8D4A7300BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
@@ -2305,8 +2305,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
 				1FD6D5C51A7BD57200E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
 				1FAA9E841A8D493700BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
 				1FAA9E851A8D493700BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
 				1FAA9E861A8D493700BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
@@ -2420,8 +2420,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
 				1FD6D5EB1A7BD69B00E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
+				1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
 				1FAA9E901A8D4A8400BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
 				1FAA9E911A8D4A8400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
 				1FAA9E921A8D4A8400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
@@ -2738,6 +2738,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				DEFDFDF31A8CDE670071D4B2 /* libswscale.3.dylib in Copy Frameworks */,
 				1FD6D5A51A7B7F7000E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
 				1FD6D5A91A7B7F7000E0FAFA /* libavformat.56.dylib in Copy Frameworks */,
 				1FD6D5AC1A7B7F7100E0FAFA /* libavutil.54.dylib in Copy Frameworks */,
@@ -2746,7 +2747,6 @@
 				DEFDFDF11A8CDE670071D4B2 /* libhogweed.2.dylib in Copy Frameworks */,
 				DEFDFDF21A8CDE670071D4B2 /* libnettle.4.dylib in Copy Frameworks */,
 				DE0C40EB1A8E03B40008685F /* libswresample.1.dylib in Copy Frameworks */,
-				DEFDFDF31A8CDE670071D4B2 /* libswscale.3.dylib in Copy Frameworks */,
 				DEFDFDF41A8CDE670071D4B2 /* libtasn1.6.dylib in Copy Frameworks */,
 				DEFDFDF51A8CDE670071D4B2 /* libx264.142.dylib in Copy Frameworks */,
 				1FD6D5B61A7B7F7100E0FAFA /* libpython2.7.dylib in Copy Frameworks */,
