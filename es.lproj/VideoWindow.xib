@@ -40,7 +40,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="VideoWidget">
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="remoteVideoWidget">
                         <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
@@ -185,7 +185,7 @@
                             </textField>
                         </subviews>
                     </view>
-                    <customView id="g4v-Xf-ipS" customClass="LocalVideoView">
+                    <customView id="g4v-Xf-ipS" customClass="myVideoWidget">
                         <rect key="frame" x="10" y="281" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </customView>
