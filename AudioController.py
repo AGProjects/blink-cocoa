@@ -1524,7 +1524,7 @@ class AudioController(MediaStream):
             return
 
         self.updateTootip()
-        peer_name = self.stream.encryption.zrtp.peer_name.decode('utf-8') if self.stream.encryption.zrtp.peer_name else None
+        peer_name = self.stream.encryption.zrtp.peer_name if self.stream.encryption.zrtp.peer_name else None
         self.sessionController.log_info("ZRTP audio peer %s name is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
         self.sessionController.log_info("ZRTP audio peer %s is %s" % (self.stream.encryption.zrtp.peer_id, 'verified' if self.stream.encryption.zrtp.verified else 'not verified'))
 
