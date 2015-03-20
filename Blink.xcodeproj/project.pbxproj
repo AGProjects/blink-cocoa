@@ -6749,7 +6749,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -6772,11 +6772,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "dc1fcaf3-4afd-467e-9f77-d0dfb34e7768";
+				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -6791,7 +6791,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Installer: AG Projects (4DFEFUDLKZ)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -6812,12 +6812,12 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "4e7ffe5e-0577-413d-a3e8-30d9917ce6a4";
+				PROVISIONING_PROFILE = "9406a340-9e34-4ce2-985c-2df7c97af31b";
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -6912,7 +6912,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -6935,10 +6935,10 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "dc1fcaf3-4afd-467e-9f77-d0dfb34e7768";
+				PROVISIONING_PROFILE = "7cdfccf3-5293-4b0c-973e-560ab4eb9d5f";
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -6952,8 +6952,8 @@
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = BlinkLite.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
+				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -6975,10 +6975,10 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
-				PROVISIONING_PROFILE = "e5592021-182f-49db-999d-cd8d6c18324b";
+				PROVISIONING_PROFILE = "2e95b5fc-c2e3-4a5f-af14-8840bbf25281";
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
@@ -7014,7 +7014,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "El Quijote";
@@ -7053,7 +7053,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
@@ -7096,7 +7096,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "El Quijote";
@@ -7137,7 +7137,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
