@@ -203,7 +203,7 @@ class VideoController(MediaStream):
 
     def markMediaReceived(self):
         self.media_received = True
-        if self.videoWindowController and self.videoWindowController.disconnectLabel.stringValue() == self.waiting_label:
+        if self.videoWindowController and self.videoWindowController.disconnectLabel and self.videoWindowController.disconnectLabel.stringValue() == self.waiting_label:
             self.videoWindowController.hideStatusLabel()
 
     def togglePause(self):
