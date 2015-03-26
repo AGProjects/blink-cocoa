@@ -1923,8 +1923,8 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                             skip_target.add(target_uri)
                             continue
 
-                # skip missed calls that happened before any outgoing call
-                elif result.direction == 'outgoing':
+                # skip missed calls that happened before any successful outgoing call
+                elif result.direction == 'outgoing' and result.duration > 0:
                     try:
                         _last_missed_call_start_time = last_missed_call_start_time[target_uri]
                     except KeyError:
