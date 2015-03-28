@@ -1916,6 +1916,9 @@ class SessionController(NSObject):
         if data.failure_reason == 'Unknown error 61':
             status = NSLocalizedString("Connection refused", "Label")
             self.failureReason = data.failure_reason
+        elif data.reason == 'Server error occurred (1/SL)':
+            status = NSLocalizedString("Server error", "Label")
+            self.failureReason = 'Server error'
         elif data.failure_reason != 'user request':
             status = u"%s" % data.failure_reason.decode('utf-8')
             self.failureReason = status
