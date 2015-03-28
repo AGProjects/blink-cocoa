@@ -1549,12 +1549,14 @@ class ContactWindowController(NSWindowController):
 
     @run_in_gui_thread
     def _NH_SIPSessionLoggedToHistory(self, notification):
-        #self.updateHistoryMenu()
+        self.updateHistoryMenu()
         if self.new_audio_sample_rate and not self.has_audio:
             settings = SIPSimpleSettings()
             settings.audio.sample_rate = self.new_audio_sample_rate
             self.new_audio_sample_rate = None
             settings.save()
+
+        NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
