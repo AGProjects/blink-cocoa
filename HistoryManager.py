@@ -1256,7 +1256,7 @@ class SessionHistoryReplicator(object):
 
                         BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
                         received_synced += 1
-                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
+                        self.sessionControllersManager.add_to_session_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
                             direction = 'incoming'
                             status = 'delivered'
@@ -1348,7 +1348,7 @@ class SessionHistoryReplicator(object):
 
                         BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
                         placed_synced += 1
-                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
+                        self.sessionControllersManager.add_to_session_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
                             local_uri = local_uri
                             remote_uri = remote_uri
