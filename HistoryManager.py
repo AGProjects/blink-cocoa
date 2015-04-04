@@ -142,6 +142,7 @@ class SessionHistoryEntry(SQLObject):
     remote_uri        = UnicodeCol(length=128)
     remote_focus      = StringCol()
     participants      = UnicodeCol(sqlType='LONGTEXT')
+    encryption        = UnicodeCol(sqlType='LONGTEXT')
     session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
     local_idx         = DatabaseIndex('local_uri')
     remote_idx        = DatabaseIndex('remote_uri')
@@ -151,7 +152,7 @@ class SessionHistoryEntry(SQLObject):
 
 class SessionHistory(object):
     __metaclass__ = Singleton
-    __version__ = 5
+    __version__ = 6
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -239,10 +240,18 @@ class SessionHistory(object):
                 except Exception, e:
                     BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
+            if previous_version.version < 6:
+                query = "ALTER TABLE sessions add column 'encryption' TEXT DEFAULT ''"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added column 'encryption' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename):
+    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename, encryption):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
@@ -260,7 +269,8 @@ class SessionHistory(object):
                           sip_callid          = call_id,
                           sip_fromtag         = from_tag,
                           sip_totag           = to_tag,
-                          am_filename         = am_filename
+                          am_filename         = am_filename,
+                          encryption          = encryption
                           )
             return True
         except dberrors.DuplicateEntryError:
@@ -1237,7 +1247,7 @@ class SessionHistoryReplicator(object):
 
                         BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
                         received_synced += 1
-                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '')
+                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
                             direction = 'incoming'
                             status = 'delivered'
@@ -1329,7 +1339,7 @@ class SessionHistoryReplicator(object):
 
                         BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
                         placed_synced += 1
-                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '')
+                        self.sessionControllersManager.add_to_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
                             local_uri = local_uri
                             remote_uri = remote_uri
