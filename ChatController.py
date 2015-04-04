@@ -2035,6 +2035,12 @@ class OutgoingMessageHandler(NSObject):
         else:
             if self.delegate.delegate.is_encrypted:
                 self.delegate.sessionController.log_info('OTR negotiation succeeded')
+                try:
+                    otr = self.delegate.sessionController.encryption['chat']
+                except KeyError:
+                    self.delegate.sessionController.encryption['chat'] = {}
+
+                self.delegate.sessionController.encryption['chat']['type'] = 'OTR'
             else:
                 self.delegate.sessionController.log_info('OTR negotiation failed')
 

@@ -14,6 +14,7 @@ from Foundation import (NSBundle,
                         NSURL,
                         NSWorkspace)
 import objc
+import cjson
 
 import hashlib
 import os
@@ -600,7 +601,6 @@ class SessionControllersManager(object):
         return True
 
     def log_incoming_session_missed(self, controller, data):
-        encryption = ''
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -613,7 +613,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -630,7 +630,6 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_voicemail(self, controller, data):
-        encryption = ''
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -643,7 +642,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -660,7 +659,6 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_ended(self, controller, data):
-        encryption = ''
         account = controller.account
         session = controller.session
         media_type = ",".join(data.streams)
@@ -678,7 +676,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -698,7 +696,6 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
-        encryption = ''
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -710,7 +707,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
@@ -730,7 +727,6 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_failed(self, controller, data):
-        encryption = ''
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -743,7 +739,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
@@ -763,7 +759,6 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_cancelled(self, controller, data):
-        encryption = ''
         account = controller.account
         self.redial_uri = controller.target_uri
         media_type = ",".join(data.streams)
@@ -777,7 +772,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
@@ -797,7 +792,6 @@ class SessionControllersManager(object):
         if not controller.session:
             return
 
-        encryption = ''
         account = controller.account
         session = controller.session
         media_type = ",".join(data.streams)
@@ -819,7 +813,7 @@ class SessionControllersManager(object):
 
         duration = session.end_time - session.start_time
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '')
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -935,6 +929,7 @@ class SessionController(NSObject):
     cancelled_during_dns_lookup = False
     retries = 0
     display_name = None
+    encryption = {}
 
     @property
     def sessionControllersManager(self):
@@ -1409,6 +1404,7 @@ class SessionController(NSObject):
         self.notify_when_participants_changed = False
         self.screensharing_urls = {}
         self.waitingForLocalVideo = False
+        self.encryption = {}
 
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
         for item in self.invited_participants:
@@ -1850,6 +1846,15 @@ class SessionController(NSObject):
         self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         self.log_info("Session started with %s" % ", ".join(stream.type for stream in data.streams))
+
+        if self.session.transport == 'tls':
+            try:
+                sig = self.encryption['signaling']
+            except KeyError:
+                self.encryption['signaling'] = {}
+            
+            self.encryption['signaling']['type'] = 'TLS'
+
         for contact in self.invited_participants:
             self.session.conference.add_participant(contact.uri)
 

@@ -1519,6 +1519,12 @@ class AudioController(MediaStream):
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.update_encryption_icon()
         self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
+        try:
+            otr = self.sessionController.encryption['audio']
+        except KeyError:
+            self.sessionController.encryption['audio'] = {}
+
+        self.sessionController.encryption['audio']['type'] = sender.encryption.type
 
         if sender.encryption.type != 'ZRTP':
             return
@@ -1527,6 +1533,7 @@ class AudioController(MediaStream):
         peer_name = self.stream.encryption.zrtp.peer_name if self.stream.encryption.zrtp.peer_name else None
         self.sessionController.log_info("ZRTP audio peer %s name is %s" % (self.stream.encryption.zrtp.peer_id, peer_name or '<not set>'))
         self.sessionController.log_info("ZRTP audio peer %s is %s" % (self.stream.encryption.zrtp.peer_id, 'verified' if self.stream.encryption.zrtp.verified else 'not verified'))
+        self.sessionController.encryption['audio']['verified'] = 'yes' if self.stream.encryption.zrtp.verified else 'no'
 
         if peer_name:
             self.sessionController.updateDisplayName(peer_name)
@@ -1566,5 +1573,12 @@ class AudioController(MediaStream):
                 chat_stream.send_message(data.sas, 'application/blink-zrtp-sas')
 
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
+        try:
+            otr = self.sessionController.encryption['audio']
+        except KeyError:
+            self.sessionController.encryption['audio'] = {}
+    
+        self.sessionController.encryption['audio']['type'] = 'ZRTP'
+        self.sessionController.encryption['audio']['verified'] = 'yes' if self.stream.encryption.zrtp.verified else 'no'
         self.update_encryption_icon()
 

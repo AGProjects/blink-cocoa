@@ -527,6 +527,12 @@ class VideoController(MediaStream):
 
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
+        try:
+            otr = self.sessionController.encryption['video']
+        except KeyError:
+            self.sessionController.encryption['video'] = {}
+        
+        self.sessionController.encryption['video']['type'] = sender.encryption.type
         if self.videoWindowController:
             self.videoWindowController.update_encryption_icon()
 
@@ -543,5 +549,13 @@ class VideoController(MediaStream):
 
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         if self.videoWindowController:
+            try:
+                otr = self.sessionController.encryption['video']
+            except KeyError:
+                self.sessionController.encryption['video'] = {}
+        
+            self.sessionController.encryption['video']['type'] = 'ZRTP'
+            self.sessionController.encryption['video']['verified'] = 'yes' if self.stream.encryption.zrtp.verified else 'no'
+
             self.videoWindowController.update_encryption_icon()
 
