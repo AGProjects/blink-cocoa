@@ -600,14 +600,11 @@ class SessionControllersManager(object):
         return True
 
     def log_incoming_session_missed(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
         encryption = ''
+        account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = ''
@@ -616,7 +613,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -633,14 +630,11 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_voicemail(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
         encryption = ''
+        account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = ''
@@ -649,7 +643,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Audio Call</h3>'
@@ -666,15 +660,12 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_ended(self, controller, data):
+        encryption = ''
         account = controller.account
         session = controller.session
-        if account is BonjourAccount():
-            return
-
-        encryption = ''
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = ''
@@ -687,7 +678,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -707,14 +698,11 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
         encryption = ''
+        account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         focus = "1" if data.focus else "0"
         failure_reason = 'Answered elsewhere'
@@ -722,7 +710,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
@@ -742,15 +730,12 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_failed(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
         encryption = ''
+        account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
@@ -758,7 +743,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Audio Call</h3>'
@@ -778,17 +763,13 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_cancelled(self, controller, data):
-        account = controller.account
-        if account is BonjourAccount():
-            return
-
-        self.redial_uri = controller.target_uri
-
         encryption = ''
+        account = controller.account
+        self.redial_uri = controller.target_uri
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = ''
@@ -796,7 +777,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Audio Call</h3>'
@@ -813,20 +794,16 @@ class SessionControllersManager(object):
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_ended(self, controller, data):
-
-        account = controller.account
-        session = controller.session
-        if not session:
-            return
-
-        if account is BonjourAccount():
+        if not controller.session:
             return
 
         encryption = ''
+        account = controller.account
+        session = controller.session
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = format_identity_to_string(account)
+        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower()
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         direction = 'incoming'
@@ -842,7 +819,7 @@ class SessionControllersManager(object):
 
         duration = session.end_time - session.start_time
 
-        self.add_to_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption)
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, data.target_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, encryption, controller.display_name or '')
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -872,8 +849,8 @@ class SessionControllersManager(object):
         return duration_print
 
     @run_in_green_thread
-    def add_to_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption):
-        SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption)
+    def add_to_session_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption='', display_name=''):
+        SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption, display_name)
 
     @run_in_green_thread
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):

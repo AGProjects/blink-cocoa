@@ -3806,21 +3806,29 @@ class ContactWindowController(NSWindowController):
 
         last_recipient = None
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            display_name = result.display_name or _display_name
+
             if target_uri == last_recipient:
                 continue
             last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != contact.uri:
                 display_name = contact.name
-                fancy_uri = '%s <%s>' % (display_name, target_uri)
-            elif display_name == target_uri:
+
+            if display_name == target_uri:
                 fancy_uri = target_uri
+            elif display_name:
+                if result.local_uri == 'bonjour.local':
+                    fancy_uri = display_name
+                else:
+                    fancy_uri = '%s <%s>' % (display_name, target_uri)
 
             item = {
             "streams": result.media_types.split(","),
             "account": result.local_uri,
             "remote_party": fancy_uri,
+            "display_name": display_name,
             "target_uri": target_uri,
             "status": result.status,
             "failure_reason": result.failure_reason,
@@ -3835,21 +3843,29 @@ class ContactWindowController(NSWindowController):
 
         last_recipient = None
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            display_name = result.display_name or _display_name
+
             if target_uri == last_recipient:
                 continue
             last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
-                fancy_uri = '%s <%s>' % (display_name, target_uri)
-            elif display_name == target_uri:
+
+            if display_name == target_uri:
                 fancy_uri = target_uri
+            elif display_name:
+                if result.local_uri == 'bonjour.local':
+                    fancy_uri = display_name
+                else:
+                    fancy_uri = '%s <%s>' % (display_name, target_uri)
 
             item = {
             "streams": result.media_types.split(","),
             "account": result.local_uri,
             "remote_party": fancy_uri,
+            "display_name": display_name,
             "target_uri": target_uri,
             "status": result.status,
             "failure_reason": result.failure_reason,
@@ -3864,21 +3880,29 @@ class ContactWindowController(NSWindowController):
 
         last_recipient = None
         for result in results:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+            display_name = result.display_name or _display_name
+
             if target_uri == last_recipient:
                 continue
             last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != target_uri:
                 display_name = contact.name
-                fancy_uri = '%s <%s>' % (display_name, target_uri)
-            elif display_name == target_uri:
+
+            if display_name == target_uri:
                 fancy_uri = target_uri
+            elif display_name:
+                if result.local_uri == 'bonjour.local':
+                    fancy_uri = display_name
+                else:
+                    fancy_uri = '%s <%s>' % (display_name, target_uri)
 
             item = {
             "streams": result.media_types.split(","),
             "account": result.local_uri,
             "remote_party": fancy_uri,
+            "display_name": display_name,
             "target_uri": target_uri,
             "status": result.status,
             "failure_reason": result.failure_reason,
@@ -4029,17 +4053,22 @@ class ContactWindowController(NSWindowController):
         else:
             item = sender.representedObject()
             target_uri = item["target_uri"]
-            try:
-                account = AccountManager().get_account(item["account"])
-            except:
-                account = None
+            _search_text = target_uri
+            if item["account"] == 'bonjour.local':
+                _search_text = item['display_name']
+                account = BonjourAccount()
+            else:
+                try:
+                    account = AccountManager().get_account(item["account"])
+                except:
+                    account = None
 
             if account and account.enabled:
                 # auto-select the account
                 AccountManager().default_account = account
                 self.refreshAccountList()
 
-            self.searchBox.setStringValue_(target_uri)
+            self.searchBox.setStringValue_(_search_text)
             self.searchContacts()
             self.focusSearchTextField()
 
@@ -4088,12 +4117,25 @@ class ContactWindowController(NSWindowController):
 
     @run_in_gui_thread
     def redial(self, session_info):
-        try:
-            account = AccountManager().get_account(session_info.local_uri)
-        except:
-            account = None
+        display_name = session_info.display_name
+        if session_info.local_uri == 'bonjour.local':
+            account = BonjourAccount()
+            bonjour_contact = self.model.getBonjourContactMatchingDisplayName(display_name)
+            if bonjour_contact:
+                target_uri = bonjour_contact.uri
+            else:
+                BlinkLogger().log_info("Bonjour neighbour %s was not found on this network" % display_name)
+                message = NSLocalizedString("Bonjour neighbour %s was not found on this network. ", "label") % display_name
+                NSRunAlertPanel(NSLocalizedString("Error", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
+                return
+        else:
+            try:
+                account = AccountManager().get_account(session_info.local_uri)
+            except:
+                account = None
 
-        target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
+            target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
+
         streams = session_info.media_types.split(",")
 
         BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account, target_uri, streams))
@@ -4101,7 +4143,7 @@ class ContactWindowController(NSWindowController):
             account = self.activeAccount()
         target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
 
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, None)
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, display_name)
 
         if 'audio' in streams and 'chat' in streams:
             # give priority to chat stream so that we do not open audio drawer for composite streams

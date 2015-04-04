@@ -1767,7 +1767,7 @@ class BonjourBlinkGroup(VirtualBlinkGroup):
 
     def __init__(self, name=NSLocalizedString("Bonjour Neighbours", "Group name label"), expanded=True):
         objc.super(BonjourBlinkGroup, self).__init__(name, expanded)
-        self.not_filtered_contacts = [] # keep a list of all neighbors so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
+        self.not_filtered_contacts = [] # keep a list of all neighbours so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
         self.original_position = None
 
 
@@ -2726,6 +2726,12 @@ class ContactListModel(CustomListModel):
 
         try:
             return (blink_contact for group in groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
+        except StopIteration:
+            return None
+
+    def getBonjourContactMatchingDisplayName(self, display_name):
+        try:
+            return (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.name == display_name).next()
         except StopIteration:
             return None
 
