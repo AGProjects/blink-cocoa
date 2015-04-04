@@ -940,7 +940,7 @@ class SessionController(NSObject):
         assert isinstance(target_uri, SIPURI)
         self = objc.super(SessionController, self).init()
         BlinkLogger().log_debug(u"Creating %s" % self)
-        self.display_name = display_name
+        self.display_name = sip_prefix_pattern.sub("", display_name)
         self.remoteIdentity = target_uri
         self.account = account
         self.target_uri = target_uri
@@ -1102,7 +1102,7 @@ class SessionController(NSObject):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
     def updateDisplayName(self, display_name):
-        self.display_name = display_name
+        self.display_name = sip_prefix_pattern.sub("", display_name)
         if display_name is not None:
             self.notification_center.post_notification("BlinkSessionChangedDisplayName", sender=self)
 

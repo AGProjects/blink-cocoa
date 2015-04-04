@@ -3808,6 +3808,7 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             display_name = result.display_name or _display_name
+            display_name = sip_prefix_pattern.sub("", display_name)
 
             if target_uri == last_recipient:
                 continue
@@ -3845,6 +3846,7 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             display_name = result.display_name or _display_name
+            display_name = sip_prefix_pattern.sub("", display_name)
 
             if target_uri == last_recipient:
                 continue
@@ -3882,6 +3884,7 @@ class ContactWindowController(NSWindowController):
         for result in results:
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             display_name = result.display_name or _display_name
+            display_name = sip_prefix_pattern.sub("", display_name)
 
             if target_uri == last_recipient:
                 continue
