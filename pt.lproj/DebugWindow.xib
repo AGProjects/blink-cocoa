@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6751" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1080" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6751"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="DebugWindow">
@@ -988,9 +987,9 @@
                         </connections>
                     </tabView>
                     <button id="CSG-W1-DOo">
-                        <rect key="frame" x="0.0" y="0.0" width="66" height="22"/>
+                        <rect key="frame" x="0.0" y="0.0" width="95" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="check" title="Autoscroll" bezelStyle="regularSquare" imagePosition="left" controlSize="mini" state="on" inset="2" id="kvC-d7-26R">
+                        <buttonCell key="cell" type="check" title="Auto de rolagem" bezelStyle="regularSquare" imagePosition="left" controlSize="mini" state="on" inset="2" id="kvC-d7-26R">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="miniSystem"/>
                         </buttonCell>
