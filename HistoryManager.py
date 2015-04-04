@@ -142,6 +142,7 @@ class SessionHistoryEntry(SQLObject):
     remote_uri        = UnicodeCol(length=128)
     remote_focus      = StringCol()
     participants      = UnicodeCol(sqlType='LONGTEXT')
+    display_name      = UnicodeCol(sqlType='LONGTEXT')
     encryption        = UnicodeCol(sqlType='LONGTEXT')
     session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
     local_idx         = DatabaseIndex('local_uri')
@@ -248,10 +249,17 @@ class SessionHistory(object):
                 except Exception, e:
                     BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
+                query = "ALTER TABLE sessions add column 'display_name' TEXT DEFAULT ''"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_debug(u"Added column 'display_name' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename, encryption):
+    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename, encryption, display_name):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
@@ -270,7 +278,8 @@ class SessionHistory(object):
                           sip_fromtag         = from_tag,
                           sip_totag           = to_tag,
                           am_filename         = am_filename,
-                          encryption          = encryption
+                          encryption          = encryption,
+                          display_name        = display_name
                           )
             return True
         except dberrors.DuplicateEntryError:
