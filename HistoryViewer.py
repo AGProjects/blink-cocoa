@@ -16,7 +16,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSToolbarPrintItemIdentifier)
 from Foundation import (NSBundle,
                         NSDate,
-                        NSDictionary,
+                        NSMutableDictionary,
                         NSDefaultRunLoopMode,
                         NSEvent,
                         NSImage,
@@ -106,6 +106,9 @@ class HistoryViewer(NSWindowController):
     after_date = None
     before_date = None
     refresh_contacts_counter = 1
+    contact_cache = {}
+    display_name_cache = {}
+    refresh_in_progress = False
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: ('audio', 'video'), 2: ('chat', 'sms'), 3: 'file-transfer', 4: 'audio-recording', 5: 'availability', 6: 'voicemail', 7: 'video-recording'}
@@ -153,7 +156,7 @@ class HistoryViewer(NSWindowController):
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.all_contacts = BlinkHistoryViewerContact('Any Address', name=u'All Contacts')
-            self.bonjour_contact = BlinkHistoryViewerContact('bonjour', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+            self.bonjour_contact = BlinkHistoryViewerContact('bonjour.local', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
@@ -177,7 +180,7 @@ class HistoryViewer(NSWindowController):
 
             self.chat_history = ChatHistory()
             self.session_history = SessionHistory()
-            self.setPeriod(2)
+            self.setPeriod(1)
 
             self.selectedTableView = self.contactTable
 
@@ -234,7 +237,7 @@ class HistoryViewer(NSWindowController):
     def awakeFromNib(self):
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "contactSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.contactTable)
 
-        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshContactsTimer:", None, True)
+        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1, self, "refreshContactsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
 
@@ -261,6 +264,11 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def refreshContacts(self):
+        if self.refresh_in_progress:
+            return
+
+        self.refresh_in_progress = True
+        self.refresh_contacts_counter = 0
         if self.chat_history:
             self.updateBusyIndicator(True)
             remote_uri = self.search_uris if self.search_uris else None
@@ -277,6 +285,7 @@ class HistoryViewer(NSWindowController):
     def renderContacts(self, results):
         index = 0
         found_uris = []
+        uris_without_display_name = []
 
         for item in self.contacts:
             item.destroy()
@@ -287,7 +296,12 @@ class HistoryViewer(NSWindowController):
 
         if self.search_uris:
             for uri in self.search_uris:
-                found_contact = getFirstContactMatchingURI(uri, exact_match=True)
+                try:
+                    found_contact = self.contact_cache[uri]
+                except KeyError:
+                    found_contact = getFirstContactMatchingURI(uri, exact_match=True)
+                    self.contact_cache[uri] = found_contact
+
                 if found_contact:
                     contact_exist = False
                     for contact_uri in found_contact.uris:
@@ -315,7 +329,11 @@ class HistoryViewer(NSWindowController):
 
         if results:
             for row in results:
-                found_contact = getFirstContactMatchingURI(row[0], exact_match=True)
+                try:
+                    found_contact = self.contact_cache[row[0]]
+                except KeyError:
+                    found_contact = getFirstContactMatchingURI(row[0], exact_match=True)
+                    self.contact_cache[row[0]] = found_contact
                 if found_contact:
                     contact_exist = False
                     for contact_uri in found_contact.uris:
@@ -331,16 +349,56 @@ class HistoryViewer(NSWindowController):
                     if row[0] in found_uris:
                         continue
                     found_uris.append(row[0])
-                    contact = BlinkHistoryViewerContact(unicode(row[0]), name=unicode(row[0]))
+                    try:
+                        display_name = self.display_name_cache[row[0]]
+                    except KeyError:
+                        display_name = unicode(row[0])
+                        uris_without_display_name.append(row[0])
+                    contact = BlinkHistoryViewerContact(unicode(row[0]), name=display_name)
 
                 self.contacts.append(contact)
-
+    
+        self.update_display_names(uris_without_display_name)
         self.contactTable.reloadData()
 
         self.contactTable.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
         self.contactTable.scrollRowToVisible_(index)
 
         self.updateContactsColumnHeader()
+        self.refresh_in_progress = False
+
+    @run_in_green_thread
+    def update_display_names(self, uris_without_display_name):
+        results = self.session_history.get_display_names(uris_without_display_name)
+        self.updateDisplayNames(results)
+
+    @allocate_autorelease_pool
+    @run_in_gui_thread
+    def updateDisplayNames(self, results):
+        must_reload = False
+        for result in results:
+            self.display_name_cache[result[0]]=result[1]
+            for contact in self.contacts:
+                if contact.uri == result[0] and contact.name != result[1]:
+                    contact.name = result[1]
+                    must_reload = True
+        if must_reload:
+            self.contactTable.reloadData()
+
+        must_reload = False
+        for entry in self.dayly_entries:
+            if entry['remote_uri_sql'] == entry['remote_uri']:
+                try:
+                    display_name = self.display_name_cache[entry['remote_uri_sql']]
+                except KeyError:
+                    pass
+                else:
+                    entry['display_name'] = display_name
+                    entry['remote_uri'] = '%s <%s>' % (display_name, entry['remote_uri_sql']) if '@' in entry['remote_uri_sql'] else display_name
+                    must_reload = True
+
+        self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
+        self.indexTable.reloadData()
 
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
@@ -369,13 +427,25 @@ class HistoryViewer(NSWindowController):
         getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
         self.dayly_entries = NSMutableArray.array()
         for result in results:
-            contact = getFirstContactMatchingURI(result[2], exact_match=True)
-            if contact:
-                remote_uri = '%s <%s>' % (contact.name, result[2])
-            else:
-                remote_uri = result[2]
+            display_name = None
+            try:
+                found_contact = self.contact_cache[result[2]]
+            except KeyError:
+                found_contact = getFirstContactMatchingURI(result[2], exact_match=True)
+                self.contact_cache[result[2]] = found_contact
 
-            entry = NSDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', result[3], 'type')
+            if found_contact:
+                display_name = found_contact.name
+                remote_uri = '%s <%s>' % (display_name, result[2]) if '@' in result[2] else display_name
+            else:
+                try:
+                    display_name = self.display_name_cache[result[2]]
+                except KeyError:
+                    remote_uri = result[2]
+                else:
+                    remote_uri = '%s <%s>' % (display_name, result[2]) if '@' in result[2] else display_name
+
+            entry = NSMutableDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', result[3], 'type', display_name, "display_name")
             self.dayly_entries.addObject_(entry)
 
         self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
@@ -554,7 +624,7 @@ class HistoryViewer(NSWindowController):
                     self.searchContactBox.setStringValue_('')
                     self.refreshContacts()
                 elif row == 1:
-                    self.search_local = 'bonjour'
+                    self.search_local = 'bonjour.local'
                     self.search_uris = None
                 elif row > 1:
                     self.search_local = None
@@ -733,7 +803,7 @@ class HistoryViewer(NSWindowController):
             label = NSLocalizedString("Please confirm the deletion of %s Bonjour history entries", "Label") % media_print + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Label")
             ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret == NSAlertDefaultReturn:
-                self.delete_messages(local_uri='bonjour', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
+                self.delete_messages(local_uri='bonjour.local', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         else:
             contact = self.contacts[row]
             if contact.presence_contact is not None:
@@ -769,13 +839,13 @@ class HistoryViewer(NSWindowController):
             self.window().orderOut_(self)
 
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
-        if notification.data.local_party != 'bonjour':
+        if notification.data.local_party != 'bonjour.local':
             exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
             if not exists:
                 self.refreshContacts()
 
     def _NH_AudioCallLoggedToHistory(self, notification):
-        if notification.data.local_party != 'bonjour':
+        if notification.data.local_party != 'bonjour.local':
             exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
             if not exists:
                 self.refreshContacts()
@@ -785,7 +855,6 @@ class HistoryViewer(NSWindowController):
 
     def refreshContactsTimer_(self, timer):
         if self.refresh_contacts_counter:
-            self.refresh_contacts_counter = 0
             self.refreshContacts()
             self.toolbar.validateVisibleItems()
 

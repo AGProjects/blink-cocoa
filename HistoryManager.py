@@ -144,6 +144,8 @@ class SessionHistoryEntry(SQLObject):
     participants      = UnicodeCol(sqlType='LONGTEXT')
     display_name      = UnicodeCol(sqlType='LONGTEXT')
     encryption        = UnicodeCol(sqlType='LONGTEXT')
+    device_id         = UnicodeCol(sqlType='LONGTEXT')
+    remote_full_uri   = UnicodeCol(sqlType='LONGTEXT')
     session_idx       = DatabaseIndex('session_id', 'local_uri', 'remote_uri', unique=True)
     local_idx         = DatabaseIndex('local_uri')
     remote_idx        = DatabaseIndex('remote_uri')
@@ -237,7 +239,7 @@ class SessionHistory(object):
                 query = "ALTER TABLE sessions add column 'am_filename' LONGTEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                    BlinkLogger().log_info(u"Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
@@ -245,21 +247,47 @@ class SessionHistory(object):
                 query = "ALTER TABLE sessions add column 'encryption' TEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added column 'encryption' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                    BlinkLogger().log_info(u"Added column 'encryption' to table %s" % SessionHistoryEntry.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "ALTER TABLE sessions add column 'display_name' TEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added column 'display_name' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                    BlinkLogger().log_info(u"Added column 'display_name' to table %s" % SessionHistoryEntry.sqlmeta.table)
                 except Exception, e:
                     BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+                query = "ALTER TABLE sessions add column 'device_id' TEXT DEFAULT ''"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_info(u"Added column 'device_id' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+                query = "ALTER TABLE sessions add column 'remote_full_uri' TEXT DEFAULT ''"
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_info(u"Added column 'remote_full_uri' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+                query = "update chat_messages set local_uri = 'bonjour.local' where local_uri = 'bonjour'"
+                try:
+                    self.db.queryAll(query)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+                query = "update sessions set local_uri = 'bonjour.local' where local_uri = 'bonjour'"
+                try:
+                    self.db.queryAll(query)
+                except Exception, e:
+                    BlinkLogger().log_error(u"Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename, encryption, display_name):
+    def add_entry(self, session_id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, am_filename, encryption, display_name, device_id, remote_full_uri):
         try:
             SessionHistoryEntry(
                           session_id          = session_id,
@@ -279,7 +307,9 @@ class SessionHistory(object):
                           sip_totag           = to_tag,
                           am_filename         = am_filename,
                           encryption          = encryption,
-                          display_name        = display_name
+                          display_name        = display_name,
+                          device_id           = device_id,
+                          remote_full_uri     = remote_full_uri
                           )
             return True
         except dberrors.DuplicateEntryError:
@@ -287,6 +317,23 @@ class SessionHistory(object):
         except Exception, e:
             BlinkLogger().log_debug(u"Error adding record %s to sessions table: %s" % (session_id, e))
             return False
+
+    def get_display_names(self, uris):
+        return block_on(self._get_display_names(uris))
+
+    @run_in_db_thread
+    def _get_display_names(self, uris):
+        query="select distinct(remote_uri), display_name from sessions where display_name <> '' and display_name != remote_uri "
+        uris_sql = ''
+        for uri in uris:
+            uris_sql += "%s," % SessionHistoryEntry.sqlrepr(uri)
+        uris_sql = uris_sql.rstrip(",")
+        query += " and remote_uri in (%s)" % uris_sql
+        try:
+            return list(self.db.queryAll(query))
+        except Exception, e:
+            BlinkLogger().log_error(u"Error getting contacts from chat history table: %s" % e)
+            return []
 
     @run_in_db_thread
     def _get_entries(self, direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden, after_date):
@@ -385,7 +432,7 @@ class SessionHistory(object):
 
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
-        query="select local_uri, remote_uri, sip_callid from sessions where media_types like '%chat%' and local_uri <> 'bonjour' order by start_time desc limit 100"
+        query="select local_uri, remote_uri, sip_callid from sessions where media_types like '%chat%' order by start_time desc limit 100"
         results = []
         try:
             rows = list(self.db.queryAll(query))
@@ -703,7 +750,7 @@ class ChatHistory(object):
 
     @run_in_db_thread
     def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
-        query = "select distinct(remote_uri) from chat_messages where local_uri <> 'bonjour'"
+        query = "select distinct(remote_uri) from chat_messages where 1=1 "
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)

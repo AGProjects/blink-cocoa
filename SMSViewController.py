@@ -470,7 +470,7 @@ class SMSViewController(NSObject):
 
         self.chatViewController.showMessage(call_id, msgid, 'incoming', format_identity_to_string(sender), icon, text, timestamp, is_html=is_html, state="delivered", media_type='sms', encryption=encryption)
 
-        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
         # save to history
         if not is_replication_message:
@@ -808,7 +808,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient=CPIMIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             return True
         return False

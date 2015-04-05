@@ -95,6 +95,7 @@ import ChatWindowController
 from BlinkLogger import BlinkLogger
 from ChatViewController import ChatViewController, MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
 from ChatOTR import BlinkOtrAccount, ChatOtrSmp
+from ContactListModel import BlinkPresenceContact
 from ContactListModel import encode_icon, decode_icon
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
@@ -230,11 +231,11 @@ class ChatController(MediaStream):
         self.previous_is_encrypted = False
         self.history_msgid_list=set()
 
-        self.remote_uri = self.sessionController.remoteAOR
-        self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour'
+        self.remote_uri = self.sessionController.remoteAOR if self.sessionController.account is not BonjourAccount() else self.sessionController.device_id
+        self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour.local'
 
-        self.require_encryption = self.sessionController.contact.contact.require_encryption if self.sessionController.contact is not None else True
-        self.silence_notifications = self.sessionController.contact.contact.silence_notifications if self.sessionController.contact is not None else False
+        self.require_encryption = self.sessionController.contact.contact.require_encryption if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) else True
+        self.silence_notifications = self.sessionController.contact.contact.silence_notifications if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) else False
         
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
@@ -261,7 +262,7 @@ class ChatController(MediaStream):
                 self.chatViewController.outputView.makeTextLarger_(None)
                 i -= 1
 
-        if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_smileys:
+        if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_smileys:
             self.chatViewController.expandSmileys = False
             self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
 
@@ -278,7 +279,7 @@ class ChatController(MediaStream):
         self.chatOtrSmpWindow = None
         self.init_otr()
 
-        if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_chat_history is not None:
+        if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_chat_history is not None:
             self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
         else:
             self.disable_chat_history = settings.chat.disable_history
@@ -320,7 +321,7 @@ class ChatController(MediaStream):
             peer_options['WHITESPACE_START_AKE'] = False
             peer_options['ERROR_START_AKE'] = False
         else:
-            if self.sessionController.contact is not None:
+            if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact):
                 peer_options['REQUIRE_ENCRYPTION'] = self.sessionController.contact.contact.require_encryption
             elif self.sessionController.account is BonjourAccount():
                 peer_options['REQUIRE_ENCRYPTION'] = False
@@ -566,7 +567,7 @@ class ChatController(MediaStream):
     @objc.IBAction
     def userClickedDatabaseLoggingButton_(self, sender):
         self.disable_chat_history = not self.disable_chat_history
-        if self.sessionController.contact is not None:
+        if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact):
             self.sessionController.contact.contact.disable_chat_history = self.disable_chat_history
             self.sessionController.contact.contact.save()
         self.updateDatabaseRecordingButton()
@@ -577,7 +578,7 @@ class ChatController(MediaStream):
         ctx = self.otr_account.getContext(self.sessionController.call_id)
         if tag == 3: # required
             self.require_encryption = not self.require_encryption
-            if self.sessionController.contact is not None:
+            if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact):
                 self.sessionController.contact.contact.require_encryption = self.require_encryption
                 self.sessionController.contact.contact.save()
 
@@ -651,7 +652,7 @@ class ChatController(MediaStream):
                     identity = None
 
                 if self.outgoing_message_handler.send(text, recipient=identity, content_type=content_type):
-                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 self.sessionController.log_info(u"Session not established, starting it")
@@ -1251,7 +1252,7 @@ class ChatController(MediaStream):
                 contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
-                    contactWindow.historyViewer.filterByURIs(('bonjour', ))
+                    contactWindow.historyViewer.filterByURIs(('bonjour.local', ))
                 else:
                     contactWindow.historyViewer.filterByURIs((format_identity_to_string(self.sessionController.target_uri),))
                 days = 1
@@ -1568,7 +1569,7 @@ class ChatController(MediaStream):
                 except Exception, e:
                     pass
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             # disable composing indicator
             if self.remoteTypingTimer:
@@ -1779,7 +1780,7 @@ class ChatController(MediaStream):
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         settings = SIPSimpleSettings()
         if data.modified.has_key("chat.disable_history"):
-            if self.sessionController.contact is not None and self.sessionController.contact.contact.disable_chat_history is not None:
+            if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_chat_history is not None:
                 self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
             else:
                 self.disable_chat_history = settings.chat.disable_history
@@ -1982,8 +1983,8 @@ class OutgoingMessageHandler(NSObject):
             self.no_report_received_messages = {}
             self.history = ChatHistory()
             self.delegate = chatView
-            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour'
-            self.remote_uri = self.delegate.delegate.sessionController.remoteAOR
+            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour.local'
+            self.remote_uri = self.delegate.delegate.sessionController.remoteAOR if self.delegate.account is not BonjourAccount() else self.delegate.delegate.sessionController.device_id
         return self
 
     def dealloc(self):

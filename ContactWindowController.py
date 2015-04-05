@@ -2468,9 +2468,8 @@ class ContactWindowController(NSWindowController):
         if media_type == "video":
             media_type = ("video", "audio")
 
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, unicode(display_name))
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, unicode(display_name), selected_contact)
         session_controller.log_info('Using local account %s' % account.id)
-        session_controller.selected_contact = selected_contact
 
         if type(media_type) is not tuple:
             if media_type == "chat" and account is not BonjourAccount():
@@ -2503,7 +2502,7 @@ class ContactWindowController(NSWindowController):
         if not target:
             return
 
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target, unicode(target))
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target, unicode(target), None)
         session_controller.nickname = nickname
 
         if participants:
@@ -4051,7 +4050,7 @@ class ContactWindowController(NSWindowController):
             if account.voicemail_uri is None:
                 return
             target_uri = normalize_sip_uri_for_outgoing_session(account.voicemail_uri, account)
-            session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, None)
+            session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, None, None)
             session_controller.startAudioSession()
         else:
             item = sender.representedObject()
@@ -4121,11 +4120,18 @@ class ContactWindowController(NSWindowController):
     @run_in_gui_thread
     def redial(self, session_info):
         display_name = session_info.display_name
+        streams = session_info.media_types.split(",")
+        contact = None
         if session_info.local_uri == 'bonjour.local':
             account = BonjourAccount()
-            bonjour_contact = self.model.getBonjourContactMatchingDisplayName(display_name)
+            device_id = session_info.device_id
+            BlinkLogger().log_info(u"Redialing to device %s of %s using bonjour account, with %s" % (device_id, display_name))
+            bonjour_contact = self.model.getBonjourContactMatchingDeviceId(device_id)
+            BlinkLogger().log_info("Bonjour neighbour id %s found" % device_id)
+
             if bonjour_contact:
                 target_uri = bonjour_contact.uri
+                contact = bonjour_contact
             else:
                 BlinkLogger().log_info("Bonjour neighbour %s was not found on this network" % display_name)
                 message = NSLocalizedString("Bonjour neighbour %s was not found on this network. ", "label") % display_name
@@ -4138,15 +4144,17 @@ class ContactWindowController(NSWindowController):
                 account = None
 
             target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
+            BlinkLogger().log_info(u"Redialing to %s using acount %s" % (target_uri, account))
 
-        streams = session_info.media_types.split(",")
+            contact = self.getFirstContactFromAllContactsGroupMatchingURI(target_uri)
 
-        BlinkLogger().log_info(u"Redial session from %s to %s, with %s" % (account, target_uri, streams))
         if not account:
+            BlinkLogger().log_info(u"Acount %s is not active, using default account" % account)
             account = self.activeAccount()
+
         target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
 
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_(account, target_uri, display_name)
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, display_name, contact)
 
         if 'audio' in streams and 'chat' in streams:
             # give priority to chat stream so that we do not open audio drawer for composite streams
@@ -4188,7 +4196,14 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def viewHistory_(self, sender):
         self.showHistoryViewer_(None)
-        self.historyViewer.filterByURIs(sender.representedObject())
+        item = sender.representedObject()
+        if isinstance(item, BlinkPresenceContact):
+            all_uris = []
+            for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
+                all_uris.append(unicode(uri.uri))
+            self.historyViewer.filterByURIs(all_uris)
+        elif isinstance(item, BonjourBlinkContact):
+            self.historyViewer.filterByDeviceId(item.id)
 
     @objc.IBAction
     def viewHistoryForContact_(self, sender):
@@ -4815,16 +4830,16 @@ class ContactWindowController(NSWindowController):
                         mitem.setRepresentedObject_(item.uri)
                         mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, item.uri))
 
-            if isinstance(item, BlinkPresenceContact):
+            if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                 if item not in self.model.bonjour_group.contacts:
                     self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
+                    history_item.setRepresentedObject_(item)
+                    history_item.setEnabled_(NSApp.delegate().history_enabled)
+
                     all_uris = []
                     for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
                         all_uris.append(unicode(uri.uri))
-                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
-                    history_item.setRepresentedObject_(all_uris)
-                    history_item.setEnabled_(NSApp.delegate().history_enabled)
-
                     recordings = self.backend.get_recordings(all_uris)[-10:]
 
                     if recordings:

@@ -1741,11 +1741,11 @@ class ChatWindowController(NSWindowController):
             self.participants.append(contact)
 
             # Add remote party
-            if isinstance(session.selected_contact, BlinkPresenceContact):
+            if isinstance(session.contact, BlinkPresenceContact):
                 # Find the contact from the all contacts group
                 model = NSApp.delegate().contactsWindowController.model
                 try:
-                    presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == session.selected_contact.contact)
+                    presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == session.contact.contact)
                 except StopIteration:
                     presence_contact = None
             else:
@@ -1788,11 +1788,11 @@ class ChatWindowController(NSWindowController):
                 self.participants.append(contact)
 
                 # Add remote party
-                if isinstance(session.selected_contact, BlinkPresenceContact):
+                if isinstance(session.contact, BlinkPresenceContact):
                     # Find the contact from the all contacts group
                     model = NSApp.delegate().contactsWindowController.model
                     try:
-                        presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == session.selected_contact.contact)
+                        presence_contact = next(item for item in model.all_contacts_group.contacts if item.contact == session.contact.contact)
                     except StopIteration:
                         presence_contact = None
                 else:
