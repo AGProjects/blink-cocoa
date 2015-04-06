@@ -773,7 +773,7 @@ class SessionControllersManager(object):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, controller.device_id or '', direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
