@@ -913,7 +913,16 @@ class HistoryViewer(NSWindowController):
         except IndexError:
             return
 
-        NSApp.delegate().contactsWindowController.startSessionWithTarget(contact.uri)
+        if '@' in contact.uri:
+            NSApp.delegate().contactsWindowController.startSessionWithTarget(contact.uri)
+        else:
+            bonjour_contact = NSApp.delegate().contactsWindowController.model.getBonjourContactMatchingDeviceId(contact.uri)
+            if not bonjour_contact:
+                BlinkLogger().log_info("Bonjour neighbour %s was not found on this network" % contact.name)
+                message = NSLocalizedString("Bonjour neighbour %s was not found on this network. ", "label") % contact.name
+                NSRunAlertPanel(NSLocalizedString("Error", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
+                return
+            NSApp.delegate().contactsWindowController.startSessionWithTarget(bonjour_contact.uri)
 
     @objc.IBAction
     def userClickedContactMenu_(self, sender):
