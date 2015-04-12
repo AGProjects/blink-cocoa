@@ -1520,7 +1520,7 @@ class AudioController(MediaStream):
         self.update_encryption_icon()
         self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
         try:
-            otr = self.sessionController.encryption['audio']
+            self.sessionController.encryption['audio']
         except KeyError:
             self.sessionController.encryption['audio'] = {}
 
@@ -1571,7 +1571,7 @@ class AudioController(MediaStream):
 
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         try:
-            otr = self.sessionController.encryption['audio']
+            self.sessionController.encryption['audio']
         except KeyError:
             self.sessionController.encryption['audio'] = {}
     
