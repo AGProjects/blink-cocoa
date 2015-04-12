@@ -3753,21 +3753,32 @@ class ContactWindowController(NSWindowController):
     @allocate_autorelease_pool
     def get_last_calls_entries_for_contact(self, contact):
         session_history = SessionHistory()
-        if contact.uris:
+
+        if isinstance(contact, BonjourBlinkContact):
+            remote_uris = [contact.id]
+        else:
             remote_uris = list(uri.uri for uri in contact.uris)
-            results = session_history.get_entries(count=10, remote_uris=remote_uris)
-            self.renderLastCallsEntriesForContact(results)
+
+        results = session_history.get_entries(count=10, remote_uris=remote_uris)
+        self.renderLastCallsEntriesForContact(results, contact)
 
     @run_in_gui_thread
-    def renderLastCallsEntriesForContact(self, results):
+    def renderLastCallsEntriesForContact(self, results, contact):
         while self.last_calls_submenu.numberOfItems() > 0:
             self.last_calls_submenu.removeItemAtIndex_(0)
 
         if results:
             for result in reversed(list(results)):
-                label = result.media_types.title()
+                if 'video' in result.media_types.lower():
+                    label = 'Video'
+                elif 'screen' in result.media_types.lower():
+                    label = 'Screen Sharing'
+                elif 'audio' in result.media_types.lower():
+                    label = 'Audio'
+                else:
+                    label = result.media_types.title()
                 label += NSLocalizedString(" from ", "Menu item") if result.direction == 'incoming' else NSLocalizedString(" to ", "Menu item")
-                label += result.remote_uri
+                label += contact.name
                 duration = result.end_time - result.start_time
                 if result.duration == 0:
                     status = session_status_localized[result.status]
@@ -4203,7 +4214,7 @@ class ContactWindowController(NSWindowController):
                 all_uris.append(unicode(uri.uri))
             self.historyViewer.filterByURIs(all_uris)
         elif isinstance(item, BonjourBlinkContact):
-            self.historyViewer.filterByDeviceId(item.id)
+            self.historyViewer.filterByURIs([item.id])
 
     @objc.IBAction
     def viewHistoryForContact_(self, sender):
@@ -4831,48 +4842,47 @@ class ContactWindowController(NSWindowController):
                         mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, item.uri))
 
             if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
-                if item not in self.model.bonjour_group.contacts:
-                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                    history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
-                    history_item.setRepresentedObject_(item)
-                    history_item.setEnabled_(NSApp.delegate().history_enabled)
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
+                history_item.setRepresentedObject_(item)
+                history_item.setEnabled_(NSApp.delegate().history_enabled)
 
-                    all_uris = []
-                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
-                        all_uris.append(unicode(uri.uri))
-                    recordings = self.backend.get_recordings(all_uris)[-10:]
+                all_uris = []
+                for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint):
+                    all_uris.append(unicode(uri.uri))
+                recordings = self.backend.get_recordings(all_uris)[-10:]
 
-                    if recordings:
-                        audio_recordings_submenu = NSMenu.alloc().init()
+                if recordings:
+                    audio_recordings_submenu = NSMenu.alloc().init()
+                    for dt, name, f, t in recordings:
+                        r_item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                        r_item.setTarget_(self)
+                        r_item.setRepresentedObject_(f)
+
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Audio Recordings", "Menu item"), "", "")
+                    self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
+
+                    if history_contact and history_contact.answering_machine_filenames:
+                        voice_messages_submenu = NSMenu.alloc().init()
                         for dt, name, f, t in recordings:
-                            r_item = audio_recordings_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
+                            if f not in history_contact.answering_machine_filenames:
+                                continue
+                            r_item = voice_messages_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
                             r_item.setTarget_(self)
                             r_item.setRepresentedObject_(f)
 
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Audio Recordings", "Menu item"), "", "")
-                        self.contactContextMenu.setSubmenu_forItem_(audio_recordings_submenu, mitem)
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Voice Messages", "Menu item"), "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(voice_messages_submenu, mitem)
 
-                        if history_contact and history_contact.answering_machine_filenames:
-                            voice_messages_submenu = NSMenu.alloc().init()
-                            for dt, name, f, t in recordings:
-                                if f not in history_contact.answering_machine_filenames:
-                                    continue
-                                r_item = voice_messages_submenu.insertItemWithTitle_action_keyEquivalent_atIndex_(dt, "recordingClicked:", "", 0)
-                                r_item.setTarget_(self)
-                                r_item.setRepresentedObject_(f)
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Calls", "Menu item"), "", "")
+                self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
+                self.get_last_calls_entries_for_contact(item)
 
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Voice Messages", "Menu item"), "", "")
-                            self.contactContextMenu.setSubmenu_forItem_(voice_messages_submenu, mitem)
-
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Last Calls", "Menu item"), "", "")
-                    self.contactContextMenu.setSubmenu_forItem_(self.last_calls_submenu, mitem)
-                    self.get_last_calls_entries_for_contact(item)
-
-                if history_contact is not None:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Copy To Search Bar", "Menu item"), "copyToSearchBar:", "")
-                    mitem.setRepresentedObject_(unicode(history_contact.uri))
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entry", "Menu item"), "hideHistoryEntries:", "")
-                    mitem.setRepresentedObject_(history_contact.session_ids)
+            if history_contact is not None:
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Copy To Search Bar", "Menu item"), "copyToSearchBar:", "")
+                mitem.setRepresentedObject_(unicode(history_contact.uri))
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide Entry", "Menu item"), "hideHistoryEntries:", "")
+                mitem.setRepresentedObject_(history_contact.session_ids)
 
             elif history_contact is not None:
                 if NSApp.delegate().history_enabled:

@@ -690,6 +690,7 @@ class HistoryViewer(NSWindowController):
 
     @run_in_gui_thread
     def filterByURIs(self, uris=(), media_type=None):
+
         self.search_text = None
         self.search_local = None
         if media_type != self.search_media:
