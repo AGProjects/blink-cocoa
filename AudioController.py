@@ -1546,10 +1546,7 @@ class AudioController(MediaStream):
     @run_in_gui_thread
     def _NH_RTPStreamDidNotEnableEncryption(self, sender, data):
         self.update_encryption_icon()
-        if sender.encryption.type != 'ZRTP':
-            return
-        NSSound.soundNamed_("zrtp-security-failed").play()
-        self.sessionController.log_info("ZRTP encryption disabled: %s" % data.reason)
+        self.sessionController.log_info(data.reason)
         self.updateTootip()
 
     @run_in_gui_thread
