@@ -896,9 +896,15 @@ class HistoryViewer(NSWindowController):
                 return
 
             contact_exists = bool(contact.presence_contact is not None)
-            self.contactMenu.itemWithTag_(2).setEnabled_(not is_anonymous(contact.uri))
-            self.contactMenu.itemWithTag_(3).setEnabled_(not contact_exists and not is_anonymous(contact.uri))
-            self.contactMenu.itemWithTag_(4).setEnabled_(contact_exists)
+            if '@' in contact.uri:
+                self.contactMenu.itemWithTag_(2).setEnabled_(not is_anonymous(contact.uri))
+                self.contactMenu.itemWithTag_(3).setEnabled_(not contact_exists and not is_anonymous(contact.uri))
+                self.contactMenu.itemWithTag_(4).setEnabled_(contact_exists)
+            else:
+                bonjour_contact = NSApp.delegate().contactsWindowController.model.getBonjourContactMatchingDeviceId(contact.uri)
+                self.contactMenu.itemWithTag_(2).setEnabled_(bool(bonjour_contact))
+                self.contactMenu.itemWithTag_(3).setEnabled_(False)
+                self.contactMenu.itemWithTag_(4).setEnabled_(False)
 
 
     @objc.IBAction
