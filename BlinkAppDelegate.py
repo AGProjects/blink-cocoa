@@ -239,6 +239,14 @@ class BlinkAppDelegate(NSObject):
         except:
             log.err()
 
+    # Needed by call_later
+    def callTimerObject_(self, timer):
+        callable = timer.userInfo()
+        try:
+            callable()
+        except:
+            log.err()
+
     def enroll(self):
         enroll = EnrollmentController.alloc().init()
         enroll.setCreateAccount()

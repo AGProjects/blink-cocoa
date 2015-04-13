@@ -1,13 +1,13 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-__all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'run_in_gui_thread',
+__all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local']
 
 from AppKit import NSApp, NSRunAlertPanel
-from Foundation import NSAutoreleasePool, NSBundle, NSThread, NSLocalizedString
+from Foundation import NSAutoreleasePool, NSBundle, NSTimer, NSThread, NSLocalizedString
 
 import platform
 import re
@@ -348,6 +348,12 @@ def run_in_gui_thread(func):
         else:
             NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kw), False)
     return wrapper
+
+
+def call_later(delay, func, *args, **kw):
+    def wrap():
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(delay, NSApp.delegate(), "callTimerObject:", lambda: func(*args, **kw), False)
+    call_in_gui_thread(wrap)
 
 
 @decorator
