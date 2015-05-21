@@ -369,7 +369,7 @@ class SessionControllersManager(object):
             self.startIncomingSession(session, streams)
             return
 
-        if stream_type_list == ['file-transfer'] and 'screencapture' in streams[0].file_selector.name.decode("utf8"):
+        if stream_type_list == ['file-transfer'] and 'screencapture' in streams[0].file_selector.name:
             if NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)

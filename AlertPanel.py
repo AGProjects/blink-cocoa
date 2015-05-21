@@ -577,7 +577,7 @@ class AlertPanel(NSObject, object):
             elif type(streams[0]) is ScreenSharingStream:
                 subject = NSLocalizedString("Remote Screen offered by", "Label") if streams[0].handler.type == "active" else NSLocalizedString("My Screen requested by", "Label")
             elif type(streams[0]) is FileTransferStream:
-                subject = NSLocalizedString("Transfer of File", "Label") + " '%s' (%s) " % (streams[0].file_selector.name.decode("utf8"), format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
+                subject = NSLocalizedString("Transfer of File", "Label") + u" '%s' (%s) " % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
             else:
                 subject = NSLocalizedString("Incoming Session request from", "Label")
                 BlinkLogger().log_info(u"Unknown media type %s" % streams)

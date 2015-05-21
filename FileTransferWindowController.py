@@ -60,12 +60,14 @@ class FileTransferWindowController(NSObject):
 
     def __init__(self):
         if self:
-            NotificationCenter().add_observer(self, name="BlinkFileTransferInitializing")
-            NotificationCenter().add_observer(self, name="BlinkFileTransferRestarting")
-            NotificationCenter().add_observer(self, name="BlinkFileTransferDidFail")
-            NotificationCenter().add_observer(self, name="BlinkFileTransferDidEnd")
-            NotificationCenter().add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
-            NotificationCenter().add_observer(self, name="BlinkShouldTerminate")
+            notification_center = NotificationCenter()
+            notification_center.add_observer(self, name="BlinkFileTransferNewOutgoing")
+            notification_center.add_observer(self, name="BlinkFileTransferNewIncoming")
+            notification_center.add_observer(self, name="BlinkFileTransferWillRestart")
+            notification_center.add_observer(self, name="BlinkFileTransferDidFail")
+            notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
+            notification_center.add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
+            notification_center.add_observer(self, name="BlinkShouldTerminate")
 
             NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
 
@@ -173,17 +175,17 @@ class FileTransferWindowController(NSObject):
         self.delete_history_transfers()
         self.load_transfers_from_history()
 
-    def _NH_BlinkFileTransferRestarting(self, sender, data):
+    def _NH_BlinkFileTransferWillRestart(self, sender, data):
         self.listView.relayout()
 
-    def _NH_BlinkFileTransferInitializing(self, sender, data):
+    def _NH_BlinkFileTransferNewOutgoing(self, sender, data):
         item = FileTransferItemView.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
 
         self.listView.addItemView_(item)
         h = NSHeight(self.listView.frame())
         self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
-        if 'screencapture' not in sender.file_path:
+        if 'screencapture' not in sender.ft_info.file_path:
             self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
@@ -192,9 +194,7 @@ class FileTransferWindowController(NSObject):
         else:
             self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count)
 
-    def _NH_BlinkFileTransferDidFail(self, sender, data):
-        self.listView.relayout()
-        self.refresh_transfer_rate()
+    _NH_BlinkFileTransferNewIncoming = _NH_BlinkFileTransferNewOutgoing
 
     def _NH_BlinkFileTransferSpeedDidUpdate(self, sender, data):
         self.refresh_transfer_rate()
@@ -202,12 +202,12 @@ class FileTransferWindowController(NSObject):
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
         self.refresh_transfer_rate()
-        # jump dock icon and bring window to front
-        if isinstance(sender, IncomingFileTransferHandler):
-            self.window.orderFront_(None)
-            NSApp.requestUserAttention_(NSInformationalRequest)
-        elif 'screencapture' not in sender.file_path:
-            self.window.orderFront_(None)
-            NSApp.requestUserAttention_(NSInformationalRequest)
-
+        if not data.error:
+            # jump dock icon and bring window to front
+            if isinstance(sender, IncomingFileTransferHandler):
+                self.window.orderFront_(None)
+                NSApp.requestUserAttention_(NSInformationalRequest)
+            elif 'screencapture' not in sender.file_path:
+                self.window.orderFront_(None)
+                NSApp.requestUserAttention_(NSInformationalRequest)
 

@@ -22,6 +22,7 @@ import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from application.system import makedirs, unlink
 from zope.interface import implements
 
 from sipsimple.account import AccountManager
@@ -61,24 +62,26 @@ class FileTransferItemView(NSView):
             NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
             filename = transferInfo.file_path
-            if filename.endswith(".download"):
-                filename = filename[:-len(".download")]
 
             self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(filename))
 
             self.nameText.setStringValue_(os.path.basename(filename))
             self.fromText.setStringValue_('To %s from account %s' % (transferInfo.remote_uri, transferInfo.local_uri) if transferInfo.direction=='outgoing' else 'From %s to account %s' % (transferInfo.remote_uri, transferInfo.local_uri))
+            self.revealButton.setHidden_(True)
 
             time_print = format_date(transferInfo.time)
             if transferInfo.status == "completed":
+                self.sizeText.setTextColor_(NSColor.blueColor())
                 t = NSLocalizedString("Completed transfer of ", "Label")
                 status = t + "%s %s" % (format_size(transferInfo.file_size, 1024), time_print)
+                if transferInfo.direction == 'incoming':
+                    self.revealButton.setHidden_(False)
             else:
+                self.sizeText.setTextColor_(NSColor.redColor())
                 if transferInfo.direction == "outgoing":
                     status = '%s %s' % (transferInfo.status.title(), time_print)
                     self.retryButton.setHidden_(False)
                 else:
-                    #status = "%s of %s"%(format_size(transferInfo.bytes_transfered, 1024), format_size(transferInfo.file_size, 1024))
                     status = "%s %s" % (transferInfo.status.title(), time_print)
 
             self.sizeText.setStringValue_(status)
@@ -97,36 +100,36 @@ class FileTransferItemView(NSView):
 
             NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
-            filename = self.transfer.file_path
+            filename = os.path.basename(self.transfer.ft_info.file_path)
+            self.nameText.setStringValue_(filename)
 
             if type(self.transfer) == OutgoingPushFileTransferHandler:
                 self.fromText.setStringValue_(u"To:  %s" % self.transfer.account.id)
             else:
-                if filename.endswith(".download"):
-                    filename = filename[:-len(".download")]
                 self.fromText.setStringValue_(u"From:  %s" % self.transfer.account.id)
-            self.nameText.setStringValue_(os.path.basename(filename))
+            self.revealButton.setHidden_(True)
 
-            if os.path.exists(filename):
-                self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(filename))
-            else:
-                tmp_folder = ApplicationData.get('.tmp_file_transfers')
-                if not os.path.exists(tmp_folder):
-                    os.mkdir(tmp_folder, 0700)
-
-                tmpf = tmp_folder + "/tmpf" + os.path.splitext(filename)[1]
-                open(tmpf, "w+").close()
+            # XXX: there should be a better way to do this!
+            tmp_folder = ApplicationData.get('.tmp_file_transfers')
+            makedirs(tmp_folder, 0700)
+            tmpf = tmp_folder + "/tmpf-" + filename
+            with open(tmpf, "w+"):
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(tmpf))
-                os.remove(tmpf)
+            unlink(tmpf)
 
             self.updateProgressInfo()
             self.progressBar.setIndeterminate_(True)
             self.progressBar.startAnimation_(None)
-            self.progressBar.setHidden_(True)
 
             self.checksumProgressBar.setIndeterminate_(False)
             self.checksumProgressBar.startAnimation_(None)
-            self.checksumProgressBar.setHidden_(False)
+
+            if transfer.direction == 'outgoing':
+                self.progressBar.setHidden_(True)
+                self.checksumProgressBar.setHidden_(False)
+            else:
+                self.progressBar.setHidden_(False)
+                self.checksumProgressBar.setHidden_(True)
 
             frame.size = self.view.frame().size
             self.setFrame_(frame)
@@ -155,7 +158,9 @@ class FileTransferItemView(NSView):
         self.icon.setImage_(image)
 
     def relayoutForDone(self):
+        self.progressBar.stopAnimation_(None)
         self.progressBar.setHidden_(True)
+        self.checksumProgressBar.stopAnimation_(None)
         self.checksumProgressBar.setHidden_(True)
         self.stopButton.setHidden_(True)
         frame = self.frame()
@@ -211,7 +216,7 @@ class FileTransferItemView(NSView):
 
     @objc.IBAction
     def stopTransfer_(self, sender):
-        self.transfer.cancel()
+        self.transfer.end()
 
     @objc.IBAction
     def retryTransfer_(self, sender):
@@ -243,8 +248,8 @@ class FileTransferItemView(NSView):
 
     @objc.IBAction
     def revealFile_(self, sender):
-        if self.transfer and self.transfer.file_path:
-            path = self.transfer.file_path
+        if self.transfer and self.transfer.ft_info and self.transfer.ft_info.file_path:
+            path = self.transfer.ft_info.file_path
         elif self.oldTransferInfo:
             environ = NSProcessInfo.processInfo().environment()
             inSandbox = environ.objectForKey_("APP_SANDBOX_CONTAINER_ID")
@@ -259,61 +264,47 @@ class FileTransferItemView(NSView):
         dirname = os.path.dirname(path)
         NSWorkspace.sharedWorkspace().selectFile_inFileViewerRootedAtPath_(path, dirname)
 
-    def _NH_BlinkFileTransferInitiated(self, notification):
-        if not self.failed:
-            self.sizeText.setStringValue_(self.transfer.status)
-            self.progressBar.setHidden_(False)
-            self.checksumProgressBar.setHidden_(True)
-        else:
-            self.sizeText.setStringValue_('File Transfer aborted')
+    def _NH_BlinkFileTransferDidInitialize(self, notification):
+        self.sizeText.setStringValue_(self.transfer.status)
+        self.progressBar.setHidden_(False)
+        self.checksumProgressBar.setHidden_(True)
 
-    def _NH_BlinkFileTransferRestarting(self, notification):
+    def _NH_BlinkFileTransferWillRestart(self, notification):
         self.sizeText.setStringValue_(self.transfer.status)
 
     def _NH_BlinkFileTransferDidStart(self, notification):
         self.progressBar.setIndeterminate_(False)
+        # update path
+        self.nameText.setStringValue_(os.path.basename(self.transfer.file_path))
 
     def _NH_BlinkFileTransferDidEnd(self, notification):
-        self.sizeText.setTextColor_(NSColor.blueColor())
-        self.progressBar.stopAnimation_(None)
-        self.updateProgressInfo()
-        self.relayoutForDone()
+        if notification.data.error:
+            self.sizeText.setTextColor_(NSColor.redColor())
+            if type(self.transfer) == OutgoingPushFileTransferHandler:
+                self.retryButton.setHidden_(False)
+        else:
+            self.sizeText.setTextColor_(NSColor.blueColor())
+            if self.transfer.direction == 'incoming':
+                self.revealButton.setHidden_(False)
+        self.fromText.setStringValue_(self.transfer.target_text)
+        self.sizeText.setStringValue_(self.transfer.progress_text)
+        self.failed = notification.data.error
         self.done = True
-        self.failed = False
-
-    def _NH_BlinkFileTransferDidFail(self, notification):
-        self.sizeText.setTextColor_(NSColor.redColor())
-
-        self.checksumProgressBar.setHidden_(True)
-        self.checksumProgressBar.stopAnimation_(None)
-        self.progressBar.setHidden_(True)
-        self.progressBar.stopAnimation_(None)
-        self.updateProgressInfo()
-
-        self.stopButton.setHidden_(True)
-        if type(self.transfer) == OutgoingPushFileTransferHandler:
-            self.retryButton.setHidden_(False)
         self.relayoutForDone()
-        self.done = True
-        self.failed = True
 
-    def _NH_BlinkFileTransferUpdate(self, notification):
-        self.updateProgressInfo()
+    def _NH_BlinkFileTransferProgress(self, notification):
+        self.fromText.setStringValue_(self.transfer.target_text)
+        self.sizeText.setStringValue_(self.transfer.progress_text)
+        self.progressBar.setDoubleValue_(notification.data.progress)
 
-    def _NH_BlinkFileTransferHashUpdate(self, notification):
+    def _NH_BlinkFileTransferHashProgress(self, notification):
         self.updateChecksumProgressInfo(notification.data.progress)
-
-    def _NH_BlinkFileTransferDidComputeHash(self, notification):
-        pass
 
     def updateProgressInfo(self):
         self.fromText.setStringValue_(self.transfer.target_text)
         self.sizeText.setStringValue_(self.transfer.progress_text)
-        self.progressBar.setDoubleValue_(self.transfer.progress*100)
 
     def updateChecksumProgressInfo(self, progress):
         self.checksumProgressBar.setDoubleValue_(progress)
-        self.sizeText.setStringValue_('Calculating checksum: %s%%' % progress)
-
-
+        self.sizeText.setStringValue_('Calculating checksum: %d%%' % progress)
 
