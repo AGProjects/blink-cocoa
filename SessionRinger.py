@@ -465,10 +465,9 @@ class Ringer(object):
                 self.chat_beep_time = now
 
     def _NH_BlinkFileTransferDidEnd(self, notification):
-        data = notification.data
         settings = SIPSimpleSettings()
         if not settings.audio.silent:
-            if data == "send":
+            if notification.sender.direction == 'incoming':
                 if self.file_transfer_outgoing_sound:
                     self.file_transfer_outgoing_sound.start()
             else:
