@@ -93,7 +93,7 @@ class FileTransfer(object):
         t = NSLocalizedString("Transferred %s of ", "Label") % format_size(transferred, 1024) + format_size(total, 1024)
         if self.transfer_rate is not None:
             if self.transfer_rate == 0:
-                status = t + "(" + NSLocalizedString("stalled", "Label") + ")"
+                status = t + " (" + NSLocalizedString("stalled", "Label") + ")"
             else:
                 eta = (total - transferred) / self.transfer_rate
                 if eta < 60:
