@@ -8,6 +8,8 @@ import os
 import time
 import uuid
 
+from collections import deque
+
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from sipsimple.account import Account, BonjourAccount
@@ -61,7 +63,7 @@ class FileTransfer(object):
 
     transfer_rate = None
     last_rate_pos = 0
-    last_rate_time = 0
+    last_rate_time = None
     rate_history = None
     ft_info = None
 
@@ -114,23 +116,19 @@ class FileTransfer(object):
 
     def update_transfer_rate(self):
         now = time.time()
-        if self.last_rate_time > 0:
-            if now - self.last_rate_time >= 1:
-                dt = now - self.last_rate_time
+        if self.last_rate_time is not None:
+            dt = now - self.last_rate_time
+            if dt >= 1:
                 db = self.file_pos - self.last_rate_pos
-                transfer_rate = int(db / dt)
-
+                transfer_rate = db / dt
                 self.rate_history.append(transfer_rate)
-                while len(self.rate_history) > 5:
-                    del self.rate_history[0]
                 self.last_rate_time = now
                 self.last_rate_pos = self.file_pos
-
-                self.transfer_rate = sum(self.rate_history) / len(self.rate_history)
+                self.transfer_rate = int(sum(self.rate_history) / len(self.rate_history))
         else:
             self.last_rate_time = now
             self.last_rate_pos = self.file_pos
-            self.rate_history = []
+            self.rate_history = deque(maxlen=5)
 
         notification_center = NotificationCenter()
         notification_center.post_notification("BlinkFileTransferSpeedDidUpdate", sender=self)
@@ -306,7 +304,8 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.total_bytes = 0
         self.progress = None
         self.last_rate_pos = 0
-        self.last_rate_time = 0
+        self.last_rate_time = None
+        self.rate_history = None
         self.session = None
         self.stream = None
         self.handler = None
