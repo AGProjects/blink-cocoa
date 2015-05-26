@@ -64,7 +64,10 @@ class FileTransfer(object):
     last_rate_time = 0
     rate_history = None
     ft_info = None
-    _progress = None
+
+    bytes = 0
+    total_bytes = 0
+    progress = None
 
     start_time = None
     end_time = None
@@ -87,15 +90,15 @@ class FileTransfer(object):
 
     @property
     def file_pos(self):
-        return self.handler.offset if self.handler is not None else 0
+        return self.bytes
 
-    def format_progress(self, transferred, total):
-        t = NSLocalizedString("Transferred %s of ", "Label") % format_size(transferred, 1024) + format_size(total, 1024)
+    def format_progress(self):
+        t = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.bytes, 1024) + format_size(self.total_bytes, 1024)
         if self.transfer_rate is not None:
             if self.transfer_rate == 0:
                 status = t + " (" + NSLocalizedString("stalled", "Label") + ")"
             else:
-                eta = (total - transferred) / self.transfer_rate
+                eta = (self.total_bytes - self.bytes) / self.transfer_rate
                 if eta < 60:
                     time_left = NSLocalizedString("Less than 1 minute", "Label")
                 elif eta < 60*60:
@@ -156,7 +159,7 @@ class FileTransfer(object):
         notification_center = NotificationCenter()
 
         if failure_reason is None:
-            self.log_info("File Transfer ended (%i of %i bytes transferred)" % (self.handler.offset, self.file_selector.size))
+            self.log_info("File Transfer ended (%i of %i bytes transferred)" % (self.bytes, self.total_bytes))
             self.end_time = datetime.datetime.now()
             t = NSLocalizedString("Completed transfer of ", "Label")
             self.status = t + format_size(self.file_size) + NSLocalizedString(" in ", "Label") + format_duration(self.end_time-self.start_time) + " " + format_date(self.end_time)
@@ -165,7 +168,7 @@ class FileTransfer(object):
         else:
             self.log_info("File Transfer failed: %s" % failure_reason)
             if failure_status is None:
-                self.status = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.handler.offset, 1024) + format_size(self.file_selector.size) + " - " +  failure_reason
+                self.status = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.bytes, 1024) + format_size(self.total_bytes) + " - " +  failure_reason
             else:
                 self.status = failure_status
             self.ft_info.status = "failed"
@@ -198,6 +201,7 @@ class FileTransfer(object):
         notification.center.post_notification("BlinkFileTransferDidStart", sender=self)
 
     def _NH_FileTransferHandlerDidInitialize(self, notification):
+        self.progress = None
         # The filename is now properly initialized
         self.ft_info.file_path = self.file_path
         notification.center.post_notification("BlinkFileTransferDidInitialize", self)
@@ -220,11 +224,13 @@ class FileTransfer(object):
         notification.center.post_notification("BlinkFileTransferUpdate", sender=self)
 
     def _NH_FileTransferHandlerProgress(self, notification):
-        progress = int(notification.data.transferred_bytes * 100 / notification.data.total_bytes)
-        if self._progress is None or progress > self._progress:
-            self._progress = progress
+        self.bytes = notification.data.transferred_bytes
+        self.total_bytes = notification.data.total_bytes
+        progress = int(self.bytes * 100 / self.total_bytes)
+        if self.progress is None or progress > self.progress:
+            self.progress = progress
             self.update_transfer_rate()
-            self.status = self.format_progress(notification.data.transferred_bytes, notification.data.total_bytes)
+            self.status = self.format_progress()
             notification.center.post_notification("BlinkFileTransferProgress", sender=self, data=NotificationData(progress=progress))
 
     def log_info(self, text):
@@ -282,7 +288,6 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.remote_identity = format_identity_to_string(target_uri)
         self.target_uri = target_uri
         self._ended = False
-        self._hash_progress = None
 
     @property
     def target_text(self):
@@ -297,8 +302,9 @@ class OutgoingPushFileTransferHandler(FileTransfer):
     def retry(self):
         self._ended = False
         self._file_selector = FileSelector.for_file(self._file_selector.name)
-        self._progress = None
-        self._hash_progress = None
+        self.bytes = 0
+        self.total_bytes = 0
+        self.progress = None
         self.last_rate_pos = 0
         self.last_rate_time = 0
         self.session = None
@@ -377,8 +383,8 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     def _NH_FileTransferHandlerHashProgress(self, notification):
         progress = int(notification.data.processed * 100 / notification.data.total)
-        if self._hash_progress is None or progress > self._hash_progress:
-            self._hash_progress = progress
+        if self.progress is None or progress > self.progress:
+            self.progress = progress
             notification.center.post_notification('BlinkFileTransferHashProgress', sender=self, data=NotificationData(progress=progress))
 
 
