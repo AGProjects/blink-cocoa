@@ -64,6 +64,7 @@ class FileTransfer(object):
     last_rate_time = 0
     rate_history = None
     ft_info = None
+    _progress = None
 
     start_time = None
     end_time = None
@@ -109,21 +110,22 @@ class FileTransfer(object):
         return status
 
     def update_transfer_rate(self):
+        now = time.time()
         if self.last_rate_time > 0:
-            if time.time() - self.last_rate_time >= 1:
-                dt = time.time() - self.last_rate_time
+            if now - self.last_rate_time >= 1:
+                dt = now - self.last_rate_time
                 db = self.file_pos - self.last_rate_pos
                 transfer_rate = int(db / dt)
 
                 self.rate_history.append(transfer_rate)
                 while len(self.rate_history) > 5:
                     del self.rate_history[0]
-                self.last_rate_time = time.time()
+                self.last_rate_time = now
                 self.last_rate_pos = self.file_pos
 
                 self.transfer_rate = sum(self.rate_history) / len(self.rate_history)
         else:
-            self.last_rate_time = time.time()
+            self.last_rate_time = now
             self.last_rate_pos = self.file_pos
             self.rate_history = []
 
@@ -218,10 +220,12 @@ class FileTransfer(object):
         notification.center.post_notification("BlinkFileTransferUpdate", sender=self)
 
     def _NH_FileTransferHandlerProgress(self, notification):
-        self.update_transfer_rate()
-        self.status = self.format_progress(notification.data.transferred_bytes, notification.data.total_bytes)
         progress = int(notification.data.transferred_bytes * 100 / notification.data.total_bytes)
-        notification.center.post_notification("BlinkFileTransferProgress", sender=self, data=NotificationData(progress=progress))
+        if self._progress is None or progress > self._progress:
+            self._progress = progress
+            self.update_transfer_rate()
+            self.status = self.format_progress(notification.data.transferred_bytes, notification.data.total_bytes)
+            notification.center.post_notification("BlinkFileTransferProgress", sender=self, data=NotificationData(progress=progress))
 
     def log_info(self, text):
         BlinkLogger().log_info(u"[%s file transfer with %s] %s" % (self.direction.title(), self.remote_identity, text))
@@ -292,6 +296,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
     def retry(self):
         self._ended = False
         self._file_selector = FileSelector.for_file(self._file_selector.name)
+        self._progress = None
         self.last_rate_pos = 0
         self.last_rate_time = 0
         self.session = None
