@@ -282,6 +282,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.remote_identity = format_identity_to_string(target_uri)
         self.target_uri = target_uri
         self._ended = False
+        self._hash_progress = None
 
     @property
     def target_text(self):
@@ -297,6 +298,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self._ended = False
         self._file_selector = FileSelector.for_file(self._file_selector.name)
         self._progress = None
+        self._hash_progress = None
         self.last_rate_pos = 0
         self.last_rate_time = 0
         self.session = None
@@ -375,7 +377,9 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
     def _NH_FileTransferHandlerHashProgress(self, notification):
         progress = int(notification.data.processed * 100 / notification.data.total)
-        notification.center.post_notification('BlinkFileTransferHashProgress', sender=self, data=NotificationData(progress=progress))
+        if self._hash_progress is None or progress > self._hash_progress:
+            self._hash_progress = progress
+            notification.center.post_notification('BlinkFileTransferHashProgress', sender=self, data=NotificationData(progress=progress))
 
 
 class OutgoingPullFileTransferHandler(FileTransfer):
