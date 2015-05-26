@@ -64,7 +64,6 @@ class FileTransferWindowController(NSObject):
             notification_center.add_observer(self, name="BlinkFileTransferNewOutgoing")
             notification_center.add_observer(self, name="BlinkFileTransferNewIncoming")
             notification_center.add_observer(self, name="BlinkFileTransferWillRestart")
-            notification_center.add_observer(self, name="BlinkFileTransferDidFail")
             notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
             notification_center.add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
             notification_center.add_observer(self, name="BlinkShouldTerminate")
