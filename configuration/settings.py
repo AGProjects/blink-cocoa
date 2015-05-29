@@ -129,7 +129,7 @@ class GUISettings(SettingsGroup):
 if video_support:
     class RTPSettingsExtension(RTPSettings):
         audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
-        video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264',)))
+        video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264', 'VP8')))
 else:
     class RTPSettingsExtension(RTPSettings):
         audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
