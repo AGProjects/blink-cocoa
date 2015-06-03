@@ -440,7 +440,10 @@ class BlinkAppDelegate(NSObject):
     def _NH_NetworkConditionsDidChange(self, notification):
         self.ip_change_timestamp = int(time.time())
         BlinkLogger().log_info(u"Network conditions changed")
-        BlinkLogger().log_info(u"IP address changed to %s" % host.default_ip)
+        if host.default_ip is None:
+            BlinkLogger().log_info(u"No IP address")
+        else:
+            BlinkLogger().log_info(u"IP address changed to %s" % host.default_ip)
 
     def _NH_SIPApplicationWillEnd(self, notification):
         call_in_thread('file-io', self.purge_temporary_files)
