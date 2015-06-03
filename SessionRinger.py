@@ -466,13 +466,13 @@ class Ringer(object):
 
     def _NH_BlinkFileTransferDidEnd(self, notification):
         settings = SIPSimpleSettings()
-        if not settings.audio.silent:
+        if not settings.audio.silent and not notification.data.error:
             if notification.sender.direction == 'incoming':
-                if self.file_transfer_outgoing_sound:
-                    self.file_transfer_outgoing_sound.start()
-            else:
                 if self.file_transfer_incoming_sound:
                     self.file_transfer_incoming_sound.start()
+            else:
+                if self.file_transfer_outgoing_sound:
+                    self.file_transfer_outgoing_sound.start()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         data = notification.data
