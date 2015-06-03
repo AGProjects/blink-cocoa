@@ -164,10 +164,15 @@ class FileTransfer(object):
             self.ft_info.status = "completed"
             self.ft_info.bytes_transfered = self.file_selector.size
         else:
-            self.log_info("File Transfer failed: %s" % failure_reason)
             if failure_status is None:
-                self.status = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.bytes, 1024) + format_size(self.total_bytes) + " - " +  failure_reason
+                if self.total_bytes:
+                    self.log_info("File Transfer was interrupted")
+                    self.status = NSLocalizedString("Transferred %s of ", "Label") % format_size(self.bytes, 1024) + format_size(self.total_bytes) + " - " +  failure_reason
+                else:
+                    self.log_info("File Transfer was cancelled")
+                    self.status = failure_reason
             else:
+                self.log_info("File Transfer failed: %s" % failure_reason)
                 self.status = failure_status
             self.ft_info.status = "failed"
             self.ft_info.bytes_transfered = self.file_pos

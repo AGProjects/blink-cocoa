@@ -2,6 +2,7 @@
 #
 
 from AppKit import NSCompositeSourceOver, NSProcessInfo
+from AppKit import NSApp
 
 from Foundation import (NSBundle,
                         NSColor,
@@ -49,6 +50,7 @@ class FileTransferItemView(NSView):
 
     failed = False
     done = False
+    file_path = None
 
     transfer = None
     oldTransferInfo = None
@@ -58,39 +60,52 @@ class FileTransferItemView(NSView):
         self = NSView.initWithFrame_(self, frame)
         if self:
             self.oldTransferInfo = transferInfo
+            self.file_path = transferInfo.file_path
 
             NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
-            filename = transferInfo.file_path
 
-            self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(filename))
+            self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(self.file_path))
 
-            self.nameText.setStringValue_(os.path.basename(filename))
+            self.nameText.setStringValue_(os.path.basename(self.file_path))
             self.fromText.setStringValue_('To %s from account %s' % (transferInfo.remote_uri, transferInfo.local_uri) if transferInfo.direction=='outgoing' else 'From %s to account %s' % (transferInfo.remote_uri, transferInfo.local_uri))
-            self.revealButton.setHidden_(True)
+            
+            self.revealButton.setHidden_(not os.path.exists(self.file_path))
 
             time_print = format_date(transferInfo.time)
             if transferInfo.status == "completed":
                 self.sizeText.setTextColor_(NSColor.blueColor())
                 t = NSLocalizedString("Completed transfer of ", "Label")
                 status = t + "%s %s" % (format_size(transferInfo.file_size, 1024), time_print)
-                if transferInfo.direction == 'incoming':
-                    self.revealButton.setHidden_(False)
             else:
                 self.sizeText.setTextColor_(NSColor.redColor())
-                if transferInfo.direction == "outgoing":
-                    status = '%s %s' % (transferInfo.status.title(), time_print)
-                    self.retryButton.setHidden_(False)
-                else:
-                    status = "%s %s" % (transferInfo.status.title(), time_print)
+                status = "%s %s" % (transferInfo.status.title(), time_print)
 
             self.sizeText.setStringValue_(status)
             frame.size = self.view.frame().size
             self.setFrame_(frame)
             self.addSubview_(self.view)
             self.relayoutForDone()
+            if transferInfo.direction == "outgoing" and transferInfo.status != "completed" and os.path.exists(self.file_path):
+                self.retryButton.setHidden_(False)
             self.done = True
         return self
+
+    def replaceWithTransfer_(self, transfer):
+        self.transfer = transfer
+        NotificationCenter().add_observer(self, sender=transfer)
+        self.stopButton.setHidden_(False)
+        self.retryButton.setHidden_(True)
+        self.progressBar.setHidden_(True)
+        self.checksumProgressBar.setHidden_(False)
+        self.checksumProgressBar.setIndeterminate_(False)
+        self.checksumProgressBar.startAnimation_(None)
+        self.sizeText.setTextColor_(NSColor.grayColor())
+
+        frame = self.frame()
+        frame.size.height = 68
+        self.setFrame_(frame)
+        self.addSubview_(self.view)
 
     def initWithFrame_transfer_(self, frame, transfer):
         self = NSView.initWithFrame_(self, frame)
@@ -100,8 +115,8 @@ class FileTransferItemView(NSView):
 
             NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
-            filename = os.path.basename(self.transfer.ft_info.file_path)
-            self.nameText.setStringValue_(filename)
+            self.file_path = os.path.basename(self.transfer.ft_info.file_path)
+            self.nameText.setStringValue_(self.file_path)
 
             if type(self.transfer) == OutgoingPushFileTransferHandler:
                 self.fromText.setStringValue_(u"To:  %s" % self.transfer.account.id)
@@ -112,7 +127,7 @@ class FileTransferItemView(NSView):
             # XXX: there should be a better way to do this!
             tmp_folder = ApplicationData.get('.tmp_file_transfers')
             makedirs(tmp_folder, 0700)
-            tmpf = tmp_folder + "/tmpf-" + filename
+            tmpf = tmp_folder + "/tmpf-" + self.file_path
             with open(tmpf, "w+"):
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(tmpf))
             unlink(tmpf)
@@ -223,9 +238,9 @@ class FileTransferItemView(NSView):
                 account = (account for account in AccountManager().iter_accounts() if account.id == self.oldTransferInfo.local_uri).next()
             except StopIteration:
                 account = AccountManager().default_account
-            from FileTransferWindowController import openFileTransferSelectionDialog
             target_uri = normalize_sip_uri_for_outgoing_session(self.oldTransferInfo.remote_uri, AccountManager().default_account)
-            openFileTransferSelectionDialog(account, target_uri, self.oldTransferInfo.file_path)
+            filenames = [unicodedata.normalize('NFC', self.oldTransferInfo.file_path)]
+            NSApp.delegate().contactsWindowController.sessionControllersManager.send_files_to_contact(account, target_uri, filenames)
         else:
             self.failed = False
             self.done = False

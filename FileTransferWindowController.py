@@ -76,9 +76,18 @@ class FileTransferWindowController(NSObject):
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_previous_transfers(self, active_items=[]):
-        results = FileTransferHistory().get_transfers(10)
-        transfers = [transfer for transfer in reversed(results) if transfer.transfer_id not in active_items]
-        self.render_previous_transfers(transfers)
+        results = FileTransferHistory().get_transfers(20)
+        already_added_file = set()
+        transfers = []
+        for transfer in results:
+            if transfer.transfer_id in active_items:
+                continue
+            if transfer.file_path in already_added_file:
+                continue
+            already_added_file.add(transfer.file_path)
+            transfers.append(transfer)
+    
+        self.render_previous_transfers(reversed(transfers))
 
     @run_in_gui_thread
     def render_previous_transfers(self, transfers):
@@ -178,11 +187,16 @@ class FileTransferWindowController(NSObject):
         self.listView.relayout()
 
     def _NH_BlinkFileTransferNewOutgoing(self, sender, data):
-        item = FileTransferItemView.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
+        try:
+            item = (item for item in self.listView.subviews().copy() if item.file_path == sender.ft_info.file_path).next()
+            item.replaceWithTransfer_(sender)
+            self.listView.relayout()
 
-        self.listView.addItemView_(item)
-        h = NSHeight(self.listView.frame())
-        self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
+        except StopIteration:
+            item = FileTransferItemView.alloc().initWithFrame_transfer_(NSMakeRect(0, 0, 100, 100), sender)
+            self.listView.addItemView_(item)
+            h = NSHeight(self.listView.frame())
+            self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
         if 'screencapture' not in sender.ft_info.file_path:
             self.window.orderFront_(None)
