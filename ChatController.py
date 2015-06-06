@@ -1609,6 +1609,9 @@ class ChatController(MediaStream):
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         if self.sessionController.session is None:
             return
+        
+        if data.error:
+            return
 
         settings = SIPSimpleSettings()
         if not settings.file_transfer.render_incoming_image_in_chat_window and not settings.file_transfer.render_incoming_video_in_chat_window:
