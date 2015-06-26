@@ -80,11 +80,12 @@ class FileTransferWindowController(NSObject):
         already_added_file = set()
         transfers = []
         for transfer in results:
+            file_idx = '%s%s' % (transfer.file_path, transfer.remote_uri)
             if transfer.transfer_id in active_items:
                 continue
-            if transfer.file_path in already_added_file:
+            if file_idx in already_added_file:
                 continue
-            already_added_file.add(transfer.file_path)
+            already_added_file.add(file_idx)
             transfers.append(transfer)
     
         self.render_previous_transfers(reversed(transfers))
@@ -188,7 +189,7 @@ class FileTransferWindowController(NSObject):
 
     def _NH_BlinkFileTransferNewOutgoing(self, sender, data):
         try:
-            item = (item for item in self.listView.subviews().copy() if item.file_path == sender.ft_info.file_path).next()
+            item = (item for item in self.listView.subviews().copy() if item.file_path == sender.ft_info.file_path and item.remote_uri == sender.ft_info.remote_uri).next()
             item.replaceWithTransfer_(sender)
             self.listView.relayout()
 

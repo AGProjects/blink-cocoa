@@ -51,6 +51,8 @@ class FileTransferItemView(NSView):
     failed = False
     done = False
     file_path = None
+    local_uri = None
+    remote_uri = None
 
     transfer = None
     oldTransferInfo = None
@@ -61,6 +63,8 @@ class FileTransferItemView(NSView):
         if self:
             self.oldTransferInfo = transferInfo
             self.file_path = transferInfo.file_path
+            self.remote_uri = transferInfo.remote_uri
+            self.local_uri = transferInfo.local_uri
 
             NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
 
@@ -117,6 +121,8 @@ class FileTransferItemView(NSView):
 
             self.file_path = os.path.basename(self.transfer.ft_info.file_path)
             self.nameText.setStringValue_(self.file_path)
+            self.remote_uri = self.transfer.ft_info.remote_uri
+            self.local_uri = self.transfer.ft_info.local_uri
 
             if type(self.transfer) == OutgoingPushFileTransferHandler:
                 self.fromText.setStringValue_(u"To:  %s" % self.transfer.account.id)
