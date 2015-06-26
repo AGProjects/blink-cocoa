@@ -3097,22 +3097,25 @@ class ContactListModel(CustomListModel):
             [all_pending_watchers.update(d) for d in self.pending_watchers_map.values()]
             notification_sent = False
             for watcher in all_pending_watchers.itervalues():
-                if not self.presencePolicyExistsForURI_(watcher.sipuri):
-                    uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                uri = sip_prefix_pattern.sub('', watcher.sipuri)
+                try:
+                    gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
+                except StopIteration:
                     if uri == notification.sender.id:
                         continue
 
-                    BlinkLogger().log_debug(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
-                    gui_watcher = BlinkPendingWatcher(watcher)
-                    self.pending_watchers_group.contacts.append(gui_watcher)
+                    if not self.presencePolicyExistsForURI_(watcher.sipuri):
+                        BlinkLogger().log_debug(u"New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
+                        gui_watcher = BlinkPendingWatcher(watcher)
+                        self.pending_watchers_group.contacts.append(gui_watcher)
 
-                    if not notification_sent:
-                        notification_sent = True
+                        if not notification_sent:
+                            notification_sent = True
 
-                        nc_title = NSLocalizedString("New Contact Request", "System notification title")
-                        nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
-                        nc_body = NSLocalizedString("This contact wishes to see your availability", "System notification body")
-                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                            nc_title = NSLocalizedString("New Contact Request", "System notification title")
+                            nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
+                            nc_body = NSLocalizedString("This contact wishes to see your availability", "System notification body")
+                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
             for watcher in tmp_active_watchers.iterkeys():
                 uri = sip_prefix_pattern.sub('', watcher)
@@ -3126,7 +3129,6 @@ class ContactListModel(CustomListModel):
                 try:
                     gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
                 except StopIteration:
-                    uri = sip_prefix_pattern.sub('', watcher.sipuri)
                     if uri == notification.sender.id:
                         continue
 
