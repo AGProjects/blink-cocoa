@@ -472,6 +472,11 @@ CA
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="My Video" tag="3" hidden="YES" keyEquivalent="7" id="Sf9-1D-yIl">
+                                <connections>
+                                    <action selector="showMyVideo:" target="389" id="gir-as-es0"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="92">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -1560,6 +1565,7 @@ ABC</string>
                 <outlet property="micLevelIndicator" destination="1820" id="1822"/>
                 <outlet property="model" destination="831" id="837"/>
                 <outlet property="muteButton" destination="878" id="881"/>
+                <outlet property="myvideoMenuItem" destination="Sf9-1D-yIl" id="SEf-wi-D5j"/>
                 <outlet property="nameText" destination="731" id="733"/>
                 <outlet property="notFoundText" destination="631" id="633"/>
                 <outlet property="participantMenu" destination="1563" id="1580"/>

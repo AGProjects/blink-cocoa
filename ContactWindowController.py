@@ -348,6 +348,7 @@ class ContactWindowController(NSWindowController):
     created_accounts = set()
     purge_presence_timer = None
     full_screen_in_progress = False
+    myvideo = None
     
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
@@ -3738,6 +3739,12 @@ class ContactWindowController(NSWindowController):
         object = sender.representedObject()
         if object is not None:
             self.startSessionWithTarget(object['target_uri'], media_type="chat", local_uri=object['account'])
+
+    @objc.IBAction
+    def showMyVideo_(self, sender):
+        if self.myvideo is None:
+            self.myvideo = MyVideoWindowController()
+        self.myvideo.show()
 
     @run_in_green_thread
     def show_last_chat_conversations(self):
