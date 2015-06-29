@@ -1015,7 +1015,8 @@ class SessionController(NSObject):
         settings = SIPSimpleSettings()
         self.video_consumer = settings.video.container
 
-        self.log_info('Local contact: %s' % self.contact.name)
+        if self.contact is not None:
+            self.log_info('Local contact: %s' % self.contact.name)
 
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
