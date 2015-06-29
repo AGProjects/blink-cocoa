@@ -2450,8 +2450,7 @@ class ContactWindowController(NSWindowController):
             if selected_contact:
                 display_name = selected_contact.name
             else:
-                contact = self.getFirstContactMatchingURI(target)
-                display_name = contact.name if contact else ''
+                display_name = ''
         else:
             account = BonjourAccount()
             display_name = contact.name
