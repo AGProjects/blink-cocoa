@@ -207,9 +207,10 @@ class VideoWidget(NSView):
         if self.isHidden():
             return
 
-        if self.aspect_ratio is None:
-            self.aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
-            if hasattr(self.delegate, "init_aspect_ratio"):
+        aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
+        if self.aspect_ratio != aspect_ratio:
+            self.aspect_ratio = aspect_ratio
+            if self.aspect_ratio is not None or hasattr(self.delegate, "init_aspect_ratio"):
                 self.delegate.init_aspect_ratio(*frame.size)
 
         self._frame = frame
@@ -589,9 +590,6 @@ class VideoWindowController(NSWindowController):
             return None
 
     def init_aspect_ratio(self, width, height):
-        if self.aspect_ratio is not None:
-            return
-
         self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
         self.aspect_ratio = floor((float(width) / height) * 100)/100
         self.sessionController.log_info('Remote aspect ratio is %s' % self.aspect_ratio)
