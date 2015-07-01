@@ -1313,11 +1313,10 @@ class AudioController(MediaStream):
 
     @run_in_gui_thread
     def _NH_MediaStreamDidStart(self, sender, data):
-        sample_rate = self.stream.sample_rate/1000
         codec = beautify_audio_codec(self.stream.codec)
         if self.stream.codec == 'opus':
             settings = SIPSimpleSettings()
-        self.sessionController.log_info("Audio stream established to %s:%s using %s %0.fkHz codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec, sample_rate))
+        self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
