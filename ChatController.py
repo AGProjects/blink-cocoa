@@ -409,7 +409,7 @@ class ChatController(MediaStream):
 
     @property
     def chatWindowController(self):
-        return NSApp.delegate().contactsWindowController.chatWindowController
+        return NSApp.delegate().chatWindowController
 
     def awakeFromNib(self):
         # setup smiley popup
@@ -465,9 +465,6 @@ class ChatController(MediaStream):
         MediaStream.changeStatus(self, newstate, fail_reason)
 
     def openChatWindow(self):
-        if self.chatWindowController is None:
-            NSApp.delegate().contactsWindowController.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
-
         old_session = self.chatWindowController.replaceInactiveWithCompatibleSession_(self.sessionController)
         if not old_session:
             view = self.getContentView()

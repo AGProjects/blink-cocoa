@@ -301,7 +301,7 @@ class VideoController(MediaStream):
         if self.sessionController.video_consumer == "audio":
             NSApp.delegate().contactsWindowController.detachVideo(self.sessionController)
         elif self.sessionController.video_consumer == "chat":
-            NSApp.delegate().contactsWindowController.chatWindowController.detachVideo(self.sessionController)
+            NSApp.delegate().chatWindowController.detachVideo(self.sessionController)
 
         status = self.status
         if status in [STREAM_IDLE, STREAM_FAILED]:

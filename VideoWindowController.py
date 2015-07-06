@@ -183,8 +183,8 @@ class VideoWidget(NSView):
         if type(self.window()) == NSDrawerWindow:
             if NSApp.delegate().contactsWindowController.drawer.contentView().window() == self.window():
                 delegate = NSApp.delegate().contactsWindowController.drawer.parentWindow().delegate()
-            elif NSApp.delegate().contactsWindowController.chatWindowController.drawer.contentView().window() == self.window():
-                delegate = NSApp.delegate().contactsWindowController.chatWindowController.drawer.parentWindow().delegate()
+            elif NSApp.delegate().chatWindowController.drawer.contentView().window() == self.window():
+                delegate = NSApp.delegate().chatWindowController.drawer.parentWindow().delegate()
         return delegate
 
     def rightMouseDown_(self, event):

@@ -1293,7 +1293,7 @@ class SessionController(NSObject):
         audio_stream = self.streamHandlerOfType("audio")
         video_stream = self.streamHandlerOfType("video")
         chat_stream = self.streamHandlerOfType("chat")
-        chatWindowController = NSApp.delegate().contactsWindowController.chatWindowController
+        chatWindowController = NSApp.delegate().chatWindowController
         contactsWindowController = NSApp.delegate().contactsWindowController
 
         if self.video_consumer == "standalone":

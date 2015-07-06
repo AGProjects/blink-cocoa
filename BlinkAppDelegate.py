@@ -47,11 +47,15 @@ from sipsimple.threading import call_in_thread
 from zope.interface import implements
 
 from SIPManager import SIPManager
+from DebugWindow import DebugWindow
 from iCloudManager import iCloudManager
 from BlinkLogger import BlinkLogger
 from EnrollmentController import EnrollmentController
 
 import PreferencesController
+import SMSWindowManager
+import ChatWindowController
+
 from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData
 from util import allocate_autorelease_pool, call_in_gui_thread, external_url_pattern
@@ -73,6 +77,8 @@ class BlinkAppDelegate(NSObject):
     implements(IObserver)
 
     contactsWindowController = objc.IBOutlet()
+    chatWindowController = objc.IBOutlet()
+    debugWindow = objc.IBOutlet()
     aboutPanel = objc.IBOutlet()
     migrationPanel = objc.IBOutlet()
     migrationText = objc.IBOutlet()
@@ -355,6 +361,9 @@ class BlinkAppDelegate(NSObject):
             self.wait_for_enrollment = False
 
         self.contactsWindowController.setupFinished()
+        SMSWindowManager.SMSWindowManager().setOwner_(self.contactsWindowController)
+        self.debugWindow = DebugWindow.alloc().init()
+        self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
 
     def killSelfAfterTimeout_(self, arg):
         time.sleep(5)

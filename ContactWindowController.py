@@ -118,7 +118,6 @@ from  LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
 import ContactOutlineView
 import ListView
 import SMSWindowManager
-import ChatWindowController
 
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
@@ -130,7 +129,6 @@ from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroup, BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar, DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
 from MediaStream import STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
-from DebugWindow import DebugWindow
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
 from ConferenceController import random_room, default_conference_server, JoinConferenceWindowController, AddParticipantsWindowController
@@ -234,8 +232,6 @@ class ContactWindowController(NSWindowController):
     searchResultsModel = objc.IBOutlet()
     fileTransfersWindow = None
 
-    debugWindow = None
-
     loaded = False
     collapsedState = False
     originalSize = None
@@ -313,7 +309,6 @@ class ContactWindowController(NSWindowController):
     screenShareMenu = objc.IBOutlet()
 
     historyViewer = None
-    chatWindowController = None
 
     searchInfoAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(
                     NSFont.systemFontOfSize_(NSFont.labelFontSize()), NSFontAttributeName,
@@ -718,12 +713,6 @@ class ContactWindowController(NSWindowController):
         if active and active.display_name != self.nameText.stringValue():
             self.nameText.setStringValue_(active.display_name or u"")
 
-        # initialize debug window
-        self.debugWindow = DebugWindow.alloc().init()
-
-        # instantiate the SMS handler
-        SMSWindowManager.SMSWindowManager().setOwner_(self)
-
         self.contactOutline.reloadData()
 
         #selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
@@ -851,11 +840,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatWindow_(self, sender):
-        if self.chatWindowController is None:
-            self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
-
-        if self.chatWindowController.tabView.tabViewItems():
-            self.chatWindowController.window().makeKeyAndOrderFront_(None)
+        if NSApp.delegate().chatWindowController.tabView.tabViewItems():
+            NSApp.delegate().chatWindowController.window().makeKeyAndOrderFront_(None)
         else:
             self.show_last_chat_conversations()
 
@@ -1529,9 +1515,6 @@ class ContactWindowController(NSWindowController):
 
     @run_in_gui_thread
     def _NH_ChatReplicationJournalEntryReceived(self, notification):
-        if self.chatWindowController is None:
-            self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
-
         data = notification.data.chat_message
         hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteAOR == data['remote_uri'])
 
@@ -2889,7 +2872,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
-        self.debugWindow.show()
+        NSApp.delegate().debugWindow.show()
 
     @objc.IBAction
     def setAlwaysOnTop_(self, sender):
@@ -4116,8 +4099,8 @@ class ContactWindowController(NSWindowController):
         self.focusSearchTextField()
 
     def focusSearchTextField(self):
-        self.window().makeFirstResponder_(self.searchBox)
-        self.window().makeKeyAndOrderFront_(None)
+        self.searchBox.window().makeFirstResponder_(self.searchBox)
+        self.searchBox.window().makeKeyAndOrderFront_(None)
 
     @objc.IBAction
     def redialLast_(self, sender):
