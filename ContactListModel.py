@@ -3116,6 +3116,8 @@ class ContactListModel(CustomListModel):
                             nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
                             nc_body = NSLocalizedString("This contact wishes to see your availability", "System notification body")
                             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                    else:
+                        BlinkLogger().log_debug(u"Account %s already has a policy for my availability for %s" % (notification.sender.id, uri))
 
             for watcher in tmp_active_watchers.iterkeys():
                 uri = sip_prefix_pattern.sub('', watcher)
@@ -3144,6 +3146,8 @@ class ContactListModel(CustomListModel):
                             nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
                             nc_body = NSLocalizedString("This contact wishes to see your availability", "System notification body")
                             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                    else:
+                        BlinkLogger().log_debug(u"Account %s already has a policy for my availability for %s" % (notification.sender.id, uri))
 
                 else:
                     # TODO: set displayname if it didn't have one?
