@@ -351,11 +351,16 @@ class ChatWindowController(NSWindowController):
         if session.remote_focus or session.hasStreamOfType("video"):
             self.drawer.open()
         else:
-            self.drawer.close()
+            self.closeDrawer()
 
+        self.drawer.open()
         if session.mustCloseAudioDrawer:
             NSApp.delegate().contactsWindowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
+
+    def closeDrawer(self):
+        return
+        self.drawer.close()
 
     def removeSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -399,9 +404,9 @@ class ChatWindowController(NSWindowController):
             if session.remote_focus or session.hasStreamOfType("video"):
                 self.drawer.open()
             else:
-                self.drawer.close()
+                self.closeDrawer()
         else:
-            self.drawer.close()
+            self.closeDrawer()
         self.refreshDrawer()
 
     def detachVideo(self, sessionController):
@@ -2011,7 +2016,7 @@ class ChatWindowController(NSWindowController):
             if session.remote_focus or session.hasStreamOfType("video"):
                 self.drawer.open()
             else:
-                self.drawer.close()
+                self.closeDrawer()
 
             if session.mustCloseAudioDrawer:
                 NSApp.delegate().contactsWindowController.drawer.close()

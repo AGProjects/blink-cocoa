@@ -1651,7 +1651,7 @@ class ChatController(MediaStream):
         self.screensharing_handler.setDisconnected()
 
         self.reset()
-        self.chatWindowController.drawer.close()
+        self.chatWindowController.closeDrawer()
 
     def _NH_BlinkSessionDidFail(self, sender, data):
         reason = data.failure_reason or data.reason
