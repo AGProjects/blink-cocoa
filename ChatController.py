@@ -1201,7 +1201,7 @@ class ChatController(MediaStream):
                 else:
                     if self.sessionController.state == STATE_IDLE:
                         self.notification_center.add_observer(self, sender=self.sessionController)
-                        self.sessionController.startCompositeSessionWithStreamsOfTypes(("video", "audio", "chat"))
+                        self.sessionController.startCompositeSessionWithStreamsOfTypes(("audio", "video", "chat"))
                     else:
                         self.sessionController.addVideoToSession()
                     self.sessionController.setVideoConsumer("chat")

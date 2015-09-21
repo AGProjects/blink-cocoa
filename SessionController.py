@@ -1682,7 +1682,7 @@ class SessionController(NSObject):
         return self.startSessionWithStreamOfType("chat")
 
     def startVideoSession(self):
-        return self.startCompositeSessionWithStreamsOfTypes(("video", "audio"))
+        return self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))
 
     def offerFileTransfer(self, file_path, content_type=None):
         return self.startSessionWithStreamOfType("chat", {"file_path":file_path, "content_type":content_type})
@@ -1707,7 +1707,7 @@ class SessionController(NSObject):
     def addVideoToSession(self):
         if not self.hasStreamOfType("video"):
             if not self.hasStreamOfType("audio"):
-                self.startCompositeSessionWithStreamsOfTypes(("video", "audio"))
+                self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))
             else:
                 self.startSessionWithStreamOfType("video")
 
