@@ -1546,7 +1546,7 @@ class ChatWindowController(NSWindowController):
             elif tag == CONFERENCE_ROOM_MENU_START_AUDIO_SESSION:
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="audio", local_uri=session.account.id)
             elif tag == CONFERENCE_ROOM_MENU_START_VIDEO_SESSION:
-                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type=("video", "audio"), local_uri=session.account.id)
+                NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type=("audio", "video"), local_uri=session.account.id)
             elif tag == CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION:
                 if session.video_consumer == "chat":
                     session.setVideoConsumer("standalone")

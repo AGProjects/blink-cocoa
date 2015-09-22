@@ -2466,7 +2466,7 @@ class ContactWindowController(NSWindowController):
             return None
 
         if media_type == "video":
-            media_type = ("video", "audio")
+            media_type = ("audio", "video")
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, unicode(display_name), selected_contact)
         session_controller.log_info('Using local account %s' % account.id)
@@ -2534,7 +2534,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startVideoSessionWithSIPURI_(self, sender):
-        self.startSessionWithTarget(sender.representedObject(), media_type=("video", "audio"))
+        self.startSessionWithTarget(sender.representedObject(), media_type=("audio", "video"))
 
     @objc.IBAction
     def startChatSessionWithSIPURI_(self, sender):
@@ -2546,7 +2546,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def startVideoToSelected_(self, sender):
-        self.startSessionToSelectedContact(("video", "audio"), sender.representedObject())
+        self.startSessionToSelectedContact(("audio", "video"), sender.representedObject())
 
     @objc.IBAction
     def startChatToSelected_(self, sender):
@@ -2705,11 +2705,11 @@ class ContactWindowController(NSWindowController):
                 elif contact.preferred_media in ("chat+audio", "audio+chat"):
                     media_type = ("chat", "audio")
                 elif contact.preferred_media == "video":
-                    media_type = ("video", "audio")
+                    media_type = ("audio", "video")
                 else:
                     media_type = "audio"
             elif sender.selectedSegment() == 1:
-                media_type=("video", "audio")
+                media_type=("audio", "video")
             elif sender.selectedSegment() == 2:
                 # IM button
                 if self.sessionControllersManager.isMediaTypeSupported('chat') and self.sessionControllersManager.isMediaTypeSupported('sms'):
