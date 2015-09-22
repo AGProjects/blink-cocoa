@@ -6,6 +6,18 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 5.4.1</title>
+            <sparkle:minimumSystemVersion>10.9.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Sep 22 07:51:23 UYT 2015</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="5.4.0"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 5.3.0</title>
             <sparkle:minimumSystemVersion>10.9.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
