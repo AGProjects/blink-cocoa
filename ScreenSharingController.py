@@ -216,8 +216,8 @@ class ScreenSharingController(MediaStream):
         if self.direction == "active":
             if newstate == STREAM_CONNECTED:
                 ip, port = self.stream.handler.address
-                self.sessionController.log_info("Connecting screen sharing viewer to vnc://127.0.0.1:%s" % port)
-                url = NSURL.URLWithString_("vnc://localhost:%i" % (port))
+                self.sessionController.log_info("Connecting screen sharing viewer to vnc://%s:%s" % (ip, port))
+                url = NSURL.URLWithString_("vnc://%s:%i" % (ip, port))
                 NSWorkspace.sharedWorkspace().openURL_(url)
         else:
             self.statusWindow.makeKeyAndOrderFront_(None)
