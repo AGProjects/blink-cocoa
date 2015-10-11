@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatWindowController">
@@ -18,7 +18,6 @@
                 <outlet property="editorButton" destination="441" id="448"/>
                 <outlet property="encryptionIconMenuItem" destination="663" id="669"/>
                 <outlet property="encryptionMenu" destination="662" id="668"/>
-                <outlet property="micLevelIndicator" destination="586" id="589"/>
                 <outlet property="muteButton" destination="220" id="222"/>
                 <outlet property="participantMenu" destination="226" id="233"/>
                 <outlet property="participantsTableView" destination="383" id="402"/>
@@ -165,7 +164,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="674" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="674" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">

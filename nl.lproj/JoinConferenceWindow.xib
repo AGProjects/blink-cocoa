@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="14A389" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="JoinConferenceWindowController">
@@ -27,16 +26,16 @@
         <window title="Deelnemen aan conferentie" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" frameAutosaveName="startConferenceWindow" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="154" width="551" height="423"/>
+            <rect key="contentRect" x="196" y="154" width="551" height="424"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
             <value key="minSize" type="size" width="551" height="424"/>
             <value key="maxSize" type="size" width="551" height="424"/>
             <view key="contentView" id="2">
-                <rect key="frame" x="0.0" y="0.0" width="551" height="423"/>
+                <rect key="frame" x="0.0" y="0.0" width="551" height="424"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" id="3">
-                        <rect key="frame" x="160" y="381" width="373" height="17"/>
+                        <rect key="frame" x="160" y="382" width="373" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Neem deel aan conferentie en nodig deelnemers uit:" id="10">
                             <font key="font" metaFont="system"/>
@@ -45,7 +44,7 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="27">
-                        <rect key="frame" x="38" y="259" width="121" height="17"/>
+                        <rect key="frame" x="38" y="260" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Deelnemer:" id="28">
                             <font key="font" metaFont="system"/>
@@ -54,7 +53,7 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="97">
-                        <rect key="frame" x="18" y="233" width="141" height="17"/>
+                        <rect key="frame" x="18" y="234" width="141" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Deelnemerslijst:" id="98">
                             <font key="font" metaFont="system"/>
@@ -63,7 +62,7 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="172">
-                        <rect key="frame" x="38" y="90" width="121" height="17"/>
+                        <rect key="frame" x="26" y="91" width="133" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Voorgestelde media:" id="173">
                             <font key="font" metaFont="system"/>
@@ -72,7 +71,7 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="25">
-                        <rect key="frame" x="38" y="318" width="121" height="17"/>
+                        <rect key="frame" x="38" y="319" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Chatroom:" id="26">
                             <font key="font" metaFont="system"/>
@@ -81,7 +80,7 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="17">
-                        <rect key="frame" x="163" y="315" width="368" height="22"/>
+                        <rect key="frame" x="163" y="316" width="368" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voer naam in of laat leeg voor een willekeurige naam" drawsBackground="YES" id="18">
                             <font key="font" metaFont="system"/>
@@ -94,7 +93,7 @@
                         </connections>
                     </textField>
                     <textField verticalHuggingPriority="750" id="161">
-                        <rect key="frame" x="38" y="289" width="121" height="17"/>
+                        <rect key="frame" x="38" y="290" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Bijnaam:" id="164">
                             <font key="font" metaFont="system"/>
@@ -103,7 +102,7 @@
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" id="162">
-                        <rect key="frame" x="164" y="286" width="367" height="22"/>
+                        <rect key="frame" x="164" y="287" width="367" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voer een bijnaam in voor de getoonde naam" drawsBackground="YES" id="163">
                             <font key="font" metaFont="system"/>
@@ -141,7 +140,7 @@ Gw
                         </connections>
                     </button>
                     <button id="44">
-                        <rect key="frame" x="274" y="88" width="105" height="18"/>
+                        <rect key="frame" x="274" y="89" width="105" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Audio " bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="45">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -150,7 +149,7 @@ Gw
                         <accessibility description="Audio voorstellen"/>
                     </button>
                     <button id="46">
-                        <rect key="frame" x="162" y="88" width="108" height="18"/>
+                        <rect key="frame" x="162" y="89" width="108" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Chat " bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="47">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -159,7 +158,7 @@ Gw
                         <accessibility description="Stel chat voor"/>
                     </button>
                     <textField verticalHuggingPriority="750" id="57">
-                        <rect key="frame" x="164" y="256" width="307" height="22"/>
+                        <rect key="frame" x="164" y="257" width="307" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Voer adres in of sleep contacten naar de lijst" drawsBackground="YES" id="58">
                             <font key="font" metaFont="system"/>
@@ -172,7 +171,7 @@ Gw
                         </connections>
                     </textField>
                     <scrollView focusRingType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="59">
-                        <rect key="frame" x="164" y="115" width="367" height="135"/>
+                        <rect key="frame" x="164" y="116" width="367" height="135"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" id="Mi6-o7-dT3">
                             <rect key="frame" x="1" y="1" width="365" height="133"/>
@@ -222,7 +221,7 @@ Gw
                         </connections>
                     </scrollView>
                     <segmentedControl verticalHuggingPriority="750" id="92">
-                        <rect key="frame" x="477" y="255" width="56" height="24"/>
+                        <rect key="frame" x="477" y="256" width="56" height="24"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="93">
                             <font key="font" metaFont="system"/>
@@ -240,7 +239,7 @@ Gw
                         </connections>
                     </segmentedControl>
                     <button hidden="YES" toolTip="Verwijder alle deelnemers" id="105">
-                        <rect key="frame" x="138" y="115" width="27" height="22"/>
+                        <rect key="frame" x="138" y="116" width="27" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="trash" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="106">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -252,7 +251,7 @@ Gw
                         </connections>
                     </button>
                     <popUpButton id="115">
-                        <rect key="frame" x="151" y="354" width="380" height="26"/>
+                        <rect key="frame" x="151" y="355" width="380" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" title="Selecteer configuratie" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="118" id="116">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -268,7 +267,7 @@ Gw
                         </connections>
                     </popUpButton>
                     <popUpButton id="150">
-                        <rect key="frame" x="151" y="354" width="380" height="26"/>
+                        <rect key="frame" x="151" y="355" width="380" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" title="Bonjour Combo" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" refusesFirstResponder="YES" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="153" id="151">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -286,7 +285,7 @@ Gw
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="NSEveryone" id="169"/>
                     </imageView>
                     <button id="170">
-                        <rect key="frame" x="161" y="61" width="385" height="18"/>
+                        <rect key="frame" x="161" y="62" width="385" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Conferentie starten als de deelnemers beschikbaar zijn" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
