@@ -22,7 +22,6 @@
                 <outlet property="audio_status" destination="147" id="154"/>
                 <outlet property="chatBox" destination="92" id="143"/>
                 <outlet property="chat_connection_mode" destination="150" id="155"/>
-                <outlet property="chat_local_endpoint" destination="96" id="141"/>
                 <outlet property="chat_remote_endpoint" destination="94" id="142"/>
                 <outlet property="chat_tls_lock" destination="168" id="170"/>
                 <outlet property="duration" destination="38" id="64"/>
