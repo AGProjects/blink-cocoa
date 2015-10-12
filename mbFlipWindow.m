@@ -64,12 +64,12 @@ return wnd;
 
 NSRect RectToScreen(NSRect aRect, NSView *aView) {
   aRect = [aView convertRect:aRect toView:nil];
-  aRect.origin = [aView.window convertBaseToScreen:aRect.origin];
+  aRect = [aView.window convertRectToScreen:aRect];
   return aRect;
 }
 
 NSRect RectFromScreen(NSRect aRect, NSView *aView) {
-  aRect.origin = [aView.window convertScreenToBase:aRect.origin];
+  aRect = [aView.window convertRectFromScreen:aRect];
   aRect = [aView convertRect:aRect fromView:nil];
   return aRect;
 }
