@@ -6795,12 +6795,12 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -6836,13 +6836,13 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "9406a340-9e34-4ce2-985c-2df7c97af31b";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
@@ -6879,12 +6879,12 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -6919,13 +6919,13 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
@@ -6962,11 +6962,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -7003,11 +7003,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
@@ -7210,12 +7210,12 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -7249,12 +7249,12 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = Blink;
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.10;
+				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
