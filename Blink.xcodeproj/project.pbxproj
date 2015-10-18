@@ -7213,6 +7213,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
+				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.BlinkBeta;
 				PRODUCT_NAME = Blink;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.9;
@@ -7252,6 +7253,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
+				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.BlinkBeta;
 				PRODUCT_NAME = Blink;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx10.9;
