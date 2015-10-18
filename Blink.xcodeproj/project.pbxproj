@@ -17,12 +17,10 @@
 		1F08DB17193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
 		1F08DB18193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
 		1F08DB19193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
-		1F08DB1A193DEDB200187373 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
 		1F08DB1B193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08DB1C193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08DB1D193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08DB1E193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
-		1F08DB1F193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F092DB412B2785E000CEE7F /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
 		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
@@ -32,8 +30,6 @@
 		1F0D4A3819BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F0D4A3919BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F0D4A3A19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
-		1F0D4A3B19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
-		1F0D4A3C19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255C1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
@@ -52,8 +48,6 @@
 		1F194A8319B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
 		1F194A8419B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
 		1F194A8519B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
-		1F194A8619B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
-		1F194A8719B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F194A8919B1F06200CE5A0F /* VideoLocalTitleBarView.xib */; };
 		1F1CEB4719C9BBEE00BD378A /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F1CEB4619C9BBEE00BD378A /* StoreKit.framework */; };
 		1F1DCC8613182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
 		1F1DCC8713182ADF004DB88B /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
@@ -234,14 +228,10 @@
 		1F22764B1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
 		1F22764C1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
 		1F22764D1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
-		1F22764E1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
-		1F22764F1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276491A82256900CA9A73 /* ZRTPAuthentication.py */; };
 		1F2276511A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
 		1F2276521A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
 		1F2276531A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
 		1F2276541A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
-		1F2276551A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
-		1F2276561A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2276581A823D6E00CA9A73 /* ZRTPAuthentication.xib */; };
 		1F24367F1912B23700E71253 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
 		1F2436801912B23700E71253 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
 		1F2436811912B23700E71253 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
@@ -273,8 +263,6 @@
 		1F29D1001906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
-		1F2C1BAD1BB168D00036C306 /* libavfilter.5.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; };
-		1F2C1BAE1BB168D00036C306 /* libavfilter.5.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; };
 		1F2C1BAF1BB168E50036C306 /* libavfilter.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F2C1BB01BB168F80036C306 /* libavdevice.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F2C1BB11BB169010036C306 /* libavfilter.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -294,17 +282,14 @@
 		1F331DC6193B5CB600831F31 /* voicemail.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DC4193B5CB600831F31 /* voicemail.png */; };
 		1F331DC7193B5CB600831F31 /* voicemail.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DC4193B5CB600831F31 /* voicemail.png */; };
 		1F331DC8193B5CB600831F31 /* voicemail.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DC4193B5CB600831F31 /* voicemail.png */; };
-		1F331DC9193B5CB600831F31 /* voicemail.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DC4193B5CB600831F31 /* voicemail.png */; };
 		1F331DCB193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
 		1F331DCC193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
 		1F331DCD193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
 		1F331DCE193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
-		1F331DCF193B655800831F31 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
 		1F337A55194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F337A56194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F337A57194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F337A58194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
-		1F337A59194C95E000DB726B /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
 		1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F35CF7D17894FFF00C6FE38 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -597,14 +582,10 @@
 		1F4B789219AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789319AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789419AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
-		1F4B789519AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
-		1F4B789619AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789C19AEAED300F854CB /* VideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */; };
 		1F4B789D19AEAED300F854CB /* VideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */; };
 		1F4B789E19AEAED300F854CB /* VideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */; };
 		1F4B789F19AEAED300F854CB /* VideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */; };
-		1F4B78A019AEAED300F854CB /* VideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */; };
-		1F4B78A119AEAED300F854CB /* VideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */; };
 		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
@@ -612,8 +593,6 @@
 		1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F52D5B419FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F52D5B519FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
-		1F52D5B619FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
-		1F52D5B719FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F536AA51591BBDC00A0FE51 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
 		1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
 		1F536AA71591BBDC00A0FE51 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
@@ -630,10 +609,6 @@
 		1F5615C412BB990800621C11 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
 		1F5677C11323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
 		1F5677C21323DDDD00D087D1 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
-		1F58A9CF19321E5000460853 /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
-		1F58A9D019321E8500460853 /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
-		1F58A9D119321ECB00460853 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F58A9D219321F4F00460853 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1F5BC16717E5FE7300D1D8BE /* Updater.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC16917E5FE7300D1D8BE /* Updater.xib */; };
 		1F5BC25D17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
 		1F5BC25E17E6114200D1D8BE /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
@@ -655,7 +630,6 @@
 		1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
 		1F5C428719DF2B070099ABA4 /* BlinkPro-Icon.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C428619DF2B070099ABA4 /* BlinkPro-Icon.xcassets */; };
 		1F5C428919DF2B270099ABA4 /* BlinkLite-Icon.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C428819DF2B270099ABA4 /* BlinkLite-Icon.xcassets */; };
-		1F5C428B19DFD90E0099ABA4 /* ElQuijotePro-Icon.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C428A19DFD90E0099ABA4 /* ElQuijotePro-Icon.xcassets */; };
 		1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F6009CF18F74D22005517FA /* mbFlipWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6009CE18F74D22005517FA /* mbFlipWindow.m */; };
@@ -719,8 +693,6 @@
 		1F774C6819CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F774C6919CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F774C6A19CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
-		1F774C6B19CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
-		1F774C6C19CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
@@ -751,7 +723,6 @@
 		1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
-		1F8CB30B19546C9700D73F74 /* branding-elquijote-appstore.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8CB30A19546C9700D73F74 /* branding-elquijote-appstore.py */; };
 		1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F8DC328135084FA0034815C /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F8DC329135084FA0034815C /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -1019,30 +990,6 @@
 		1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E991A8E0E1D00BB3ED9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE81A8CDE660071D4B2 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E9A1A8E0E1D00BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E9B1A8E0E1D00BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E9C1A8E0E1D00BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E9D1A8E0E1D00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E9E1A8E0E1D00BB3ED9 /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEC1A8CDE670071D4B2 /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E9F1A8E0E1D00BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA01A8E0E1D00BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA11A8E0E1D00BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA21A8E0E1D00BB3ED9 /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA31A8E0E1D00BB3ED9 /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA51A8E0E1D00BB3ED9 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA61A8E0E2400BB3ED9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE81A8CDE660071D4B2 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA71A8E0E2400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA81A8E0E2400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EA91A8E0E2400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EAA1A8E0E2400BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EAB1A8E0E2400BB3ED9 /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEC1A8CDE670071D4B2 /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EAC1A8E0E2400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EAD1A8E0E2400BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EAE1A8E0E2400BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EAF1A8E0E2400BB3ED9 /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EB01A8E0E2400BB3ED9 /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9EB21A8E0E2500BB3ED9 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022F18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
@@ -1062,8 +1009,6 @@
 		1FB247E115D99AEB00703D24 /* OfflineNoteController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247E015D99AEB00703D24 /* OfflineNoteController.py */; };
 		1FB247E215D99AEB00703D24 /* OfflineNoteController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247E015D99AEB00703D24 /* OfflineNoteController.py */; };
 		1FB247E315D99AEB00703D24 /* OfflineNoteController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247E015D99AEB00703D24 /* OfflineNoteController.py */; };
-		1FB2BE321B15F20A008C72E4 /* libavdevice.56.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; };
-		1FB2BE331B15F20A008C72E4 /* libavdevice.56.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; };
 		1FB2BE341B15F215008C72E4 /* libavdevice.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
 		1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
@@ -1117,328 +1062,10 @@
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
-		1FC80E0E192E3E1F00BD62F4 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
-		1FC80E0F192E3E1F00BD62F4 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
-		1FC80E10192E3E1F00BD62F4 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
-		1FC80E11192E3E1F00BD62F4 /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
-		1FC80E12192E3E1F00BD62F4 /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
-		1FC80E13192E3E1F00BD62F4 /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
-		1FC80E14192E3E1F00BD62F4 /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
-		1FC80E15192E3E1F00BD62F4 /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
-		1FC80E16192E3E1F00BD62F4 /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
-		1FC80E17192E3E1F00BD62F4 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		1FC80E18192E3E1F00BD62F4 /* VideoLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoLocalWindowController.py */; };
-		1FC80E19192E3E1F00BD62F4 /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
-		1FC80E1A192E3E1F00BD62F4 /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
-		1FC80E1B192E3E1F00BD62F4 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
-		1FC80E1C192E3E1F00BD62F4 /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
-		1FC80E1D192E3E1F00BD62F4 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
-		1FC80E1E192E3E1F00BD62F4 /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
-		1FC80E1F192E3E1F00BD62F4 /* EnrollmentController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF387D0FE096A00040117A /* EnrollmentController.py */; };
-		1FC80E20192E3E1F00BD62F4 /* Main.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF39C30FE1B0CF0040117A /* Main.py */; };
-		1FC80E21192E3E1F00BD62F4 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
-		1FC80E22192E3E1F00BD62F4 /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11AA570FF323A1007FC176 /* pause.png */; };
-		1FC80E23192E3E1F00BD62F4 /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
-		1FC80E24192E3E1F00BD62F4 /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
-		1FC80E25192E3E1F00BD62F4 /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
-		1FC80E26192E3E1F00BD62F4 /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
-		1FC80E27192E3E1F00BD62F4 /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
-		1FC80E28192E3E1F00BD62F4 /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
-		1FC80E29192E3E1F00BD62F4 /* message_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67A0FFDAE1400701821 /* message_received.wav */; };
-		1FC80E2A192E3E1F00BD62F4 /* message_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67B0FFDAE1400701821 /* message_sent.wav */; };
-		1FC80E2B192E3E1F00BD62F4 /* ring_inbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67C0FFDAE1400701821 /* ring_inbound.wav */; };
-		1FC80E2C192E3E1F00BD62F4 /* ring_outbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67D0FFDAE1400701821 /* ring_outbound.wav */; };
-		1FC80E2D192E3E1F00BD62F4 /* VerticalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE9EA100447D700701821 /* VerticalBoxView.py */; };
-		1FC80E2E192E3E1F00BD62F4 /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
-		1FC80E2F192E3E1F00BD62F4 /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
-		1FC80E30192E3E1F00BD62F4 /* AudioSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B103E361015721E00002158 /* AudioSession.py */; };
-		1FC80E31192E3E1F00BD62F4 /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
-		1FC80E32192E3E1F00BD62F4 /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
-		1FC80E33192E3E1F00BD62F4 /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
-		1FC80E34192E3E1F00BD62F4 /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
-		1FC80E35192E3E1F00BD62F4 /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
-		1FC80E36192E3E1F00BD62F4 /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
-		1FC80E37192E3E1F00BD62F4 /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
-		1FC80E38192E3E1F00BD62F4 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */; };
-		1FC80E39192E3E1F00BD62F4 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
-		1FC80E3A192E3E1F00BD62F4 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
-		1FC80E3B192E3E1F00BD62F4 /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
-		1FC80E3C192E3E1F00BD62F4 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
-		1FC80E3D192E3E1F00BD62F4 /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
-		1FC80E3E192E3E1F00BD62F4 /* record.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A441040EC0F00BEE04E /* record.png */; };
-		1FC80E3F192E3E1F00BD62F4 /* recording1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A541040FF0C00BEE04E /* recording1.png */; };
-		1FC80E40192E3E1F00BD62F4 /* recording2.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A551040FF0C00BEE04E /* recording2.png */; };
-		1FC80E41192E3E1F00BD62F4 /* recording3.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A561040FF0C00BEE04E /* recording3.png */; };
-		1FC80E42192E3E1F00BD62F4 /* mic.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F81047809C00F40437 /* mic.png */; };
-		1FC80E43192E3E1F00BD62F4 /* speaker.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F91047809C00F40437 /* speaker.png */; };
-		1FC80E44192E3E1F00BD62F4 /* bell.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40FF104783D800F40437 /* bell.png */; };
-		1FC80E45192E3E1F00BD62F4 /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
-		1FC80E46192E3E1F00BD62F4 /* busy.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807A18C02DA800A3B313 /* busy.png */; };
-		1FC80E47192E3E1F00BD62F4 /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
-		1FC80E48192E3E1F00BD62F4 /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
-		1FC80E49192E3E1F00BD62F4 /* away.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807918C02DA800A3B313 /* away.png */; };
-		1FC80E4A192E3E1F00BD62F4 /* FileTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */; };
-		1FC80E4B192E3E1F00BD62F4 /* FileTransferItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */; };
-		1FC80E4C192E3E1F00BD62F4 /* FileTransferItemView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */; };
-		1FC80E4D192E3E1F00BD62F4 /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
-		1FC80E4E192E3E1F00BD62F4 /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
-		1FC80E4F192E3E1F00BD62F4 /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
-		1FC80E50192E3E1F00BD62F4 /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
-		1FC80E51192E3E1F00BD62F4 /* AnsweringMachine.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08A781063B3570069AB9A /* AnsweringMachine.py */; };
-		1FC80E52192E3E1F00BD62F4 /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
-		1FC80E53192E3E1F00BD62F4 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BE7632910732DC000A1DF24 /* About.xib */; };
-		1FC80E54192E3E1F00BD62F4 /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
-		1FC80E55192E3E1F00BD62F4 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
-		1FC80E56192E3E1F00BD62F4 /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
-		1FC80E57192E3E1F00BD62F4 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
-		1FC80E58192E3E1F00BD62F4 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
-		1FC80E59192E3E1F00BD62F4 /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
-		1FC80E5A192E3E1F00BD62F4 /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
-		1FC80E5B192E3E1F00BD62F4 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
-		1FC80E5C192E3E1F00BD62F4 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
-		1FC80E5D192E3E1F00BD62F4 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
-		1FC80E5E192E3E1F00BD62F4 /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
-		1FC80E5F192E3E1F00BD62F4 /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
-		1FC80E60192E3E1F00BD62F4 /* dtmf_2_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1071095BFF500284E18 /* dtmf_2_tone.wav */; };
-		1FC80E61192E3E1F00BD62F4 /* dtmf_3_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1081095BFF500284E18 /* dtmf_3_tone.wav */; };
-		1FC80E62192E3E1F00BD62F4 /* dtmf_4_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1091095BFF500284E18 /* dtmf_4_tone.wav */; };
-		1FC80E63192E3E1F00BD62F4 /* dtmf_5_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10A1095BFF500284E18 /* dtmf_5_tone.wav */; };
-		1FC80E64192E3E1F00BD62F4 /* dtmf_6_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10B1095BFF500284E18 /* dtmf_6_tone.wav */; };
-		1FC80E65192E3E1F00BD62F4 /* dtmf_7_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10C1095BFF500284E18 /* dtmf_7_tone.wav */; };
-		1FC80E66192E3E1F00BD62F4 /* dtmf_8_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10D1095BFF500284E18 /* dtmf_8_tone.wav */; };
-		1FC80E67192E3E1F00BD62F4 /* dtmf_9_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10E1095BFF500284E18 /* dtmf_9_tone.wav */; };
-		1FC80E68192E3E1F00BD62F4 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
-		1FC80E69192E3E1F00BD62F4 /* pause-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */; };
-		1FC80E6A192E3E1F00BD62F4 /* dtmf_A_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10F1095BFF500284E18 /* dtmf_A_tone.wav */; };
-		1FC80E6B192E3E1F00BD62F4 /* dtmf_B_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1101095BFF500284E18 /* dtmf_B_tone.wav */; };
-		1FC80E6C192E3E1F00BD62F4 /* dtmf_C_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1111095BFF500284E18 /* dtmf_C_tone.wav */; };
-		1FC80E6D192E3E1F00BD62F4 /* dtmf_D_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1121095BFF500284E18 /* dtmf_D_tone.wav */; };
-		1FC80E6E192E3E1F00BD62F4 /* dtmf_pound_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1131095BFF500284E18 /* dtmf_pound_tone.wav */; };
-		1FC80E6F192E3E1F00BD62F4 /* dtmf_star_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1141095BFF500284E18 /* dtmf_star_tone.wav */; };
-		1FC80E70192E3E1F00BD62F4 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
-		1FC80E71192E3E1F00BD62F4 /* hangup_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1151095BFF500284E18 /* hangup_tone.wav */; };
-		1FC80E73192E3E1F00BD62F4 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
-		1FC80E74192E3E1F00BD62F4 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
-		1FC80E75192E3E1F00BD62F4 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
-		1FC80E76192E3E1F00BD62F4 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
-		1FC80E77192E3E1F00BD62F4 /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
-		1FC80E78192E3E1F00BD62F4 /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
-		1FC80E79192E3E1F00BD62F4 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
-		1FC80E7A192E3E1F00BD62F4 /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
-		1FC80E7B192E3E1F00BD62F4 /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
-		1FC80E7C192E3E1F00BD62F4 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
-		1FC80E7D192E3E1F00BD62F4 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
-		1FC80E7E192E3E1F00BD62F4 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
-		1FC80E7F192E3E1F00BD62F4 /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
-		1FC80E80192E3E1F00BD62F4 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
-		1FC80E81192E3E1F00BD62F4 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
-		1FC80E82192E3E1F00BD62F4 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
-		1FC80E84192E3E1F00BD62F4 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
-		1FC80E85192E3E1F00BD62F4 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
-		1FC80E86192E3E1F00BD62F4 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
-		1FC80E87192E3E1F00BD62F4 /* paused-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6018E0FA6500CA7B86 /* paused-red.png */; };
-		1FC80E88192E3E1F00BD62F4 /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
-		1FC80E89192E3E1F00BD62F4 /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
-		1FC80E8A192E3E1F00BD62F4 /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
-		1FC80E8B192E3E1F00BD62F4 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
-		1FC80E8C192E3E1F00BD62F4 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
-		1FC80E8E192E3E1F00BD62F4 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
-		1FC80E90192E3E1F00BD62F4 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
-		1FC80E91192E3E1F00BD62F4 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
-		1FC80E92192E3E1F00BD62F4 /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
-		1FC80E93192E3E1F00BD62F4 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
-		1FC80E94192E3E1F00BD62F4 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
-		1FC80E95192E3E1F00BD62F4 /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
-		1FC80E96192E3E1F00BD62F4 /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
-		1FC80E97192E3E1F00BD62F4 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
-		1FC80E98192E3E1F00BD62F4 /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
-		1FC80E99192E3E1F00BD62F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
-		1FC80E9A192E3E1F00BD62F4 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
-		1FC80E9B192E3E1F00BD62F4 /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
-		1FC80E9C192E3E1F00BD62F4 /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
-		1FC80E9D192E3E1F00BD62F4 /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
-		1FC80E9E192E3E1F00BD62F4 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
-		1FC80E9F192E3E1F00BD62F4 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
-		1FC80EA0192E3E1F00BD62F4 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
-		1FC80EA1192E3E1F00BD62F4 /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
-		1FC80EA2192E3E1F00BD62F4 /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
-		1FC80EA3192E3E1F00BD62F4 /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
-		1FC80EA4192E3E1F00BD62F4 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
-		1FC80EA5192E3E1F00BD62F4 /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
-		1FC80EA6192E3E1F00BD62F4 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
-		1FC80EA8192E3E1F00BD62F4 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
-		1FC80EA9192E3E1F00BD62F4 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
-		1FC80EAA192E3E1F00BD62F4 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
-		1FC80EAB192E3E1F00BD62F4 /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
-		1FC80EAC192E3E1F00BD62F4 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
-		1FC80EAD192E3E1F00BD62F4 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
-		1FC80EAE192E3E1F00BD62F4 /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
-		1FC80EAF192E3E1F00BD62F4 /* VideoTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */; };
-		1FC80EB0192E3E1F00BD62F4 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
-		1FC80EB1192E3E1F00BD62F4 /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
-		1FC80EB2192E3E1F00BD62F4 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1FC80EB4192E3E1F00BD62F4 /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
-		1FC80EB5192E3E1F00BD62F4 /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
-		1FC80EB6192E3E1F00BD62F4 /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
-		1FC80EB7192E3E1F00BD62F4 /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
-		1FC80EB8192E3E1F00BD62F4 /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
-		1FC80EB9192E3E1F00BD62F4 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
-		1FC80EBA192E3E1F00BD62F4 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
-		1FC80EBB192E3E1F00BD62F4 /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
-		1FC80EBC192E3E1F00BD62F4 /* about.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0809118C02F4C00A3B313 /* about.tiff */; };
-		1FC80EBD192E3E1F00BD62F4 /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
-		1FC80EBE192E3E1F00BD62F4 /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
-		1FC80EBF192E3E1F00BD62F4 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */; };
-		1FC80EC0192E3E1F00BD62F4 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
-		1FC80EC1192E3E1F00BD62F4 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
-		1FC80EC2192E3E1F00BD62F4 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
-		1FC80EC3192E3E1F00BD62F4 /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
-		1FC80EC4192E3E1F00BD62F4 /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
-		1FC80EC5192E3E1F00BD62F4 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
-		1FC80EC6192E3E1F00BD62F4 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
-		1FC80EC7192E3E1F00BD62F4 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
-		1FC80EC8192E3E1F00BD62F4 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
-		1FC80EC9192E3E1F00BD62F4 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
-		1FC80ECA192E3E1F00BD62F4 /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
-		1FC80ECB192E3E1F00BD62F4 /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
-		1FC80ECC192E3E1F00BD62F4 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
-		1FC80ECD192E3E1F00BD62F4 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
-		1FC80ECE192E3E1F00BD62F4 /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
-		1FC80ECF192E3E1F00BD62F4 /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
-		1FC80ED0192E3E1F00BD62F4 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
-		1FC80ED1192E3E1F00BD62F4 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
-		1FC80ED2192E3E1F00BD62F4 /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
-		1FC80ED3192E3E1F00BD62F4 /* pencil_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAE0B1118FD7A2300038AA4 /* pencil_16.png */; };
-		1FC80ED4192E3E1F00BD62F4 /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
-		1FC80ED7192E3E1F00BD62F4 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
-		1FC80ED8192E3E1F00BD62F4 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
-		1FC80ED9192E3E1F00BD62F4 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
-		1FC80EDA192E3E1F00BD62F4 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
-		1FC80EDB192E3E1F00BD62F4 /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
-		1FC80EDC192E3E1F00BD62F4 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
-		1FC80EDE192E3E1F00BD62F4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
-		1FC80EE0192E3E1F00BD62F4 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
-		1FC80EE1192E3E1F00BD62F4 /* AddressBookEmail-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */; };
-		1FC80EE2192E3E1F00BD62F4 /* AddressBookEmail-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907C1549631A0011EE27 /* AddressBookEmail-plugin.py */; };
-		1FC80EE3192E3E1F00BD62F4 /* AddressBookTel-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907D1549631A0011EE27 /* AddressBookTel-plugin-setup.py */; };
-		1FC80EE4192E3E1F00BD62F4 /* AddressBookTel-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907E1549631A0011EE27 /* AddressBookTel-plugin.py */; };
-		1FC80EE5192E3E1F00BD62F4 /* AddressBookURL-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907F1549631A0011EE27 /* AddressBookURL-plugin-setup.py */; };
-		1FC80EE6192E3E1F00BD62F4 /* AddressBookURL-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */; };
-		1FC80EE7192E3E1F00BD62F4 /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
-		1FC80EE8192E3E1F00BD62F4 /* Nickname.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F54625A158B34D0005628D9 /* Nickname.xib */; };
-		1FC80EE9192E3E1F00BD62F4 /* NicknameController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F546250158B300A005628D9 /* NicknameController.py */; };
-		1FC80EEA192E3E1F00BD62F4 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
-		1FC80EEB192E3E1F00BD62F4 /* Subject.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AB01591BCE500A0FE51 /* Subject.xib */; };
-		1FC80EEC192E3E1F00BD62F4 /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
-		1FC80EED192E3E1F00BD62F4 /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
-		1FC80EEE192E3E1F00BD62F4 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
-		1FC80EEF192E3E1F00BD62F4 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
-		1FC80EF0192E3E1F00BD62F4 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
-		1FC80EF1192E3E1F00BD62F4 /* PresencePublisher.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F88639815D6F62B00373743 /* PresencePublisher.py */; };
-		1FC80EF2192E3E1F00BD62F4 /* OfflineNoteController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247E015D99AEB00703D24 /* OfflineNoteController.py */; };
-		1FC80EF3192E3E1F00BD62F4 /* PresenceInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */; };
-		1FC80EF4192E3E1F00BD62F4 /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
-		1FC80EF5192E3E1F00BD62F4 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
-		1FC80EF6192E3E1F00BD62F4 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
-		1FC80EF7192E3E1F00BD62F4 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		1FC80EF8192E3E1F00BD62F4 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
-		1FC80EF9192E3E1F00BD62F4 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
-		1FC80EFA192E3E1F00BD62F4 /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
-		1FC80EFB192E3E1F00BD62F4 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
-		1FC80EFC192E3E1F00BD62F4 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
-		1FC80EFD192E3E1F00BD62F4 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
-		1FC80EFE192E3E1F00BD62F4 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
-		1FC80EFF192E3E1F00BD62F4 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
-		1FC80F00192E3E1F00BD62F4 /* AecSlider.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27E21795452100672B73 /* AecSlider.xib */; };
-		1FC80F01192E3E1F00BD62F4 /* locked-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F117BF770900985747 /* locked-green.png */; };
-		1FC80F02192E3E1F00BD62F4 /* unlocked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F617BF771A00985747 /* unlocked-red.png */; };
-		1FC80F03192E3E1F00BD62F4 /* locked-orange.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FB17BF777D00985747 /* locked-orange.png */; };
-		1FC80F04192E3E1F00BD62F4 /* locked-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FC17BF777D00985747 /* locked-yellow.png */; };
-		1FC80F05192E3E1F00BD62F4 /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
-		1FC80F06192E3E1F00BD62F4 /* unlocked-darkgray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */; };
-		1FC80F07192E3E1F00BD62F4 /* OTRSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C9C17CB60D50056ADB4 /* OTRSettings.xib */; };
-		1FC80F09192E3E1F00BD62F4 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
-		1FC80F0A192E3E1F00BD62F4 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
-		1FC80F0B192E3E1F00BD62F4 /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
-		1FC80F0C192E3E1F00BD62F4 /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
-		1FC80F0D192E3E1F00BD62F4 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
-		1FC80F0F192E3E1F00BD62F4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
-		1FC80F11192E3E1F00BD62F4 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
-		1FC80F12192E3E1F00BD62F4 /* database-local-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30F17F9825D00CB74EC /* database-local-off.png */; };
-		1FC80F13192E3E1F00BD62F4 /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D31017F9825D00CB74EC /* database-remote-off.png */; };
-		1FC80F15192E3E1F00BD62F4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
-		1FC80F16192E3E1F00BD62F4 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
-		1FC80F17192E3E1F00BD62F4 /* mbFlipWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6009CE18F74D22005517FA /* mbFlipWindow.m */; };
-		1FC80F19192E3E1F00BD62F4 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
-		1FC80F1A192E3E1F00BD62F4 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
-		1FC80F1B192E3E1F00BD62F4 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
-		1FC80F1C192E3E1F00BD62F4 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
-		1FC80F1D192E3E1F00BD62F4 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
-		1FC80F1E192E3E1F00BD62F4 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		1FC80F1F192E3E1F00BD62F4 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
-		1FC80F20192E3E1F00BD62F4 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
-		1FC80F23192E3E1F00BD62F4 /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
-		1FC80F24192E3E1F00BD62F4 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
-		1FC80F25192E3E1F00BD62F4 /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
-		1FC80F26192E3E1F00BD62F4 /* beer.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF648105DC53A00F267F9 /* beer.png */; };
-		1FC80F27192E3E1F00BD62F4 /* camera.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF649105DC53A00F267F9 /* camera.png */; };
-		1FC80F28192E3E1F00BD62F4 /* cigarette.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64A105DC53A00F267F9 /* cigarette.png */; };
-		1FC80F29192E3E1F00BD62F4 /* coffee.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64B105DC53A00F267F9 /* coffee.png */; };
-		1FC80F2A192E3E1F00BD62F4 /* monkey.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF714105DDF1200F267F9 /* monkey.png */; };
-		1FC80F2B192E3E1F00BD62F4 /* confused.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64C105DC53A00F267F9 /* confused.png */; };
-		1FC80F2C192E3E1F00BD62F4 /* console.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64D105DC53A00F267F9 /* console.png */; };
-		1FC80F2D192E3E1F00BD62F4 /* cool.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64E105DC53A00F267F9 /* cool.png */; };
-		1FC80F2E192E3E1F00BD62F4 /* cross.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64F105DC53A00F267F9 /* cross.png */; };
-		1FC80F2F192E3E1F00BD62F4 /* crying.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF650105DC53A00F267F9 /* crying.png */; };
-		1FC80F30192E3E1F00BD62F4 /* devil.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF651105DC53A00F267F9 /* devil.png */; };
-		1FC80F31192E3E1F00BD62F4 /* dont-know.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF652105DC53A00F267F9 /* dont-know.png */; };
-		1FC80F32192E3E1F00BD62F4 /* grin.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF653105DC53A00F267F9 /* grin.png */; };
-		1FC80F33192E3E1F00BD62F4 /* hug-left.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF654105DC53A00F267F9 /* hug-left.png */; };
-		1FC80F34192E3E1F00BD62F4 /* hug-right.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF655105DC53A00F267F9 /* hug-right.png */; };
-		1FC80F35192E3E1F00BD62F4 /* kiss.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF656105DC53A00F267F9 /* kiss.png */; };
-		1FC80F36192E3E1F00BD62F4 /* love.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF657105DC53A00F267F9 /* love.png */; };
-		1FC80F37192E3E1F00BD62F4 /* meeting.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF658105DC53A00F267F9 /* meeting.png */; };
-		1FC80F38192E3E1F00BD62F4 /* musical-note.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF659105DC53A00F267F9 /* musical-note.png */; };
-		1FC80F39192E3E1F00BD62F4 /* nerdy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65A105DC53A00F267F9 /* nerdy.png */; };
-		1FC80F3A192E3E1F00BD62F4 /* neutral.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65B105DC53A00F267F9 /* neutral.png */; };
-		1FC80F3B192E3E1F00BD62F4 /* party.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65C105DC53A00F267F9 /* party.png */; };
-		1FC80F3C192E3E1F00BD62F4 /* phone.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65D105DC53A00F267F9 /* phone.png */; };
-		1FC80F3D192E3E1F00BD62F4 /* plate.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65E105DC53A00F267F9 /* plate.png */; };
-		1FC80F3E192E3E1F00BD62F4 /* question.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65F105DC53A00F267F9 /* question.png */; };
-		1FC80F3F192E3E1F00BD62F4 /* sad.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF661105DC53A00F267F9 /* sad.png */; };
-		1FC80F40192E3E1F00BD62F4 /* shame.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF662105DC53A00F267F9 /* shame.png */; };
-		1FC80F41192E3E1F00BD62F4 /* shock.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF663105DC53A00F267F9 /* shock.png */; };
-		1FC80F42192E3E1F00BD62F4 /* sick.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF664105DC53A00F267F9 /* sick.png */; };
-		1FC80F43192E3E1F00BD62F4 /* silent.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF665105DC53A00F267F9 /* silent.png */; };
-		1FC80F44192E3E1F00BD62F4 /* sleepy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF666105DC53A00F267F9 /* sleepy.png */; };
-		1FC80F45192E3E1F00BD62F4 /* smile-big.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF668105DC53A00F267F9 /* smile-big.png */; };
-		1FC80F46192E3E1F00BD62F4 /* smile.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF669105DC53A00F267F9 /* smile.png */; };
-		1FC80F47192E3E1F00BD62F4 /* theme in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66A105DC53A00F267F9 /* theme */; };
-		1FC80F48192E3E1F00BD62F4 /* thinking.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66B105DC53A00F267F9 /* thinking.png */; };
-		1FC80F49192E3E1F00BD62F4 /* tongue.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66C105DC53A00F267F9 /* tongue.png */; };
-		1FC80F4A192E3E1F00BD62F4 /* tv.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66D105DC53A00F267F9 /* tv.png */; };
-		1FC80F4B192E3E1F00BD62F4 /* uhm-yeah.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66E105DC53A00F267F9 /* uhm-yeah.png */; };
-		1FC80F4C192E3E1F00BD62F4 /* wink.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66F105DC53A00F267F9 /* wink.png */; };
-		1FC80F4D192E3E1F00BD62F4 /* yawn.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF670105DC53A00F267F9 /* yawn.png */; };
-		1FC80F4F192E3E1F00BD62F4 /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
-		1FC80F50192E3E1F00BD62F4 /* account.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550410F643350083D346 /* account.py */; };
-		1FC80F51192E3E1F00BD62F4 /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
-		1FC80F52192E3E1F00BD62F4 /* datatypes.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550510F643350083D346 /* datatypes.py */; };
-		1FC80F53192E3E1F00BD62F4 /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
-		1FC80F55192E3E1F00BD62F4 /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
-		1FC80F56192E3E1F00BD62F4 /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
-		1FC80F58192E3E1F00BD62F4 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
-		1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FC80F6D192E3FA800BD62F4 /* ElQuijote.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */; };
-		1FC80F6F192E406B00BD62F4 /* ElQuijote.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F6E192E406B00BD62F4 /* ElQuijote.entitlements */; };
-		1FC80F71192E414C00BD62F4 /* branding-elquijote.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F70192E414C00BD62F4 /* branding-elquijote.py */; };
-		1FC80F73192E520200BD62F4 /* ElQuijote-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */; };
 		1FC99CF619BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
 		1FC99CF719BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
 		1FC99CF819BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
 		1FC99CF919BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
-		1FC99CFA19BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
-		1FC99CFB19BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
 		1FC9FE9714378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
 		1FC9FE9814378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
 		1FC9FE9914378A450056B3A8 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
@@ -1449,328 +1076,6 @@
 		1FCA7D5D195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5E195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
-		1FCA7D60195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
-		1FCA7D6419546B0B00765366 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
-		1FCA7D6519546B0B00765366 /* ElQuijote.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F6E192E406B00BD62F4 /* ElQuijote.entitlements */; };
-		1FCA7D6619546B0B00765366 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
-		1FCA7D6719546B0B00765366 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
-		1FCA7D6819546B0B00765366 /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
-		1FCA7D6919546B0B00765366 /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
-		1FCA7D6A19546B0B00765366 /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
-		1FCA7D6B19546B0B00765366 /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
-		1FCA7D6C19546B0B00765366 /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
-		1FCA7D6D19546B0B00765366 /* EnrollmentWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380A0FE088C70040117A /* EnrollmentWindow.xib */; };
-		1FCA7D6E19546B0B00765366 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF380C0FE088C70040117A /* MainWindow.xib */; };
-		1FCA7D6F19546B0B00765366 /* VideoLocalWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EF7FE18E637E0008592D2 /* VideoLocalWindowController.py */; };
-		1FCA7D7019546B0B00765366 /* PreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38100FE088C70040117A /* PreferencesWindow.xib */; };
-		1FCA7D7119546B0B00765366 /* ChatWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38120FE088C70040117A /* ChatWindow.xib */; };
-		1FCA7D7219546B0B00765366 /* ChatView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38160FE088C70040117A /* ChatView.xib */; };
-		1FCA7D7319546B0B00765366 /* BlinkAppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38250FE088E80040117A /* BlinkAppDelegate.py */; };
-		1FCA7D7419546B0B00765366 /* voicemail-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DCA193B655800831F31 /* voicemail-red.png */; };
-		1FCA7D7519546B0B00765366 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
-		1FCA7D7619546B0B00765366 /* SIPManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38270FE088E80040117A /* SIPManager.py */; };
-		1FCA7D7719546B0B00765366 /* EnrollmentController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF387D0FE096A00040117A /* EnrollmentController.py */; };
-		1FCA7D7819546B0B00765366 /* Main.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF39C30FE1B0CF0040117A /* Main.py */; };
-		1FCA7D7919546B0B00765366 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
-		1FCA7D7A19546B0B00765366 /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11AA570FF323A1007FC176 /* pause.png */; };
-		1FCA7D7B19546B0B00765366 /* BlinkLogger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B0B20FF55C52007FC176 /* BlinkLogger.py */; };
-		1FCA7D7C19546B0B00765366 /* mute.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1210FF6B0B3007FC176 /* mute.png */; };
-		1FCA7D7E19546B0B00765366 /* paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B11B1CE0FF735FB007FC176 /* paused.png */; };
-		1FCA7D7F19546B0B00765366 /* PreferencesController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE51F0FFC5D0500701821 /* PreferencesController.py */; };
-		1FCA7D8019546B0B00765366 /* file_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6780FFDAE1400701821 /* file_received.wav */; };
-		1FCA7D8119546B0B00765366 /* file_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE6790FFDAE1400701821 /* file_sent.wav */; };
-		1FCA7D8219546B0B00765366 /* message_received.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67A0FFDAE1400701821 /* message_received.wav */; };
-		1FCA7D8319546B0B00765366 /* message_sent.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67B0FFDAE1400701821 /* message_sent.wav */; };
-		1FCA7D8419546B0B00765366 /* ring_inbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67C0FFDAE1400701821 /* ring_inbound.wav */; };
-		1FCA7D8519546B0B00765366 /* ring_outbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE67D0FFDAE1400701821 /* ring_outbound.wav */; };
-		1FCA7D8619546B0B00765366 /* VerticalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B5DE9EA100447D700701821 /* VerticalBoxView.py */; };
-		1FCA7D8719546B0B00765366 /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
-		1FCA7D8819546B0B00765366 /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
-		1FCA7D8919546B0B00765366 /* ElQuijote-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */; };
-		1FCA7D8A19546B0B00765366 /* AudioSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B103E361015721E00002158 /* AudioSession.py */; };
-		1FCA7D8B19546B0B00765366 /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
-		1FCA7D8C19546B0B00765366 /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
-		1FCA7D8D19546B0B00765366 /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
-		1FCA7D8E19546B0B00765366 /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
-		1FCA7D8F19546B0B00765366 /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
-		1FCA7D9019546B0B00765366 /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
-		1FCA7D9119546B0B00765366 /* DebugWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2409831022A04700079580 /* DebugWindow.py */; };
-		1FCA7D9219546B0B00765366 /* DebugWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B4D17EC83F000E63A20 /* DebugWindow.xib */; };
-		1FCA7D9319546B0B00765366 /* PhotoPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5F17EC842B00E63A20 /* PhotoPicker.xib */; };
-		1FCA7D9419546B0B00765366 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
-		1FCA7D9519546B0B00765366 /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
-		1FCA7D9619546B0B00765366 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
-		1FCA7D9719546B0B00765366 /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
-		1FCA7D9819546B0B00765366 /* record.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A441040EC0F00BEE04E /* record.png */; };
-		1FCA7D9919546B0B00765366 /* recording1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A541040FF0C00BEE04E /* recording1.png */; };
-		1FCA7D9A19546B0B00765366 /* recording2.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A551040FF0C00BEE04E /* recording2.png */; };
-		1FCA7D9B19546B0B00765366 /* recording3.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A561040FF0C00BEE04E /* recording3.png */; };
-		1FCA7D9C19546B0B00765366 /* mic.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F81047809C00F40437 /* mic.png */; };
-		1FCA7D9D19546B0B00765366 /* speaker.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40F91047809C00F40437 /* speaker.png */; };
-		1FCA7D9E19546B0B00765366 /* bell.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B4C40FF104783D800F40437 /* bell.png */; };
-		1FCA7D9F19546B0B00765366 /* bluelock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97B1053431600F267F9 /* bluelock.png */; };
-		1FCA7DA019546B0B00765366 /* busy.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807A18C02DA800A3B313 /* busy.png */; };
-		1FCA7DA119546B0B00765366 /* greenlock.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DE97C1053431600F267F9 /* greenlock.png */; };
-		1FCA7DA219546B0B00765366 /* ContactOutlineView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF3C71059F27C00F267F9 /* ContactOutlineView.py */; };
-		1FCA7DA319546B0B00765366 /* away.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807918C02DA800A3B313 /* away.png */; };
-		1FCA7DA419546B0B00765366 /* FileTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5DE105CBFCA00F267F9 /* FileTransferWindow.xib */; };
-		1FCA7DA519546B0B00765366 /* FileTransferItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E2105CC03400F267F9 /* FileTransferItemView.xib */; };
-		1FCA7DA619546B0B00765366 /* FileTransferItemView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5E9105D3CDD00F267F9 /* FileTransferItemView.py */; };
-		1FCA7DA719546B0B00765366 /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
-		1FCA7DA819546B0B00765366 /* ListView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF5EC105D467000F267F9 /* ListView.py */; };
-		1FCA7DA919546B0B00765366 /* FileTransferWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF60E105D494000F267F9 /* FileTransferWindowController.py */; };
-		1FCA7DAA19546B0B00765366 /* SmileyManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2DF6A9105DC69900F267F9 /* SmileyManager.py */; };
-		1FCA7DAB19546B0B00765366 /* AnsweringMachine.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08A781063B3570069AB9A /* AnsweringMachine.py */; };
-		1FCA7DAC19546B0B00765366 /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
-		1FCA7DAD19546B0B00765366 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BE7632910732DC000A1DF24 /* About.xib */; };
-		1FCA7DAE19546B0B00765366 /* voicemail.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F331DC4193B5CB600831F31 /* voicemail.png */; };
-		1FCA7DAF19546B0B00765366 /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
-		1FCA7DB019546B0B00765366 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
-		1FCA7DB119546B0B00765366 /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
-		1FCA7DB219546B0B00765366 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
-		1FCA7DB319546B0B00765366 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
-		1FCA7DB419546B0B00765366 /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
-		1FCA7DB519546B0B00765366 /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
-		1FCA7DB619546B0B00765366 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
-		1FCA7DB719546B0B00765366 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
-		1FCA7DB819546B0B00765366 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
-		1FCA7DB919546B0B00765366 /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
-		1FCA7DBA19546B0B00765366 /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
-		1FCA7DBB19546B0B00765366 /* dtmf_2_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1071095BFF500284E18 /* dtmf_2_tone.wav */; };
-		1FCA7DBC19546B0B00765366 /* dtmf_3_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1081095BFF500284E18 /* dtmf_3_tone.wav */; };
-		1FCA7DBD19546B0B00765366 /* dtmf_4_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1091095BFF500284E18 /* dtmf_4_tone.wav */; };
-		1FCA7DBE19546B0B00765366 /* dtmf_5_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10A1095BFF500284E18 /* dtmf_5_tone.wav */; };
-		1FCA7DBF19546B0B00765366 /* dtmf_6_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10B1095BFF500284E18 /* dtmf_6_tone.wav */; };
-		1FCA7DC019546B0B00765366 /* dtmf_7_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10C1095BFF500284E18 /* dtmf_7_tone.wav */; };
-		1FCA7DC119546B0B00765366 /* dtmf_8_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10D1095BFF500284E18 /* dtmf_8_tone.wav */; };
-		1FCA7DC219546B0B00765366 /* dtmf_9_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10E1095BFF500284E18 /* dtmf_9_tone.wav */; };
-		1FCA7DC319546B0B00765366 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
-		1FCA7DC419546B0B00765366 /* pause-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */; };
-		1FCA7DC519546B0B00765366 /* dtmf_A_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B10F1095BFF500284E18 /* dtmf_A_tone.wav */; };
-		1FCA7DC619546B0B00765366 /* dtmf_B_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1101095BFF500284E18 /* dtmf_B_tone.wav */; };
-		1FCA7DC719546B0B00765366 /* dtmf_C_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1111095BFF500284E18 /* dtmf_C_tone.wav */; };
-		1FCA7DC819546B0B00765366 /* dtmf_D_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1121095BFF500284E18 /* dtmf_D_tone.wav */; };
-		1FCA7DC919546B0B00765366 /* dtmf_pound_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1131095BFF500284E18 /* dtmf_pound_tone.wav */; };
-		1FCA7DCA19546B0B00765366 /* dtmf_star_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1141095BFF500284E18 /* dtmf_star_tone.wav */; };
-		1FCA7DCB19546B0B00765366 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
-		1FCA7DCC19546B0B00765366 /* hangup_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1151095BFF500284E18 /* hangup_tone.wav */; };
-		1FCA7DCE19546B0B00765366 /* hold_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1161095BFF500284E18 /* hold_tone.wav */; };
-		1FCA7DCF19546B0B00765366 /* ring_outbound2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1171095BFF500284E18 /* ring_outbound2.wav */; };
-		1FCA7DD019546B0B00765366 /* ring_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1181095BFF500284E18 /* ring_tone.wav */; };
-		1FCA7DD119546B0B00765366 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
-		1FCA7DD219546B0B00765366 /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
-		1FCA7DD319546B0B00765366 /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
-		1FCA7DD419546B0B00765366 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
-		1FCA7DD519546B0B00765366 /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
-		1FCA7DD619546B0B00765366 /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
-		1FCA7DD719546B0B00765366 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
-		1FCA7DD819546B0B00765366 /* SMSView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73310CDE8CE00325F30 /* SMSView.xib */; };
-		1FCA7DD919546B0B00765366 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
-		1FCA7DDA19546B0B00765366 /* ChatView.html in Resources */ = {isa = PBXBuildFile; fileRef = 2BD011E110D8198400D27A92 /* ChatView.html */; };
-		1FCA7DDB19546B0B00765366 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
-		1FCA7DDC19546B0B00765366 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
-		1FCA7DDD19546B0B00765366 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
-		1FCA7DDE19546B0B00765366 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
-		1FCA7DDF19546B0B00765366 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
-		1FCA7DE019546B0B00765366 /* HistoryViewer.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB36D3510FE504600DA4577 /* HistoryViewer.xib */; };
-		1FCA7DE119546B0B00765366 /* paused-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6018E0FA6500CA7B86 /* paused-red.png */; };
-		1FCA7DE219546B0B00765366 /* SoundRecorder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BB376411103C98300DA4577 /* SoundRecorder.xib */; };
-		1FCA7DE319546B0B00765366 /* unavailable_message.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FF5936B110F07C70047E2CD /* unavailable_message.wav */; };
-		1FCA7DE419546B0B00765366 /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
-		1FCA7DE519546B0B00765366 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
-		1FCA7DE619546B0B00765366 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
-		1FCA7DE719546B0B00765366 /* offline.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB14193DEDB200187373 /* offline.aif */; };
-		1FCA7DE919546B0B00765366 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
-		1FCA7DEB19546B0B00765366 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
-		1FCA7DEC19546B0B00765366 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
-		1FCA7DED19546B0B00765366 /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
-		1FCA7DEE19546B0B00765366 /* test@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */; };
-		1FCA7DEF19546B0B00765366 /* ChatWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F71724712BE201200CBA476 /* ChatWindowController.py */; };
-		1FCA7DF019546B0B00765366 /* AddParticipantsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6EE94E12BF7E9A000C47DA /* AddParticipantsWindow.xib */; };
-		1FCA7DF119546B0B00765366 /* FileTransferController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F8760B412C026840090846C /* FileTransferController.py */; };
-		1FCA7DF219546B0B00765366 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
-		1FCA7DF319546B0B00765366 /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
-		1FCA7DF419546B0B00765366 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
-		1FCA7DF519546B0B00765366 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
-		1FCA7DF619546B0B00765366 /* VideoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8C5C12DA18960029857C /* VideoController.py */; };
-		1FCA7DF719546B0B00765366 /* video-hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAF8D5212DA31100029857C /* video-hangup.png */; };
-		1FCA7DF819546B0B00765366 /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
-		1FCA7DF919546B0B00765366 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
-		1FCA7DFA19546B0B00765366 /* HistoryManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBBF2E612E9B3500077E766 /* HistoryManager.py */; };
-		1FCA7DFB19546B0B00765366 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
-		1FCA7DFC19546B0B00765366 /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
-		1FCA7DFD19546B0B00765366 /* end_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8513182ADF004DB88B /* end_arrow.png */; };
-		1FCA7DFE19546B0B00765366 /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
-		1FCA7DFF19546B0B00765366 /* transfer.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F5677C01323DDDD00D087D1 /* transfer.png */; };
-		1FCA7E0019546B0B00765366 /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
-		1FCA7E0119546B0B00765366 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
-		1FCA7E0219546B0B00765366 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
-		1FCA7E0319546B0B00765366 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
-		1FCA7E0419546B0B00765366 /* silence.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1F17C25D137335D700DF4724 /* silence.wav */; };
-		1FCA7E0519546B0B00765366 /* ConferenceFileCell.py in Resources */ = {isa = PBXBuildFile; fileRef = DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */; };
-		1FCA7E0619546B0B00765366 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
-		1FCA7E0819546B0B00765366 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
-		1FCA7E0919546B0B00765366 /* fullscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2746781388755F0052C384 /* fullscreen.png */; };
-		1FCA7E0A19546B0B00765366 /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
-		1FCA7E0B19546B0B00765366 /* VideoTitleBarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6C0DC3190EBD8F00E79D90 /* VideoTitleBarView.xib */; };
-		1FCA7E0C19546B0B00765366 /* restore.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2747D21388FC5C0052C384 /* restore.png */; };
-		1FCA7E0D19546B0B00765366 /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
-		1FCA7E0E19546B0B00765366 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
-		1FCA7E1019546B0B00765366 /* chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF118E1390EDE7001D1CAF /* chat.png */; };
-		1FCA7E1119546B0B00765366 /* alerts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11961390EDFD001D1CAF /* alerts.png */; };
-		1FCA7E1219546B0B00765366 /* logs.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF119A1390EE08001D1CAF /* logs.png */; };
-		1FCA7E1319546B0B00765366 /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
-		1FCA7E1419546B0B00765366 /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
-		1FCA7E1519546B0B00765366 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
-		1FCA7E1619546B0B00765366 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
-		1FCA7E1719546B0B00765366 /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
-		1FCA7E1819546B0B00765366 /* about.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0809118C02F4C00A3B313 /* about.tiff */; };
-		1FCA7E1919546B0B00765366 /* contact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
-		1FCA7E1A19546B0B00765366 /* contacts.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA47A2F13B246FF0081F90B /* contacts.png */; };
-		1FCA7E1B19546B0B00765366 /* CallTransferWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF32B5617EC841500E63A20 /* CallTransferWindow.xib */; };
-		1FCA7E1C19546B0B00765366 /* AudioSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2489DE13FE781F007CDFD5 /* AudioSession.xib */; };
-		1FCA7E1D19546B0B00765366 /* zrtp-securemode.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A09140308950024F921 /* zrtp-securemode.wav */; };
-		1FCA7E1E19546B0B00765366 /* zrtp-security-failed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A0A140308950024F921 /* zrtp-security-failed.wav */; };
-		1FCA7E1F19546B0B00765366 /* SessionInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */; };
-		1FCA7E2019546B0B00765366 /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
-		1FCA7E2119546B0B00765366 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
-		1FCA7E2219546B0B00765366 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
-		1FCA7E2319546B0B00765366 /* panel-info.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F689570140BA93100DA5329 /* panel-info.png */; };
-		1FCA7E2419546B0B00765366 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
-		1FCA7E2519546B0B00765366 /* help.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF622FF140E20C000E81891 /* help.png */; };
-		1FCA7E2619546B0B00765366 /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
-		1FCA7E2719546B0B00765366 /* stop_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD99702142DEFD100EE171F /* stop_chat.png */; };
-		1FCA7E2819546B0B00765366 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
-		1FCA7E2919546B0B00765366 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
-		1FCA7E2A19546B0B00765366 /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
-		1FCA7E2B19546B0B00765366 /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
-		1FCA7E2C19546B0B00765366 /* shrinktofit.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FE9514378A450056B3A8 /* shrinktofit.png */; };
-		1FCA7E2D19546B0B00765366 /* shrinktofit-pressed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */; };
-		1FCA7E2E19546B0B00765366 /* ConferenceScreenSharing.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF8F1439CCA900DFBB2A /* ConferenceScreenSharing.py */; };
-		1FCA7E2F19546B0B00765366 /* pencil_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAE0B1118FD7A2300038AA4 /* pencil_16.png */; };
-		1FCA7E3019546B0B00765366 /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
-		1FCA7E3119546B0B00765366 /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F337A54194C95E000DB726B /* moon.png */; };
-		1FCA7E3319546B0B00765366 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
-		1FCA7E3419546B0B00765366 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
-		1FCA7E3519546B0B00765366 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
-		1FCA7E3619546B0B00765366 /* invisible.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807B18C02DA800A3B313 /* invisible.png */; };
-		1FCA7E3719546B0B00765366 /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
-		1FCA7E3819546B0B00765366 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
-		1FCA7E3A19546B0B00765366 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
-		1FCA7E3B19546B0B00765366 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
-		1FCA7E3C19546B0B00765366 /* AddressBookEmail-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907B1549631A0011EE27 /* AddressBookEmail-plugin-setup.py */; };
-		1FCA7E3D19546B0B00765366 /* AddressBookEmail-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907C1549631A0011EE27 /* AddressBookEmail-plugin.py */; };
-		1FCA7E3E19546B0B00765366 /* AddressBookTel-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907D1549631A0011EE27 /* AddressBookTel-plugin-setup.py */; };
-		1FCA7E3F19546B0B00765366 /* AddressBookTel-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907E1549631A0011EE27 /* AddressBookTel-plugin.py */; };
-		1FCA7E4019546B0B00765366 /* AddressBookURL-plugin-setup.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA4907F1549631A0011EE27 /* AddressBookURL-plugin-setup.py */; };
-		1FCA7E4119546B0B00765366 /* AddressBookURL-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */; };
-		1FCA7E4219546B0B00765366 /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
-		1FCA7E4319546B0B00765366 /* Nickname.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F54625A158B34D0005628D9 /* Nickname.xib */; };
-		1FCA7E4419546B0B00765366 /* NicknameController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F546250158B300A005628D9 /* NicknameController.py */; };
-		1FCA7E4519546B0B00765366 /* SubjectController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AA41591BBDC00A0FE51 /* SubjectController.py */; };
-		1FCA7E4619546B0B00765366 /* Subject.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F536AB01591BCE500A0FE51 /* Subject.xib */; };
-		1FCA7E4719546B0B00765366 /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
-		1FCA7E4819546B0B00765366 /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
-		1FCA7E4919546B0B00765366 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
-		1FCA7E4A19546B0B00765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
-		1FCA7E4B19546B0B00765366 /* pending_watcher.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0F0A915C9537400D2EE39 /* pending_watcher.tiff */; };
-		1FCA7E4C19546B0B00765366 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
-		1FCA7E4D19546B0B00765366 /* PresencePublisher.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F88639815D6F62B00373743 /* PresencePublisher.py */; };
-		1FCA7E4E19546B0B00765366 /* OfflineNoteController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FB247E015D99AEB00703D24 /* OfflineNoteController.py */; };
-		1FCA7E4F19546B0B00765366 /* PresenceInfoPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */; };
-		1FCA7E5019546B0B00765366 /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
-		1FCA7E5119546B0B00765366 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
-		1FCA7E5219546B0B00765366 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
-		1FCA7E5319546B0B00765366 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		1FCA7E5419546B0B00765366 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
-		1FCA7E5519546B0B00765366 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
-		1FCA7E5619546B0B00765366 /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
-		1FCA7E5719546B0B00765366 /* MyVideoLocalWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */; };
-		1FCA7E5819546B0B00765366 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
-		1FCA7E5919546B0B00765366 /* ElQuijote.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */; };
-		1FCA7E5A19546B0B00765366 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
-		1FCA7E5B19546B0B00765366 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
-		1FCA7E5C19546B0B00765366 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
-		1FCA7E5D19546B0B00765366 /* AecSlider.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27E21795452100672B73 /* AecSlider.xib */; };
-		1FCA7E5E19546B0B00765366 /* locked-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F117BF770900985747 /* locked-green.png */; };
-		1FCA7E5F19546B0B00765366 /* unlocked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F617BF771A00985747 /* unlocked-red.png */; };
-		1FCA7E6019546B0B00765366 /* locked-orange.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FB17BF777D00985747 /* locked-orange.png */; };
-		1FCA7E6119546B0B00765366 /* locked-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963FC17BF777D00985747 /* locked-yellow.png */; };
-		1FCA7E6219546B0B00765366 /* ChatOTR.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF3736F17C9E656007418EB /* ChatOTR.py */; };
-		1FCA7E6319546B0B00765366 /* unlocked-darkgray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */; };
-		1FCA7E6419546B0B00765366 /* OTRSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C9C17CB60D50056ADB4 /* OTRSettings.xib */; };
-		1FCA7E6619546B0B00765366 /* locked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F683AC717CD32960090A902 /* locked-red.png */; };
-		1FCA7E6719546B0B00765366 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
-		1FCA7E6819546B0B00765366 /* AlertPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26217E6114200D1D8BE /* AlertPanel.xib */; };
-		1FCA7E6919546B0B00765366 /* AlertPanelView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */; };
-		1FCA7E6A19546B0B00765366 /* offline.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0808C18C02E1F00A3B313 /* offline.png */; };
-		1FCA7E6C19546B0B00765366 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1F5BC30217E66DAC00D1D8BE /* Localizable.strings */; };
-		1FCA7E6D19546B0B00765366 /* database-on.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9BB3C17F8117500D7FFA8 /* database-on.png */; };
-		1FCA7E6E19546B0B00765366 /* database-local-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D30F17F9825D00CB74EC /* database-local-off.png */; };
-		1FCA7E6F19546B0B00765366 /* database-remote-off.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F17D31017F9825D00CB74EC /* database-remote-off.png */; };
-		1FCA7E7119546B0B00765366 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
-		1FCA7E7219546B0B00765366 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
-		1FCA7E7319546B0B00765366 /* mbFlipWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6009CE18F74D22005517FA /* mbFlipWindow.m */; };
-		1FCA7E7519546B0B00765366 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
-		1FCA7E7619546B0B00765366 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
-		1FCA7E7719546B0B00765366 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F718E61CC8008592D2 /* OpenGL.framework */; };
-		1FCA7E7819546B0B00765366 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F6EF7F518E61CC1008592D2 /* QuartzCore.framework */; };
-		1FCA7E7919546B0B00765366 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F11174F9DBC00E1D5F9 /* libpython2.7.dylib */; };
-		1FCA7E7A19546B0B00765366 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		1FCA7E7B19546B0B00765366 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973115D24E2C00FB33D9 /* Security.framework */; };
-		1FCA7E7D19546B0B00765366 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F27973315D24E3500FB33D9 /* Carbon.framework */; };
-		1FCA7E7F19546B0B00765366 /* victory.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF715105DDF1200F267F9 /* victory.png */; };
-		1FCA7E8019546B0B00765366 /* angel.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF646105DC53A00F267F9 /* angel.png */; };
-		1FCA7E8119546B0B00765366 /* angry.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF647105DC53A00F267F9 /* angry.png */; };
-		1FCA7E8219546B0B00765366 /* beer.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF648105DC53A00F267F9 /* beer.png */; };
-		1FCA7E8319546B0B00765366 /* camera.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF649105DC53A00F267F9 /* camera.png */; };
-		1FCA7E8419546B0B00765366 /* cigarette.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64A105DC53A00F267F9 /* cigarette.png */; };
-		1FCA7E8519546B0B00765366 /* coffee.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64B105DC53A00F267F9 /* coffee.png */; };
-		1FCA7E8619546B0B00765366 /* monkey.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF714105DDF1200F267F9 /* monkey.png */; };
-		1FCA7E8719546B0B00765366 /* confused.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64C105DC53A00F267F9 /* confused.png */; };
-		1FCA7E8819546B0B00765366 /* console.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64D105DC53A00F267F9 /* console.png */; };
-		1FCA7E8919546B0B00765366 /* cool.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64E105DC53A00F267F9 /* cool.png */; };
-		1FCA7E8A19546B0B00765366 /* cross.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF64F105DC53A00F267F9 /* cross.png */; };
-		1FCA7E8B19546B0B00765366 /* crying.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF650105DC53A00F267F9 /* crying.png */; };
-		1FCA7E8C19546B0B00765366 /* devil.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF651105DC53A00F267F9 /* devil.png */; };
-		1FCA7E8D19546B0B00765366 /* dont-know.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF652105DC53A00F267F9 /* dont-know.png */; };
-		1FCA7E8E19546B0B00765366 /* grin.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF653105DC53A00F267F9 /* grin.png */; };
-		1FCA7E8F19546B0B00765366 /* hug-left.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF654105DC53A00F267F9 /* hug-left.png */; };
-		1FCA7E9019546B0B00765366 /* hug-right.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF655105DC53A00F267F9 /* hug-right.png */; };
-		1FCA7E9119546B0B00765366 /* kiss.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF656105DC53A00F267F9 /* kiss.png */; };
-		1FCA7E9219546B0B00765366 /* love.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF657105DC53A00F267F9 /* love.png */; };
-		1FCA7E9319546B0B00765366 /* meeting.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF658105DC53A00F267F9 /* meeting.png */; };
-		1FCA7E9419546B0B00765366 /* musical-note.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF659105DC53A00F267F9 /* musical-note.png */; };
-		1FCA7E9519546B0B00765366 /* nerdy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65A105DC53A00F267F9 /* nerdy.png */; };
-		1FCA7E9619546B0B00765366 /* neutral.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65B105DC53A00F267F9 /* neutral.png */; };
-		1FCA7E9719546B0B00765366 /* party.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65C105DC53A00F267F9 /* party.png */; };
-		1FCA7E9819546B0B00765366 /* phone.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65D105DC53A00F267F9 /* phone.png */; };
-		1FCA7E9919546B0B00765366 /* plate.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65E105DC53A00F267F9 /* plate.png */; };
-		1FCA7E9A19546B0B00765366 /* question.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF65F105DC53A00F267F9 /* question.png */; };
-		1FCA7E9B19546B0B00765366 /* sad.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF661105DC53A00F267F9 /* sad.png */; };
-		1FCA7E9C19546B0B00765366 /* shame.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF662105DC53A00F267F9 /* shame.png */; };
-		1FCA7E9D19546B0B00765366 /* shock.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF663105DC53A00F267F9 /* shock.png */; };
-		1FCA7E9E19546B0B00765366 /* sick.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF664105DC53A00F267F9 /* sick.png */; };
-		1FCA7E9F19546B0B00765366 /* silent.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF665105DC53A00F267F9 /* silent.png */; };
-		1FCA7EA019546B0B00765366 /* sleepy.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF666105DC53A00F267F9 /* sleepy.png */; };
-		1FCA7EA119546B0B00765366 /* smile-big.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF668105DC53A00F267F9 /* smile-big.png */; };
-		1FCA7EA219546B0B00765366 /* smile.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF669105DC53A00F267F9 /* smile.png */; };
-		1FCA7EA319546B0B00765366 /* theme in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66A105DC53A00F267F9 /* theme */; };
-		1FCA7EA419546B0B00765366 /* thinking.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66B105DC53A00F267F9 /* thinking.png */; };
-		1FCA7EA519546B0B00765366 /* tongue.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66C105DC53A00F267F9 /* tongue.png */; };
-		1FCA7EA619546B0B00765366 /* tv.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66D105DC53A00F267F9 /* tv.png */; };
-		1FCA7EA719546B0B00765366 /* uhm-yeah.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66E105DC53A00F267F9 /* uhm-yeah.png */; };
-		1FCA7EA819546B0B00765366 /* wink.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF66F105DC53A00F267F9 /* wink.png */; };
-		1FCA7EA919546B0B00765366 /* yawn.png in Copy Smiley Files (default) */ = {isa = PBXBuildFile; fileRef = 2B2DF670105DC53A00F267F9 /* yawn.png */; };
-		1FCA7EAB19546B0B00765366 /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
-		1FCA7EAC19546B0B00765366 /* account.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550410F643350083D346 /* account.py */; };
-		1FCA7EAD19546B0B00765366 /* contact.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 1FF2F5B113AB406A00502BDB /* contact.py */; };
-		1FCA7EAE19546B0B00765366 /* datatypes.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550510F643350083D346 /* datatypes.py */; };
-		1FCA7EAF19546B0B00765366 /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
-		1FCA7EB119546B0B00765366 /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
-		1FCA7EB219546B0B00765366 /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
-		1FCA7EB419546B0B00765366 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
-		1FCA7EBD19546B0B00765366 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FCE2BDF166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1FCE2BE0166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1FCE2BE1166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
@@ -2074,8 +1379,6 @@
 		DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607241A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607251A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
-		DE2607261A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
-		DE2607271A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE3A673013A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673113A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
 		DE3A673213A8A987006EEB0F /* default.crt in Resources */ = {isa = PBXBuildFile; fileRef = DE3A672F13A8A987006EEB0F /* default.crt */; };
@@ -2446,235 +1749,6 @@
 				1FD6D5E51A7BD69B00E0FAFA /* libavutil.54.dylib in Copy Frameworks */,
 				1FD6D5EF1A7BD69B00E0FAFA /* libpython2.7.dylib in Copy Frameworks */,
 				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
-			);
-			name = "Copy Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FC80F22192E3E1F00BD62F4 /* Copy Smiley Files (default) */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = smileys/default;
-			dstSubfolderSpec = 7;
-			files = (
-				1FC80F23192E3E1F00BD62F4 /* victory.png in Copy Smiley Files (default) */,
-				1FC80F24192E3E1F00BD62F4 /* angel.png in Copy Smiley Files (default) */,
-				1FC80F25192E3E1F00BD62F4 /* angry.png in Copy Smiley Files (default) */,
-				1FC80F26192E3E1F00BD62F4 /* beer.png in Copy Smiley Files (default) */,
-				1FC80F27192E3E1F00BD62F4 /* camera.png in Copy Smiley Files (default) */,
-				1FC80F28192E3E1F00BD62F4 /* cigarette.png in Copy Smiley Files (default) */,
-				1FC80F29192E3E1F00BD62F4 /* coffee.png in Copy Smiley Files (default) */,
-				1FC80F2A192E3E1F00BD62F4 /* monkey.png in Copy Smiley Files (default) */,
-				1FC80F2B192E3E1F00BD62F4 /* confused.png in Copy Smiley Files (default) */,
-				1FC80F2C192E3E1F00BD62F4 /* console.png in Copy Smiley Files (default) */,
-				1FC80F2D192E3E1F00BD62F4 /* cool.png in Copy Smiley Files (default) */,
-				1FC80F2E192E3E1F00BD62F4 /* cross.png in Copy Smiley Files (default) */,
-				1FC80F2F192E3E1F00BD62F4 /* crying.png in Copy Smiley Files (default) */,
-				1FC80F30192E3E1F00BD62F4 /* devil.png in Copy Smiley Files (default) */,
-				1FC80F31192E3E1F00BD62F4 /* dont-know.png in Copy Smiley Files (default) */,
-				1FC80F32192E3E1F00BD62F4 /* grin.png in Copy Smiley Files (default) */,
-				1FC80F33192E3E1F00BD62F4 /* hug-left.png in Copy Smiley Files (default) */,
-				1FC80F34192E3E1F00BD62F4 /* hug-right.png in Copy Smiley Files (default) */,
-				1FC80F35192E3E1F00BD62F4 /* kiss.png in Copy Smiley Files (default) */,
-				1FC80F36192E3E1F00BD62F4 /* love.png in Copy Smiley Files (default) */,
-				1FC80F37192E3E1F00BD62F4 /* meeting.png in Copy Smiley Files (default) */,
-				1FC80F38192E3E1F00BD62F4 /* musical-note.png in Copy Smiley Files (default) */,
-				1FC80F39192E3E1F00BD62F4 /* nerdy.png in Copy Smiley Files (default) */,
-				1FC80F3A192E3E1F00BD62F4 /* neutral.png in Copy Smiley Files (default) */,
-				1FC80F3B192E3E1F00BD62F4 /* party.png in Copy Smiley Files (default) */,
-				1FC80F3C192E3E1F00BD62F4 /* phone.png in Copy Smiley Files (default) */,
-				1FC80F3D192E3E1F00BD62F4 /* plate.png in Copy Smiley Files (default) */,
-				1FC80F3E192E3E1F00BD62F4 /* question.png in Copy Smiley Files (default) */,
-				1FC80F3F192E3E1F00BD62F4 /* sad.png in Copy Smiley Files (default) */,
-				1FC80F40192E3E1F00BD62F4 /* shame.png in Copy Smiley Files (default) */,
-				1FC80F41192E3E1F00BD62F4 /* shock.png in Copy Smiley Files (default) */,
-				1FC80F42192E3E1F00BD62F4 /* sick.png in Copy Smiley Files (default) */,
-				1FC80F43192E3E1F00BD62F4 /* silent.png in Copy Smiley Files (default) */,
-				1FC80F44192E3E1F00BD62F4 /* sleepy.png in Copy Smiley Files (default) */,
-				1FC80F45192E3E1F00BD62F4 /* smile-big.png in Copy Smiley Files (default) */,
-				1FC80F46192E3E1F00BD62F4 /* smile.png in Copy Smiley Files (default) */,
-				1FC80F47192E3E1F00BD62F4 /* theme in Copy Smiley Files (default) */,
-				1FC80F48192E3E1F00BD62F4 /* thinking.png in Copy Smiley Files (default) */,
-				1FC80F49192E3E1F00BD62F4 /* tongue.png in Copy Smiley Files (default) */,
-				1FC80F4A192E3E1F00BD62F4 /* tv.png in Copy Smiley Files (default) */,
-				1FC80F4B192E3E1F00BD62F4 /* uhm-yeah.png in Copy Smiley Files (default) */,
-				1FC80F4C192E3E1F00BD62F4 /* wink.png in Copy Smiley Files (default) */,
-				1FC80F4D192E3E1F00BD62F4 /* yawn.png in Copy Smiley Files (default) */,
-			);
-			name = "Copy Smiley Files (default)";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FC80F4E192E3E1F00BD62F4 /* Copy Configuration Package */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = configuration;
-			dstSubfolderSpec = 7;
-			files = (
-				1FC80F4F192E3E1F00BD62F4 /* __init__.py in Copy Configuration Package */,
-				1FC80F50192E3E1F00BD62F4 /* account.py in Copy Configuration Package */,
-				1FC80F51192E3E1F00BD62F4 /* contact.py in Copy Configuration Package */,
-				1FC80F52192E3E1F00BD62F4 /* datatypes.py in Copy Configuration Package */,
-				1FC80F53192E3E1F00BD62F4 /* settings.py in Copy Configuration Package */,
-			);
-			name = "Copy Configuration Package";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FC80F54192E3E1F00BD62F4 /* Copy Interfaces Package */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = interfaces;
-			dstSubfolderSpec = 7;
-			files = (
-				1FC80F55192E3E1F00BD62F4 /* __init__.py in Copy Interfaces Package */,
-				1FC80F56192E3E1F00BD62F4 /* itunes.py in Copy Interfaces Package */,
-			);
-			name = "Copy Interfaces Package";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FC80F57192E3E1F00BD62F4 /* Copy Libraries */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 7;
-			files = (
-				1FC80F58192E3E1F00BD62F4 /* lib in Copy Libraries */,
-			);
-			name = "Copy Libraries";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FC80F59192E3E1F00BD62F4 /* Copy Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				1FAA9E991A8E0E1D00BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
-				1FAA9E9A1A8E0E1D00BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
-				1FAA9E9B1A8E0E1D00BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
-				1FAA9E9C1A8E0E1D00BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FAA9E9D1A8E0E1D00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
-				1FAA9E9E1A8E0E1D00BB3ED9 /* libswscale.3.dylib in Copy Frameworks */,
-				1FAA9E9F1A8E0E1D00BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
-				1FAA9EA01A8E0E1D00BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
-				1FAA9EA11A8E0E1D00BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */,
-				1FAA9EA21A8E0E1D00BB3ED9 /* libavformat.56.dylib in Copy Frameworks */,
-				1FAA9EA31A8E0E1D00BB3ED9 /* libavutil.54.dylib in Copy Frameworks */,
-				1FAA9EA51A8E0E1D00BB3ED9 /* libpython2.7.dylib in Copy Frameworks */,
-				1F58A9D119321ECB00460853 /* Sparkle.framework in Copy Frameworks */,
-				1FC80F60192E3E1F00BD62F4 /* Python.framework in Copy Frameworks */,
-			);
-			name = "Copy Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7E7E19546B0B00765366 /* Copy Smiley Files (default) */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = smileys/default;
-			dstSubfolderSpec = 7;
-			files = (
-				1FCA7E7F19546B0B00765366 /* victory.png in Copy Smiley Files (default) */,
-				1FCA7E8019546B0B00765366 /* angel.png in Copy Smiley Files (default) */,
-				1FCA7E8119546B0B00765366 /* angry.png in Copy Smiley Files (default) */,
-				1FCA7E8219546B0B00765366 /* beer.png in Copy Smiley Files (default) */,
-				1FCA7E8319546B0B00765366 /* camera.png in Copy Smiley Files (default) */,
-				1FCA7E8419546B0B00765366 /* cigarette.png in Copy Smiley Files (default) */,
-				1FCA7E8519546B0B00765366 /* coffee.png in Copy Smiley Files (default) */,
-				1FCA7E8619546B0B00765366 /* monkey.png in Copy Smiley Files (default) */,
-				1FCA7E8719546B0B00765366 /* confused.png in Copy Smiley Files (default) */,
-				1FCA7E8819546B0B00765366 /* console.png in Copy Smiley Files (default) */,
-				1FCA7E8919546B0B00765366 /* cool.png in Copy Smiley Files (default) */,
-				1FCA7E8A19546B0B00765366 /* cross.png in Copy Smiley Files (default) */,
-				1FCA7E8B19546B0B00765366 /* crying.png in Copy Smiley Files (default) */,
-				1FCA7E8C19546B0B00765366 /* devil.png in Copy Smiley Files (default) */,
-				1FCA7E8D19546B0B00765366 /* dont-know.png in Copy Smiley Files (default) */,
-				1FCA7E8E19546B0B00765366 /* grin.png in Copy Smiley Files (default) */,
-				1FCA7E8F19546B0B00765366 /* hug-left.png in Copy Smiley Files (default) */,
-				1FCA7E9019546B0B00765366 /* hug-right.png in Copy Smiley Files (default) */,
-				1FCA7E9119546B0B00765366 /* kiss.png in Copy Smiley Files (default) */,
-				1FCA7E9219546B0B00765366 /* love.png in Copy Smiley Files (default) */,
-				1FCA7E9319546B0B00765366 /* meeting.png in Copy Smiley Files (default) */,
-				1FCA7E9419546B0B00765366 /* musical-note.png in Copy Smiley Files (default) */,
-				1FCA7E9519546B0B00765366 /* nerdy.png in Copy Smiley Files (default) */,
-				1FCA7E9619546B0B00765366 /* neutral.png in Copy Smiley Files (default) */,
-				1FCA7E9719546B0B00765366 /* party.png in Copy Smiley Files (default) */,
-				1FCA7E9819546B0B00765366 /* phone.png in Copy Smiley Files (default) */,
-				1FCA7E9919546B0B00765366 /* plate.png in Copy Smiley Files (default) */,
-				1FCA7E9A19546B0B00765366 /* question.png in Copy Smiley Files (default) */,
-				1FCA7E9B19546B0B00765366 /* sad.png in Copy Smiley Files (default) */,
-				1FCA7E9C19546B0B00765366 /* shame.png in Copy Smiley Files (default) */,
-				1FCA7E9D19546B0B00765366 /* shock.png in Copy Smiley Files (default) */,
-				1FCA7E9E19546B0B00765366 /* sick.png in Copy Smiley Files (default) */,
-				1FCA7E9F19546B0B00765366 /* silent.png in Copy Smiley Files (default) */,
-				1FCA7EA019546B0B00765366 /* sleepy.png in Copy Smiley Files (default) */,
-				1FCA7EA119546B0B00765366 /* smile-big.png in Copy Smiley Files (default) */,
-				1FCA7EA219546B0B00765366 /* smile.png in Copy Smiley Files (default) */,
-				1FCA7EA319546B0B00765366 /* theme in Copy Smiley Files (default) */,
-				1FCA7EA419546B0B00765366 /* thinking.png in Copy Smiley Files (default) */,
-				1FCA7EA519546B0B00765366 /* tongue.png in Copy Smiley Files (default) */,
-				1FCA7EA619546B0B00765366 /* tv.png in Copy Smiley Files (default) */,
-				1FCA7EA719546B0B00765366 /* uhm-yeah.png in Copy Smiley Files (default) */,
-				1FCA7EA819546B0B00765366 /* wink.png in Copy Smiley Files (default) */,
-				1FCA7EA919546B0B00765366 /* yawn.png in Copy Smiley Files (default) */,
-			);
-			name = "Copy Smiley Files (default)";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7EAA19546B0B00765366 /* Copy Configuration Package */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = configuration;
-			dstSubfolderSpec = 7;
-			files = (
-				1FCA7EAB19546B0B00765366 /* __init__.py in Copy Configuration Package */,
-				1FCA7EAC19546B0B00765366 /* account.py in Copy Configuration Package */,
-				1FCA7EAD19546B0B00765366 /* contact.py in Copy Configuration Package */,
-				1FCA7EAE19546B0B00765366 /* datatypes.py in Copy Configuration Package */,
-				1FCA7EAF19546B0B00765366 /* settings.py in Copy Configuration Package */,
-			);
-			name = "Copy Configuration Package";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7EB019546B0B00765366 /* Copy Interfaces Package */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = interfaces;
-			dstSubfolderSpec = 7;
-			files = (
-				1FCA7EB119546B0B00765366 /* __init__.py in Copy Interfaces Package */,
-				1FCA7EB219546B0B00765366 /* itunes.py in Copy Interfaces Package */,
-			);
-			name = "Copy Interfaces Package";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7EB319546B0B00765366 /* Copy Libraries */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 7;
-			files = (
-				1FCA7EB419546B0B00765366 /* lib in Copy Libraries */,
-			);
-			name = "Copy Libraries";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7EB519546B0B00765366 /* Copy Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				1FAA9EA61A8E0E2400BB3ED9 /* libgmp.10.dylib in Copy Frameworks */,
-				1FAA9EA71A8E0E2400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
-				1FAA9EA81A8E0E2400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
-				1FAA9EA91A8E0E2400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FAA9EAA1A8E0E2400BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
-				1FAA9EAB1A8E0E2400BB3ED9 /* libswscale.3.dylib in Copy Frameworks */,
-				1FAA9EAC1A8E0E2400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
-				1FAA9EAD1A8E0E2400BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
-				1FAA9EAE1A8E0E2400BB3ED9 /* libavcodec.56.dylib in Copy Frameworks */,
-				1FAA9EAF1A8E0E2400BB3ED9 /* libavformat.56.dylib in Copy Frameworks */,
-				1FAA9EB01A8E0E2400BB3ED9 /* libavutil.54.dylib in Copy Frameworks */,
-				1FAA9EB21A8E0E2500BB3ED9 /* libpython2.7.dylib in Copy Frameworks */,
-				1FCA7EBD19546B0B00765366 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3113,7 +2187,6 @@
 		1FC38F01192234E1007B0340 /* layers.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers.png; path = icons/layers.png; sourceTree = SOURCE_ROOT; };
 		1FC6342F18F9D3450098945F /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
-		1FC80F6A192E3E1F00BD62F4 /* El Quijote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "El Quijote.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FC80F6B192E3E1F00BD62F4 /* Info-elquijote.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-elquijote.plist"; path = "/Users/adigeo/work/blink/Info-elquijote.plist"; sourceTree = "<absolute>"; };
 		1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ElQuijote.icns; sourceTree = "<group>"; };
 		1FC80F6E192E406B00BD62F4 /* ElQuijote.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = ElQuijote.entitlements; sourceTree = "<group>"; };
@@ -3123,7 +2196,6 @@
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
 		1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "support@conference.sip2sip.info.tiff"; path = "icons/support@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
-		1FCA7EC719546B0B00765366 /* El Quijote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "El Quijote.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FCE106A19BD308D006F64C1 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FCE106B19BD308F006F64C1 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FCE106C19BD3092006F64C1 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
@@ -3429,41 +2501,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1FC80F18192E3E1F00BD62F4 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1F2C1BAD1BB168D00036C306 /* libavfilter.5.dylib in Frameworks */,
-				1FC80F19192E3E1F00BD62F4 /* AVFoundation.framework in Frameworks */,
-				1FB2BE321B15F20A008C72E4 /* libavdevice.56.dylib in Frameworks */,
-				1FC80F1A192E3E1F00BD62F4 /* ScriptingBridge.framework in Frameworks */,
-				1FC80F1B192E3E1F00BD62F4 /* OpenGL.framework in Frameworks */,
-				1FC80F1C192E3E1F00BD62F4 /* QuartzCore.framework in Frameworks */,
-				1FC80F1D192E3E1F00BD62F4 /* libpython2.7.dylib in Frameworks */,
-				1FC80F1E192E3E1F00BD62F4 /* Cocoa.framework in Frameworks */,
-				1FC80F1F192E3E1F00BD62F4 /* Security.framework in Frameworks */,
-				1F58A9D219321F4F00460853 /* Sparkle.framework in Frameworks */,
-				1FC80F20192E3E1F00BD62F4 /* Carbon.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7E7419546B0B00765366 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1FCA7E7519546B0B00765366 /* AVFoundation.framework in Frameworks */,
-				1FB2BE331B15F20A008C72E4 /* libavdevice.56.dylib in Frameworks */,
-				1FCA7E7619546B0B00765366 /* ScriptingBridge.framework in Frameworks */,
-				1FCA7E7719546B0B00765366 /* OpenGL.framework in Frameworks */,
-				1FCA7E7819546B0B00765366 /* QuartzCore.framework in Frameworks */,
-				1FCA7E7919546B0B00765366 /* libpython2.7.dylib in Frameworks */,
-				1FCA7E7A19546B0B00765366 /* Cocoa.framework in Frameworks */,
-				1FCA7E7B19546B0B00765366 /* Security.framework in Frameworks */,
-				1F2C1BAE1BB168D00036C306 /* libavfilter.5.dylib in Frameworks */,
-				1FCA7E7D19546B0B00765366 /* Carbon.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -3509,8 +2546,6 @@
 				1FCF1FB712B57DFF00F71BE5 /* Blink Pro.app */,
 				1F8DC412135084FA0034815C /* Blink Lite.app */,
 				1F35D0B017894FFF00C6FE38 /* SIP2SIP.app */,
-				1FC80F6A192E3E1F00BD62F4 /* El Quijote.app */,
-				1FCA7EC719546B0B00765366 /* El Quijote.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4266,52 +3301,6 @@
 			productReference = 1F8DC412135084FA0034815C /* Blink Lite.app */;
 			productType = "com.apple.product-type.application";
 		};
-		1FC80E0C192E3E1F00BD62F4 /* El Quijote */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 1FC80F67192E3E1F00BD62F4 /* Build configuration list for PBXNativeTarget "El Quijote" */;
-			buildPhases = (
-				1FC80E0D192E3E1F00BD62F4 /* Resources */,
-				1FC80F14192E3E1F00BD62F4 /* Sources */,
-				1FC80F18192E3E1F00BD62F4 /* Frameworks */,
-				1FC80F22192E3E1F00BD62F4 /* Copy Smiley Files (default) */,
-				1FC80F4E192E3E1F00BD62F4 /* Copy Configuration Package */,
-				1FC80F54192E3E1F00BD62F4 /* Copy Interfaces Package */,
-				1FC80F57192E3E1F00BD62F4 /* Copy Libraries */,
-				1FC80F59192E3E1F00BD62F4 /* Copy Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "El Quijote";
-			productInstallPath = "$(HOME)/Applications";
-			productName = MacSip;
-			productReference = 1FC80F6A192E3E1F00BD62F4 /* El Quijote.app */;
-			productType = "com.apple.product-type.application";
-		};
-		1FCA7D6119546B0B00765366 /* El Quijote Pro */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 1FCA7EC419546B0B00765366 /* Build configuration list for PBXNativeTarget "El Quijote Pro" */;
-			buildPhases = (
-				1FCA7D6219546B0B00765366 /* Resources */,
-				1FCA7E7019546B0B00765366 /* Sources */,
-				1FCA7E7419546B0B00765366 /* Frameworks */,
-				1FCA7E7E19546B0B00765366 /* Copy Smiley Files (default) */,
-				1FCA7EAA19546B0B00765366 /* Copy Configuration Package */,
-				1FCA7EB019546B0B00765366 /* Copy Interfaces Package */,
-				1FCA7EB319546B0B00765366 /* Copy Libraries */,
-				1FCA7EB519546B0B00765366 /* Copy Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "El Quijote Pro";
-			productInstallPath = "$(HOME)/Applications";
-			productName = MacSip;
-			productReference = 1FCA7EC719546B0B00765366 /* El Quijote.app */;
-			productType = "com.apple.product-type.application";
-		};
 		8D1107260486CEB800E47090 /* Blink */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Blink" */;
@@ -4368,28 +3357,6 @@
 							};
 						};
 					};
-					1FC80E0C192E3E1F00BD62F4 = {
-						DevelopmentTeam = JWAQD9C3CU;
-						SystemCapabilities = {
-							com.apple.Sandbox = {
-								enabled = 0;
-							};
-							com.apple.iCloud = {
-								enabled = 0;
-							};
-						};
-					};
-					1FCA7D6119546B0B00765366 = {
-						DevelopmentTeam = JWAQD9C3CU;
-						SystemCapabilities = {
-							com.apple.Sandbox = {
-								enabled = 1;
-							};
-							com.apple.iCloud = {
-								enabled = 1;
-							};
-						};
-					};
 					8D1107260486CEB800E47090 = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 						SystemCapabilities = {
@@ -4423,8 +3390,6 @@
 				1F22729312B554F50010A8B2 /* Blink Pro */,
 				1F8DC324135084FA0034815C /* Blink Lite */,
 				1F35CF7817894FFF00C6FE38 /* SIP2SIP */,
-				1FC80E0C192E3E1F00BD62F4 /* El Quijote */,
-				1FCA7D6119546B0B00765366 /* El Quijote Pro */,
 			);
 		};
 /* End PBXProject section */
@@ -5263,561 +4228,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1FC80E0D192E3E1F00BD62F4 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1F58A9CF19321E5000460853 /* Updater.py in Resources */,
-				1FC80E0E192E3E1F00BD62F4 /* ContactWindowController.py in Resources */,
-				1FC80F6F192E406B00BD62F4 /* ElQuijote.entitlements in Resources */,
-				1FC80E0F192E3E1F00BD62F4 /* ContactCell.py in Resources */,
-				1FC80E10192E3E1F00BD62F4 /* ContactListModel.py in Resources */,
-				1FC80E11192E3E1F00BD62F4 /* reconnect.png in Resources */,
-				1FC80E12192E3E1F00BD62F4 /* SessionController.py in Resources */,
-				1F194A8619B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
-				1FC80E13192E3E1F00BD62F4 /* HorizontalBoxView.py in Resources */,
-				1FC80E14192E3E1F00BD62F4 /* Contact.xib in Resources */,
-				1FC80E15192E3E1F00BD62F4 /* close.png in Resources */,
-				1FC80E16192E3E1F00BD62F4 /* EnrollmentWindow.xib in Resources */,
-				1FC80E17192E3E1F00BD62F4 /* MainWindow.xib in Resources */,
-				1FC80E18192E3E1F00BD62F4 /* VideoLocalWindowController.py in Resources */,
-				1FC80E19192E3E1F00BD62F4 /* PreferencesWindow.xib in Resources */,
-				1FC80E1A192E3E1F00BD62F4 /* ChatWindow.xib in Resources */,
-				1FC80E1B192E3E1F00BD62F4 /* ChatView.xib in Resources */,
-				1FC80E1C192E3E1F00BD62F4 /* BlinkAppDelegate.py in Resources */,
-				1F331DCF193B655800831F31 /* voicemail-red.png in Resources */,
-				1FC80E1D192E3E1F00BD62F4 /* ScreensharingPreviewPanel.py in Resources */,
-				1FC80E1E192E3E1F00BD62F4 /* SIPManager.py in Resources */,
-				1FC80E1F192E3E1F00BD62F4 /* EnrollmentController.py in Resources */,
-				1FC80E20192E3E1F00BD62F4 /* Main.py in Resources */,
-				1FC80E21192E3E1F00BD62F4 /* ChatController.py in Resources */,
-				1FC80E22192E3E1F00BD62F4 /* pause.png in Resources */,
-				1FC80E23192E3E1F00BD62F4 /* BlinkLogger.py in Resources */,
-				1FC80E24192E3E1F00BD62F4 /* mute.png in Resources */,
-				1F58A9D019321E8500460853 /* Updater.xib in Resources */,
-				1FC80E25192E3E1F00BD62F4 /* paused.png in Resources */,
-				1FC80E26192E3E1F00BD62F4 /* PreferencesController.py in Resources */,
-				1FC80E27192E3E1F00BD62F4 /* file_received.wav in Resources */,
-				1FC80E28192E3E1F00BD62F4 /* file_sent.wav in Resources */,
-				1FC80E29192E3E1F00BD62F4 /* message_received.wav in Resources */,
-				1FC80E2A192E3E1F00BD62F4 /* message_sent.wav in Resources */,
-				1FC80E2B192E3E1F00BD62F4 /* ring_inbound.wav in Resources */,
-				1FC80E2C192E3E1F00BD62F4 /* ring_outbound.wav in Resources */,
-				1F4B789519AEAEC200F854CB /* VideoWindow.xib in Resources */,
-				1FC80E2D192E3E1F00BD62F4 /* VerticalBoxView.py in Resources */,
-				1FC80E2E192E3E1F00BD62F4 /* PreferenceOptions.py in Resources */,
-				1FC80E2F192E3E1F00BD62F4 /* TableView.py in Resources */,
-				1FC80F73192E520200BD62F4 /* ElQuijote-logo.png in Resources */,
-				1FC80E30192E3E1F00BD62F4 /* AudioSession.py in Resources */,
-				1FC80E31192E3E1F00BD62F4 /* muted.png in Resources */,
-				1FC80E32192E3E1F00BD62F4 /* srtp.png in Resources */,
-				1FC80E33192E3E1F00BD62F4 /* AlertPanel.py in Resources */,
-				1FC80E34192E3E1F00BD62F4 /* blink.icns in Resources */,
-				1FC80E35192E3E1F00BD62F4 /* util.py in Resources */,
-				1FC80E36192E3E1F00BD62F4 /* SessionRinger.py in Resources */,
-				1FC80E37192E3E1F00BD62F4 /* DebugWindow.py in Resources */,
-				1FC80E38192E3E1F00BD62F4 /* DebugWindow.xib in Resources */,
-				1FC80E39192E3E1F00BD62F4 /* PhotoPicker.xib in Resources */,
-				1FC80E3A192E3E1F00BD62F4 /* PhotoPicker.py in Resources */,
-				1FC80E3B192E3E1F00BD62F4 /* SoundSetting.xib in Resources */,
-				DE2607261A93A9D6004FAEF8 /* Profiler.py in Resources */,
-				1FC80E3C192E3E1F00BD62F4 /* audio.png in Resources */,
-				1FC80E3D192E3E1F00BD62F4 /* display.png in Resources */,
-				1FC80E3E192E3E1F00BD62F4 /* record.png in Resources */,
-				1FC80E3F192E3E1F00BD62F4 /* recording1.png in Resources */,
-				1FC80E40192E3E1F00BD62F4 /* recording2.png in Resources */,
-				1FC80E41192E3E1F00BD62F4 /* recording3.png in Resources */,
-				1FC80E42192E3E1F00BD62F4 /* mic.png in Resources */,
-				1FC80E43192E3E1F00BD62F4 /* speaker.png in Resources */,
-				1FC80E44192E3E1F00BD62F4 /* bell.png in Resources */,
-				1FC80E45192E3E1F00BD62F4 /* bluelock.png in Resources */,
-				1FC80E46192E3E1F00BD62F4 /* busy.png in Resources */,
-				1FC80E47192E3E1F00BD62F4 /* greenlock.png in Resources */,
-				1FC80E48192E3E1F00BD62F4 /* ContactOutlineView.py in Resources */,
-				1FC80E49192E3E1F00BD62F4 /* away.png in Resources */,
-				1FC80E4A192E3E1F00BD62F4 /* FileTransferWindow.xib in Resources */,
-				1FC80E4B192E3E1F00BD62F4 /* FileTransferItemView.xib in Resources */,
-				1FC80E4C192E3E1F00BD62F4 /* FileTransferItemView.py in Resources */,
-				1FC80E4D192E3E1F00BD62F4 /* Grab.aif in Resources */,
-				1FC80E4E192E3E1F00BD62F4 /* ListView.py in Resources */,
-				1FC80E4F192E3E1F00BD62F4 /* FileTransferWindowController.py in Resources */,
-				1FC80E50192E3E1F00BD62F4 /* SmileyManager.py in Resources */,
-				1FC80E51192E3E1F00BD62F4 /* AnsweringMachine.py in Resources */,
-				1FC80E52192E3E1F00BD62F4 /* FileTransferSession.py in Resources */,
-				1FC80E53192E3E1F00BD62F4 /* About.xib in Resources */,
-				1F331DC9193B5CB600831F31 /* voicemail.png in Resources */,
-				1FC80E54192E3E1F00BD62F4 /* incoming_file.png in Resources */,
-				1FC80E55192E3E1F00BD62F4 /* upfile.png in Resources */,
-				1FC80E56192E3E1F00BD62F4 /* hangup.png in Resources */,
-				1FC80E57192E3E1F00BD62F4 /* belloff.png in Resources */,
-				1FC80E58192E3E1F00BD62F4 /* bellon.png in Resources */,
-				1FC80E59192E3E1F00BD62F4 /* AudioController.py in Resources */,
-				1FC80E5A192E3E1F00BD62F4 /* MediaStream.py in Resources */,
-				1FC80E5B192E3E1F00BD62F4 /* AccountSettings.py in Resources */,
-				1FC80E5C192E3E1F00BD62F4 /* AccountSettings.xib in Resources */,
-				1FC80E5D192E3E1F00BD62F4 /* answering_machine_tone.wav in Resources */,
-				1FC80E5E192E3E1F00BD62F4 /* dtmf_0_tone.wav in Resources */,
-				1FC80E5F192E3E1F00BD62F4 /* dtmf_1_tone.wav in Resources */,
-				1F52D5B619FAF1AF00F44E56 /* locked-gray.png in Resources */,
-				1FC80E60192E3E1F00BD62F4 /* dtmf_2_tone.wav in Resources */,
-				1FC80E61192E3E1F00BD62F4 /* dtmf_3_tone.wav in Resources */,
-				1FC80E62192E3E1F00BD62F4 /* dtmf_4_tone.wav in Resources */,
-				1FC80E63192E3E1F00BD62F4 /* dtmf_5_tone.wav in Resources */,
-				1FC80E64192E3E1F00BD62F4 /* dtmf_6_tone.wav in Resources */,
-				1FC80E65192E3E1F00BD62F4 /* dtmf_7_tone.wav in Resources */,
-				1FC80E66192E3E1F00BD62F4 /* dtmf_8_tone.wav in Resources */,
-				1FC80E67192E3E1F00BD62F4 /* dtmf_9_tone.wav in Resources */,
-				1FC80E68192E3E1F00BD62F4 /* layers2.png in Resources */,
-				1FC80E69192E3E1F00BD62F4 /* pause-white.png in Resources */,
-				1FC80E6A192E3E1F00BD62F4 /* dtmf_A_tone.wav in Resources */,
-				1FC80E6B192E3E1F00BD62F4 /* dtmf_B_tone.wav in Resources */,
-				1FC80E6C192E3E1F00BD62F4 /* dtmf_C_tone.wav in Resources */,
-				1FC80E6D192E3E1F00BD62F4 /* dtmf_D_tone.wav in Resources */,
-				1FC80E6E192E3E1F00BD62F4 /* dtmf_pound_tone.wav in Resources */,
-				1FC80E6F192E3E1F00BD62F4 /* dtmf_star_tone.wav in Resources */,
-				1FC80E70192E3E1F00BD62F4 /* available.png in Resources */,
-				1FC80E71192E3E1F00BD62F4 /* hangup_tone.wav in Resources */,
-				1FC80E73192E3E1F00BD62F4 /* hold_tone.wav in Resources */,
-				1FC80E74192E3E1F00BD62F4 /* ring_outbound2.wav in Resources */,
-				1FC80E75192E3E1F00BD62F4 /* ring_tone.wav in Resources */,
-				1FC80E76192E3E1F00BD62F4 /* FancyTabSwitcher.py in Resources */,
-				1FC80E77192E3E1F00BD62F4 /* Group.xib in Resources */,
-				1FC80E78192E3E1F00BD62F4 /* GroupController.py in Resources */,
-				1FC80E79192E3E1F00BD62F4 /* pencil.png in Resources */,
-				1FC80E7A192E3E1F00BD62F4 /* ScreenServerWindow.xib in Resources */,
-				1FC80E7B192E3E1F00BD62F4 /* ScreenSharingController.py in Resources */,
-				1FC80E7C192E3E1F00BD62F4 /* SMSSession.xib in Resources */,
-				1FC80E7D192E3E1F00BD62F4 /* SMSView.xib in Resources */,
-				1FC80E7E192E3E1F00BD62F4 /* ChatViewController.py in Resources */,
-				1FC80E7F192E3E1F00BD62F4 /* ChatView.html in Resources */,
-				1FC99CFA19BC93700013C580 /* close-small.png in Resources */,
-				1FC80E80192E3E1F00BD62F4 /* aspect_ratio.png in Resources */,
-				1FC80E81192E3E1F00BD62F4 /* smiley_off.png in Resources */,
-				1FC80E82192E3E1F00BD62F4 /* smiley_on.png in Resources */,
-				1FC80E84192E3E1F00BD62F4 /* SMSWindowManager.py in Resources */,
-				1FC80E85192E3E1F00BD62F4 /* HistoryViewer.py in Resources */,
-				1FC80E86192E3E1F00BD62F4 /* HistoryViewer.xib in Resources */,
-				1FC80E87192E3E1F00BD62F4 /* paused-red.png in Resources */,
-				1FC80E88192E3E1F00BD62F4 /* SoundRecorder.xib in Resources */,
-				1FC80E89192E3E1F00BD62F4 /* unavailable_message.wav in Resources */,
-				1FC80E8A192E3E1F00BD62F4 /* AnsweringMachineSetting.xib in Resources */,
-				1FC80E8B192E3E1F00BD62F4 /* audio_small.png in Resources */,
-				1FC80E8C192E3E1F00BD62F4 /* SMSViewController.py in Resources */,
-				1F08DB1A193DEDB200187373 /* offline.aif in Resources */,
-				1FC80E8E192E3E1F00BD62F4 /* PresenceOfflineWindow.xib in Resources */,
-				1FC80E90192E3E1F00BD62F4 /* 200901@login.zipdx.com.tiff in Resources */,
-				1FC80E91192E3E1F00BD62F4 /* blink-full-72dpi.tif in Resources */,
-				1FC80E92192E3E1F00BD62F4 /* ConferenceController.py in Resources */,
-				1FC80E93192E3E1F00BD62F4 /* test@conference.sip2sip.info.tiff in Resources */,
-				1FC80E94192E3E1F00BD62F4 /* ChatWindowController.py in Resources */,
-				1FC80E95192E3E1F00BD62F4 /* AddParticipantsWindow.xib in Resources */,
-				1FC80E96192E3E1F00BD62F4 /* FileTransferController.py in Resources */,
-				1FC80E97192E3E1F00BD62F4 /* ParticipantsTableView.py in Resources */,
-				1F774C6B19CB169800240DC1 /* video-active.png in Resources */,
-				1FC80E98192E3E1F00BD62F4 /* hangup_small.png in Resources */,
-				1FC80E99192E3E1F00BD62F4 /* audio_16.png in Resources */,
-				1FC80E9A192E3E1F00BD62F4 /* video.png in Resources */,
-				1FC80E9B192E3E1F00BD62F4 /* VideoController.py in Resources */,
-				1FC80E9C192E3E1F00BD62F4 /* video-hangup.png in Resources */,
-				1FC80E9D192E3E1F00BD62F4 /* ChatPrivateMessage.xib in Resources */,
-				1FC80E9E192E3E1F00BD62F4 /* ChatPrivateMessageController.py in Resources */,
-				1FC80E9F192E3E1F00BD62F4 /* HistoryManager.py in Resources */,
-				1FC80EA0192E3E1F00BD62F4 /* trash.png in Resources */,
-				1FC80EA1192E3E1F00BD62F4 /* outgoing_file.png in Resources */,
-				1FC80EA2192E3E1F00BD62F4 /* end_arrow.png in Resources */,
-				1FC80EA3192E3E1F00BD62F4 /* begin_arrow.png in Resources */,
-				1FC80EA4192E3E1F00BD62F4 /* transfer.png in Resources */,
-				1FC80EA5192E3E1F00BD62F4 /* paused_16.png in Resources */,
-				1FC80EA6192E3E1F00BD62F4 /* ConferenceConfigurationPanel.xib in Resources */,
-				1FC80EA8192E3E1F00BD62F4 /* ConferenceConfigurationPanel.py in Resources */,
-				1FC80EA9192E3E1F00BD62F4 /* resources.py in Resources */,
-				1FC80EAA192E3E1F00BD62F4 /* silence.wav in Resources */,
-				1FC80EAB192E3E1F00BD62F4 /* ConferenceFileCell.py in Resources */,
-				1F08DB1F193DEDB200187373 /* online.aif in Resources */,
-				1FC80F71192E414C00BD62F4 /* branding-elquijote.py in Resources */,
-				1FC80EAC192E3E1F00BD62F4 /* editor.png in Resources */,
-				1FC80EAD192E3E1F00BD62F4 /* fullscreen.png in Resources */,
-				1FC80EAE192E3E1F00BD62F4 /* video-paused.png in Resources */,
-				1FC80EAF192E3E1F00BD62F4 /* VideoTitleBarView.xib in Resources */,
-				1FC80EB0192E3E1F00BD62F4 /* restore.png in Resources */,
-				1FC80EB1192E3E1F00BD62F4 /* mirror.png in Resources */,
-				1FC80EB2192E3E1F00BD62F4 /* mute-white.png in Resources */,
-				1FC80EB4192E3E1F00BD62F4 /* chat.png in Resources */,
-				1FC80EB5192E3E1F00BD62F4 /* alerts.png in Resources */,
-				1FC80EB6192E3E1F00BD62F4 /* logs.png in Resources */,
-				1FC80EB7192E3E1F00BD62F4 /* audio-preferences.png in Resources */,
-				1FC80EB8192E3E1F00BD62F4 /* answering_machine.png in Resources */,
-				1FC80EB9192E3E1F00BD62F4 /* editor-changed.png in Resources */,
-				1FC80EBA192E3E1F00BD62F4 /* MigrationPanel.xib in Resources */,
-				1FC80EBB192E3E1F00BD62F4 /* default.crt in Resources */,
-				1FC80EBC192E3E1F00BD62F4 /* about.tiff in Resources */,
-				1FC80EBD192E3E1F00BD62F4 /* contact.py in Resources */,
-				1FC80EBE192E3E1F00BD62F4 /* contacts.png in Resources */,
-				1FC80EBF192E3E1F00BD62F4 /* CallTransferWindow.xib in Resources */,
-				1FC80EC0192E3E1F00BD62F4 /* AudioSession.xib in Resources */,
-				1FC80EC1192E3E1F00BD62F4 /* zrtp-securemode.wav in Resources */,
-				1FC80EC2192E3E1F00BD62F4 /* zrtp-security-failed.wav in Resources */,
-				1FC80EC3192E3E1F00BD62F4 /* SessionInfoPanel.xib in Resources */,
-				1FC80EC4192E3E1F00BD62F4 /* SessionInfoController.py in Resources */,
-				1FC80EC5192E3E1F00BD62F4 /* lock-zrtp.png in Resources */,
-				1FC80EC6192E3E1F00BD62F4 /* layers.png in Resources */,
-				1FC80EC7192E3E1F00BD62F4 /* panel-info.png in Resources */,
-				1FC80EC8192E3E1F00BD62F4 /* screenshot.png in Resources */,
-				1F0D4A3B19BF351D002AB989 /* VideoRecorder.py in Resources */,
-				1F2276551A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
-				1FC80EC9192E3E1F00BD62F4 /* help.png in Resources */,
-				1FC80ECA192E3E1F00BD62F4 /* start_chat.png in Resources */,
-				1FC80ECB192E3E1F00BD62F4 /* stop_chat.png in Resources */,
-				1FC80ECC192E3E1F00BD62F4 /* VideoWindowController.py in Resources */,
-				1FC80ECD192E3E1F00BD62F4 /* display_16.png in Resources */,
-				1F22764E1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
-				1FC80ECE192E3E1F00BD62F4 /* display_red.png in Resources */,
-				1FC80ECF192E3E1F00BD62F4 /* display_red_16.png in Resources */,
-				1FC80ED0192E3E1F00BD62F4 /* shrinktofit.png in Resources */,
-				1FC80ED1192E3E1F00BD62F4 /* shrinktofit-pressed.png in Resources */,
-				1FC80ED2192E3E1F00BD62F4 /* ConferenceScreenSharing.py in Resources */,
-				1FC80ED3192E3E1F00BD62F4 /* pencil_16.png in Resources */,
-				1FC80ED4192E3E1F00BD62F4 /* ConferenceScreenSharing.xib in Resources */,
-				1F337A59194C95E000DB726B /* moon.png in Resources */,
-				1FC80ED7192E3E1F00BD62F4 /* JoinConferenceWindow.xib in Resources */,
-				1FC80ED8192E3E1F00BD62F4 /* mime.types in Resources */,
-				1FC80ED9192E3E1F00BD62F4 /* ldap.png in Resources */,
-				1FC80EDA192E3E1F00BD62F4 /* invisible.png in Resources */,
-				1FC80EDB192E3E1F00BD62F4 /* NightVolumeSetting.xib in Resources */,
-				1FC80EDC192E3E1F00BD62F4 /* ScreensharingPreviewPanel.xib in Resources */,
-				1FC80EDE192E3E1F00BD62F4 /* iCloudManager.py in Resources */,
-				1FC80EE0192E3E1F00BD62F4 /* ca.crt in Resources */,
-				1FC80EE1192E3E1F00BD62F4 /* AddressBookEmail-plugin-setup.py in Resources */,
-				1FC80EE2192E3E1F00BD62F4 /* AddressBookEmail-plugin.py in Resources */,
-				1FC80EE3192E3E1F00BD62F4 /* AddressBookTel-plugin-setup.py in Resources */,
-				1FC80EE4192E3E1F00BD62F4 /* AddressBookTel-plugin.py in Resources */,
-				1FC80EE5192E3E1F00BD62F4 /* AddressBookURL-plugin-setup.py in Resources */,
-				1FC80EE6192E3E1F00BD62F4 /* AddressBookURL-plugin.py in Resources */,
-				1FC80EE7192E3E1F00BD62F4 /* EncryptionWrappers.py in Resources */,
-				1FC80EE8192E3E1F00BD62F4 /* Nickname.xib in Resources */,
-				1FC80EE9192E3E1F00BD62F4 /* NicknameController.py in Resources */,
-				1FC80EEA192E3E1F00BD62F4 /* SubjectController.py in Resources */,
-				1FC80EEB192E3E1F00BD62F4 /* Subject.xib in Resources */,
-				1FC80EEC192E3E1F00BD62F4 /* MyVideoWindowController.py in Resources */,
-				1FC80EED192E3E1F00BD62F4 /* ContactController.py in Resources */,
-				1FC80EEE192E3E1F00BD62F4 /* VirtualGroups.py in Resources */,
-				1FCA7D60195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */,
-				1FC80EEF192E3E1F00BD62F4 /* pending_watcher.tiff in Resources */,
-				1FC80EF0192E3E1F00BD62F4 /* blocked.png in Resources */,
-				1FC80EF1192E3E1F00BD62F4 /* PresencePublisher.py in Resources */,
-				1FC80EF2192E3E1F00BD62F4 /* OfflineNoteController.py in Resources */,
-				1FC80EF3192E3E1F00BD62F4 /* PresenceInfoPanel.xib in Resources */,
-				1FC80EF4192E3E1F00BD62F4 /* PresenceInfoController.py in Resources */,
-				1FC80EF5192E3E1F00BD62F4 /* WorldMapView.py in Resources */,
-				1FC80EF6192E3E1F00BD62F4 /* location.png in Resources */,
-				1FC80EF7192E3E1F00BD62F4 /* BlockedContact.py in Resources */,
-				1FC80EF8192E3E1F00BD62F4 /* BlockedContact.xib in Resources */,
-				1FC80EF9192E3E1F00BD62F4 /* time.png in Resources */,
-				1FC80EFA192E3E1F00BD62F4 /* lupa.png in Resources */,
-				1FC80EFB192E3E1F00BD62F4 /* MyVideoLocalWindow.xib in Resources */,
-				1FC80EFC192E3E1F00BD62F4 /* MergeContacts.xib in Resources */,
-				1FC80F6D192E3FA800BD62F4 /* ElQuijote.icns in Resources */,
-				1FC80EFD192E3E1F00BD62F4 /* MergeContactController.py in Resources */,
-				1FC80EFE192E3E1F00BD62F4 /* hangup_16.png in Resources */,
-				1FC80EFF192E3E1F00BD62F4 /* echo@conference.sip2sip.info.tiff in Resources */,
-				1FC80F00192E3E1F00BD62F4 /* AecSlider.xib in Resources */,
-				1FC80F01192E3E1F00BD62F4 /* locked-green.png in Resources */,
-				1F4B78A019AEAED300F854CB /* VideoLocalWindow.xib in Resources */,
-				1FC80F02192E3E1F00BD62F4 /* unlocked-red.png in Resources */,
-				1FC80F03192E3E1F00BD62F4 /* locked-orange.png in Resources */,
-				1FC80F04192E3E1F00BD62F4 /* locked-yellow.png in Resources */,
-				1FC80F05192E3E1F00BD62F4 /* ChatOTR.py in Resources */,
-				1FC80F06192E3E1F00BD62F4 /* unlocked-darkgray.png in Resources */,
-				1FC80F07192E3E1F00BD62F4 /* OTRSettings.xib in Resources */,
-				1FC80F09192E3E1F00BD62F4 /* locked-red.png in Resources */,
-				1FC80F0A192E3E1F00BD62F4 /* ChatOtrSmp.xib in Resources */,
-				1FC80F0B192E3E1F00BD62F4 /* AlertPanel.xib in Resources */,
-				1FC80F0C192E3E1F00BD62F4 /* AlertPanelView.xib in Resources */,
-				1FC80F0D192E3E1F00BD62F4 /* offline.png in Resources */,
-				1FC80F0F192E3E1F00BD62F4 /* Localizable.strings in Resources */,
-				1FC80F11192E3E1F00BD62F4 /* database-on.png in Resources */,
-				1FC80F12192E3E1F00BD62F4 /* database-local-off.png in Resources */,
-				1FC80F13192E3E1F00BD62F4 /* database-remote-off.png in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7D6219546B0B00765366 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1FCA7D6419546B0B00765366 /* ContactWindowController.py in Resources */,
-				1FCA7D6519546B0B00765366 /* ElQuijote.entitlements in Resources */,
-				1FCA7D6619546B0B00765366 /* ContactCell.py in Resources */,
-				1FCA7D6719546B0B00765366 /* ContactListModel.py in Resources */,
-				1FCA7D6819546B0B00765366 /* reconnect.png in Resources */,
-				1FCA7D6919546B0B00765366 /* SessionController.py in Resources */,
-				1FCA7D6A19546B0B00765366 /* HorizontalBoxView.py in Resources */,
-				1FCA7D6B19546B0B00765366 /* Contact.xib in Resources */,
-				1FCA7D6C19546B0B00765366 /* close.png in Resources */,
-				1FCA7D6D19546B0B00765366 /* EnrollmentWindow.xib in Resources */,
-				1FCA7D6E19546B0B00765366 /* MainWindow.xib in Resources */,
-				1FCA7D6F19546B0B00765366 /* VideoLocalWindowController.py in Resources */,
-				1FCA7D7019546B0B00765366 /* PreferencesWindow.xib in Resources */,
-				1FCA7D7119546B0B00765366 /* ChatWindow.xib in Resources */,
-				1FCA7D7219546B0B00765366 /* ChatView.xib in Resources */,
-				1FCA7D7319546B0B00765366 /* BlinkAppDelegate.py in Resources */,
-				1FCA7D7419546B0B00765366 /* voicemail-red.png in Resources */,
-				1FCA7D7519546B0B00765366 /* ScreensharingPreviewPanel.py in Resources */,
-				1FCA7D7619546B0B00765366 /* SIPManager.py in Resources */,
-				1FCA7D7719546B0B00765366 /* EnrollmentController.py in Resources */,
-				1FCA7D7819546B0B00765366 /* Main.py in Resources */,
-				1FCA7D7919546B0B00765366 /* ChatController.py in Resources */,
-				1FCA7D7A19546B0B00765366 /* pause.png in Resources */,
-				1FCA7D7B19546B0B00765366 /* BlinkLogger.py in Resources */,
-				1FCA7D7C19546B0B00765366 /* mute.png in Resources */,
-				1FCA7D7E19546B0B00765366 /* paused.png in Resources */,
-				1FCA7D7F19546B0B00765366 /* PreferencesController.py in Resources */,
-				1FCA7D8019546B0B00765366 /* file_received.wav in Resources */,
-				1FCA7D8119546B0B00765366 /* file_sent.wav in Resources */,
-				1FCA7D8219546B0B00765366 /* message_received.wav in Resources */,
-				1FCA7D8319546B0B00765366 /* message_sent.wav in Resources */,
-				1FCA7D8419546B0B00765366 /* ring_inbound.wav in Resources */,
-				1FCA7D8519546B0B00765366 /* ring_outbound.wav in Resources */,
-				1FCA7D8619546B0B00765366 /* VerticalBoxView.py in Resources */,
-				1FCA7D8719546B0B00765366 /* PreferenceOptions.py in Resources */,
-				1FCA7D8819546B0B00765366 /* TableView.py in Resources */,
-				1FCA7D8919546B0B00765366 /* ElQuijote-logo.png in Resources */,
-				1FCA7D8A19546B0B00765366 /* AudioSession.py in Resources */,
-				1FCA7D8B19546B0B00765366 /* muted.png in Resources */,
-				1FCA7D8C19546B0B00765366 /* srtp.png in Resources */,
-				1FCA7D8D19546B0B00765366 /* AlertPanel.py in Resources */,
-				1FCA7D8E19546B0B00765366 /* blink.icns in Resources */,
-				1FCA7D8F19546B0B00765366 /* util.py in Resources */,
-				1FCA7D9019546B0B00765366 /* SessionRinger.py in Resources */,
-				1FCA7D9119546B0B00765366 /* DebugWindow.py in Resources */,
-				1FCA7D9219546B0B00765366 /* DebugWindow.xib in Resources */,
-				1FCA7D9319546B0B00765366 /* PhotoPicker.xib in Resources */,
-				1FCA7D9419546B0B00765366 /* PhotoPicker.py in Resources */,
-				1FCA7D9519546B0B00765366 /* SoundSetting.xib in Resources */,
-				1FCA7D9619546B0B00765366 /* audio.png in Resources */,
-				1F774C6C19CB169800240DC1 /* video-active.png in Resources */,
-				1FCA7D9719546B0B00765366 /* display.png in Resources */,
-				1FCA7D9819546B0B00765366 /* record.png in Resources */,
-				1FCA7D9919546B0B00765366 /* recording1.png in Resources */,
-				1FCA7D9A19546B0B00765366 /* recording2.png in Resources */,
-				1FCA7D9B19546B0B00765366 /* recording3.png in Resources */,
-				1FCA7D9C19546B0B00765366 /* mic.png in Resources */,
-				1FCA7D9D19546B0B00765366 /* speaker.png in Resources */,
-				1FCA7D9E19546B0B00765366 /* bell.png in Resources */,
-				1FCA7D9F19546B0B00765366 /* bluelock.png in Resources */,
-				1FCA7DA019546B0B00765366 /* busy.png in Resources */,
-				1FCA7DA119546B0B00765366 /* greenlock.png in Resources */,
-				1FCA7DA219546B0B00765366 /* ContactOutlineView.py in Resources */,
-				1FCA7DA319546B0B00765366 /* away.png in Resources */,
-				1FCA7DA419546B0B00765366 /* FileTransferWindow.xib in Resources */,
-				1FCA7DA519546B0B00765366 /* FileTransferItemView.xib in Resources */,
-				1FCA7DA619546B0B00765366 /* FileTransferItemView.py in Resources */,
-				1FCA7DA719546B0B00765366 /* Grab.aif in Resources */,
-				1FCA7DA819546B0B00765366 /* ListView.py in Resources */,
-				1FCA7DA919546B0B00765366 /* FileTransferWindowController.py in Resources */,
-				1FCA7DAA19546B0B00765366 /* SmileyManager.py in Resources */,
-				1FCA7DAB19546B0B00765366 /* AnsweringMachine.py in Resources */,
-				1FCA7DAC19546B0B00765366 /* FileTransferSession.py in Resources */,
-				1FCA7DAD19546B0B00765366 /* About.xib in Resources */,
-				1F2276561A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
-				1FCA7DAE19546B0B00765366 /* voicemail.png in Resources */,
-				1FCA7DAF19546B0B00765366 /* incoming_file.png in Resources */,
-				1FCA7DB019546B0B00765366 /* upfile.png in Resources */,
-				1FCA7DB119546B0B00765366 /* hangup.png in Resources */,
-				1FCA7DB219546B0B00765366 /* belloff.png in Resources */,
-				1FCA7DB319546B0B00765366 /* bellon.png in Resources */,
-				1FCA7DB419546B0B00765366 /* AudioController.py in Resources */,
-				1FCA7DB519546B0B00765366 /* MediaStream.py in Resources */,
-				1FCA7DB619546B0B00765366 /* AccountSettings.py in Resources */,
-				1FCA7DB719546B0B00765366 /* AccountSettings.xib in Resources */,
-				1F194A8719B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
-				1F52D5B719FAF1AF00F44E56 /* locked-gray.png in Resources */,
-				1FCA7DB819546B0B00765366 /* answering_machine_tone.wav in Resources */,
-				1FCA7DB919546B0B00765366 /* dtmf_0_tone.wav in Resources */,
-				1FCA7DBA19546B0B00765366 /* dtmf_1_tone.wav in Resources */,
-				1FCA7DBB19546B0B00765366 /* dtmf_2_tone.wav in Resources */,
-				1FCA7DBC19546B0B00765366 /* dtmf_3_tone.wav in Resources */,
-				1FCA7DBD19546B0B00765366 /* dtmf_4_tone.wav in Resources */,
-				1FCA7DBE19546B0B00765366 /* dtmf_5_tone.wav in Resources */,
-				1FCA7DBF19546B0B00765366 /* dtmf_6_tone.wav in Resources */,
-				1FCA7DC019546B0B00765366 /* dtmf_7_tone.wav in Resources */,
-				1FCA7DC119546B0B00765366 /* dtmf_8_tone.wav in Resources */,
-				1FCA7DC219546B0B00765366 /* dtmf_9_tone.wav in Resources */,
-				1FCA7DC319546B0B00765366 /* layers2.png in Resources */,
-				1FCA7DC419546B0B00765366 /* pause-white.png in Resources */,
-				1FCA7DC519546B0B00765366 /* dtmf_A_tone.wav in Resources */,
-				1FCA7DC619546B0B00765366 /* dtmf_B_tone.wav in Resources */,
-				1FCA7DC719546B0B00765366 /* dtmf_C_tone.wav in Resources */,
-				1FCA7DC819546B0B00765366 /* dtmf_D_tone.wav in Resources */,
-				1FCA7DC919546B0B00765366 /* dtmf_pound_tone.wav in Resources */,
-				1FCA7DCA19546B0B00765366 /* dtmf_star_tone.wav in Resources */,
-				1FCA7DCB19546B0B00765366 /* available.png in Resources */,
-				1FCA7DCC19546B0B00765366 /* hangup_tone.wav in Resources */,
-				1FCA7DCE19546B0B00765366 /* hold_tone.wav in Resources */,
-				1FCA7DCF19546B0B00765366 /* ring_outbound2.wav in Resources */,
-				1FCA7DD019546B0B00765366 /* ring_tone.wav in Resources */,
-				1FCA7DD119546B0B00765366 /* FancyTabSwitcher.py in Resources */,
-				1FCA7DD219546B0B00765366 /* Group.xib in Resources */,
-				1FCA7DD319546B0B00765366 /* GroupController.py in Resources */,
-				1FCA7DD419546B0B00765366 /* pencil.png in Resources */,
-				1FCA7DD519546B0B00765366 /* ScreenServerWindow.xib in Resources */,
-				1FCA7DD619546B0B00765366 /* ScreenSharingController.py in Resources */,
-				1FCA7DD719546B0B00765366 /* SMSSession.xib in Resources */,
-				1FCA7DD819546B0B00765366 /* SMSView.xib in Resources */,
-				1FCA7DD919546B0B00765366 /* ChatViewController.py in Resources */,
-				1FCA7DDA19546B0B00765366 /* ChatView.html in Resources */,
-				1FCA7DDB19546B0B00765366 /* aspect_ratio.png in Resources */,
-				1FCA7DDC19546B0B00765366 /* smiley_off.png in Resources */,
-				1FCA7DDD19546B0B00765366 /* smiley_on.png in Resources */,
-				1FCA7DDE19546B0B00765366 /* SMSWindowManager.py in Resources */,
-				1FCA7DDF19546B0B00765366 /* HistoryViewer.py in Resources */,
-				1FCA7DE019546B0B00765366 /* HistoryViewer.xib in Resources */,
-				1FCA7DE119546B0B00765366 /* paused-red.png in Resources */,
-				1FCA7DE219546B0B00765366 /* SoundRecorder.xib in Resources */,
-				1FCA7DE319546B0B00765366 /* unavailable_message.wav in Resources */,
-				1FCA7DE419546B0B00765366 /* AnsweringMachineSetting.xib in Resources */,
-				1FCA7DE519546B0B00765366 /* audio_small.png in Resources */,
-				1FCA7DE619546B0B00765366 /* SMSViewController.py in Resources */,
-				1FCA7DE719546B0B00765366 /* offline.aif in Resources */,
-				1FCA7DE919546B0B00765366 /* PresenceOfflineWindow.xib in Resources */,
-				1FCA7DEB19546B0B00765366 /* 200901@login.zipdx.com.tiff in Resources */,
-				1FCA7DEC19546B0B00765366 /* blink-full-72dpi.tif in Resources */,
-				1FCA7DED19546B0B00765366 /* ConferenceController.py in Resources */,
-				1FCA7DEE19546B0B00765366 /* test@conference.sip2sip.info.tiff in Resources */,
-				1FCA7DEF19546B0B00765366 /* ChatWindowController.py in Resources */,
-				1FCA7DF019546B0B00765366 /* AddParticipantsWindow.xib in Resources */,
-				1FCA7DF119546B0B00765366 /* FileTransferController.py in Resources */,
-				1FCA7DF219546B0B00765366 /* ParticipantsTableView.py in Resources */,
-				1FCA7DF319546B0B00765366 /* hangup_small.png in Resources */,
-				1FCA7DF419546B0B00765366 /* audio_16.png in Resources */,
-				1FCA7DF519546B0B00765366 /* video.png in Resources */,
-				1FCA7DF619546B0B00765366 /* VideoController.py in Resources */,
-				1FCA7DF719546B0B00765366 /* video-hangup.png in Resources */,
-				1FCA7DF819546B0B00765366 /* ChatPrivateMessage.xib in Resources */,
-				1FCA7DF919546B0B00765366 /* ChatPrivateMessageController.py in Resources */,
-				1FCA7DFA19546B0B00765366 /* HistoryManager.py in Resources */,
-				1FCA7DFB19546B0B00765366 /* trash.png in Resources */,
-				1FCA7DFC19546B0B00765366 /* outgoing_file.png in Resources */,
-				1FCA7DFD19546B0B00765366 /* end_arrow.png in Resources */,
-				1FCA7DFE19546B0B00765366 /* begin_arrow.png in Resources */,
-				1FCA7DFF19546B0B00765366 /* transfer.png in Resources */,
-				1FCA7E0019546B0B00765366 /* paused_16.png in Resources */,
-				1FCA7E0119546B0B00765366 /* ConferenceConfigurationPanel.xib in Resources */,
-				1FCA7E0219546B0B00765366 /* ConferenceConfigurationPanel.py in Resources */,
-				1FCA7E0319546B0B00765366 /* resources.py in Resources */,
-				1FCA7E0419546B0B00765366 /* silence.wav in Resources */,
-				1FCA7E0519546B0B00765366 /* ConferenceFileCell.py in Resources */,
-				1FCA7E0619546B0B00765366 /* online.aif in Resources */,
-				1FCA7E0819546B0B00765366 /* editor.png in Resources */,
-				1FCA7E0919546B0B00765366 /* fullscreen.png in Resources */,
-				1FCA7E0A19546B0B00765366 /* video-paused.png in Resources */,
-				1FCA7E0B19546B0B00765366 /* VideoTitleBarView.xib in Resources */,
-				1FCA7E0C19546B0B00765366 /* restore.png in Resources */,
-				1FCA7E0D19546B0B00765366 /* mirror.png in Resources */,
-				1FCA7E0E19546B0B00765366 /* mute-white.png in Resources */,
-				1FCA7E1019546B0B00765366 /* chat.png in Resources */,
-				1FCA7E1119546B0B00765366 /* alerts.png in Resources */,
-				1FCA7E1219546B0B00765366 /* logs.png in Resources */,
-				1FCA7E1319546B0B00765366 /* audio-preferences.png in Resources */,
-				1FCA7E1419546B0B00765366 /* answering_machine.png in Resources */,
-				1FCA7E1519546B0B00765366 /* editor-changed.png in Resources */,
-				1F4B789619AEAEC200F854CB /* VideoWindow.xib in Resources */,
-				1FCA7E1619546B0B00765366 /* MigrationPanel.xib in Resources */,
-				1FCA7E1719546B0B00765366 /* default.crt in Resources */,
-				1FCA7E1819546B0B00765366 /* about.tiff in Resources */,
-				1FCA7E1919546B0B00765366 /* contact.py in Resources */,
-				1F5C428B19DFD90E0099ABA4 /* ElQuijotePro-Icon.xcassets in Resources */,
-				1FCA7E1A19546B0B00765366 /* contacts.png in Resources */,
-				1FCA7E1B19546B0B00765366 /* CallTransferWindow.xib in Resources */,
-				1FCA7E1C19546B0B00765366 /* AudioSession.xib in Resources */,
-				1FCA7E1D19546B0B00765366 /* zrtp-securemode.wav in Resources */,
-				1FCA7E1E19546B0B00765366 /* zrtp-security-failed.wav in Resources */,
-				1FCA7E1F19546B0B00765366 /* SessionInfoPanel.xib in Resources */,
-				1FCA7E2019546B0B00765366 /* SessionInfoController.py in Resources */,
-				1FCA7E2119546B0B00765366 /* lock-zrtp.png in Resources */,
-				1FCA7E2219546B0B00765366 /* layers.png in Resources */,
-				1FCA7E2319546B0B00765366 /* panel-info.png in Resources */,
-				1FCA7E2419546B0B00765366 /* screenshot.png in Resources */,
-				1FCA7E2519546B0B00765366 /* help.png in Resources */,
-				1FCA7E2619546B0B00765366 /* start_chat.png in Resources */,
-				1F4B78A119AEAED300F854CB /* VideoLocalWindow.xib in Resources */,
-				1FCA7E2719546B0B00765366 /* stop_chat.png in Resources */,
-				1FCA7E2819546B0B00765366 /* VideoWindowController.py in Resources */,
-				1FCA7E2919546B0B00765366 /* display_16.png in Resources */,
-				1F22764F1A82256900CA9A73 /* ZRTPAuthentication.py in Resources */,
-				1FCA7E2A19546B0B00765366 /* display_red.png in Resources */,
-				1FCA7E2B19546B0B00765366 /* display_red_16.png in Resources */,
-				1FCA7E2C19546B0B00765366 /* shrinktofit.png in Resources */,
-				1FCA7E2D19546B0B00765366 /* shrinktofit-pressed.png in Resources */,
-				1FCA7E2E19546B0B00765366 /* ConferenceScreenSharing.py in Resources */,
-				1FCA7E2F19546B0B00765366 /* pencil_16.png in Resources */,
-				1FCA7E3019546B0B00765366 /* ConferenceScreenSharing.xib in Resources */,
-				1FCA7E3119546B0B00765366 /* moon.png in Resources */,
-				1FCA7E3319546B0B00765366 /* JoinConferenceWindow.xib in Resources */,
-				1FCA7E3419546B0B00765366 /* mime.types in Resources */,
-				1FCA7E3519546B0B00765366 /* ldap.png in Resources */,
-				1FCA7E3619546B0B00765366 /* invisible.png in Resources */,
-				1FC99CFB19BC93700013C580 /* close-small.png in Resources */,
-				1FCA7E3719546B0B00765366 /* NightVolumeSetting.xib in Resources */,
-				1FCA7E3819546B0B00765366 /* ScreensharingPreviewPanel.xib in Resources */,
-				1FCA7E3A19546B0B00765366 /* iCloudManager.py in Resources */,
-				1FCA7E3B19546B0B00765366 /* ca.crt in Resources */,
-				1FCA7E3C19546B0B00765366 /* AddressBookEmail-plugin-setup.py in Resources */,
-				1FCA7E3D19546B0B00765366 /* AddressBookEmail-plugin.py in Resources */,
-				1FCA7E3E19546B0B00765366 /* AddressBookTel-plugin-setup.py in Resources */,
-				DE2607271A93A9D6004FAEF8 /* Profiler.py in Resources */,
-				1FCA7E3F19546B0B00765366 /* AddressBookTel-plugin.py in Resources */,
-				1FCA7E4019546B0B00765366 /* AddressBookURL-plugin-setup.py in Resources */,
-				1FCA7E4119546B0B00765366 /* AddressBookURL-plugin.py in Resources */,
-				1FCA7E4219546B0B00765366 /* EncryptionWrappers.py in Resources */,
-				1FCA7E4319546B0B00765366 /* Nickname.xib in Resources */,
-				1FCA7E4419546B0B00765366 /* NicknameController.py in Resources */,
-				1FCA7E4519546B0B00765366 /* SubjectController.py in Resources */,
-				1FCA7E4619546B0B00765366 /* Subject.xib in Resources */,
-				1FCA7E4719546B0B00765366 /* MyVideoWindowController.py in Resources */,
-				1FCA7E4819546B0B00765366 /* ContactController.py in Resources */,
-				1FCA7E4919546B0B00765366 /* VirtualGroups.py in Resources */,
-				1FCA7E4A19546B0B00765366 /* support@conference.sip2sip.info.tiff in Resources */,
-				1FCA7E4B19546B0B00765366 /* pending_watcher.tiff in Resources */,
-				1FCA7E4C19546B0B00765366 /* blocked.png in Resources */,
-				1FCA7E4D19546B0B00765366 /* PresencePublisher.py in Resources */,
-				1FCA7E4E19546B0B00765366 /* OfflineNoteController.py in Resources */,
-				1FCA7E4F19546B0B00765366 /* PresenceInfoPanel.xib in Resources */,
-				1FCA7E5019546B0B00765366 /* PresenceInfoController.py in Resources */,
-				1FCA7E5119546B0B00765366 /* WorldMapView.py in Resources */,
-				1FCA7E5219546B0B00765366 /* location.png in Resources */,
-				1FCA7E5319546B0B00765366 /* BlockedContact.py in Resources */,
-				1FCA7E5419546B0B00765366 /* BlockedContact.xib in Resources */,
-				1FCA7E5519546B0B00765366 /* time.png in Resources */,
-				1FCA7E5619546B0B00765366 /* lupa.png in Resources */,
-				1FCA7E5719546B0B00765366 /* MyVideoLocalWindow.xib in Resources */,
-				1FCA7E5819546B0B00765366 /* MergeContacts.xib in Resources */,
-				1FCA7E5919546B0B00765366 /* ElQuijote.icns in Resources */,
-				1FCA7E5A19546B0B00765366 /* MergeContactController.py in Resources */,
-				1FCA7E5B19546B0B00765366 /* hangup_16.png in Resources */,
-				1FCA7E5C19546B0B00765366 /* echo@conference.sip2sip.info.tiff in Resources */,
-				1FCA7E5D19546B0B00765366 /* AecSlider.xib in Resources */,
-				1F0D4A3C19BF351D002AB989 /* VideoRecorder.py in Resources */,
-				1FCA7E5E19546B0B00765366 /* locked-green.png in Resources */,
-				1FCA7E5F19546B0B00765366 /* unlocked-red.png in Resources */,
-				1FCA7E6019546B0B00765366 /* locked-orange.png in Resources */,
-				1F8CB30B19546C9700D73F74 /* branding-elquijote-appstore.py in Resources */,
-				1FCA7E6119546B0B00765366 /* locked-yellow.png in Resources */,
-				1FCA7E6219546B0B00765366 /* ChatOTR.py in Resources */,
-				1FCA7E6319546B0B00765366 /* unlocked-darkgray.png in Resources */,
-				1FCA7E6419546B0B00765366 /* OTRSettings.xib in Resources */,
-				1FCA7E6619546B0B00765366 /* locked-red.png in Resources */,
-				1FCA7E6719546B0B00765366 /* ChatOtrSmp.xib in Resources */,
-				1FCA7E6819546B0B00765366 /* AlertPanel.xib in Resources */,
-				1FCA7E6919546B0B00765366 /* AlertPanelView.xib in Resources */,
-				1FCA7E6A19546B0B00765366 /* offline.png in Resources */,
-				1FCA7E6C19546B0B00765366 /* Localizable.strings in Resources */,
-				1FCA7E6D19546B0B00765366 /* database-on.png in Resources */,
-				1FCA7E6E19546B0B00765366 /* database-local-off.png in Resources */,
-				1FCA7E6F19546B0B00765366 /* database-remote-off.png in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		8D1107290486CEB800E47090 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6125,26 +4535,6 @@
 				1F8DC3BF135084FA0034815C /* main.m in Sources */,
 				1F9268F814868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 				1F6009D118F74D22005517FA /* mbFlipWindow.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FC80F14192E3E1F00BD62F4 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1FC80F15192E3E1F00BD62F4 /* main.m in Sources */,
-				1FC80F16192E3E1F00BD62F4 /* EMKeychainItem.m in Sources */,
-				1FC80F17192E3E1F00BD62F4 /* mbFlipWindow.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1FCA7E7019546B0B00765366 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1FCA7E7119546B0B00765366 /* main.m in Sources */,
-				1FCA7E7219546B0B00765366 /* EMKeychainItem.m in Sources */,
-				1FCA7E7319546B0B00765366 /* mbFlipWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7013,174 +5403,6 @@
 			};
 			name = Release;
 		};
-		1FC80F68192E3E1F00BD62F4 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
-				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
-				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = (
-					/System/Library/Frameworks,
-					"$(inherited)",
-					"$(SRCROOT)",
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Blink_Prefix.pch;
-				INFOPLIST_FILE = "$(SRCROOT)/Info-elquijote.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(inherited)",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
-				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
-				PRODUCT_NAME = "El Quijote";
-				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
-				VALID_ARCHS = x86_64;
-				WRAPPER_EXTENSION = app;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		1FC80F69192E3E1F00BD62F4 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
-				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = (
-					/System/Library/Frameworks,
-					"$(inherited)",
-					"$(SRCROOT)",
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				GCC_MODEL_TUNING = "";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Blink_Prefix.pch;
-				INFOPLIST_FILE = "$(SRCROOT)/Info-elquijote.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(inherited)",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
-				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
-				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
-				PRODUCT_NAME = "El Quijote";
-				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
-				VALID_ARCHS = x86_64;
-				WRAPPER_EXTENSION = app;
-			};
-			name = Release;
-		};
-		1FCA7EC519546B0B00765366 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_ENTITLEMENTS = ElQuijote.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer: Gabriel Georgescu (6ZPPVCDK88)";
-				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
-				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = (
-					/System/Library/Frameworks,
-					"$(inherited)",
-					"$(SRCROOT)",
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Blink_Prefix.pch;
-				INFOPLIST_FILE = "Info-elquijote-appstore.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(inherited)",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
-				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
-				PRODUCT_NAME = "El Quijote";
-				PROVISIONING_PROFILE = "B832E9E3-0533-4629-BB25-B6F22635450A";
-				SDKROOT = macosx10.9;
-				VALID_ARCHS = x86_64;
-				WRAPPER_EXTENSION = app;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		1FCA7EC619546B0B00765366 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_ENTITLEMENTS = ElQuijote.entitlements;
-				CODE_SIGN_IDENTITY = "3rd Party Mac Developer Application: Aspery Corporation S.A. (JWAQD9C3CU)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application: Aspery Corporation S.A. (JWAQD9C3CU)";
-				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
-				FRAMEWORK_SEARCH_PATHS = (
-					/System/Library/Frameworks,
-					"$(inherited)",
-					"$(SRCROOT)",
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				GCC_MODEL_TUNING = "";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Blink_Prefix.pch;
-				INFOPLIST_FILE = "Info-elquijote-appstore.plist";
-				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = (
-					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"$(inherited)",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
-					"$(PROJECT_DIR)/Distribution/Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
-				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
-				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
-				PRODUCT_NAME = "El Quijote";
-				PROVISIONING_PROFILE = "63ADE081-D763-45A8-83CD-8A806C01E2E7";
-				SDKROOT = macosx10.9;
-				VALID_ARCHS = x86_64;
-				WRAPPER_EXTENSION = app;
-			};
-			name = Release;
-		};
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -7315,24 +5537,6 @@
 			buildConfigurations = (
 				1F8DC410135084FA0034815C /* Debug */,
 				1F8DC411135084FA0034815C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		1FC80F67192E3E1F00BD62F4 /* Build configuration list for PBXNativeTarget "El Quijote" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1FC80F68192E3E1F00BD62F4 /* Debug */,
-				1FC80F69192E3E1F00BD62F4 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		1FCA7EC419546B0B00765366 /* Build configuration list for PBXNativeTarget "El Quijote Pro" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1FCA7EC519546B0B00765366 /* Debug */,
-				1FCA7EC619546B0B00765366 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
