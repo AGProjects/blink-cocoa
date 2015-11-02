@@ -1,5 +1,3 @@
-
-
 #import "Python.h"
 #import <Cocoa/Cocoa.h>
 
@@ -15,6 +13,7 @@ int main(int argc, char *argv[])
 
     setenv("PYTHONPATH", [pythonPath UTF8String], 1);
     setenv("DYLD_LIBRARY_PATH", [libraryPath UTF8String], 1);
+    setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
 
     NSArray *possibleMainExtensions = [NSArray arrayWithObjects: @"py", @"pyc", @"pyo", nil];
     NSString *mainFilePath = nil;
