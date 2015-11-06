@@ -16,10 +16,16 @@ from Foundation import (NSBundle,
 from AppKit import NSEventTrackingRunLoopMode, NSRunAlertPanel
 import objc
 
-from application.notification import IObserver, NotificationCenter
+import socket
+
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
+from eventlib.coros import event
+from eventlib.greenio import GreenSocket
+from eventlib.proc import spawn
+from eventlib.util import tcp_socket, set_reuse_addr
 from zope.interface import implements
-from sipsimple.streams.msrp import ScreenSharingStream, ExternalVNCServerHandler, ExternalVNCViewerHandler, VNCConnectionError
+from sipsimple.streams.msrp import ScreenSharingStream, ScreenSharingServerHandler, ScreenSharingViewerHandler, VNCConnectionError
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 from BlinkLogger import BlinkLogger
@@ -36,6 +42,166 @@ from MediaStream import (MediaStream,
                          STATE_FAILED,
                          STATE_CONNECTED)
 from util import allocate_autorelease_pool, run_in_gui_thread
+
+
+class Interrupt(Exception):
+    pass
+
+
+class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
+    address = ('localhost', 0)
+    connect_timeout = 5
+
+    def __init__(self):
+        super(ExternalVNCViewerHandler, self).__init__()
+        self.vnc_starter_thread = None
+        self.vnc_socket = None
+        self.vnc_server_socket = GreenSocket(tcp_socket())
+        set_reuse_addr(self.vnc_server_socket)
+        self.vnc_server_socket.settimeout(self.connect_timeout)
+        self.vnc_server_socket.bind(self.address)
+        self.vnc_server_socket.listen(1)
+        self.address = self.vnc_server_socket.getsockname()
+        self._reconnect_event = event()
+
+    def _msrp_reader(self):
+        while True:
+            try:
+                data = self.incoming_msrp_queue.wait()
+                self.vnc_socket.sendall(data)
+            except Interrupt:
+                # Wait until the viewer reconnects and self.vnc_socket is replaced
+                self._reconnect_event.wait()
+                self._reconnect_event.reset()
+            except Exception, e:
+                self.msrp_reader_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
+                NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='sending', reason=str(e)))
+                break
+
+    def _msrp_writer(self):
+        while True:
+            try:
+                data = self.vnc_socket.recv(2048)
+                if not data:
+                    # Pause MSRP reader
+                    self.msrp_reader_thread.kill(Interrupt)
+                    self.vnc_socket.close()
+                    self.vnc_socket = None
+                    try:
+                        sock, addr = self.vnc_server_socket.accept()
+                    except socket.timeout:
+                        raise VNCConnectionError("connection with the VNC viewer was closed")
+                    self.vnc_socket = sock
+                    # Signal the VNC server needs to be reconnected
+                    self.outgoing_msrp_queue.send('BLINK_VNC_RECONNECT')
+                    # Resume the MSRP reader
+                    self._reconnect_event.send()
+                    continue
+                self.outgoing_msrp_queue.send(data)
+            except Exception, e:
+                self.msrp_writer_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
+                NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='reading', reason=str(e)))
+                break
+
+    def _start_vnc_connection(self):
+        try:
+            sock, addr = self.vnc_server_socket.accept()
+            self.vnc_socket = sock
+        except Exception, e:
+            self.vnc_starter_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
+            NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='connecting', reason=str(e)))
+        else:
+            self.msrp_reader_thread = spawn(self._msrp_reader)
+            self.msrp_writer_thread = spawn(self._msrp_writer)
+        finally:
+            self.vnc_starter_thread = None
+
+    def _NH_MediaStreamDidStart(self, notification):
+        self.vnc_starter_thread = spawn(self._start_vnc_connection)
+
+    def _NH_MediaStreamWillEnd(self, notification):
+        if self.vnc_starter_thread is not None:
+            self.vnc_starter_thread.kill()
+            self.vnc_starter_thread = None
+        super(ExternalVNCViewerHandler, self)._NH_MediaStreamWillEnd(notification)
+        self.vnc_server_socket.close()
+        if self.vnc_socket is not None:
+            self.vnc_socket.close()
+
+
+class ExternalVNCServerHandler(ScreenSharingServerHandler):
+    address = ('localhost', 5900)
+    connect_timeout = 5
+
+    def __init__(self):
+        super(ExternalVNCServerHandler, self).__init__()
+        self.vnc_starter_thread = None
+        self.vnc_socket = None
+        self._reconnect_event = event()
+
+    def _msrp_reader(self):
+        while True:
+            try:
+                data = self.incoming_msrp_queue.wait()
+                if data == 'BLINK_VNC_RECONNECT':
+                    # Interrupt MSRP writer
+                    self.msrp_writer_thread.kill(Interrupt)
+                    self.vnc_socket.close()
+                    self.vnc_socket = None
+                    self.vnc_socket = GreenSocket(tcp_socket())
+                    self.vnc_socket.settimeout(self.connect_timeout)
+                    self.vnc_socket.connect(self.address)
+                    self.vnc_socket.settimeout(None)
+                    # Resume MSRP writer
+                    self._reconnect_event.send()
+                    continue
+                self.vnc_socket.sendall(data)
+            except Exception, e:
+                self.msrp_reader_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
+                NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='sending', reason=str(e)))
+                break
+
+    def _msrp_writer(self):
+        while True:
+            try:
+                data = self.vnc_socket.recv(2048)
+                if not data:
+                    raise VNCConnectionError("connection to the VNC server was closed")
+                self.outgoing_msrp_queue.send(data)
+            except Interrupt:
+                # Wait until we reconnect to the VNC server and self.vnc_socket is replaced
+                self._reconnect_event.wait()
+                self._reconnect_event.reset()
+            except Exception, e:
+                self.msrp_writer_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
+                NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='reading', reason=str(e)))
+                break
+
+    def _start_vnc_connection(self):
+        try:
+            self.vnc_socket = GreenSocket(tcp_socket())
+            self.vnc_socket.settimeout(self.connect_timeout)
+            self.vnc_socket.connect(self.address)
+            self.vnc_socket.settimeout(None)
+        except Exception, e:
+            self.vnc_starter_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
+            NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='connecting', reason=str(e)))
+        else:
+            self.msrp_reader_thread = spawn(self._msrp_reader)
+            self.msrp_writer_thread = spawn(self._msrp_writer)
+        finally:
+            self.vnc_starter_thread = None
+
+    def _NH_MediaStreamDidStart(self, notification):
+        self.vnc_starter_thread = spawn(self._start_vnc_connection)
+
+    def _NH_MediaStreamWillEnd(self, notification):
+        if self.vnc_starter_thread is not None:
+            self.vnc_starter_thread.kill()
+            self.vnc_starter_thread = None
+        super(ExternalVNCServerHandler, self)._NH_MediaStreamWillEnd(notification)
+        if self.vnc_socket is not None:
+            self.vnc_socket.close()
 
 
 ScreenSharingStream.ServerHandler = ExternalVNCServerHandler
