@@ -366,9 +366,9 @@ class BlinkAppDelegate(NSObject):
         self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
 
     def killSelfAfterTimeout_(self, arg):
-        time.sleep(5)
+        time.sleep(15)
         BlinkLogger().log_info(u"Forcing termination of apparently hanged process")
-        os._exit(1)
+        os._exit(0)
 
     def applicationShouldTerminate_(self, sender):
         if self.terminating:
@@ -455,6 +455,7 @@ class BlinkAppDelegate(NSObject):
             BlinkLogger().log_info(u"IP address changed to %s" % host.default_ip)
 
     def _NH_SIPApplicationWillEnd(self, notification):
+        BlinkLogger().log_info(u"Core engine will be stopped")
         call_in_thread('file-io', self.purge_temporary_files)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
@@ -469,6 +470,7 @@ class BlinkAppDelegate(NSObject):
         call_in_thread('file-io', self.purge_temporary_files)
 
     def _NH_SIPApplicationDidEnd(self, notification):
+        BlinkLogger().log_info(u"Core engine stopped")
         call_in_gui_thread(NSApp.terminate_, self)
 
     def applicationWillTerminate_(self, notification):
