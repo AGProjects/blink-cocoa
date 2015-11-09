@@ -367,7 +367,7 @@ class BlinkAppDelegate(NSObject):
 
     def killSelfAfterTimeout_(self, arg):
         time.sleep(15)
-        BlinkLogger().log_info(u"Forcing termination of apparently hanged process")
+        BlinkLogger().log_info(u"Application forcefully terminated because core engine did not be stop in a timely manner")
         os._exit(0)
 
     def applicationShouldTerminate_(self, sender):
@@ -375,7 +375,7 @@ class BlinkAppDelegate(NSObject):
             return True
 
         self.terminating = True
-        BlinkLogger().log_info('Application will terminate')
+        BlinkLogger().log_info('Application will be terminated')
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
         NotificationCenter().post_notification("BlinkShouldTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
@@ -475,6 +475,7 @@ class BlinkAppDelegate(NSObject):
 
     def applicationWillTerminate_(self, notification):
         NotificationCenter().post_notification("BlinkWillTerminate", None)
+        BlinkLogger().log_info(u"Application terminated")
 
     def computerDidWake_(self, notification):
         self.wake_up_timestamp = int(time.time())
