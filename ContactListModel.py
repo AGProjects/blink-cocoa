@@ -1255,7 +1255,7 @@ class BlinkPresenceContact(BlinkContact):
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name
                             nc_body = NSLocalizedString("%s is now ", "Person name") % self.name + status_localized[status]
-                            NSApp.delegate().gui_notify(nc_title, nc_body)
+                            #NSApp.delegate().gui_notify(nc_title, nc_body)
                             settings = SIPSimpleSettings()
                             if settings.sounds.play_presence_sounds:
                                 if status == "available":
