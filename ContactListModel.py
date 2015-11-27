@@ -1227,22 +1227,22 @@ class BlinkPresenceContact(BlinkContact):
                             NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
 
                     if status in ('available', 'offline') and self.name:
-                        notify = False
+                        notify = True
+                        now = int(time.time())
                         if NSApp.delegate().wake_up_timestamp is not None:
-                            now = int(time.time())
-                            if now - NSApp.delegate().wake_up_timestamp > 60:
-                                notify = True
-                        elif NSApp.delegate().ip_change_timestamp is not None:
-                            now = int(time.time())
-                            if now - NSApp.delegate().ip_change_timestamp > 60:
-                                notify = True
-                        elif NSApp.delegate().transport_lost_timestamp is not None:
-                            now = int(time.time())
-                            if now - NSApp.delegate().transport_lost_timestamp > 60:
-                                notify = True
-                        else:
-                            notify = True
-
+                            if now - NSApp.delegate().wake_up_timestamp < 60:
+                                notify = False
+                        if NSApp.delegate().ip_change_timestamp is not None:
+                            if now - NSApp.delegate().ip_change_timestamp < 60:
+                                notify = False
+                        if NSApp.delegate().transport_lost_timestamp is not None:
+                            if now - NSApp.delegate().transport_lost_timestamp < 60:
+                                notify = False
+                        
+                        if not notify:
+                            log_line = 'Presence notify for %s skipped because network is not yet stable' % self.name
+                            BlinkLogger().log_debug(log_line)
+        
                         # discard myself
                         for _account in AccountManager().iter_accounts():
                             for _uri in all_uris:
@@ -1255,7 +1255,8 @@ class BlinkPresenceContact(BlinkContact):
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name
                             nc_body = NSLocalizedString("%s is now ", "Person name") % self.name + status_localized[status]
-                            #NSApp.delegate().gui_notify(nc_title, nc_body)
+                            if status == "available":
+                                NSApp.delegate().gui_notify(nc_title, nc_body)
                             settings = SIPSimpleSettings()
                             if settings.sounds.play_presence_sounds:
                                 if status == "available":
