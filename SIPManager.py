@@ -597,10 +597,10 @@ class SIPManager(object):
             BlinkLogger().log_info(message)
         elif contact_changed:
             message = u'Account %s changed contact to %s' % (account.id, data.contact_header.uri)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
         elif registrar_changed:
             message = u'Account %s changed registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
-            BlinkLogger().log_info(message)
+            BlinkLogger().log_debug(message)
 
         self.registrar_addresses[account.id] = _address
         self.contact_addresses[account.id] = data.contact_header.uri
