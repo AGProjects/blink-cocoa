@@ -2050,6 +2050,7 @@ SettingDescription = {
                       'ldap.enabled': NSLocalizedString("Enabled", "Label"),
                       'ldap.username': NSLocalizedString("Username", "Label"),
                       'ldap.password': NSLocalizedString("Password", "Label"),
+                      'ldap.extra_fields': NSLocalizedString("Extra Fields", "Label"),
                       'logs.trace_msrp_to_file': NSLocalizedString("Log MSRP Media", "Label"),
                       'logs.trace_sip_to_file': NSLocalizedString("Log SIP Signaling", "Label"),
                       'logs.trace_xcap_to_file': NSLocalizedString("Log XCAP Storage", "Label"),
@@ -2139,6 +2140,7 @@ Placeholders = {
                  'sip.alternative_proxy' : 'sip2.example.com:5060;transport=tcp',
                  'voicemail_uri': 'user@example.com',
                  'xcap.xcap_root': 'https://xcap.example.com/xcap-root/',
+                 'ldap.extra_fields': 'extension1, phone2'
                   }
 
 SectionNames = {
@@ -2188,7 +2190,7 @@ BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'presence
 AccountSettingsOrder = {
                        'audio': ['do_not_disturb', 'call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'reject_unauthorized_contacts', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
-                       'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn'],
+                       'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn', 'extra_fields'],
                        'pstn': ['dial_plan', 'idd_prefix', 'strip_digits', 'prefix'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
                        'rtp': ['encryption_type', 'inband_dtmf', 'hangup_on_timeout', 'audio_codec_list', 'video_codec_list'],

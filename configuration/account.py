@@ -145,6 +145,7 @@ class LDAPSettingsExtension(SettingsGroup):
     transport = Setting(type=MSRPTransport, default='tls')
     port = Setting(type=NonNegativeInteger, default=636)
     dn = Setting(type=LDAPdn, default='', nillable=True)
+    extra_fields = Setting(type=str, default='', nillable=True)
 
 
 class AccountExtension(SettingsObjectExtension):

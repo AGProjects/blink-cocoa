@@ -5848,6 +5848,7 @@ class LdapDirectory(object):
         self.username = ldap_settings.username or ''
         self.password = ldap_settings.password or ''
         self.dn = ldap_settings.dn or ''
+        self.extra_fields = ldap_settings.extra_fields or ''
 
         self.l = ldap.initialize(self.server)
         tls_folder = ApplicationData.get('tls')
@@ -5896,6 +5897,8 @@ class LdapSearch(object):
 
         self.ldap_directory.connect()
         if self.ldap_directory.connected:
+            extra_fields = self.ldap_directory.extra_fields.split(",")
+
             filter = "cn=" + "*" + keyword.encode("utf-8") + "*"
             try:
                 self.ldap_query_id = self.ldap_directory.l.search(self.ldap_directory.dn, ldap.SCOPE_SUBTREE, filter)
@@ -5934,6 +5937,12 @@ class LdapSearch(object):
                                 for _entry in entry['SIPIdentitySIPURI']:
                                     address = ('sip', sip_prefix_pattern.sub("", str(_entry)))
                                     uris.append(address)
+                            for f in extra_fields:
+                                f = trim(f)
+                                if entry.has_key(f):
+                                    for _entry in entry[f]:
+                                        address = ('other', sip_prefix_pattern.sub("", str(_entry)))
+                                        uris.append(address)
                             if uris:
                                 data = NotificationData(name=entry['cn'][0], uris=uris)
                                 NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
