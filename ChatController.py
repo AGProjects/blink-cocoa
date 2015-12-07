@@ -85,8 +85,7 @@ from zope.interface import implements
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SDPAttribute
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.streams import ChatStream, ChatStreamError
-from sipsimple.streams.applications.chat import CPIMIdentity
+from sipsimple.streams.msrp.chat import ChatStream, ChatStreamError, ChatIdentity
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.application import SIPApplication
 from sipsimple.util import ISOTimestamp
@@ -644,7 +643,7 @@ class ChatController(MediaStream):
                 self.chatViewController.inputText.setString_("")
                 recipient = '%s <sip:%s>' % (self.sessionController.display_name, self.sessionController.remoteAOR)
                 try:
-                    identity = CPIMIdentity.parse(recipient)
+                    identity = ChatIdentity.parse(recipient)
                 except ValueError:
                     identity = None
 
@@ -863,7 +862,7 @@ class ChatController(MediaStream):
             if message.cpim_to:
                 address, display_name, full_uri, fancy_uri = sipuri_components_from_string(message.cpim_to)
                 try:
-                    recipient = CPIMIdentity.parse('%s <sip:%s>' % (display_name, address))
+                    recipient = ChatIdentity.parse('%s <sip:%s>' % (display_name, address))
                 except ValueError:
                     continue
             else:

@@ -25,7 +25,7 @@ from eventlib.greenio import GreenSocket
 from eventlib.proc import spawn
 from eventlib.util import tcp_socket, set_reuse_addr
 from zope.interface import implements
-from sipsimple.streams.msrp import ScreenSharingStream, ScreenSharingServerHandler, ScreenSharingViewerHandler, VNCConnectionError
+from sipsimple.streams.msrp.screensharing import ScreenSharingStream, ScreenSharingServerHandler, ScreenSharingViewerHandler, VNCConnectionError
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 from BlinkLogger import BlinkLogger

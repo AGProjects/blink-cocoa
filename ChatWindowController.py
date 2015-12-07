@@ -71,7 +71,7 @@ from operator import attrgetter
 from sipsimple.account import BonjourAccount
 from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
-from sipsimple.streams.applications.chat import CPIMIdentity
+from sipsimple.streams.msrp.chat import ChatIdentity
 from sipsimple.configuration.settings import SIPSimpleSettings
 from urllib import unquote
 from zope.interface import implements
@@ -949,7 +949,7 @@ class ChatWindowController(NSWindowController):
                 return
 
             try:
-                recipient = CPIMIdentity(SIPURI.parse('sip:%s' % str(contact.uri)), display_name=contact.name)
+                recipient = ChatIdentity(SIPURI.parse('sip:%s' % str(contact.uri)), display_name=contact.name)
             except SIPCoreError:
                 return
 

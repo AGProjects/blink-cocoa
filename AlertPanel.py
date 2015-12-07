@@ -42,16 +42,7 @@ from application.python import Null
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.session import SessionManager, IllegalStateError
-from sipsimple.streams import AudioStream, ChatStream, FileTransferStream, ScreenSharingStream
-try:
-    from sipsimple.streams import VideoStream
-    video_support = True
-except ImportError:
-    VideoStream = None
-    video_support = False
-
 from zope.interface import implements
-
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
@@ -522,15 +513,15 @@ class AlertPanel(NSObject, object):
             elif "Audio" in type_names:
                 alt_action = NSLocalizedString("Audio Only", "Button title")
                 alt_object = ONLY_AUDIO
-        elif type(streams[0]) is VideoStream:
+        elif streams[0].type == 'video':
             subject = NSLocalizedString("Addition of Video requested by", "Label")
-        elif type(streams[0]) is AudioStream:
+        elif streams[0].type == 'audio':
             subject = NSLocalizedString("Addition of Audio requested by", "Label")
-        elif type(streams[0]) is ChatStream:
+        elif streams[0].type == 'chat':
             subject = NSLocalizedString("Addition of Chat requested by", "Label")
-        elif type(streams[0]) is FileTransferStream:
+        elif streams[0].type == 'file-transfer':
             subject = NSLocalizedString("Transfer of File", "Label") + " '%s' (%s) " % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
-        elif type(streams[0]) is ScreenSharingStream:
+        elif streams[0].type == 'screen-sharing':
             if streams[0].handler.type == "active":
                 subject = NSLocalizedString("Remote Screen offered by", "Label")
             else:
@@ -568,15 +559,15 @@ class AlertPanel(NSObject, object):
                     subject = ", ".join(type_names)
                 elif 'Video' in type_names:
                     subject = NSLocalizedString("Video call requested by", "Label")
-                elif type(streams[0]) is VideoStream:
+                elif streams[0].type == 'video':
                     subject = NSLocalizedString("Video call requested by", "Label")
-            elif type(streams[0]) is AudioStream:
+            elif streams[0].type == 'audio':
                 subject = NSLocalizedString("Audio call requested by", "Label")
-            elif type(streams[0]) is ChatStream:
+            elif streams[0].type == 'chat':
                 subject = NSLocalizedString("Chat Session requested by", "Label")
-            elif type(streams[0]) is ScreenSharingStream:
+            elif streams[0].type == 'screen-sharing':
                 subject = NSLocalizedString("Remote Screen offered by", "Label") if streams[0].handler.type == "active" else NSLocalizedString("My Screen requested by", "Label")
-            elif type(streams[0]) is FileTransferStream:
+            elif streams[0].type == 'file-transfer':
                 subject = NSLocalizedString("Transfer of File", "Label") + u" '%s' (%s) " % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
             else:
                 subject = NSLocalizedString("Incoming Session request from", "Label")

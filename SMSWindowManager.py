@@ -21,7 +21,7 @@ from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads.iscomposing import IsComposingMessage
-from sipsimple.streams.applications.chat import CPIMMessage, CPIMParserError
+from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError
 from sipsimple.util import ISOTimestamp
 
 from BlinkLogger import BlinkLogger
@@ -408,13 +408,13 @@ class SMSWindowManagerClass(NSObject):
 
         if data.content_type == 'message/cpim':
             try:
-                cpim_message = CPIMMessage.parse(data.body)
+                cpim_message = CPIMPayload.decode(data.body)
             except CPIMParserError:
                 BlinkLogger().log_warning(u"Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
                 return
             else:
                 is_cpim = True
-                body = cpim_message.body
+                body = cpim_message.content
                 content_type = cpim_message.content_type
                 sender_identity = cpim_message.sender or data.from_header
                 if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:

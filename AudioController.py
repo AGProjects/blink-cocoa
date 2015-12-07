@@ -51,7 +51,7 @@ from sipsimple.account import BonjourAccount, AccountManager
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.streams import AudioStream
+from sipsimple.streams import MediaStreamRegistry
 from sipsimple.threading import call_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
@@ -155,12 +155,12 @@ class AudioController(MediaStream):
 
     @classmethod
     def createStream(self):
-        return AudioStream()
+        return MediaStreamRegistry.AudioStream()
 
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
-        self.stream = AudioStream()
+        self.stream = MediaStreamRegistry.AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
         self.previous_rx_bytes = 0
         self.previous_tx_bytes = 0

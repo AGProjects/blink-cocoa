@@ -48,7 +48,7 @@ from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, S
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
-from sipsimple.streams.applications.chat import CPIMMessage, CPIMIdentity
+from sipsimple.streams.msrp.chat import CPIMPayload, ChatIdentity
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
@@ -611,8 +611,8 @@ class SMSViewController(NSObject):
         if isinstance(self.account, Account):
             if not self.account.sms.disable_replication:
                 contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
-                msg = CPIMMessage(sent_message.body.decode('utf-8'), sent_message.content_type, sender=CPIMIdentity(self.account.uri, self.account.display_name), recipients=[CPIMIdentity(self.target_uri, contact.name if contact else None)])
-                self.sendReplicationMessage(response_code, str(msg), content_type='message/cpim')
+                msg = CPIMPayload(sent_message.body.decode('utf-8'), sent_message.content_type, sender=ChatIdentity(self.account.uri, self.account.display_name), recipients=[ChatIdentity(self.target_uri, contact.name if contact else None)])
+                self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
 
     @run_in_green_thread
     def sendReplicationMessage(self, response_code, text, content_type="message/cpim", timestamp=None):
@@ -693,7 +693,7 @@ class SMSViewController(NSObject):
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                       RouteHeader(routes[0].uri), content_type, text, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
-            recipient=CPIMIdentity(self.target_uri, self.display_name)
+            recipient = ChatIdentity(self.target_uri, self.display_name)
             hash = hashlib.sha1()
             hash.update(text.encode("utf-8")+str(timestamp))
             msgid = hash.hexdigest()
@@ -782,7 +782,7 @@ class SMSViewController(NSObject):
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             self.chatViewController.showMessage(call_id, msgid, 'outgoing', None, icon, text, timestamp, state="sent", media_type='sms')
 
-            recipient=CPIMIdentity(self.target_uri, self.display_name)
+            recipient = ChatIdentity(self.target_uri, self.display_name)
             self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
 
         self.queue.append((msgid, text, content_type))
@@ -807,7 +807,7 @@ class SMSViewController(NSObject):
                 self.sendMessage(text)
             self.chatViewController.resetTyping()
 
-            recipient=CPIMIdentity(self.target_uri, self.display_name)
+            recipient = ChatIdentity(self.target_uri, self.display_name)
             self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             return True

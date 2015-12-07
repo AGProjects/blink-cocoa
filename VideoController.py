@@ -9,7 +9,7 @@ from application.python import Null
 from application.system import host
 from collections import deque
 from zope.interface import implements
-from sipsimple.streams import VideoStream
+from sipsimple.streams import MediaStreamRegistry
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 
@@ -49,12 +49,12 @@ class VideoController(MediaStream):
 
     @classmethod
     def createStream(self):
-        return VideoStream()
+        return MediaStreamRegistry.VideoStream()
 
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
-        self.stream = VideoStream()
+        self.stream = MediaStreamRegistry.VideoStream()
         self.started = False
         self.previous_rx_bytes = 0
         self.previous_tx_bytes = 0

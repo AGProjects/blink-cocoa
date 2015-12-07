@@ -14,7 +14,7 @@ import os
 import shutil
 
 from application.system import makedirs
-from sipsimple.streams import ChatStreamError
+from sipsimple.streams.msrp.chat import ChatStreamError
 from sipsimple.util import ISOTimestamp
 from util import format_identity_to_string
 

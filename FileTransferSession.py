@@ -17,7 +17,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import ToHeader, SIPURI
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session
-from sipsimple.streams import FileTransferStream, FileSelector
+from sipsimple.streams.msrp.filetransfer import FileTransferStream, FileSelector
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implements
