@@ -1394,7 +1394,7 @@ class ChatController(MediaStream):
     def _NH_ChatStreamGotMessage(self, stream, data):
         message = data.message
         if message.content_type == 'application/blink-logging-status':
-            if message.body.lower() == "disabled":
+            if message.content.lower() == "disabled":
                 self.remote_party_history = False
                 if not self.disable_chat_history:
                     log = NSLocalizedString("Remote chat history disabled", "Label")
@@ -1415,7 +1415,7 @@ class ChatController(MediaStream):
         elif message.content_type == 'application/blink-icon':
             if not self.session.remote_focus:
                 try:
-                    self.remoteIcon = decode_icon(message.body)
+                    self.remoteIcon = decode_icon(message.content)
                 except Exception:
                     pass
                 else:
@@ -1448,7 +1448,7 @@ class ChatController(MediaStream):
 
                 self.sessionController.log_info('Image %s received inline' % file_path)
                 fd = open(file_path, "w+")
-                fd.write(message.body)
+                fd.write(message.content)
                 fd.close()
 
                 image = NSImage.alloc().initWithContentsOfFile_(file_path)
@@ -1469,14 +1469,14 @@ class ChatController(MediaStream):
             return
 
         hash = hashlib.sha1()
-        hash.update(message.body.encode("utf-8")+str(message.timestamp))
+        hash.update(message.content.encode("utf-8")+str(message.timestamp))
         msgid = hash.hexdigest()
 
         if msgid not in self.history_msgid_list:
             sender = message.sender
             recipient = message.recipients[0]
             private = data.private
-            text = message.body
+            text = message.content
             sender_aor = format_identity_to_string(sender)
             status = 'delivered'
             encryption = ''
