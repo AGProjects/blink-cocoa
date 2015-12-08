@@ -611,7 +611,7 @@ class SMSViewController(NSObject):
         if isinstance(self.account, Account):
             if not self.account.sms.disable_replication:
                 contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
-                msg = CPIMPayload(sent_message.body.decode('utf-8'), sent_message.content_type, sender=ChatIdentity(self.account.uri, self.account.display_name), recipients=[ChatIdentity(self.target_uri, contact.name if contact else None)])
+                msg = CPIMPayload(sent_message.content.decode('utf-8'), sent_message.content_type, sender=ChatIdentity(self.account.uri, self.account.display_name), recipients=[ChatIdentity(self.target_uri, contact.name if contact else None)])
                 self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
 
     @run_in_green_thread

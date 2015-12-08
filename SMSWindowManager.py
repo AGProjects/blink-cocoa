@@ -435,7 +435,7 @@ class SMSWindowManagerClass(NSObject):
             #BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
-            body = cpim_message.body if is_cpim else data.body
+            body = cpim_message.content if is_cpim else data.body
             msg = IsComposingMessage.parse(body)
             state = msg.state.value
             refresh = msg.refresh.value if msg.refresh is not None else None
