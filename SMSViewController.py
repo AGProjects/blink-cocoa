@@ -473,7 +473,7 @@ class SMSViewController(NSObject):
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
         # save to history
-        if not is_replication_message:
+        if not is_replication_message or (is_replication_message and self.local_uri == self.account.id):
             message = MessageInfo(msgid, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type="html" if is_html else "text", status="delivered", encryption=encryption)
             self.add_to_history(message)
 
