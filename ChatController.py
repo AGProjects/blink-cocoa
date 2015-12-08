@@ -639,7 +639,7 @@ class ChatController(MediaStream):
                 self.chatViewController.textWasPasted = False
                 self.resetStyle()
 
-            if text:
+            if content:
                 self.chatViewController.inputText.setString_("")
                 recipient = '%s <sip:%s>' % (self.sessionController.display_name, self.sessionController.remoteAOR)
                 try:

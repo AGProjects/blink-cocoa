@@ -408,7 +408,7 @@ class SMSWindowManagerClass(NSObject):
 
         if data.content_type == 'message/cpim':
             try:
-                cpim_message = CPIMPayload.decode(data.content)
+                cpim_message = CPIMPayload.decode(data.body)
             except CPIMParserError:
                 BlinkLogger().log_warning(u"Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
                 return
