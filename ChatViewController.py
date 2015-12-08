@@ -43,23 +43,23 @@ _url_pattern_exact = re.compile("^((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)$
 
 
 class ChatMessageObject(object):
-    def __init__(self, call_id, msgid, text, is_html, timestamp=None, media_type='chat'):
+    def __init__(self, call_id, msgid, content, is_html, timestamp=None, media_type='chat'):
         self.call_id = call_id
         self.msgid = msgid
-        self.text = text
+        self.content = content
         self.is_html = is_html
         self.timestamp = timestamp
         self.media_type = media_type
 
 
-def processHTMLText(text='', usesmileys=True, is_html=False):
+def processHTMLText(content='', usesmileys=True, is_html=False):
     if is_html:
-        text = urlify(text)
-        text = text.replace('\n', '')
-        text = text.replace('\\', '&#92;')
+        content = urlify(content)
+        content = content.replace('\n', '')
+        content = content.replace('\\', '&#92;')
 
     result = []
-    tokens = _url_pattern.split(text)
+    tokens = _url_pattern.split(content)
     for token in tokens:
         if not is_html and _url_pattern_exact.match(token):
             type, d, rest = token.partition(":")
@@ -73,9 +73,9 @@ def processHTMLText(text='', usesmileys=True, is_html=False):
             if usesmileys:
                 token = SmileyManager().subst_smileys_html(token)
         result.append(token)
-        text = "".join(result)
+        content = "".join(result)
 
-    return text
+    return content
 
 
 class ChatInputTextView(NSTextView):
@@ -97,10 +97,10 @@ class ChatInputTextView(NSTextView):
     def setMaxLength_(self, l):
         self.maxLength = l
 
-    def insertText_(self, text):
+    def insertText_(self, content):
         if self.maxLength:
             oldText = self.textStorage().copy()
-        NSTextView.insertText_(self, text)
+        NSTextView.insertText_(self, content)
         if self.maxLength and self.textStorage().length() > self.maxLength:
             self.textStorage().setAttributedString_(oldText)
             self.didChangeText()
@@ -108,11 +108,11 @@ class ChatInputTextView(NSTextView):
     def readSelectionFromPasteboard_type_(self, pboard, type):
         self.owner.textWasPasted = True
         if self.maxLength:
-            text = pboard.stringForType_(type)
-            if text:
-                if self.textStorage().length() - self.rangeForUserTextChange().length + len(text) > self.maxLength:
-                    text = text.substringWithRange_(NSMakeRange(0, self.maxLength - (self.textStorage().length() - self.rangeForUserTextChange().length)))
-                self.textStorage().replaceCharactersInRange_withString_(self.rangeForUserTextChange(), text)
+            content = pboard.stringForType_(type)
+            if content:
+                if self.textStorage().length() - self.rangeForUserTextChange().length + len(content) > self.maxLength:
+                    content = content.substringWithRange_(NSMakeRange(0, self.maxLength - (self.textStorage().length() - self.rangeForUserTextChange().length)))
+                self.textStorage().replaceCharactersInRange_withString_(self.rangeForUserTextChange(), content)
                 self.didChangeText()
                 return True
             return False
@@ -268,7 +268,7 @@ class ChatViewController(NSObject):
         call_ids = set()
         if self.search_text is not None:
             for message in self.rendered_messages:
-                if self.search_text.lower() in message.text.lower():
+                if self.search_text.lower() in message.content.lower():
                     if message.call_id:
                         call_ids.add(message.call_id)
                         if message.media_type == 'sms':
@@ -361,10 +361,10 @@ class ChatViewController(NSObject):
         self.outputView.mainFrame().loadRequest_(request)
         assert self.outputView.preferences().isJavaScriptEnabled()
 
-    def appendAttributedString_(self, text):
+    def appendAttributedString_(self, content):
         storage = self.inputText.textStorage()
         storage.beginEditing()
-        storage.appendAttributedString_(text)
+        storage.appendAttributedString_(content)
         storage.endEditing()
 
     def textDidChange_(self, notification):
@@ -423,9 +423,9 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue = []
 
-    def showSystemMessage(self, call_id, text, timestamp=None, is_error=False):
+    def showSystemMessage(self, call_id, content, timestamp=None, is_error=False):
         msgid = str(uuid.uuid1())
-        rendered_message = ChatMessageObject(call_id, msgid, text, False, timestamp)
+        rendered_message = ChatMessageObject(call_id, msgid, content, False, timestamp)
         self.rendered_messages.append(rendered_message)
 
         if timestamp is None:
@@ -437,14 +437,14 @@ class ChatViewController(NSObject):
                 timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         is_error = 1 if is_error else "null"
-        script = """renderSystemMessage('%s', "%s", "%s", %s)""" % (msgid, processHTMLText(text), timestamp, is_error)
+        script = """renderSystemMessage('%s', "%s", "%s", %s)""" % (msgid, processHTMLText(content), timestamp, is_error)
 
         if self.finishedLoading:
             self.executeJavaScript(script)
         else:
             self.messageQueue.append(script)
 
-    def showMessage(self, call_id, msgid, direction, sender, icon_path, text, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
+    def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
         lock_icon_path = Resources.get('unlocked-darkgray.png')
         if encryption is not None:
             if encryption == '':
@@ -463,7 +463,7 @@ class ChatViewController(NSObject):
             self.delegate.showChatViewWhileVideoActive()
 
         # keep track of rendered messages to toggle the smileys or search their content later
-        rendered_message = ChatMessageObject(call_id, msgid, text, is_html, timestamp, media_type)
+        rendered_message = ChatMessageObject(call_id, msgid, content, is_html, timestamp, media_type)
         self.rendered_messages.append(rendered_message)
 
         if timestamp.date() != datetime.date.today():
@@ -471,7 +471,7 @@ class ChatViewController(NSObject):
         else:
             displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
-        text = processHTMLText(text, self.expandSmileys, is_html)
+        content = processHTMLText(content, self.expandSmileys, is_html)
         private = 1 if is_private else "null"
 
         if is_private and recipient:
@@ -483,9 +483,9 @@ class ChatViewController(NSObject):
                 label = cgi.escape(self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
 
         try:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, text, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
         except UnicodeDecodeError:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, text.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
         except:
             self.delegate.showSystemMessage("Chat message id %s rendering error: %s" % (msgid, e), ISOTimestamp.now(), True)
             return
@@ -502,11 +502,11 @@ class ChatViewController(NSObject):
 
     def toggleSmileys(self, expandSmileys):
         for entry in self.rendered_messages:
-            self.updateMessage(entry.msgid, entry.text, entry.is_html, expandSmileys)
+            self.updateMessage(entry.msgid, entry.content, entry.is_html, expandSmileys)
 
-    def updateMessage(self, msgid, text, is_html, expandSmileys):
-        text = processHTMLText(text, expandSmileys, is_html)
-        script = """updateMessageBodyContent('%s', "%s")""" % (msgid, text)
+    def updateMessage(self, msgid, content, is_html, expandSmileys):
+        content = processHTMLText(content, expandSmileys, is_html)
+        script = """updateMessageBodyContent('%s', "%s")""" % (msgid, content)
         self.executeJavaScript(script)
 
     def toggleCollaborationEditor(self):

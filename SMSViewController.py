@@ -65,13 +65,13 @@ MAX_MESSAGE_LENGTH = 1300
 
 
 class MessageInfo(object):
-    def __init__(self, msgid, call_id='', direction='outgoing', sender=None, recipient=None, timestamp=None, text=None, content_type=None, status=None, encryption='', otr=False):
+    def __init__(self, msgid, call_id='', direction='outgoing', sender=None, recipient=None, timestamp=None, content=None, content_type=None, status=None, encryption='', otr=False):
         self.msgid = msgid
         self.direction = direction
         self.sender = sender
         self.recipient = recipient
         self.timestamp = timestamp
-        self.text = text
+        self.content = content
         self.content_type = content_type
         self.status = status
         self.call_id = call_id
@@ -389,19 +389,19 @@ class SMSViewController(NSObject):
             self.chatViewController.loadingTextIndicator.setStringValue_("")
             self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
-    def gotMessage(self, sender, call_id, text, is_html=False, is_replication_message=False, timestamp=None, window=None):
+    def gotMessage(self, sender, call_id, content, is_html=False, is_replication_message=False, timestamp=None, window=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or ISOTimestamp.now()
 
         hash = hashlib.sha1()
-        hash.update(text.encode('utf-8')+str(timestamp)+str(sender))
+        hash.update(content.encode('utf-8')+str(timestamp)+str(sender))
         msgid = hash.hexdigest()
         encryption = ''
 
         try:
             ctx = self.otr_account.getContext(self.session_id)
-            text, tlvs = ctx.receiveMessage(text.encode('utf-8'), appdata={'stream': self})
+            content, tlvs = ctx.receiveMessage(content.encode('utf-8'), appdata={'stream': self})
             self.setEncryptionState(ctx)
             fingerprint = ctx.getCurrentKey()
             if fingerprint:
@@ -413,7 +413,7 @@ class SMSViewController(NSObject):
 
             self.chatOtrSmpWindow.handle_tlv(tlvs)
 
-            if text is None:
+            if content is None:
                 return
 
         except potr.context.NotOTRMessage, e:
@@ -452,14 +452,14 @@ class SMSViewController(NSObject):
             status = 'failed'
             self.log_info('Encrypted message has runtime error: %s' % e)
 
-        if text.startswith('?OTR:'):
+        if content.startswith('?OTR:'):
             return
 
         if not is_replication_message and not window.isKeyWindow():
             if is_html:
-                nc_body = html2txt(text.decode('utf-8'))
+                nc_body = html2txt(content.decode('utf-8'))
             else:
-                nc_body = text.decode('utf-8')
+                nc_body = content.decode('utf-8')
 
             nc_title = NSLocalizedString("SMS Message Received", "Label")
             nc_subtitle = format_identity_to_string(sender, format='full')
@@ -468,13 +468,13 @@ class SMSViewController(NSObject):
         encryption_log = " with encryption %s" % encryption if encryption else ''
         self.log_info(u"Incoming message %s received%s" % (call_id, encryption_log))
 
-        self.chatViewController.showMessage(call_id, msgid, 'incoming', format_identity_to_string(sender), icon, text, timestamp, is_html=is_html, state="delivered", media_type='sms', encryption=encryption)
+        self.chatViewController.showMessage(call_id, msgid, 'incoming', format_identity_to_string(sender), icon, content, timestamp, is_html=is_html, state="delivered", media_type='sms', encryption=encryption)
 
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
         # save to history
         if not is_replication_message:
-            message = MessageInfo(msgid, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, text=text, content_type="html" if is_html else "text", status="delivered", encryption=encryption)
+            message = MessageInfo(msgid, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type="html" if is_html else "text", status="delivered", encryption=encryption)
             self.add_to_history(message)
 
         if self.require_encryption and not self.otr_has_been_initialized:
@@ -605,9 +605,12 @@ class SMSViewController(NSObject):
         cpim_timestamp = str(message.timestamp)
         content_type="html" if "html" in message.content_type else "text"
 
-        self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.text, content_type, "0", message.status, call_id=message.call_id)
+        self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content, content_type, "0", message.status, call_id=message.call_id)
 
     def composeReplicationMessage(self, sent_message, response_code):
+        if sent_message.content_type == "application/im-iscomposing+xml":
+            return
+
         if isinstance(self.account, Account):
             if not self.account.sms.disable_replication:
                 contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
@@ -615,7 +618,7 @@ class SMSViewController(NSObject):
                 self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
 
     @run_in_green_thread
-    def sendReplicationMessage(self, response_code, text, content_type="message/cpim", timestamp=None):
+    def sendReplicationMessage(self, response_code, content, content_type="message/cpim", timestamp=None):
         timestamp = timestamp or ISOTimestamp.now()
         # Lookup routes
         if self.account.sip.outbound_proxy is not None:
@@ -642,21 +645,21 @@ class SMSViewController(NSObject):
             utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
-                                      RouteHeader(route.uri), content_type, text.encode('utf-8') if utf8_encode else text, credentials=self.account.credentials, extra_headers=extra_headers)
+                                      RouteHeader(route.uri), content_type, content.encode('utf-8') if utf8_encode else content, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.routes = routes
-        for msgid, text, content_type in self.queue:
-            self._sendMessage(msgid, text, content_type)
+        for msgid, content, content_type in self.queue:
+            self._sendMessage(msgid, content, content_type)
         self.queue = []
 
     @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
-        for msgid, text, content_type in self.queue:
+        for msgid, content, content_type in self.queue:
             try:
                 message = self.messages.pop(msgid)
             except KeyError:
@@ -672,7 +675,7 @@ class SMSViewController(NSObject):
         self.queue = []
 
     @run_in_green_thread
-    def send_message(self, text, timestamp=None):
+    def send_message(self, content, timestamp=None):
         # this function is only used by the OTR negotiator
         # Lookup routes
         content_type = 'text/plain'
@@ -691,24 +694,24 @@ class SMSViewController(NSObject):
             pass
         else:
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                      RouteHeader(routes[0].uri), content_type, text, credentials=self.account.credentials)
+                                      RouteHeader(routes[0].uri), content_type, content, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
             recipient = ChatIdentity(self.target_uri, self.display_name)
             hash = hashlib.sha1()
-            hash.update(text.encode("utf-8")+str(timestamp))
+            hash.update(content.encode("utf-8")+str(timestamp))
             msgid = hash.hexdigest()
             id=str(message_request)
-            self.messages[id] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, otr=True)
+            self.messages[id] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, otr=True)
             message_request.send(15)
 
-    def _sendMessage(self, msgid, text, content_type="text/plain"):
+    def _sendMessage(self, msgid, content, content_type="text/plain"):
         if content_type != "application/im-iscomposing+xml":
             self.enableIsComposing = True
             message = self.messages.pop(msgid)
 
             try:
                 ctx = self.otr_account.getContext(self.session_id)
-                newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.text.encode('utf-8'), appdata={'stream': self})
+                newmsg = ctx.sendMessage(potr.context.FRAGMENT_SEND_ALL_BUT_LAST, message.content.encode('utf-8'), appdata={'stream': self})
                 newmsg = newmsg.decode('utf-8')
                 self.setEncryptionState(ctx)
                 fingerprint = ctx.getCurrentKey()
@@ -744,7 +747,7 @@ class SMSViewController(NSObject):
         else:
             route = self.last_route or self.routes[0]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                      RouteHeader(route.uri), content_type, text, credentials=self.account.credentials)
+                                      RouteHeader(route.uri), content_type, content, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
             message_request.send(5)
             id=str(message_request)
@@ -771,21 +774,21 @@ class SMSViewController(NSObject):
             self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
-    def sendMessage(self, text, content_type="text/plain"):
+    def sendMessage(self, content, content_type="text/plain"):
         timestamp = ISOTimestamp.now()
         hash = hashlib.sha1()
-        hash.update(text.encode("utf-8")+str(timestamp))
+        hash.update(content.encode("utf-8")+str(timestamp))
         msgid = hash.hexdigest()
         call_id = ''
 
         if content_type != "application/im-iscomposing+xml":
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
-            self.chatViewController.showMessage(call_id, msgid, 'outgoing', None, icon, text, timestamp, state="sent", media_type='sms')
+            self.chatViewController.showMessage(call_id, msgid, 'outgoing', None, icon, content, timestamp, state="sent", media_type='sms')
 
             recipient = ChatIdentity(self.target_uri, self.display_name)
-            self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, text=text, status="queued")
+            self.messages[msgid] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued")
 
-        self.queue.append((msgid, text, content_type))
+        self.queue.append((msgid, content, content_type))
 
         # Async DNS lookup
         if host is None or host.default_ip is None:
@@ -799,12 +802,12 @@ class SMSViewController(NSObject):
 
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
-            text = unicode(textView.string())
+            content = unicode(textView.string())
             textView.setString_("")
             textView.didChangeText()
 
-            if text:
-                self.sendMessage(text)
+            if content:
+                self.sendMessage(content)
             self.chatViewController.resetTyping()
 
             recipient = ChatIdentity(self.target_uri, self.display_name)

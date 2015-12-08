@@ -408,13 +408,13 @@ class SMSWindowManagerClass(NSObject):
 
         if data.content_type == 'message/cpim':
             try:
-                cpim_message = CPIMPayload.decode(data.body)
+                cpim_message = CPIMPayload.decode(data.content)
             except CPIMParserError:
                 BlinkLogger().log_warning(u"Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
                 return
             else:
                 is_cpim = True
-                body = cpim_message.content
+                content = cpim_message.content
                 content_type = cpim_message.content_type
                 sender_identity = cpim_message.sender or data.from_header
                 if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
@@ -423,7 +423,7 @@ class SMSWindowManagerClass(NSObject):
                 else:
                     window_tab_identity = data.from_header
         else:
-            body = data.body.decode('utf-8')
+            content = data.body.decode('utf-8')
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = sender_identity
@@ -435,8 +435,8 @@ class SMSWindowManagerClass(NSObject):
             #BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type == 'application/im-iscomposing+xml':
             # body must not be utf-8 decoded
-            body = cpim_message.content if is_cpim else data.body
-            msg = IsComposingMessage.parse(body)
+            content = cpim_message.content if is_cpim else data.body
+            msg = IsComposingMessage.parse(content)
             state = msg.state.value
             refresh = msg.refresh.value if msg.refresh is not None else None
             content_type = msg.content_type.value if msg.content_type is not None else None
@@ -472,5 +472,5 @@ class SMSWindowManagerClass(NSObject):
                 replication_timestamp = ISOTimestamp.now()
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, call_id, body, is_html, is_replication_message, replication_timestamp, window=window)
+        viewer.gotMessage(sender_identity, call_id, content, is_html, is_replication_message, replication_timestamp, window=window)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
