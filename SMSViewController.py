@@ -557,7 +557,7 @@ class SMSViewController(NSObject):
                         self.log_info('OTR negotiation failed')
                         self.otr_negotiation_in_progress = False
             else:
-                self.composeReplicationMessage(sender, data.code)
+                self.composeReplicationMessage(message, data.code)
                 if message.content_type != "application/im-iscomposing+xml":
                     self.log_info(u"Outgoing message %s delivered" % (call_id))
                     if data.code == 202:
@@ -589,7 +589,7 @@ class SMSViewController(NSObject):
                     self.log_info('OTR negotiation failed')
                     self.otr_negotiation_in_progress = False
             else:
-                self.composeReplicationMessage(sender, data.code)
+                self.composeReplicationMessage(message, data.code)
                 if message.content_type != "application/im-iscomposing+xml":
                     self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                     message.status='failed'
