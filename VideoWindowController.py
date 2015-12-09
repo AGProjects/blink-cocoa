@@ -6,7 +6,6 @@ from AppKit import (NSApp,
                     NSRectFillUsingOperation,
                     NSCompositeSourceOver,
                     NSApplication,
-                    NSDrawerWindow,
                     NSGraphicsContext,
                     NSCalibratedRGBColorSpace,
                     NSAlphaFirstBitmapFormat,
@@ -179,12 +178,12 @@ class VideoWidget(NSView):
 
     @property
     def delegate(self):
-        delegate = self.window().delegate()
-        if type(self.window()) == NSDrawerWindow:
-            if NSApp.delegate().contactsWindowController.drawer.contentView().window() == self.window():
-                delegate = NSApp.delegate().contactsWindowController.drawer.parentWindow().delegate()
-            elif NSApp.delegate().chatWindowController.drawer.contentView().window() == self.window():
-                delegate = NSApp.delegate().chatWindowController.drawer.parentWindow().delegate()
+        if NSApp.delegate().contactsWindowController.drawer.contentView().window() == self.window():
+            delegate = NSApp.delegate().contactsWindowController.drawer.parentWindow().delegate()
+        elif NSApp.delegate().chatWindowController.drawer.contentView().window() == self.window():
+            delegate = NSApp.delegate().chatWindowController.drawer.parentWindow().delegate()
+        else:
+            delegate = self.window().delegate()
         return delegate
 
     def rightMouseDown_(self, event):
@@ -217,7 +216,7 @@ class VideoWidget(NSView):
         self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
-        if self.delegate.full_screen_in_progress:
+        if self.delegate and self.delegate.full_screen_in_progress:
             return
 
         frame = self._frame
