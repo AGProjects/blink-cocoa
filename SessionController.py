@@ -1880,7 +1880,7 @@ class SessionController(NSObject):
 
     def _NH_BlinkLocalVideoReady(self, sender, data):
         self.waitingForLocalVideo = False
-        if not self.ended:
+        if not self.ended and not self.isActive():
             self.lookup_destination(self.target_uri)
 
     def musicTimer_(self, timer):
