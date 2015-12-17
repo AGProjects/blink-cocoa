@@ -50,11 +50,8 @@ from AppKit import (NSAlertDefaultReturn,
 
 from Foundation import (NSArray,
                         NSBitmapImageRep,
-                        NSAttributedString,
                         NSBundle,
                         NSData,
-                        NSDictionary,
-                        NSColor,
                         NSDate,
                         NSEvent,
                         NSImage,
@@ -86,12 +83,11 @@ import uuid
 import sys
 import time
 
-from application.notification import NotificationCenter, IObserver, NotificationData
+from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.python.descriptor import classproperty
 from application.python.types import Singleton
 from application.system import makedirs, unlink
-from eventlib import api
 from eventlib.green import urllib2
 from itertools import chain
 from sipsimple.configuration import DuplicateIDError
