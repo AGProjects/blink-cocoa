@@ -2534,22 +2534,20 @@ class CustomListModel(NSObject):
                         return False
 
                     target_changed = False
+                    target_uris = {uri.uri for uri in targetContact.contact.uris}
+
                     if isinstance(sourceContact, BlinkPendingWatcher):
-                        try:
-                            uri = next(uri for uri in targetContact.contact.uris if uri.uri == sourceContact.uri)
-                        except StopIteration:
-                            targetContact.contact.uris.add(sourceContact.uris[0])
+                        if sourceContact.uri not in target_uris:
+                            uri = sourceContact.uris[0]
+                            targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=uri.type))
                             targetContact.contact.presence.policy = 'allow'
                             targetContact.contact.presence.subscribe = True
                             target_changed = True
                     else:
                         if sourceContact.contact is not None:
-                            for new_uri in sourceContact.contact.uris:
-                                try:
-                                    uri = next(uri for uri in targetContact.contact.uris if uri.uri == new_uri.uri)
-                                except StopIteration:
-                                    targetContact.contact.uris.add(new_uri)
-                                    target_changed = True
+                            for uri in (uri for uri in sourceContact.contact.uris if uri.uri not in target_uris):
+                                targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=uri.type))
+                                target_changed = True
 
                         if targetContact.avatar is DefaultUserAvatar() and sourceContact.avatar is not DefaultUserAvatar():
                             avatar = PresenceContactAvatar(sourceContact.avatar.icon)
