@@ -744,7 +744,7 @@ class BlinkPresenceContact(BlinkContact):
                 continue
 
             try:
-                pidfs_for_account = self.pidfs_map[key][account]
+                self.pidfs_map[key][account]
             except KeyError:
                 pass
             else:
@@ -1890,7 +1890,6 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             blink_contact.destroy()
         seen = {}
         contacts = []
-        settings = SIPSimpleSettings()
         skip_target = set()
         session_ids = {}
         last_missed_call_start_time = {}
@@ -1903,7 +1902,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 if result.direction == 'incoming':
                     if result.status == 'missed':
                         try:
-                            _last_missed_call_start_time = last_missed_call_start_time[k]
+                            last_missed_call_start_time[k]
                         except KeyError:
                             last_missed_call_start_time[target_uri] = result.start_time
 
@@ -1911,7 +1910,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                     # skip missed calls that happened before any successful incoming call
                     if result.duration > 0 or result.am_filename != '':
                         try:
-                            _last_missed_call_start_time = last_missed_call_start_time[target_uri]
+                            last_missed_call_start_time[target_uri]
                         except KeyError:
                             if contact:
                                 for uri in contact.uris:
@@ -1924,7 +1923,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
                 # skip missed calls that happened before any successful outgoing call
                 elif result.direction == 'outgoing' and result.duration > 0:
                     try:
-                        _last_missed_call_start_time = last_missed_call_start_time[target_uri]
+                        last_missed_call_start_time[target_uri]
                     except KeyError:
                         if contact:
                             for uri in contact.uris:
@@ -3464,7 +3463,6 @@ class ContactListModel(CustomListModel):
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         record = notification.data.record
         display_name = record.name
-        host = record.host
         uri = record.uri
         id = record.id
 
