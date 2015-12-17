@@ -738,19 +738,10 @@ class BlinkPresenceContact(BlinkContact):
         return pidfs
 
     def account_has_pidfs_for_uris(self, account, uris):
-        has_pidfs = False
-        for key in self.pidfs_map.keys():
-            if key not in uris:
-                continue
-
-            try:
-                self.pidfs_map[key][account]
-            except KeyError:
-                pass
-            else:
-                has_pidfs = True
-
-        return has_pidfs
+        for key in (key for key in self.pidfs_map.iterkeys() if key in uris):
+            if account in self.pidfs_map[key]:
+                return True
+        return False
 
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
@@ -1901,17 +1892,12 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             if isinstance(self, MissedCallsBlinkGroup):
                 if result.direction == 'incoming':
                     if result.status == 'missed':
-                        try:
-                            last_missed_call_start_time[k]
-                        except KeyError:
+                        if k not in last_missed_call_start_time:
                             last_missed_call_start_time[target_uri] = result.start_time
-
 
                     # skip missed calls that happened before any successful incoming call
                     if result.duration > 0 or result.am_filename != '':
-                        try:
-                            last_missed_call_start_time[target_uri]
-                        except KeyError:
+                        if target_uri not in last_missed_call_start_time:
                             if contact:
                                 for uri in contact.uris:
                                     if uri is None:
@@ -1922,9 +1908,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
 
                 # skip missed calls that happened before any successful outgoing call
                 elif result.direction == 'outgoing' and result.duration > 0:
-                    try:
-                        last_missed_call_start_time[target_uri]
-                    except KeyError:
+                    if target_uri not in last_missed_call_start_time:
                         if contact:
                             for uri in contact.uris:
                                 if uri is None:
