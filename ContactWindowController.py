@@ -5938,7 +5938,7 @@ class LdapSearch(object):
                                     address = ('sip', sip_prefix_pattern.sub("", str(_entry)))
                                     uris.append(address)
                             for f in extra_fields:
-                                f = trim(f)
+                                f = f.strip()
                                 if entry.has_key(f):
                                     for _entry in entry[f]:
                                         address = ('other', sip_prefix_pattern.sub("", str(_entry)))
