@@ -1978,6 +1978,7 @@ class ChatWindowController(NSWindowController):
 
         self.participantsTableView.reloadData()
         self.conferenceFilesTableView.reloadData()
+        self.drawerSplitView.setNeedsDisplay_(True)
 
     def drawerWillResizeContents_toSize_(self, drawer, size):
         self.drawerSplitViewDidResize_(None)
