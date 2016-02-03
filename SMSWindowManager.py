@@ -35,8 +35,6 @@ class SMSWindowController(NSWindowController):
     tabView = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
     toolbar = objc.IBOutlet()
-    encryptionMenu = objc.IBOutlet()
-    encryptionIconMenuItem = objc.IBOutlet()
 
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
@@ -79,98 +77,7 @@ class SMSWindowController(NSWindowController):
             self.window().orderOut_(self)
 
     def menuWillOpen_(self, menu):
-        if menu == self.encryptionMenu:
-            settings = SIPSimpleSettings()
-            item = menu.itemWithTag_(1)
-            item.setHidden_(not settings.chat.enable_encryption)
-
-            item = menu.itemWithTag_(3)
-            item.setEnabled_(False)
-            item.setState_(NSOffState)
-            item.setHidden_(True)
-
-            item = menu.itemWithTag_(4)
-            item.setState_(NSOffState)
-            item.setEnabled_(False)
-            item.setState_(NSOffState)
-
-            item = menu.itemWithTag_(5)
-            item.setHidden_(True)
-
-            item = menu.itemWithTag_(6)
-            item.setHidden_(True)
-
-            item = menu.itemWithTag_(7)
-            item.setHidden_(True)
-
-            item = menu.itemWithTag_(9)
-            item.setHidden_(True)
-
-            selectedSession = self.selectedSessionController()
-            if selectedSession:
-                display_name = '%s@%s' % (selectedSession.target_uri.user, selectedSession.target_uri.host)
-                item.setHidden_(False)
-                item = menu.itemWithTag_(1)
-                my_fingerprint = selectedSession.otr_account.getPrivkey()
-                item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(my_fingerprint))
-
-                item = menu.itemWithTag_(3)
-                item.setTitle_(NSLocalizedString("Always require OTR encryption with %s", "Menu item") % display_name)
-
-                if selectedSession.contact is not None:
-                    item.setEnabled_(True)
-                    item.setState_(NSOnState if selectedSession.require_encryption else NSOffState)
-                    item.setHidden_(not settings.chat.enable_encryption)
-                else:
-                    item.setEnabled_(False)
-                    item.setHidden_(True)
-                    item.setState_(NSOffState)
-
-                item = menu.itemWithTag_(4)
-                if settings.chat.enable_encryption:
-                    item.setHidden_(False)
-                    if selectedSession.require_encryption and selectedSession.is_encrypted:
-                        item.setEnabled_(False)
-                    else:
-                        item.setEnabled_(True)
-
-                    if selectedSession.otr_negotiation_in_progress:
-                        item.setTitle_(NSLocalizedString("OTR negotiation in progress...", "Menu item"))
-                        item.setEnabled_(False)
-                    else:
-                        item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not selectedSession.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
-
-                else:
-                    item.setEnabled_(False)
-                    item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
-
-                if settings.chat.enable_encryption:
-                    ctx = selectedSession.otr_account.getContext(selectedSession.session_id)
-                    fingerprint = ctx.getCurrentKey()
-
-                    if fingerprint:
-                        item = menu.itemWithTag_(6)
-                        item.setHidden_(False)
-
-                        item = menu.itemWithTag_(7)
-                        item.setHidden_(False)
-
-                        fingerprint_verified = selectedSession.otr_account.getTrust(selectedSession.remote_uri, str(fingerprint))
-                        item.setEnabled_(False)
-                        _t = NSLocalizedString("%s's fingerprint is ", "Menu item") % display_name
-                        item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
-
-                        item = menu.itemWithTag_(5)
-                        item.setEnabled_(True if fingerprint else False)
-                        item.setHidden_(False)
-                        item.setTitle_(NSLocalizedString("I have verified %s's fingerprint", "Menu item") % display_name)
-                        item.setState_(NSOnState if fingerprint_verified else NSOffState)
-
-                        item = menu.itemWithTag_(9)
-                        item.setHidden_(False)
-                    else:
-                        item = menu.itemWithTag_(9)
-                        item.setHidden_(True)
+        pass
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
@@ -235,8 +142,6 @@ class SMSWindowController(NSWindowController):
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
         selectedSession = self.selectedSessionController()
-        if selectedSession:
-            selectedSession.updateEncryptionWidgets()
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0:
@@ -256,13 +161,6 @@ class SMSWindowController(NSWindowController):
             SMSWindowManager().windows.remove(self)
             self.notification_center.remove_observer(self, name="BlinkShouldTerminate")
         return True
-
-    @objc.IBAction
-    def userClickedEncryptionMenu_(self, sender):
-        # dispatch the click to the active session
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            selectedSession.userClickedEncryptionMenu_(sender)
 
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):

@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1070" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="SMSWindowController">
             <connections>
-                <outlet property="encryptionIconMenuItem" destination="ode-SL-AzX" id="Dwq-am-rtz"/>
-                <outlet property="encryptionMenu" destination="eqf-k7-4lX" id="S9V-Ss-jey"/>
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="119" id="e2W-yg-gLN"/>
@@ -58,64 +56,6 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="125"/>
-                    <toolbarItem implicitItemIdentifier="CA113185-2B92-4E8D-95B1-351679504117" explicitItemIdentifier="encryption" label="Encryptie" paletteLabel="Encryptie" toolTip="Encryptie-opties" image="unlocked-darkgray" autovalidates="NO" id="eXG-Dz-cun">
-                        <size key="minSize" width="55" height="25"/>
-                        <size key="maxSize" width="55" height="35"/>
-                        <popUpButton key="view" id="kNe-Tq-nrN">
-                            <rect key="frame" x="5" y="14" width="55" height="35"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="PbT-Jt-vT9" id="ODJ-4Z-0wL">
-                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="eqf-k7-4lX">
-                                    <items>
-                                        <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="ode-SL-AzX"/>
-                                        <menuItem title="Mijn vingerafdruk" tag="1" enabled="NO" id="mB6-M1-KMr">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                        <menuItem title="Actief" tag="4" id="PbT-Jt-vT9">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="Hcf-qY-5yO"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Encryptie altijd vereist voor dit contact" tag="3" id="oam-Ba-ulg">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="71t-bP-LRJ"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" tag="6" id="pzI-9j-Jft"/>
-                                        <menuItem title="Geen vingerafdruk ontdekt" tag="7" id="EG1-SW-Olu">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                        <menuItem title="Ik heb de vingerafdruk geverifieerd" tag="5" id="rEQ-Fm-xMH">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="eWP-zO-xjG"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Verifieer met het SMP protocol" tag="9" id="etd-a0-8Ca">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="3ID-ue-qie"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="14w-ix-dju"/>
-                                        <menuItem title="Over het OTR protocol" tag="10" id="C4L-bC-kSK">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="4zk-LH-oPa"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                    <connections>
-                                        <outlet property="delegate" destination="-2" id="Dym-c2-gwC"/>
-                                    </connections>
-                                </menu>
-                            </popUpButtonCell>
-                        </popUpButton>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Toon/Verberg emoticons" tag="100" image="smiley_on" id="127">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
@@ -132,7 +72,6 @@
                     <toolbarItem reference="133"/>
                     <toolbarItem reference="E90-Cd-Ned"/>
                     <toolbarItem reference="125"/>
-                    <toolbarItem reference="eXG-Dz-cun"/>
                     <toolbarItem reference="127"/>
                     <toolbarItem reference="128"/>
                     <toolbarItem reference="131"/>
@@ -150,7 +89,6 @@
         <image name="audio" width="240" height="240"/>
         <image name="smiley_on" width="32" height="32"/>
         <image name="time" width="128" height="128"/>
-        <image name="unlocked-darkgray" width="171" height="170"/>
         <image name="video" width="520" height="520"/>
     </resources>
 </document>
