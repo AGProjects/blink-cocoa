@@ -568,13 +568,18 @@ class AudioController(MediaStream):
                 self.recordingImage = 0
 
         if self.stream and self.stream.codec and self.stream.sample_rate:
-            if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.remoteIdentity.user.isdigit():
-                self.audioStatus.setTextColor_(NSColor.orangeColor())
-                self.audioStatus.setStringValue_(NSLocalizedString("Enter DTMF using keyboard", "Audio status label"))
-                self.audioStatus.sizeToFit()
-            else:
-                if not self.hangup_reason:
-                    self.updateAudioStatusWithCodecInformation()
+            try:
+                if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.remoteIdentity.user.isdigit():
+                    self.audioStatus.setTextColor_(NSColor.orangeColor())
+                    self.audioStatus.setStringValue_(NSLocalizedString("Enter DTMF using keyboard", "Audio status label"))
+                    self.audioStatus.sizeToFit()
+                else:
+                    if not self.hangup_reason:
+                        self.updateAudioStatusWithCodecInformation()
+            except AttributeError:
+                # TODO: self.sessionController.remoteIdentity is sometimes an URI sometimes a To/From header...
+                pass
+
 
     def transferFailed_(self, timer):
         self.changeStatus(STREAM_CONNECTED)
