@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatWindowController">
@@ -164,7 +164,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="674" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="638" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -177,12 +177,6 @@
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="648"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Always Require Encryption With This Contact" tag="3" id="643">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="650"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" tag="6" id="645"/>
@@ -311,7 +305,7 @@
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="36"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="367"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -345,7 +339,7 @@
                                 <rect key="frame" x="-100" y="-100" width="223" height="15"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="385">
+                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="385">
                                 <rect key="frame" x="224" y="17" width="15" height="102"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
@@ -362,7 +356,7 @@
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="36"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="83"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>

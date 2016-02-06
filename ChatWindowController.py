@@ -343,9 +343,8 @@ class ChatWindowController(NSWindowController):
             chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Connecting...", "Label"))
             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
         else:
-            if not chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
-                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
-                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+            chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
         self.updateTitle()
         if session.remote_focus or session.hasStreamOfType("video"):
@@ -556,8 +555,6 @@ class ChatWindowController(NSWindowController):
                             else:
                                 chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                                 chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-                        elif chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
-                            pass
                         else:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
@@ -581,8 +578,6 @@ class ChatWindowController(NSWindowController):
                         if audio_stream and audio_stream.isConnecting:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
                             chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                        elif chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
-                            pass
                         else:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
@@ -1191,11 +1186,6 @@ class ChatWindowController(NSWindowController):
             item = menu.itemWithTag_(1)
             item.setHidden_(not settings.chat.enable_encryption)
 
-            item = menu.itemWithTag_(3)
-            item.setEnabled_(False)
-            item.setState_(NSOffState)
-            item.setHidden_(True)
-
             item = menu.itemWithTag_(4)
             item.setState_(NSOffState)
             item.setEnabled_(False)
@@ -1218,85 +1208,50 @@ class ChatWindowController(NSWindowController):
                 chat_stream = selectedSession.streamHandlerOfType("chat")
                 if chat_stream:
                     display_name = selectedSession.titleShort
-                    if selectedSession.session.remote_focus:
-                        item.setHidden_(True)
-                    else:
-                        item.setHidden_(False)
-                        item = menu.itemWithTag_(1)
-                        my_fingerprint = chat_stream.otr_account.getPrivkey()
-                        item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(my_fingerprint))
-
-                    item = menu.itemWithTag_(3)
-                    item.setTitle_(NSLocalizedString("Always require OTR encryption with %s", "Menu item") % display_name)
-
-                    if selectedSession.contact is not None:
-                        item.setEnabled_(True)
-                        item.setState_(NSOnState if chat_stream.require_encryption else NSOffState)
-                        item.setHidden_(not settings.chat.enable_encryption)
-                    else:
-                        item.setEnabled_(False)
-                        item.setHidden_(True)
-                        item.setState_(NSOffState)
+                    item = menu.itemWithTag_(1)
+                    item.setHidden_(not chat_stream.is_encrypted)
+                    if chat_stream.is_encrypted:
+                        item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(chat_stream.local_fingerprint))
 
                     item = menu.itemWithTag_(4)
                     if settings.chat.enable_encryption:
                         if chat_stream.status == STREAM_CONNECTED:
                             item.setHidden_(False)
-                            if selectedSession.session.remote_focus:
-                                item.setEnabled_(False)
-                                item.setTitle_(NSLocalizedString("OTR encryption is not possible within a multi-party conference", "Menu item"))
+                            if selectedSession.account is BonjourAccount():
+                                item.setEnabled_(True)
                             else:
-                                if selectedSession.account is BonjourAccount():
-                                    item.setEnabled_(True)
-                                else:
-                                    if chat_stream.require_encryption and chat_stream.is_encrypted:
-                                        item.setEnabled_(False)
-                                    else:
-                                        item.setEnabled_(True)
-
-                                if chat_stream.outgoing_message_handler.otr_negotiation_in_progress:
-                                    item.setTitle_(NSLocalizedString("OTR negotiation in progress...", "Menu item"))
+                                if chat_stream.require_encryption and chat_stream.is_encrypted:
                                     item.setEnabled_(False)
                                 else:
-                                    item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+                                    item.setEnabled_(True)
+
+                            item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
                         else:
                             item.setEnabled_(False)
                             item.setTitle_(NSLocalizedString("OTR encryption is possible after connection is established", "Menu item"))
-
                     else:
                         item.setEnabled_(False)
                         item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
 
                     if settings.chat.enable_encryption:
-                        ctx = chat_stream.otr_account.getContext(selectedSession.call_id)
-                        fingerprint = ctx.getCurrentKey()
-
-                        if fingerprint:
+                        if chat_stream.remote_fingerprint:
                             item = menu.itemWithTag_(6)
                             item.setHidden_(False)
 
                             item = menu.itemWithTag_(7)
                             item.setHidden_(False)
-
-                            fingerprint_verified = chat_stream.otr_account.getTrust(selectedSession.remoteAOR, str(fingerprint))
                             item.setEnabled_(False)
                             _t = NSLocalizedString("%s's fingerprint is ", "Menu item") % display_name
-                            item.setTitle_( "%s %s" % (_t, fingerprint) if fingerprint is not None else NSLocalizedString("No Fingerprint Discovered", "Menu item"))
+                            item.setTitle_( "%s %s" % (_t, chat_stream.remote_fingerprint))
+                            
+                            item = menu.itemWithTag_(5)
+                            item.setEnabled_(True)
+                            item.setHidden_(False)
+                            item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
+                            item.setState_(NSOnState if chat_stream.stream.encryption.verified else NSOffState)
 
-                            if selectedSession.account is BonjourAccount():
-                                item = menu.itemWithTag_(5)
-                                item.setHidden_(True)
-                                item = menu.itemWithTag_(9)
-                                item.setHidden_(True)
-                            else:
-                                item = menu.itemWithTag_(5)
-                                item.setEnabled_(True if fingerprint else False)
-                                item.setHidden_(False)
-                                item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
-                                item.setState_(NSOnState if fingerprint_verified else NSOffState)
-
-                                item = menu.itemWithTag_(9)
-                                item.setHidden_(False)
+                            item = menu.itemWithTag_(9)
+                            item.setHidden_(not chat_stream.stream.encryption.active)
                         else:
                             item = menu.itemWithTag_(9)
                             item.setHidden_(True)

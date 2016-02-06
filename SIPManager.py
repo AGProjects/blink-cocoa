@@ -55,9 +55,7 @@ class SIPManager(object):
     implements(IObserver)
 
     def __init__(self):
-
-        BlinkLogger().log_info(u"Loading core engine version %s" % sdk_version)
-        BlinkLogger().log_debug(u"Starting core version %s" % core_version)
+        BlinkLogger().log_info(u"Using SIP SIMPLE client SDK version %s" % sdk_version)
 
         self._app = SIPApplication()
         self._delegate = None
