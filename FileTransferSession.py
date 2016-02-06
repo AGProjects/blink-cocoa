@@ -335,13 +335,13 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info(u"Initiating DNS Lookup for SIP routes of %s (through proxy %s)" % (self.target_uri, uri))
+            self.log_info(u"Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
-            self.log_info(u"Initiating DNS Lookup for SIP routes of %s (through account %s proxy)" % (self.target_uri, self.account.id))
+            self.log_info(u"Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
         else:
             uri = self.target_uri
-            self.log_info(u"Initiating DNS Lookup for SIP routes of %s" % self.target_uri)
+            self.log_info(u"Initiating DNS Lookup for %s" % self.target_uri)
 
         settings = SIPSimpleSettings()
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
@@ -365,6 +365,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
     def _NH_DNSLookupDidSucceed(self, notification):
         notification.center.remove_observer(self, sender=notification.sender)
         if self._ended:
+            self.log_info("File transfer was already cancelled")
             return
         routes = notification.data.result
         if not routes:
@@ -376,12 +377,13 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification.center.add_observer(self, sender=self.stream)
         notification.center.add_observer(self, sender=self.handler)
         self.session.connect(ToHeader(self.target_uri), routes, [self.stream])
+        self.log_info("File transfer request sent...")
 
     def _NH_DNSLookupDidFail(self, notification):
+        self.log_info("DNS Lookup failed: '%s'" % notification.data.error)
         notification.center.remove_observer(self, sender=notification.sender)
         if self._ended:
             return
-        self.log_info("DNS Lookup for SIP routes failed: '%s'" % notification.data.error)
         status = NSLocalizedString("DNS Lookup failed", "Label")
         self._terminate(failure_reason=notification.data.error, failure_status=status)
 
@@ -432,13 +434,13 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info(u"Initiating DNS Lookup for SIP routes of %s (through proxy %s)" % (self.target_uri, uri))
+            self.log_info(u"Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
-            self.log_info(u"Initiating DNS Lookup for SIP routes of %s (through account %s proxy)" % (self.target_uri, self.account.id))
+            self.log_info(u"Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
         else:
             uri = self.target_uri
-            self.log_info(u"Initiating DNS Lookup for SIP routes of %s" % self.target_uri)
+            self.log_info(u"Initiating DNS Lookup for %s" % self.target_uri)
 
         settings = SIPSimpleSettings()
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
