@@ -286,6 +286,10 @@ class ChatController(MediaStream):
         self.history = ChatHistory()
         self.backend = SIPManager()
         self.chatOtrSmpWindow = None
+            
+        self.chatViewController.encryptionDisabledWarningLabel.setHidden_(False)
+        self.chatViewController.continueWithoutEncryptionCheckbox.setHidden_(False)
+        #self.chatViewController.inputText.setEnabled_(False)
 
         if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_chat_history is not None:
             self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
@@ -1338,14 +1342,22 @@ class ChatController(MediaStream):
 
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         if data.new_state is OTRState.Encrypted:
-            self.sessionController.log_info("Chat encryption activated")
+            self.sessionController.log_info("Chat encryption activated using OTR protocol")
+            self.sessionController.log_info("OTR fingerprints: Local %s <-> Remote %s" % (self.local_fingerprint, self.remote_fingerprint))
+            if stream.encryption.verified:
+                self.sessionController.log_info("Remote fingerprint has been verified")
+            else:
+                self.sessionController.log_error("Remote fingerprint has not yet been verified")
         elif data.new_state is OTRState.Finished:
             log = NSLocalizedString("Chat encryption finished", "Label")
             self.sessionController.log_info("Chat encryption deactivated")
             nc_title = NSLocalizedString("Encryption", "System notification title")
             nc_subtitle = self.sessionController.titleShort
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
-            # TODO: add gui elements for user confirmation, display button in enter text area
+
+            self.chatViewController.encryptionDisabledWarningLabel.setLabel_(NSLocalizedString("Chat encryption deactivated", "Label"))
+            self.chatViewController.continueWithoutEncryptionCheckbox.setTitle_(NSLocalizedString("Continue without encryption", "Button title"))
+
             self.stream.encryption.stop()
         elif data.new_state is OTRState.Plaintext:
             log = NSLocalizedString("Chat encryption deactivated", "Label")

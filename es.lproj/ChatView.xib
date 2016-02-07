@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15D21" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="6254"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="9531"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatController">
@@ -53,7 +54,7 @@
                             <rect key="frame" x="234" y="186" width="32" height="32"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         </progressIndicator>
-                        <searchField verticalHuggingPriority="750" id="222">
+                        <searchField wantsLayer="YES" verticalHuggingPriority="750" id="222">
                             <rect key="frame" x="319" y="396" width="162" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Buscar Mensajes" usesSingleLineMode="YES" bezelStyle="round" id="223">
@@ -117,7 +118,7 @@
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <textView importsGraphics="NO" findStyle="panel" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" id="25" customClass="ChatInputTextView">
-                                        <rect key="frame" x="0.0" y="0.0" width="463" height="71"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="462" height="71"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         <size key="minSize" width="462" height="71"/>
@@ -162,6 +163,26 @@
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
                             </textFieldCell>
                         </textField>
+                        <button hidden="YES" verticalHuggingPriority="750" id="HDY-as-kcz">
+                            <rect key="frame" x="105" y="19" width="291" height="32"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES"/>
+                            <buttonCell key="cell" type="push" title="Continue without encryption" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="ZYq-mI-VMT">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="confirmWithoutEncryption:" target="164" id="eha-kW-Fx1"/>
+                            </connections>
+                        </button>
+                        <textField hidden="YES" verticalHuggingPriority="750" id="Z1v-ZF-M0q">
+                            <rect key="frame" x="109" y="8" width="283" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Encryption has been disabled by remote party" id="PZi-98-2jg">
+                                <font key="font" metaFont="system"/>
+                                <color key="textColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </textFieldCell>
+                        </textField>
                     </subviews>
                 </customView>
             </subviews>
@@ -172,7 +193,9 @@
         </splitView>
         <customObject id="164" customClass="ChatViewController">
             <connections>
+                <outlet property="continueWithoutEncryptionCheckbox" destination="HDY-as-kcz" id="wHU-4U-yGi"/>
                 <outlet property="delegate" destination="-2" id="168"/>
+                <outlet property="encryptionDisabledWarningLabel" destination="Z1v-ZF-M0q" id="Xlg-fI-62u"/>
                 <outlet property="inputText" destination="25" id="176"/>
                 <outlet property="inputView" destination="23" id="194"/>
                 <outlet property="lastMessagesLabel" destination="217" id="219"/>
@@ -186,7 +209,7 @@
         </customObject>
     </objects>
     <resources>
-        <image name="NSAddTemplate" width="8" height="8"/>
+        <image name="NSAddTemplate" width="11" height="11"/>
         <image name="database-on" width="306" height="256"/>
     </resources>
 </document>

@@ -14,7 +14,7 @@ import time
 import urllib
 import uuid
 
-from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification
+from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification, NSOnState
 from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL, NSURLRequest, NSWorkspace
 from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
 
@@ -191,6 +191,8 @@ class ChatViewController(NSObject):
     loadingTextIndicator = objc.IBOutlet()
     searchMessagesBox = objc.IBOutlet()
     showRelatedMessagesButton = objc.IBOutlet()
+    encryptionDisabledWarningLabel = objc.IBOutlet()
+    continueWithoutEncryptionCheckbox = objc.IBOutlet()
 
     splitterHeight = None
 
@@ -366,6 +368,11 @@ class ChatViewController(NSObject):
         storage.beginEditing()
         storage.appendAttributedString_(content)
         storage.endEditing()
+
+    @objc.IBAction
+    def confirmWithoutEncryption_(self, sender):
+        self.continueWithoutEncryptionCheckbox.setHidden_(True)
+        self.encryptionDisabledWarningLabel.setHidden_(True)
 
     def textDidChange_(self, notification):
         self.lastTypedTime = datetime.datetime.now()
