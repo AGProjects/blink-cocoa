@@ -2208,7 +2208,6 @@
 		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FC80F6B192E3E1F00BD62F4 /* Info-elquijote.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-elquijote.plist"; path = "/Users/adigeo/work/blink/Info-elquijote.plist"; sourceTree = "<absolute>"; };
 		1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ElQuijote.icns; sourceTree = "<group>"; };
-		1FC80F6E192E406B00BD62F4 /* ElQuijote.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = ElQuijote.entitlements; sourceTree = "<group>"; };
 		1FC80F70192E414C00BD62F4 /* branding-elquijote.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote.py"; sourceTree = "<group>"; };
 		1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ElQuijote-logo.png"; sourceTree = "<group>"; };
 		1FC99CF519BC93700013C580 /* close-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "close-small.png"; path = "icons/close-small.png"; sourceTree = "<group>"; };
@@ -2673,7 +2672,6 @@
 			children = (
 				1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */,
 				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
-				1FC80F6E192E406B00BD62F4 /* ElQuijote.entitlements */,
 			);
 			name = Sandbox;
 			sourceTree = "<group>";
