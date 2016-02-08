@@ -286,10 +286,6 @@ class ChatController(MediaStream):
         self.history = ChatHistory()
         self.backend = SIPManager()
         self.chatOtrSmpWindow = None
-            
-        self.chatViewController.encryptionDisabledWarningLabel.setHidden_(False)
-        self.chatViewController.continueWithoutEncryptionCheckbox.setHidden_(False)
-        #self.chatViewController.inputText.setEnabled_(False)
 
         if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_chat_history is not None:
             self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
