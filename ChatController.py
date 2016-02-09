@@ -1316,20 +1316,21 @@ class ChatController(MediaStream):
 
     def _NH_ChatStreamSMPVerificationDidStart(self, stream, data):
         if data.originator == 'remote':
-            self.chatOtrSmpWindow.show(question=data.question)
+            self.sessionController.log_info("OTR SMP verification requested by remote")
+            self.chatOtrSmpWindow.show(question=data.question, remote=True)
 
     def _NH_ChatStreamSMPVerificationDidNotStart(self, stream, data):
-        self.sessionController.log_info("Chat SMP verification did not start: %s", data.reason)
+        self.sessionController.log_info("OTR SMP verification did not start: %s", data.reason)
         self.chatOtrSmpWindow.handle_remote_response()
 
     def _NH_ChatStreamSMPVerificationDidEnd(self, stream, data):
-        self.sessionController.log_info("Chat SMP verification ended")
+        self.sessionController.log_info("OTR SMP verification ended")
         if data.status is SMPStatus.Success:
-            self.sessionController.log_info("Chat SMP verification succeeded")
+            self.sessionController.log_info("OTR SMP verification succeeded")
         elif data.status is SMPStatus.Interrupted:
-            self.sessionController.log_info("Chat SMP verification aborted: %s" % data.reason)
+            self.sessionController.log_info("OTR SMP verification aborted: %s" % data.reason)
         elif data.status is SMPStatus.ProtocolError:
-            self.sessionController.log_info("Chat SMP verification error: %s" % data.reason)
+            self.sessionController.log_info("OTR SMP verification error: %s" % data.reason)
 
         self.chatOtrSmpWindow.handle_remote_response(data.same_secrets)
 
@@ -1339,21 +1340,18 @@ class ChatController(MediaStream):
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         if data.new_state is OTRState.Encrypted:
             self.sessionController.log_info("Chat encryption activated using OTR protocol")
-            self.sessionController.log_info("OTR fingerprints: Local %s <-> Remote %s" % (self.local_fingerprint, self.remote_fingerprint))
+            self.sessionController.log_info("OTR local fingerprint %s" % self.local_fingerprint)
+            self.sessionController.log_info("OTR remote fingerprint %s" % self.remote_fingerprint)
             if stream.encryption.verified:
-                self.sessionController.log_info("Remote fingerprint has been verified")
+                self.sessionController.log_info("OTR remote fingerprint has been verified")
             else:
-                self.sessionController.log_error("Remote fingerprint has not yet been verified")
+                self.sessionController.log_error("OTR remote fingerprint has not yet been verified")
         elif data.new_state is OTRState.Finished:
             log = NSLocalizedString("Chat encryption finished", "Label")
             self.sessionController.log_info("Chat encryption deactivated")
             nc_title = NSLocalizedString("Encryption", "System notification title")
             nc_subtitle = self.sessionController.titleShort
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
-
-            self.chatViewController.encryptionDisabledWarningLabel.setLabel_(NSLocalizedString("Chat encryption deactivated", "Label"))
-            self.chatViewController.continueWithoutEncryptionCheckbox.setTitle_(NSLocalizedString("Continue without encryption", "Button title"))
-
             self.stream.encryption.stop()
         elif data.new_state is OTRState.Plaintext:
             log = NSLocalizedString("Chat encryption deactivated", "Label")
