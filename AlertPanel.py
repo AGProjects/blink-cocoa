@@ -810,8 +810,8 @@ class AlertPanel(NSObject, object):
                 self.removeSession(session)
         elif action == REJECT:
             try:
-                sessionController.log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_to_string(session.remote_identity))
-                self.rejectSession(session, 603, "Busy Everywhere")
+                sessionController.log_info(u"Rejecting session from %s with Decline" % format_identity_to_string(session.remote_identity))
+                self.rejectSession(session, 603)
             except Exception, exc:
                 sessionController.log_info(u"Error rejecting session: %s" % exc)
                 self.removeSession(session)
@@ -987,8 +987,8 @@ class AlertPanel(NSObject, object):
                         sessionController.log_info(u"Error rejecting proposal: %s" % exc)
                         self.removeSession(session)
                 else:
-                    sessionController.log_info(u"Rejecting session from %s with Busy Everywhere" % format_identity_to_string(session.remote_identity))
-                    self.rejectSession(session, 603, "Busy Everywhere")
+                    sessionController.log_info(u"Rejecting session from %s with Decline" % format_identity_to_string(session.remote_identity))
+                    self.rejectSession(session, 603)
             except Exception, exc:
                 self.removeSession(session)
                 sessionController.log_info(u"Error rejecting session: %s" % exc)

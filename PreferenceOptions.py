@@ -391,7 +391,7 @@ class NegativeSIPCodeOption(NonNegativeIntegerOption):
             if current != new:
                 self.set(new)
         else:
-            NSRunAlertPanel(NSLocalizedString("Invalid Code", "Window title"), NSLocalizedString("Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for Busy Here or 603 code for Busy Everywhere", "Label"), NSLocalizedString("OK", "Button title"), None, None)
+            NSRunAlertPanel(NSLocalizedString("Invalid Code", "Window title"), NSLocalizedString("Do Not Disturb Code can be in 400 or 600 range. Examples: use 486 code for 'Busy Here' or 603 code for 'Decline'", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
             return
 

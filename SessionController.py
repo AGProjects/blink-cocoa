@@ -255,7 +255,7 @@ class SessionControllersManager(object):
             nc_body = 'Call from %s refused' % match_contact.name
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             try:
-                session.reject(488, 'Incompatible media')
+                session.reject(488)
             except IllegalStateError, e:
                 BlinkLogger().log_error(e)
             return
@@ -266,7 +266,7 @@ class SessionControllersManager(object):
         if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
             BlinkLogger().log_info(u"Blocked contact rejected")
             try:
-                session.reject(603, 'Not Acceptable Here')
+                session.reject(603)
             except IllegalStateError, e:
                 BlinkLogger().log_error(e)
             nc_title = 'Blocked Contact Rejected'
@@ -280,7 +280,7 @@ class SessionControllersManager(object):
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             BlinkLogger().log_info(u"Rejecting call until we finish existing calls")
             try:
-                session.reject(603, 'Busy here')
+                session.reject(600)
             except IllegalStateError, e:
                 BlinkLogger().log_error(e)
             return
@@ -290,7 +290,7 @@ class SessionControllersManager(object):
         if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
             BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
             try:
-                session.reject(486, 'Busy Here')
+                session.reject(486)
             except IllegalStateError, e:
                 BlinkLogger().log_error(e)
             return
@@ -314,7 +314,7 @@ class SessionControllersManager(object):
                     NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=None)
                     BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
                     try:
-                        session.reject(603, 'Anonymous Not Acceptable')
+                        session.reject(603)  # todo: an alternative to this is 433 "Anonymity Disallowed" (see RFC 5079), but is not a global reject code and is not present in sipsimple -Dan
                     except IllegalStateError, e:
                         BlinkLogger().log_error(e)
                     return
@@ -327,7 +327,7 @@ class SessionControllersManager(object):
                         NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                         BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
                         try:
-                            session.reject(603, 'Not Acceptable Here')
+                            session.reject(603)
                         except IllegalStateError, e:
                             BlinkLogger().log_error(e)
                         return
@@ -337,7 +337,7 @@ class SessionControllersManager(object):
                     nc_body = 'Call refused from blocked contact'
                     NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                     try:
-                        session.reject(603, 'Not Acceptable Here')
+                        session.reject(603)
                     except IllegalStateError, e:
                         BlinkLogger().log_error(e)
                     return
@@ -2348,7 +2348,7 @@ class SessionController(NSObject):
                 elif data.code == 486:
                     contact.detail = NSLocalizedString("Busy", "Contact detail")
                 elif data.code == 603:
-                    contact.detail = NSLocalizedString("Busy Everywhere", "Contact detail")
+                    contact.detail = NSLocalizedString("Decline", "Contact detail")
                 else:
                     reason = '%s (%s)' % (data.reason, data.code) if data.code else data.reason
                     contact.detail = NSLocalizedString("Invitation failed: %s", "Contact detail") % reason
