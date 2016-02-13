@@ -244,7 +244,6 @@ class ChatController(MediaStream):
         self.remote_uri = self.sessionController.remoteAOR if self.sessionController.account is not BonjourAccount() else self.sessionController.device_id
         self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour.local'
 
-        self.require_encryption = self.sessionController.contact.contact.require_encryption if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) else True
         self.silence_notifications = self.sessionController.contact.contact.silence_notifications if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) else False
         
         self.notification_center = NotificationCenter()
