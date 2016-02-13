@@ -26,7 +26,6 @@ class BlinkContactExtension(ContactExtension):
     auto_answer = SharedSetting(type=Boolean, default=False)
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)
-    require_encryption = SharedSetting(type=Boolean, default=False, nillable=True)
     disable_chat_history = Setting(type=Boolean, nillable=True)
     silence_notifications = Setting(type=Boolean, default=False)
     icon_info = IconSettings
