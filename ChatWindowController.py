@@ -1217,14 +1217,7 @@ class ChatWindowController(NSWindowController):
                     if settings.chat.enable_encryption:
                         if chat_stream.status == STREAM_CONNECTED:
                             item.setHidden_(False)
-                            if selectedSession.account is BonjourAccount():
-                                item.setEnabled_(True)
-                            else:
-                                if chat_stream.require_encryption and chat_stream.is_encrypted:
-                                    item.setEnabled_(False)
-                                else:
-                                    item.setEnabled_(True)
-
+                            item.setEnabled_(True)
                             item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
                         else:
                             item.setEnabled_(False)
