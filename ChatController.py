@@ -1352,6 +1352,7 @@ class ChatController(MediaStream):
             nc_title = NSLocalizedString("Encryption", "System notification title")
             nc_subtitle = self.sessionController.titleShort
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
+            self.chatViewController.showEncryptionFinishedConfirmationDialog()
             self.stream.encryption.stop()
         elif data.new_state is OTRState.Plaintext:
             log = NSLocalizedString("Chat encryption deactivated", "Label")

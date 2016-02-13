@@ -369,10 +369,18 @@ class ChatViewController(NSObject):
         storage.appendAttributedString_(content)
         storage.endEditing()
 
+    def showEncryptionFinishedConfirmationDialog(self):
+        self.continueWithoutEncryptionCheckbox.setHidden_(False)
+        self.encryptionDisabledWarningLabel.setHidden_(False)
+        self.inputText.setSelectable_(False)
+        self.inputText.setEditable_(False)
+
     @objc.IBAction
     def confirmWithoutEncryption_(self, sender):
         self.continueWithoutEncryptionCheckbox.setHidden_(True)
         self.encryptionDisabledWarningLabel.setHidden_(True)
+        self.inputText.setSelectable_(True)
+        self.inputText.setEditable_(True)
 
     def textDidChange_(self, notification):
         self.lastTypedTime = datetime.datetime.now()
