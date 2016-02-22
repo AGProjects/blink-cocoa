@@ -57,6 +57,12 @@
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1FC04812D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
 		1F1FC04912D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
+		1F21921A1C7B62C20052C134 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F21921B1C7B62C90052C134 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F21921C1C7B62CE0052C134 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F21921D1C7B62D60052C134 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
+		1F21921E1C7B62DB0052C134 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
+		1F21921F1C7B62E10052C134 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
 		1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F22729712B554F50010A8B2 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -1518,6 +1524,7 @@
 				1F7E9B031C61082D002653F9 /* libgmp.10.dylib in Copy Frameworks */,
 				1F7E9AFA1C6107D9002653F9 /* libmpc.3.dylib in Copy Frameworks */,
 				1F7E9AFB1C6107DB002653F9 /* libmpfr.4.dylib in Copy Frameworks */,
+				1F21921A1C7B62C20052C134 /* libpython2.7.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -1635,6 +1642,7 @@
 				1F7E9AFF1C61080A002653F9 /* libgmp.10.dylib in Copy Frameworks */,
 				1F7E9B001C61080C002653F9 /* libmpc.3.dylib in Copy Frameworks */,
 				1F7E9B011C61080E002653F9 /* libmpfr.4.dylib in Copy Frameworks */,
+				1F21921C1C7B62CE0052C134 /* libpython2.7.dylib in Copy Frameworks */,
 				1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */,
 				1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */,
 			);
@@ -1753,6 +1761,7 @@
 				1F7E9AFC1C6107FA002653F9 /* libgmp.10.dylib in Copy Frameworks */,
 				1F7E9AFD1C6107FD002653F9 /* libmpc.3.dylib in Copy Frameworks */,
 				1F7E9AFE1C6107FF002653F9 /* libmpfr.4.dylib in Copy Frameworks */,
+				1F21921B1C7B62C90052C134 /* libpython2.7.dylib in Copy Frameworks */,
 				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -2473,6 +2482,7 @@
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
+				1F21921F1C7B62E10052C134 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2488,6 +2498,7 @@
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
+				1F21921D1C7B62D60052C134 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2502,6 +2513,7 @@
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
+				1F21921E1C7B62DB0052C134 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
