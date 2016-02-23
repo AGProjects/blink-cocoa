@@ -1345,6 +1345,7 @@ class ChatController(MediaStream):
                 self.sessionController.log_info("OTR remote fingerprint has been verified")
             else:
                 self.sessionController.log_error("OTR remote fingerprint has not yet been verified")
+            self.chatViewController.hideEncryptionFinishedConfirmationDialog()
         elif data.new_state is OTRState.Finished:
             log = NSLocalizedString("Chat encryption finished", "Label")
             self.sessionController.log_info("Chat encryption deactivated")
