@@ -1353,7 +1353,6 @@ class ChatController(MediaStream):
             nc_subtitle = self.sessionController.titleShort
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
             self.chatViewController.showEncryptionFinishedConfirmationDialog()
-            self.stream.encryption.stop()
         elif data.new_state is OTRState.Plaintext:
             log = NSLocalizedString("Chat encryption deactivated", "Label")
             self.sessionController.log_info("Chat encryption deactivated")
@@ -1675,6 +1674,7 @@ class ChatController(MediaStream):
             self.sessionController.log_info(u"Chat session ended")
 
         self.outgoing_message_handler.setDisconnected()
+        self.chatViewController.hideEncryptionFinishedConfirmationDialog()
 
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         settings = SIPSimpleSettings()

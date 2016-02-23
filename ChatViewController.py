@@ -384,6 +384,7 @@ class ChatViewController(NSObject):
     @objc.IBAction
     def confirmWithoutEncryption_(self, sender):
         self.hideEncryptionFinishedConfirmationDialog()
+        self.delegate.stream.encryption.stop()
 
     def textDidChange_(self, notification):
         self.lastTypedTime = datetime.datetime.now()
