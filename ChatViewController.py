@@ -154,7 +154,7 @@ class ChatInputTextView(NSTextView):
             keys = event.characters()
             if keys[0] == 'i' and self.owner.delegate.sessionController.info_panel is not None:
                 self.owner.delegate.sessionController.info_panel.toggle()
-        else:
+        elif self.isEditable():
             objc.super(ChatInputTextView, self).keyDown_(event)
 
 
