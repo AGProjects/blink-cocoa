@@ -1557,6 +1557,8 @@ class AudioController(MediaStream):
             if all(len(path)==1 for path in (full_local_path, full_remote_path)):
                 chat_stream.send_message(data.sas, 'application/blink-zrtp-sas')
 
+        self._do_smp_verification()
+
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         try:
             self.sessionController.encryption['audio']
@@ -1565,4 +1567,11 @@ class AudioController(MediaStream):
         self.sessionController.encryption['audio']['type'] = 'ZRTP'
         self.sessionController.encryption['audio']['verified'] = 'yes' if self.stream.encryption.zrtp.verified else 'no'
         self.update_encryption_icon()
+        self._do_smp_verification()
+
+    def _do_smp_verification(self):
+        chatStream = self.sessionController.streamHandlerOfType("chat")
+        if chatStream and chatStream.status == STREAM_CONNECTED and chatStream.stream.encryption.active and not not chatStream.stream.encryption.verified:
+            chatStream._do_smp_verification()
+
 

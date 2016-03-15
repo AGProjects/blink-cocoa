@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9532"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatWindowController">
@@ -164,7 +164,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="0.0" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="639" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -180,21 +180,21 @@
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" tag="6" id="645"/>
-                                        <menuItem title="Amprentă Nu E Descoperită" tag="7" id="639">
+                                        <menuItem title="Amprenta Nu A fost Descoperită" tag="7" id="639">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="Am Verificat Amprenta" tag="5" id="644">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        <menuItem title="Am incredere in Identitatea interlocutorului" tag="5" keyEquivalent="s" id="644">
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="649"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Verifică Identitatea Folosind Protocolul SMP" tag="9" id="670">
+                                        <menuItem title="Verifică Amprenta Folosind Protocolul SMP" tag="9" id="670">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="672"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Amprenta a fost verificată folosind ZRTP SAS" tag="11" keyEquivalent="s" id="hkR-Ox-k62"/>
                                         <menuItem isSeparatorItem="YES" id="673"/>
                                         <menuItem title="Despre Protocolul OTR" tag="10" id="674">
                                             <modifierMask key="keyEquivalentModifierMask"/>

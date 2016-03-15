@@ -1203,6 +1203,9 @@ class ChatWindowController(NSWindowController):
             item = menu.itemWithTag_(9)
             item.setHidden_(True)
 
+            item = menu.itemWithTag_(11)
+            item.setHidden_(True)
+
             selectedSession = self.selectedSessionController()
             if selectedSession:
                 chat_stream = selectedSession.streamHandlerOfType("chat")
@@ -1240,11 +1243,16 @@ class ChatWindowController(NSWindowController):
                             item = menu.itemWithTag_(5)
                             item.setEnabled_(True)
                             item.setHidden_(False)
-                            item.setTitle_(NSLocalizedString("I have verified %s's fingerprint" % display_name, "Menu item"))
+                            item.setTitle_(NSLocalizedString("Validate the identity of %s" % display_name, "Menu item"))
                             item.setState_(NSOnState if chat_stream.stream.encryption.verified else NSOffState)
 
-                            item = menu.itemWithTag_(9)
-                            item.setHidden_(not chat_stream.stream.encryption.active)
+                            item = menu.itemWithTag_(11)
+                            item.setEnabled_(False)
+                            item.setHidden_(False)
+                            item.setState_(NSOnState if chat_stream.smp_verifified_using_zrtp else NSOffState)
+
+                            #item = menu.itemWithTag_(9)
+                            #item.setHidden_(not chat_stream.stream.encryption.active)
                         else:
                             item = menu.itemWithTag_(9)
                             item.setHidden_(True)

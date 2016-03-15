@@ -70,6 +70,7 @@ import time
 import unicodedata
 import uuid
 from otr import OTRState
+from util import call_later
 
 from dateutil.tz import tzlocal
 from gnutls.errors import GNUTLSError
@@ -201,6 +202,11 @@ class ChatController(MediaStream):
     video_attached = False
     media_started = False
     closed = False
+
+    smp_verifified_using_zrtp = False
+    smp_verification_delay = 0
+    smp_verification_tries = 5
+    smp_verification_question = 'What is the ZRTP authentication string?'
 
     @property
     def local_fingerprint(self):
@@ -1308,10 +1314,34 @@ class ChatController(MediaStream):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    def _do_smp_verification(self):
+        session = self.sessionController.session
+        try:
+            audio_stream = next(stream for stream in session.streams if stream.type=='audio' and stream.encryption.type=='ZRTP' and stream.encryption.active and stream.encryption.zrtp.verified)
+        except StopIteration:
+            audio_stream = None
+
+        if audio_stream:
+            self.stream.encryption.smp_verify(audio_stream.encryption.zrtp.sas, question=self.smp_verification_question)
+            self.sessionController.log_info("Performing OTR SMP verification using ZRTP SAS...")
+
     def _NH_ChatStreamSMPVerificationDidStart(self, stream, data):
         if data.originator == 'remote':
             self.sessionController.log_info("OTR SMP verification requested by remote")
-            self.chatOtrSmpWindow.show(question=data.question, remote=True)
+            if data.question == self.smp_verification_question:
+                session = self.sessionController.session
+                try:
+                    audio_stream = next(stream for stream in session.streams if stream.type=='audio' and stream.encryption.type=='ZRTP' and stream.encryption.active and stream.encryption.zrtp.verified)
+                except StopIteration:
+                    self.stream.encryption.smp_abort()
+                else:
+                    self.sessionController.log_info("OTR SMP verification done automatically using ZRTP SAS")
+                    self.stream.encryption.smp_answer(audio_stream.encryption.zrtp.sas)
+                    self.smp_verifified_using_zrtp = True
+            else:
+                self.chatOtrSmpWindow.show(question=data.question, remote=True)
+        else:
+            self._do_smp_verification()
 
     def _NH_ChatStreamSMPVerificationDidNotStart(self, stream, data):
         self.sessionController.log_info("OTR SMP verification did not start: %s", data.reason)
@@ -1321,12 +1351,20 @@ class ChatController(MediaStream):
         self.sessionController.log_info("OTR SMP verification ended")
         if data.status is SMPStatus.Success:
             self.sessionController.log_info("OTR SMP verification succeeded")
+            self.chatOtrSmpWindow.handle_remote_response(data.same_secrets)
+            self.showSystemMessage('Peer identity verification succeeded', ISOTimestamp.now(), False)
+            #self.showSystemMessage('Please validate the identity in the encryption lock menu', ISOTimestamp.now(), True)
+
         elif data.status is SMPStatus.Interrupted:
             self.sessionController.log_info("OTR SMP verification aborted: %s" % data.reason)
         elif data.status is SMPStatus.ProtocolError:
             self.sessionController.log_info("OTR SMP verification error: %s" % data.reason)
+            if data.reason == 'startup collision':
+                self.smp_verification_tries -= 1
+                self.smp_verification_delay *= 2
+                if self.smp_verification_tries > 0:
+                    call_later(self.smp_verification_delay, self._do_smp_verification)
 
-        self.chatOtrSmpWindow.handle_remote_response(data.same_secrets)
 
     def _NH_ChatStreamOTRError(self, stream, data):
         self.sessionController.log_info("Chat encryption error: %s", data.error)
@@ -1340,6 +1378,10 @@ class ChatController(MediaStream):
                 self.sessionController.log_info("OTR remote fingerprint has been verified")
             else:
                 self.sessionController.log_error("OTR remote fingerprint has not yet been verified")
+                self.smp_verification_delay = 0 if self.stream.encryption.key_fingerprint > self.stream.encryption.peer_fingerprint else 1
+                self.smp_verification_tries = 5
+                self._do_smp_verification()
+
             self.chatViewController.hideEncryptionFinishedConfirmationDialog()
         elif data.new_state is OTRState.Finished:
             log = NSLocalizedString("Chat encryption finished", "Label")
