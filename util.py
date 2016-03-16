@@ -15,7 +15,6 @@ import shlex
 import unicodedata
 import time
 import calendar
-import threading
 
 
 from datetime import datetime
@@ -361,11 +360,7 @@ def call_later(delay, func, *args, **kw):
 def allocate_autorelease_pool(func):
     @preserve_signature(func)
     def wrapper(*args, **kw):
-        thread = threading.current_thread()
-        try:
-            thread.ns_autorelease_pool
-        except AttributeError:
-            thread.ns_autorelease_pool = NSAutoreleasePool.alloc().init()
+        pool = NSAutoreleasePool.alloc().init()
         func(*args, **kw)
     return wrapper
 
