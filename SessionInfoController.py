@@ -220,36 +220,6 @@ class SessionInfoController(NSObject):
         if self.chat_stream is not None:
             self.chat_stream = None
 
-    def _NH_BlinkDidRenegotiateStreams(self, notification):
-        for stream in notification.data.removed_streams:
-            if stream.type == 'audio':
-                self.remove_audio_stream()
-            elif stream.type == 'chat':
-                self.remove_chat_stream()
-            elif stream.type == 'video':
-                self.remove_video_stream()
-
-        for stream in notification.data.added_streams:
-            if stream.type == 'audio':
-                self.add_audio_stream()
-            elif stream.type == 'chat':
-                self.add_chat_stream()
-            elif stream.type == 'video':
-                self.add_video_stream()
-
-        self.updatePanelValues()
-
-    def _NH_CFGSettingsObjectDidChange(self, notification):
-        settings = SIPSimpleSettings()
-        if notification.data.modified.has_key("gui.rtt_threshold"):
-            self.audio_rtt_graph.setAboveLimit_(settings.gui.rtt_threshold)
-            self.audio_rtt_graph.setMinimumHeigth_(settings.gui.rtt_threshold)
-
-    @allocate_autorelease_pool
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
-
     def resetSession(self):
         self.remote_endpoint.setStringValue_('')
         self.remote_ua.setStringValue_('')
@@ -549,6 +519,36 @@ class SessionInfoController(NSObject):
                 self.video_status.setStringValue_(title)
             else:
                 self.video_status.setStringValue_("")
+
+    @allocate_autorelease_pool
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_BlinkDidRenegotiateStreams(self, notification):
+        for stream in notification.data.removed_streams:
+            if stream.type == 'audio':
+                self.remove_audio_stream()
+            elif stream.type == 'chat':
+                self.remove_chat_stream()
+            elif stream.type == 'video':
+                self.remove_video_stream()
+
+        for stream in notification.data.added_streams:
+            if stream.type == 'audio':
+                self.add_audio_stream()
+            elif stream.type == 'chat':
+                self.add_chat_stream()
+            elif stream.type == 'video':
+                self.add_video_stream()
+
+        self.updatePanelValues()
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        settings = SIPSimpleSettings()
+        if notification.data.modified.has_key("gui.rtt_threshold"):
+            self.audio_rtt_graph.setAboveLimit_(settings.gui.rtt_threshold)
+            self.audio_rtt_graph.setMinimumHeigth_(settings.gui.rtt_threshold)
 
     def _NH_BlinkSessionGotRingIndication(self, notification):
         self.updateSessionStatus(sub_state=NSLocalizedString("Ringing...", "Label"))
