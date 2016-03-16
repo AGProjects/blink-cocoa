@@ -457,8 +457,8 @@ class HistoryViewer(NSWindowController):
     @run_in_green_thread
     @allocate_autorelease_pool
     def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None, before_date=None):
-        self.updateBusyIndicator(True)
         if self.chat_history:
+            self.updateBusyIndicator(True)
             search_text = self.search_text if self.search_text else None
             if not remote_uri:
                 remote_uri = self.search_uris if self.search_uris else None
@@ -479,7 +479,7 @@ class HistoryViewer(NSWindowController):
             # reset pagination to the last page
             start = len(self.messages) - len(self.messages)%MAX_MESSAGES_PER_PAGE if len(self.messages) > MAX_MESSAGES_PER_PAGE else 0
             self.renderMessages(start)
-        self.updateBusyIndicator(False)
+            self.updateBusyIndicator(False)
 
     @allocate_autorelease_pool
     @run_in_gui_thread
