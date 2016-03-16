@@ -590,6 +590,8 @@ class SessionInfoController(NSObject):
         if self.sessionController is not None and self.sessionController.session is not None and hasattr(notification.data, 'conference_info'):
              pass
 
+    # todo: the ICE negotiation notification handlers below are never executed (check observers), yet the values in the GUI are updated (from somewhere else?) -Dan
+
     @run_in_gui_thread
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
         if notification.sender.type == 'audio' and self.audio_stream is not None:
