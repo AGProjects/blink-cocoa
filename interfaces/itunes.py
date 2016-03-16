@@ -3,18 +3,18 @@
 
 __all__ = ['MusicApplications']
 
+import time
+
 from Foundation import NSAppleScript
 from ScriptingBridge import SBApplication
 
 from application.notification import NotificationCenter
 from application.python.types import Singleton
-
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 
 from util import allocate_autorelease_pool
 from zope.interface import implements
-import time
 
 
 class MusicApplications(object):
@@ -64,7 +64,7 @@ class MusicInterface(object):
         self.last_volume = 0
         self.delegate = delegate
         self.application = SBApplication.applicationWithBundleIdentifier_(self.application_id)
-    
+
     def play(self):
         if self.application is None:
             return
@@ -76,14 +76,14 @@ class MusicInterface(object):
         if not self.application.isRunning():
             return 0.0
         return self.application.soundVolume()
-    
+
     def setVolume_(self, volume):
         if self.application is None:
             return
         if not self.application.isRunning():
             return
         self.application.setSoundVolume_(volume)
-    
+
     def getState(self):
         if self.application is None:
             return
@@ -102,7 +102,7 @@ class MusicInterface(object):
     @allocate_autorelease_pool
     def pause(self):
         self._pause()
-    
+
     def _pause(self):
         if self.application is None:
             return
@@ -168,17 +168,17 @@ class SpotifyInterface(MusicInterface):
 class VLCInterface(MusicInterface):
     application_id = 'org.videolan.vlc'
     is_playing_status = True
-    
+
     def getVolume(self):
         if self.application is None:
             return 0
         return self.application.audioVolume()
-    
+
     def setVolume_(self, volume):
         if self.application is None:
             return
         self.application.setAudioVolume_(volume)
-    
+
     def play(self):
         pass
 
@@ -192,7 +192,7 @@ class VLCInterface(MusicInterface):
     @allocate_autorelease_pool
     def pause(self):
         self._pause()
-    
+
     @run_in_thread('VLC-interface')
     @allocate_autorelease_pool
     def resume(self):
