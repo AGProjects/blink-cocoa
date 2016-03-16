@@ -474,9 +474,7 @@ class HistoryViewer(NSWindowController):
             results = self.chat_history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
 
             # cache message for pagination
-            self.messages=[]
-            for e in reversed(results):
-                self.messages.append(e)
+            self.messages = list(reversed(results))
 
             # reset pagination to the last page
             start = len(self.messages) - len(self.messages)%MAX_MESSAGES_PER_PAGE if len(self.messages) > MAX_MESSAGES_PER_PAGE else 0
