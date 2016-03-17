@@ -33,7 +33,7 @@ from zope.interface import implements
 from sipsimple.util import ISOTimestamp
 
 from MediaStream import STREAM_CONNECTED
-from util import allocate_autorelease_pool, beautify_audio_codec, beautify_video_codec, run_in_gui_thread, format_size
+from util import beautify_audio_codec, beautify_video_codec, run_in_gui_thread, format_size
 
 
 ice_candidates= {'srflx': 'Server Reflexive',
@@ -520,7 +520,7 @@ class SessionInfoController(NSObject):
             else:
                 self.video_status.setStringValue_("")
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
@@ -592,14 +592,12 @@ class SessionInfoController(NSObject):
 
     # todo: the ICE negotiation notification handlers below are never executed (check observers), yet the values in the GUI are updated (from somewhere else?) -Dan
 
-    @run_in_gui_thread
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
         if notification.sender.type == 'audio' and self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
         elif notification.sender.type == 'video' and self.video_stream is not None:
             self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
 
-    @run_in_gui_thread
     def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         if notification.sender.type == 'audio' and self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')

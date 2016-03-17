@@ -45,7 +45,7 @@ from zope.interface import implements
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
-from util import allocate_autorelease_pool, is_anonymous ,sipuri_components_from_string, run_in_gui_thread
+from util import is_anonymous, sipuri_components_from_string, run_in_gui_thread
 
 
 SQL_LIMIT=1000
@@ -819,7 +819,7 @@ class HistoryViewer(NSWindowController):
             self.busyIndicator.setHidden_(True)
             self.queryDatabaseLabel.setHidden_(True)
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
