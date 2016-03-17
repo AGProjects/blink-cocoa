@@ -29,7 +29,7 @@ from zope.interface import implements
 from sipsimple.account import AccountManager
 from resources import ApplicationData
 from FileTransferSession import OutgoingPushFileTransferHandler
-from util import allocate_autorelease_pool, format_size, format_date, run_in_gui_thread, normalize_sip_uri_for_outgoing_session
+from util import format_size, format_date, run_in_gui_thread, normalize_sip_uri_for_outgoing_session
 
 
 class FileTransferItemView(NSView):
