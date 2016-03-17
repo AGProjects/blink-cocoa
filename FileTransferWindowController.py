@@ -74,7 +74,7 @@ class FileTransferWindowController(NSObject):
             self.load_transfers_from_history()
 
     @run_in_green_thread
-    def get_previous_transfers(self, active_items=[]):
+    def get_previous_transfers(self, active_items=()):
         results = FileTransferHistory().get_transfers(20)
         already_added_file = set()
         transfers = []
