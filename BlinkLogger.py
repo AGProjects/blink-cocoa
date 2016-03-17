@@ -16,8 +16,6 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 from pprint import pformat
 
-from util import allocate_autorelease_pool
-
 
 class BlinkLogger(object):
     __metaclass__ = Singleton
@@ -25,6 +23,13 @@ class BlinkLogger(object):
     def __init__(self):
         self.gui_backlog = []
         self.gui_logger = self.backlog_keeper
+
+    @property
+    def app_delegate(self):
+        try:
+            return self.__dict__['app_delegate']
+        except KeyError:
+            return self.__dict__.setdefault('app_delegate', NSApp.delegate())
 
     def backlog_keeper(self, text):
         self.gui_backlog.append(text)
@@ -50,7 +55,7 @@ class BlinkLogger(object):
         self.gui_logger(message)
 
     def log_debug(self, message):
-        if NSApp.delegate().debug:
+        if self.app_delegate.debug:
             print message
             self.gui_logger(message)
 
@@ -137,7 +142,6 @@ class FileLogger(object):
     def handle_notification(self, notification):
         self._event_queue.put(notification)
 
-    @allocate_autorelease_pool
     def _process_notification(self, notification):
         settings = SIPSimpleSettings()
         handler = getattr(self, '_NH_%s' % notification.name, None)
