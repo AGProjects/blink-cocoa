@@ -38,7 +38,7 @@ from sipsimple.core import SIPCoreError, SIPURI
 from zope.interface import implements
 
 from VirtualGroups import VirtualGroup
-from util import allocate_autorelease_pool, checkValidPhoneNumber, format_uri_type, run_in_gui_thread
+from util import checkValidPhoneNumber, format_uri_type, run_in_gui_thread
 
 
 class MyImageThing(NSImageView):
@@ -120,7 +120,6 @@ class AddContactController(NSObject):
         self.subscriptions = None
         self.defaultPhotoImage = None
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

@@ -20,7 +20,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import run_in_gui_thread
 
 
 class NSURLRequest(objc.Category(NSURLRequest)):
@@ -61,7 +61,6 @@ class ConferenceScreenSharing(NSObject):
 
         return self
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

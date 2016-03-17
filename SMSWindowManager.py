@@ -26,7 +26,7 @@ from sipsimple.util import ISOTimestamp
 
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
-from util import allocate_autorelease_pool, format_identity_to_string, html2txt, run_in_gui_thread
+from util import format_identity_to_string, html2txt, run_in_gui_thread
 
 
 class SMSWindowController(NSWindowController):
@@ -66,7 +66,6 @@ class SMSWindowController(NSWindowController):
             title = NSLocalizedString("Short Messages", "Window Title")
         return title
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -279,7 +278,6 @@ class SMSWindowManagerClass(NSObject):
         else:
             return None
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

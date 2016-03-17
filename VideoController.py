@@ -20,7 +20,7 @@ from SessionInfoController import ice_candidates
 
 from VideoWindowController import VideoWindowController
 from VideoRecorder import VideoRecorder
-from util import allocate_autorelease_pool, run_in_gui_thread, beautify_video_codec
+from util import run_in_gui_thread, beautify_video_codec
 import objc
 
 
@@ -104,7 +104,6 @@ class VideoController(MediaStream):
         except Exception:
             pass
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

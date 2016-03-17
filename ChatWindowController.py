@@ -487,7 +487,7 @@ class ChatWindowController(NSWindowController):
     def init_aspect_ratio(self, width, height):
         self.refresh_drawer_counter += 1
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)

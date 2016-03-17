@@ -788,7 +788,6 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = {}
         objc.super(BlinkPresenceContact, self).destroy()
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -2622,7 +2621,6 @@ class ContactListModel(CustomListModel):
 
         return self
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

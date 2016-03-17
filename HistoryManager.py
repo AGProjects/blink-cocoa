@@ -1123,7 +1123,6 @@ class SessionHistoryReplicator(object):
             NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
             NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -1861,7 +1860,6 @@ class ChatHistoryReplicator(object):
         else:
             BlinkLogger().log_debug('Local chat history is in sync with chat history server for %s' % account)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def updateTimer_(self, timer):
         if self.paused:
@@ -1950,7 +1948,6 @@ class ChatHistoryReplicator(object):
 
         self.startConnectionForIncomingReplication(account, timestamp)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def startConnectionForIncomingReplication(self, account, after_timestamp):
         settings = SIPSimpleSettings()

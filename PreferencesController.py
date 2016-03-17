@@ -60,7 +60,7 @@ from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSlid
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
-from util import allocate_autorelease_pool, run_in_gui_thread, AccountInfo
+from util import run_in_gui_thread, AccountInfo
 
 
 class PreferencesController(NSWindowController, object):
@@ -668,7 +668,6 @@ class PreferencesController(NSWindowController, object):
                             self.registration_status.setStringValue_(NSLocalizedString("Registration %s", "Label") % selected_account.register_state)
                         self.registration_status.setHidden_(False)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

@@ -415,7 +415,6 @@ class ChatController(MediaStream):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
         self.status = newstate
@@ -705,7 +704,6 @@ class ChatController(MediaStream):
 
         self.send_pending_message()
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def render_history_messages(self, messages, scrollToMessageId=None):
         if self.chatViewController.scrolling_zoom_factor:
@@ -795,7 +793,6 @@ class ChatController(MediaStream):
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def resend_last_failed_message(self, messages):
         if self.sessionController.account is BonjourAccount():
@@ -814,7 +811,6 @@ class ChatController(MediaStream):
             private = True if message.private == "1" else False
             self.outgoing_message_handler.resend(message.msgid, message.body, recipient, private, message.content_type)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def send_pending_message(self):
         if self.sessionController.pending_chat_messages:
@@ -1307,7 +1303,6 @@ class ChatController(MediaStream):
         self.remoteTypingTimer = None
         self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -2033,7 +2028,6 @@ class OutgoingMessageHandler(NSObject):
         message.state = state
         self.delegate.markMessage(message.msgid, state, message.private)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -2170,7 +2164,6 @@ class ConferenceScreenSharingHandler(object):
             NotificationCenter().discard_observer(self, sender=self.stream)
             self.stream = None
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

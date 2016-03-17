@@ -41,7 +41,7 @@ from MediaStream import (MediaStream,
                          STATE_DNS_FAILED,
                          STATE_FAILED,
                          STATE_CONNECTED)
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import run_in_gui_thread
 
 
 class Interrupt(Exception):
@@ -445,7 +445,6 @@ class ScreenSharingController(MediaStream):
             self.close_timer.invalidate()
             self.close_timer = None
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

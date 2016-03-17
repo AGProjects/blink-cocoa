@@ -34,7 +34,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from configuration.datatypes import UserIcon
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import run_in_gui_thread
 
 from Quartz import kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
 
@@ -143,7 +143,6 @@ class PresencePublisher(object):
         NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

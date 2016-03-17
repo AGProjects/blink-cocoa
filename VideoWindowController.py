@@ -106,7 +106,7 @@ from VideoLocalWindowController import VideoLocalWindowController
 from SIPManager import SIPManager
 from ZRTPAuthentication import ZRTPAuthentication
 
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import run_in_gui_thread
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implements
@@ -550,7 +550,6 @@ class VideoWindowController(NSWindowController):
         else:
             self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

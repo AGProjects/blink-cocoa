@@ -72,7 +72,7 @@ try:
 except ImportError:
     video_support = False
 from interfaces.itunes import MusicApplications
-from util import allocate_autorelease_pool, format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc
+from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc
 
 
 SessionIdentifierSerial = 0
@@ -153,7 +153,6 @@ class SessionControllersManager(object):
     def chatSessions(self):
         return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("chat"))
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -1433,7 +1432,6 @@ class SessionController(NSObject):
         # notify Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def changeSessionState(self, newstate, fail_reason=None):
         self.log_debug("changed state to %s" % newstate)
@@ -1744,14 +1742,12 @@ class SessionController(NSObject):
         else:
             return format_identity_to_string(self.remoteIdentity, format='compact', check_contact=True)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         self.log_info("Routing failure: '%s'"%msg)
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def cancelBeforeDNSLookup(self):
         self.log_info("Session cancelled before DNS lookup")
@@ -1761,7 +1757,6 @@ class SessionController(NSObject):
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=487, originator='local', reason='Session Cancelled', failure_reason='Session Cancelled', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.log_debug("setRoutesResolved: %s" % routes)
@@ -1842,7 +1837,6 @@ class SessionController(NSObject):
             except (IllegalDirectionError, IllegalStateError),e:
                 pass
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

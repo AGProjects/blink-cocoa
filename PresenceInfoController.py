@@ -23,7 +23,7 @@ from zope.interface import implements
 
 from ContactListModel import presence_status_for_contact
 import WorldMapView
-from util import allocate_autorelease_pool, run_in_gui_thread, sip_prefix_pattern
+from util import run_in_gui_thread, sip_prefix_pattern
 
 
 SPLITTER_HEIGHT = 300
@@ -54,7 +54,6 @@ class PresenceInfoController(NSObject):
         self.statusLabel.setStringValue_("")
         NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged")
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

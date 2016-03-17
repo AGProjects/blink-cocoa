@@ -156,7 +156,6 @@ class FileTransferWindowController(NSObject):
         else:
             self.transferSpeed.setStringValue_('')
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

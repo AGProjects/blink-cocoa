@@ -67,7 +67,7 @@ from MediaStream import STATE_CONNECTING, STATE_FAILED, STATE_DNS_FAILED, STATE_
 from ZRTPAuthentication import ZRTPAuthentication
 
 from resources import Resources
-from util import allocate_autorelease_pool, beautify_audio_codec, format_identity_to_string, normalize_sip_uri_for_outgoing_session, translate_alpha2digit, run_in_gui_thread
+from util import beautify_audio_codec, format_identity_to_string, normalize_sip_uri_for_outgoing_session, translate_alpha2digit, run_in_gui_thread
 
 
 RecordingImages = []
@@ -1240,7 +1240,6 @@ class AudioController(MediaStream):
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

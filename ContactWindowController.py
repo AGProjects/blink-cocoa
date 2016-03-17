@@ -1048,7 +1048,6 @@ class ContactWindowController(NSWindowController):
         blink_contact.contact.uris.add(ContactURI(uri=sender.representedObject()['uri']))
         blink_contact.contact.save()
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

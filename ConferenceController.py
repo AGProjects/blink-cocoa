@@ -147,7 +147,6 @@ class JoinConferenceWindowController(NSObject):
         self.notification_center.remove_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
         objc.super(JoinConferenceWindowController, self).dealloc()
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

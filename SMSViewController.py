@@ -54,7 +54,7 @@ from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
-from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
+from util import format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
 
 
 MAX_MESSAGE_LENGTH = 1300
@@ -282,7 +282,6 @@ class SMSViewController(NSObject):
 
         window.noteView_isComposing_(self, flag)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -396,7 +395,6 @@ class SMSViewController(NSObject):
                                       RouteHeader(route.uri), content_type, content.encode('utf-8') if utf8_encode else content, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.routes = routes
@@ -404,7 +402,6 @@ class SMSViewController(NSObject):
             self._sendMessage(msgid, content, content_type)
         self.queue = []
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         for msgid, content, content_type in self.queue:
@@ -609,7 +606,6 @@ class SMSViewController(NSObject):
         messages = [row for row in reversed(results)]
         self.render_history_messages(messages)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def render_history_messages(self, messages):
         if self.chatViewController.scrolling_zoom_factor:

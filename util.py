@@ -337,7 +337,9 @@ def call_in_gui_thread(func, *args, **kwargs):
     if NSThread.isMainThread():
         func(*args, **kwargs)
     else:
+        pool = NSAutoreleasePool.alloc().init()
         NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kwargs), False)
+        del pool
 
 
 @decorator
@@ -347,7 +349,9 @@ def run_in_gui_thread(func):
         if NSThread.isMainThread():
             func(*args, **kw)
         else:
+            pool = NSAutoreleasePool.alloc().init()
             NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kw), False)
+            del pool
     return wrapper
 
 

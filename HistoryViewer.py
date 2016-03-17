@@ -246,7 +246,6 @@ class HistoryViewer(NSWindowController):
     def close_(self, sender):
         self.window().close()
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def refreshViewer(self):
         self.refreshContacts()
@@ -280,7 +279,6 @@ class HistoryViewer(NSWindowController):
             self.renderContacts(results)
             self.updateBusyIndicator(False)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def renderContacts(self, results):
         index = 0
@@ -372,7 +370,6 @@ class HistoryViewer(NSWindowController):
         results = self.session_history.get_display_names(uris_without_display_name)
         self.updateDisplayNames(results)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def updateDisplayNames(self, results):
         must_reload = False
@@ -415,13 +412,11 @@ class HistoryViewer(NSWindowController):
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def resetDailyEntries(self):
         self.dayly_entries = NSMutableArray.array()
         self.indexTable.reloadData()
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def renderDailyEntries(self, results):
         getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
@@ -481,7 +476,6 @@ class HistoryViewer(NSWindowController):
             self.renderMessages(start)
             self.updateBusyIndicator(False)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def renderMessages(self, start=None):
         self.chatViewController.clear()
@@ -512,7 +506,6 @@ class HistoryViewer(NSWindowController):
 
         self.foundMessagesLabel.setStringValue_(text)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def renderMessage(self, message):
         if message.direction == 'outgoing':
@@ -814,7 +807,6 @@ class HistoryViewer(NSWindowController):
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(remote_uri=remote_uri, media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def updateBusyIndicator(self, busy=False):
         if busy:

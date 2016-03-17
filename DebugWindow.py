@@ -370,7 +370,6 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def renderActivity(self, text):
         iserror = text.lower().startswith("error")
@@ -583,7 +582,6 @@ class DebugWindow(NSObject):
         if settings.logs.trace_xcap_in_gui != Disabled:
             self.append_line(self.xcapTextView, text)
 
-    @allocate_autorelease_pool
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
