@@ -378,6 +378,28 @@ def allocate_autorelease_pool(func):
     return wrapper
 
 
+@decorator
+def allocate_autorelease_pool_debug(func):
+    @preserve_signature(func)
+    def wrapper(*args, **kw):
+        thread = threading.current_thread()
+        try:
+            thread.ns_autorelease_pool
+        except AttributeError:
+            thread.ns_autorelease_pool = NSAutoreleasePool.alloc().init()
+            thread.ns_autorelease_pool_refcount = 1
+        else:
+            thread.ns_autorelease_pool_refcount += 1
+        try:
+            func(*args, **kw)
+        finally:
+            thread.ns_autorelease_pool_refcount -= 1
+            if thread.ns_autorelease_pool_refcount == 0:
+                NSAutoreleasePool.showPools()
+                del thread.ns_autorelease_pool, thread.ns_autorelease_pool_refcount
+    return wrapper
+
+
 def translate_alpha2digit(key):
     try:
         letter_map = translate_alpha2digit.letter_map
