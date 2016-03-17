@@ -51,6 +51,7 @@ from util import allocate_autorelease_pool, is_anonymous ,sipuri_components_from
 SQL_LIMIT=1000
 MAX_MESSAGES_PER_PAGE=15
 
+
 class MyTableView(NSTableView):
     def keyDown_(self, event):
         if event.charactersIgnoringModifiers():
@@ -465,44 +466,43 @@ class HistoryViewer(NSWindowController):
                 after_date = self.after_date if self.after_date else None
             if not before_date:
                 before_date = self.before_date if self.before_date else None
-
             results = self.chat_history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
-
-            # cache message for pagination
-            self.messages = list(reversed(results))
-
-            # reset pagination to the last page
-            start = len(self.messages) - len(self.messages)%MAX_MESSAGES_PER_PAGE if len(self.messages) > MAX_MESSAGES_PER_PAGE else 0
-            self.renderMessages(start)
+            self.renderMessages(results)
             self.updateBusyIndicator(False)
 
     @run_in_gui_thread
-    def renderMessages(self, start=None):
+    def renderMessages(self, messages=None):
         self.chatViewController.clear()
         self.chatViewController.resetRenderedMessages()
         self.chatViewController.last_sender = None
 
-        start_from = start or self.start
+        if messages is not None:
+            # new message list. cache for pagination and reset pagination to the last page
+            self.messages = list(reversed(messages))
+            message_count = len(messages)
+            start = message_count // MAX_MESSAGES_PER_PAGE * MAX_MESSAGES_PER_PAGE
+            end = message_count
+        else:
+            message_count = len(self.messages)
+            start = self.start
+            end = min(start + MAX_MESSAGES_PER_PAGE, message_count)
 
-        end = start_from + MAX_MESSAGES_PER_PAGE if start_from + MAX_MESSAGES_PER_PAGE < len(self.messages) else len(self.messages)
-        for row in self.messages[start_from:end]:
+        for row in self.messages[start:end]:
             self.renderMessage(row)
 
-        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and start_from > MAX_MESSAGES_PER_PAGE else False, 0)
-        self.paginationButton.setEnabled_forSegment_(True if start_from else False, 1)
-        self.paginationButton.setEnabled_forSegment_(True if start_from+MAX_MESSAGES_PER_PAGE+1 < len(self.messages) else False, 2)
-        self.paginationButton.setEnabled_forSegment_(True if len(self.messages)>MAX_MESSAGES_PER_PAGE and len(self.messages) - start_from > 2*MAX_MESSAGES_PER_PAGE else False, 3)
+        self.paginationButton.setEnabled_forSegment_(start > MAX_MESSAGES_PER_PAGE, 0)
+        self.paginationButton.setEnabled_forSegment_(start > 0, 1)
+        self.paginationButton.setEnabled_forSegment_(start + MAX_MESSAGES_PER_PAGE + 1 < message_count, 2)
+        self.paginationButton.setEnabled_forSegment_(start + MAX_MESSAGES_PER_PAGE * 2 < message_count, 3)
 
-        text = NSLocalizedString("No entry found", "Label")
-        if len(self.messages):
-            if len(self.messages) == 1:
-                text = NSLocalizedString("Displaying 1 entry", "Label")
-            elif MAX_MESSAGES_PER_PAGE > len(self.messages):
-                text = NSLocalizedString("Displaying %d entries", "Label") % end
-            else:
-                l = len(self.messages)
-                e = start_from + 1
-                text = NSLocalizedString("Displaying %d to ", "Label") % e + str(end) + NSLocalizedString(" out of %d entries", "Label") % l
+        if message_count == 0:
+            text = NSLocalizedString(u"No entry found", "Label")
+        elif message_count == 1:
+            text = NSLocalizedString(u"Displaying 1 entry", "Label")
+        elif message_count < MAX_MESSAGES_PER_PAGE:
+            text = NSLocalizedString(u"Displaying {} entries".format(end), "Label")
+        else:
+            text = NSLocalizedString(u"Displaying {} to {} out of {} entries", "Label").format(start+1, end, message_count)
 
         self.foundMessagesLabel.setStringValue_(text)
 
