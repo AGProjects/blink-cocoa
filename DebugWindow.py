@@ -26,7 +26,7 @@ from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
 from sipsimple.configuration.settings import SIPSimpleSettings
-from util import allocate_autorelease_pool, run_in_gui_thread, format_size
+from util import run_in_gui_thread, format_size
 from SessionInfoController import ice_candidates
 
 # User choices for debug: Disabled, Simplified, Full
@@ -451,7 +451,6 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
-    @allocate_autorelease_pool
     def renderSIP(self, notification):
         settings = SIPSimpleSettings()
         if settings.logs.trace_sip_in_gui == Disabled:

@@ -91,7 +91,7 @@ from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
-from util import allocate_autorelease_pool, format_identity_to_string, format_size_rounded, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
+from util import format_identity_to_string, format_size_rounded, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
 
 
 CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT = 314
@@ -2059,7 +2059,6 @@ class ChatWindowController(NSWindowController):
 
         return NSDragOperationNone
 
-    @allocate_autorelease_pool
     def tableView_acceptDrop_row_dropOperation_(self, table, info, row, dropOperation):
         pboard = info.draggingPasteboard()
         session = self.selectedSessionController()

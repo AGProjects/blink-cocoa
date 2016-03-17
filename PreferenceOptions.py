@@ -75,7 +75,7 @@ from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
-from util import audio_codecs, video_codecs, allocate_autorelease_pool, osx_version
+from util import audio_codecs, video_codecs, osx_version
 
 
 def makeLabel(label):
@@ -1294,12 +1294,10 @@ class SoundFileOption(Option):
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
 
-    @allocate_autorelease_pool
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
-        if self.sound == notification.sender:
-            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)
-
+        if notification.sender is self.sound:
+            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)  # it seems this doesn't need an autorelease pool
 
     def finished_(self, data):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
@@ -1421,11 +1419,10 @@ class NightVolumeOption(Option):
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
 
-    @allocate_autorelease_pool
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
-        if self.sound == notification.sender:
-            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)
+        if notification.sender is self.sound:
+            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)  # it seems this doesn't need an autorelease pool
 
     def finished_(self, data):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
@@ -1556,12 +1553,10 @@ class AnsweringMessageOption(Option):
         NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
         self.sound.start()
 
-    @allocate_autorelease_pool
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
-        if self.sound == notification.sender:
-            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)
-
+        if notification.sender is self.sound:
+            self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)  # it seems this doesn't need an autorelease pool
 
     def finished_(self, data):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))

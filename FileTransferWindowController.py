@@ -25,7 +25,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import FileTransferHistory
 from FileTransferItemView import FileTransferItemView
 from FileTransferSession import IncomingFileTransferHandler, OutgoingPushFileTransferHandler, OutgoingPullFileTransferHandler
-from util import allocate_autorelease_pool, run_in_gui_thread, format_size
+from util import run_in_gui_thread, format_size
 
 
 def openFileTransferSelectionDialog(account, dest_uri, filename=None):
@@ -74,7 +74,6 @@ class FileTransferWindowController(NSObject):
             self.load_transfers_from_history()
 
     @run_in_green_thread
-    @allocate_autorelease_pool
     def get_previous_transfers(self, active_items=[]):
         results = FileTransferHistory().get_transfers(20)
         already_added_file = set()
@@ -87,7 +86,6 @@ class FileTransferWindowController(NSObject):
                 continue
             already_added_file.add(file_idx)
             transfers.append(transfer)
-    
         self.render_previous_transfers(reversed(transfers))
 
     @run_in_gui_thread

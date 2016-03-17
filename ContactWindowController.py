@@ -3738,7 +3738,6 @@ class ContactWindowController(NSWindowController):
             self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0])
 
     @run_in_green_thread
-    @allocate_autorelease_pool
     def get_last_calls_entries_for_contact(self, contact):
         session_history = SessionHistory()
 
@@ -4106,7 +4105,6 @@ class ContactWindowController(NSWindowController):
         self.get_last_outgoing_session_from_history()
 
     @run_in_green_thread
-    @allocate_autorelease_pool
     def get_last_outgoing_session_from_history(self):
         results = SessionHistory().get_entries(direction='outgoing', count=1)
         try:

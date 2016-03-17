@@ -815,7 +815,6 @@ class BlinkPresenceContact(BlinkContact):
             return
         self.purge_pidfs_for_account(notification.sender.id)
 
-    @allocate_autorelease_pool
     @run_in_green_thread
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map
@@ -1257,7 +1256,6 @@ class BlinkPresenceContact(BlinkContact):
         if log:
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
-    @allocate_autorelease_pool
     @run_in_green_thread
     def _process_icon(self, icon_url):
         contact = self.contact
@@ -1870,7 +1868,6 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.last_results = results
             self.refresh_contacts(results)
 
-    @allocate_autorelease_pool
     @run_in_green_thread
     def refresh_contacts(self, results):
         for blink_contact in list(self.contacts):

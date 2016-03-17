@@ -36,7 +36,6 @@ from Foundation import (NSArray,
                         )
 
 from ContactListModel import presence_status_icons
-from util import allocate_autorelease_pool
 import objc
 
 country_iso_map = {
@@ -523,7 +522,6 @@ class MapView(NSView):
 
         return self
 
-    @allocate_autorelease_pool
     def setContact(self, contact):
         self.contact = contact
         self.selectedCountries = {}
@@ -554,7 +552,6 @@ class MapView(NSView):
 
         self.setNeedsDisplay_(True)
 
-    @allocate_autorelease_pool
     def drawRect_(self, rect):
         self.background_color.set()
         NSRectFill(rect)
@@ -674,7 +671,6 @@ class MapView(NSView):
                 self.addSubview_(labelView)
                 self.labels[key] = labelView
 
-    @allocate_autorelease_pool
     def startSession_(self, sender):
         device = None
         for device_id, button in self.buttons.iteritems():

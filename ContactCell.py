@@ -25,7 +25,6 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import BonjourAccount
 
 from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkOnlineContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, BlinkHistoryViewerContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
-from util import allocate_autorelease_pool
 
 
 class ContactCell(NSTextFieldCell):
@@ -61,7 +60,6 @@ class ContactCell(NSTextFieldCell):
             return objc.super(ContactCell, self).cellSize()
         return NSMakeSize(100, 30)
 
-    @allocate_autorelease_pool
     def drawWithFrame_inView_(self, frame, view):
         if self.contact is None:
             return objc.super(ContactCell, self).drawWithFrame_inView_(frame, view)
@@ -81,7 +79,6 @@ class ContactCell(NSTextFieldCell):
             pass
 
 
-    @allocate_autorelease_pool
     def drawFirstLine(self):
         frame = self.frame
         frame.origin.x = 35
@@ -91,7 +88,6 @@ class ContactCell(NSTextFieldCell):
         attrs = self.firstLineAttributes if not self.isHighlighted() else self.firstLineAttributes_highlighted
         self.stringValue().drawInRect_withAttributes_(rect, attrs)
 
-    @allocate_autorelease_pool
     def drawSecondLine(self):
         frame = self.frame
         frame.origin.y += 15
@@ -100,7 +96,6 @@ class ContactCell(NSTextFieldCell):
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
             self.contact.detail.drawInRect_withAttributes_(rect, attrs)
 
-    @allocate_autorelease_pool
     def drawActiveMedia(self):
         if type(self.contact) not in (BlinkConferenceContact, BlinkMyselfConferenceContact):
             return
@@ -122,7 +117,6 @@ class ContactCell(NSTextFieldCell):
             left = left - padding - 2
             self.drawIcon(self.screenIcon, left, self.frame.origin.y +14, 16, 16)
 
-    @allocate_autorelease_pool
     def drawPresenceIcon(self):
         status = 'offline'
         if type(self.contact) is BlinkMyselfConferenceContact:
@@ -223,7 +217,6 @@ class ContactCell(NSTextFieldCell):
                     left = self.view.frame().size.width - 26
                     self.drawIcon(self.nightIcon, left, self.frame.origin.y +14, 16, 16)
 
-    @allocate_autorelease_pool
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
         if not size or not size.height:

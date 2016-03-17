@@ -451,7 +451,6 @@ class HistoryViewer(NSWindowController):
             self.contactTable.deselectAll_(True)
 
     @run_in_green_thread
-    @allocate_autorelease_pool
     def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None, before_date=None):
         if self.chat_history:
             self.updateBusyIndicator(True)
