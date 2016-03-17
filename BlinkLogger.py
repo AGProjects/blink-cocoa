@@ -55,7 +55,7 @@ class BlinkLogger(object):
         self.gui_logger(message)
 
     def log_debug(self, message):
-        if self.app_delegate.debug:
+        if self.app_delegate.debug:  # todo: log_debug is called 13-14 times before this flag is initialized from the configuration, meaning they can never be displayed
             print message
             self.gui_logger(message)
 
