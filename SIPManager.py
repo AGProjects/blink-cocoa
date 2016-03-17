@@ -670,7 +670,6 @@ class SIPManager(object):
                 settings.audio.enable_aec = True
                 settings.save()
 
-    @run_in_green_thread
     def _NH_SystemWillSleep(self, sender, data):
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
@@ -679,7 +678,6 @@ class SIPManager(object):
             bonjour_account.enabled=False
             self.bonjour_disabled_on_sleep=True
 
-    @run_in_green_thread
     def _NH_SystemDidWakeUpFromSleep(self, sender, data):
         BlinkLogger().log_info(u"Computer wake up from sleep")
         bonjour_account = BonjourAccount()
