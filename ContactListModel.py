@@ -1,8 +1,6 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from __future__ import with_statement
-
 __all__ = ['BlinkContact',
            'BlinkConferenceContact',
            'BlinkPendingWatcher',
