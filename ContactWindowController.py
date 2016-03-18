@@ -535,7 +535,7 @@ class ContactWindowController(NSWindowController):
             dot.unlockFocus()
             self.presence_dots[i] = dot
 
-        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init() or Null
         self.speech_synthesizer.setDelegate_(self)
 
         self.rotateCameraTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "rotateCamera:", None, True)
@@ -1951,7 +1951,7 @@ class ContactWindowController(NSWindowController):
             settings = SIPSimpleSettings()
             if play_initial_announcement and not self.speech_synthesizer_active and not self.has_audio and not settings.audio.silent:
                 if self.speech_synthesizer is None:
-                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+                    self.speech_synthesizer = NSSpeechSynthesizer.alloc().init() or Null
                     self.speech_synthesizer.setDelegate_(self)
 
                 settings = SIPSimpleSettings()

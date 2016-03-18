@@ -106,7 +106,7 @@ class AlertPanel(NSObject, object):
     def init_speech_recognition(self):
         settings = SIPSimpleSettings()
         if settings.sounds.use_speech_recognition:
-            self.speech_recognizer = NSSpeechRecognizer.alloc().init()
+            self.speech_recognizer = NSSpeechRecognizer.alloc().init() or Null
             self.speech_recognizer.setDelegate_(self)
             self.speech_recognizer.setListensInForegroundOnly_(False)
             commands = ("Accept", "Answer", "Busy", "Reject", "Voicemail", "Answering machine")
@@ -145,7 +145,7 @@ class AlertPanel(NSObject, object):
         self.unMuteAfterSpeechDidEnd()
 
     def init_speech_synthesis(self):
-        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init() or Null
         self.speech_synthesizer.setDelegate_(self)
         self.speak_text = None
         self.speech_synthesizer_timer = None
@@ -725,13 +725,14 @@ class AlertPanel(NSObject, object):
                     self.disableAutoAnswer(view, session)
 
     def muteBeforeSpeechWillStart(self):
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
-        if hasAudio:
-            if not SIPManager().is_muted():
-                NSApp.delegate().contactsWindowController.muteClicked_(None)
-                self.muted_by_synthesizer = True
-        if self.speech_recognizer:
-            self.speech_recognizer.stopListening()
+        if self.speech_synthesizer:
+            hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
+            if hasAudio:
+                if not SIPManager().is_muted():
+                    NSApp.delegate().contactsWindowController.muteClicked_(None)
+                    self.muted_by_synthesizer = True
+            if self.speech_recognizer:
+                self.speech_recognizer.stopListening()
 
     def unMuteAfterSpeechDidEnd(self):
         if self.muted_by_synthesizer and SIPManager().is_muted():
