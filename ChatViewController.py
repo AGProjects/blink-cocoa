@@ -505,7 +505,7 @@ class ChatViewController(NSObject):
             script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
         except UnicodeDecodeError:
             script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
-        except:
+        except Exception as e:
             self.delegate.showSystemMessage("Chat message id %s rendering error: %s" % (msgid, e), ISOTimestamp.now(), True)
             return
 

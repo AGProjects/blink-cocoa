@@ -1925,7 +1925,7 @@ class ContactWindowController(NSWindowController):
                 self.speech_synthesizer.startSpeakingString_(speak_text)
 
             NSApp.activateIgnoringOtherApps_(True)
-            ret = NSRunAlertPanel(NSLocalizedString("Start Scheduled Conference", "Window title"), message, NSLocalizedString("Start Now", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+            ret = NSRunAlertPanel(NSLocalizedString("Start Scheduled Conference", "Window title"), label, NSLocalizedString("Start Now", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
 
             if ret == NSAlertDefaultReturn:
                 self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)

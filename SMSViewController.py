@@ -54,7 +54,7 @@ from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
-from util import format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
+from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
 
 
 MAX_MESSAGE_LENGTH = 1300

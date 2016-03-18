@@ -85,6 +85,7 @@ from Foundation import mbFlipWindow
 import datetime
 import os
 import objc
+import time
 import unicodedata
 
 from math import floor
