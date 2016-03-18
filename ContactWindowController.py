@@ -517,9 +517,6 @@ class ContactWindowController(NSWindowController):
         self.statusBarItem.setHighlightMode_(1)
         self.statusBarItem.setToolTip_(NSApp.delegate().applicationName)
         self.statusBarItem.setMenu_(self.statusBarMenu)
-        self.rotateCameraTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "rotateCamera:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSModalPanelRunLoopMode)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSDefaultRunLoopMode)
 
         self.last_calls_submenu = NSMenu.alloc().init()
         self.last_calls_submenu.setAutoenablesItems_(False)
@@ -538,12 +535,16 @@ class ContactWindowController(NSWindowController):
             dot.unlockFocus()
             self.presence_dots[i] = dot
 
+        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
+        self.speech_synthesizer.setDelegate_(self)
+
+        self.rotateCameraTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "rotateCamera:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.rotateCameraTimer, NSDefaultRunLoopMode)
+
         self.conference_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "startConferenceTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.conference_timer, NSDefaultRunLoopMode)
-
-        self.speech_synthesizer = NSSpeechSynthesizer.alloc().init()
-        self.speech_synthesizer.setDelegate_(self)
 
         self.purge_presence_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10, self, "purgePresenceTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.purge_presence_timer, NSModalPanelRunLoopMode)
