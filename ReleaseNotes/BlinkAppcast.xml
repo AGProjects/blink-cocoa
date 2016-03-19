@@ -6,6 +6,42 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 5.8.8</title>
+            <sparkle:minimumSystemVersion>10.9.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Mar 18 11:48:27 ART 2016</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="5.8.8"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
+            <title>Version 5.8.7</title>
+            <sparkle:minimumSystemVersion>10.9.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Mar 15 12:19:08 ART 2016</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="5.8.7"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
+            <title>Version 5.8.6</title>
+            <sparkle:minimumSystemVersion>10.9.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Fri Mar  4 16:41:30 ART 2016</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="5.8.6"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 5.8.5</title>
             <sparkle:minimumSystemVersion>10.9.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>

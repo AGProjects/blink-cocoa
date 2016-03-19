@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>March 2nd, 2016</string>
+	<string>March 18th, 2016</string>
 	<key>BrandingFile</key>
 	<string>branding</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -21,7 +21,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>5.8.5</string>
+	<string>5.8.8</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -44,7 +44,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>5.8.5</string>
+	<string>5.8.8</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSMinimumSystemVersion</key>
