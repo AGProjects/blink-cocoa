@@ -5247,7 +5247,7 @@
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
-				PROVISIONING_PROFILE = "1f6895a1-b5c4-4f87-92ba-2c3efd63b2f0";
+				PROVISIONING_PROFILE = "ce66ed40-8e0f-46b5-b29a-1eb830069403";
 				SDKROOT = macosx10.9;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
