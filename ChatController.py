@@ -1371,6 +1371,7 @@ class ChatController(MediaStream):
 
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         if data.new_state is OTRState.Encrypted:
+            self.showSystemMessage(self.showSystemMessage("Encryption enabled", ISOTimestamp.now())
             self.sessionController.log_info("Chat encryption activated using OTR protocol")
             self.sessionController.log_info("OTR local fingerprint %s" % self.local_fingerprint)
             self.sessionController.log_info("OTR remote fingerprint %s" % self.remote_fingerprint)
@@ -1387,12 +1388,14 @@ class ChatController(MediaStream):
             log = NSLocalizedString("Chat encryption finished", "Label")
             self.sessionController.log_info("Chat encryption deactivated")
             nc_title = NSLocalizedString("Encryption", "System notification title")
+            self.showSystemMessage(self.showSystemMessage("Encryption disabled", ISOTimestamp.now(), True)
             nc_subtitle = self.sessionController.titleShort
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
             self.chatViewController.showEncryptionFinishedConfirmationDialog()
         elif data.new_state is OTRState.Plaintext:
             log = NSLocalizedString("Chat encryption deactivated", "Label")
             self.sessionController.log_info("Chat encryption deactivated")
+            self.showSystemMessage(self.showSystemMessage("Encryption deactivated", ISOTimestamp.now(), True)
             nc_title = NSLocalizedString("Encryption", "System notification title")
             nc_subtitle = self.sessionController.titleShort
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
