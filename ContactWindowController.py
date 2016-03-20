@@ -1065,7 +1065,7 @@ class ContactWindowController(NSWindowController):
                 volume = 0.8
 
                 if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
-                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                    if settings.sounds.night_volume.start_hour <= this_hour < settings.sounds.night_volume.end_hour:
                         volume = settings.sounds.night_volume.volume/100.0
                 elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
                     if this_hour < settings.sounds.night_volume.end_hour:
@@ -1088,7 +1088,7 @@ class ContactWindowController(NSWindowController):
             volume = 0.8
 
             if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
-                if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                if settings.sounds.night_volume.start_hour <= this_hour < settings.sounds.night_volume.end_hour:
                     volume = settings.sounds.night_volume.volume/100.0
             elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
                 if this_hour < settings.sounds.night_volume.end_hour:
@@ -1881,7 +1881,7 @@ class ContactWindowController(NSWindowController):
             i = 1
             for uri in conference.participants:
                 presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
-                if i <= len(conference.participants) and i > 1:
+                if 1 < i <= len(conference.participants):
                     if i == len(conference.participants):
                         label += ' and '
                     else:
@@ -1911,7 +1911,7 @@ class ContactWindowController(NSWindowController):
                 volume = 0.8
 
                 if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
-                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                    if settings.sounds.night_volume.start_hour <= this_hour < settings.sounds.night_volume.end_hour:
                         volume = settings.sounds.night_volume.volume/100.0
                 elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
                     if this_hour < settings.sounds.night_volume.end_hour:
@@ -1958,7 +1958,7 @@ class ContactWindowController(NSWindowController):
                 this_hour = int(datetime.datetime.now(tzlocal()).strftime("%H"))
                 volume = 0.8
                 if settings.sounds.night_volume.start_hour < settings.sounds.night_volume.end_hour:
-                    if this_hour < settings.sounds.night_volume.end_hour and this_hour >= settings.sounds.night_volume.start_hour:
+                    if settings.sounds.night_volume.start_hour <= this_hour < settings.sounds.night_volume.end_hour:
                         volume = settings.sounds.night_volume.volume/100.0
                 elif settings.sounds.night_volume.start_hour > settings.sounds.night_volume.end_hour:
                     if this_hour < settings.sounds.night_volume.end_hour:
