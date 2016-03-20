@@ -9,6 +9,7 @@ from AppKit import NSApp, EMGenericKeychainItem
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
+from application.version import Version
 
 from configuration.account import LDAPSettingsExtension
 
@@ -37,8 +38,7 @@ class iCloudManager(NSObject):
             NSUserDefaults.standardUserDefaults().setObject_forKey_("Disabled", "iCloudSyncEnabled")
             return
 
-        major, minor = platform.mac_ver()[0].split('.')[0:2]
-        if (int(major) == 10 and int(minor) >= 7) or int(major) > 10:
+        if Version.parse(platform.mac_ver()[0]) >= Version.parse("10.7"):
             self.notification_center = NotificationCenter()
             enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
             if enabled is None:
