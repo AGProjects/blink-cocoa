@@ -1250,8 +1250,10 @@ class ContactWindowController(NSWindowController):
             elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
                     self.accounts[position].register_failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
+                elif notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error:
+                    self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label")
                 else:
-                    self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error else notification.data.error
+                    self.accounts[position].register_failure_reason = notification.data.error
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
