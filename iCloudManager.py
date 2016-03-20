@@ -162,7 +162,7 @@ class iCloudManager(NSObject):
                 data = cjson.decode(json_data)
             except TypeError:
                 # account has been deleted in the mean time. don't delete account locally because iCloud is unreliable.
-                pass
+                data = {}
 
             try:
                 account = account_manager.get_account(key)
