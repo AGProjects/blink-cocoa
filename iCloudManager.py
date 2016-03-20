@@ -79,7 +79,7 @@ class iCloudManager(NSObject):
         self.notification_center.add_observer(self, name='SIPApplicationDidStart')
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
 
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "cloudStorgeDidChange:", u"NSUbiquitousKeyValueStoreDidChangeExternallyNotification", self.cloud_storage)
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "cloudStorageDidChange:", u"NSUbiquitousKeyValueStoreDidChangeExternallyNotification", self.cloud_storage)
 
     def stop(self):
         self.cloud_storage = None
@@ -323,11 +323,11 @@ class iCloudManager(NSObject):
             self.stop()
 
     @run_in_thread('file-io')
-    def cloudStorgeDidChange_(self, notification):
+    def cloudStorageDidChange_(self, notification):
         BlinkLogger().log_info(u"iCloud storage has changed")
         reason = notification.userInfo()["NSUbiquitousKeyValueStoreChangeReasonKey"]
         if reason == 2:
-            BlinkLogger().log_info(u"iCloud quota exeeded")
+            BlinkLogger().log_info(u"iCloud quota exceeded")
         for key in notification.userInfo()["NSUbiquitousKeyValueStoreChangedKeysKey"]:
             if '@' in key:
                 account_manager = AccountManager()
