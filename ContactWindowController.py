@@ -344,7 +344,7 @@ class ContactWindowController(NSWindowController):
     purge_presence_timer = None
     full_screen_in_progress = False
     myvideo = None
-    
+
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
 
@@ -1075,7 +1075,7 @@ class ContactWindowController(NSWindowController):
                 self.speech_synthesizer.setVolume_(volume)
 
                 self.speech_synthesizer_active = True
-                speak_text = NSLocalizedString("%s is now available", "Spoken text by syntheziser") % contact.name
+                speak_text = NSLocalizedString("%s is now available", "Spoken text by synthesiser") % contact.name
                 self.speech_synthesizer.startSpeakingString_(speak_text)
 
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
@@ -1410,7 +1410,7 @@ class ContactWindowController(NSWindowController):
 
     def _NH_BlinkConferenceGotUpdate(self, notification):
         self.updateParticipantsView()
-    
+
     def _NH_BlinkDidRenegotiateStreams(self, notification):
         self.recalculateDrawerSplitter()
 
@@ -1920,7 +1920,7 @@ class ContactWindowController(NSWindowController):
                         volume = settings.sounds.night_volume.volume/100.0
                 self.speech_synthesizer.setVolume_(volume)
 
-                speak_text = NSLocalizedString("%s are now available. Start conference now?", "Spoken text by syntheziser") % label
+                speak_text = NSLocalizedString("%s are now available. Start conference now?", "Spoken text by synthesiser") % label
                 self.speech_synthesizer_active = True
                 self.speech_synthesizer.startSpeakingString_(speak_text)
 
@@ -1932,7 +1932,7 @@ class ContactWindowController(NSWindowController):
 
             self.scheduled_conferences.discard(conference)
 
-    def startConferenceIfAppropiate(self, conference, play_initial_announcement=False):
+    def startConferenceIfAppropriate(self, conference, play_initial_announcement=False):
         start_now = True
         if conference.start_when_participants_available and conference.participants:
             for uri in conference.participants:
@@ -1981,7 +1981,7 @@ class ContactWindowController(NSWindowController):
             return
         conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
-            self.startConferenceIfAppropiate(conference, play_initial_announcement=True)
+            self.startConferenceIfAppropriate(conference, play_initial_announcement=True)
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
 
@@ -2284,7 +2284,7 @@ class ContactWindowController(NSWindowController):
                         self.ldap_search.cancel()
                     self.ldap_search.search(text)
 
-                # create a syntetic contact with what we typed
+                # create a synthetic contact with what we typed
                 try:
                     str(text)
                 except UnicodeEncodeError:
@@ -2631,7 +2631,7 @@ class ContactWindowController(NSWindowController):
     def rightMouseDown_(self, event):
         point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
         event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(NSRightMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), self.window().windowNumber(), self.window().graphicsContext(), 0, 1, 0)
-                                                                                                                                  
+
         menu = NSMenu.alloc().init()
         session = self.getSelectedAudioSession()
         video_stream = session.streamHandlerOfType("video")
@@ -2653,7 +2653,7 @@ class ContactWindowController(NSWindowController):
         session = self.getSelectedAudioSession()
         if session:
             session.setVideoConsumer("standalone")
-    
+
     @objc.IBAction
     def groupButtonClicked_(self, sender):
         # IM button
@@ -2900,7 +2900,7 @@ class ContactWindowController(NSWindowController):
         sender.resignFirstResponder()
 
     def removePresenceContactForOurselves(self):
-       # mysel contact was used in the past to replicate our own presence
+       # myself contact was used in the past to replicate our own presence
        addressbook_manager = AddressbookManager()
        try:
            contact = addressbook_manager.get_contact('myself')
@@ -3469,7 +3469,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setRepresentedObject_(account)
 
         # voicemail
-        def format_account_item(account, mwi_data, mwi_format_new, mwi_format_nonew):
+        def format_account_item(account, mwi_data, mwi_format_new, mwi_format_no_new):
             a = NSMutableAttributedString.alloc().init()
             n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal_font_color)
             a.appendAttributedString_(n)
@@ -3478,7 +3478,7 @@ class ContactWindowController(NSWindowController):
                 t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_new)
             else:
                 text = "No new messages"
-                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_nonew)
+                t = NSAttributedString.alloc().initWithString_attributes_(text, mwi_format_no_new)
             a.appendAttributedString_(t)
             return a
 
@@ -4142,12 +4142,12 @@ class ContactWindowController(NSWindowController):
                 account = None
 
             target_uri = sipuri_components_from_string(session_info.remote_uri)[0]
-            BlinkLogger().log_info(u"Redialing to %s using acount %s" % (target_uri, account))
+            BlinkLogger().log_info(u"Redialing to %s using account %s" % (target_uri, account))
 
             contact = self.getFirstContactFromAllContactsGroupMatchingURI(target_uri)
 
         if not account:
-            BlinkLogger().log_info(u"Acount %s is not active, using default account" % account)
+            BlinkLogger().log_info(u"Account %s is not active, using default account" % account)
             account = self.activeAccount()
 
         target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
@@ -5582,7 +5582,7 @@ class ContactWindowController(NSWindowController):
 
                 contact.active_media = active_media
 
-                # detail will be reset on receival of next conference-info update
+                # detail will be reset on receiving of the next conference-info update
                 if uri in session.pending_removal_participants:
                     contact.detail = NSLocalizedString("Removal requested...", "Participants contextual menu item")
 
@@ -5729,7 +5729,7 @@ class ContactWindowController(NSWindowController):
     def recalculateDrawerSplitter(self):
         if not self.drawer.isOpen():
             return
-        
+
         parent_frame = self.drawerSplitView.frame()
         top_frame = self.sessionsView.frame()
         middle_frame = self.participantsView.frame()
