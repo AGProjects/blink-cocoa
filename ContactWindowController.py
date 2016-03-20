@@ -2900,13 +2900,13 @@ class ContactWindowController(NSWindowController):
         sender.resignFirstResponder()
 
     def removePresenceContactForOurselves(self):
-       # myself contact was used in the past to replicate our own presence
-       addressbook_manager = AddressbookManager()
-       try:
+        # myself contact was used in the past to replicate our own presence
+        addressbook_manager = AddressbookManager()
+        try:
            contact = addressbook_manager.get_contact('myself')
-       except KeyError:
+        except KeyError:
            pass
-       else:
+        else:
            contact.delete()
 
     def loadPresenceStates(self):
