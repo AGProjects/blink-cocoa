@@ -154,21 +154,15 @@ class iCloudManager(NSObject):
         return cjson.encode(data)
 
     def _update_account_from_cloud(self, key):
-        json_data = self.cloud_storage.stringForKey_(key)
         account_manager = AccountManager()
+        json_data = self.cloud_storage.stringForKey_(key)
+
         if json_data:
             try:
                 data = cjson.decode(json_data)
             except TypeError:
-                # account has been deleted in the mean time
-                try:
-                    account = account_manager.get_account(key)
-                    if isinstance(account, Account):
-                        # don't delete account because iCloud is unreliable
-                        # account.delete()
-                        pass
-                except KeyError:
-                    pass
+                # account has been deleted in the mean time. don't delete account locally because iCloud is unreliable.
+                pass
 
             try:
                 account = account_manager.get_account(key)
@@ -195,15 +189,6 @@ class iCloudManager(NSObject):
                             k.setPassword_(value)
                         else:
                             k.removeFromKeychain()
-        else:
-            try:
-                account = account_manager.get_account(key)
-                if isinstance(account, Account):
-                    pass
-                    # don't delete account because iCloud is unreliable
-                    # account.delete()
-            except KeyError:
-                pass
 
         self.notification_center.post_notification("SIPAccountChangedByICloud", sender=self, data=NotificationData(account=key))
 
