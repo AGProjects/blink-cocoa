@@ -1087,35 +1087,25 @@ class ContactWindowController(NSWindowController):
     @allocate_autorelease_pool
     def _NH_PresenceSubscriptionDidFail(self, notification):
         try:
-            account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account._presence_subscriber == notification.sender).next()
-        except StopIteration:
-            return
-
-        try:
-            position = self.accounts.index(account)
+            position = self.accounts.index(notification.sender.account)
         except ValueError:
-            return
-
-        if self.accounts[position].subscribe_presence_state != 'failed':
-            BlinkLogger().log_debug("Presence subscriptions for account %s failed" % account.id)
-        self.accounts[position].subscribe_presence_state = 'failed'
+            pass
+        else:
+            if self.accounts[position].subscribe_presence_state != 'failed':
+                BlinkLogger().log_debug("Presence subscriptions for account %s failed" % notification.sender.account.id)
+            self.accounts[position].subscribe_presence_state = 'failed'
 
     @allocate_autorelease_pool
     def _NH_PresenceSubscriptionDidEnd(self, notification):
         try:
-            account = (account for account in AccountManager().get_accounts() if account is not BonjourAccount() and account._presence_subscriber == notification.sender).next()
-        except StopIteration:
-            return
-
-        try:
-            position = self.accounts.index(account)
+            position = self.accounts.index(notification.sender.account)
         except ValueError:
-            return
-
-        if self.accounts[position].subscribe_presence_state != 'ended':
-            BlinkLogger().log_debug("Presence subscriptions for account %s ended" % account.id)
-        self.accounts[position].subscribe_presence_state = 'ended'
-        self.accounts[position].subscribe_presence_timestamp = None
+            pass
+        else:
+            if self.accounts[position].subscribe_presence_state != 'ended':
+                BlinkLogger().log_debug("Presence subscriptions for account %s ended" % notification.sender.account.id)
+            self.accounts[position].subscribe_presence_state = 'ended'
+            self.accounts[position].subscribe_presence_timestamp = None
 
     @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
@@ -1126,7 +1116,6 @@ class ContactWindowController(NSWindowController):
         else:
             if self.accounts[position].subscribe_presence_state != 'active':
                 BlinkLogger().log_debug("Presence subscriptions for account %s are active" % notification.sender.id)
-
             self.accounts[position].subscribe_presence_timestamp = time.time()
             self.accounts[position].subscribe_presence_state = 'active'
             self.accounts[position].subscribe_presence_purged = False
