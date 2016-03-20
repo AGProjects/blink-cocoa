@@ -114,16 +114,16 @@ class iCloudManager(NSObject):
                             # BlinkLogger().log_info(u"Removing %s because was removed from iCloud" % account.id)
                             # account.delete()
                     else:
-                        json_data = self.getJsonAccountData(account)
+                        json_data = self._get_account_data(account)
                         BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
                         self.cloud_storage.setString_forKey_(json_data, account.id)
                     changes +=  1
                 else:
-                    local_json = self.getJsonAccountData(account)
+                    local_json = self._get_account_data(account)
                     remote_json = self.cloud_storage.stringForKey_(account.id)
-                    if self.hasDifference(account, local_json, remote_json, True):
+                    if self._has_difference(account, local_json, remote_json, True):
                         BlinkLogger().log_info(u"Updating %s from iCloud" % account.id)
-                        self.updateAccountFromCloud(account.id)
+                        self._update_account_from_cloud(account.id)
                         changes +=  1
 
         for key in self.storage_keys:
@@ -132,7 +132,7 @@ class iCloudManager(NSObject):
                     AccountManager().get_account(key)
                 except KeyError:
                     BlinkLogger().log_info(u"Adding %s from iCloud" % key)
-                    self.updateAccountFromCloud(key)
+                    self._update_account_from_cloud(key)
                     changes += 1
 
         if not self.first_sync_completed:
@@ -144,16 +144,16 @@ class iCloudManager(NSObject):
             BlinkLogger().log_info(u"Synchronization with iCloud completed")
         self.sync_active = False
 
-    def purgeStorage(self):
+    def purge_storage(self):
         self.first_sync_completed = False
         for key in self.storage_keys:
             self.cloud_storage.removeObjectForKey_(key)
 
-    def getJsonAccountData(self, account):
+    def _get_account_data(self, account):
         data = self._get_state(account, skip=self.skip_settings)
         return cjson.encode(data)
 
-    def updateAccountFromCloud(self, key):
+    def _update_account_from_cloud(self, key):
         json_data = self.cloud_storage.stringForKey_(key)
         account_manager = AccountManager()
         if json_data:
@@ -206,7 +206,7 @@ class iCloudManager(NSObject):
 
         self.notification_center.post_notification("SIPAccountChangedByICloud", sender=self, data=NotificationData(account=key))
 
-    def hasDifference(self, account, local_json, remote_json, icloud=False):
+    def _has_difference(self, account, local_json, remote_json, icloud=False):
         changed_keys = set()
         BlinkLogger().log_debug(u"Computing differences from iCloud for %s" % account.id)
         try:
@@ -333,14 +333,14 @@ class iCloudManager(NSObject):
                 account_manager = AccountManager()
                 try:
                     account = account_manager.get_account(key)
-                    local_json = self.getJsonAccountData(account)
+                    local_json = self._get_account_data(account)
                     remote_json = self.cloud_storage.stringForKey_(key)
-                    if self.hasDifference(account, local_json, remote_json, True):
+                    if self._has_difference(account, local_json, remote_json, True):
                         BlinkLogger().log_info(u"Updating %s from iCloud" % key)
-                        self.updateAccountFromCloud(key)
+                        self._update_account_from_cloud(key)
                 except KeyError:
                     BlinkLogger().log_info(u"Adding %s from iCloud" % key)
-                    self.updateAccountFromCloud(key)
+                    self._update_account_from_cloud(key)
 
     @run_in_thread('file-io')
     @allocate_autorelease_pool
@@ -352,7 +352,7 @@ class iCloudManager(NSObject):
         account = data.account
         if self.first_sync_completed and account.id not in self.storage_keys and isinstance(account, Account):
             if account.gui.sync_with_icloud:
-                json_data = self.getJsonAccountData(account)
+                json_data = self._get_account_data(account)
                 BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
                 self.cloud_storage.setString_forKey_(json_data, account.id)
 
@@ -364,7 +364,7 @@ class iCloudManager(NSObject):
 
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
-            local_json = self.getJsonAccountData(account)
+            local_json = self._get_account_data(account)
             remote_json = self.cloud_storage.stringForKey_(account.id)
             if "gui.sync_with_icloud" in data.modified.keys():
                 if account.gui.sync_with_icloud and account.id not in self.storage_keys:
@@ -374,10 +374,10 @@ class iCloudManager(NSObject):
                     BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
                     self.cloud_storage.removeObjectForKey_(account.id)
             elif account.gui.sync_with_icloud:
-                must_update = any(key for key in data.modified.keys() if key not in self.skip_settings) and self.hasDifference(account, local_json, remote_json)
+                must_update = any(key for key in data.modified.keys() if key not in self.skip_settings) and self._has_difference(account, local_json, remote_json)
                 if must_update:
                     BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
-                    json_data = self.getJsonAccountData(account)
+                    json_data = self._get_account_data(account)
                     self.cloud_storage.setString_forKey_(json_data, account.id)
 
     def _NH_SIPApplicationDidStart(self, sender, data):
