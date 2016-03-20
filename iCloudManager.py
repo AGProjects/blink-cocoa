@@ -263,7 +263,7 @@ class iCloudManager(NSObject):
 
         return bool(diffs)
 
-    def _get_state(self, account, obj=None, skip=[]):
+    def _get_state(self, account, obj=None, skip=()):
         state = {}
         if obj is None:
             obj = account
