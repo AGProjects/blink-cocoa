@@ -44,7 +44,7 @@ class iCloudManager(NSObject):
             if enabled is None:
                 NSUserDefaults.standardUserDefaults().setObject_forKey_("Enabled", "iCloudSyncEnabled")
                 self.start()
-            elif enabled == "Enabled" :
+            elif enabled == "Enabled":
                 self.start()
 
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
@@ -117,14 +117,14 @@ class iCloudManager(NSObject):
                         json_data = self._get_account_data(account)
                         BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
                         self.cloud_storage.setString_forKey_(json_data, account.id)
-                    changes +=  1
+                    changes += 1
                 else:
                     local_json = self._get_account_data(account)
                     remote_json = self.cloud_storage.stringForKey_(account.id)
                     if self._has_difference(account, local_json, remote_json, True):
                         BlinkLogger().log_info(u"Updating %s from iCloud" % account.id)
                         self._update_account_from_cloud(account.id)
-                        changes +=  1
+                        changes += 1
 
         for key in self.storage_keys:
             if '@' in key:
@@ -179,8 +179,8 @@ class iCloudManager(NSObject):
 
             # update keychain passwords
             if isinstance(account, Account):
-                passwords = {'auth': {'label': '%s (%s)'      % (NSApp.delegate().applicationName, account.id), 'value': account.auth.password},
-                             'web':  {'label': '%s WEB (%s)'  % (NSApp.delegate().applicationName, account.id), 'value': account.server.web_password},
+                passwords = {'auth': {'label': '%s (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.auth.password},
+                             'web':  {'label': '%s WEB (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.server.web_password},
                              'ldap': {'label': '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.ldap.password},
                              'chat': {'label': '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.chat.replication_password}}
                 for p in passwords.keys():
@@ -235,9 +235,9 @@ class iCloudManager(NSObject):
 
             BlinkLogger().log_debug('Setting %s has been added' % e)
 
-            if not local_data.has_key(e):
+            if e not in local_data:
                 BlinkLogger().log_debug('Remote added')
-            elif not remote_data.has_key(e):
+            elif e not in remote_data:
                 BlinkLogger().log_debug('Local added')
 
             changed_keys.add(e)
@@ -249,10 +249,10 @@ class iCloudManager(NSObject):
 
             BlinkLogger().log_debug('Setting %s has been removed' % e)
 
-            if not local_data.has_key(e):
+            if e not in local_data:
                 BlinkLogger().log_debug('Local removed')
 
-            if not remote_data.has_key(e):
+            if e not in remote_data:
                 BlinkLogger().log_debug('Remote removed')
 
             changed_keys.add(e)
