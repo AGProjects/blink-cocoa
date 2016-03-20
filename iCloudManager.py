@@ -1,14 +1,11 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-import Foundation
-from Foundation import (NSObject,
-                        NSUserDefaults,
-                        NSNotificationCenter)
-from AppKit import NSApp, EMGenericKeychainItem
-
 import cjson
 import platform
+
+from Foundation import NSObject, NSUserDefaults, NSNotificationCenter, NSUbiquitousKeyValueStore
+from AppKit import NSApp, EMGenericKeychainItem
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
@@ -35,14 +32,6 @@ class iCloudManager(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def _get_first_sync_completed(self):
-        return NSUserDefaults.standardUserDefaults().boolForKey_("iCloudFirstSyncCompleted")
-
-    def _set_first_sync_completed(self, value):
-        NSUserDefaults.standardUserDefaults().setBool_forKey_(value, "iCloudFirstSyncCompleted")
-
-    first_sync_completed = property(_get_first_sync_completed, _set_first_sync_completed)
-
     def __init__(self):
         if not NSApp.delegate().icloud_enabled:
             NSUserDefaults.standardUserDefaults().setObject_forKey_("Disabled", "iCloudSyncEnabled")
@@ -60,9 +49,28 @@ class iCloudManager(NSObject):
 
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
 
+    @property
+    def storage_keys(self):
+        return self.cloud_storage.dictionaryRepresentation().keys()
+
+    @property
+    def storage_size(self):
+        size = 0
+        for key in self.storage_keys:
+            size += len(self.cloud_storage.stringForKey_(key))
+        return size
+
+    @property
+    def first_sync_completed(self):
+        return NSUserDefaults.standardUserDefaults().boolForKey_("iCloudFirstSyncCompleted")
+
+    @first_sync_completed.setter
+    def first_sync_completed(self, value):
+        NSUserDefaults.standardUserDefaults().setBool_forKey_(value, "iCloudFirstSyncCompleted")
+
     def start(self):
         BlinkLogger().log_debug(u"Starting iCloud Manager")
-        self.cloud_storage = Foundation.NSUbiquitousKeyValueStore.defaultStore()
+        self.cloud_storage = NSUbiquitousKeyValueStore.defaultStore()
         self.cloud_storage.synchronize()
         BlinkLogger().log_debug(u"%.1f out of 64.0 KB of iCloud storage space used" % (self.storage_size/1024))
 
@@ -84,92 +92,6 @@ class iCloudManager(NSObject):
 
         self.first_sync_completed = False
         BlinkLogger().log_info(u"iCloud Manager stopped")
-
-    def userDefaultsDidChange_(self, notification):
-        enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
-        if enabled == "Enabled":
-            if self.cloud_storage is None:
-                self.start()
-                self.sync()
-        elif self.cloud_storage is not None:
-            self.stop()
-
-    @property
-    def storage_keys(self):
-        return self.cloud_storage.dictionaryRepresentation().keys()
-
-    @property
-    def storage_size(self):
-        size = 0
-        for key in self.storage_keys:
-            size += len(self.cloud_storage.stringForKey_(key))
-        return size
-
-    def purgeStorage(self):
-        self.first_sync_completed = False
-        for key in self.storage_keys:
-            self.cloud_storage.removeObjectForKey_(key)
-
-    @run_in_thread('file-io')
-    @allocate_autorelease_pool
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification.sender, notification.data)
-
-    @run_in_thread('file-io')
-    def cloudStorgeDidChange_(self, notification):
-        BlinkLogger().log_info(u"iCloud storage has changed")
-        reason = notification.userInfo()["NSUbiquitousKeyValueStoreChangeReasonKey"]
-        if reason == 2:
-            BlinkLogger().log_info(u"iCloud quota exeeded")
-        for key in notification.userInfo()["NSUbiquitousKeyValueStoreChangedKeysKey"]:
-            if '@' in key:
-                am = AccountManager()
-                try:
-                    account = am.get_account(key)
-                    local_json = self.getJsonAccountData(account)
-                    remote_json = self.cloud_storage.stringForKey_(key)
-                    if self.hasDifference(account, local_json, remote_json, True):
-                        BlinkLogger().log_info(u"Updating %s from iCloud" % key)
-                        self.updateAccountFromCloud(key)
-                except KeyError:
-                    BlinkLogger().log_info(u"Adding %s from iCloud" % key)
-                    self.updateAccountFromCloud(key)
-
-    def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
-        account = data.account
-        if self.first_sync_completed and account.id not in self.storage_keys and isinstance(account, Account):
-            if account.gui.sync_with_icloud:
-                json_data = self.getJsonAccountData(account)
-                BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
-                self.cloud_storage.setString_forKey_(json_data, account.id)
-
-    def _NH_SIPAccountManagerDidRemoveAccount(self, sender, data):
-        account = data.account
-        if self.first_sync_completed and account.id in self.storage_keys and isinstance(account, Account):
-            BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
-            self.cloud_storage.removeObjectForKey_(account.id)
-
-    def _NH_CFGSettingsObjectDidChange(self, account, data):
-        if isinstance(account, Account):
-            local_json = self.getJsonAccountData(account)
-            remote_json = self.cloud_storage.stringForKey_(account.id)
-            if "gui.sync_with_icloud" in data.modified.keys():
-                if account.gui.sync_with_icloud and account.id not in self.storage_keys:
-                    BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(local_json)))
-                    self.cloud_storage.setString_forKey_(local_json, account.id)
-                elif account.id in self.storage_keys:
-                    BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
-                    self.cloud_storage.removeObjectForKey_(account.id)
-            elif account.gui.sync_with_icloud:
-                must_update = any(key for key in data.modified.keys() if key not in self.skip_settings) and self.hasDifference(account, local_json, remote_json)
-                if must_update:
-                    BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
-                    json_data = self.getJsonAccountData(account)
-                    self.cloud_storage.setString_forKey_(json_data, account.id)
-
-    def _NH_SIPApplicationDidStart(self, sender, data):
-        self.sync()
 
     @run_in_thread('file-io')
     def sync(self):
@@ -211,7 +133,7 @@ class iCloudManager(NSObject):
                 except KeyError:
                     BlinkLogger().log_info(u"Adding %s from iCloud" % key)
                     self.updateAccountFromCloud(key)
-                    changes +=  1
+                    changes += 1
 
         if not self.first_sync_completed:
             self.first_sync_completed = True
@@ -222,70 +144,25 @@ class iCloudManager(NSObject):
             BlinkLogger().log_info(u"Synchronization with iCloud completed")
         self.sync_active = False
 
-    def getJsonAccountData(self, account):
-        def get_state(account, obj=None, skip=[]):
-            state = {}
-            if obj is None:
-                obj = account
-            for name in dir(obj.__class__):
-                attribute = getattr(obj.__class__, name, None)
-                if name in skip:
-                    continue
-                if isinstance(attribute, SettingsGroupMeta):
-                    state[name] = get_state(account, getattr(obj, name), skip)
-                elif isinstance(attribute, Setting):
-                    value = attribute.__getstate__(obj)
-                    if value is DefaultValue:
-                        value = attribute.default
-                    if name == 'password':
-                        if isinstance(obj, AuthSettings):
-                            label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
-                            keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                            value = unicode(keychain_item.password()) if keychain_item is not None else ''
-                        elif isinstance(obj, LDAPSettingsExtension):
-                            label = '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id)
-                            keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                            value = unicode(keychain_item.password()) if keychain_item is not None else ''
-                    if name == 'web_password':
-                        label = '%s WEB (%s)' % (NSApp.delegate().applicationName, account.id)
-                        keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                        value = unicode(keychain_item.password()) if keychain_item is not None else ''
-                    if name == 'replication_password':
-                        label = '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id)
-                        keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                        value = unicode(keychain_item.password()) if keychain_item is not None else ''
-                    state[name] = value
-            return state
+    def purgeStorage(self):
+        self.first_sync_completed = False
+        for key in self.storage_keys:
+            self.cloud_storage.removeObjectForKey_(key)
 
-        data = get_state(account, skip=self.skip_settings)
+    def getJsonAccountData(self, account):
+        data = self._get_state(account, skip=self.skip_settings)
         return cjson.encode(data)
 
     def updateAccountFromCloud(self, key):
-        def set_state(obj, state):
-            for name, value in state.iteritems():
-                attribute = getattr(obj.__class__, name, None)
-                if isinstance(attribute, SettingsGroupMeta):
-                    group = getattr(obj, name)
-                    set_state(group, value)
-                elif isinstance(attribute, Setting):
-                    if issubclass(attribute.type, bool) and isinstance(value, bool):
-                        value = str(value)
-                    try:
-                        attribute.__setstate__(obj, value)
-                    except ValueError:
-                        pass
-                    else:
-                        attribute.dirty[obj] = True
-
         json_data = self.cloud_storage.stringForKey_(key)
-        am = AccountManager()
+        account_manager = AccountManager()
         if json_data:
             try:
                 data = cjson.decode(json_data)
             except TypeError:
                 # account has been deleted in the mean time
                 try:
-                    account = am.get_account(key)
+                    account = account_manager.get_account(key)
                     if isinstance(account, Account):
                         # don't delete account because iCloud is unreliable
                         # account.delete()
@@ -294,10 +171,10 @@ class iCloudManager(NSObject):
                     pass
 
             try:
-                account = am.get_account(key)
+                account = account_manager.get_account(key)
             except KeyError:
                 account = Account(key)
-            set_state(account, data)
+            self._set_state(account, data)
             account.save()
 
             # update keychain passwords
@@ -305,8 +182,7 @@ class iCloudManager(NSObject):
                 passwords = {'auth': {'label': '%s (%s)'      % (NSApp.delegate().applicationName, account.id), 'value': account.auth.password},
                              'web':  {'label': '%s WEB (%s)'  % (NSApp.delegate().applicationName, account.id), 'value': account.server.web_password},
                              'ldap': {'label': '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.ldap.password},
-                             'chat': {'label': '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.chat.replication_password}
-                            }
+                             'chat': {'label': '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id), 'value': account.chat.replication_password}}
                 for p in passwords.keys():
                     label = passwords[p]['label']
                     value = passwords[p]['value']
@@ -320,7 +196,7 @@ class iCloudManager(NSObject):
                             k.removeFromKeychain()
         else:
             try:
-                account = am.get_account(key)
+                account = account_manager.get_account(key)
                 if isinstance(account, Account):
                     pass
                     # don't delete account because iCloud is unreliable
@@ -386,4 +262,124 @@ class iCloudManager(NSObject):
             self.notification_center.post_notification("iCloudStorageDidChange", sender=self, data=NotificationData(account=account.id, changed_keys=changed_keys))
 
         return bool(diffs)
+
+    def _get_state(self, account, obj=None, skip=[]):
+        state = {}
+        if obj is None:
+            obj = account
+        for name in dir(obj.__class__):
+            attribute = getattr(obj.__class__, name, None)
+            if name in skip:
+                continue
+            if isinstance(attribute, SettingsGroupMeta):
+                state[name] = self.get_state(account, getattr(obj, name), skip)
+            elif isinstance(attribute, Setting):
+                value = attribute.__getstate__(obj)
+                if value is DefaultValue:
+                    value = attribute.default
+                if name == 'password':
+                    if isinstance(obj, AuthSettings):
+                        label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
+                        keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                        value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                    elif isinstance(obj, LDAPSettingsExtension):
+                        label = '%s LDAP (%s)' % (NSApp.delegate().applicationName, account.id)
+                        keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                        value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                if name == 'web_password':
+                    label = '%s WEB (%s)' % (NSApp.delegate().applicationName, account.id)
+                    keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                    value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                if name == 'replication_password':
+                    label = '%s ChatReplication (%s)' % (NSApp.delegate().applicationName, account.id)
+                    keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
+                    value = unicode(keychain_item.password()) if keychain_item is not None else ''
+                state[name] = value
+        return state
+
+    def _set_state(self, obj, state):
+        for name, value in state.iteritems():
+            attribute = getattr(obj.__class__, name, None)
+            if isinstance(attribute, SettingsGroupMeta):
+                group = getattr(obj, name)
+                self._set_state(group, value)
+            elif isinstance(attribute, Setting):
+                if issubclass(attribute.type, bool) and isinstance(value, bool):
+                    value = str(value)
+                try:
+                    attribute.__setstate__(obj, value)
+                except ValueError:
+                    pass
+                else:
+                    attribute.dirty[obj] = True
+
+    def userDefaultsDidChange_(self, notification):
+        enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
+        if enabled == "Enabled":
+            if self.cloud_storage is None:
+                self.start()
+                self.sync()
+        elif self.cloud_storage is not None:
+            self.stop()
+
+    @run_in_thread('file-io')
+    def cloudStorgeDidChange_(self, notification):
+        BlinkLogger().log_info(u"iCloud storage has changed")
+        reason = notification.userInfo()["NSUbiquitousKeyValueStoreChangeReasonKey"]
+        if reason == 2:
+            BlinkLogger().log_info(u"iCloud quota exeeded")
+        for key in notification.userInfo()["NSUbiquitousKeyValueStoreChangedKeysKey"]:
+            if '@' in key:
+                account_manager = AccountManager()
+                try:
+                    account = account_manager.get_account(key)
+                    local_json = self.getJsonAccountData(account)
+                    remote_json = self.cloud_storage.stringForKey_(key)
+                    if self.hasDifference(account, local_json, remote_json, True):
+                        BlinkLogger().log_info(u"Updating %s from iCloud" % key)
+                        self.updateAccountFromCloud(key)
+                except KeyError:
+                    BlinkLogger().log_info(u"Adding %s from iCloud" % key)
+                    self.updateAccountFromCloud(key)
+
+    @run_in_thread('file-io')
+    @allocate_autorelease_pool
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
+        account = data.account
+        if self.first_sync_completed and account.id not in self.storage_keys and isinstance(account, Account):
+            if account.gui.sync_with_icloud:
+                json_data = self.getJsonAccountData(account)
+                BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
+                self.cloud_storage.setString_forKey_(json_data, account.id)
+
+    def _NH_SIPAccountManagerDidRemoveAccount(self, sender, data):
+        account = data.account
+        if self.first_sync_completed and account.id in self.storage_keys and isinstance(account, Account):
+            BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
+            self.cloud_storage.removeObjectForKey_(account.id)
+
+    def _NH_CFGSettingsObjectDidChange(self, account, data):
+        if isinstance(account, Account):
+            local_json = self.getJsonAccountData(account)
+            remote_json = self.cloud_storage.stringForKey_(account.id)
+            if "gui.sync_with_icloud" in data.modified.keys():
+                if account.gui.sync_with_icloud and account.id not in self.storage_keys:
+                    BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(local_json)))
+                    self.cloud_storage.setString_forKey_(local_json, account.id)
+                elif account.id in self.storage_keys:
+                    BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
+                    self.cloud_storage.removeObjectForKey_(account.id)
+            elif account.gui.sync_with_icloud:
+                must_update = any(key for key in data.modified.keys() if key not in self.skip_settings) and self.hasDifference(account, local_json, remote_json)
+                if must_update:
+                    BlinkLogger().log_info(u"Updating %s on iCloud" % account.id)
+                    json_data = self.getJsonAccountData(account)
+                    self.cloud_storage.setString_forKey_(json_data, account.id)
+
+    def _NH_SIPApplicationDidStart(self, sender, data):
+        self.sync()
 
