@@ -113,6 +113,8 @@ from zope.interface import implements
 
 from LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
 
+import ContactOutlineView  # this is used from the UI
+import ListView            # this is used from the UI
 import SMSWindowManager
 
 from AccountSettings import AccountSettings
@@ -122,6 +124,7 @@ from BlockedContact import BlockedContact
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
+from ContactCell import ContactCell  # this is used from the UI
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup
 from ContactListModel import BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar
 from ContactListModel import DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
