@@ -856,7 +856,7 @@ class ContactWindowController(NSWindowController):
         self.open_last_sms_conversations(results)
 
     @run_in_gui_thread
-    def open_last_sms_conversations(self, conversations=[]):
+    def open_last_sms_conversations(self, conversations=()):
         if SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
             return
 
@@ -1793,7 +1793,7 @@ class ContactWindowController(NSWindowController):
         else:
             return DefaultUserAvatar().path
 
-    def addContact(self, uris=[], name=None):
+    def addContact(self, uris=(), name=None):
         self.model.addContact(uris=uris, name=name)
         self.contactOutline.reloadData()
 
@@ -2469,7 +2469,7 @@ class ContactWindowController(NSWindowController):
 
         return session_controller
 
-    def joinConference(self, target, media_type, participants=[], nickname=None):
+    def joinConference(self, target, media_type, participants=(), nickname=None):
         BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media_type))
         if participants:
             BlinkLogger().log_info(u"Inviting participants: %s" % participants)
@@ -3734,7 +3734,7 @@ class ContactWindowController(NSWindowController):
         self.open_last_chat_conversations(results)
 
     @run_in_gui_thread
-    def open_last_chat_conversations(self, conversations=[]):
+    def open_last_chat_conversations(self, conversations=()):
         for parties in conversations:
             self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0])
 
