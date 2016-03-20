@@ -94,6 +94,7 @@ class iCloudManager(NSObject):
         BlinkLogger().log_info(u"iCloud Manager stopped")
 
     @run_in_thread('file-io')
+    @allocate_autorelease_pool
     def sync(self):
         if self.sync_active:
             return
@@ -144,6 +145,7 @@ class iCloudManager(NSObject):
             BlinkLogger().log_info(u"Synchronization with iCloud completed")
         self.sync_active = False
 
+    @allocate_autorelease_pool
     def purge_storage(self):
         self.first_sync_completed = False
         for key in self.storage_keys:
@@ -310,6 +312,7 @@ class iCloudManager(NSObject):
             self.stop()
 
     @run_in_thread('file-io')
+    @allocate_autorelease_pool
     def cloudStorageDidChange_(self, notification):
         BlinkLogger().log_info(u"iCloud storage has changed")
         reason = notification.userInfo()["NSUbiquitousKeyValueStoreChangeReasonKey"]
