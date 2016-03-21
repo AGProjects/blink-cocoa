@@ -1,6 +1,15 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+debug_memory = True  # turn it on to enable tracing some of the memory leaks
+
+# this import has to come first
+
+if debug_memory:
+    import memory_debug
+    del memory_debug
+
+
 import os
 import sys
 from util import memory_stick_mode
