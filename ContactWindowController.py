@@ -3411,9 +3411,6 @@ class ContactWindowController(NSWindowController):
         a.appendAttributedString_(t)
         return a
 
-    def delete_session_history_entries(self):
-        SessionHistory().delete_entries()
-
     def sip_session_missed(self, session, stream_types):
         BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
         if 'audio' in stream_types:
@@ -5032,7 +5029,7 @@ class ContactWindowController(NSWindowController):
     def historyClicked_(self, sender):
         NSApp.activateIgnoringOtherApps_(True)
         if sender.tag() == 444:
-            self.delete_session_history_entries()
+            SessionHistory().delete_entries()
         elif sender.tag() == 555:
             # Voicemail
             account = sender.representedObject()
