@@ -870,7 +870,6 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(5).setHidden_(True)
             self.blinkMenu.itemWithTag_(6).setHidden_(True)
 
-    @allocate_autorelease_pool
     def updateCallMenu(self):
         menu = self.callMenu
 
@@ -960,7 +959,6 @@ class ContactWindowController(NSWindowController):
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(account)
 
-    @allocate_autorelease_pool
     def updateRecordingsMenu(self):
         if not NSApp.delegate().recording_enabled:
             return
@@ -1253,7 +1251,6 @@ class ContactWindowController(NSWindowController):
                 title = u"%s" % session.titleShort if isinstance(session.account, BonjourAccount) else u"%s" % session.titleLong
         return title
 
-    @allocate_autorelease_pool
     def updateParticipantsView(self):
         session = self.getSelectedAudioSession()
 
@@ -1328,7 +1325,6 @@ class ContactWindowController(NSWindowController):
         if self.videoView.setProducer(producer):
             self.recalculateDrawerSplitter()
 
-    @allocate_autorelease_pool
     def updateContactContextMenu(self):
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             sel = self.contactOutline.selectedRow()
@@ -3415,7 +3411,6 @@ class ContactWindowController(NSWindowController):
         a.appendAttributedString_(t)
         return a
 
-    @allocate_autorelease_pool
     def delete_session_history_entries(self):
         SessionHistory().delete_entries()
 
@@ -5256,7 +5251,6 @@ class ContactWindowController(NSWindowController):
     def _NH_HistoryEntriesVisibilityChanged(self, notification):
         self.model.reload_history_groups(force_reload=True)
 
-    @allocate_autorelease_pool
     def _NH_PresenceSubscriptionDidFail(self, notification):
         try:
             position = self.accounts.index(notification.sender.account)
@@ -5267,7 +5261,6 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_debug("Presence subscriptions for account %s failed" % notification.sender.account.id)
             self.accounts[position].subscribe_presence_state = 'failed'
 
-    @allocate_autorelease_pool
     def _NH_PresenceSubscriptionDidEnd(self, notification):
         try:
             position = self.accounts.index(notification.sender.account)
@@ -5279,7 +5272,6 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_state = 'ended'
             self.accounts[position].subscribe_presence_timestamp = None
 
-    @allocate_autorelease_pool
     def _NH_SIPAccountGotPresenceState(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -5659,7 +5651,6 @@ class ContactWindowController(NSWindowController):
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
 
-    @run_in_gui_thread
     def _NH_ChatReplicationJournalEntryReceived(self, notification):
         data = notification.data.chat_message
         hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteAOR == data['remote_uri'])
@@ -5667,7 +5658,6 @@ class ContactWindowController(NSWindowController):
         if not hasChat:
             self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
 
-    @run_in_gui_thread
     def _NH_BlinkProposalDidFail(self, notification):
         media_type = notification.data.proposed_streams[0].type
         if media_type == "video":
@@ -5677,7 +5667,6 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_info(u"Starting new %s session to %s because adding stream failed" % (media_type, target_uri))
         self.startSessionWithTarget(target_uri, media_type=media_type, local_uri=local_uri)
 
-    @run_in_gui_thread
     def _NH_SIPSessionLoggedToHistory(self, notification):
         self.updateHistoryMenu()
         if self.new_audio_sample_rate and not self.has_audio:
