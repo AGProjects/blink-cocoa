@@ -35,20 +35,22 @@ class NSLogger(object):
     def tell(self): raise IOError("NSLogger does not have position")
     def truncate(self, size=0): raise IOError("cannot truncate NSLogger")
     def write(self, text):
-        pool= Foundation.NSAutoreleasePool.alloc().init()
+        pool = Foundation.NSAutoreleasePool.alloc().init()
         if isinstance(text, basestring):
             text = text.rstrip()
         elif not isinstance(text, buffer):
             raise TypeError("write() argument must be a string or read-only buffer")
         Foundation.NSLog("%@", text)
+        del pool
     def writelines(self, lines):
-        pool= Foundation.NSAutoreleasePool.alloc().init()
+        pool = Foundation.NSAutoreleasePool.alloc().init()
         for line in lines:
             if isinstance(line, basestring):
                 line = line.rstrip()
             elif not isinstance(line, buffer):
                 raise TypeError("writelines() argument must be a sequence of strings")
             Foundation.NSLog("%@", line)
+        del pool
 
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
