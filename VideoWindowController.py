@@ -146,8 +146,8 @@ class VideoWidget(NSView):
     
     def setProducer(self, producer):
         BlinkLogger().log_debug("%s setProducer %s" % (self, producer))
-        if producer == None:
-            if  self.renderer is not None:
+        if producer is None:
+            if self.renderer is not None:
                 self.renderer.close()
                 self.renderer = None
                 return True
@@ -164,7 +164,7 @@ class VideoWidget(NSView):
     def close(self):
         BlinkLogger().log_debug("Close %s" % self)
         self.setProducer(None)
-        if  self.renderer is not None:
+        if self.renderer is not None:
             self.renderer.close()
             self.renderer = None
         self.removeFromSuperview()
