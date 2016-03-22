@@ -98,7 +98,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import VideoCamera, Engine, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
-from util import format_identity_to_string
+from util import allocate_autorelease_pool, format_identity_to_string, call_in_gui_thread
 
 from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState, CGColorCreateGenericRGB
 
@@ -203,18 +203,20 @@ class VideoWidget(NSView):
         if hasattr(self.delegate, "mouseDraggedView_"):
             self.delegate.mouseDraggedView_(event)
 
+    @allocate_autorelease_pool
     def handle_frame(self, frame):
         if self.isHidden():
             return
 
+        self._frame = frame
+
         aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
         if self.aspect_ratio != aspect_ratio:
             self.aspect_ratio = aspect_ratio
-            if self.aspect_ratio is not None or hasattr(self.delegate, "init_aspect_ratio"):
-                self.delegate.init_aspect_ratio(*frame.size)
-
-        self._frame = frame
-        self.setNeedsDisplay_(True)
+            call_in_gui_thread(self.delegate.init_aspect_ratio, *frame.size)
+            call_in_gui_thread(self.setNeedsDisplay_, True)
+        else:
+            self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
         if self.delegate and self.delegate.full_screen_in_progress:
