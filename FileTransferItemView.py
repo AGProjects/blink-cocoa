@@ -203,9 +203,13 @@ class FileTransferItemView(NSView):
         frame.size.height = self.originalHeight
         self.setFrame_(frame)
 
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
+    def updateProgressInfo(self):
+        self.fromText.setStringValue_(self.transfer.target_text)
+        self.sizeText.setStringValue_(self.transfer.progress_text)
+
+    def updateChecksumProgressInfo(self, progress):
+        self.checksumProgressBar.setDoubleValue_(progress)
+        self.sizeText.setStringValue_('Calculating checksum: %d%%' % progress)
 
     def setSelected_(self, flag):
         if flag:
@@ -283,6 +287,11 @@ class FileTransferItemView(NSView):
         dirname = os.path.dirname(path)
         NSWorkspace.sharedWorkspace().selectFile_inFileViewerRootedAtPath_(path, dirname)
 
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
     def _NH_BlinkFileTransferDidInitialize(self, notification):
         self.sizeText.setStringValue_(self.transfer.status)
         self.progressBar.setHidden_(False)
@@ -318,12 +327,4 @@ class FileTransferItemView(NSView):
 
     def _NH_BlinkFileTransferHashProgress(self, notification):
         self.updateChecksumProgressInfo(notification.data.progress)
-
-    def updateProgressInfo(self):
-        self.fromText.setStringValue_(self.transfer.target_text)
-        self.sizeText.setStringValue_(self.transfer.progress_text)
-
-    def updateChecksumProgressInfo(self, progress):
-        self.checksumProgressBar.setDoubleValue_(progress)
-        self.sizeText.setStringValue_('Calculating checksum: %d%%' % progress)
 
