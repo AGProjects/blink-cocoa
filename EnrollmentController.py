@@ -32,7 +32,7 @@ from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import Account, AccountManager
 
-from util import allocate_autorelease_pool
+from util import run_in_gui_thread
 from zope.interface import implements
 
 from BlinkLogger import BlinkLogger
@@ -110,7 +110,7 @@ class EnrollmentController(NSObject):
         NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
