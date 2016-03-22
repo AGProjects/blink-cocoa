@@ -721,6 +721,32 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
 
     @property
+    def id(self):
+        return self.contact.id
+
+    @property
+    def uri(self):
+        if self.default_uri is not None:
+            return self.default_uri.uri
+        try:
+            uri = next(iter(self.contact.uris))
+        except (StopIteration, AttributeError):
+            return u''
+        else:
+            return uri.uri
+
+    @property
+    def uri_type(self):
+        if self.default_uri is not None:
+            return self.default_uri.type or 'SIP'
+        try:
+            uri = next(iter(self.contact.uris))
+        except (StopIteration, AttributeError):
+            return u'SIP'
+        else:
+            return uri.type or 'SIP'
+
+    @property
     def pidfs(self):
         pidfs = set()
         for key in self.pidfs_map.keys():
@@ -734,6 +760,67 @@ class BlinkPresenceContact(BlinkContact):
                     if not found:
                         pidfs.add(pidf)
         return pidfs
+
+    def _get_favorite(self):
+        addressbook_manager = AddressbookManager()
+        try:
+            group = addressbook_manager.get_group('favorites')
+        except KeyError:
+            return False
+        else:
+            return self.contact.id in group.contacts
+
+    def _set_favorite(self, value):
+        addressbook_manager = AddressbookManager()
+        try:
+            group = addressbook_manager.get_group('favorites')
+        except KeyError:
+            group = Group(id='favorites')
+            group.name = u'Favorites'
+            group.expanded = True
+            group.position = None
+            group.save()
+        operation = group.contacts.add if value else group.contacts.remove
+        try:
+            operation(self.contact)
+        except ValueError:
+            pass
+        else:
+            group.save()
+
+    favorite = property(_get_favorite, _set_favorite)
+    del _get_favorite, _set_favorite
+
+    def _get_preferred_media(self):
+        uri = str(self.uri)
+        if not uri.startswith(('sip:', 'sips:')):
+            uri = 'sip:'+uri
+        try:
+            uri = SIPURI.parse(uri)
+        except SIPCoreError:
+            return self.contact.preferred_media
+        else:
+            return uri.parameters.get('session-type', self.contact.preferred_media)
+
+    def _set_preferred_media(self, value):
+        self.contact.preferred_media = value
+        self.contact.save()
+
+    preferred_media = property(_get_preferred_media, _set_preferred_media)
+    del _get_preferred_media, _set_preferred_media
+
+    def _get_default_uri(self):
+        try:
+            return self.contact.uris.default if self.contact is not None else None
+        except AttributeError:
+            return None
+
+    def _set_default_uri(self, value):
+        self.contact.uris.default = value
+        self.contact.save()
+
+    default_uri = property(_get_default_uri, _set_default_uri)
+    del _get_default_uri, _set_default_uri
 
     def account_has_pidfs_for_uris(self, account, uris):
         for key in (key for key in self.pidfs_map.iterkeys() if key in uris):
@@ -789,56 +876,8 @@ class BlinkPresenceContact(BlinkContact):
         objc.super(BlinkPresenceContact, self).destroy()
 
     @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
-
-    def _NH_SIPApplicationWillEnd(self, notification):
-        self.pidfs_map = {}
-        self.init_presence_state()
-        self.application_will_end = True
-
-    def _NH_SystemDidWakeUpFromSleep(self, notification):
-        self.pidfs_map = {}
-        self.init_presence_state()
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
-
-    def _NH_CFGSettingsObjectDidChange(self, notification):
-        if self.application_will_end:
-            return
-        if isinstance(notification.sender, Account) and 'presence.enabled' in notification.data.modified:
-            if not notification.sender.presence.enabled:
-                self.purge_pidfs_for_account(notification.sender.id)
-
-    def _NH_SIPAccountDidDeactivate(self, notification):
-        if self.application_will_end:
-            return
-        self.purge_pidfs_for_account(notification.sender.id)
-
-    def _NH_SIPAccountGotPresenceState(self, notification):
-        resource_map = notification.data.resource_map
-        for key, value in resource_map.iteritems():
-            if self.matchesURI(key, True) and self.contact is not None:
-                contact_uris = list(uri.uri for uri in iter(self.contact.uris))
-                resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
-                if resources:
-                    changed = self.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
-                    if changed:
-                        BlinkLogger().log_debug('Availability for %s %s by account %s has changed' % (self.name, key, notification.sender.id))
-                        self.reloadModelItem(self)
-                        if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
-                            online_group_changed = self.addToOrRemoveFromOnlineGroup()
-                            if online_group_changed:
-                                self.reloadModelItem(online_group_changed)
-
-    @run_in_gui_thread
     def reloadModelItem(self, item):
         NSApp.delegate().contactsWindowController.model.contactOutline.reloadItem_reloadChildren_(item, True)
-
-    def _NH_BlinkPresenceFailed(self, notification):
-        if self.application_will_end:
-            return
-        self.purge_pidfs_for_account(notification.sender)
 
     def purge_pidfs_for_account(self, account):
         changes = False
@@ -1341,89 +1380,6 @@ class BlinkPresenceContact(BlinkContact):
 
         return None
 
-    def _get_favorite(self):
-        addressbook_manager = AddressbookManager()
-        try:
-            group = addressbook_manager.get_group('favorites')
-        except KeyError:
-            return False
-        else:
-            return self.contact.id in group.contacts
-    def _set_favorite(self, value):
-        addressbook_manager = AddressbookManager()
-        try:
-            group = addressbook_manager.get_group('favorites')
-        except KeyError:
-            group = Group(id='favorites')
-            group.name = u'Favorites'
-            group.expanded = True
-            group.position = None
-            group.save()
-        operation = group.contacts.add if value else group.contacts.remove
-        try:
-            operation(self.contact)
-        except ValueError:
-            pass
-        else:
-            group.save()
-    favorite = property(_get_favorite, _set_favorite)
-    del _get_favorite, _set_favorite
-
-    def _get_preferred_media(self):
-        uri = str(self.uri)
-        if not uri.startswith(('sip:', 'sips:')):
-            uri = 'sip:'+uri
-        try:
-            uri = SIPURI.parse(uri)
-        except SIPCoreError:
-            return self.contact.preferred_media
-        else:
-            return uri.parameters.get('session-type', self.contact.preferred_media)
-    def _set_preferred_media(self, value):
-        self.contact.preferred_media = value
-        self.contact.save()
-    preferred_media = property(_get_preferred_media, _set_preferred_media)
-    del _get_preferred_media, _set_preferred_media
-
-    def _get_default_uri(self):
-        try:
-            return self.contact.uris.default if self.contact is not None else None
-        except AttributeError:
-            return None
-
-    def _set_default_uri(self, value):
-        self.contact.uris.default = value
-        self.contact.save()
-
-    default_uri = property(_get_default_uri, _set_default_uri)
-    del _get_default_uri, _set_default_uri
-
-    @property
-    def id(self):
-        return self.contact.id
-
-    @property
-    def uri(self):
-        if self.default_uri is not None:
-            return self.default_uri.uri
-        try:
-            uri = next(iter(self.contact.uris))
-        except (StopIteration, AttributeError):
-            return u''
-        else:
-            return uri.uri
-
-    @property
-    def uri_type(self):
-        if self.default_uri is not None:
-            return self.default_uri.type or 'SIP'
-        try:
-            uri = next(iter(self.contact.uris))
-        except (StopIteration, AttributeError):
-            return u'SIP'
-        else:
-            return uri.type or 'SIP'
-
     @allocate_autorelease_pool
     def setPresenceNote(self):
         if self.presence_state['status']['busy']:
@@ -1493,8 +1449,58 @@ class BlinkPresenceContact(BlinkContact):
             self.detail = detail
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_SIPApplicationWillEnd(self, notification):
+        self.pidfs_map = {}
+        self.init_presence_state()
+        self.application_will_end = True
+
+    def _NH_SystemDidWakeUpFromSleep(self, notification):
+        self.pidfs_map = {}
+        self.init_presence_state()
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        if self.application_will_end:
+            return
+        if isinstance(notification.sender, Account) and 'presence.enabled' in notification.data.modified:
+            if not notification.sender.presence.enabled:
+                self.purge_pidfs_for_account(notification.sender.id)
+
+    def _NH_SIPAccountDidDeactivate(self, notification):
+        if self.application_will_end:
+            return
+        self.purge_pidfs_for_account(notification.sender.id)
+
+    def _NH_SIPAccountGotPresenceState(self, notification):
+        resource_map = notification.data.resource_map
+        for key, value in resource_map.iteritems():
+            if self.matchesURI(key, True) and self.contact is not None:
+                contact_uris = list(uri.uri for uri in iter(self.contact.uris))
+                resources = dict((key, value) for key, value in resource_map.iteritems() if key in contact_uris)
+                if resources:
+                    changed = self.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
+                    if changed:
+                        BlinkLogger().log_debug('Availability for %s %s by account %s has changed' % (self.name, key, notification.sender.id))
+                        self.reloadModelItem(self)
+                        if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
+                            online_group_changed = self.addToOrRemoveFromOnlineGroup()
+                            if online_group_changed:
+                                self.reloadModelItem(online_group_changed)
+
+    def _NH_BlinkPresenceFailed(self, notification):
+        if self.application_will_end:
+            return
+        self.purge_pidfs_for_account(notification.sender)
+
+
 class AllContactsBlinkGroupBlinkPresenceContact(BlinkPresenceContact):
     pass
+
 
 class BlinkOnlineContact(BlinkPresenceContact):
     pass
@@ -2617,11 +2623,6 @@ class ContactListModel(CustomListModel):
 
         return self
 
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification)
-
     def awakeFromNib(self):
         self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
@@ -3000,6 +3001,273 @@ class ContactListModel(CustomListModel):
                         self.pending_watchers_group.sortContacts()
         self.renderPendingWatchersGroupIfNecessary()
 
+    def reload_history_groups(self, force_reload=False):
+        if not NSApp.delegate().history_enabled:
+            return
+
+    @run_in_thread('file-io')
+    def _atomic_update(self, save=(), delete=()):
+        with AddressbookManager.transaction():
+            [item.save() for item in save]
+            [item.delete() for item in delete]
+
+    def getBlinkContactsForName(self, name):
+        return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
+
+    def getBlinkContactsForURI(self, uri, exact_match=False):
+        return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
+
+    def getBlinkGroupsForBlinkContact(self, blink_contact):
+        allowed_groups = [group for group in self.groupsList if group.add_contact_allowed]
+        if not isinstance(blink_contact, BlinkPresenceContact):
+            return [group for group in allowed_groups if blink_contact in group.contacts]
+        else:
+            return [group for group in allowed_groups if blink_contact.contact in (item.contact for item in group.contacts if isinstance(item, BlinkPresenceContact))]
+
+    def saveGroupPosition(self):
+        # save groups position
+        addressbook_manager = AddressbookManager()
+        vg_manager = VirtualGroupsManager()
+        with addressbook_manager.transaction():
+            for group in addressbook_manager.get_groups()+vg_manager.get_groups():
+                try:
+                    blink_group = next(grp for grp in self.groupsList if grp.group == group)
+                except StopIteration:
+                    group.position = None
+                    group.save()
+                else:
+                    if group.position != self.groupsList.index(blink_group):
+                        group.position = self.groupsList.index(blink_group)
+                        group.save()
+
+    def createInitialGroupAndContacts(self):
+        BlinkLogger().log_debug(u"Creating initial contacts")
+
+        test_contacts = [dict(id='test_call',       name='Test Call',       preferred_media='audio+chat', uri='echo@conference.sip2sip.info'),
+                         dict(id='test_conference', name='Test Conference', preferred_media='audio+chat', uri='test@conference.sip2sip.info')]
+
+        def create_contact(id, name, preferred_media, uri):
+            contact = Contact(id)
+            contact.name = name
+            contact.preferred_media = preferred_media
+            contact.uris = [ContactURI(uri=uri, type='SIP')]
+            icon = NSImage.alloc().initWithContentsOfFile_(NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri))
+            avatar = PresenceContactAvatar(icon)
+            avatar.path = os.path.join(avatar.base_path, '%s.tiff' % id)
+            avatar.save()
+            return contact
+
+        group = Group(id='test')
+        group.name = 'Test'
+        group.expanded = True
+        group.contacts = [create_contact(**entry) for entry in test_contacts]
+
+        modified_items = list(group.contacts) + [group]
+        self._atomic_update(save=modified_items)
+
+    def moveBonjourGroupFirst(self):
+        if self.bonjour_group in self.groupsList:
+            self.bonjour_group.original_position = self.groupsList.index(self.bonjour_group)
+            self.groupsList.remove(self.bonjour_group)
+            self.groupsList.insert(0, self.bonjour_group)
+            self.saveGroupPosition()
+
+    def restoreBonjourGroupPosition(self):
+        if self.bonjour_group in self.groupsList:
+            self.groupsList.remove(self.bonjour_group)
+            self.groupsList.insert(self.bonjour_group.original_position or 0, self.bonjour_group)
+            self.saveGroupPosition()
+
+    def removeContactFromGroups(self, blink_contact, blink_groups):
+        for blink_group in blink_groups:
+            blink_group.group.contacts.remove(blink_contact.contact)
+            blink_group.group.save()
+
+    def removeContactFromBlinkGroups(self, contact, groups):
+        for group in groups:
+            try:
+                blink_contact = next(blink_contact for blink_contact in group.contacts if blink_contact.contact == contact)
+            except StopIteration:
+                pass
+            else:
+                group.contacts.remove(blink_contact)
+                blink_contact.destroy()
+                group.sortContacts()
+
+    def removePolicyForContactURIs(self, contact):
+        addressbook_manager = AddressbookManager()
+        # remove any policies for the same uris
+        for policy_contact in addressbook_manager.get_policies():
+            for address in contact.uris:
+                if policy_contact.uri == address.uri:
+                    policy_contact.delete()
+
+    def addBlockedPolicyForContactURIs(self, contact):
+        addressbook_manager = AddressbookManager()
+        for address in contact.uris:
+            if '@' not in address.uri:
+                continue
+
+            try:
+                policy_contact = (policy_contact for policy_contact in addressbook_manager.get_policies() if policy_contact.uri == address.uri).next()
+            except StopIteration:
+                policy_contact = Policy()
+                policy_contact.uri = address.uri
+                policy_contact.name = contact.name
+                policy_contact.presence.policy = 'block'
+                policy_contact.dialog.policy = 'block'
+                policy_contact.save()
+            else:
+                policy_contact.presence.policy = 'block'
+                policy_contact.dialog.policy = 'block'
+                policy_contact.save()
+
+    def addGroup(self):
+        controller = AddGroupController()
+        name = controller.runModal()
+        if not name:
+            return
+        group = Group()
+        group.name = name
+        group.expanded = True
+        group.position = max(len(self.groupsList)-1, 0)
+        group.save()
+
+    def editGroup(self, blink_group):
+        controller = AddGroupController()
+        name = controller.runModalForRename_(blink_group.name)
+        if not name or name == blink_group.name:
+            return
+        blink_group.group.name = name
+        blink_group.group.save()
+
+    def addGroupsForContact(self, contact, groups):
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            for blink_group in groups:
+                blink_group.group.contacts.add(contact)
+                blink_group.group.save()
+
+    def addContact(self, uris=[], group=None, name=None):
+        controller = AddContactController(uris, name=name, group=group)
+        new_contact = controller.runModal()
+
+        if not new_contact:
+            return False
+
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            contact = Contact()
+            contact.name = new_contact['name']
+            contact.organization = new_contact['organization']
+            contact.uris = new_contact['uris']
+            contact.auto_answer = new_contact['auto_answer']
+            contact.uris.default = new_contact['default_uri']
+            contact.preferred_media = new_contact['preferred_media']
+            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
+            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
+            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+
+            icon = new_contact['icon']
+            if icon is not None and icon is not DefaultUserAvatar().icon:
+                avatar = PresenceContactAvatar(icon)
+                avatar.path = avatar.path_for_contact(contact)
+                avatar.save()
+                contact.icon_info.url = None
+                contact.icon_info.etag = None
+                contact.icon_info.local = True
+
+            contact.save()
+
+            self.removePolicyForContactURIs(contact)
+            self.addGroupsForContact(contact, new_contact['groups'] or [])
+
+        return True
+
+    def editContact(self, item):
+        if not item:
+            return
+
+        if isinstance(item, SystemAddressBookBlinkContact):
+            url = "addressbook://"+item.id
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+            return
+
+        if not item.editable:
+            return
+
+        controller = EditContactController(item)
+        new_contact = controller.runModal()
+        if not new_contact:
+            return
+
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            contact = item.contact
+            contact.name = new_contact['name']
+            contact.organization = new_contact['organization']
+            contact.uris = new_contact['uris']
+            contact.auto_answer = new_contact['auto_answer']
+            contact.uris.default = new_contact['default_uri']
+            contact.preferred_media = new_contact['preferred_media']
+            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
+            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
+            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
+
+            icon = new_contact['icon']
+            if icon is None and item.avatar is not DefaultUserAvatar() or icon is not item.avatar.icon:
+                item.avatar.delete()
+                contact.icon_info.url = None
+                contact.icon_info.etag = None
+                if icon is not None:
+                    avatar = PresenceContactAvatar(icon)
+                    avatar.path = avatar.path_for_contact(contact)
+                    avatar.save()
+                    contact.icon_info.local = True
+                else:
+                    contact.icon_info.local = False
+
+            contact.save()
+
+            self.removePolicyForContactURIs(contact)
+
+            old_groups = set(self.getBlinkGroupsForBlinkContact(item))
+            new_groups = set(new_contact['groups'])
+            self.removeContactFromGroups(item, old_groups - new_groups)
+            self.addGroupsForContact(contact, new_groups)
+
+    def deleteContact(self, blink_contact):
+        if not blink_contact.deletable:
+            return
+
+        name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
+        message = NSLocalizedString("Delete '%s' from the Contacts list?", "Label") % name
+        message = re.sub("%", "%%", message)
+
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+        if ret == NSAlertDefaultReturn:
+            addressbook_manager = AddressbookManager()
+            with addressbook_manager.transaction():
+                #self.addBlockedPolicyForContactURIs(blink_contact.contact)
+                blink_contact.contact.delete()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    def deleteGroup(self, blink_group):
+        message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. ", "Label") % blink_group.name
+        message = re.sub("%", "%%", message)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Group", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+        if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
+            if blink_group.deletable:
+                blink_group.group.delete()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
     def _NH_SIPApplicationWillStart(self, notification):
         # Load virtual groups
         vgm = VirtualGroupsManager()
@@ -3174,10 +3442,6 @@ class ContactListModel(CustomListModel):
         if self.contact_backup_timer is not None and self.contact_backup_timer.isValid():
             self.contact_backup_timer.invalidate()
         self.contact_backup_timer = None
-
-    def reload_history_groups(self, force_reload=False):
-        if not NSApp.delegate().history_enabled:
-            return
 
         settings = SIPSimpleSettings()
         if settings.contacts.enable_missed_calls_group:
@@ -3822,262 +4086,4 @@ class ContactListModel(CustomListModel):
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
-
-    @run_in_thread('file-io')
-    def _atomic_update(self, save=(), delete=()):
-        with AddressbookManager.transaction():
-            [item.save() for item in save]
-            [item.delete() for item in delete]
-
-    def getBlinkContactsForName(self, name):
-        return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
-
-    def getBlinkContactsForURI(self, uri, exact_match=False):
-        return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
-
-    def getBlinkGroupsForBlinkContact(self, blink_contact):
-        allowed_groups = [group for group in self.groupsList if group.add_contact_allowed]
-        if not isinstance(blink_contact, BlinkPresenceContact):
-            return [group for group in allowed_groups if blink_contact in group.contacts]
-        else:
-            return [group for group in allowed_groups if blink_contact.contact in (item.contact for item in group.contacts if isinstance(item, BlinkPresenceContact))]
-
-    def saveGroupPosition(self):
-        # save groups position
-        addressbook_manager = AddressbookManager()
-        vg_manager = VirtualGroupsManager()
-        with addressbook_manager.transaction():
-            for group in addressbook_manager.get_groups()+vg_manager.get_groups():
-                try:
-                    blink_group = next(grp for grp in self.groupsList if grp.group == group)
-                except StopIteration:
-                    group.position = None
-                    group.save()
-                else:
-                    if group.position != self.groupsList.index(blink_group):
-                        group.position = self.groupsList.index(blink_group)
-                        group.save()
-
-    def createInitialGroupAndContacts(self):
-        BlinkLogger().log_debug(u"Creating initial contacts")
-
-        test_contacts = [dict(id='test_call',       name='Test Call',       preferred_media='audio+chat', uri='echo@conference.sip2sip.info'),
-                         dict(id='test_conference', name='Test Conference', preferred_media='audio+chat', uri='test@conference.sip2sip.info')]
-
-        def create_contact(id, name, preferred_media, uri):
-            contact = Contact(id)
-            contact.name = name
-            contact.preferred_media = preferred_media
-            contact.uris = [ContactURI(uri=uri, type='SIP')]
-            icon = NSImage.alloc().initWithContentsOfFile_(NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri))
-            avatar = PresenceContactAvatar(icon)
-            avatar.path = os.path.join(avatar.base_path, '%s.tiff' % id)
-            avatar.save()
-            return contact
-
-        group = Group(id='test')
-        group.name = 'Test'
-        group.expanded = True
-        group.contacts = [create_contact(**entry) for entry in test_contacts]
-
-        modified_items = list(group.contacts) + [group]
-        self._atomic_update(save=modified_items)
-
-    def moveBonjourGroupFirst(self):
-        if self.bonjour_group in self.groupsList:
-            self.bonjour_group.original_position = self.groupsList.index(self.bonjour_group)
-            self.groupsList.remove(self.bonjour_group)
-            self.groupsList.insert(0, self.bonjour_group)
-            self.saveGroupPosition()
-
-    def restoreBonjourGroupPosition(self):
-        if self.bonjour_group in self.groupsList:
-            self.groupsList.remove(self.bonjour_group)
-            self.groupsList.insert(self.bonjour_group.original_position or 0, self.bonjour_group)
-            self.saveGroupPosition()
-
-    def removeContactFromGroups(self, blink_contact, blink_groups):
-        for blink_group in blink_groups:
-            blink_group.group.contacts.remove(blink_contact.contact)
-            blink_group.group.save()
-
-    def removeContactFromBlinkGroups(self, contact, groups):
-        for group in groups:
-            try:
-                blink_contact = next(blink_contact for blink_contact in group.contacts if blink_contact.contact == contact)
-            except StopIteration:
-                pass
-            else:
-                group.contacts.remove(blink_contact)
-                blink_contact.destroy()
-                group.sortContacts()
-
-    def removePolicyForContactURIs(self, contact):
-        addressbook_manager = AddressbookManager()
-        # remove any policies for the same uris
-        for policy_contact in addressbook_manager.get_policies():
-            for address in contact.uris:
-                if policy_contact.uri == address.uri:
-                    policy_contact.delete()
-
-    def addBlockedPolicyForContactURIs(self, contact):
-        addressbook_manager = AddressbookManager()
-        for address in contact.uris:
-            if '@' not in address.uri:
-                continue
-
-            try:
-                policy_contact = (policy_contact for policy_contact in addressbook_manager.get_policies() if policy_contact.uri == address.uri).next()
-            except StopIteration:
-                policy_contact = Policy()
-                policy_contact.uri = address.uri
-                policy_contact.name = contact.name
-                policy_contact.presence.policy = 'block'
-                policy_contact.dialog.policy = 'block'
-                policy_contact.save()
-            else:
-                policy_contact.presence.policy = 'block'
-                policy_contact.dialog.policy = 'block'
-                policy_contact.save()
-
-    def addGroup(self):
-        controller = AddGroupController()
-        name = controller.runModal()
-        if not name:
-            return
-        group = Group()
-        group.name = name
-        group.expanded = True
-        group.position = max(len(self.groupsList)-1, 0)
-        group.save()
-
-    def editGroup(self, blink_group):
-        controller = AddGroupController()
-        name = controller.runModalForRename_(blink_group.name)
-        if not name or name == blink_group.name:
-            return
-        blink_group.group.name = name
-        blink_group.group.save()
-
-    def addGroupsForContact(self, contact, groups):
-        addressbook_manager = AddressbookManager()
-        with addressbook_manager.transaction():
-            for blink_group in groups:
-                blink_group.group.contacts.add(contact)
-                blink_group.group.save()
-
-    def addContact(self, uris=[], group=None, name=None):
-        controller = AddContactController(uris, name=name, group=group)
-        new_contact = controller.runModal()
-
-        if not new_contact:
-            return False
-
-        addressbook_manager = AddressbookManager()
-        with addressbook_manager.transaction():
-            contact = Contact()
-            contact.name = new_contact['name']
-            contact.organization = new_contact['organization']
-            contact.uris = new_contact['uris']
-            contact.auto_answer = new_contact['auto_answer']
-            contact.uris.default = new_contact['default_uri']
-            contact.preferred_media = new_contact['preferred_media']
-            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
-            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
-            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-
-            icon = new_contact['icon']
-            if icon is not None and icon is not DefaultUserAvatar().icon:
-                avatar = PresenceContactAvatar(icon)
-                avatar.path = avatar.path_for_contact(contact)
-                avatar.save()
-                contact.icon_info.url = None
-                contact.icon_info.etag = None
-                contact.icon_info.local = True
-
-            contact.save()
-
-            self.removePolicyForContactURIs(contact)
-            self.addGroupsForContact(contact, new_contact['groups'] or [])
-
-        return True
-
-    def editContact(self, item):
-        if not item:
-            return
-
-        if isinstance(item, SystemAddressBookBlinkContact):
-            url = "addressbook://"+item.id
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
-            return
-
-        if not item.editable:
-            return
-
-        controller = EditContactController(item)
-        new_contact = controller.runModal()
-        if not new_contact:
-            return
-
-        addressbook_manager = AddressbookManager()
-        with addressbook_manager.transaction():
-            contact = item.contact
-            contact.name = new_contact['name']
-            contact.organization = new_contact['organization']
-            contact.uris = new_contact['uris']
-            contact.auto_answer = new_contact['auto_answer']
-            contact.uris.default = new_contact['default_uri']
-            contact.preferred_media = new_contact['preferred_media']
-            contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
-            contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
-            contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
-
-            icon = new_contact['icon']
-            if icon is None and item.avatar is not DefaultUserAvatar() or icon is not item.avatar.icon:
-                item.avatar.delete()
-                contact.icon_info.url = None
-                contact.icon_info.etag = None
-                if icon is not None:
-                    avatar = PresenceContactAvatar(icon)
-                    avatar.path = avatar.path_for_contact(contact)
-                    avatar.save()
-                    contact.icon_info.local = True
-                else:
-                    contact.icon_info.local = False
-
-            contact.save()
-
-            self.removePolicyForContactURIs(contact)
-
-            old_groups = set(self.getBlinkGroupsForBlinkContact(item))
-            new_groups = set(new_contact['groups'])
-            self.removeContactFromGroups(item, old_groups - new_groups)
-            self.addGroupsForContact(contact, new_groups)
-
-    def deleteContact(self, blink_contact):
-        if not blink_contact.deletable:
-            return
-
-        name = blink_contact.name if len(blink_contact.name) else unicode(blink_contact.uri)
-        message = NSLocalizedString("Delete '%s' from the Contacts list?", "Label") % name
-        message = re.sub("%", "%%", message)
-
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
-        if ret == NSAlertDefaultReturn:
-            addressbook_manager = AddressbookManager()
-            with addressbook_manager.transaction():
-                #self.addBlockedPolicyForContactURIs(blink_contact.contact)
-                blink_contact.contact.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
-    def deleteGroup(self, blink_group):
-        message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. ", "Label") % blink_group.name
-        message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Group", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
-        if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
-            if blink_group.deletable:
-                blink_group.group.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
