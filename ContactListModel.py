@@ -815,7 +815,6 @@ class BlinkPresenceContact(BlinkContact):
             return
         self.purge_pidfs_for_account(notification.sender.id)
 
-    @run_in_green_thread
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map
         for key, value in resource_map.iteritems():
@@ -1868,7 +1867,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.last_results = results
             self.refresh_contacts(results)
 
-    @run_in_green_thread
+    @run_in_gui_thread
     def refresh_contacts(self, results):
         for blink_contact in list(self.contacts):
             self.contacts.remove(blink_contact)
@@ -3176,7 +3175,6 @@ class ContactListModel(CustomListModel):
             self.contact_backup_timer.invalidate()
         self.contact_backup_timer = None
 
-    @run_in_green_thread
     def reload_history_groups(self, force_reload=False):
         if not NSApp.delegate().history_enabled:
             return

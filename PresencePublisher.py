@@ -439,6 +439,7 @@ class PresencePublisher(object):
         except OSError:
             return None
 
+    @run_in_gui_thread
     def publish(self):
         if self.application_ended:
             return
