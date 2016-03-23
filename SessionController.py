@@ -725,7 +725,6 @@ class SessionControllersManager(object):
                     MusicApplications().resume()
 
 
-    @run_in_gui_thread
     def _NH_SIPSessionNewIncoming(self, session, data):
         match_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri, exact_match=True)
         streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
@@ -874,7 +873,6 @@ class SessionControllersManager(object):
         if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
             self.show_web_alert_page(session)
 
-    @run_in_gui_thread
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.ringer.add_outgoing(session, data.streams)
         if session.transfer_info is not None:
@@ -895,7 +893,6 @@ class SessionControllersManager(object):
     def _NH_WavePlayerDidEnd(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
 
-    @run_in_gui_thread
     def _NH_BlinkSessionDidEnd(self, session_controller, data):
         if session_controller.session is not None and session_controller.session.direction == "incoming":
             if session_controller.accounting_for_answering_machine:
@@ -905,7 +902,6 @@ class SessionControllersManager(object):
         else:
             self.log_outgoing_session_ended(session_controller, data)
 
-    @run_in_gui_thread
     def _NH_BlinkSessionDidFail(self, session_controller, data):
         if data.direction == "outgoing":
             if data.code == 487:
