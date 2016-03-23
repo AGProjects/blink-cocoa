@@ -157,7 +157,6 @@ class AnsweringMachine(object):
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
-    @run_in_green_thread
     def add_to_history(self, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         try:
             controller = (controller for controller in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers if controller.session == self.session).next()
