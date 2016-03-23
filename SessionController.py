@@ -153,302 +153,6 @@ class SessionControllersManager(object):
     def chatSessions(self):
         return (sess.session for sess in self.sessionControllers if sess.hasStreamOfType("chat"))
 
-    @run_in_gui_thread
-    def handle_notification(self, notification):
-        handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification.sender, notification.data)
-
-    def _NH_SIPApplicationDidStart(self, sender, data):
-        self.ringer = Ringer(self)
-        self.get_redial_uri_from_history()
-        ChatHistoryReplicator()
-
-    @run_in_green_thread
-    def get_redial_uri_from_history(self):
-        results = SessionHistory().get_entries(direction='outgoing', count=1)
-        try:
-            session_info = results[0]
-        except IndexError:
-            pass
-        else:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
-            self.redial_uri = fancy_uri
-
-    def _NH_BlinkShouldTerminate(self, sender, data):
-        self.closeAllSessions()
-
-    def _NH_SIPApplicationWillEnd(self, sender, data):
-        self.ringer.stop()
-
-    def _NH_SIPSessionDidFail(self, session, data):
-        self.incomingSessions.discard(session)
-        if self.pause_music:
-            if not self.activeAudioStreams and not self.incomingSessions:
-                MusicApplications().resume()
-
-    def _NH_SIPSessionDidStart(self, session, data):
-        self.incomingSessions.discard(session)
-        if self.pause_music:
-            if all(stream.type != 'audio' for stream in data.streams):
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    MusicApplications().resume()
-
-        if session.direction == 'incoming':
-            if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
-                self.show_web_alert_page(session)
-
-    def _NH_SIPSessionDidEnd(self, session, data):
-        if self.pause_music:
-            self.incomingSessions.discard(session)
-            if not self.activeAudioStreams and not self.incomingSessions:
-                MusicApplications().resume()
-
-    def _NH_SIPSessionNewProposal(self, session, data):
-        if self.pause_music:
-            if any(stream.type == 'audio' for stream in data.proposed_streams):
-                MusicApplications().resume()
-
-    def _NH_SIPSessionProposalRejected(self, session, data):
-        if self.pause_music:
-            if any(stream.type == 'audio' for stream in data.proposed_streams):
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    MusicApplications().resume()
-
-    def _NH_MediaStreamDidInitialize(self, stream, data):
-        if stream.type == 'audio':
-            self.activeAudioStreams.add(stream)
-
-    def _NH_SystemWillSleep(self, sender, data):
-        self.notification_center.remove_observer(self, name='SIPSessionNewIncoming')
-
-    def _NH_SystemDidWakeUpFromSleep(self, sender, data):
-        self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
-
-    def _NH_MediaStreamDidEnd(self, stream, data):
-        if self.pause_music:
-            if stream.type == "audio":
-                self.activeAudioStreams.discard(stream)
-                # TODO: check if session has other streams and if yes, resume itunes
-                # in case of session ends, resume is handled by the Session Controller
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    MusicApplications().resume()
-
-    def _NH_MediaStreamDidFail(self, stream, data):
-        if self.pause_music:
-            if stream.type == "audio":
-                self.activeAudioStreams.discard(stream)
-                if not self.activeAudioStreams and not self.incomingSessions:
-                    MusicApplications().resume()
-
-
-    @run_in_gui_thread
-    def _NH_SIPSessionNewIncoming(self, session, data):
-        match_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri, exact_match=True)
-        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
-        stream_type_list = list(set(stream.type for stream in streams))
-        caller_name = match_contact.name if match_contact else format_identity_to_string(session.remote_identity)
-
-        if data.streams and not streams:
-            BlinkLogger().log_info(u"Rejecting session for unsupported media type")
-            nc_title = 'Incompatible Media'
-            nc_body = 'Call from %s refused' % match_contact.name
-            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-            try:
-                session.reject(488)
-            except IllegalStateError, e:
-                BlinkLogger().log_error(e)
-            return
-        elif not streams:
-            # Handle initial INVITE with no SDP, offer audio
-            streams = [AudioStream()]
-
-        if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
-            BlinkLogger().log_info(u"Blocked contact rejected")
-            try:
-                session.reject(603)
-            except IllegalStateError, e:
-                BlinkLogger().log_error(e)
-            nc_title = 'Blocked Contact Rejected'
-            nc_body = 'Call from %s refused' % caller_name
-            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-            return
-
-        if self.dndSessions:
-            nc_title = 'Call Rejected'
-            nc_body = 'Do not disturb until done with other calls'
-            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-            BlinkLogger().log_info(u"Rejecting call until we finish existing calls")
-            try:
-                session.reject(600)
-            except IllegalStateError, e:
-                BlinkLogger().log_error(e)
-            return
-
-        # if call waiting is disabled and we have audio calls reject with busy
-        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
-        if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
-            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
-            try:
-                session.reject(486)
-            except IllegalStateError, e:
-                BlinkLogger().log_error(e)
-            return
-
-        if 'audio' in stream_type_list and session.account is not BonjourAccount():
-            if session.account.audio.do_not_disturb:
-                nc_title = 'Do Not Disturb'
-                nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
-                NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-                BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % caller_name)
-                try:
-                    session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
-                except IllegalStateError, e:
-                    BlinkLogger().log_error(e)
-                return
-
-            if session.account.audio.reject_anonymous:
-                if session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
-                    nc_title = 'Anonymous Call Rejected'
-                    nc_body = 'Call refused'
-                    NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=None)
-                    BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
-                    try:
-                        session.reject(603)  # todo: an alternative to this is 433 "Anonymity Disallowed" (see RFC 5079), but is not a global reject code and is not present in sipsimple -Dan
-                    except IllegalStateError, e:
-                        BlinkLogger().log_error(e)
-                    return
-
-            if session.account.audio.reject_unauthorized_contacts:
-                if match_contact is not None and isinstance(match_contact, BlinkPresenceContact):
-                    if match_contact.contact.presence.policy != 'allow':
-                        nc_title = 'Unauthorized Caller Rejected'
-                        nc_body = 'Call from %s refused' % caller_name
-                        NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-                        BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
-                        try:
-                            session.reject(603)
-                        except IllegalStateError, e:
-                            BlinkLogger().log_error(e)
-                        return
-                else:
-                    BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
-                    nc_title = 'Unauthorized Caller Rejected'
-                    nc_body = 'Call refused from blocked contact'
-                    NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-                    try:
-                        session.reject(603)
-                    except IllegalStateError, e:
-                        BlinkLogger().log_error(e)
-                    return
-
-        # save session subject
-        try:
-            session.subject = data.headers['Subject'].body
-        except KeyError:
-            session.subject = None
-
-        # at this stage call is allowed and will alert the user
-        self.incomingSessions.add(session)
-
-        if self.pause_music:
-            MusicApplications().pause()
-
-        self.ringer.add_incoming(session, streams)
-        session.blink_supported_streams = streams
-
-        settings = SIPSimpleSettings()
-        stream_type_list = list(set(stream.type for stream in streams))
-
-        if match_contact:
-            if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
-                self.startIncomingSession(session, streams)
-                return
-        elif session.account is BonjourAccount() and stream_type_list == ['chat']:
-            BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
-            self.startIncomingSession(session, streams)
-            return
-
-        if stream_type_list == ['file-transfer'] and 'screencapture' in streams[0].file_selector.name:
-            if NSApp.delegate().contactsWindowController.my_device_is_active:
-                BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
-                self.startIncomingSession(session, streams)
-                return
-
-        try:
-            session.send_ring_indication()
-        except IllegalStateError, e:
-            BlinkLogger().log_info(u"IllegalStateError: %s" % e)
-        else:
-            if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
-                self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
-            else:
-                self.addControllerWithSession_(session)
-                self.alertPanel.addIncomingSession(session)
-                self.alertPanel.show()
-
-        if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
-            self.show_web_alert_page(session)
-
-    @run_in_gui_thread
-    def _NH_SIPSessionNewOutgoing(self, session, data):
-        self.ringer.add_outgoing(session, data.streams)
-        if session.transfer_info is not None:
-            # This Session was created as a result of a transfer
-            self.addControllerWithSessionTransfer_(session)
-
-    def _NH_AudioStreamGotDTMF(self, sender, data):
-        key = data.digit
-        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
-        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
-        self.notification_center.add_observer(self, sender=wave_player)
-        SIPApplication.voice_audio_bridge.add(wave_player)
-        wave_player.start()
-
-    def _NH_WavePlayerDidFail(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender)
-
-    def _NH_WavePlayerDidEnd(self, sender, data):
-        self.notification_center.remove_observer(self, sender=sender)
-
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidEnd(self, session_controller, data):
-        if session_controller.session is not None and session_controller.session.direction == "incoming":
-            if session_controller.accounting_for_answering_machine:
-                self.log_incoming_session_missed(session_controller, data)
-            else:
-                self.log_incoming_session_ended(session_controller, data)
-        else:
-            self.log_outgoing_session_ended(session_controller, data)
-
-    @run_in_gui_thread
-    def _NH_BlinkSessionDidFail(self, session_controller, data):
-        if data.direction == "outgoing":
-            if data.code == 487:
-                self.log_outgoing_session_cancelled(session_controller, data)
-            else:
-                self.log_outgoing_session_failed(session_controller, data)
-        elif data.direction == "incoming":
-            session = session_controller.session
-            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
-                self.log_incoming_session_answered_elsewhere(session_controller, data)
-            else:
-                self.log_incoming_session_missed(session_controller, data)
-
-            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
-                pass
-            elif data.streams == ['file-transfer']:
-                pass
-            else:
-                session_controller.log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
-                if 'audio' in data.streams:
-                    NSApp.delegate().noteMissedCall()
-
-                nc_title = 'Missed Call (' + ", ".join(data.streams)  + ')'
-                nc_subtitle = 'From %s' % format_identity_to_string(session.remote_identity, check_contact=True, format='full')
-                nc_body = 'Missed call at %s' % data.timestamp.strftime("%Y-%m-%d %H:%M")
-                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-
     def addControllerWithSession_(self, session):
         sessionController = SessionController.alloc().initWithSession_(session)
         self.sessionControllers.append(sessionController)
@@ -472,52 +176,6 @@ class SessionControllersManager(object):
 
         NSApp.delegate().contactsWindowController.toggleOnThePhonePresenceActivity()
 
-    def send_files_to_contact(self, account, contact_uri, filenames):
-        if not self.isMediaTypeSupported('file-transfer'):
-            return
-
-        NSApp.delegate().contactsWindowController.showFileTransfers_(None)
-        target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, AccountManager().default_account)
-
-        for file in filenames:
-            if os.path.isdir(file):
-                dir = file
-                base_name = os.path.basename(dir)
-                dir_name = os.path.dirname(dir)
-                zip_folder = ApplicationData.get('.tmp_file_transfers')
-                if not os.path.exists(zip_folder):
-                    os.mkdir(zip_folder, 0700)
-                zip_file = '%s/%s.zip' % (zip_folder, base_name)
-                if os.path.isfile(zip_file):
-                    i = 1
-                    while True:
-                        zip_file = '%s/%s_%d.zip' % (zip_folder, base_name, i)
-                        if not os.path.isfile(zip_file):
-                            break
-                        i += 1
-
-                zf = zipfile.ZipFile(zip_file, mode='w')
-                try:
-                    BlinkLogger().log_error(u"Compressing folder %s to %s" % (dir, zip_file))
-                    for root, dirs, files in os.walk(file):
-                        for name in files:
-                            _file = os.path.join(root, name)
-                            arcname = _file[len(dir_name)+1:]
-                            zf.write(_file, compress_type=zipfile.ZIP_DEFLATED, arcname=arcname)
-                except Exception, exc:
-                    BlinkLogger().log_error(u"Error compressing %s to %s: %s" % (dir, zip_file, exc))
-                    continue
-                finally:
-                    zf.close()
-
-                file = zip_file
-
-            try:
-                xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
-                xfer.start()
-            except Exception, exc:
-                BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
-
     def sessionControllerForSession(self, session):
         try:
             controller = (controller for controller in self.sessionControllers if controller.session == session).next()
@@ -539,6 +197,13 @@ class SessionControllersManager(object):
             session_controller = self.addControllerWithSession_(session)
         session_controller.setAnsweringMachineMode_(answeringMachine)
         session_controller.handleIncomingStreams(streams, is_update=False, add_to_conference=add_to_conference)
+
+    def closeAllSessions(self):
+        if self.sessionControllers:
+            BlinkLogger().log_info('Ending all sessions')
+
+            for session in self.sessionControllers[:]:
+                session.end()
 
     def isScreenSharingEnabled(self):
         try:
@@ -891,12 +556,62 @@ class SessionControllersManager(object):
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
         ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
 
-    def closeAllSessions(self):
-        if self.sessionControllers:
-            BlinkLogger().log_info('Ending all sessions')
+    @run_in_green_thread
+    def get_redial_uri_from_history(self):
+        results = SessionHistory().get_entries(direction='outgoing', count=1)
+        try:
+            session_info = results[0]
+        except IndexError:
+            pass
+        else:
+            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
+            self.redial_uri = fancy_uri
 
-            for session in self.sessionControllers[:]:
-                session.end()
+    def send_files_to_contact(self, account, contact_uri, filenames):
+        if not self.isMediaTypeSupported('file-transfer'):
+            return
+
+        NSApp.delegate().contactsWindowController.showFileTransfers_(None)
+        target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, AccountManager().default_account)
+
+        for file in filenames:
+            if os.path.isdir(file):
+                dir = file
+                base_name = os.path.basename(dir)
+                dir_name = os.path.dirname(dir)
+                zip_folder = ApplicationData.get('.tmp_file_transfers')
+                if not os.path.exists(zip_folder):
+                    os.mkdir(zip_folder, 0700)
+                zip_file = '%s/%s.zip' % (zip_folder, base_name)
+                if os.path.isfile(zip_file):
+                    i = 1
+                    while True:
+                        zip_file = '%s/%s_%d.zip' % (zip_folder, base_name, i)
+                        if not os.path.isfile(zip_file):
+                            break
+                        i += 1
+
+                zf = zipfile.ZipFile(zip_file, mode='w')
+                try:
+                    BlinkLogger().log_error(u"Compressing folder %s to %s" % (dir, zip_file))
+                    for root, dirs, files in os.walk(file):
+                        for name in files:
+                            _file = os.path.join(root, name)
+                            arcname = _file[len(dir_name)+1:]
+                            zf.write(_file, compress_type=zipfile.ZIP_DEFLATED, arcname=arcname)
+                except Exception, exc:
+                    BlinkLogger().log_error(u"Error compressing %s to %s: %s" % (dir, zip_file, exc))
+                    continue
+                finally:
+                    zf.close()
+
+                file = zip_file
+
+            try:
+                xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
+                xfer.start()
+            except Exception, exc:
+                BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
 
     @run_in_gui_thread
     def show_web_alert_page(self, session):
@@ -932,6 +647,291 @@ class SessionControllersManager(object):
                 if not SIPManager()._delegate.accountSettingsPanels.has_key(caller_key):
                     SIPManager()._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
                 SIPManager()._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
+
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification.sender, notification.data)
+
+    def _NH_SIPApplicationDidStart(self, sender, data):
+        self.ringer = Ringer(self)
+        self.get_redial_uri_from_history()
+        ChatHistoryReplicator()
+
+    def _NH_BlinkShouldTerminate(self, sender, data):
+        self.closeAllSessions()
+
+    def _NH_SIPApplicationWillEnd(self, sender, data):
+        self.ringer.stop()
+
+    def _NH_SIPSessionDidFail(self, session, data):
+        self.incomingSessions.discard(session)
+        if self.pause_music:
+            if not self.activeAudioStreams and not self.incomingSessions:
+                MusicApplications().resume()
+
+    def _NH_SIPSessionDidStart(self, session, data):
+        self.incomingSessions.discard(session)
+        if self.pause_music:
+            if all(stream.type != 'audio' for stream in data.streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    MusicApplications().resume()
+
+        if session.direction == 'incoming':
+            if session.account is not BonjourAccount() and session.account.web_alert.show_alert_page_after_connect:
+                self.show_web_alert_page(session)
+
+    def _NH_SIPSessionDidEnd(self, session, data):
+        if self.pause_music:
+            self.incomingSessions.discard(session)
+            if not self.activeAudioStreams and not self.incomingSessions:
+                MusicApplications().resume()
+
+    def _NH_SIPSessionNewProposal(self, session, data):
+        if self.pause_music:
+            if any(stream.type == 'audio' for stream in data.proposed_streams):
+                MusicApplications().resume()
+
+    def _NH_SIPSessionProposalRejected(self, session, data):
+        if self.pause_music:
+            if any(stream.type == 'audio' for stream in data.proposed_streams):
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    MusicApplications().resume()
+
+    def _NH_MediaStreamDidInitialize(self, stream, data):
+        if stream.type == 'audio':
+            self.activeAudioStreams.add(stream)
+
+    def _NH_SystemWillSleep(self, sender, data):
+        self.notification_center.remove_observer(self, name='SIPSessionNewIncoming')
+
+    def _NH_SystemDidWakeUpFromSleep(self, sender, data):
+        self.notification_center.add_observer(self, name='SIPSessionNewIncoming')
+
+    def _NH_MediaStreamDidEnd(self, stream, data):
+        if self.pause_music:
+            if stream.type == "audio":
+                self.activeAudioStreams.discard(stream)
+                # TODO: check if session has other streams and if yes, resume itunes
+                # in case of session ends, resume is handled by the Session Controller
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    MusicApplications().resume()
+
+    def _NH_MediaStreamDidFail(self, stream, data):
+        if self.pause_music:
+            if stream.type == "audio":
+                self.activeAudioStreams.discard(stream)
+                if not self.activeAudioStreams and not self.incomingSessions:
+                    MusicApplications().resume()
+
+
+    @run_in_gui_thread
+    def _NH_SIPSessionNewIncoming(self, session, data):
+        match_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri, exact_match=True)
+        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
+        stream_type_list = list(set(stream.type for stream in streams))
+        caller_name = match_contact.name if match_contact else format_identity_to_string(session.remote_identity)
+
+        if data.streams and not streams:
+            BlinkLogger().log_info(u"Rejecting session for unsupported media type")
+            nc_title = 'Incompatible Media'
+            nc_body = 'Call from %s refused' % match_contact.name
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+            try:
+                session.reject(488)
+            except IllegalStateError, e:
+                BlinkLogger().log_error(e)
+            return
+        elif not streams:
+            # Handle initial INVITE with no SDP, offer audio
+            streams = [AudioStream()]
+
+        if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
+            BlinkLogger().log_info(u"Blocked contact rejected")
+            try:
+                session.reject(603)
+            except IllegalStateError, e:
+                BlinkLogger().log_error(e)
+            nc_title = 'Blocked Contact Rejected'
+            nc_body = 'Call from %s refused' % caller_name
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+            return
+
+        if self.dndSessions:
+            nc_title = 'Call Rejected'
+            nc_body = 'Do not disturb until done with other calls'
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+            BlinkLogger().log_info(u"Rejecting call until we finish existing calls")
+            try:
+                session.reject(600)
+            except IllegalStateError, e:
+                BlinkLogger().log_error(e)
+            return
+
+        # if call waiting is disabled and we have audio calls reject with busy
+        hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
+        if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
+            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
+            try:
+                session.reject(486)
+            except IllegalStateError, e:
+                BlinkLogger().log_error(e)
+            return
+
+        if 'audio' in stream_type_list and session.account is not BonjourAccount():
+            if session.account.audio.do_not_disturb:
+                nc_title = 'Do Not Disturb'
+                nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
+                NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+                BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % caller_name)
+                try:
+                    session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
+                except IllegalStateError, e:
+                    BlinkLogger().log_error(e)
+                return
+
+            if session.account.audio.reject_anonymous:
+                if session.remote_identity.uri.user.lower() in ('anonymous', 'unknown', 'unavailable'):
+                    nc_title = 'Anonymous Call Rejected'
+                    nc_body = 'Call refused'
+                    NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=None)
+                    BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
+                    try:
+                        session.reject(603)  # todo: an alternative to this is 433 "Anonymity Disallowed" (see RFC 5079), but is not a global reject code and is not present in sipsimple -Dan
+                    except IllegalStateError, e:
+                        BlinkLogger().log_error(e)
+                    return
+
+            if session.account.audio.reject_unauthorized_contacts:
+                if match_contact is not None and isinstance(match_contact, BlinkPresenceContact):
+                    if match_contact.contact.presence.policy != 'allow':
+                        nc_title = 'Unauthorized Caller Rejected'
+                        nc_body = 'Call from %s refused' % caller_name
+                        NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+                        BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                        try:
+                            session.reject(603)
+                        except IllegalStateError, e:
+                            BlinkLogger().log_error(e)
+                        return
+                else:
+                    BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                    nc_title = 'Unauthorized Caller Rejected'
+                    nc_body = 'Call refused from blocked contact'
+                    NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
+                    try:
+                        session.reject(603)
+                    except IllegalStateError, e:
+                        BlinkLogger().log_error(e)
+                    return
+
+        # save session subject
+        try:
+            session.subject = data.headers['Subject'].body
+        except KeyError:
+            session.subject = None
+
+        # at this stage call is allowed and will alert the user
+        self.incomingSessions.add(session)
+
+        if self.pause_music:
+            MusicApplications().pause()
+
+        self.ringer.add_incoming(session, streams)
+        session.blink_supported_streams = streams
+
+        settings = SIPSimpleSettings()
+        stream_type_list = list(set(stream.type for stream in streams))
+
+        if match_contact:
+            if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
+                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
+                self.startIncomingSession(session, streams)
+                return
+        elif session.account is BonjourAccount() and stream_type_list == ['chat']:
+            BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
+            self.startIncomingSession(session, streams)
+            return
+
+        if stream_type_list == ['file-transfer'] and 'screencapture' in streams[0].file_selector.name:
+            if NSApp.delegate().contactsWindowController.my_device_is_active:
+                BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
+                self.startIncomingSession(session, streams)
+                return
+
+        try:
+            session.send_ring_indication()
+        except IllegalStateError, e:
+            BlinkLogger().log_info(u"IllegalStateError: %s" % e)
+        else:
+            if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
+                self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
+            else:
+                self.addControllerWithSession_(session)
+                self.alertPanel.addIncomingSession(session)
+                self.alertPanel.show()
+
+        if session.account is not BonjourAccount() and not session.account.web_alert.show_alert_page_after_connect:
+            self.show_web_alert_page(session)
+
+    @run_in_gui_thread
+    def _NH_SIPSessionNewOutgoing(self, session, data):
+        self.ringer.add_outgoing(session, data.streams)
+        if session.transfer_info is not None:
+            # This Session was created as a result of a transfer
+            self.addControllerWithSessionTransfer_(session)
+
+    def _NH_AudioStreamGotDTMF(self, sender, data):
+        key = data.digit
+        filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
+        wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
+        self.notification_center.add_observer(self, sender=wave_player)
+        SIPApplication.voice_audio_bridge.add(wave_player)
+        wave_player.start()
+
+    def _NH_WavePlayerDidFail(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
+
+    def _NH_WavePlayerDidEnd(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionDidEnd(self, session_controller, data):
+        if session_controller.session is not None and session_controller.session.direction == "incoming":
+            if session_controller.accounting_for_answering_machine:
+                self.log_incoming_session_missed(session_controller, data)
+            else:
+                self.log_incoming_session_ended(session_controller, data)
+        else:
+            self.log_outgoing_session_ended(session_controller, data)
+
+    @run_in_gui_thread
+    def _NH_BlinkSessionDidFail(self, session_controller, data):
+        if data.direction == "outgoing":
+            if data.code == 487:
+                self.log_outgoing_session_cancelled(session_controller, data)
+            else:
+                self.log_outgoing_session_failed(session_controller, data)
+        elif data.direction == "incoming":
+            session = session_controller.session
+            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
+                self.log_incoming_session_answered_elsewhere(session_controller, data)
+            else:
+                self.log_incoming_session_missed(session_controller, data)
+
+            if data.code == 487 and data.failure_reason == 'Call completed elsewhere':
+                pass
+            elif data.streams == ['file-transfer']:
+                pass
+            else:
+                session_controller.log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
+                if 'audio' in data.streams:
+                    NSApp.delegate().noteMissedCall()
+
+                nc_title = 'Missed Call (' + ", ".join(data.streams)  + ')'
+                nc_subtitle = 'From %s' % format_identity_to_string(session.remote_identity, check_contact=True, format='full')
+                nc_body = 'Missed call at %s' % data.timestamp.strftime("%Y-%m-%d %H:%M")
+                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
 
 class SessionController(NSObject):
