@@ -417,6 +417,7 @@ class SIPManager(object):
         SIPSimpleSettings().audio.silent = flag
         SIPSimpleSettings().save()
 
+    @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -424,7 +425,6 @@ class SIPManager(object):
     def _NH_SIPApplicationFailedToStartTLS(self, sender, data):
         BlinkLogger().log_info(u'Failed to start TLS transport: %s' % data.error)
 
-    @allocate_autorelease_pool
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
