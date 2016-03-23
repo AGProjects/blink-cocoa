@@ -105,7 +105,7 @@ from sipsimple.audio import AudioConference, WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
-from sipsimple.threading import call_in_thread, run_in_thread
+from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
 from twisted.internet import reactor
@@ -2608,17 +2608,13 @@ class ContactWindowController(NSWindowController):
         return any(device for device in devices if media in device['caps'])
 
     def switchAudioDevice(self, device):
-        def switch_device(device):
-            settings = SIPSimpleSettings()
-            settings.audio.input_device = unicode(device)
-            settings.audio.output_device = unicode(device)
-            settings.save()
-
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         settings = SIPSimpleSettings()
         if hasAudio or settings.audio.automatic_device_switch:
             BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
-            call_in_thread('device-io', switch_device, device)
+            settings.audio.input_device = unicode(device)
+            settings.audio.output_device = unicode(device)
+            settings.save()
         else:
             NSApp.activateIgnoringOtherApps_(True)
             panel = NSGetInformationalAlertPanel(NSLocalizedString("New Audio Device", "Window title"),
@@ -2638,7 +2634,9 @@ class ContactWindowController(NSWindowController):
 
             if ret == NSAlertDefaultReturn:
                 BlinkLogger().log_info(u"Switching input/output audio devices to %s" % device.strip())
-                call_in_thread('device-io', switch_device, device)
+                settings.audio.input_device = unicode(device)
+                settings.audio.output_device = unicode(device)
+                settings.save()
 
         self.menuWillOpen_(self.devicesMenu)
 
