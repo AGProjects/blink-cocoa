@@ -41,7 +41,7 @@ from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.threading import call_in_thread
+from sipsimple.threading import run_in_thread
 from zope.interface import implements
 
 from SIPManager import SIPManager
@@ -198,10 +198,11 @@ class BlinkAppDelegate(NSObject):
             else:
                 self.updater = Updater()
 
-            call_in_thread('file-io', self.purge_temporary_files)
+            self.purge_temporary_files()
 
         return self
 
+    @run_in_thread('file-io')
     def purge_temporary_files(self):
         for dir in ('.tmp_screenshots', '.tmp_snapshots', '.tmp_file_transfers'):
             folder = ApplicationData.get(dir)
@@ -454,7 +455,7 @@ class BlinkAppDelegate(NSObject):
 
     def _NH_SIPApplicationWillEnd(self, notification):
         BlinkLogger().log_info(u"Core engine will be stopped")
-        call_in_thread('file-io', self.purge_temporary_files)
+        self.purge_temporary_files()
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if 'gui.extended_debug' in notification.data.modified:
@@ -464,8 +465,7 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         self.debug = settings.gui.extended_debug
-
-        call_in_thread('file-io', self.purge_temporary_files)
+        self.purge_temporary_files()
 
     def _NH_SIPApplicationDidEnd(self, notification):
         BlinkLogger().log_info(u"Core engine stopped")
