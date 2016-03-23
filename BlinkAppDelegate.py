@@ -56,7 +56,8 @@ import ChatWindowController
 
 from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData
-from util import allocate_autorelease_pool, call_in_gui_thread, external_url_pattern
+from util import external_url_pattern, run_in_gui_thread
+
 
 def fourcharToInt(fourCharCode):
     return struct.unpack('>l', fourCharCode)[0]
@@ -385,7 +386,7 @@ class BlinkAppDelegate(NSObject):
         Profiler.stop(os.path.join(ApplicationData.directory, 'logs', 'profiler.stats'))
         return False
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
@@ -469,7 +470,7 @@ class BlinkAppDelegate(NSObject):
 
     def _NH_SIPApplicationDidEnd(self, notification):
         BlinkLogger().log_info(u"Core engine stopped")
-        call_in_gui_thread(NSApp.terminate_, self)
+        NSApp.terminate_(self)
 
     def applicationWillTerminate_(self, notification):
         NotificationCenter().post_notification("BlinkWillTerminate", None)
