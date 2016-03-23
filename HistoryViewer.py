@@ -247,7 +247,6 @@ class HistoryViewer(NSWindowController):
     def close_(self, sender):
         self.window().close()
 
-    @run_in_gui_thread
     def refreshViewer(self):
         self.refreshContacts()
         self.refreshDailyEntries()
