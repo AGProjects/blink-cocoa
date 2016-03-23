@@ -1384,7 +1384,7 @@ class SessionHistoryReplicator(object):
                         try:
                             _timezone = timezone(call['timezone'].replace('\\/', '/'))
                         except KeyError:
-                            _timezone = timezone('Europe/Amsterdam') #default used by CDRTool app
+                            _timezone = timezone('Europe/Amsterdam')  # default used by CDRTool app
 
                         start_time = _timezone.localize(start_time).astimezone(pytz.utc)
                         end_time = _timezone.localize(end_time).astimezone(pytz.utc)
@@ -1429,7 +1429,6 @@ class SessionHistoryReplicator(object):
 
         if received_synced:
             BlinkLogger().log_info(u"%d received calls synced from server history of %s" % (received_synced, account))
-    
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
