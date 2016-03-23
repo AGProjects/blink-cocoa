@@ -2697,31 +2697,31 @@ class ContactListModel(CustomListModel):
             groupsList.append(self.addressbook_group)
 
         try:
-            return (blink_contact for group in groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
+            return next(blink_contact for group in groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match))
         except StopIteration:
             return None
 
     def getBonjourContactMatchingDisplayName(self, display_name):
         try:
-            return (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.name.startswith(display_name)).next()
+            return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.name.startswith(display_name))
         except StopIteration:
             return None
 
     def getBonjourContactMatchingDeviceId(self, device_id):
         try:
-            return (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.id == device_id).next()
+            return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.id == device_id)
         except StopIteration:
             return None
 
     def getBonjourContactMatchingUri(self, uri):
         try:
-            return (blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.uri == uri).next()
+            return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.uri == uri)
         except StopIteration:
             return None
 
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
         try:
-            return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match)).next()
+            return next(blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
         except StopIteration:
             return None
 
