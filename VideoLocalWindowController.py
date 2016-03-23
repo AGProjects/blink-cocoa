@@ -302,6 +302,7 @@ class VideoLocalWindowController(NSWindowController):
         settings.video.auto_rotate_cameras = not settings.video.auto_rotate_cameras
         settings.save()
 
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
