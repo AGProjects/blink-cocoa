@@ -435,7 +435,7 @@ class SIPManager(object):
         self.migratePasswordsToKeychain()
         self.cleanupIcons()
 
-        # Set audio settings compatible with AEC and Noise Supressor
+        # Set audio settings compatible with AEC and Noise Suppression
         settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled else 48000
         if NSApp.delegate().service_provider_help_url and settings.service_provider.help_url != NSApp.delegate().service_provider_help_url:
             settings.service_provider.help_url = NSApp.delegate().service_provider_help_url
