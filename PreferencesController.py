@@ -971,7 +971,7 @@ class PreferencesController(NSWindowController, object):
     def _NH_AudioDevicesDidChange(self, notification):
         self.updateAudioDevices_(None)
 
-    def _NH_DeviceDevicesDidChange(self, notification):
+    def _NH_VideoDevicesDidChange(self, notification):
         self.updateVideoDevices_(None)
 
     def updateVideoDevices_(self, object):
