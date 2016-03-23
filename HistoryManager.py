@@ -1248,6 +1248,7 @@ class SessionHistoryReplicator(object):
         BlinkLogger().log_debug(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
 
     @run_in_green_thread
+    @allocate_autorelease_pool
     def syncServerHistoryWithLocalHistory(self, account, calls):
         if calls is None:
             return
