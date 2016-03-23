@@ -389,7 +389,7 @@ class SessionHistory(object):
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
     @run_in_db_thread
-    def unhide_missed_entries(self):
+    def show_missed_entries(self):
         query = "update sessions set hidden = 0 where status = 'missed'"
         try:
             self.db.queryAll(query)
@@ -399,7 +399,7 @@ class SessionHistory(object):
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
     @run_in_db_thread
-    def unhide_incoming_entries(self):
+    def show_incoming_entries(self):
         query = "update sessions set hidden = 0 where direction = 'incoming' and status != 'missed'"
         try:
             self.db.queryAll(query)
@@ -409,7 +409,7 @@ class SessionHistory(object):
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
     @run_in_db_thread
-    def unhide_outgoing_entries(self):
+    def show_outgoing_entries(self):
         query = "update sessions set hidden = 0 where direction = 'outgoing'"
         try:
             self.db.queryAll(query)

@@ -3520,11 +3520,11 @@ class ContactWindowController(NSWindowController):
     def showHiddenEntries_(self, sender):
         group = sender.representedObject()
         if isinstance(group, MissedCallsBlinkGroup):
-            SessionHistory().unhide_missed_entries()
+            SessionHistory().show_missed_entries()
         elif isinstance(group, IncomingCallsBlinkGroup):
-            SessionHistory().unhide_incoming_entries()
+            SessionHistory().show_incoming_entries()
         elif isinstance(group, OutgoingCallsBlinkGroup):
-            SessionHistory().unhide_outgoing_entries()
+            SessionHistory().show_outgoing_entries()
 
     @objc.IBAction
     def hideGroup_(self, sender):
