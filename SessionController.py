@@ -549,10 +549,10 @@ class SessionControllersManager(object):
         return duration_print
 
     def add_to_session_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption='', display_name='', device_id='', remote_full_uri=''):
-        SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption, display_name, device_id, remote_full_uri)
+        return SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption, display_name, device_id, remote_full_uri)
 
     def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
-        ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
+        return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
 
     @run_in_green_thread
     def get_redial_uri_from_history(self):
