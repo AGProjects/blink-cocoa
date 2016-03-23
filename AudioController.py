@@ -1236,9 +1236,8 @@ class AudioController(MediaStream):
     def updateTransferProgress(self, msg):
         self.updateAudioStatusWithSessionState(msg)
 
-    @run_in_green_thread
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
+        return ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     @run_in_gui_thread
     def handle_notification(self, notification):

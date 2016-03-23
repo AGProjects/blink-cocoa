@@ -344,7 +344,6 @@ class SMSViewController(NSObject):
                 self.log_info(u"Outgoing message %s delivery failed: %s" % (call_id, data.reason))
         self.notification_center.remove_observer(self, sender=sender)
 
-    @run_in_green_thread
     def add_to_history(self, message):
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient) if message.recipient else ''

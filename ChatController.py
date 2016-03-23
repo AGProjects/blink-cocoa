@@ -2113,7 +2113,6 @@ class OutgoingMessageHandler(NSObject):
         except KeyError:
             pass
 
-    @run_in_green_thread
     def add_to_history(self, message):
         if self.delegate.delegate.disable_chat_history:
             return

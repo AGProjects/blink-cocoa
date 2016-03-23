@@ -172,9 +172,8 @@ class FileTransferWindowController(NSObject):
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
             self.window.makeKeyAndOrderFront_(None)
 
-    @run_in_green_thread
     def delete_history_transfers(self):
-        FileTransferHistory().delete_transfers()
+        return FileTransferHistory().delete_transfers()
 
     @objc.IBAction
     def clearList_(self, sender):

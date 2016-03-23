@@ -133,7 +133,6 @@ class FileTransfer(object):
         notification_center = NotificationCenter()
         notification_center.post_notification("BlinkFileTransferSpeedDidUpdate", sender=self)
 
-    @run_in_green_thread
     def add_to_history(self):
         FileTransferHistory().add_transfer(transfer_id=self.ft_info.transfer_id, direction=self.ft_info.direction, local_uri=self.ft_info.local_uri, remote_uri=self.ft_info.remote_uri, file_path=self.ft_info.file_path, bytes_transfered=self.ft_info.bytes_transfered, file_size=self.ft_info.file_size or 0, status=self.ft_info.status)
 
