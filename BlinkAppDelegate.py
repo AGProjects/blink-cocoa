@@ -64,14 +64,14 @@ def fourcharToInt(fourCharCode):
 
 
 class BlinkAppDelegate(NSObject):
-    '''Responsible for starting and stopping the application
+    """Responsible for starting and stopping the application
        Register URL types handled by Blink
        Updating the dock icon with missed calls
        Migrating data from one version to another
        Start enrollment if run first time
        Calling Initial SIP URL if necessary
        Handle wake up from sleep
-       Show about panel'''
+       Show about panel"""
 
     implements(IObserver)
 
