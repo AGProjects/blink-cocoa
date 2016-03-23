@@ -248,11 +248,6 @@ class HistoryViewer(NSWindowController):
     def close_(self, sender):
         self.window().close()
 
-    def refreshViewer(self):
-        self.refreshContacts()
-        self.refreshDailyEntries()
-        self.refreshMessages()
-
     @run_in_green_thread
     def delete_messages(self, local_uri=None, remote_uri=None, date=None, after_date=None, before_date=None, media_type=None):
         block_on(self.chat_history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type))
@@ -261,6 +256,11 @@ class HistoryViewer(NSWindowController):
         self.search_uris = None
         self.search_local = None
         self.refreshViewer()
+
+    def refreshViewer(self):
+        self.refreshContacts()
+        self.refreshDailyEntries()
+        self.refreshMessages()
 
     @run_in_green_thread
     def refreshContacts(self):
