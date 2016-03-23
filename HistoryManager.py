@@ -975,6 +975,7 @@ class ChatHistory(object):
             self.db.queryAll('vacuum')
             return True
 
+
 class FileTransfer(SQLObject):
     class sqlmeta:
         table = 'file_transfers'

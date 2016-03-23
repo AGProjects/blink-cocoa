@@ -38,6 +38,7 @@ import datetime
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
+from eventlib.twistedutil import block_on
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implements
@@ -254,8 +255,8 @@ class HistoryViewer(NSWindowController):
 
     @run_in_green_thread
     def delete_messages(self, local_uri=None, remote_uri=None, date=None, after_date=None, before_date=None, media_type=None):
-        self.chat_history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type)
-        self.session_history.delete_entries(local_uri=local_uri, remote_uri=remote_uri, after_date=after_date, before_date=before_date)
+        block_on(self.chat_history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type))
+        block_on(self.session_history.delete_entries(local_uri=local_uri, remote_uri=remote_uri, after_date=after_date, before_date=before_date))
         self.search_text = None
         self.search_uris = None
         self.search_local = None
