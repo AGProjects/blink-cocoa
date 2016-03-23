@@ -3513,12 +3513,10 @@ class ContactWindowController(NSWindowController):
     def copyToSearchBar_(self, sender):
         self.searchBox.setStringValue_(sender.representedObject())
 
-    @run_in_green_thread
     def hideHistoryEntries_(self, sender):
         session_ids = sender.representedObject()
         SessionHistory().hide_entries(session_ids)
 
-    @run_in_green_thread
     def showHiddenEntries_(self, sender):
         group = sender.representedObject()
         if isinstance(group, MissedCallsBlinkGroup):

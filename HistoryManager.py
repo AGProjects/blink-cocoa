@@ -373,11 +373,8 @@ class SessionHistory(object):
         # TODO: exclude media types like file transfer, as we may not want to redial them
         return block_on(self._get_entries(direction, status, remote_focus, count, call_id, from_tag, to_tag, remote_uris, hidden, after_date))
 
-    def hide_entries(self, session_ids):
-        block_on(self._hide_entries(session_ids))
-
     @run_in_db_thread
-    def _hide_entries(self, session_ids):
+    def hide_entries(self, session_ids):
         query = "update sessions set hidden = 1 where "
         session_ids_sql = ''
         for id in session_ids:
@@ -391,11 +388,8 @@ class SessionHistory(object):
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
-    def unhide_missed_entries(self):
-        block_on(self._unhide_missed_entries())
-
     @run_in_db_thread
-    def _unhide_missed_entries(self):
+    def unhide_missed_entries(self):
         query = "update sessions set hidden = 0 where status = 'missed'"
         try:
             self.db.queryAll(query)
@@ -404,11 +398,8 @@ class SessionHistory(object):
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
-    def unhide_incoming_entries(self):
-        block_on(self._unhide_incoming_entries())
-
     @run_in_db_thread
-    def _unhide_incoming_entries(self):
+    def unhide_incoming_entries(self):
         query = "update sessions set hidden = 0 where direction = 'incoming' and status != 'missed'"
         try:
             self.db.queryAll(query)
@@ -417,11 +408,8 @@ class SessionHistory(object):
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
-    def unhide_outgoing_entries(self):
-        block_on(self._unhide_outgoing_entries())
-
     @run_in_db_thread
-    def _unhide_outgoing_entries(self):
+    def unhide_outgoing_entries(self):
         query = "update sessions set hidden = 0 where direction = 'outgoing'"
         try:
             self.db.queryAll(query)
