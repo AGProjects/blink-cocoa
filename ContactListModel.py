@@ -3443,16 +3443,6 @@ class ContactListModel(CustomListModel):
             self.contact_backup_timer.invalidate()
         self.contact_backup_timer = None
 
-        settings = SIPSimpleSettings()
-        if settings.contacts.enable_missed_calls_group:
-            self.missed_calls_group.load_contacts(force_reload)
-
-        if settings.contacts.enable_outgoing_calls_group:
-            self.outgoing_calls_group.load_contacts(force_reload)
-
-        if settings.contacts.enable_incoming_calls_group:
-            self.incoming_calls_group.load_contacts(force_reload)
-
     def _NH_AudioCallLoggedToHistory(self, notification):
         if NSApp.delegate().history_enabled:
             return
