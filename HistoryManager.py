@@ -1233,7 +1233,7 @@ class SessionHistoryReplicator(object):
             key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
         except StopIteration:
             return
-        BlinkLogger().log_debug(u"Failed to retrieve calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+        BlinkLogger().log_error(u"Failed to retrieve calls history for %s from %s: %s" % (key, self.last_calls_connections[key]['url'], error.userInfo()['NSLocalizedDescription']))
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -2094,7 +2094,7 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], error))
+                BlinkLogger().log_error(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], error.userInfo()['NSLocalizedDescription']))
                 self.connections_for_outgoing_replication[key]['connection'] = None
 
         try:
