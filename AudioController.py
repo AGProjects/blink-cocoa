@@ -111,7 +111,6 @@ class AudioController(MediaStream):
     recordingImage = 0
     audioEndTime = None
     timer = None
-    statistics_timer = None
     last_stats = None
     transfer_timer = None
     hangedUp = False
@@ -271,10 +270,6 @@ class AudioController(MediaStream):
             self.segmentedConferenceButtons.setHidden_(False)
 
     def invalidateTimers(self):
-        if self.statistics_timer is not None and self.statistics_timer.isValid():
-            self.statistics_timer.invalidate()
-        self.statistics_timer = None
-
         if self.transfer_timer is not None and self.transfer_timer.isValid():
             self.transfer_timer.invalidate()
         self.transfer_timer = None
@@ -540,11 +535,14 @@ class AudioController(MediaStream):
         self.sessionController.transferSession(target)
 
     def updateTimer_(self, timer):
-        settings = SIPSimpleSettings()
+        self.updateStatistics()
         self.updateTileStatistics()
+        settings = SIPSimpleSettings()
+
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
-            if duration >= SIPSimpleSettings().answering_machine.max_recording_duration:
+
+            if duration >= settings.answering_machine.max_recording_duration:
                 self.sessionController.log_info("Answering machine recording time limit reached, hanging up...")
                 self.end()
                 return
@@ -579,7 +577,6 @@ class AudioController(MediaStream):
             except AttributeError:
                 # TODO: self.sessionController.remoteIdentity is sometimes an URI sometimes a To/From header...
                 pass
-
 
     def transferFailed_(self, timer):
         self.changeStatus(STREAM_CONNECTED)
@@ -777,9 +774,10 @@ class AudioController(MediaStream):
 
         MediaStream.changeStatus(self, newstate, fail_reason)
 
-    def updateStatisticsTimer_(self, timer):
+    def updateStatistics(self):
         if not self.stream:
             return
+
         stats = self.stream.statistics
         if stats is not None and self.last_stats is not None:
             jitter = stats['rx']['jitter']['last'] / 1000.0 + stats['tx']['jitter']['last'] / 1000.0
@@ -1318,9 +1316,6 @@ class AudioController(MediaStream):
         if self.stream.codec == 'opus':
             settings = SIPSimpleSettings()
         self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
-        self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
-        NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
 
         self.updateTileStatistics()
 
