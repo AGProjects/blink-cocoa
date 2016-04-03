@@ -549,7 +549,7 @@ class AudioController(MediaStream):
                 self.end()
                 return
 
-        if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING] or self.hangedUp:
+        if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_RINGING] or self.hangedUp:
             if self.audioEndTime and (time.time() - self.audioEndTime > settings.gui.close_delay):
                 self.removeFromSession()
                 NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
