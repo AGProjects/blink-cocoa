@@ -2651,7 +2651,7 @@ class ContactWindowController(NSWindowController):
 
         if not streamController.sessionController.hasStreamOfType("chat"):
             if (streamController.sessionController.hasStreamOfType("video") and streamController.sessionController.video_consumer == "audio") or not streamController.sessionController.hasStreamOfType("video"):
-                self.window().performSelector_withObject_afterDelay_("makeFirstResponder:", streamController.view, 0.5)
+                self.window().makeFirstResponder_(streamController.view)
                 self.showAudioDrawer()
 
     def showAudioDrawer(self):
