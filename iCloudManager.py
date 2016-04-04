@@ -261,7 +261,7 @@ class iCloudManager(NSObject):
             if name in skip:
                 continue
             if isinstance(attribute, SettingsGroupMeta):
-                state[name] = self.get_state(account, getattr(obj, name), skip)
+                state[name] = self._get_state(account, getattr(obj, name), skip)
             elif isinstance(attribute, Setting):
                 value = attribute.__getstate__(obj)
                 if value is DefaultValue:
