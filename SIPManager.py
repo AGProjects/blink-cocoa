@@ -36,7 +36,7 @@ from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
 from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
-from sipsimple.threading.green import run_in_green_thread, Command
+from sipsimple.threading.green import call_in_green_thread, run_in_green_thread, Command
 
 from BlinkLogger import BlinkLogger, FileLogger
 
@@ -44,7 +44,7 @@ from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread
+from util import beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread
 
 
 class SIPManager(object):
@@ -417,7 +417,7 @@ class SIPManager(object):
         SIPSimpleSettings().audio.silent = flag
         SIPSimpleSettings().save()
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -543,7 +543,6 @@ class SIPManager(object):
     def _NH_SIPEngineGotException(self, sender, data):
         print "SIP Engine Exception", data
 
-    @run_in_gui_thread
     def _NH_SIPEngineDidFail(self, sender, data):
         NSRunAlertPanel(NSLocalizedString("Fatal Error Encountered", "Window title"), NSLocalizedString("There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.", "Label"),
                         NSLocalizedString("Shut Down", "Button title"), None, None)
@@ -555,14 +554,14 @@ class SIPManager(object):
         BlinkLogger().log_info(u"Account %s activated" % account.id)
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
-            self.bonjour_conference_services.start()
+            call_in_green_thread(self.bonjour_conference_services.start)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info(u"Account %s deactivated" % account.id)
         MWIData.remove(account)
         # Deactivate BonjourConferenceServer discovery
         if account is BonjourAccount():
-            self.bonjour_conference_services.stop()
+            call_in_green_thread(self.bonjour_conference_services.stop)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         #contact_header_list = data.contact_header_list
@@ -620,7 +619,6 @@ class SIPManager(object):
         except KeyError:
             pass
 
-    @run_in_gui_thread
     def _NH_SIPAccountGotMessageSummary(self, account, data):
         BlinkLogger().log_debug(u"Received voicemail notification for account %s" % account.id)
         summary = data.message_summary

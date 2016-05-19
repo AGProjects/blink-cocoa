@@ -24,7 +24,7 @@ from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 
 from resources import Resources
-from util import allocate_autorelease_pool, run_in_gui_thread
+from util import run_in_gui_thread
 
 from BlinkLogger import BlinkLogger
 
@@ -333,7 +333,7 @@ class Ringer(object):
             hangup_tone.start()
             self.last_hangup_tone_time = time.time()
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)

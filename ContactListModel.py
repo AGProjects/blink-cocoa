@@ -401,6 +401,7 @@ class BlinkContact(NSObject):
         self.contact = None
         objc.super(BlinkContact, self).dealloc()
 
+    @run_in_gui_thread
     def destroy(self):
         if self.destroyed:
             return
@@ -529,7 +530,7 @@ class BlinkConferenceContact(BlinkContact):
         self.presence_contact = presence_contact
         self.updatePresenceState()
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def destroy(self):
         if self.presence_contact is not None:
             NotificationCenter().remove_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
@@ -552,7 +553,6 @@ class BlinkConferenceContact(BlinkContact):
                                           }
                               }
 
-    @allocate_autorelease_pool
     def setPresenceNote(self):
         presence_notes = self.presence_state['presence_notes']
         if presence_notes:
@@ -575,7 +575,7 @@ class BlinkConferenceContact(BlinkContact):
         if detail != self.detail:
             self.detail = detail
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def updatePresenceState(self):
         self.init_presence_state()
 
@@ -665,6 +665,7 @@ class BlinkBlockedPresenceContact(BlinkContact):
         objc.super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
         self.avatar = BlockedPolicyAvatar()
 
+    @run_in_gui_thread
     def destroy(self):
         self.policy = None
         objc.super(BlinkBlockedPresenceContact, self).destroy()
@@ -860,7 +861,7 @@ class BlinkPresenceContact(BlinkContact):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def destroy(self):
         NotificationCenter().discard_observer(self, name="SIPAccountDidDeactivate")
         NotificationCenter().discard_observer(self, name="CFGSettingsObjectDidChange")
@@ -1380,7 +1381,6 @@ class BlinkPresenceContact(BlinkContact):
 
         return None
 
-    @allocate_autorelease_pool
     def setPresenceNote(self):
         if self.presence_state['status']['busy']:
             wining_status = 'busy'
@@ -1545,6 +1545,7 @@ class BonjourBlinkContact(BlinkContact):
         candidate = self.split_uri(uri)
         return (self.username, self.domain) == (candidate[0], candidate[1])
 
+    @run_in_gui_thread
     def destroy(self):
         self.bonjour_neighbour = None
         objc.super(BonjourBlinkContact, self).destroy()

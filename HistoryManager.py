@@ -1573,7 +1573,7 @@ class ChatHistoryReplicator(object):
         except (cPickle.PickleError, IOError):
             pass
 
-    @allocate_autorelease_pool
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
