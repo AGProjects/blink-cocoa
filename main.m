@@ -10,9 +10,11 @@ int main(int argc, char *argv[])
     NSString *resourcePath = [mainBundle resourcePath];
     NSArray *pythonPathArray = [NSArray arrayWithObjects: resourcePath, [resourcePath stringByAppendingPathComponent:@"lib"], nil];
     NSString *pythonPath = [pythonPathArray componentsJoinedByString:@":"];
+    NSString *pythonHome = [libraryPath stringByAppendingPathComponent:@"Python.framework/Versions/Current"];
 
-    setenv("PYTHONPATH", [pythonPath UTF8String], 1);
     setenv("DYLD_LIBRARY_PATH", [libraryPath UTF8String], 1);
+    setenv("PYTHONPATH", [pythonPath UTF8String], 1);
+    setenv("PYTHONHOME", [pythonHome UTF8String], 1);
     setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
 
     NSArray *possibleMainExtensions = [NSArray arrayWithObjects: @"py", @"pyc", @"pyo", nil];
