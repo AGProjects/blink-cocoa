@@ -215,7 +215,8 @@ class StatusItem(NSObject):
 
     def show(self, item):
         if not self.items:
-            self.statusItem = NSStatusBar.systemStatusBar().statusItemWithLength_(30)
+            #self.statusItem = NSStatusBar.systemStatusBar().statusItemWithLength_(30)
+            self.statusItem = Null
             self.menu = NSMenu.alloc().init()
             image = NSImage.imageNamed_("display").copy()
             image.setSize_(NSMakeSize(24, 24))
@@ -239,7 +240,7 @@ class StatusItem(NSObject):
                 self.menu.removeItem_(mitem)
                 self.items.remove(item)
             if not self.items:
-                NSStatusBar.systemStatusBar().removeStatusItem_(self.statusItem)
+                #NSStatusBar.systemStatusBar().removeStatusItem_(self.statusItem)
                 self.statusItem = None
                 self.menu = None
 
