@@ -57,12 +57,6 @@
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1FC04812D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
 		1F1FC04912D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
-		1F21921A1C7B62C20052C134 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F21921B1C7B62C90052C134 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F21921C1C7B62CE0052C134 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F21921D1C7B62D60052C134 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
-		1F21921E1C7B62DB0052C134 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
-		1F21921F1C7B62E10052C134 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
 		1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F22729712B554F50010A8B2 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
@@ -269,12 +263,6 @@
 		1F29D1001906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
-		1F2C1BB01BB168F80036C306 /* libavdevice.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F2C1BB11BB169010036C306 /* libavfilter.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F2C1BB21BB169130036C306 /* libavfilter.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F2C1BB31BB169170036C306 /* libavdevice.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F2C1BB41BB169250036C306 /* libavfilter.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F2C1BB51BB169270036C306 /* libavdevice.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F2D05C615A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2D05C715A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2D05C815A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
@@ -634,7 +622,6 @@
 		1F5C0764140436E4001DA3EF /* SessionInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C0760140436E4001DA3EF /* SessionInfoController.py */; };
 		1F5C428719DF2B070099ABA4 /* BlinkPro-Icon.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C428619DF2B070099ABA4 /* BlinkPro-Icon.xcassets */; };
 		1F5C428919DF2B270099ABA4 /* BlinkLite-Icon.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5C428819DF2B270099ABA4 /* BlinkLite-Icon.xcassets */; };
-		1F5C42D71C7B42EC00447F15 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */; };
 		1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */; };
 		1F6009CF18F74D22005517FA /* mbFlipWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6009CE18F74D22005517FA /* mbFlipWindow.m */; };
@@ -694,6 +681,44 @@
 		1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
 		1F72E53F16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
 		1F72E54016A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
+		1F762C0E1D9C759F00F3D455 /* libavcodec.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C0F1D9C759F00F3D455 /* libavformat.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983B1D9C267500DB4CB5 /* libavformat.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C101D9C759F00F3D455 /* libavutil.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983C1D9C267500DB4CB5 /* libavutil.55.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C111D9C759F00F3D455 /* libcrypto.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983D1D9C267500DB4CB5 /* libcrypto.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C121D9C759F00F3D455 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983E1D9C267500DB4CB5 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C131D9C759F00F3D455 /* libgnutls.30.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983F1D9C267500DB4CB5 /* libgnutls.30.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C141D9C759F00F3D455 /* libhogweed.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898401D9C267500DB4CB5 /* libhogweed.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C151D9C759F00F3D455 /* libmp3lame.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898411D9C267500DB4CB5 /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C161D9C759F00F3D455 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898421D9C267500DB4CB5 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C171D9C759F00F3D455 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898431D9C267500DB4CB5 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C181D9C759F00F3D455 /* libnettle.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898441D9C267500DB4CB5 /* libnettle.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C191D9C759F00F3D455 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C1A1D9C759F00F3D455 /* libsqlite3.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898461D9C267500DB4CB5 /* libsqlite3.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C1B1D9C759F00F3D455 /* libssl.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898471D9C267500DB4CB5 /* libssl.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C1C1D9C759F00F3D455 /* libswresample.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898481D9C267500DB4CB5 /* libswresample.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C1D1D9C759F00F3D455 /* libswscale.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898491D9C267500DB4CB5 /* libswscale.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C1E1D9C759F00F3D455 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984A1D9C267500DB4CB5 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C1F1D9C759F00F3D455 /* libx264.148.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984B1D9C267500DB4CB5 /* libx264.148.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C201D9C75AC00F3D455 /* libavcodec.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C211D9C75AC00F3D455 /* libavformat.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983B1D9C267500DB4CB5 /* libavformat.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C221D9C75AC00F3D455 /* libavutil.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983C1D9C267500DB4CB5 /* libavutil.55.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C231D9C75AC00F3D455 /* libcrypto.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983D1D9C267500DB4CB5 /* libcrypto.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C241D9C75AC00F3D455 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983E1D9C267500DB4CB5 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C251D9C75AC00F3D455 /* libgnutls.30.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983F1D9C267500DB4CB5 /* libgnutls.30.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C261D9C75AC00F3D455 /* libhogweed.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898401D9C267500DB4CB5 /* libhogweed.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C271D9C75AC00F3D455 /* libmp3lame.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898411D9C267500DB4CB5 /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C281D9C75AC00F3D455 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898421D9C267500DB4CB5 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C291D9C75AC00F3D455 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898431D9C267500DB4CB5 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C2A1D9C75AC00F3D455 /* libnettle.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898441D9C267500DB4CB5 /* libnettle.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C2B1D9C75AC00F3D455 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C2C1D9C75AC00F3D455 /* libsqlite3.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898461D9C267500DB4CB5 /* libsqlite3.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C2D1D9C75AC00F3D455 /* libssl.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898471D9C267500DB4CB5 /* libssl.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C2E1D9C75AC00F3D455 /* libswresample.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898481D9C267500DB4CB5 /* libswresample.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C2F1D9C75AC00F3D455 /* libswscale.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898491D9C267500DB4CB5 /* libswscale.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C301D9C75AC00F3D455 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984A1D9C267500DB4CB5 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C311D9C75AC00F3D455 /* libx264.148.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984B1D9C267500DB4CB5 /* libx264.148.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */ = {isa = PBXBuildFile; fileRef = DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */; };
+		1F762C331D9C760000F3D455 /* memory_debug.py in Resources */ = {isa = PBXBuildFile; fileRef = DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */; };
 		1F774C6719CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F774C6819CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F774C6919CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
@@ -707,15 +732,6 @@
 		1F7E0485176DC43D0006FF31 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
 		1F7E0486176DC43D0006FF31 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
 		1F7E0487176DC43D0006FF31 /* hangup_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7E0484176DC43D0006FF31 /* hangup_16.png */; };
-		1F7E9AFA1C6107D9002653F9 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AEA1C60EBE9002653F9 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9AFB1C6107DB002653F9 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AEB1C60EBE9002653F9 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9AFC1C6107FA002653F9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AE91C60EBE9002653F9 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9AFD1C6107FD002653F9 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AEA1C60EBE9002653F9 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9AFE1C6107FF002653F9 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AEB1C60EBE9002653F9 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9AFF1C61080A002653F9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AE91C60EBE9002653F9 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9B001C61080C002653F9 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AEA1C60EBE9002653F9 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9B011C61080E002653F9 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AEB1C60EBE9002653F9 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F7E9B031C61082D002653F9 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7E9AE91C60EBE9002653F9 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F7EAC6118E0FA6500CA7B86 /* paused-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6018E0FA6500CA7B86 /* paused-red.png */; };
 		1F7EAC6218E0FA6500CA7B86 /* paused-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6018E0FA6500CA7B86 /* paused-red.png */; };
 		1F7EAC6318E0FA6500CA7B86 /* paused-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7EAC6018E0FA6500CA7B86 /* paused-red.png */; };
@@ -983,24 +999,6 @@
 		1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAA83A71656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
-		1FAA9E851A8D493700BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E861A8D493700BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E871A8D493700BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E881A8D493700BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E891A8D493700BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E8B1A8D4A7300BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E8C1A8D4A7300BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E8D1A8D4A7300BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E8E1A8D4A7300BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E8F1A8D4A7300BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E911A8D4A8400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E921A8D4A8400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E931A8D4A8400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E941A8D4A8400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E951A8D4A8400BB3ED9 /* libx264.142.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022F18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
@@ -1072,6 +1070,47 @@
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
+		1FC8984E1D9C26A300DB4CB5 /* libavcodec.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8984F1D9C26A500DB4CB5 /* libavformat.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983B1D9C267500DB4CB5 /* libavformat.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898501D9C26BD00DB4CB5 /* libavutil.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983C1D9C267500DB4CB5 /* libavutil.55.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898511D9C26C000DB4CB5 /* libcrypto.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983D1D9C267500DB4CB5 /* libcrypto.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898521D9C26C200DB4CB5 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983E1D9C267500DB4CB5 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898531D9C26C500DB4CB5 /* libgnutls.30.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983F1D9C267500DB4CB5 /* libgnutls.30.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898541D9C26C800DB4CB5 /* libhogweed.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898401D9C267500DB4CB5 /* libhogweed.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898551D9C26CA00DB4CB5 /* libmp3lame.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898411D9C267500DB4CB5 /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898561D9C26CD00DB4CB5 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898421D9C267500DB4CB5 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898571D9C26D200DB4CB5 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898431D9C267500DB4CB5 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898581D9C26D400DB4CB5 /* libnettle.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898441D9C267500DB4CB5 /* libnettle.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898591D9C26D600DB4CB5 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8985A1D9C26DD00DB4CB5 /* libsqlite3.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898461D9C267500DB4CB5 /* libsqlite3.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8985B1D9C26DF00DB4CB5 /* libssl.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898471D9C267500DB4CB5 /* libssl.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8985C1D9C26E100DB4CB5 /* libswresample.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898481D9C267500DB4CB5 /* libswresample.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8985D1D9C26E300DB4CB5 /* libswscale.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898491D9C267500DB4CB5 /* libswscale.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8985E1D9C26E500DB4CB5 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984A1D9C267500DB4CB5 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8985F1D9C26E800DB4CB5 /* libx264.148.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984B1D9C267500DB4CB5 /* libx264.148.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898601D9C294C00DB4CB5 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; };
+		1FC898611D9C297200DB4CB5 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; };
+		1FC898621D9C29C200DB4CB5 /* memory_debug.py in Resources */ = {isa = PBXBuildFile; fileRef = DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */; };
+		1FC898631D9C29FA00DB4CB5 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; };
+		1FC898641D9C2A0300DB4CB5 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; };
+		1FC898651D9C4E7300DB4CB5 /* libavcodec.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898661D9C4E7300DB4CB5 /* libavformat.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983B1D9C267500DB4CB5 /* libavformat.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898671D9C4E7300DB4CB5 /* libavutil.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983C1D9C267500DB4CB5 /* libavutil.55.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898681D9C4E7300DB4CB5 /* libcrypto.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983D1D9C267500DB4CB5 /* libcrypto.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898691D9C4E7300DB4CB5 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983E1D9C267500DB4CB5 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8986A1D9C4E7300DB4CB5 /* libgnutls.30.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8983F1D9C267500DB4CB5 /* libgnutls.30.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8986B1D9C4E7300DB4CB5 /* libhogweed.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898401D9C267500DB4CB5 /* libhogweed.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8986C1D9C4E7300DB4CB5 /* libmp3lame.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898411D9C267500DB4CB5 /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8986D1D9C4E7300DB4CB5 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898421D9C267500DB4CB5 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8986E1D9C4E7300DB4CB5 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898431D9C267500DB4CB5 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC8986F1D9C4E7300DB4CB5 /* libnettle.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898441D9C267500DB4CB5 /* libnettle.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898701D9C4E7300DB4CB5 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898711D9C4E7300DB4CB5 /* libsqlite3.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898461D9C267500DB4CB5 /* libsqlite3.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898721D9C4E7300DB4CB5 /* libssl.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898471D9C267500DB4CB5 /* libssl.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898731D9C4E7300DB4CB5 /* libswresample.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898481D9C267500DB4CB5 /* libswresample.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898741D9C4E7300DB4CB5 /* libswscale.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC898491D9C267500DB4CB5 /* libswscale.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898751D9C4E7300DB4CB5 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984A1D9C267500DB4CB5 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC898761D9C4E7300DB4CB5 /* libx264.148.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC8984B1D9C267500DB4CB5 /* libx264.148.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FC99CF619BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
 		1FC99CF719BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
 		1FC99CF819BC93700013C580 /* close-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC99CF519BC93700013C580 /* close-small.png */; };
@@ -1109,7 +1148,7 @@
 		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
-		1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
 		1FD0807C18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
 		1FD0807D18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
 		1FD0807E18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
@@ -1148,18 +1187,6 @@
 		1FD614BC1580C7F000FC809F /* EncryptionWrappers.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FD614B91580C7F000FC809F /* EncryptionWrappers.py */; };
 		1FD671D412F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
-		1FD6D5B91A7BD57200E0FAFA /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5BC1A7BD57200E0FAFA /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5BF1A7BD57200E0FAFA /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5C51A7BD57200E0FAFA /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5CC1A7BD68700E0FAFA /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5CF1A7BD68700E0FAFA /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5D21A7BD68700E0FAFA /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5D81A7BD68700E0FAFA /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5DF1A7BD69A00E0FAFA /* libavcodec.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5E21A7BD69A00E0FAFA /* libavformat.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5E51A7BD69B00E0FAFA /* libavutil.54.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FD6D5EB1A7BD69B00E0FAFA /* libswscale.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8C15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
@@ -1375,7 +1402,6 @@
 		85E8550A10F643350083D346 /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		DE1BD06B1D9A7E77004DAD1E /* libmp3lame.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE1BD0691D9A7E77004DAD1E /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		DE2607221A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607241A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
@@ -1391,23 +1417,6 @@
 		DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
 		DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
 		DE9790FB15B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
-		DEBDF7121D9AA1C200FE9BD3 /* libsqlite3.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEBDF7111D9AA1C200FE9BD3 /* libsqlite3.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DECBE5261D9AB80000C0DF87 /* libhogweed.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DECBE5251D9AB80000C0DF87 /* libhogweed.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE341D9A7BA4009DDF16 /* libavcodec.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE191D9A7BA3009DDF16 /* libavcodec.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE371D9A7BA4009DDF16 /* libavformat.57.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE1C1D9A7BA3009DDF16 /* libavformat.57.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE3A1D9A7BA5009DDF16 /* libavutil.55.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE1F1D9A7BA3009DDF16 /* libavutil.55.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE3C1D9A7BA5009DDF16 /* libcrypto.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE211D9A7BA3009DDF16 /* libcrypto.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE3D1D9A7BA5009DDF16 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE221D9A7BA3009DDF16 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE3E1D9A7BA5009DDF16 /* libgnutls.30.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE231D9A7BA3009DDF16 /* libgnutls.30.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE401D9A7BA5009DDF16 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE251D9A7BA4009DDF16 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE411D9A7BA5009DDF16 /* libmpfr.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE261D9A7BA4009DDF16 /* libmpfr.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE421D9A7BA5009DDF16 /* libnettle.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE271D9A7BA4009DDF16 /* libnettle.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE431D9A7BA5009DDF16 /* libpython2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE281D9A7BA4009DDF16 /* libpython2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE441D9A7BA5009DDF16 /* libssl.1.0.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE291D9A7BA4009DDF16 /* libssl.1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE461D9A7BA5009DDF16 /* libswresample.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE2B1D9A7BA4009DDF16 /* libswresample.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE491D9A7BA5009DDF16 /* libswscale.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE2E1D9A7BA4009DDF16 /* libswscale.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE4B1D9A7BA5009DDF16 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE301D9A7BA4009DDF16 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		DEDEAE4C1D9A7BA5009DDF16 /* libx264.148.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DEDEAE311D9A7BA4009DDF16 /* libx264.148.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA0135DF34200456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA2135DF34400456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
@@ -1512,22 +1521,24 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1F2C1BB11BB169010036C306 /* libavfilter.5.dylib in Copy Frameworks */,
-				1F2C1BB01BB168F80036C306 /* libavdevice.56.dylib in Copy Frameworks */,
-				1FD6D5D81A7BD68700E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
-				1FAA9E961A8E0DF300BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
-				1FAA9E8B1A8D4A7300BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
-				1FAA9E8C1A8D4A7300BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
-				1FAA9E8D1A8D4A7300BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FAA9E8E1A8D4A7300BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
-				1FAA9E8F1A8D4A7300BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
-				1FD6D5CC1A7BD68700E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
-				1FD6D5CF1A7BD68700E0FAFA /* libavformat.56.dylib in Copy Frameworks */,
-				1FD6D5D21A7BD68700E0FAFA /* libavutil.54.dylib in Copy Frameworks */,
-				1F7E9B031C61082D002653F9 /* libgmp.10.dylib in Copy Frameworks */,
-				1F7E9AFA1C6107D9002653F9 /* libmpc.3.dylib in Copy Frameworks */,
-				1F7E9AFB1C6107DB002653F9 /* libmpfr.4.dylib in Copy Frameworks */,
-				1F21921A1C7B62C20052C134 /* libpython2.7.dylib in Copy Frameworks */,
+				1F762C0E1D9C759F00F3D455 /* libavcodec.57.dylib in Copy Frameworks */,
+				1F762C0F1D9C759F00F3D455 /* libavformat.57.dylib in Copy Frameworks */,
+				1F762C101D9C759F00F3D455 /* libavutil.55.dylib in Copy Frameworks */,
+				1F762C111D9C759F00F3D455 /* libcrypto.1.0.0.dylib in Copy Frameworks */,
+				1F762C121D9C759F00F3D455 /* libgmp.10.dylib in Copy Frameworks */,
+				1F762C131D9C759F00F3D455 /* libgnutls.30.dylib in Copy Frameworks */,
+				1F762C141D9C759F00F3D455 /* libhogweed.4.dylib in Copy Frameworks */,
+				1F762C151D9C759F00F3D455 /* libmp3lame.0.dylib in Copy Frameworks */,
+				1F762C161D9C759F00F3D455 /* libmpc.3.dylib in Copy Frameworks */,
+				1F762C171D9C759F00F3D455 /* libmpfr.4.dylib in Copy Frameworks */,
+				1F762C181D9C759F00F3D455 /* libnettle.6.dylib in Copy Frameworks */,
+				1F762C191D9C759F00F3D455 /* libpython2.7.dylib in Copy Frameworks */,
+				1F762C1A1D9C759F00F3D455 /* libsqlite3.0.dylib in Copy Frameworks */,
+				1F762C1B1D9C759F00F3D455 /* libssl.1.0.0.dylib in Copy Frameworks */,
+				1F762C1C1D9C759F00F3D455 /* libswresample.2.dylib in Copy Frameworks */,
+				1F762C1D1D9C759F00F3D455 /* libswscale.4.dylib in Copy Frameworks */,
+				1F762C1E1D9C759F00F3D455 /* libtasn1.6.dylib in Copy Frameworks */,
+				1F762C1F1D9C759F00F3D455 /* libx264.148.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -1630,22 +1641,24 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1FD6D5C51A7BD57200E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
-				1F2C1BB51BB169270036C306 /* libavdevice.56.dylib in Copy Frameworks */,
-				1F2C1BB41BB169250036C306 /* libavfilter.5.dylib in Copy Frameworks */,
-				1FAA9E981A8E0E0000BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
-				1FAA9E851A8D493700BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
-				1FAA9E861A8D493700BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
-				1FAA9E871A8D493700BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FAA9E881A8D493700BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
-				1FAA9E891A8D493700BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
-				1FD6D5B91A7BD57200E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
-				1FD6D5BC1A7BD57200E0FAFA /* libavformat.56.dylib in Copy Frameworks */,
-				1FD6D5BF1A7BD57200E0FAFA /* libavutil.54.dylib in Copy Frameworks */,
-				1F7E9AFF1C61080A002653F9 /* libgmp.10.dylib in Copy Frameworks */,
-				1F7E9B001C61080C002653F9 /* libmpc.3.dylib in Copy Frameworks */,
-				1F7E9B011C61080E002653F9 /* libmpfr.4.dylib in Copy Frameworks */,
-				1F21921C1C7B62CE0052C134 /* libpython2.7.dylib in Copy Frameworks */,
+				1FC898651D9C4E7300DB4CB5 /* libavcodec.57.dylib in Copy Frameworks */,
+				1FC898661D9C4E7300DB4CB5 /* libavformat.57.dylib in Copy Frameworks */,
+				1FC898671D9C4E7300DB4CB5 /* libavutil.55.dylib in Copy Frameworks */,
+				1FC898681D9C4E7300DB4CB5 /* libcrypto.1.0.0.dylib in Copy Frameworks */,
+				1FC898691D9C4E7300DB4CB5 /* libgmp.10.dylib in Copy Frameworks */,
+				1FC8986A1D9C4E7300DB4CB5 /* libgnutls.30.dylib in Copy Frameworks */,
+				1FC8986B1D9C4E7300DB4CB5 /* libhogweed.4.dylib in Copy Frameworks */,
+				1FC8986C1D9C4E7300DB4CB5 /* libmp3lame.0.dylib in Copy Frameworks */,
+				1FC8986D1D9C4E7300DB4CB5 /* libmpc.3.dylib in Copy Frameworks */,
+				1FC8986E1D9C4E7300DB4CB5 /* libmpfr.4.dylib in Copy Frameworks */,
+				1FC8986F1D9C4E7300DB4CB5 /* libnettle.6.dylib in Copy Frameworks */,
+				1FC898701D9C4E7300DB4CB5 /* libpython2.7.dylib in Copy Frameworks */,
+				1FC898711D9C4E7300DB4CB5 /* libsqlite3.0.dylib in Copy Frameworks */,
+				1FC898721D9C4E7300DB4CB5 /* libssl.1.0.0.dylib in Copy Frameworks */,
+				1FC898731D9C4E7300DB4CB5 /* libswresample.2.dylib in Copy Frameworks */,
+				1FC898741D9C4E7300DB4CB5 /* libswscale.4.dylib in Copy Frameworks */,
+				1FC898751D9C4E7300DB4CB5 /* libtasn1.6.dylib in Copy Frameworks */,
+				1FC898761D9C4E7300DB4CB5 /* libx264.148.dylib in Copy Frameworks */,
 				1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */,
 				1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */,
 			);
@@ -1749,22 +1762,24 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1F2C1BB21BB169130036C306 /* libavfilter.5.dylib in Copy Frameworks */,
-				1F2C1BB31BB169170036C306 /* libavdevice.56.dylib in Copy Frameworks */,
-				1FD6D5EB1A7BD69B00E0FAFA /* libswscale.3.dylib in Copy Frameworks */,
-				1FAA9E971A8E0DFA00BB3ED9 /* libswresample.1.dylib in Copy Frameworks */,
-				1FAA9E911A8D4A8400BB3ED9 /* libgnutls.28.dylib in Copy Frameworks */,
-				1FAA9E921A8D4A8400BB3ED9 /* libhogweed.2.dylib in Copy Frameworks */,
-				1FAA9E931A8D4A8400BB3ED9 /* libnettle.4.dylib in Copy Frameworks */,
-				1FAA9E941A8D4A8400BB3ED9 /* libtasn1.6.dylib in Copy Frameworks */,
-				1FAA9E951A8D4A8400BB3ED9 /* libx264.142.dylib in Copy Frameworks */,
-				1FD6D5DF1A7BD69A00E0FAFA /* libavcodec.56.dylib in Copy Frameworks */,
-				1FD6D5E21A7BD69A00E0FAFA /* libavformat.56.dylib in Copy Frameworks */,
-				1FD6D5E51A7BD69B00E0FAFA /* libavutil.54.dylib in Copy Frameworks */,
-				1F7E9AFC1C6107FA002653F9 /* libgmp.10.dylib in Copy Frameworks */,
-				1F7E9AFD1C6107FD002653F9 /* libmpc.3.dylib in Copy Frameworks */,
-				1F7E9AFE1C6107FF002653F9 /* libmpfr.4.dylib in Copy Frameworks */,
-				1F21921B1C7B62C90052C134 /* libpython2.7.dylib in Copy Frameworks */,
+				1F762C201D9C75AC00F3D455 /* libavcodec.57.dylib in Copy Frameworks */,
+				1F762C211D9C75AC00F3D455 /* libavformat.57.dylib in Copy Frameworks */,
+				1F762C221D9C75AC00F3D455 /* libavutil.55.dylib in Copy Frameworks */,
+				1F762C231D9C75AC00F3D455 /* libcrypto.1.0.0.dylib in Copy Frameworks */,
+				1F762C241D9C75AC00F3D455 /* libgmp.10.dylib in Copy Frameworks */,
+				1F762C251D9C75AC00F3D455 /* libgnutls.30.dylib in Copy Frameworks */,
+				1F762C261D9C75AC00F3D455 /* libhogweed.4.dylib in Copy Frameworks */,
+				1F762C271D9C75AC00F3D455 /* libmp3lame.0.dylib in Copy Frameworks */,
+				1F762C281D9C75AC00F3D455 /* libmpc.3.dylib in Copy Frameworks */,
+				1F762C291D9C75AC00F3D455 /* libmpfr.4.dylib in Copy Frameworks */,
+				1F762C2A1D9C75AC00F3D455 /* libnettle.6.dylib in Copy Frameworks */,
+				1F762C2B1D9C75AC00F3D455 /* libpython2.7.dylib in Copy Frameworks */,
+				1F762C2C1D9C75AC00F3D455 /* libsqlite3.0.dylib in Copy Frameworks */,
+				1F762C2D1D9C75AC00F3D455 /* libssl.1.0.0.dylib in Copy Frameworks */,
+				1F762C2E1D9C75AC00F3D455 /* libswresample.2.dylib in Copy Frameworks */,
+				1F762C2F1D9C75AC00F3D455 /* libswscale.4.dylib in Copy Frameworks */,
+				1F762C301D9C75AC00F3D455 /* libtasn1.6.dylib in Copy Frameworks */,
+				1F762C311D9C75AC00F3D455 /* libx264.148.dylib in Copy Frameworks */,
 				1FD066B817537B7600957876 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -1840,26 +1855,26 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FC8984E1D9C26A300DB4CB5 /* libavcodec.57.dylib in Copy Frameworks */,
+				1FC8984F1D9C26A500DB4CB5 /* libavformat.57.dylib in Copy Frameworks */,
+				1FC898501D9C26BD00DB4CB5 /* libavutil.55.dylib in Copy Frameworks */,
+				1FC898511D9C26C000DB4CB5 /* libcrypto.1.0.0.dylib in Copy Frameworks */,
+				1FC898521D9C26C200DB4CB5 /* libgmp.10.dylib in Copy Frameworks */,
+				1FC898531D9C26C500DB4CB5 /* libgnutls.30.dylib in Copy Frameworks */,
+				1FC898541D9C26C800DB4CB5 /* libhogweed.4.dylib in Copy Frameworks */,
+				1FC898551D9C26CA00DB4CB5 /* libmp3lame.0.dylib in Copy Frameworks */,
+				1FC898561D9C26CD00DB4CB5 /* libmpc.3.dylib in Copy Frameworks */,
+				1FC898571D9C26D200DB4CB5 /* libmpfr.4.dylib in Copy Frameworks */,
+				1FC898581D9C26D400DB4CB5 /* libnettle.6.dylib in Copy Frameworks */,
+				1FC898591D9C26D600DB4CB5 /* libpython2.7.dylib in Copy Frameworks */,
+				1FC8985A1D9C26DD00DB4CB5 /* libsqlite3.0.dylib in Copy Frameworks */,
+				1FC8985B1D9C26DF00DB4CB5 /* libssl.1.0.0.dylib in Copy Frameworks */,
+				1FC8985D1D9C26E300DB4CB5 /* libswscale.4.dylib in Copy Frameworks */,
+				1FC8985E1D9C26E500DB4CB5 /* libtasn1.6.dylib in Copy Frameworks */,
+				1FC8985C1D9C26E100DB4CB5 /* libswresample.2.dylib in Copy Frameworks */,
+				1FC8985F1D9C26E800DB4CB5 /* libx264.148.dylib in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				DEFDFDF81A8CF4E20071D4B2 /* Sparkle.framework in Copy Frameworks */,
-				DEDEAE341D9A7BA4009DDF16 /* libavcodec.57.dylib in Copy Frameworks */,
-				DEDEAE371D9A7BA4009DDF16 /* libavformat.57.dylib in Copy Frameworks */,
-				DEDEAE3A1D9A7BA5009DDF16 /* libavutil.55.dylib in Copy Frameworks */,
-				DEDEAE3C1D9A7BA5009DDF16 /* libcrypto.1.0.0.dylib in Copy Frameworks */,
-				DEDEAE3D1D9A7BA5009DDF16 /* libgmp.10.dylib in Copy Frameworks */,
-				DEDEAE3E1D9A7BA5009DDF16 /* libgnutls.30.dylib in Copy Frameworks */,
-				DEDEAE401D9A7BA5009DDF16 /* libmpc.3.dylib in Copy Frameworks */,
-				DECBE5261D9AB80000C0DF87 /* libhogweed.4.dylib in Copy Frameworks */,
-				DEDEAE411D9A7BA5009DDF16 /* libmpfr.4.dylib in Copy Frameworks */,
-				DEDEAE421D9A7BA5009DDF16 /* libnettle.6.dylib in Copy Frameworks */,
-				DEDEAE431D9A7BA5009DDF16 /* libpython2.7.dylib in Copy Frameworks */,
-				DEBDF7121D9AA1C200FE9BD3 /* libsqlite3.0.dylib in Copy Frameworks */,
-				DEDEAE441D9A7BA5009DDF16 /* libssl.1.0.0.dylib in Copy Frameworks */,
-				DEDEAE461D9A7BA5009DDF16 /* libswresample.2.dylib in Copy Frameworks */,
-				DEDEAE491D9A7BA5009DDF16 /* libswscale.4.dylib in Copy Frameworks */,
-				DEDEAE4B1D9A7BA5009DDF16 /* libtasn1.6.dylib in Copy Frameworks */,
-				DEDEAE4C1D9A7BA5009DDF16 /* libx264.148.dylib in Copy Frameworks */,
-				DE1BD06B1D9A7E77004DAD1E /* libmp3lame.0.dylib in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1937,7 +1952,6 @@
 		1F29D0EB1905BD670051B1BC /* sip2sip.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = sip2sip.icns; sourceTree = "<group>"; };
 		1F29D0FC1906D55E0051B1BC /* video-paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-paused.png"; path = "icons/video-paused.png"; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
-		1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavfilter.5.dylib; path = Distribution/Frameworks/libavfilter.5.dylib; sourceTree = "<group>"; };
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F32884E17DB8192003A7F12 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
@@ -1978,7 +1992,6 @@
 		1F5C428619DF2B070099ABA4 /* BlinkPro-Icon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "BlinkPro-Icon.xcassets"; path = "icons/BlinkPro-Icon.xcassets"; sourceTree = "<group>"; };
 		1F5C428819DF2B270099ABA4 /* BlinkLite-Icon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "BlinkLite-Icon.xcassets"; path = "icons/BlinkLite-Icon.xcassets"; sourceTree = "<group>"; };
 		1F5C428A19DFD90E0099ABA4 /* ElQuijotePro-Icon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "ElQuijotePro-Icon.xcassets"; path = "icons/ElQuijotePro-Icon.xcassets"; sourceTree = "<group>"; };
-		1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = Distribution/Frameworks/libpython2.7.dylib; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
 		1F6009CD18F74D22005517FA /* mbFlipWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mbFlipWindow.h; sourceTree = "<group>"; };
 		1F6009CE18F74D22005517FA /* mbFlipWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mbFlipWindow.m; sourceTree = "<group>"; };
@@ -2134,9 +2147,6 @@
 		1F789C9214ADD9DD00437EA4 /* iCloudManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = iCloudManager.py; sourceTree = "<group>"; };
 		1F7CC99514730F6F00F2C981 /* ldap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ldap.png; path = icons/ldap.png; sourceTree = "<group>"; };
 		1F7E0484176DC43D0006FF31 /* hangup_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_16.png; path = icons/hangup_16.png; sourceTree = SOURCE_ROOT; };
-		1F7E9AE91C60EBE9002653F9 /* libgmp.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.10.dylib; path = Distribution/Frameworks/libgmp.10.dylib; sourceTree = "<group>"; };
-		1F7E9AEA1C60EBE9002653F9 /* libmpc.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpc.3.dylib; path = Distribution/Frameworks/libmpc.3.dylib; sourceTree = "<group>"; };
-		1F7E9AEB1C60EBE9002653F9 /* libmpfr.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpfr.4.dylib; path = Distribution/Frameworks/libmpfr.4.dylib; sourceTree = "<group>"; };
 		1F7EAC6018E0FA6500CA7B86 /* paused-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "paused-red.png"; path = "icons/paused-red.png"; sourceTree = SOURCE_ROOT; };
 		1F7EAC6518E0FA6E00CA7B86 /* pause-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "pause-white.png"; path = "icons/pause-white.png"; sourceTree = SOURCE_ROOT; };
 		1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "blink-full-72dpi.tif"; path = "icons/blink-full-72dpi.tif"; sourceTree = "<group>"; };
@@ -2179,7 +2189,6 @@
 		1FB22A09140308950024F921 /* zrtp-securemode.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-securemode.wav"; path = "sounds/zrtp-securemode.wav"; sourceTree = "<group>"; };
 		1FB22A0A140308950024F921 /* zrtp-security-failed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-security-failed.wav"; path = "sounds/zrtp-security-failed.wav"; sourceTree = "<group>"; };
 		1FB247E015D99AEB00703D24 /* OfflineNoteController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = OfflineNoteController.py; sourceTree = "<group>"; };
-		1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavdevice.56.dylib; path = Distribution/Frameworks/libavdevice.56.dylib; sourceTree = "<group>"; };
 		1FB30807146D540C001430B5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1FB30809146D5598001430B5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		1FB3AE7318F1E73E001C612B /* close.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = close.png; path = icons/close.png; sourceTree = "<group>"; };
@@ -2215,6 +2224,26 @@
 		1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ElQuijote.icns; sourceTree = "<group>"; };
 		1FC80F70192E414C00BD62F4 /* branding-elquijote.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote.py"; sourceTree = "<group>"; };
 		1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ElQuijote-logo.png"; sourceTree = "<group>"; };
+		1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.57.dylib; path = Distribution/Frameworks/libavcodec.57.dylib; sourceTree = "<group>"; };
+		1FC8983B1D9C267500DB4CB5 /* libavformat.57.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.57.dylib; path = Distribution/Frameworks/libavformat.57.dylib; sourceTree = "<group>"; };
+		1FC8983C1D9C267500DB4CB5 /* libavutil.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.55.dylib; path = Distribution/Frameworks/libavutil.55.dylib; sourceTree = "<group>"; };
+		1FC8983D1D9C267500DB4CB5 /* libcrypto.1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.0.0.dylib; path = Distribution/Frameworks/libcrypto.1.0.0.dylib; sourceTree = "<group>"; };
+		1FC8983E1D9C267500DB4CB5 /* libgmp.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.10.dylib; path = Distribution/Frameworks/libgmp.10.dylib; sourceTree = "<group>"; };
+		1FC8983F1D9C267500DB4CB5 /* libgnutls.30.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.30.dylib; path = Distribution/Frameworks/libgnutls.30.dylib; sourceTree = "<group>"; };
+		1FC898401D9C267500DB4CB5 /* libhogweed.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhogweed.4.dylib; path = Distribution/Frameworks/libhogweed.4.dylib; sourceTree = "<group>"; };
+		1FC898411D9C267500DB4CB5 /* libmp3lame.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.0.dylib; path = Distribution/Frameworks/libmp3lame.0.dylib; sourceTree = "<group>"; };
+		1FC898421D9C267500DB4CB5 /* libmpc.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpc.3.dylib; path = Distribution/Frameworks/libmpc.3.dylib; sourceTree = "<group>"; };
+		1FC898431D9C267500DB4CB5 /* libmpfr.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpfr.4.dylib; path = Distribution/Frameworks/libmpfr.4.dylib; sourceTree = "<group>"; };
+		1FC898441D9C267500DB4CB5 /* libnettle.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnettle.6.dylib; path = Distribution/Frameworks/libnettle.6.dylib; sourceTree = "<group>"; };
+		1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = Distribution/Frameworks/libpython2.7.dylib; sourceTree = "<group>"; };
+		1FC898461D9C267500DB4CB5 /* libsqlite3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.0.dylib; path = Distribution/Frameworks/libsqlite3.0.dylib; sourceTree = "<group>"; };
+		1FC898471D9C267500DB4CB5 /* libssl.1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.0.0.dylib; path = Distribution/Frameworks/libssl.1.0.0.dylib; sourceTree = "<group>"; };
+		1FC898481D9C267500DB4CB5 /* libswresample.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.2.dylib; path = Distribution/Frameworks/libswresample.2.dylib; sourceTree = "<group>"; };
+		1FC898491D9C267500DB4CB5 /* libswscale.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.4.dylib; path = Distribution/Frameworks/libswscale.4.dylib; sourceTree = "<group>"; };
+		1FC8984A1D9C267500DB4CB5 /* libtasn1.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.6.dylib; path = Distribution/Frameworks/libtasn1.6.dylib; sourceTree = "<group>"; };
+		1FC8984B1D9C267500DB4CB5 /* libx264.148.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.148.dylib; path = Distribution/Frameworks/libx264.148.dylib; sourceTree = "<group>"; };
+		1FC8984C1D9C267500DB4CB5 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
+		1FC8984D1D9C267500DB4CB5 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		1FC99CF519BC93700013C580 /* close-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "close-small.png"; path = "icons/close-small.png"; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
@@ -2288,10 +2317,6 @@
 		1FD2EF951439CCC300DFBB2A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceScreenSharing.xib; sourceTree = "<group>"; };
 		1FD614B91580C7F000FC809F /* EncryptionWrappers.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = EncryptionWrappers.py; sourceTree = "<group>"; };
 		1FD671D312F5A58D00B0E78C /* outgoing_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = outgoing_file.png; path = icons/outgoing_file.png; sourceTree = "<group>"; };
-		1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.56.dylib; path = Distribution/Frameworks/libavcodec.56.dylib; sourceTree = "<group>"; };
-		1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.56.dylib; path = Distribution/Frameworks/libavformat.56.dylib; sourceTree = "<group>"; };
-		1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.54.dylib; path = Distribution/Frameworks/libavutil.54.dylib; sourceTree = "<group>"; };
-		1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.3.dylib; path = Distribution/Frameworks/libswscale.3.dylib; sourceTree = "<group>"; };
 		1FD7AB8915D2F18B00ECBAF5 /* blocked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blocked.png; path = icons/blocked.png; sourceTree = "<group>"; };
 		1FD996FD142DEFC400EE171F /* start_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = start_chat.png; path = icons/start_chat.png; sourceTree = "<group>"; };
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
@@ -2459,9 +2484,6 @@
 		85E8550610F643350083D346 /* settings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = settings.py; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.1.dylib; path = Distribution/Frameworks/libswresample.1.dylib; sourceTree = "<group>"; };
-		DE1BD0691D9A7E77004DAD1E /* libmp3lame.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.0.dylib; path = Distribution/Frameworks/libmp3lame.0.dylib; sourceTree = "<group>"; };
-		DE1BD06A1D9A7E77004DAD1E /* libmp3lame.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.dylib; path = Distribution/Frameworks/libmp3lame.dylib; sourceTree = "<group>"; };
 		DE2607211A93A9D6004FAEF8 /* Profiler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiler.py; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
@@ -2469,56 +2491,7 @@
 		DE5E4A0B1374510C00D4F8BC /* ConferenceFileCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceFileCell.py; sourceTree = "<group>"; };
 		DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = memory_debug.py; sourceTree = "<group>"; };
 		DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VirtualGroups.py; sourceTree = "<group>"; };
-		DEBDF7111D9AA1C200FE9BD3 /* libsqlite3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.0.dylib; path = Distribution/Frameworks/libsqlite3.0.dylib; sourceTree = "<group>"; };
-		DECBE5251D9AB80000C0DF87 /* libhogweed.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhogweed.4.dylib; path = Distribution/Frameworks/libhogweed.4.dylib; sourceTree = "<group>"; };
-		DEDEAE011D998A74009DDF16 /* libswscale.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.4.dylib; path = Distribution/Frameworks/libswscale.4.dylib; sourceTree = "<group>"; };
-		DEDEAE031D998A8E009DDF16 /* libavformat.57.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.57.dylib; path = Distribution/Frameworks/libavformat.57.dylib; sourceTree = "<group>"; };
-		DEDEAE051D998AA5009DDF16 /* libavcodec.57.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.57.dylib; path = Distribution/Frameworks/libavcodec.57.dylib; sourceTree = "<group>"; };
-		DEDEAE071D998AB5009DDF16 /* libavutil.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.55.dylib; path = Distribution/Frameworks/libavutil.55.dylib; sourceTree = "<group>"; };
-		DEDEAE091D998AE0009DDF16 /* libgmp.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.10.dylib; path = Distribution/Frameworks/libgmp.10.dylib; sourceTree = "<group>"; };
-		DEDEAE0A1D998AE0009DDF16 /* libgnutls.30.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.30.dylib; path = Distribution/Frameworks/libgnutls.30.dylib; sourceTree = "<group>"; };
-		DEDEAE0B1D998AE0009DDF16 /* libhogweed.4.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhogweed.4.2.dylib; path = Distribution/Frameworks/libhogweed.4.2.dylib; sourceTree = "<group>"; };
-		DEDEAE0C1D998AE0009DDF16 /* libmpc.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpc.3.dylib; path = Distribution/Frameworks/libmpc.3.dylib; sourceTree = "<group>"; };
-		DEDEAE0D1D998AE0009DDF16 /* libmpfr.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpfr.4.dylib; path = Distribution/Frameworks/libmpfr.4.dylib; sourceTree = "<group>"; };
-		DEDEAE0E1D998AE0009DDF16 /* libnettle.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnettle.6.dylib; path = Distribution/Frameworks/libnettle.6.dylib; sourceTree = "<group>"; };
-		DEDEAE0F1D998AE0009DDF16 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = Distribution/Frameworks/libpython2.7.dylib; sourceTree = "<group>"; };
-		DEDEAE131D998AFF009DDF16 /* libtasn1.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.6.dylib; path = Distribution/Frameworks/libtasn1.6.dylib; sourceTree = "<group>"; };
-		DEDEAE141D998B41009DDF16 /* libx264.148.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.148.dylib; path = Distribution/Frameworks/libx264.148.dylib; sourceTree = "<group>"; };
-		DEDEAE161D998B84009DDF16 /* libswresample.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.2.dylib; path = Distribution/Frameworks/libswresample.2.dylib; sourceTree = "<group>"; };
-		DEDEAE181D9A7BA3009DDF16 /* libavcodec.57.48.101.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.57.48.101.dylib; path = Distribution/Frameworks/libavcodec.57.48.101.dylib; sourceTree = "<group>"; };
-		DEDEAE191D9A7BA3009DDF16 /* libavcodec.57.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.57.dylib; path = Distribution/Frameworks/libavcodec.57.dylib; sourceTree = "<group>"; };
-		DEDEAE1A1D9A7BA3009DDF16 /* libavcodec.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavcodec.dylib; path = Distribution/Frameworks/libavcodec.dylib; sourceTree = "<group>"; };
-		DEDEAE1B1D9A7BA3009DDF16 /* libavformat.57.41.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.57.41.100.dylib; path = Distribution/Frameworks/libavformat.57.41.100.dylib; sourceTree = "<group>"; };
-		DEDEAE1C1D9A7BA3009DDF16 /* libavformat.57.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.57.dylib; path = Distribution/Frameworks/libavformat.57.dylib; sourceTree = "<group>"; };
-		DEDEAE1D1D9A7BA3009DDF16 /* libavformat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavformat.dylib; path = Distribution/Frameworks/libavformat.dylib; sourceTree = "<group>"; };
-		DEDEAE1E1D9A7BA3009DDF16 /* libavutil.55.28.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.55.28.100.dylib; path = Distribution/Frameworks/libavutil.55.28.100.dylib; sourceTree = "<group>"; };
-		DEDEAE1F1D9A7BA3009DDF16 /* libavutil.55.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.55.dylib; path = Distribution/Frameworks/libavutil.55.dylib; sourceTree = "<group>"; };
-		DEDEAE201D9A7BA3009DDF16 /* libavutil.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libavutil.dylib; path = Distribution/Frameworks/libavutil.dylib; sourceTree = "<group>"; };
-		DEDEAE211D9A7BA3009DDF16 /* libcrypto.1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.0.0.dylib; path = Distribution/Frameworks/libcrypto.1.0.0.dylib; sourceTree = "<group>"; };
-		DEDEAE221D9A7BA3009DDF16 /* libgmp.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.10.dylib; path = Distribution/Frameworks/libgmp.10.dylib; sourceTree = "<group>"; };
-		DEDEAE231D9A7BA3009DDF16 /* libgnutls.30.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.30.dylib; path = Distribution/Frameworks/libgnutls.30.dylib; sourceTree = "<group>"; };
-		DEDEAE241D9A7BA3009DDF16 /* libhogweed.4.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhogweed.4.2.dylib; path = Distribution/Frameworks/libhogweed.4.2.dylib; sourceTree = "<group>"; };
-		DEDEAE251D9A7BA4009DDF16 /* libmpc.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpc.3.dylib; path = Distribution/Frameworks/libmpc.3.dylib; sourceTree = "<group>"; };
-		DEDEAE261D9A7BA4009DDF16 /* libmpfr.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpfr.4.dylib; path = Distribution/Frameworks/libmpfr.4.dylib; sourceTree = "<group>"; };
-		DEDEAE271D9A7BA4009DDF16 /* libnettle.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnettle.6.dylib; path = Distribution/Frameworks/libnettle.6.dylib; sourceTree = "<group>"; };
-		DEDEAE281D9A7BA4009DDF16 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = Distribution/Frameworks/libpython2.7.dylib; sourceTree = "<group>"; };
-		DEDEAE291D9A7BA4009DDF16 /* libssl.1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.0.0.dylib; path = Distribution/Frameworks/libssl.1.0.0.dylib; sourceTree = "<group>"; };
-		DEDEAE2A1D9A7BA4009DDF16 /* libswresample.2.1.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.2.1.100.dylib; path = Distribution/Frameworks/libswresample.2.1.100.dylib; sourceTree = "<group>"; };
-		DEDEAE2B1D9A7BA4009DDF16 /* libswresample.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.2.dylib; path = Distribution/Frameworks/libswresample.2.dylib; sourceTree = "<group>"; };
-		DEDEAE2C1D9A7BA4009DDF16 /* libswresample.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswresample.dylib; path = Distribution/Frameworks/libswresample.dylib; sourceTree = "<group>"; };
-		DEDEAE2D1D9A7BA4009DDF16 /* libswscale.4.1.100.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.4.1.100.dylib; path = Distribution/Frameworks/libswscale.4.1.100.dylib; sourceTree = "<group>"; };
-		DEDEAE2E1D9A7BA4009DDF16 /* libswscale.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.4.dylib; path = Distribution/Frameworks/libswscale.4.dylib; sourceTree = "<group>"; };
-		DEDEAE2F1D9A7BA4009DDF16 /* libswscale.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.dylib; path = Distribution/Frameworks/libswscale.dylib; sourceTree = "<group>"; };
-		DEDEAE301D9A7BA4009DDF16 /* libtasn1.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.6.dylib; path = Distribution/Frameworks/libtasn1.6.dylib; sourceTree = "<group>"; };
-		DEDEAE311D9A7BA4009DDF16 /* libx264.148.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.148.dylib; path = Distribution/Frameworks/libx264.148.dylib; sourceTree = "<group>"; };
-		DEDEAE321D9A7BA4009DDF16 /* libx264.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.dylib; path = Distribution/Frameworks/libx264.dylib; sourceTree = "<group>"; };
 		DEFD8C5E135DD6CD00456E86 /* resources.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = resources.py; sourceTree = "<group>"; };
-		DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.28.dylib; path = Distribution/Frameworks/libgnutls.28.dylib; sourceTree = "<group>"; };
-		DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libhogweed.2.dylib; path = Distribution/Frameworks/libhogweed.2.dylib; sourceTree = "<group>"; };
-		DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnettle.4.dylib; path = Distribution/Frameworks/libnettle.4.dylib; sourceTree = "<group>"; };
-		DEFDFDEC1A8CDE670071D4B2 /* libswscale.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libswscale.3.dylib; path = Distribution/Frameworks/libswscale.3.dylib; sourceTree = "<group>"; };
-		DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtasn1.6.dylib; path = Distribution/Frameworks/libtasn1.6.dylib; sourceTree = "<group>"; };
-		DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libx264.142.dylib; path = Distribution/Frameworks/libx264.142.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2533,7 +2506,7 @@
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
-				1F21921F1C7B62E10052C134 /* libpython2.7.dylib in Frameworks */,
+				1FC898631D9C29FA00DB4CB5 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2549,7 +2522,7 @@
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
-				1F21921D1C7B62D60052C134 /* libpython2.7.dylib in Frameworks */,
+				1FC898611D9C297200DB4CB5 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2564,7 +2537,7 @@
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
-				1F21921E1C7B62DB0052C134 /* libpython2.7.dylib in Frameworks */,
+				1FC898641D9C2A0300DB4CB5 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2580,7 +2553,7 @@
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				1F5C42D71C7B42EC00447F15 /* libpython2.7.dylib in Frameworks */,
+				1FC898601D9C294C00DB4CB5 /* libpython2.7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2780,23 +2753,26 @@
 		1FEDE7CF17AFD4C50038C579 /* C-Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				1F2C1BA81BB168CF0036C306 /* libavfilter.5.dylib */,
-				1FB2BE2D1B15F20A008C72E4 /* libavdevice.56.dylib */,
-				DEFDFDE91A8CDE660071D4B2 /* libgnutls.28.dylib */,
-				DEFDFDEA1A8CDE660071D4B2 /* libhogweed.2.dylib */,
-				DEFDFDEB1A8CDE670071D4B2 /* libnettle.4.dylib */,
-				DE0C40EA1A8E03B40008685F /* libswresample.1.dylib */,
-				DEFDFDEC1A8CDE670071D4B2 /* libswscale.3.dylib */,
-				DEFDFDED1A8CDE670071D4B2 /* libtasn1.6.dylib */,
-				DEFDFDEE1A8CDE670071D4B2 /* libx264.142.dylib */,
-				1FD6D58D1A7B7F3800E0FAFA /* libavcodec.56.dylib */,
-				1FD6D5911A7B7F3800E0FAFA /* libavformat.56.dylib */,
-				1FD6D5941A7B7F3800E0FAFA /* libavutil.54.dylib */,
-				1FD6D59F1A7B7F3800E0FAFA /* libswscale.3.dylib */,
-				1F7E9AE91C60EBE9002653F9 /* libgmp.10.dylib */,
-				1F7E9AEA1C60EBE9002653F9 /* libmpc.3.dylib */,
-				1F7E9AEB1C60EBE9002653F9 /* libmpfr.4.dylib */,
-				1F5C42D61C7B42E200447F15 /* libpython2.7.dylib */,
+				1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */,
+				1FC8983B1D9C267500DB4CB5 /* libavformat.57.dylib */,
+				1FC8983C1D9C267500DB4CB5 /* libavutil.55.dylib */,
+				1FC8983D1D9C267500DB4CB5 /* libcrypto.1.0.0.dylib */,
+				1FC8983E1D9C267500DB4CB5 /* libgmp.10.dylib */,
+				1FC8983F1D9C267500DB4CB5 /* libgnutls.30.dylib */,
+				1FC898401D9C267500DB4CB5 /* libhogweed.4.dylib */,
+				1FC898411D9C267500DB4CB5 /* libmp3lame.0.dylib */,
+				1FC898421D9C267500DB4CB5 /* libmpc.3.dylib */,
+				1FC898431D9C267500DB4CB5 /* libmpfr.4.dylib */,
+				1FC898441D9C267500DB4CB5 /* libnettle.6.dylib */,
+				1FC898451D9C267500DB4CB5 /* libpython2.7.dylib */,
+				1FC898461D9C267500DB4CB5 /* libsqlite3.0.dylib */,
+				1FC898471D9C267500DB4CB5 /* libssl.1.0.0.dylib */,
+				1FC898481D9C267500DB4CB5 /* libswresample.2.dylib */,
+				1FC898491D9C267500DB4CB5 /* libswscale.4.dylib */,
+				1FC8984A1D9C267500DB4CB5 /* libtasn1.6.dylib */,
+				1FC8984B1D9C267500DB4CB5 /* libx264.148.dylib */,
+				1FC8984C1D9C267500DB4CB5 /* Python.framework */,
+				1FC8984D1D9C267500DB4CB5 /* Sparkle.framework */,
 			);
 			name = "C-Libraries";
 			sourceTree = "<group>";
@@ -2804,52 +2780,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */,
-				DECBE5251D9AB80000C0DF87 /* libhogweed.4.dylib */,
-				DEBDF7111D9AA1C200FE9BD3 /* libsqlite3.0.dylib */,
-				DE1BD0691D9A7E77004DAD1E /* libmp3lame.0.dylib */,
-				DE1BD06A1D9A7E77004DAD1E /* libmp3lame.dylib */,
-				DEDEAE181D9A7BA3009DDF16 /* libavcodec.57.48.101.dylib */,
-				DEDEAE191D9A7BA3009DDF16 /* libavcodec.57.dylib */,
-				DEDEAE1A1D9A7BA3009DDF16 /* libavcodec.dylib */,
-				DEDEAE1B1D9A7BA3009DDF16 /* libavformat.57.41.100.dylib */,
-				DEDEAE1C1D9A7BA3009DDF16 /* libavformat.57.dylib */,
-				DEDEAE1D1D9A7BA3009DDF16 /* libavformat.dylib */,
-				DEDEAE1E1D9A7BA3009DDF16 /* libavutil.55.28.100.dylib */,
-				DEDEAE1F1D9A7BA3009DDF16 /* libavutil.55.dylib */,
-				DEDEAE201D9A7BA3009DDF16 /* libavutil.dylib */,
-				DEDEAE211D9A7BA3009DDF16 /* libcrypto.1.0.0.dylib */,
-				DEDEAE221D9A7BA3009DDF16 /* libgmp.10.dylib */,
-				DEDEAE231D9A7BA3009DDF16 /* libgnutls.30.dylib */,
-				DEDEAE241D9A7BA3009DDF16 /* libhogweed.4.2.dylib */,
-				DEDEAE251D9A7BA4009DDF16 /* libmpc.3.dylib */,
-				DEDEAE261D9A7BA4009DDF16 /* libmpfr.4.dylib */,
-				DEDEAE271D9A7BA4009DDF16 /* libnettle.6.dylib */,
-				DEDEAE281D9A7BA4009DDF16 /* libpython2.7.dylib */,
-				DEDEAE291D9A7BA4009DDF16 /* libssl.1.0.0.dylib */,
-				DEDEAE2A1D9A7BA4009DDF16 /* libswresample.2.1.100.dylib */,
-				DEDEAE2B1D9A7BA4009DDF16 /* libswresample.2.dylib */,
-				DEDEAE2C1D9A7BA4009DDF16 /* libswresample.dylib */,
-				DEDEAE2D1D9A7BA4009DDF16 /* libswscale.4.1.100.dylib */,
-				DEDEAE2E1D9A7BA4009DDF16 /* libswscale.4.dylib */,
-				DEDEAE2F1D9A7BA4009DDF16 /* libswscale.dylib */,
-				DEDEAE301D9A7BA4009DDF16 /* libtasn1.6.dylib */,
-				DEDEAE311D9A7BA4009DDF16 /* libx264.148.dylib */,
-				DEDEAE321D9A7BA4009DDF16 /* libx264.dylib */,
-				DEDEAE161D998B84009DDF16 /* libswresample.2.dylib */,
-				DEDEAE141D998B41009DDF16 /* libx264.148.dylib */,
-				DEDEAE131D998AFF009DDF16 /* libtasn1.6.dylib */,
-				DEDEAE091D998AE0009DDF16 /* libgmp.10.dylib */,
-				DEDEAE0A1D998AE0009DDF16 /* libgnutls.30.dylib */,
-				DEDEAE0B1D998AE0009DDF16 /* libhogweed.4.2.dylib */,
-				DEDEAE0C1D998AE0009DDF16 /* libmpc.3.dylib */,
-				DEDEAE0D1D998AE0009DDF16 /* libmpfr.4.dylib */,
-				DEDEAE0E1D998AE0009DDF16 /* libnettle.6.dylib */,
-				DEDEAE0F1D998AE0009DDF16 /* libpython2.7.dylib */,
-				DEDEAE071D998AB5009DDF16 /* libavutil.55.dylib */,
-				DEDEAE051D998AA5009DDF16 /* libavcodec.57.dylib */,
-				DEDEAE031D998A8E009DDF16 /* libavformat.57.dylib */,
-				DEDEAE011D998A74009DDF16 /* libswscale.4.dylib */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F485725191595FA002543C7 /* Branding */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
@@ -3269,6 +3199,7 @@
 		2BEFC1BD0FD1C93F00447EFB /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */,
 				1F5BC30217E66DAC00D1D8BE /* Localizable.strings */,
 				DEFD8C5E135DD6CD00456E86 /* resources.py */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
@@ -3447,6 +3378,7 @@
 				TargetAttributes = {
 					1F22729312B554F50010A8B2 = {
 						DevelopmentTeam = 4DFEFUDLKZ;
+						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.InAppPurchase = {
 								enabled = 0;
@@ -3512,6 +3444,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */,
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
 				1F22729712B554F50010A8B2 /* ContactCell.py in Resources */,
 				1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */,
@@ -3789,6 +3722,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FC898621D9C29C200DB4CB5 /* memory_debug.py in Resources */,
 				1F35CF7B17894FFF00C6FE38 /* ContactWindowController.py in Resources */,
 				1F35CF7C17894FFF00C6FE38 /* ContactCell.py in Resources */,
 				1F35CF7D17894FFF00C6FE38 /* ContactListModel.py in Resources */,
@@ -4068,6 +4002,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F762C331D9C760000F3D455 /* memory_debug.py in Resources */,
 				1F8DC327135084FA0034815C /* ContactWindowController.py in Resources */,
 				1F8DC328135084FA0034815C /* ContactCell.py in Resources */,
 				1F8DC329135084FA0034815C /* ContactListModel.py in Resources */,
@@ -5279,6 +5214,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = "";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5299,12 +5235,13 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -5322,6 +5259,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5340,13 +5278,14 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
@@ -5358,8 +5297,8 @@
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
 				CODE_SIGN_ENTITLEMENTS = "";
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = /tmp/sip2sip.dst;
@@ -5383,12 +5322,12 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -5400,8 +5339,8 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DSTROOT = /tmp/sip2sip.dst;
@@ -5423,13 +5362,13 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = SIP2SIP;
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
@@ -5466,11 +5405,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = YES;
@@ -5507,11 +5446,11 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_NAME = "Blink Lite";
 				PROVISIONING_PROFILE = "";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = app;
 			};
@@ -5520,10 +5459,10 @@
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -5549,6 +5488,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
+				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.BlinkBeta;
 				PRODUCT_NAME = Blink;
 				PROVISIONING_PROFILE = "";
@@ -5562,10 +5502,10 @@
 		C01FCF4C08A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -5589,6 +5529,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
+				OTHER_CODE_SIGN_FLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.BlinkBeta;
 				PRODUCT_NAME = Blink;
 				PROVISIONING_PROFILE = "";
