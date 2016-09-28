@@ -35,7 +35,8 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSTableViewSelectionDidChangeNotification,
                     NSTableViewDropAbove,
-                    NSVariableStatusItemLength)
+                    NSVariableStatusItemLength,
+                    NSStatusBar)
 
 from Foundation import (NSArray,
                         NSAttributedString,
@@ -65,7 +66,6 @@ from Foundation import (NSArray,
                         NSPasteboard,
                         NSRunLoop,
                         NSSpeechSynthesizer,
-                        NSStatusBar,
                         NSString,
                         NSLocalizedString,
                         NSTimer,
@@ -318,8 +318,7 @@ class ContactWindowController(NSWindowController):
     presenceInfoPanel = None
     tellMeWhenContactBecomesAvailableList = set()
 
-    #statusbar = NSStatusBar.systemStatusBar()
-    statusbar = Null
+    statusbar = NSStatusBar.systemStatusBar()
     statusBarMenu = objc.IBOutlet()
     speech_synthesizer = None
     speech_synthesizer_active = False
