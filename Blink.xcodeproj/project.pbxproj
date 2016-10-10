@@ -5214,7 +5214,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5259,7 +5259,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5301,6 +5301,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				DSTROOT = /tmp/sip2sip.dst;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5343,6 +5344,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				DSTROOT = /tmp/sip2sip.dst;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5385,6 +5387,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5428,6 +5431,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5465,6 +5469,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
@@ -5508,6 +5513,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					"\"/System/Library/Frameworks\"",
