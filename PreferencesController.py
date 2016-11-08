@@ -60,7 +60,7 @@ from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSlid
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
-from util import run_in_gui_thread, AccountInfo
+from util import run_in_gui_thread, AccountInfo, osx_version
 
 
 class PreferencesController(NSWindowController, object):
@@ -208,8 +208,11 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['contacts.enable_missed_calls_group'] = HiddenOption
 
         try:
-            from sipsimple.configuration.settings import H264Settings
+            video_support = True if osx_version != "10.12" else False
         except ImportError:
+            video_support = False
+        
+        if not video_support:
             try:
                 item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'video').next()
                 self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))

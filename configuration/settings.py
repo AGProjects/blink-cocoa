@@ -9,13 +9,8 @@ __all__ = ['SIPSimpleSettingsExtension']
 
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
-try:
-    from sipsimple.configuration.datatypes import H264Profile, VideoResolution
-    from sipsimple.configuration.settings import H264Settings, VideoSettings, VideoCodecList
-    video_support = True
-except ImportError:
-    video_support = False
-    pass
+from sipsimple.configuration.datatypes import H264Profile, VideoResolution
+from sipsimple.configuration.settings import H264Settings, VideoSettings, VideoCodecList
 
 from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
@@ -30,21 +25,20 @@ class AnsweringMachineSettings(SettingsGroup):
     max_recording_duration = Setting(type=NonNegativeInteger, default=120)
     unavailable_message = Setting(type=AnsweringMachineSoundFile, default=AnsweringMachineSoundFile(AnsweringMachineSoundFile.DefaultSoundFile('unavailable_message.wav')), nillable=True)
 
-if video_support:
-    class H264SettingsExtension(H264Settings):
-        profile = Setting(type=H264Profile, default='baseline')
-        level = Setting(type=str, default='3.1')
+class H264SettingsExtension(H264Settings):
+    profile = Setting(type=H264Profile, default='baseline')
+    level = Setting(type=str, default='3.1')
 
-    class VideoSettingsExtension(VideoSettings):
-        enable_when_auto_answer = Setting(type=bool, default=False)
-        full_screen_after_connect = Setting(type=bool, default=True)
-        keep_window_on_top = Setting(type=bool, default=True)
-        resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
-        max_bitrate = Setting(type=float, default=4, nillable=True)
-        framerate = Setting(type=int, default=15)
-        h264 = H264SettingsExtension
-        auto_rotate_cameras = Setting(type=bool, default=True)
-        container = Setting(type=str, default='standalone')
+class VideoSettingsExtension(VideoSettings):
+    enable_when_auto_answer = Setting(type=bool, default=False)
+    full_screen_after_connect = Setting(type=bool, default=True)
+    keep_window_on_top = Setting(type=bool, default=True)
+    resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
+    max_bitrate = Setting(type=float, default=4, nillable=True)
+    framerate = Setting(type=int, default=15)
+    h264 = H264SettingsExtension
+    auto_rotate_cameras = Setting(type=bool, default=True)
+    container = Setting(type=str, default='standalone')
 
 
 class EchoCancellerSettingsExtension(EchoCancellerSettings):
@@ -124,15 +118,9 @@ class GUISettings(SettingsGroup):
     media_support_detection = Setting(type=bool, default=False)
     close_delay = Setting(type=NonNegativeInteger, default=4)
 
-
-
-if video_support:
-    class RTPSettingsExtension(RTPSettings):
-        audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
-        video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264', 'VP8')))
-else:
-    class RTPSettingsExtension(RTPSettings):
-        audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
+class RTPSettingsExtension(RTPSettings):
+    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
+    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264', 'VP8')))
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
@@ -183,8 +171,7 @@ class PresenceStateSettings(SettingsGroup):
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
-    if video_support:
-        video = VideoSettingsExtension
+    video = VideoSettingsExtension
     chat = ChatSettingsExtension
     screen_sharing_server = ScreenSharingSettingsExtension
     file_transfer = FileTransferSettingsExtension

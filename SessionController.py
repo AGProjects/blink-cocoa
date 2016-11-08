@@ -66,13 +66,9 @@ from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_CAN
 from SessionRinger import Ringer
 from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
-try:
-    from VideoController import VideoController
-    video_support = True
-except ImportError:
-    video_support = False
+from VideoController import VideoController
 from interfaces.itunes import MusicApplications
-from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc
+from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc, osx_version
 
 
 SessionIdentifierSerial = 0
@@ -84,11 +80,9 @@ StreamHandlerForType = {
     "file-transfer" : FileTransferController,
     "screen-sharing" : ScreenSharingController,
     "screen-sharing-server" : ScreenSharingServerController,
-    "screen-sharing-client" : ScreenSharingViewerController
+    "screen-sharing-client" : ScreenSharingViewerController,
+    "video": VideoController
 }
-
-if video_support:
-    StreamHandlerForType['video'] = VideoController
 
 class SessionControllersManager(object):
     __metaclass__ = Singleton
@@ -263,6 +257,11 @@ class SessionControllersManager(object):
         if type == 'sms':
             return settings.chat.enable_sms
 
+        if type == 'video':
+            if osx_version == "10.12":
+                BlinkLogger().log_debug(u"Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
+                return False
+        
         return True
 
     def log_incoming_session_missed(self, controller, data):
@@ -2088,7 +2087,7 @@ class SessionController(NSObject):
 
             if self.contact and self.contact.auto_answer:
                 accepted_streams = streams
-                if video_support and "video" in stream_type_list and not settings.video.enable_when_auto_answer:
+                if "video" in stream_type_list and not settings.video.enable_when_auto_answer:
                     accepted_streams = [s for s in streams if s.type not in ("video")]
                 else:
                     accepted_streams = streams
@@ -2169,7 +2168,7 @@ class SessionController(NSObject):
                 handler = self.streamHandlerForStream(stream)
                 if handler:
                     handler.changeStatus(STREAM_FAILED, data.reason)
-            elif video_support and stream.type == "video":
+            elif stream.type == "video":
                 self.log_info("Removing video stream")
                 handler = self.streamHandlerForStream(stream)
                 if handler:
@@ -2249,10 +2248,9 @@ class SessionController(NSObject):
             for stream in data.removed_streams:
                 self.log_debug("%s stream removed by remote party" % stream.type.title())
 
-            if video_support:
-                video_removed = any(stream for stream in data.removed_streams if isinstance(stream, VideoStream))
-                if video_removed:
-                    self.notification_center.post_notification("VideoRemovedByRemoteParty", sender=self, data=data)
+            video_removed = any(stream for stream in data.removed_streams if isinstance(stream, VideoStream))
+            if video_removed:
+                self.notification_center.post_notification("VideoRemovedByRemoteParty", sender=self, data=data)
 
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 

@@ -58,14 +58,8 @@ from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
 from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress, VideoResolution
-try:
-    from sipsimple.configuration.datatypes import VideoCodecList, H264Profile
-    video_support = True
-except ImportError:
-    VideoCodecList = None
-    video_support = False
-    pass
 
+from sipsimple.configuration.datatypes import VideoCodecList, H264Profile
 from sipsimple.configuration.settings import SIPSimpleSettings
 from configuration.settings import EchoCancellerSettingsExtension
 from zope.interface import implements
@@ -675,13 +669,10 @@ class AudioCodecListOption(MultipleSelectionOption):
                 options.append(opt)
         self.options = options
 
-if video_support:
-    class VideoCodecListOption(AudioCodecListOption):
-        available_codec_list = VideoCodecList
-        beautified_codecs = video_codecs
-        type = 'video'
-else:
-    VideoCodecListOption = None
+class VideoCodecListOption(AudioCodecListOption):
+    available_codec_list = VideoCodecList
+    beautified_codecs = video_codecs
+    type = 'video'
 
 class AccountAudioCodecListOption(AudioCodecListOption):
     def __init__(self, object, name, option, description=None):
@@ -739,64 +730,61 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         else:
             cell.setEnabled_(True)
 
-if video_support:
-    class AccountVideoCodecListOption(VideoCodecListOption):
-        def __init__(self, object, name, option, description=None):
-            VideoCodecListOption.__init__(self, object, name, option, description)
+class AccountVideoCodecListOption(VideoCodecListOption):
+    def __init__(self, object, name, option, description=None):
+        VideoCodecListOption.__init__(self, object, name, option, description)
 
-            self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 110, 20))
-            self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
-            self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
-            self.check.setButtonType_(NSSwitchButton)
-            self.check.setTarget_(self)
-            self.check.setAction_("customizeCodecs:")
-            self.sideView.addSubview_(self.check)
+        self.check = NSButton.alloc().initWithFrame_(NSMakeRect(0, 105, 110, 20))
+        self.check.setTitle_(NSLocalizedString("Customize", "Check box title"))
+        self.check.setToolTip_(NSLocalizedString("Check if you want to customize the codec list for this account instead of using the global settings", "Checkbox tooltip"))
+        self.check.setButtonType_(NSSwitchButton)
+        self.check.setTarget_(self)
+        self.check.setAction_("customizeCodecs:")
+        self.sideView.addSubview_(self.check)
 
-        def loadGlobalSettings(self):
-            value = SIPSimpleSettings().rtp.video_codec_list or []
-            options = []
-            for val in list(value):
-                try:
-                    v = (v for k, v in video_codecs.iteritems() if val == k).next()
-                except StopIteration:
-                    options.append(val)
-                else:
-                    options.append(v)
-
-            self.selection = set(options)
-            for opt in self.options:
-                if opt not in options:
-                    options.append(opt)
-            self.options = options
-
-        def customizeCodecs_(self, sender):
-            if sender.state() == NSOffState:
-                self.loadGlobalSettings()
-
-            self.table.reloadData()
-            self.store()
-
-        def _store(self):
-            if self.check.state() == NSOnState:
-                VideoCodecListOption._store(self)
+    def loadGlobalSettings(self):
+        value = SIPSimpleSettings().rtp.video_codec_list or []
+        options = []
+        for val in list(value):
+            try:
+                v = (v for k, v in video_codecs.iteritems() if val == k).next()
+            except StopIteration:
+                options.append(val)
             else:
-                self.set(None)
+                options.append(v)
 
-        def restore(self):
-            if self.get() is None:
-                self.check.setState_(NSOffState)
-                self.loadGlobalSettings()
-            else:
-                self.check.setState_(NSOnState)
-                VideoCodecListOption.restore(self)
+        self.selection = set(options)
+        for opt in self.options:
+            if opt not in options:
+                options.append(opt)
+        self.options = options
 
-        def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
-            if self.check.state() == NSOffState:
-                cell.setEnabled_(False)
-            else:
-                cell.setEnabled_(True)
-else:
-    AccountVideoCodecListOption = None
+    def customizeCodecs_(self, sender):
+        if sender.state() == NSOffState:
+            self.loadGlobalSettings()
+
+        self.table.reloadData()
+        self.store()
+
+    def _store(self):
+        if self.check.state() == NSOnState:
+            VideoCodecListOption._store(self)
+        else:
+            self.set(None)
+
+    def restore(self):
+        if self.get() is None:
+            self.check.setState_(NSOffState)
+            self.loadGlobalSettings()
+        else:
+            self.check.setState_(NSOnState)
+            VideoCodecListOption.restore(self)
+
+    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
+        if self.check.state() == NSOffState:
+            cell.setEnabled_(False)
+        else:
+            cell.setEnabled_(True)
 
 
 class PopUpMenuOption(Option):
@@ -1933,11 +1921,13 @@ PreferenceOptionTypes = {
 
 # These acount sections are always hidden
 DisabledAccountPreferenceSections = []
-if osx_version == '10.6':
-    DisabledAccountPreferenceSections.append('chat')
 
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider', 'server', 'echo_canceller']
+
+if osx_version == '10.12':
+    DisabledPreferenceSections.append('video')
+    DisabledAccountPreferenceSections.append('video')
 
 # These section are rendered staticaly in their own view
 StaticPreferenceSections = ['audio', 'video', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']

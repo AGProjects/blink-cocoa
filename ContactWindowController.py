@@ -4569,6 +4569,9 @@ class ContactWindowController(NSWindowController):
             item.setIndentationLevel_(2)
             item.setState_(NSOnState if value in (None, "None") else NSOffState)
             index += 1
+            
+            if not self.sessionControllersManager.isMediaTypeSupported('video'):
+                return
 
             if value == 'system_default':
                 value = self.backend._app.video_device.real_name
