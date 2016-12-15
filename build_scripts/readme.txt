@@ -72,17 +72,13 @@ Compiling PyObjC
 ----------------
 
 In order to get a PyObjC version that will work with the framework created
-above (Python 2.7, 64bits) an equivalent Python must be used to compile it. 
+above (Python 2.7, 64bits) an equivalent Python must be used to compile it.
 That is, if has to be a Python 2.7 version (it doesn't have to be the exact
-version) and it has to be a 64bit version.  The MACOSX_DEPLOYMENT_TARGET
-must also be set to the appropriate value.
+version) and it has to be a 64bit version.
 
-PyObjcC can be installed with easy_install or pip.  We install it in 2 steps
-to save some compilation time due to a bug in the build system:
-
-pip install pyobjc-core
-pip install pyobjc
-pip install pycrypto
+darcs get darcs@devel.ag-projects.com:repositories/thirdparty/pyobjc-25
+cd pyobjc-25
+python install.py
 
 When compiling PyObjC a Python package will be created for every system
 framework, but not all of them are needed (at the moment), so just pick the
