@@ -207,12 +207,7 @@ class PreferencesController(NSWindowController, object):
             PreferenceOptionTypes['contacts.enable_outgoing_calls_group'] = HiddenOption
             PreferenceOptionTypes['contacts.enable_missed_calls_group'] = HiddenOption
 
-        try:
-            video_support = True if osx_version != "10.12" else False
-        except ImportError:
-            video_support = False
-        
-        if not video_support:
+        if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
             try:
                 item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'video').next()
                 self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))

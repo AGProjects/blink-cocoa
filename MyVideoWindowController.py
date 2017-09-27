@@ -43,19 +43,20 @@ from Foundation import (NSBundle,
                         NSZeroRect
                         )
 
-from AVFoundation import (AVCaptureDeviceInput,
-                          AVCaptureVideoDataOutput,
-                          AVCaptureDevice,
-                          AVCaptureSession,
-                          AVCaptureVideoPreviewLayer,
-                          AVCaptureStillImageOutput,
-                          AVCaptureSessionPresetHigh,
-                          AVLayerVideoGravityResizeAspectFill,
-                          AVMediaTypeVideo,
-                          AVMediaTypeMuxed,
-                          AVVideoCodecJPEG,
-                          AVVideoCodecKey
-                          )
+# TODO: Video broken since 10.13
+#from AVFoundation import (AVCaptureDeviceInput,
+#                          AVCaptureVideoDataOutput,
+#                          AVCaptureDevice,
+#                          AVCaptureSession,
+#                          AVCaptureVideoPreviewLayer,
+#                          AVCaptureStillImageOutput,
+#                          AVCaptureSessionPresetHigh,
+#                          AVLayerVideoGravityResizeAspectFill,
+#                          AVMediaTypeVideo,
+#                          AVMediaTypeMuxed,
+#                          AVVideoCodecJPEG,
+#                          AVVideoCodecKey
+#                          )
 
 import objc
 
@@ -433,7 +434,7 @@ class LocalVideoView(NSView):
     def getDevice(self):
         # Find a video camera
         try:
-            device = (device for device in AVCaptureDevice.devices() if (device.hasMediaType_(AVMediaTypeVideo) or device.hasMediaType_(AVMediaTypeMuxed)) and device.localizedName() == SIPApplication.video_device.real_name).next()
+            device = (device for device in AVCaptureDevice.devices() if device.localizedName() == SIPApplication.video_device.real_name).next()
         except StopIteration:
             BlinkLogger().log_error('No video camera found')
             return None

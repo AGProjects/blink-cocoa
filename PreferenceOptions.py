@@ -1925,10 +1925,6 @@ DisabledAccountPreferenceSections = []
 # These general sections are always hidden
 DisabledPreferenceSections = ['service_provider', 'server', 'echo_canceller']
 
-if osx_version == '10.12':
-    DisabledPreferenceSections.append('video')
-    DisabledAccountPreferenceSections.append('video')
-
 # These section are rendered staticaly in their own view
 StaticPreferenceSections = ['audio', 'video', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
 

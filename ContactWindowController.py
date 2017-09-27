@@ -2799,7 +2799,7 @@ class ContactWindowController(NSWindowController):
                         videoOk = False
                     else:
                         chatOk = audioOk
-                        videoOk = audioOk
+                        videoOk = audioOk and self.sessionControllersManager.isMediaTypeSupported('video')
                     if contacts and not is_sip_aor_format(contacts[0].uri):
                         screenOk = False
                     else:
@@ -2808,7 +2808,7 @@ class ContactWindowController(NSWindowController):
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = audioOk
                 screenOk = audioOk
-                videoOk = audioOk
+                videoOk = audioOk and self.sessionControllersManager.isMediaTypeSupported('video')
             elif tabItem == "dialpad":
                 audioOk = self.searchBox.stringValue().strip() != u""
                 chatOk = False

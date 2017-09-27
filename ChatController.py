@@ -1194,10 +1194,11 @@ class ChatController(MediaStream):
                 contactWindow.historyViewer.setPeriod(days)
 
     def userClickedSnapshotMenu_(self, sender):
-        picker = PhotoPicker(ApplicationData.get('.tmp_snapshots'), high_res=True, history=False)
-        path, image = picker.runModal()
-        if image and path:
-            self.sendFiles([unicode(path)])
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+            picker = PhotoPicker(ApplicationData.get('.tmp_snapshots'), high_res=True, history=False)
+            path, image = picker.runModal()
+            if image and path:
+                self.sendFiles([unicode(path)])
 
     def userClickedScreenshotMenu_(self, sender):
         screenshots_folder = ApplicationData.get('.tmp_screenshots')
