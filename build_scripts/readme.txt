@@ -57,10 +57,10 @@ rm -r Versions/Current/lib/python2.7/lib-dynload/gdbm.so
 rm -r Versions/Current/lib/python2.7/lib-dynload/readline.so
 rm -r Versions/2.7/lib/python2.7/site-packages
 
-Replace Versions/Current/lib/python2.7/site.py@ with an empty file.
+Replace Versions/Current/lib/python2.7/site.py with an empty file.
 
 rm ~/work/blink/Distribution/Frameworks//Python.framework/Versions/Current/lib/python2.7/site.py
-touch ~/work/blink/Distribution/Frameworks//Python.framework/Versions/Current/lib/python2.7/site.py
+touch ~/work/blink/Distribution/Frameworks/Python.framework/Versions/Current/lib/python2.7/site.py
 
 Python Framework needs file a Info.plist file under Resources in order to be
 compatible with latest OSX bundle structure:
