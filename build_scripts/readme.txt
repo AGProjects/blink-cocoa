@@ -84,12 +84,12 @@ When compiling PyObjC a Python package will be created for every system
 framework, but not all of them are needed (at the moment), so just pick the
 ones we use:
 
+AVFoundation
 AddressBook
 AppKit
 Cocoa
 CoreFoundation
 Foundation
-JavaScriptCore
 LaunchServices
 PyObjCTools
 Quartz
