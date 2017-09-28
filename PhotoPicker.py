@@ -146,7 +146,6 @@ class EditImageView(NSImageView):
             self.cropRectangle = newRect
             self.setNeedsDisplay_(True)
 
-
     def drawRect_(self, rect):
         NSImageView.drawRect_(self, rect)
 
@@ -330,9 +329,13 @@ class PhotoPicker(NSObject):
                 #self.countdownCheckbox.setHidden_(False)
                 self.mirrorButton.setHidden_(False)
                 self.captureButton.setHidden_(False)
+                if self.captureView.captureSession and self.captureView.captureSession.isRunning():
+                    self.captureButton.setEnabled_(True)
+                else: 
+                    self.captureButton.setEnabled_(False)
+
                 self.useButton.setEnabled_(False)
             else:
-                self.previewButton.setEnabled_(False)
                 self.previewButton.setEnabled_(False)
 
     @objc.IBAction

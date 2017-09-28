@@ -490,18 +490,22 @@ class LocalVideoView(NSView):
             if width == 0 or height == 0:
                 width = 1280
                 height = 720
-                BlinkLogger().log_debug("Error: %s camera does not provide any supported video format" % device.localizedName())
+                BlinkLogger().log_info("Error: %s camera does not provide any supported video format" % device.localizedName())
             else:
                 if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
-                    BlinkLogger().log_debug("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
+                    BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 
             self.captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
             if self.captureDeviceInput:
-                self.captureSession.addInput_(self.captureDeviceInput)
+                try: 
+                    self.captureSession.addInput_(self.captureDeviceInput)
+                except ValueError:
+                    BlinkLogger().log_info('Failed to add camera input to capture session')
+                return   
             else:
-                BlinkLogger().log_debug('Failed to aquire input %s' % self)
+                BlinkLogger().log_info('Failed to aquire input %s' % self)
                 return
 
             self.setWantsLayer_(True)
@@ -523,17 +527,17 @@ class LocalVideoView(NSView):
 
             self.captureSession.addOutput_(self.stillImageOutput)
 
-        if self.captureSession:
-            BlinkLogger().log_debug('Start aquire local video %s' % self)
+        if self.captureSession and self.videoPreviewLayer:
+            BlinkLogger().log_info('Start aquire local video %s' % self)
             self.videoPreviewLayer.setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.4))
             self.captureSession.startRunning()
 
     def computerDidWake_(self, notification):
-        if self.captureSession:
+        if self.captureSession and self.captureSession.isRunning():
             self.captureSession.startRunning()
 
     def computerWillSleep_(self, notification):
-        if self.captureSession:
+        if self.captureSession and self.captureSession.isRunning():
             self.captureSession.stopRunning()
 
     def setMirroring(self):
@@ -562,8 +566,9 @@ class LocalVideoView(NSView):
 
             NotificationCenter().post_notification('CameraSnapshotDidSucceed', sender=self, data=NotificationData(image=image))
 
-        connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
-        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, capture_handler)
+        if self.stillImageOutput:
+            connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
+            self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, capture_handler)
 
     def visible(self):
         return self.captureSession is not None
@@ -583,7 +588,7 @@ class LocalVideoView(NSView):
         NSWorkspace.sharedWorkspace().notificationCenter().removeObserver_name_object_(self, NSWorkspaceDidWakeNotification, None)
         NSWorkspace.sharedWorkspace().notificationCenter().removeObserver_name_object_(self, NSWorkspaceWillSleepNotification, None)
 
-        if self.captureSession is not None:
+        if self.captureSession is not None and self.captureSession.isRunning():
             BlinkLogger().log_debug('Stop aquire local video %s' % self)
             self.captureSession.stopRunning()
 
