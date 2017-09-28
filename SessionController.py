@@ -259,9 +259,8 @@ class SessionControllersManager(object):
             return settings.chat.enable_sms
 
         if type == 'video':
-            if osx_version == "10.12":
-                BlinkLogger().log_debug(u"Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
-                return False
+            BlinkLogger().log_debug(u"Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
+            return False
         
         return True
 
