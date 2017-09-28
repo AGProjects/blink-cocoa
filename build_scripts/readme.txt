@@ -68,8 +68,21 @@ compatible with latest OSX bundle structure:
 cp build_scripts/PythonFramework.plist Distribution/Frameworks/Python.framework/Resources/Info.plist           
 
 
-Compiling PyObjC
-----------------
+Installing PyObjC
+-----------------
+
+Since September 28th, 2017, Blink works with latest PyObjc 4.X.
+
+pip install pyobjc
+
+Then copy the Frameworks listed below into Blink/Distribution/Resources/lib
+folder.
+
+Some frameworks may not load becuase of missing __init__.py if so create an
+empty one inside the corespondent folder.
+
+
+For older version 2.5
 
 In order to get a PyObjC version that will work with the framework created
 above (Python 2.7, 64bits) an equivalent Python must be used to compile it.
