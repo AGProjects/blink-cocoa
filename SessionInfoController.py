@@ -171,11 +171,13 @@ class SessionInfoController(NSObject):
         self.resetSession()
         self.updatePanelValues()
 
+    @objc.python_method
     def add_session(self, sessionController):
         if self.sessionController is None:
             self.sessionController = sessionController
             self.notification_center.add_observer(self, sender=self.sessionController)
 
+    @objc.python_method
     def remove_session(self):
         if self.sessionController is not None:
             self.notification_center.remove_observer(self, sender=self.sessionController)
@@ -185,12 +187,14 @@ class SessionInfoController(NSObject):
         self.remove_video_stream()
         self.remove_chat_stream()
 
+    @objc.python_method
     def add_audio_stream(self):
         if self.sessionController is not None and self.sessionController.hasStreamOfType("audio") and self.audio_stream is None:
             self.audio_stream = self.sessionController.streamHandlerOfType("audio")
             self.notification_center.add_observer(self, sender=self.audio_stream)
             self.notification_center.add_observer(self, sender=self.audio_stream.stream)
 
+    @objc.python_method
     def remove_audio_stream(self):
         if self.audio_stream is not None:
             self.notification_center.discard_observer(self, sender=self.audio_stream)
@@ -198,12 +202,14 @@ class SessionInfoController(NSObject):
             self.audio_stream = None
             self.updateAudioStatus()
 
+    @objc.python_method
     def add_video_stream(self):
         if self.sessionController is not None and self.sessionController.hasStreamOfType("video") and self.video_stream is None:
             self.video_stream = self.sessionController.streamHandlerOfType("video")
             self.notification_center.add_observer(self, sender=self.video_stream)
             self.notification_center.add_observer(self, sender=self.video_stream.stream)
 
+    @objc.python_method
     def remove_video_stream(self):
         if self.video_stream is not None:
             self.notification_center.discard_observer(self, sender=self.video_stream)
@@ -212,14 +218,17 @@ class SessionInfoController(NSObject):
             self.resetVideo()
             self.updateVideoStatus()
 
+    @objc.python_method
     def add_chat_stream(self):
         if self.sessionController is not None and self.sessionController.hasStreamOfType("chat") and self.chat_stream is None:
             self.chat_stream = self.sessionController.streamHandlerOfType("chat")
 
+    @objc.python_method
     def remove_chat_stream(self):
         if self.chat_stream is not None:
             self.chat_stream = None
 
+    @objc.python_method
     def resetSession(self):
         self.remote_endpoint.setStringValue_('')
         self.remote_ua.setStringValue_('')
@@ -230,6 +239,7 @@ class SessionInfoController(NSObject):
         self.resetVideo()
         self.resetChat()
 
+    @objc.python_method
     def resetAudio(self):
         self.audio_status.setStringValue_('')
         self.audio_codec.setStringValue_('')
@@ -241,6 +251,7 @@ class SessionInfoController(NSObject):
         self.rx_speed.setStringValue_('')
         self.tx_speed.setStringValue_('')
 
+    @objc.python_method
     def resetVideo(self):
         self.video_status.setStringValue_('')
         self.video_codec.setStringValue_('')
@@ -249,13 +260,16 @@ class SessionInfoController(NSObject):
         self.video_rx_speed.setStringValue_('')
         self.video_tx_speed.setStringValue_('')
 
+    @objc.python_method
     def resetChat(self):
         self.chat_remote_endpoint.setStringValue_('')
         self.chat_connection_mode.setStringValue_('')
 
+    @objc.python_method
     def updatePanelValues(self):
         self.updateSession()
 
+    @objc.python_method
     def updateSession(self):
         if self.sessionController is None:
             self.resetSession()
@@ -287,6 +301,7 @@ class SessionInfoController(NSObject):
         self.updateVideo()
         self.updateChat()
 
+    @objc.python_method
     def updateSessionStatus(self, sub_state=None):
         if self.sessionController.state is None:
             self.status.setStringValue_("")
@@ -300,6 +315,7 @@ class SessionInfoController(NSObject):
 
         self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state and sub_state != 'None' else state)
 
+    @objc.python_method
     def updateAudio(self):
         if self.audio_status.stringValue() and (self.sessionController is None or self.audio_stream is None or self.audio_stream.stream is None):
             self.resetAudio()
@@ -381,6 +397,7 @@ class SessionInfoController(NSObject):
 
             self.audio_ice_negotiation.setStringValue_(ice_status)
 
+    @objc.python_method
     def updateVideo(self):
         if self.video_status.stringValue() and (self.sessionController is None or self.video_stream is None or self.video_stream.stream is None):
             self.resetVideo()
@@ -449,6 +466,7 @@ class SessionInfoController(NSObject):
 
             self.video_ice_negotiation.setStringValue_(ice_status)
 
+    @objc.python_method
     def updateChat(self):
         if self.sessionController is None or self.chat_stream is None or self.chat_stream.stream is None or self.chat_stream.stream.msrp is None:
             self.resetChat()
@@ -468,6 +486,7 @@ class SessionInfoController(NSObject):
             self.updateAudio()
             self.updateVideo()
 
+    @objc.python_method
     def updateDuration(self):
         if self.sessionController is not None and self.sessionController.session is not None:
             if self.sessionController.session.end_time:
@@ -485,6 +504,7 @@ class SessionInfoController(NSObject):
             else:
                 self.duration.setStringValue_('')
 
+    @objc.python_method
     def updateAudioStatus(self):
         if self.sessionController is None or self.audio_stream is None:
             self.audio_status.setStringValue_("")
@@ -503,6 +523,7 @@ class SessionInfoController(NSObject):
             else:
                 self.audio_status.setStringValue_("")
 
+    @objc.python_method
     def updateVideoStatus(self):
         if self.sessionController is None or self.video_stream is None:
             self.video_status.setStringValue_("")
@@ -520,11 +541,13 @@ class SessionInfoController(NSObject):
             else:
                 self.video_status.setStringValue_("")
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BlinkDidRenegotiateStreams(self, notification):
         for stream in notification.data.removed_streams:
             if stream.type == 'audio':
@@ -544,75 +567,94 @@ class SessionInfoController(NSObject):
 
         self.updatePanelValues()
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
         if notification.data.modified.has_key("gui.rtt_threshold"):
             self.audio_rtt_graph.setAboveLimit_(settings.gui.rtt_threshold)
             self.audio_rtt_graph.setMinimumHeigth_(settings.gui.rtt_threshold)
 
+    @objc.python_method
     def _NH_BlinkSessionGotRingIndication(self, notification):
         self.updateSessionStatus(sub_state=NSLocalizedString("Ringing...", "Label"))
 
+    @objc.python_method
     def _NH_BlinkSessionGotProvisionalResponse(self, notification):
         self.updateSessionStatus(sub_state=notification.data.reason)
 
+    @objc.python_method
     def _NH_BlinkSessionDidProcessTransaction(self, notification):
         self.updateSessionStatus()
 
+    @objc.python_method
     def _NH_BlinkSentAddProposal(self, notification):
         self.updateSessionStatus()
 
+    @objc.python_method
     def _NH_BlinkSentRemoveProposal(self, notification):
         self.updateSessionStatus()
 
+    @objc.python_method
     def _NH_BlinkGotProposal(self, notification):
         self.updateSessionStatus()
 
+    @objc.python_method
     def _NH_BlinkProposalGotRejected(self, notification):
         self.updateSessionStatus()
 
+    @objc.python_method
     def _NH_BlinkStreamHandlersChanged(self, notification):
         self.updatePanelValues()
 
+    @objc.python_method
     def _NH_BlinkSessionWillStart(self, notification):
         self.updatePanelValues()
 
+    @objc.python_method
     def _NH_BlinkSessionDidStart(self, notification):
         self.add_audio_stream()
         self.add_video_stream()
         self.add_chat_stream()
         self.updatePanelValues()
 
+    @objc.python_method
     def _NH_BlinkSessionDidEnd(self, notification):
         self.stopTimer()
 
+    @objc.python_method
     def _NH_BlinkConferenceGotUpdate(self, notification):
         if self.sessionController is not None and self.sessionController.session is not None and hasattr(notification.data, 'conference_info'):
              pass
 
     # todo: the ICE negotiation notification handlers below are never executed (check observers), yet the values in the GUI are updated (from somewhere else?) -Dan
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
         if notification.sender.type == 'audio' and self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
         elif notification.sender.type == 'video' and self.video_stream is not None:
             self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         if notification.sender.type == 'audio' and self.audio_stream is not None:
             self.audio_ice_negotiation.setStringValue_(self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else '')
         elif notification.sender.type == 'video' and self.video_stream is not None:
             self.video_ice_negotiation.setStringValue_(self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else '')
 
+    @objc.python_method
     def _NH_RTPStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
 
+    @objc.python_method
     def show(self):
         self.window.orderFront_(None)
 
+    @objc.python_method
     def hide(self):
         self.window.orderOut_(None)
 
+    @objc.python_method
     def toggle(self):
         if self.window.isVisible():
             self.hide()
@@ -622,11 +664,13 @@ class SessionInfoController(NSObject):
     def windowShouldClose_(self, sender):
         self.window.orderOut_(None)
 
+    @objc.python_method
     def close(self):
         self.stopTimer()
         self.remove_session()
         self.window.orderOut_(None)
 
+    @objc.python_method
     def stopTimer(self):
         if self.timer:
             self.timer.invalidate()

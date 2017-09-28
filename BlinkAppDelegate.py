@@ -22,6 +22,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSWorkspace,
                     NSWorkspaceWillSleepNotification,
                     NSWorkspaceDidWakeNotification)
+
 import Foundation
 import LaunchServices
 import objc
@@ -142,6 +143,7 @@ class BlinkAppDelegate(NSObject):
                            "ro": NSLocalizedString("Romanian", "Menu item"),
                            "pt": NSLocalizedString("Portuguese", "Menu item")
                            }
+
     statusbar_menu_icon = 'invisible'
     about_copyright = "Copyright 2009-2014 AG Projects"
     active_transports = set()
@@ -203,6 +205,7 @@ class BlinkAppDelegate(NSObject):
 
         return self
 
+    @objc.python_method
     @run_in_thread('file-io')
     def purge_temporary_files(self):
         for dir in ('.tmp_screenshots', '.tmp_snapshots', '.tmp_file_transfers'):
@@ -213,6 +216,7 @@ class BlinkAppDelegate(NSObject):
                 except EnvironmentError:
                     pass
 
+    @objc.python_method
     def gui_notify(self, title, body, subtitle=None):
         if self.application_will_end:
             return
@@ -253,11 +257,13 @@ class BlinkAppDelegate(NSObject):
         except:
             log.err()
 
+    @objc.python_method
     def enroll(self):
         enroll = EnrollmentController.alloc().init()
         enroll.setCreateAccount()
         enroll.runModal()
 
+    @objc.python_method
     def updateDockTile(self):
         if self.missedCalls > 0 or self.missedChats > 0:
             icon = NSImage.imageNamed_("Blink")
@@ -275,11 +281,13 @@ class BlinkAppDelegate(NSObject):
         NSApp.setApplicationIconImage_(icon)
         NSApp.dockTile().display()
 
+    @objc.python_method
     def noteNewMessage(self, window):
         if not NSApp.isActive():
             self.missedChats += 1
             self.updateDockTile()
 
+    @objc.python_method
     def noteMissedCall(self):
         self.missedCalls += 1
         self.updateDockTile()
@@ -386,11 +394,13 @@ class BlinkAppDelegate(NSObject):
         Profiler.stop(os.path.join(ApplicationData.directory, 'logs', 'profiler.stats'))
         return False
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_SIPEngineTransportDidDisconnect(self, notification):
         self.transport_lost_timestamp = int(time.time())
 
@@ -437,15 +447,18 @@ class BlinkAppDelegate(NSObject):
         else:
             NotificationCenter().post_notification("BlinkTransportFailed", data=NotificationData(transport=transport))
 
+    @objc.python_method
     def _NH_SIPEngineTransportDidConnect(self, notification):
         transport = "%s:%s" %(notification.data.transport, notification.data.remote_address)
         if transport not in self.active_transports:
             BlinkLogger().log_info(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
             self.active_transports.add(transport)
 
+    @objc.python_method
     def _NH_DNSNameserversDidChange(self, notification):
         BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
 
+    @objc.python_method
     def _NH_NetworkConditionsDidChange(self, notification):
         self.ip_change_timestamp = int(time.time())
         BlinkLogger().log_info(u"Network conditions changed")
@@ -454,20 +467,24 @@ class BlinkAppDelegate(NSObject):
         else:
             BlinkLogger().log_info(u"IP address changed to %s" % host.default_ip)
 
+    @objc.python_method
     def _NH_SIPApplicationWillEnd(self, notification):
         BlinkLogger().log_info(u"Core engine will be stopped")
         self.purge_temporary_files()
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if 'gui.extended_debug' in notification.data.modified:
             settings = SIPSimpleSettings()
             self.debug = settings.gui.extended_debug
 
+    @objc.python_method
     def _NH_SIPApplicationDidStart(self, notification):
         settings = SIPSimpleSettings()
         self.debug = settings.gui.extended_debug
         self.purge_temporary_files()
 
+    @objc.python_method
     def _NH_SIPApplicationDidEnd(self, notification):
         BlinkLogger().log_info(u"Core engine stopped")
         NSApp.terminate_(self)
@@ -505,6 +522,7 @@ class BlinkAppDelegate(NSObject):
 
         self.aboutPanel.makeKeyAndOrderFront_(None)
 
+    @objc.python_method
     def normalizeExternalURL(self, url):
         return external_url_pattern.sub("", url)
 
@@ -537,7 +555,7 @@ class BlinkAppDelegate(NSObject):
         else:
             self.contactsWindowController.joinConference(unicode(url), list(media_type), list(participants))
 
-
+    @objc.python_method
     def registerURLHandler(self):
         event_class = event_id = fourcharToInt("GURL")
         event_manager = NSAppleEventManager.sharedAppleEventManager()
@@ -546,5 +564,4 @@ class BlinkAppDelegate(NSObject):
         bundleID = NSBundle.mainBundle().bundleIdentifier()
         LaunchServices.LSSetDefaultHandlerForURLScheme("sip", bundleID)
         LaunchServices.LSSetDefaultHandlerForURLScheme("tel", bundleID)
-
 

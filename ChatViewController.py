@@ -91,6 +91,7 @@ class ChatInputTextView(NSTextView):
             pass
         return self
 
+    @objc.python_method
     def setOwner(self, owner):
         self.owner = owner   # ChatViewController
 
@@ -232,14 +233,15 @@ class ChatViewController(NSObject):
 
     textWasPasted = False
 
-
     @property
     def sessionController(self):
         return self.delegate.sessionController
 
+    @objc.python_method
     def resetRenderedMessages(self):
         self.rendered_messages=[]
 
+    @objc.python_method
     def setAccount_(self, account):
         self.account = account
 
@@ -338,18 +340,22 @@ class ChatViewController(NSObject):
         if self.related_messages:
             self.showRelatedMessagesButton.setHidden_(False)
 
+    @objc.python_method
     def htmlBoxVisible(self, msgid):
         script = """htmlBoxVisible('%s')""" % msgid
         self.executeJavaScript(script)
 
+    @objc.python_method
     def htmlBoxHidden(self, msgid):
         script = """htmlBoxHidden('%s')""" % msgid
         self.executeJavaScript(script)
 
+    @objc.python_method
     def markFound(self, msgid):
         script = """markFound('%s')""" % msgid
         self.executeJavaScript(script)
 
+    @objc.python_method
     def unmarkFound(self, msgid):
         script = """unmarkFound('%s')""" % msgid
         self.executeJavaScript(script)
@@ -369,12 +375,14 @@ class ChatViewController(NSObject):
         storage.appendAttributedString_(content)
         storage.endEditing()
 
+    @objc.python_method
     def showEncryptionFinishedConfirmationDialog(self):
         self.continueWithoutEncryptionCheckbox.setHidden_(False)
         self.encryptionDisabledWarningLabel.setHidden_(False)
         self.inputText.setSelectable_(False)
         self.inputText.setEditable_(False)
 
+    @objc.python_method
     def hideEncryptionFinishedConfirmationDialog(self):
         self.continueWithoutEncryptionCheckbox.setHidden_(True)
         self.encryptionDisabledWarningLabel.setHidden_(True)
@@ -400,6 +408,7 @@ class ChatViewController(NSObject):
             else:
                 self.typingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(TYPING_IDLE_TIMEOUT, self, "becameIdle:", None, False)
 
+    @objc.python_method
     def resetTyping(self):
         if self.typingTimer:
             self.typingTimer.invalidate()
@@ -413,6 +422,7 @@ class ChatViewController(NSObject):
         self.resetTyping()
         self.delegate.chatView_becameIdle_(self, lastTypedTime)
 
+    @objc.python_method
     def updateEncryptionLock(self, msgid, encryption=None):
         if encryption is None:
             return
@@ -424,6 +434,7 @@ class ChatViewController(NSObject):
         script = "updateEncryptionLock('%s','%s')" % (msgid, lock_icon_path)
         self.executeJavaScript(script)
 
+    @objc.python_method
     def markMessage(self, msgid, state, private=False): # delegate
         if state == MSG_STATE_DELIVERED:
             is_private = 1 if private else "null"
@@ -436,12 +447,14 @@ class ChatViewController(NSObject):
             script = "markFailed('%s')"%msgid
             self.executeJavaScript(script)
 
+    @objc.python_method
     def clear(self):
         if self.finishedLoading:
             self.executeJavaScript("clear()")
         else:
             self.messageQueue = []
 
+    @objc.python_method
     def showSystemMessage(self, call_id, content, timestamp=None, is_error=False):
         msgid = str(uuid.uuid1())
         rendered_message = ChatMessageObject(call_id, msgid, content, False, timestamp)
@@ -463,6 +476,7 @@ class ChatViewController(NSObject):
         else:
             self.messageQueue.append(script)
 
+    @objc.python_method
     def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
         lock_icon_path = Resources.get('unlocked-darkgray.png')
         if encryption is not None:
@@ -519,21 +533,25 @@ class ChatViewController(NSObject):
 
         self.previous_msgid = msgid
 
+    @objc.python_method
     def toggleSmileys(self, expandSmileys):
         for entry in self.rendered_messages:
             self.updateMessage(entry.msgid, entry.content, entry.is_html, expandSmileys)
 
+    @objc.python_method
     def updateMessage(self, msgid, content, is_html, expandSmileys):
         content = processHTMLText(content, expandSmileys, is_html)
         script = """updateMessageBodyContent('%s', "%s")""" % (msgid, content)
         self.executeJavaScript(script)
 
+    @objc.python_method
     def toggleCollaborationEditor(self):
         if self.editorVisible:
             self.hideCollaborationEditor()
         else:
             self.showCollaborationEditor()
 
+    @objc.python_method
     def showCollaborationEditor(self):
         self.editorVisible = True
         self.last_scrolling_label = self.lastMessagesLabel.stringValue()
@@ -550,6 +568,7 @@ class ChatViewController(NSObject):
         script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
         self.executeJavaScript(script)
 
+    @objc.python_method
     def hideCollaborationEditor(self):
         self.editorVisible = False
         self.lastMessagesLabel.setStringValue_(self.last_scrolling_label)
@@ -565,14 +584,17 @@ class ChatViewController(NSObject):
         script = "hideCollaborationEditor()"
         self.executeJavaScript(script)
 
+    @objc.python_method
     def scrollToBottom(self):
         script = "scrollToBottom()"
         self.executeJavaScript(script)
 
+    @objc.python_method
     def scrollToId(self, id):
         script = """scrollToId("%s")""" % id
         self.executeJavaScript(script)
 
+    @objc.python_method
     def executeJavaScript(self, script):
         self.outputView.stringByEvaluatingJavaScriptFromString_(script)
 
@@ -610,7 +632,6 @@ class ChatViewController(NSObject):
             else:
                 listener.ignore()
                 NSWorkspace.sharedWorkspace().openURL_(theURL)
-
 
     # capture java-script functions
     def isSelectorExcludedFromWebScript_(self, sel):
@@ -673,6 +694,7 @@ class ChatViewController(NSObject):
             self.lastMessagesLabel.setStringValue_(zoom_period_label)
             self.delegate.scroll_back_in_time()
 
+    @objc.python_method
     def collaborativeEditorisTyping(self):
         self.editorIsComposing = True
         self.delegate.resetIsComposingTimer(5)
@@ -682,6 +704,7 @@ class ChatViewController(NSObject):
     def webView_didClearWindowObject_forFrame_(self, sender, windowObject, frame):
         windowObject.setValue_forKey_(self, "blink")
 
+    @objc.python_method
     def close(self):
         # memory clean up
         self.rendered_messages = set()

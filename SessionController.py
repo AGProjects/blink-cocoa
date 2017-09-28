@@ -5,6 +5,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSApp,
                     NSEventTrackingRunLoopMode,
                     NSRunAlertPanel)
+
 from Foundation import (NSBundle,
                         NSLocalizedString,
                         NSObject,
@@ -258,7 +259,6 @@ class SessionControllersManager(object):
             return settings.chat.enable_sms
 
         if type == 'video':
-            return False
             if osx_version == "10.12":
                 BlinkLogger().log_debug(u"Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
                 return False
@@ -1149,6 +1149,7 @@ class SessionController(NSObject):
     def remoteAOR(self):
         return format_identity_to_string(self.target_uri)
 
+    @objc.python_method
     def startDeallocTimer(self):
         self.notification_center.remove_observer(self, sender=self)
         self.notification_center.remove_observer(self, name='SystemWillSleep')
@@ -1163,6 +1164,7 @@ class SessionController(NSObject):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     def updateDisplayName(self, display_name):
         self.display_name = sip_prefix_pattern.sub("", display_name)
         if display_name is not None:
@@ -1178,24 +1180,31 @@ class SessionController(NSObject):
         self.notification_center = None
         objc.super(SessionController, self).dealloc()
 
+    @objc.python_method
     def log_info(self, text):
         BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
+    @objc.python_method
     def log_debug(self, text):
         BlinkLogger().log_debug(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
+    @objc.python_method
     def log_error(self, text):
         BlinkLogger().log_error(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
+    @objc.python_method
     def isActive(self):
         return self.state in (STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP)
 
+    @objc.python_method
     def canProposeMediaStreamChanges(self):
         return not self.inProposal and self.state == STATE_CONNECTED and self.sub_state in ("normal", None)
 
+    @objc.python_method
     def canStartSession(self):
         return self.state in (STATE_IDLE, STATE_FINISHED, STATE_FAILED)
 
+    @objc.python_method
     def canCancelProposal(self):
         if self.session is None:
             return False
@@ -1205,11 +1214,13 @@ class SessionController(NSObject):
 
         return True
 
+    @objc.python_method
     def acceptIncomingProposal(self, streams):
         self.handleIncomingStreams(streams, True)
         if self.session is not None:
             self.session.accept_proposal(streams)
 
+    @objc.python_method
     def handleIncomingStreams(self, streams, is_update=False, add_to_conference=False):
         try:
             # give priority to chat stream so that we do not open audio drawer for composite streams
@@ -1262,24 +1273,29 @@ class SessionController(NSObject):
                 log_data = NotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
                 self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
+    @objc.python_method
     def setAnsweringMachineMode_(self, flag):
         self.answeringMachineMode = flag
 
+    @objc.python_method
     def hasStreamOfType(self, stype):
         return any(s for s in self.streamHandlers if s.stream and s.stream.type==stype)
 
+    @objc.python_method
     def streamHandlerOfType(self, stype):
         try:
             return (s for s in self.streamHandlers if s.stream and s.stream.type==stype).next()
         except StopIteration:
             return None
 
+    @objc.python_method
     def streamHandlerForStream(self, stream):
         try:
             return (s for s in self.streamHandlers if s.stream==stream).next()
         except StopIteration:
             return None
 
+    @objc.python_method
     def setVideoConsumer(self, type=None):
         self.log_debug('setVideoConsumer to %s' % type)
         self.video_consumer = type
@@ -1329,6 +1345,7 @@ class SessionController(NSObject):
             if video_stream:
                 video_stream.hideVideoWindow()
 
+    @objc.python_method
     def end(self):
         if self.state == STATE_DNS_FAILED:
             return
@@ -1338,6 +1355,7 @@ class SessionController(NSObject):
         if self.session is not None:
             self.session.end()
 
+    @objc.python_method
     def endStream(self, streamHandler):
         if self.session is not None:
             if streamHandler.stream.type == "audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers) == 2:
@@ -1394,6 +1412,7 @@ class SessionController(NSObject):
                     return True
                 return False
 
+    @objc.python_method
     def cancelProposal(self, streamController):
         self.log_debug("cancelProposal %s" % streamController)
         stream = streamController.stream
@@ -1417,6 +1436,7 @@ class SessionController(NSObject):
     def ended(self):
         return self.state in (STATE_FINISHED, STATE_FAILED, STATE_DNS_FAILED)
 
+    @objc.python_method
     def removeStreamHandler(self, streamHandler):
         try:
             self.streamHandlers.remove(streamHandler)
@@ -1426,6 +1446,7 @@ class SessionController(NSObject):
         # notify Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
+    @objc.python_method
     @run_in_gui_thread
     def changeSessionState(self, newstate, fail_reason=None):
         self.log_debug("changed state to %s" % newstate)
@@ -1436,6 +1457,7 @@ class SessionController(NSObject):
             handler.sessionStateChanged(newstate, fail_reason)
         self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=NotificationData(state=newstate, reason=fail_reason))
 
+    @objc.python_method
     def resetSession(self):
         self.log_debug("Reset session")
         self.state = STATE_IDLE
@@ -1473,17 +1495,20 @@ class SessionController(NSObject):
 
         SessionControllersManager().removeController(self)
 
+    @objc.python_method
     def initInfoPanel(self):
         if self.info_panel is None:
             self.info_panel = SessionInfoController(self)
             self.info_panel_was_visible = False
             self.info_panel_last_frame = False
 
+    @objc.python_method
     def destroyInfoPanel(self):
         if self.info_panel is not None:
             self.info_panel.close()
             self.info_panel = None
 
+    @objc.python_method
     def lookup_destination(self, target_uri):
         self.changeSessionState(STATE_DNS_LOOKUP)
 
@@ -1508,6 +1533,7 @@ class SessionController(NSObject):
 
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
+    @objc.python_method
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
         if self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED):
             self.resetSession()
@@ -1665,38 +1691,48 @@ class SessionController(NSObject):
         self.open_chat_window_only = False
         return True
 
+    @objc.python_method
     def startSessionWithStreamOfType(self, stype, kwargs={}): # pyobjc doesn't like **kwargs
         return self.startCompositeSessionWithStreamsOfTypes(((stype, kwargs), ))
 
+    @objc.python_method
     def startAudioSession(self):
         return self.startSessionWithStreamOfType("audio")
 
+    @objc.python_method
     def startChatSession(self):
         return self.startSessionWithStreamOfType("chat")
 
+    @objc.python_method
     def startVideoSession(self):
         return self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))
 
+    @objc.python_method
     def offerFileTransfer(self, file_path, content_type=None):
         return self.startSessionWithStreamOfType("chat", {"file_path":file_path, "content_type":content_type})
 
+    @objc.python_method
     def addAudioToSession(self):
         if not self.hasStreamOfType("audio"):
             self.startSessionWithStreamOfType("audio")
 
+    @objc.python_method
     def removeAudioFromSession(self):
         if self.hasStreamOfType("audio"):
             audioStream = self.streamHandlerOfType("audio")
             self.endStream(audioStream)
 
+    @objc.python_method
     def addChatToSession(self):
         self.startSessionWithStreamOfType("chat")
 
+    @objc.python_method
     def removeChatFromSession(self):
         if self.hasStreamOfType("chat"):
             chatStream = self.streamHandlerOfType("chat")
             self.endStream(chatStream)
 
+    @objc.python_method
     def addVideoToSession(self):
         if not self.hasStreamOfType("video"):
             if not self.hasStreamOfType("audio"):
@@ -1704,19 +1740,23 @@ class SessionController(NSObject):
             else:
                 self.startSessionWithStreamOfType("video")
 
+    @objc.python_method
     def removeVideoFromSession(self):
         if self.hasStreamOfType("video"):
             videoStream = self.streamHandlerOfType("video")
             self.endStream(videoStream)
 
+    @objc.python_method
     def addMyScreenToSession(self):
         if not self.hasStreamOfType("screen-sharing"):
             self.startSessionWithStreamOfType("screen-sharing-server")
 
+    @objc.python_method
     def addRemoteScreenToSession(self):
         if not self.hasStreamOfType("screen-sharing"):
             self.startSessionWithStreamOfType("screen-sharing-client")
 
+    @objc.python_method
     def removeScreenFromSession(self):
         if self.hasStreamOfType("screen-sharing"):
             screenSharingStream = self.streamHandlerOfType("screen-sharing")
@@ -1736,21 +1776,25 @@ class SessionController(NSObject):
         else:
             return format_identity_to_string(self.remoteIdentity, format='compact', check_contact=True)
 
+    @objc.python_method
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         self.log_info("Routing failure: '%s'"%msg)
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
+    @objc.python_method
     @run_in_gui_thread
     def cancelBeforeDNSLookup(self):
         self.log_info("Session cancelled before DNS lookup")
         self.notification_center.post_notification("BlinkSessionCancelledBeforeDNSLookup", sender=self)
 
+    @objc.python_method
     def _NH_BlinkSessionCancelledBeforeDNSLookup(self, sender, data):
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=487, originator='local', reason='Session Cancelled', failure_reason='Session Cancelled', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
+    @objc.python_method
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.log_debug("setRoutesResolved: %s" % routes)
@@ -1758,6 +1802,7 @@ class SessionController(NSObject):
         if not self.waitingForITunes and not self.waitingForLocalVideo:
             self.connectSession()
 
+    @objc.python_method
     def connectSession(self):
         if self.cancelled_during_dns_lookup:
             self.log_info("Session cancelled during DNS lookup")
@@ -1791,6 +1836,7 @@ class SessionController(NSObject):
         self.log_info("Connecting session to %s" % self.routes[0])
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
+    @objc.python_method
     def transferSession(self, target, replaced_session_controller=None):
         if self.session is not None:
             target_uri = str(target)
@@ -1806,6 +1852,7 @@ class SessionController(NSObject):
                 self.session.transfer(target_uri, replaced_session_controller.session if replaced_session_controller is not None else None)
                 self.log_info("Outgoing transfer request to %s" % sip_prefix_pattern.sub("", str(target_uri)))
 
+    @objc.python_method
     def _acceptTransfer(self):
         if self.session is not None:
             self.log_info("Transfer request accepted by user")
@@ -1815,6 +1862,7 @@ class SessionController(NSObject):
                 pass
         self.transfer_window = None
 
+    @objc.python_method
     def _rejectTransfer(self):
         if self.session is not None:
             self.log_info("Transfer request rejected by user")
@@ -1824,6 +1872,7 @@ class SessionController(NSObject):
                 BlinkLogger().log_error(e)
         self.transfer_window = None
 
+    @objc.python_method
     def reject(self, code, reason):
         if self.session is not None:
             try:
@@ -1831,11 +1880,13 @@ class SessionController(NSObject):
             except (IllegalDirectionError, IllegalStateError),e:
                 pass
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_DNSLookupDidFail(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
         if host is None or host.default_ip is None:
@@ -1844,6 +1895,7 @@ class SessionController(NSObject):
             message = u"SIP DNS lookup for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
 
+    @objc.python_method
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
         result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
@@ -1854,9 +1906,11 @@ class SessionController(NSObject):
         else:
             self.setRoutesResolved(routes)
 
+    @objc.python_method
     def _NH_SystemWillSleep(self, sender, data):
         self.end()
 
+    @objc.python_method
     def _NH_MusicPauseDidExecute(self, sender, data):
         if not self.waitingForITunes:
             return
@@ -1866,6 +1920,7 @@ class SessionController(NSObject):
         if self.routes:
             self.connectSession()
 
+    @objc.python_method
     def _NH_BlinkLocalVideoReady(self, sender, data):
         self.waitingForLocalVideo = False
         if not self.ended and not self.isActive():
@@ -1879,9 +1934,11 @@ class SessionController(NSObject):
         if self.routes:
             self.connectSession()
 
+    @objc.python_method
     def _NH_SIPSessionGotRingIndication(self, sender, data):
         self.notification_center.post_notification("BlinkSessionGotRingIndication", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionWillStart(self, sender, data):
         self.call_id = sender._invitation.call_id
         self.log_info("Session with call id %s will start" % self.call_id)
@@ -1895,6 +1952,7 @@ class SessionController(NSObject):
             self.invited_participants = []
             self.conference_shared_files = []
 
+    @objc.python_method
     def _NH_SIPSessionDidStart(self, sender, data):
         self.transport = '%s:%s' % (self.session.transport, str(self.session.peer_address))
         self.log_info("Next SIP hop is %s" % self.transport)
@@ -1935,6 +1993,7 @@ class SessionController(NSObject):
 
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionWillEnd(self, sender, data):
         self.log_info("Session will end %sly" % data.originator)
         self.endingBy = data.originator
@@ -1943,6 +2002,7 @@ class SessionController(NSObject):
             self.transfer_window = None
         self.notification_center.post_notification("BlinkSessionWillEnd", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionDidFail(self, sender, data):
         try:
             self.call_id = sender._invitation.call_id
@@ -2030,9 +2090,11 @@ class SessionController(NSObject):
             else:
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
 
+    @objc.python_method
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info(u"Proposed media: %s" % ', '.join([s.type for s in data.streams]))
 
+    @objc.python_method
     def _NH_SIPSessionDidEnd(self, sender, data):
         self.retries = 0
 
@@ -2057,6 +2119,7 @@ class SessionController(NSObject):
         self.notification_center.discard_observer(self, sender=sender._invitation)
         self.notification_center.remove_observer(self, sender=sender)
 
+    @objc.python_method
     def _NH_SIPSessionGotProvisionalResponse(self, sender, data):
         if data.code != 180:
             if data.code == 183:
@@ -2066,9 +2129,11 @@ class SessionController(NSObject):
             log_data = NotificationData(timestamp=datetime.now(), reason=data.reason, code=data.code)
             self.notification_center.post_notification("BlinkSessionGotProvisionalResponse", sender=self, data=log_data)
 
+    @objc.python_method
     def _NH_SIPSessionDidChangeHoldState(self, session, data):
         self.notification_center.post_notification("BlinkSessionDidChangeHoldState", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionNewProposal(self, session, data):
         self.inProposal = True
         self.proposalOriginator = data.originator
@@ -2146,6 +2211,7 @@ class SessionController(NSObject):
             # needed to temporarily disable the Chat Window toolbar buttons
             self.notification_center.post_notification("BlinkGotProposal", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionProposalRejected(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
@@ -2188,6 +2254,7 @@ class SessionController(NSObject):
         # notify Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionProposalAccepted(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
@@ -2206,6 +2273,7 @@ class SessionController(NSObject):
         log_data = NotificationData(timestamp=datetime.now(), accepted_streams=data.accepted_streams)
         self.notification_center.post_notification("BlinkProposalAccepted", sender=self, data=log_data)
 
+    @objc.python_method
     def _NH_SIPSessionHadProposalFailure(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
@@ -2225,6 +2293,7 @@ class SessionController(NSObject):
         # notify Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
+    @objc.python_method
     def _NH_SIPInvitationChangedState(self, sender, data):
         if data.prev_state != data.state:
             self.log_debug('Invitation changed state %s -> %s' % (data.prev_state, data.state))
@@ -2235,9 +2304,11 @@ class SessionController(NSObject):
                 self.inProposal = False
             self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionDidProcessTransaction(self, sender, data):
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionDidRenegotiateStreams(self, sender, data):
         self.inProposal = False
         self.proposalOriginator = None
@@ -2255,6 +2326,7 @@ class SessionController(NSObject):
 
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
         # Skip processing if session has ended
         if self.state == STATE_FINISHED:
@@ -2303,6 +2375,7 @@ class SessionController(NSObject):
 
         self.previous_conference_users = self.conference_info.users
 
+    @objc.python_method
     def _NH_SIPConferenceDidAddParticipant(self, sender, data):
         self.log_info(u"Added participant to conference: %s" % data.participant)
         uri = sip_prefix_pattern.sub("", str(data.participant))
@@ -2316,6 +2389,7 @@ class SessionController(NSObject):
             # notify controllers who need conference information
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
+    @objc.python_method
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
         self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
         uri = sip_prefix_pattern.sub("", str(data.participant))
@@ -2341,6 +2415,7 @@ class SessionController(NSObject):
                     contact.detail = NSLocalizedString("Invitation failed: %s", "Contact detail") % reason
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
+    @objc.python_method
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
@@ -2360,6 +2435,7 @@ class SessionController(NSObject):
             # notify controllers who need conference information
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
 
+    @objc.python_method
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
         target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
         self.log_info(u'Incoming transfer request to %s' % target)
@@ -2371,37 +2447,46 @@ class SessionController(NSObject):
             self.transfer_window = CallTransferWindowController(self, target)
             self.transfer_window.show()
 
+    @objc.python_method
     def _NH_SIPSessionTransferNewOutgoing(self, sender, data):
         self.notification_center.post_notification("BlinkSessionTransferNewOutgoing", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionTransferDidStart(self, sender, data):
         self.log_info(u'Transfer started')
         self.notification_center.post_notification("BlinkSessionTransferDidStart", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionTransferDidEnd(self, sender, data):
         self.log_info(u'Transfer succeeded')
         self.notification_center.post_notification("BlinkSessionTransferDidEnd", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionTransferDidFail(self, sender, data):
         self.log_info(u'Transfer failed %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferDidFail", sender=self, data=data)
 
+    @objc.python_method
     def _NH_SIPSessionTransferGotProgress(self, sender, data):
         self.log_info(u'Transfer got progress %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferGotProgress", sender=self, data=data)
 
+    @objc.python_method
     def _NH_BlinkChatWindowWasClosed(self, sender, data):
         self.startDeallocTimer()
 
+    @objc.python_method
     def _NH_BlinkSessionDidFail(self, sender, data):
         self.startDeallocTimer()
         video_stream = self.streamHandlerOfType("video")
         if video_stream:
             video_stream.end()
 
+    @objc.python_method
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.startDeallocTimer()
 
+    @objc.python_method
     def _NH_BlinkTransportFailed(self, sender, data):
         if self.session is None:
             return
@@ -2409,8 +2494,10 @@ class SessionController(NSObject):
         if data.transport == self.transport:
             self.log_info("Connection lost to %s" % data.transport)
 
+    @objc.python_method
     def _NH_AnsweringMachineRecordingDidEnd(self, sender, data):
         self.answering_machine_filename = data.filename
+
 
 class CallTransferWindowController(NSObject):
     window = objc.IBOutlet()

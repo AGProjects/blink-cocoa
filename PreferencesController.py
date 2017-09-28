@@ -100,7 +100,6 @@ class PreferencesController(NSWindowController, object):
     saving = False
     logsize_timer = None
 
-
     def init(self):
         self = objc.super(PreferencesController, self).init()
         if self:
@@ -122,6 +121,7 @@ class PreferencesController(NSWindowController, object):
 
             return self
 
+    @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):
         if self.window():
             self.window().orderOut_(self)
@@ -150,6 +150,7 @@ class PreferencesController(NSWindowController, object):
         NSApp.activateIgnoringOtherApps_(True)
         NSWindowController.showWindow_(self, sender)
 
+    @objc.python_method
     def validateAddAccountButton(self):
         if self.addButton:
             self.addButton.setEnabled_(SIPManager().validateAddAccountAction())
@@ -355,6 +356,7 @@ class PreferencesController(NSWindowController, object):
             self.window().setTitle_(NSLocalizedString("Help", "Window title"))
             NSApp.delegate().contactsWindowController.showHelp('#preferences')
 
+    @objc.python_method
     def createGeneralOptionsUI(self, type='basic'):
         for i in range(self.generalTabView.numberOfTabViewItems()):
             self.generalTabView.removeTabViewItem_(self.generalTabView.tabViewItemAtIndex_(0))
@@ -418,7 +420,7 @@ class PreferencesController(NSWindowController, object):
                     tabItem.setView_(view)
                     self.generalTabView.addTabViewItem_(tabItem)
 
-
+    @objc.python_method
     def createAccountOptionsUI(self, account):
         self.advancedPop.removeAllItems()
         for i in range(self.advancedTabView.numberOfTabViewItems()):
@@ -454,6 +456,7 @@ class PreferencesController(NSWindowController, object):
 
             self.advancedTabView.addTabViewItem_(tabItem)
 
+    @objc.python_method
     def createViewForSection(self, storage_object, frame, section_name, section_class, section_object=None):
         if section_object is None:
             section_object = getattr(storage_object, section_name)
@@ -552,11 +555,13 @@ class PreferencesController(NSWindowController, object):
 
         return section_view
 
+    @objc.python_method
     def optionDidChange(self, option):
         self.saving = True
         option.owner.save()
         self.saving = False
 
+    @objc.python_method
     def showOptionsForAccount(self, account):
         self.updating = True
         if account.display_name:
@@ -582,12 +587,14 @@ class PreferencesController(NSWindowController, object):
 
         self.updating = False
 
+    @objc.python_method
     def addAccount(self):
         enroll = EnrollmentController.alloc().init()
         enroll.setupForAdditionalAccounts()
         enroll.runModal()
         enroll.release()
 
+    @objc.python_method
     def removeSelectedAccount(self):
         account_info = self.selectedAccount()
         if account_info:
@@ -621,6 +628,7 @@ class PreferencesController(NSWindowController, object):
                 account.auth.password = unicode(self.passwordText.stringValue()).encode("utf8")
                 account.save()
 
+    @objc.python_method
     def selectedAccount(self):
         if not self.accountTable:
             return None
@@ -629,13 +637,16 @@ class PreferencesController(NSWindowController, object):
             return None
         return self.getAccountForRow(selected)
 
+    @objc.python_method
     def getAccountForRow(self, row):
         return self.accounts[row]
 
+    @objc.python_method
     def refresh_account_table(self):
         if self.accountTable:
             self.accountTable.reloadData()
 
+    @objc.python_method
     def updateRegistrationStatus(self):
         if self.registration_status:
             selected_account = self.selectedAccount()
@@ -666,11 +677,13 @@ class PreferencesController(NSWindowController, object):
                             self.registration_status.setStringValue_(NSLocalizedString("Registration %s", "Label") % selected_account.register_state)
                         self.registration_status.setHidden_(False)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_SIPAccountChangedByICloud(self, notification):
         self.refresh_account_table()
         if self.accountTable:
@@ -678,6 +691,7 @@ class PreferencesController(NSWindowController, object):
         self.validateAddAccountButton()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidAddAccount(self, notification):
         account = notification.data.account
         self.accounts.insert(account.order, AccountInfo(account))
@@ -687,6 +701,7 @@ class PreferencesController(NSWindowController, object):
         self.validateAddAccountButton()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
@@ -696,6 +711,7 @@ class PreferencesController(NSWindowController, object):
         self.validateAddAccountButton()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -707,6 +723,7 @@ class PreferencesController(NSWindowController, object):
         self.accounts[position].register_failure_reason = None
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountWillRegister(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -716,6 +733,7 @@ class PreferencesController(NSWindowController, object):
         self.refresh_account_table()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -728,6 +746,7 @@ class PreferencesController(NSWindowController, object):
         self.refresh_account_table()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -744,6 +763,7 @@ class PreferencesController(NSWindowController, object):
 
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidFail(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -758,6 +778,7 @@ class PreferencesController(NSWindowController, object):
         self.refresh_account_table()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -772,6 +793,7 @@ class PreferencesController(NSWindowController, object):
     _NH_BonjourAccountRegistrationDidFail = _NH_SIPAccountRegistrationDidFail
     _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         sender = notification.sender
 
@@ -934,6 +956,7 @@ class PreferencesController(NSWindowController, object):
             self.refresh_account_table()
             self.updateRegistrationStatus()
 
+    @objc.python_method
     def update_per_device_aec(self):
         settings = SIPSimpleSettings()
         combined_audio_device = (settings.audio.input_device or "") + " " + (settings.audio.output_device or "")
@@ -962,19 +985,24 @@ class PreferencesController(NSWindowController, object):
                 settings.audio.enable_aec = per_device_aec
                 settings.save()
 
+    @objc.python_method
     def _NH_BlinkTransportFailed(self, notification):
         self.refresh_account_table()
         self.updateRegistrationStatus()
 
+    @objc.python_method
     def _NH_AudioDevicesDidChange(self, notification):
         self.updateAudioDevices_(None)
 
+    @objc.python_method
     def _NH_VideoDevicesDidChange(self, notification):
         self.updateVideoDevices_(None)
 
+    @objc.python_method
     def updateVideoDevices_(self, object):
         pass
 
+    @objc.python_method
     def updateAudioDevices_(self, object):
         audio_device_option_types = (PreferenceOptionTypes["audio.input_device"], PreferenceOptionTypes["audio.output_device"])
         for view in (v for v in self.settingViews.itervalues() if isinstance(v, audio_device_option_types)):
@@ -1011,6 +1039,7 @@ class PreferencesController(NSWindowController, object):
                 cell.setImage_(None)
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration disabled", "Accesibility text"), NSAccessibilityTitleAttribute)
 
+    @objc.python_method
     def display_outbound_proxy_radio_if_needed(self, account):
         tab = self.advancedTabView.selectedTabViewItem()
         if account is not BonjourAccount():
@@ -1065,9 +1094,11 @@ class PreferencesController(NSWindowController, object):
     def goToLogsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(ApplicationData.get('logs'))
 
+    @objc.python_method
     def updateLogSize_(self, timer):
         self._update_logs_size_label()
 
+    @objc.python_method
     @run_in_gui_thread
     def _update_logs_size_label(self):
         def _normalize_binary_size(size):
@@ -1183,7 +1214,6 @@ class PreferencesController(NSWindowController, object):
             return True
         return False
 
-
     def tableView_writeRows_toPasteboard_(self, table, rows, pboard):
         index = rows[0]
         pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-account"), self)
@@ -1219,6 +1249,7 @@ class PreferencesController(NSWindowController, object):
         elif sender == self.removeButton:
             self.removeSelectedAccount()
 
+    @objc.python_method
     def get_logs_size(self):
         logs_size = 0
         for path, dirs, files in os.walk(os.path.join(ApplicationData.directory, 'logs')):

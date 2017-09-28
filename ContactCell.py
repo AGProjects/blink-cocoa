@@ -46,6 +46,7 @@ class ContactCell(NSTextFieldCell):
     secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.grayColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
     secondLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
 
+    @objc.python_method
     def setContact_(self, contact):
         self.contact = contact
 
@@ -78,7 +79,7 @@ class ContactCell(NSTextFieldCell):
         except Exception:
             pass
 
-
+    @objc.python_method
     def drawFirstLine(self):
         frame = self.frame
         frame.origin.x = 35
@@ -88,6 +89,7 @@ class ContactCell(NSTextFieldCell):
         attrs = self.firstLineAttributes if not self.isHighlighted() else self.firstLineAttributes_highlighted
         self.stringValue().drawInRect_withAttributes_(rect, attrs)
 
+    @objc.python_method
     def drawSecondLine(self):
         frame = self.frame
         frame.origin.y += 15
@@ -96,6 +98,7 @@ class ContactCell(NSTextFieldCell):
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
             self.contact.detail.drawInRect_withAttributes_(rect, attrs)
 
+    @objc.python_method
     def drawActiveMedia(self):
         if type(self.contact) not in (BlinkConferenceContact, BlinkMyselfConferenceContact):
             return
@@ -117,6 +120,7 @@ class ContactCell(NSTextFieldCell):
             left = left - padding - 2
             self.drawIcon(self.screenIcon, left, self.frame.origin.y +14, 16, 16)
 
+    @objc.python_method
     def drawPresenceIcon(self):
         status = 'offline'
         if type(self.contact) is BlinkMyselfConferenceContact:
@@ -217,6 +221,7 @@ class ContactCell(NSTextFieldCell):
                     left = self.view.frame().size.width - 26
                     self.drawIcon(self.nightIcon, left, self.frame.origin.y +14, 16, 16)
 
+    @objc.python_method
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
         if not size or not size.height:
@@ -224,6 +229,4 @@ class ContactCell(NSTextFieldCell):
         rect = NSMakeRect(0, 0, size.width, size.height)
         trect = NSMakeRect(origin_x, origin_y, (size_y/size.height) * size.width, size_x)
         icon.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(trect, rect, NSCompositeSourceOver, 1.0, True, None)
-
-
 

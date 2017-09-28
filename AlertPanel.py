@@ -89,7 +89,7 @@ class AlertPanel(NSObject, object):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
     def init(self):
-        self = super(AlertPanel, self).init()
+        self = objc.super(AlertPanel, self).init()
         if self:
             NSBundle.loadNibNamed_owner_("AlertPanel", self)
             self.panel.setLevel_(3000)
@@ -103,6 +103,7 @@ class AlertPanel(NSObject, object):
 
         return self
 
+    @objc.python_method
     def init_speech_recognition(self):
         settings = SIPSimpleSettings()
         if settings.sounds.use_speech_recognition:
@@ -112,6 +113,7 @@ class AlertPanel(NSObject, object):
             commands = ("Accept", "Answer", "Busy", "Reject", "Voicemail", "Answering machine")
             self.speech_recognizer.setCommands_(commands)
 
+    @objc.python_method
     def startSpeechRecognition(self):
         if self.speech_recognizer is None:
             self.init_speech_recognition()
@@ -119,6 +121,7 @@ class AlertPanel(NSObject, object):
         if self.speech_recognizer is not None and len(self.sessions):
             self.speech_recognizer.startListening()
 
+    @objc.python_method
     def stopSpeechRecognition(self):
         if self.speech_recognizer:
             self.speech_recognizer.stopListening()
@@ -144,12 +147,14 @@ class AlertPanel(NSObject, object):
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         self.unMuteAfterSpeechDidEnd()
 
+    @objc.python_method
     def init_speech_synthesis(self):
         self.speech_synthesizer = NSSpeechSynthesizer.alloc().init() or Null
         self.speech_synthesizer.setDelegate_(self)
         self.speak_text = None
         self.speech_synthesizer_timer = None
 
+    @objc.python_method
     def stopSpeechSynthesizer(self):
         self.speech_synthesizer.stopSpeaking()
         if self.speech_synthesizer_timer and self.speech_synthesizer_timer.isValid():
@@ -157,6 +162,7 @@ class AlertPanel(NSObject, object):
         self.speak_text = None
         self.unMuteAfterSpeechDidEnd()
 
+    @objc.python_method
     def startSpeechSynthesizerTimer(self):
         self.speech_synthesizer_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(2, self, "startSpeaking:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.speech_synthesizer_timer, NSRunLoopCommonModes)
@@ -181,6 +187,7 @@ class AlertPanel(NSObject, object):
             self.muteBeforeSpeechWillStart()
             self.speech_synthesizer.startSpeakingString_(self.speak_text)
 
+    @objc.python_method
     def show(self):
         self.panel.center()
         self.panel.orderFront_(self)
@@ -189,6 +196,7 @@ class AlertPanel(NSObject, object):
     def close(self):
         self.panel.close()
 
+    @objc.python_method
     def getItemView(self):
         array = NSMutableArray.array()
         context = NSMutableDictionary.dictionary()
@@ -203,6 +211,7 @@ class AlertPanel(NSObject, object):
         else:
             raise RuntimeError("Internal Error. Could not find NSBox in AlertPanelView.nib")
 
+    @objc.python_method
     def getButtonImageForState(self, size, pushed):
         image = NSImage.alloc().initWithSize_(size)
         image.lockFocus()
@@ -223,13 +232,16 @@ class AlertPanel(NSObject, object):
             image.unlockFocus()
         return image
 
+    @objc.python_method
     def addIncomingStreamProposal(self, session, streams):
         self.proposals[session] = streams
         self._addIncomingSession(session, streams, True)
 
+    @objc.python_method
     def addIncomingSession(self, session):
         self._addIncomingSession(session, session.blink_supported_streams, False)
 
+    @objc.python_method
     def _addIncomingSession(self, session, streams, is_update_proposal):
         view = self.getItemView()
         self.sessions[session] = view
@@ -485,6 +497,7 @@ class AlertPanel(NSObject, object):
         else:
             self.conferenceButton.setHidden_(False)
 
+    @objc.python_method
     def format_subject_for_incoming_reinvite(self, session, streams):
         alt_action = None
         alt_object = ONLY_CHAT
@@ -530,6 +543,7 @@ class AlertPanel(NSObject, object):
             subject = NSLocalizedString("Addition of unknown stream to existing session requested by", "Label")
         return subject, alt_action, alt_object
 
+    @objc.python_method
     def format_subject_for_incoming_invite(self, session, streams):
         alt_action = None
         alt_object = ONLY_CHAT
@@ -575,6 +589,7 @@ class AlertPanel(NSObject, object):
 
         return subject, alt_action, alt_object
 
+    @objc.python_method
     def removeSession(self, session):
         if not self.sessions.has_key(session):
             return
@@ -618,6 +633,7 @@ class AlertPanel(NSObject, object):
         if not self.sessions:
             self.unMuteAfterSpeechDidEnd()
 
+    @objc.python_method
     def disableAnsweringMachine(self, view, session):
         if session in self.answeringMachineTimers:
             amLabel = view.viewWithTag_(15)
@@ -627,6 +643,7 @@ class AlertPanel(NSObject, object):
             timer.invalidate()
             del self.answeringMachineTimers[session]
 
+    @objc.python_method
     @run_in_gui_thread
     def enableAnsweringMachine(self, view, session, run_now=False):
         try:
@@ -646,6 +663,7 @@ class AlertPanel(NSObject, object):
             if run_now:
                 self.acceptAudioStreamAnsweringMachine(session)
 
+    @objc.python_method
     def disableAutoAnswer(self, view, session):
         if session in self.autoAnswerTimers:
             label = view.viewWithTag_(15)
@@ -655,6 +673,7 @@ class AlertPanel(NSObject, object):
             timer.invalidate()
             del self.autoAnswerTimers[session]
 
+    @objc.python_method
     def enableAutoAnswer(self, view, session, delay=30):
         if session not in self.autoAnswerTimers:
             label = view.viewWithTag_(15)
@@ -684,20 +703,25 @@ class AlertPanel(NSObject, object):
         text = NSLocalizedString("Automaticaly Accepting in %i s", "Label") % remaining
         info["label"].setStringValue_(text)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_SIPSessionDidFail(self, notification):
         self.cancelSession(notification.sender, notification.data.reason)
 
+    @objc.python_method
     def _NH_SIPSessionProposalRejected(self, notification):
         self.cancelSession(notification.sender, notification.data.reason)
 
+    @objc.python_method
     def _NH_SIPSessionDidEnd(self, notification):
         self.cancelSession(notification.sender, notification.data.end_reason)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
         if notification.data.modified.has_key("sounds.use_speech_recognition"):
@@ -724,6 +748,7 @@ class AlertPanel(NSObject, object):
                 else:
                     self.disableAutoAnswer(view, session)
 
+    @objc.python_method
     def muteBeforeSpeechWillStart(self):
         if self.speech_synthesizer:
             hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
@@ -734,6 +759,7 @@ class AlertPanel(NSObject, object):
             if self.speech_recognizer:
                 self.speech_recognizer.stopListening()
 
+    @objc.python_method
     def unMuteAfterSpeechDidEnd(self):
         if self.muted_by_synthesizer and SIPManager().is_muted():
             NSApp.delegate().contactsWindowController.muteClicked_(None)
@@ -766,6 +792,7 @@ class AlertPanel(NSObject, object):
         else:
             self.decideForSessionRequest(action, session)
 
+    @objc.python_method
     def decideForProposalRequest(self, action, session, streams):
         sessionController = self.sessionControllersManager.sessionControllerForSession(session)
         if action == ACCEPT:
@@ -783,6 +810,7 @@ class AlertPanel(NSObject, object):
                 sessionController.log_info(u"Error rejecting proposal: %s" % exc)
                 self.removeSession(session)
 
+    @objc.python_method
     def decideForSessionRequest(self, action, session):
         sessionController = self.sessionControllersManager.sessionControllerForSession(session)
         if action == ACCEPT:
@@ -824,6 +852,7 @@ class AlertPanel(NSObject, object):
                 sessionController.log_info(u"Error rejecting session: %s" % exc)
                 self.removeSession(session)
 
+    @objc.python_method
     def decideForAllSessionRequests(self, action):
         if self.attention is not None:
             NSApp.cancelUserAttentionRequest_(self.attention)
@@ -910,10 +939,12 @@ class AlertPanel(NSObject, object):
                     sessionController.log_info(u"Error rejecting session: %s" % exc)
                     self.removeSession(session)
 
+    @objc.python_method
     def acceptStreams(self, session, add_to_conference=False):
         self.sessionControllersManager.startIncomingSession(session, session.blink_supported_streams, add_to_conference=add_to_conference)
         self.removeSession(session)
 
+    @objc.python_method
     def acceptProposedStreams(self, session):
         sessionController = self.sessionControllersManager.sessionControllerForSession(session)
         if sessionController is not None:
@@ -924,17 +955,20 @@ class AlertPanel(NSObject, object):
 
         self.removeSession(session)
 
+    @objc.python_method
     def acceptChatStream(self, session):
         streams = [s for s in session.proposed_streams if s.type== "chat"]
         self.sessionControllersManager.startIncomingSession(session, streams)
         self.removeSession(session)
 
+    @objc.python_method
     def acceptAudioStreamAnsweringMachine(self, session):
         # accept audio only
         streams = [s for s in session.proposed_streams if s.type == "audio"]
         self.sessionControllersManager.startIncomingSession(session, streams, answeringMachine=True)
         self.removeSession(session)
 
+    @objc.python_method
     def acceptAudioStream(self, session):
         # accept audio and chat only
         streams = [s for s in session.proposed_streams if s.type in ("audio", "chat")]
@@ -949,10 +983,12 @@ class AlertPanel(NSObject, object):
                 self.sessionControllersManager.startIncomingSession(session, streams)
         self.removeSession(session)
 
+    @objc.python_method
     def rejectProposal(self, session):
         session.reject_proposal()
         self.removeSession(session)
 
+    @objc.python_method
     def rejectSession(self, session, code=603, reason=None):
         try:
             session.reject(code, reason)
@@ -960,6 +996,7 @@ class AlertPanel(NSObject, object):
             print e
         self.removeSession(session)
 
+    @objc.python_method
     def cancelSession(self, session, reason):
         """Session cancelled by something other than the user"""
 
@@ -975,6 +1012,7 @@ class AlertPanel(NSObject, object):
             view.viewWithTag_(i).setEnabled_(False)
         self.removeSession(session)
 
+    @objc.python_method
     def rejectAllSessions(self):
         for session in self.sessions.keys():
             sessionController = self.sessionControllersManager.sessionControllerForSession(session)

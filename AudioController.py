@@ -152,10 +152,12 @@ class AudioController(MediaStream):
     conference_segments  = (conference_mute_segment, conference_hold_segment, conference_record_segment, conference_hangup_segment)
     timestamp = time.time()
 
+    @objc.python_method
     @classmethod
     def createStream(self):
         return MediaStreamRegistry.AudioStream()
 
+    @objc.python_method
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
@@ -190,12 +192,13 @@ class AudioController(MediaStream):
     def srtp_active(self):
         return self.stream.encryption.type == 'SRTP/SDES' and self.stream.encryption.active
 
+    @objc.python_method
     def reset(self):
         self.early_media = False
-        super(AudioController, self).reset()
+        objc.super(AudioController, self).reset()
 
     def initWithOwner_stream_(self, scontroller, stream):
-        self = super(AudioController, self).initWithOwner_stream_(scontroller, stream)
+        self = objc.super(AudioController, self).initWithOwner_stream_(scontroller, stream)
         scontroller.log_debug(u"Creating %s" % self)
 
         self.statistics = {'loss_rx': 0, 'loss_tx': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
@@ -261,6 +264,7 @@ class AudioController(MediaStream):
         self.sessionInfoButton.setEnabled_(True)
         return self
 
+    @objc.python_method
     def setSegmentedButtons(self, type):
         if type == 'normal':
             self.segmentedButtons.setHidden_(False)
@@ -269,6 +273,7 @@ class AudioController(MediaStream):
             self.segmentedButtons.setHidden_(True)
             self.segmentedConferenceButtons.setHidden_(False)
 
+    @objc.python_method
     def invalidateTimers(self):
         if self.transfer_timer is not None and self.transfer_timer.isValid():
             self.transfer_timer.invalidate()
@@ -285,8 +290,9 @@ class AudioController(MediaStream):
         self.view.release()
         self.sessionController.log_debug(u"Dealloc %s" % self)
         self.sessionController = None
-        super(AudioController, self).dealloc()
+        objc.super(AudioController, self).dealloc()
 
+    @objc.python_method
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
         self.sessionController.log_debug(u"Start incoming %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
@@ -310,6 +316,7 @@ class AudioController(MediaStream):
         NSApp.delegate().contactsWindowController.showAudioSession(self, add_to_conference=add_to_conference)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
+    @objc.python_method
     def startOutgoing(self, is_update):
         self.sessionController.log_debug(u"Start outgoing %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
@@ -319,6 +326,7 @@ class AudioController(MediaStream):
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
 
+    @objc.python_method
     def sessionStateChanged(self, state, detail):
         if state == STATE_CONNECTING:
             self.updateTLSIcon()
@@ -333,8 +341,8 @@ class AudioController(MediaStream):
             self.audioEndTime = time.time()
             self.changeStatus(STREAM_IDLE, detail)
 
+    @objc.python_method
     def end(self):
-
         status = self.status
         if status in [STREAM_IDLE, STREAM_FAILED]:
             self.hangedUp = True
@@ -366,6 +374,7 @@ class AudioController(MediaStream):
     def canTransfer(self):
         return self.status in (STREAM_CONNECTED)
 
+    @objc.python_method
     def answerCall(self):
         self.sessionController.log_info("Taking over call on answering machine...")
 
@@ -384,6 +393,7 @@ class AudioController(MediaStream):
         self.sessionController.accounting_for_answering_machine = False
         self.answeringMachine = None
 
+    @objc.python_method
     def hold(self):
         if self.session and not self.holdByLocal and self.status not in (STREAM_IDLE, STREAM_FAILED):
             self.stream.device.output_muted = True
@@ -393,6 +403,7 @@ class AudioController(MediaStream):
             self.changeStatus(self.status)
             self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
 
+    @objc.python_method
     def unhold(self):
         if self.session and self.holdByLocal and self.status not in (STREAM_IDLE, STREAM_FAILED):
             self.stream.device.output_muted = False
@@ -402,6 +413,7 @@ class AudioController(MediaStream):
             self.changeStatus(self.status)
             self.notification_center.post_notification("BlinkAudioStreamChangedHoldState", sender=self)
 
+    @objc.python_method
     def sessionBoxKeyPressEvent(self, sender, event):
         s = event.characters()
         if s and self.stream:
@@ -421,6 +433,7 @@ class AudioController(MediaStream):
                 elif key in string.digits+string.uppercase+'#*':
                     self.send_dtmf(key)
 
+    @objc.python_method
     def send_dtmf(self, key):
         if not self.stream:
             return
@@ -440,7 +453,7 @@ class AudioController(MediaStream):
             SIPApplication.voice_audio_bridge.add(wave_player)
             wave_player.start()
 
-
+    @objc.python_method
     def sessionBoxDidActivate(self, sender):
         if self.isConferencing:
             NSApp.delegate().contactsWindowController.unholdConference()
@@ -453,6 +466,7 @@ class AudioController(MediaStream):
 
         self.notification_center.post_notification("ActiveAudioSessionChanged", sender=self)
 
+    @objc.python_method
     def sessionBoxDidDeactivate(self, sender):
         if self.isConferencing:
             if not sender.conferencing: # only hold if the sender is a non-conference session
@@ -463,6 +477,7 @@ class AudioController(MediaStream):
         else:
             self.hold()
 
+    @objc.python_method
     def sessionBoxDidAddConferencePeer(self, sender, peer):
         if self == peer:
             return
@@ -498,10 +513,12 @@ class AudioController(MediaStream):
             peer.addToConference()
             return True
 
+    @objc.python_method
     def sessionBoxDidRemoveFromConference(self, sender):
         self.sessionController.log_info(u"Removed %s from conference through drag&drop" % self.sessionController.titleLong)
         self.removeFromConference()
 
+    @objc.python_method
     def addToConference(self):
         if self.holdByLocal:
             self.unhold()
@@ -511,6 +528,7 @@ class AudioController(MediaStream):
         self.view.setConferencing_(True)
         self.updateLabelColor()
 
+    @objc.python_method
     def removeFromConference(self):
         NSApp.delegate().contactsWindowController.removeAudioSessionFromConference(self)
         self.setSegmentedButtons("normal")
@@ -523,6 +541,7 @@ class AudioController(MediaStream):
             self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("mute"), self.conference_mute_segment)
         self.updateLabelColor()
 
+    @objc.python_method
     def toggleHold(self):
         if self.session:
             if self.holdByLocal:
@@ -531,6 +550,7 @@ class AudioController(MediaStream):
             else:
                 self.hold()
 
+    @objc.python_method
     def transferSession(self, target):
         self.sessionController.transferSession(target)
 
@@ -581,6 +601,7 @@ class AudioController(MediaStream):
     def transferFailed_(self, timer):
         self.changeStatus(STREAM_CONNECTED)
 
+    @objc.python_method
     def updateAudioStatusWithSessionState(self, text, error=False):
         if not error and self.zrtp_show_verify_phrase:
             return
@@ -593,6 +614,7 @@ class AudioController(MediaStream):
         self.audioStatus.sizeToFit()
         self.audioStatus.display()
 
+    @objc.python_method
     def updateAudioStatusWithCodecInformation(self):
         if self.zrtp_show_verify_phrase:
             return
@@ -630,6 +652,7 @@ class AudioController(MediaStream):
 
         self.audioStatus.sizeToFit()
 
+    @objc.python_method
     def updateLabelColor(self):
         if self.isConferencing:
             if self.view.selected:
@@ -642,6 +665,7 @@ class AudioController(MediaStream):
             else:
                 self.label.setTextColor_(NSColor.blackColor())
 
+    @objc.python_method
     def updateTLSIcon(self):
         if self.session and self.session.transport == "tls":
             frame = self.label.frame()
@@ -655,6 +679,7 @@ class AudioController(MediaStream):
             self.label.setFrame_(frame)
             self.tlsIcon.setHidden_(True)
 
+    @objc.python_method
     def changeStatus(self, newstate, fail_reason=None):
         if not NSThread.isMainThread():
             raise Exception("called from non-main thread")
@@ -774,6 +799,7 @@ class AudioController(MediaStream):
 
         MediaStream.changeStatus(self, newstate, fail_reason)
 
+    @objc.python_method
     def updateStatistics(self):
         if not self.stream:
             return
@@ -819,6 +845,7 @@ class AudioController(MediaStream):
 
         self.last_stats = stats
 
+    @objc.python_method
     def updateDuration(self):
         if not self.session:
             return
@@ -857,6 +884,7 @@ class AudioController(MediaStream):
                 label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else u"Bonjour"
                 self.elapsed.setStringValue_(label)
 
+    @objc.python_method
     def updateTileStatistics(self):
         if not self.session:
             return
@@ -1044,7 +1072,6 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(41) # dnd until end
             item.setState_(NSOnState if self.sessionController.do_not_disturb_until_end else NSOffState)
 
-
     @objc.IBAction
     def userClickedSessionMenuItem_(self, sender):
         tag = sender.tag()
@@ -1124,6 +1151,7 @@ class AudioController(MediaStream):
         if self.sessionController.info_panel is not None:
             self.sessionController.info_panel.toggle()
 
+    @objc.python_method
     def update_encryption_icon(self):
         if self.zrtp_active:
             if self.zrtp_verified:
@@ -1206,6 +1234,7 @@ class AudioController(MediaStream):
                 self.unhold()
             self.answerCall()
 
+    @objc.python_method
     def startAudioRecording(self):
         settings = SIPSimpleSettings()
         session = self.sessionController.session
@@ -1216,6 +1245,7 @@ class AudioController(MediaStream):
         self.recording_path=os.path.join(path, filename)
         self.stream.start_recording(self.recording_path)
 
+    @objc.python_method
     def addRecordingToHistory(self, filename):
         message = "<h3>Audio Call Recorded</h3>"
         message += "<p>%s" % filename
@@ -1231,17 +1261,21 @@ class AudioController(MediaStream):
 
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
+    @objc.python_method
     def updateTransferProgress(self, msg):
         self.updateAudioStatusWithSessionState(msg)
 
+    @objc.python_method
     def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         return ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_RTPStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
             self.sessionController.log_info(u'Audio stream timeout')
@@ -1249,6 +1283,7 @@ class AudioController(MediaStream):
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Audio ICE negotiation failed: %s' % data.reason)
         self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
@@ -1256,6 +1291,7 @@ class AudioController(MediaStream):
         # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
         #self.end()
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Audio ICE negotiation succeeded')
         self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
@@ -1272,6 +1308,7 @@ class AudioController(MediaStream):
 
         self.ice_negotiation_status = 'Success'
 
+    @objc.python_method
     def _NH_BlinkAudioStreamUnholdRequested(self, sender, data):
         if sender is self or (sender.isConferencing and self.isConferencing):
             return
@@ -1280,11 +1317,13 @@ class AudioController(MediaStream):
         elif not sender.isConferencing:
             self.hold()
 
+    @objc.python_method
     def _NH_AudioStreamDidStartRecording(self, sender, data):
         self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.conference_record_segment)
 
+    @objc.python_method
     def _NH_AudioStreamDidStopRecording(self, sender, data):
         self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
@@ -1296,6 +1335,7 @@ class AudioController(MediaStream):
         nc_body = NSLocalizedString("This audio call has been recorded", "System notification body")
         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
+    @objc.python_method
     def _NH_RTPStreamDidChangeHoldState(self, sender, data):
         self.sessionController.log_info(u"%s requested %s"%(data.originator.title(),(data.on_hold and "hold" or "unhold")))
         if data.originator != "local":
@@ -1311,6 +1351,7 @@ class AudioController(MediaStream):
             if data.on_hold and not self.holdByLocal:
                 self.hold()
 
+    @objc.python_method
     def _NH_MediaStreamDidStart(self, sender, data):
         codec = beautify_audio_codec(self.stream.codec)
         if self.stream.codec == 'opus':
@@ -1332,6 +1373,7 @@ class AudioController(MediaStream):
         if NSApp.delegate().recording_enabled and self.sessionController.account.audio.auto_recording:
             self.startAudioRecording()
 
+    @objc.python_method
     def updateTootip(self):
         if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:
             if self.encryption_active:
@@ -1353,6 +1395,7 @@ class AudioController(MediaStream):
                     self.stream.remote_rtp_port,
                   enc_type))
 
+    @objc.python_method
     def send_postdial_string_as_dtmf(self):
         time.sleep(2)
         for digit in self.sessionController.postdial_string:
@@ -1363,6 +1406,7 @@ class AudioController(MediaStream):
             else:
                 self.send_dtmf(digit)
 
+    @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
         if NSApp.delegate().contactsWindowController.window().isKeyWindow():
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
@@ -1378,6 +1422,7 @@ class AudioController(MediaStream):
         self.sessionInfoButton.setEnabled_(False)
         self.invalidateTimers()
 
+    @objc.python_method
     def _NH_MediaStreamWillEnd(self, sender, data):
         self.transfer_in_progress = False
         self.ice_negotiation_status = None
@@ -1393,6 +1438,7 @@ class AudioController(MediaStream):
             self.zrtp_controller.close()
             self.zrtp_controller = None
 
+    @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.sessionController.log_info("Audio stream ended")
         if NSApp.delegate().contactsWindowController.window().isKeyWindow():
@@ -1409,6 +1455,7 @@ class AudioController(MediaStream):
                 else:
                     self.changeStatus(STREAM_IDLE, NSLocalizedString("Session Ended", "Audio status label"))
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationStateDidChange(self, sender, data):
         if data.state == 'GATHERING':
             self.updateAudioStatusWithSessionState(NSLocalizedString("Gathering ICE Candidates...", "Audio status label"))
@@ -1423,20 +1470,25 @@ class AudioController(MediaStream):
         elif data.state == 'FAILED':
             self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
 
+    @objc.python_method
     def _NH_BlinkSessionCancelledBeforeDNSLookup(self, sender, data):
         self.end()
 
+    @objc.python_method
     def _NH_BlinkSessionDidStart(self, sender, data):
         self.stopRinging()
 
+    @objc.python_method
     def _NH_BlinkSessionStartedEarlyMedia(self, sender, data):
         sender.log_info("Early media started by remote end-point")
         self.stopRinging()
         self.early_media = True
 
+    @objc.python_method
     def _NH_BlinkDidRenegotiateStreams(self, sender, data):
         self.stopRinging()
 
+    @objc.python_method
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
         if self.early_media:
             return
@@ -1450,6 +1502,7 @@ class AudioController(MediaStream):
             self.outbound_ringtone.start()
         self.changeStatus(STREAM_RINGING)
 
+    @objc.python_method
     def _NH_BlinkSessionDidFail(self, sender, data):
         if NSApp.delegate().contactsWindowController.window().isKeyWindow():
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
@@ -1458,6 +1511,7 @@ class AudioController(MediaStream):
         self.stopRinging()
         self.reset()
 
+    @objc.python_method
     def _NH_BlinkSessionDidEnd(self, sender, data):
         if NSApp.delegate().contactsWindowController.window().isKeyWindow():
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
@@ -1467,19 +1521,23 @@ class AudioController(MediaStream):
         self.stopRinging()
         self.reset()
 
+    @objc.python_method
     def _NH_BlinkSessionTransferNewIncoming(self, sender, data):
         self.transfer_in_progress = True
 
     _NH_BlinkSessionTransferNewOutgoing = _NH_BlinkSessionTransferNewIncoming
 
+    @objc.python_method
     def _NH_BlinkSessionTransferDidStart(self, sender, data):
         self.updateTransferProgress(NSLocalizedString("Transferring...", "Audio status label"))
 
+    @objc.python_method
     def _NH_BlinkSessionTransferDidEnd(self, sender, data):
         self.updateTransferProgress(NSLocalizedString("Transfer Succeeded", "Audio status label"))
         self.transferred = True
         self.transfer_in_progress = False
 
+    @objc.python_method
     def _NH_BlinkSessionTransferDidFail(self, sender, data):
         self.updateTransferProgress(NSLocalizedString("Transfer Rejected (%s)", "Audio status label") % data.code if data.code in (486, 603) else NSLocalizedString("Transfer Failed (%s)", "Audio status label") % data.code)
         self.transfer_in_progress = False
@@ -1487,9 +1545,11 @@ class AudioController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.transfer_timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     def _NH_BlinkSessionTransferGotProgress(self, sender, data):
         self.updateTransferProgress(NSLocalizedString("Transfer: %s", "Audio status label") % data.reason.capitalize())
 
+    @objc.python_method
     def stopRinging(self):
         if self.outbound_ringtone is None:
             return
@@ -1501,6 +1561,7 @@ class AudioController(MediaStream):
             pass # there is currently a hack in the middleware which stops the bridge when the audio stream ends
         self.outbound_ringtone = None
 
+    @objc.python_method
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.update_encryption_icon()
         self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
@@ -1523,15 +1584,18 @@ class AudioController(MediaStream):
         if peer_name:
             self.sessionController.updateDisplayName(peer_name)
 
+    @objc.python_method
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
         peer_name = self.sessionController.titleShort
         self.label.setStringValue_(peer_name)
 
+    @objc.python_method
     def _NH_RTPStreamDidNotEnableEncryption(self, sender, data):
         self.update_encryption_icon()
         self.sessionController.log_info(data.reason)
         self.updateTootip()
 
+    @objc.python_method
     def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
         self.sessionController.log_info("ZRTP authentication string is '%s'" % data.sas)
         if not data.verified:
@@ -1553,6 +1617,7 @@ class AudioController(MediaStream):
 
         self._do_smp_verification()
 
+    @objc.python_method
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         try:
             self.sessionController.encryption['audio']
@@ -1563,6 +1628,7 @@ class AudioController(MediaStream):
         self.update_encryption_icon()
         self._do_smp_verification()
 
+    @objc.python_method
     def _do_smp_verification(self):
         chatStream = self.sessionController.streamHandlerOfType("chat")
         if chatStream and chatStream.status == STREAM_CONNECTED and chatStream.stream.encryption.active and not not chatStream.stream.encryption.verified:

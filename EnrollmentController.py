@@ -70,7 +70,6 @@ class EnrollmentController(NSObject):
     syncWithiCloudCheckbox = objc.IBOutlet()
     allowed_domains = []
 
-
     def init(self):
         if self:
             NSBundle.loadNibNamed_owner_("EnrollmentWindow", self)
@@ -110,11 +109,13 @@ class EnrollmentController(NSObject):
         NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
         NotificationCenter().remove_observer(self, name='SIPAccountManagerDidAddAccount')
         if self.window.isVisible():
@@ -140,6 +141,7 @@ class EnrollmentController(NSObject):
 
         self.window.setFrame_display_animate_(frame, True, True)
 
+    @objc.python_method
     def validate(self):
         if self.radioMatrix.selectedCell().tag() == 1:
             # Login
@@ -200,6 +202,7 @@ class EnrollmentController(NSObject):
 
             return True
 
+    @objc.python_method
     def addExistingAccount(self):
         try:
             display_name = unicode(self.displayNameText.stringValue().strip())
@@ -232,10 +235,12 @@ class EnrollmentController(NSObject):
 
         return True
 
+    @objc.python_method
     def setCreateAccount(self):
         self.radioMatrix.selectCellWithTag_(2)
         self.selectRadio_(self.radioMatrix)
 
+    @objc.python_method
     def setupForAdditionalAccounts(self):
         self.window.setTitle_(NSLocalizedString("Add Account", "Enrollment window title"))
 
@@ -254,6 +259,7 @@ class EnrollmentController(NSObject):
         cancel = self.window.contentView().viewWithTag_(111)
         cancel.setTitle_(NSLocalizedString("Add", "Button title"))
 
+    @objc.python_method
     def createNewAccount(self):
         sip_address = None
         display_name = unicode(self.newDisplayNameText.stringValue().strip())
@@ -460,7 +466,6 @@ class EnrollmentController(NSObject):
                         NSApp.stopModalWithCode_(NSOKButton)
         else:
             NSApp.stopModalWithCode_(NSCancelButton)
-
 
     def windowShouldClose_(self, sender):
         NSApp.stopModalWithCode_(NSCancelButton)

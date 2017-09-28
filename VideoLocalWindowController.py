@@ -60,6 +60,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from zope.interface import implements
 
+
 class VideoLocalWindowController(NSWindowController):
     implements(IObserver)
 
@@ -114,6 +115,7 @@ class VideoLocalWindowController(NSWindowController):
     def windowDidEnterFullScreen_(self, notification):
         self.full_screen_in_progress = False
 
+    @objc.python_method
     def init_aspect_ratio(self, width, height):
         self.sessionController.log_info('Local video stream at %0.fx%0.f resolution' % (width, height))
         self.aspect_ratio = floor((float(width) / height) * 100)/100
@@ -124,6 +126,7 @@ class VideoLocalWindowController(NSWindowController):
 
         self.show()
     
+    @objc.python_method
     def show(self):
         if self.aspect_ratio:
             self.window().center()
@@ -157,12 +160,14 @@ class VideoLocalWindowController(NSWindowController):
         else:
             return None
 
+    @objc.python_method
     def log_debug(self, log):
         if self.sessionController:
             self.sessionController.log_debug(log)
         else:
             BlinkLogger().log_debug(log)
 
+    @objc.python_method
     def log_info(self, log):
         if self.sessionController:
             self.sessionController.log_info(log)
@@ -302,11 +307,13 @@ class VideoLocalWindowController(NSWindowController):
         settings.video.auto_rotate_cameras = not settings.video.auto_rotate_cameras
         settings.save()
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.videoView.setProducer(notification.data.new_camera)
 

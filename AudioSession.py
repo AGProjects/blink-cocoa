@@ -11,6 +11,7 @@ from AppKit import (NSApp,
                     NSFontAttributeName,
                     NSLeftMouseUp,
                     NSStringPboardType)
+
 from Foundation import (NSArray,
                         NSBezierPath,
                         NSColor,
@@ -30,8 +31,8 @@ from Foundation import (NSArray,
                         NSView,
                         NSWidth,
                         NSZeroPoint)
-import objc
 
+import objc
 import os
 import re
 import time
@@ -61,6 +62,7 @@ class AudioSession(NSView):
     def acceptsFirstResponder(self):
         return True
 
+    @objc.python_method
     def canBecomeKeyView(self):
         return True
 
@@ -79,6 +81,7 @@ class AudioSession(NSView):
         if digits and dtmf_match_regexp.match(digits):
             call_in_thread('dtmf-io', self.send_dtmf, digits)
 
+    @objc.python_method
     def send_dtmf(self, digits):
         for digit in digits:
             time.sleep(0.5)
@@ -103,6 +106,7 @@ class AudioSession(NSView):
     def setDelegate_(self, delegate):
         self.delegate = delegate
 
+    @objc.python_method
     def makeDragImage(self):
         if self.delegate is None:
             return
@@ -190,6 +194,7 @@ class AudioSession(NSView):
                     if view.selected and not (self.conferencing and view.conferencing):
                         view.setSelected_(False)
 
+    @objc.python_method
     def viewDidMoveToWindow(self):
         if self.selected and self.window():
             self.window().makeFirstResponder_(self)
@@ -222,6 +227,7 @@ class AudioSession(NSView):
         if self.draggedOut and self.conferencing:
             self.delegate.sessionBoxDidRemoveFromConference(self)
 
+    @objc.python_method
     def foreachConferenceSession(self, callable):
         for view in self.superview().subviews():
             if view.conferencing:
@@ -231,6 +237,7 @@ class AudioSession(NSView):
         if self.delegate is None:
             return NSDragOperationNone
 
+        @objc.python_method
         def highlight(view):
             view.highlighted = True
             view.setNeedsDisplay_(True)

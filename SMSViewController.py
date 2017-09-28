@@ -157,7 +157,6 @@ class SMSViewController(NSObject):
 
         return self
 
-
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
@@ -189,12 +188,15 @@ class SMSViewController(NSObject):
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
             item.setImage_(image)
 
+    @objc.python_method
     def revalidateToolbar(self):
         pass
 
+    @objc.python_method
     def isOutputFrameVisible(self):
         return True
 
+    @objc.python_method
     def log_info(self, text):
         BlinkLogger().log_info(u"[SMS %s with %s] %s" % (self.session_id, self.remote_uri, text))
 
@@ -209,15 +211,18 @@ class SMSViewController(NSObject):
         frame.size = self.outputContainer.frame().size
         self.chatViewController.outputView.setFrame_(frame)
 
+    @objc.python_method
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
+    @objc.python_method
     def matchesTargetAccount(self, target, account):
         that_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(target)
         this_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
+    @objc.python_method
     def gotMessage(self, sender, call_id, content, is_html=False, is_replication_message=False, timestamp=None, window=None):
         self.enableIsComposing = True
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
@@ -258,6 +263,7 @@ class SMSViewController(NSObject):
             self.remoteTypingTimer.invalidate()
         self.remoteTypingTimer = None
 
+    @objc.python_method
     def gotIsComposing(self, window, state, refresh, last_active):
         self.enableIsComposing = True
 
@@ -282,16 +288,19 @@ class SMSViewController(NSObject):
 
         window.noteView_isComposing_(self, flag)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_DNSLookupDidFail(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
         message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
 
+    @objc.python_method
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
 
@@ -303,6 +312,7 @@ class SMSViewController(NSObject):
         else:
             self.setRoutesResolved(routes)
 
+    @objc.python_method
     def _NH_SIPMessageDidSucceed(self, sender, data):
         try:
             message = self.messages.pop(str(sender))
@@ -326,6 +336,7 @@ class SMSViewController(NSObject):
 
         self.notification_center.remove_observer(self, sender=sender)
 
+    @objc.python_method
     def _NH_SIPMessageDidFail(self, sender, data):
         try:
             message = self.messages.pop(str(sender))
@@ -344,6 +355,7 @@ class SMSViewController(NSObject):
                 self.log_info(u"Outgoing message %s delivery failed: %s" % (call_id, data.reason))
         self.notification_center.remove_observer(self, sender=sender)
 
+    @objc.python_method
     def add_to_history(self, message):
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient) if message.recipient else ''
@@ -353,6 +365,7 @@ class SMSViewController(NSObject):
 
         self.history.add_message(message.msgid, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content, content_type, "0", message.status, call_id=message.call_id)
 
+    @objc.python_method
     def composeReplicationMessage(self, sent_message, response_code):
         if sent_message.content_type == "application/im-iscomposing+xml":
             return
@@ -363,6 +376,7 @@ class SMSViewController(NSObject):
                 msg = CPIMPayload(sent_message.content.encode('utf-8'), sent_message.content_type, charset='utf-8', sender=ChatIdentity(self.account.uri, self.account.display_name), recipients=[ChatIdentity(self.target_uri, contact.name if contact else None)])
                 self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
 
+    @objc.python_method
     @run_in_green_thread
     def sendReplicationMessage(self, response_code, content, content_type="message/cpim", timestamp=None):
         timestamp = timestamp or ISOTimestamp.now()
@@ -394,6 +408,7 @@ class SMSViewController(NSObject):
                                       RouteHeader(route.uri), content_type, content.encode('utf-8') if utf8_encode else content, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
+    @objc.python_method
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.routes = routes
@@ -401,6 +416,7 @@ class SMSViewController(NSObject):
             self._sendMessage(msgid, content, content_type)
         self.queue = []
 
+    @objc.python_method
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
         for msgid, content, content_type in self.queue:
@@ -418,6 +434,7 @@ class SMSViewController(NSObject):
                     self.log_info(log_text)
         self.queue = []
 
+    @objc.python_method
     @run_in_green_thread
     def send_message(self, content, timestamp=None):
         # Lookup routes
@@ -447,6 +464,7 @@ class SMSViewController(NSObject):
             self.messages[id] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content)
             message_request.send(15)
 
+    @objc.python_method
     def _sendMessage(self, msgid, content, content_type="text/plain"):
         if content_type != "application/im-iscomposing+xml":
             self.enableIsComposing = True
@@ -472,6 +490,7 @@ class SMSViewController(NSObject):
 
         self.messages[id] = message
 
+    @objc.python_method
     def lookup_destination(self, target_uri):
         assert isinstance(target_uri, SIPURI)
 
@@ -491,6 +510,7 @@ class SMSViewController(NSObject):
             self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
+    @objc.python_method
     def sendMessage(self, content, content_type="text/plain"):
         timestamp = ISOTimestamp.now()
         hash = hashlib.sha1()
@@ -537,6 +557,7 @@ class SMSViewController(NSObject):
         chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
         self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % chars_left)
 
+    @objc.python_method
     def getContentView(self):
         return self.chatViewController.view
 
@@ -553,11 +574,13 @@ class SMSViewController(NSObject):
     def chatViewDidLoad_(self, chatView):
          self.replay_history()
 
+    @objc.python_method
     def scroll_back_in_time(self):
          self.chatViewController.clear()
          self.chatViewController.resetRenderedMessages()
          self.replay_history()
 
+    @objc.python_method
     @run_in_green_thread
     def replay_history(self):
         blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
@@ -605,6 +628,7 @@ class SMSViewController(NSObject):
         messages = [row for row in reversed(results)]
         self.render_history_messages(messages)
 
+    @objc.python_method
     @run_in_gui_thread
     def render_history_messages(self, messages):
         if self.chatViewController.scrolling_zoom_factor:

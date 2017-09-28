@@ -61,11 +61,13 @@ class ConferenceScreenSharing(NSObject):
 
         return self
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_SIPSessionGotConferenceInfo(self, notification):
         screen_sharing_urls = list(unquote(user.screen_image_url.value) for user in notification.data.conference_info.users if user.screen_image_url is not None)
 
@@ -78,6 +80,7 @@ class ConferenceScreenSharing(NSObject):
             BlinkLogger().log_info(u"%s re-started sharing her screen" % self.display_name)
             self.startLoading()
 
+    @objc.python_method
     def setTitle(self):
         name = "%s <%s> %s" % (self.display_name, self.screensharing_uri, "(" + NSLocalizedString("stopped", "Label") + ")" if not self.loading else "")
         self.window.setTitle_(NSLocalizedString("Shared Screen of %s", "Window title") % name)
@@ -94,6 +97,7 @@ class ConferenceScreenSharing(NSObject):
         except KeyError:
             pass
 
+    @objc.python_method
     def show(self, display_name, sip_uri, web_url):
         self.screensharing_uri = sip_uri
         self.screensharing_url = web_url
@@ -105,6 +109,7 @@ class ConferenceScreenSharing(NSObject):
 
         self.window.makeKeyAndOrderFront_(self)
 
+    @objc.python_method
     def startLoading(self):
         self.loading = True
         self.setTitle()
@@ -114,6 +119,7 @@ class ConferenceScreenSharing(NSObject):
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
 
+    @objc.python_method
     def stopLoading(self):
         self.loading = False
         self.setTitle()

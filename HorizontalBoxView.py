@@ -19,6 +19,7 @@ class HorizontalBoxView(NSView):
             self.expandingViews = set()
         return self
 
+    @objc.python_method
     def setViewExpands(self, view, flag = True):
         if flag and not view in self.expandingViews:
             self.expandingViews.add(view)
@@ -45,6 +46,7 @@ class HorizontalBoxView(NSView):
             frame.size.width = minimumWidth
             self.setFrame_(frame)
 
+    @objc.python_method
     def isFlipped(self):
         return True
 
@@ -90,5 +92,3 @@ class HorizontalBoxView(NSView):
 
             view.setFrame_(rect)
             x += NSWidth(rect) + self.spacing
-
-

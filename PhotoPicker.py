@@ -103,6 +103,7 @@ class EditImageView(NSImageView):
         self.cropRectangle.origin.y = 0
         self.setNeedsDisplay_(True)
 
+    @objc.python_method
     def getCropped(self):
         image = self.image()
 
@@ -238,11 +239,13 @@ class PhotoPicker(NSObject):
             self.tabView.removeTabViewItem_(self.historyTabView)
         self.captureView.auto_rotate_menu_enabled = False
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_CameraSnapshotDidSucceed(self, notification):
         self.photoView.setHidden_(False)
         self.captureView.setHidden_(True)
@@ -260,9 +263,11 @@ class PhotoPicker(NSObject):
         image.setSize_(NSMakeSize(w, h))
         self.photoView.setImage_(image)
 
+    @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.captureView.reloadCamera()
 
+    @objc.python_method
     def refreshLibrary(self):
         if not self.history:
             return
@@ -385,6 +390,7 @@ class PhotoPicker(NSObject):
             NSSound.soundNamed_("Tink").play()
             self.countdownProgress.setDoubleValue_(self.countdown_counter)
 
+    @objc.python_method
     def executeCapture(self):
         self.captureView.getSnapshot()
         NSSound.soundNamed_("Grab").play()
@@ -415,6 +421,7 @@ class PhotoPicker(NSObject):
         frame.size = size
         self.cropWindowImage.setFrame_(frame)
 
+    @objc.python_method
     def storeCaptured(self):
         makedirs(self.storage_folder)
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -436,6 +443,7 @@ class PhotoPicker(NSObject):
         self.refreshLibrary()
         return path, image
 
+    @objc.python_method
     def cropAndAddImage(self, path):
         try:
             image = NSImage.alloc().initWithContentsOfFile_(path)
@@ -468,6 +476,7 @@ class PhotoPicker(NSObject):
 
         #self.addImageFile(path)
 
+    @objc.python_method
     def addImageFile(self, path):
         path = os.path.normpath(path)
 
@@ -526,6 +535,7 @@ class PhotoPicker(NSObject):
         except AttributeError:
             pass
 
+    @objc.python_method
     def runModal(self):
         self.window.makeKeyAndOrderFront_(None)
         self.refreshLibrary()
@@ -540,5 +550,4 @@ class PhotoPicker(NSObject):
             else:
                 return self.storeCaptured()
         return None, None
-
 

@@ -369,9 +369,13 @@ class BlinkContact(NSObject):
         if detail is None:
             detail = NSString.stringWithString_(u'')
         return detail
+
     def _set_detail(self, value):
         self.__dict__['detail'] = NSString.stringWithString_(value)
+
     detail = property(_get_detail, _set_detail)
+    del _get_detail, _set_detail
+
 
     @property
     def icon(self):
@@ -401,6 +405,7 @@ class BlinkContact(NSObject):
         self.contact = None
         objc.super(BlinkContact, self).dealloc()
 
+    @objc.python_method
     @run_in_gui_thread
     def destroy(self):
         if self.destroyed:
@@ -418,6 +423,7 @@ class BlinkContact(NSObject):
             self.dealloc_timer = None
         self.release()
 
+    @objc.python_method
     def _set_username_and_domain(self):
         # save username and domain to speed up name lookups in the contacts list
         uri_string = self.uri
@@ -434,15 +440,18 @@ class BlinkContact(NSObject):
     def copyWithZone_(self, zone):
         return self
 
+    @objc.python_method
     def __str__(self):
         return "<%s: %s>" % (self.__class__.__name__, self.uri)
 
     __repr__ = __str__
 
+    @objc.python_method
     def __contains__(self, text):
         text = text.lower()
         return any(text in item for item in chain((uri.uri.lower() for uri in self.uris), (self.name.lower(),)))
 
+    @objc.python_method
     def split_uri(self, uri):
         if isinstance(uri, (FrozenSIPURI, SIPURI)):
             return (uri.user or '', uri.host or '')
@@ -455,6 +464,7 @@ class BlinkContact(NSObject):
             user = uri.partition(":")[0]
             return (user, '')
 
+    @objc.python_method
     def matchesURI(self, uri, exact_match=False):
         def match(me, candidate, exact_match=False):
             # check exact match
@@ -530,6 +540,7 @@ class BlinkConferenceContact(BlinkContact):
         self.presence_contact = presence_contact
         self.updatePresenceState()
 
+    @objc.python_method
     @run_in_gui_thread
     def destroy(self):
         if self.presence_contact is not None:
@@ -537,14 +548,17 @@ class BlinkConferenceContact(BlinkContact):
             self.presence_contact = None
         objc.super(BlinkConferenceContact, self).destroy()
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BlinkContactPresenceHasChanged(self, notification):
         self.updatePresenceState()
 
+    @objc.python_method
     def init_presence_state(self):
         self.presence_state = { 'presence_notes': [],
                                 'status': { 'available':     False,
@@ -553,6 +567,7 @@ class BlinkConferenceContact(BlinkContact):
                                           }
                               }
 
+    @objc.python_method
     def setPresenceNote(self):
         presence_notes = self.presence_state['presence_notes']
         if presence_notes:
@@ -575,6 +590,7 @@ class BlinkConferenceContact(BlinkContact):
         if detail != self.detail:
             self.detail = detail
 
+    @objc.python_method
     @run_in_gui_thread
     def updatePresenceState(self):
         self.init_presence_state()
@@ -665,6 +681,7 @@ class BlinkBlockedPresenceContact(BlinkContact):
         objc.super(BlinkBlockedPresenceContact, self).__init__(uri, name=name)
         self.avatar = BlockedPolicyAvatar()
 
+    @objc.python_method
     @run_in_gui_thread
     def destroy(self):
         self.policy = None
@@ -674,6 +691,8 @@ class BlinkBlockedPresenceContact(BlinkContact):
 class BlinkPresenceContactAttribute(object):
     def __init__(self, name):
         self.name = name
+    
+    @objc.python_method
     def __get__(self, obj, objtype):
         if obj is None:
             return self
@@ -682,6 +701,7 @@ class BlinkPresenceContactAttribute(object):
         except AttributeError:
             return None
 
+    @objc.python_method
     def __set__(self, obj, value):
         if obj.contact is not None:
             setattr(obj.contact, self.name, value)
@@ -823,12 +843,14 @@ class BlinkPresenceContact(BlinkContact):
     default_uri = property(_get_default_uri, _set_default_uri)
     del _get_default_uri, _set_default_uri
 
+    @objc.python_method
     def account_has_pidfs_for_uris(self, account, uris):
         for key in (key for key in self.pidfs_map.iterkeys() if key in uris):
             if account in self.pidfs_map[key]:
                 return True
         return False
 
+    @objc.python_method
     def init_presence_state(self):
         self.presence_state = { 'pending_authorizations':    {},
                                 'status': { 'available':     False,
@@ -844,6 +866,7 @@ class BlinkPresenceContact(BlinkContact):
     def presenceNoteTimer_(self, timer):
         self.setPresenceNote()
 
+    @objc.python_method
     def _clone_presence_state(self, other=None):
         # TODO: remove this ugly hack, also, need to 'synchronize' timers
         model = NSApp.delegate().contactsWindowController.model
@@ -861,6 +884,7 @@ class BlinkPresenceContact(BlinkContact):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     @run_in_gui_thread
     def destroy(self):
         NotificationCenter().discard_observer(self, name="SIPAccountDidDeactivate")
@@ -876,10 +900,12 @@ class BlinkPresenceContact(BlinkContact):
         self.pidfs_map = {}
         objc.super(BlinkPresenceContact, self).destroy()
 
+    @objc.python_method
     @run_in_gui_thread
     def reloadModelItem(self, item):
         NSApp.delegate().contactsWindowController.model.contactOutline.reloadItem_reloadChildren_(item, True)
 
+    @objc.python_method
     def purge_pidfs_for_account(self, account):
         changes = False
         for key, value in self.pidfs_map.copy().iteritems():
@@ -911,6 +937,7 @@ class BlinkPresenceContact(BlinkContact):
             else:
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
+    @objc.python_method
     def handle_presence_resources(self, resources, account, full_state=False, log=False):
         # log should be set only for contacts in all contacs group
         if self.application_will_end:
@@ -989,6 +1016,7 @@ class BlinkPresenceContact(BlinkContact):
         self.handle_pidfs(log)
         return True
 
+    @objc.python_method
     def handle_pidfs(self, log=False):
         # log should be True when updating contacts in all contacts group to avoid duplicates
         if self.application_will_end:
@@ -1295,6 +1323,7 @@ class BlinkPresenceContact(BlinkContact):
         if log:
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
+    @objc.python_method
     @run_in_green_thread
     def _process_icon(self, icon_url):
         contact = self.contact
@@ -1358,6 +1387,7 @@ class BlinkPresenceContact(BlinkContact):
         contact.save()
         contact.updating_remote_icon = False
 
+    @objc.python_method
     def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
@@ -1381,6 +1411,7 @@ class BlinkPresenceContact(BlinkContact):
 
         return None
 
+    @objc.python_method
     def setPresenceNote(self):
         if self.presence_state['status']['busy']:
             wining_status = 'busy'
@@ -1449,21 +1480,25 @@ class BlinkPresenceContact(BlinkContact):
             self.detail = detail
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_SIPApplicationWillEnd(self, notification):
         self.pidfs_map = {}
         self.init_presence_state()
         self.application_will_end = True
 
+    @objc.python_method
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         self.pidfs_map = {}
         self.init_presence_state()
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         if self.application_will_end:
             return
@@ -1471,11 +1506,13 @@ class BlinkPresenceContact(BlinkContact):
             if not notification.sender.presence.enabled:
                 self.purge_pidfs_for_account(notification.sender.id)
 
+    @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, notification):
         if self.application_will_end:
             return
         self.purge_pidfs_for_account(notification.sender.id)
 
+    @objc.python_method
     def _NH_SIPAccountGotPresenceState(self, notification):
         resource_map = notification.data.resource_map
         for key, value in resource_map.iteritems():
@@ -1492,6 +1529,7 @@ class BlinkPresenceContact(BlinkContact):
                             if online_group_changed:
                                 self.reloadModelItem(online_group_changed)
 
+    @objc.python_method
     def _NH_BlinkPresenceFailed(self, notification):
         if self.application_will_end:
             return
@@ -1536,15 +1574,18 @@ class BonjourBlinkContact(BlinkContact):
         else:
             self.avatar = DefaultUserAvatar()
 
+    @objc.python_method
     def update_uri(self, uri):
         self.aor = uri
         self.uris = [ContactURI(uri=str(uri), type='SIP')]
         self._set_username_and_domain()
 
+    @objc.python_method
     def matchesURI(self, uri, exact_match=False):
         candidate = self.split_uri(uri)
         return (self.username, self.domain) == (candidate[0], candidate[1])
 
+    @objc.python_method
     @run_in_gui_thread
     def destroy(self):
         self.bonjour_neighbour = None
@@ -1663,6 +1704,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
             self.avatar = DefaultUserAvatar()
         self._set_username_and_domain()
 
+    @objc.python_method
     @classmethod
     def format_person_name(cls, person):
         first = person.valueForProperty_(AddressBook.kABFirstNameProperty)
@@ -1683,6 +1725,8 @@ class SystemAddressBookBlinkContact(BlinkContact):
 class BlinkGroupAttribute(object):
     def __init__(self, name):
         self.name = name
+    
+    @objc.python_method
     def __get__(self, obj, objtype):
         if obj is None:
             return self
@@ -1690,6 +1734,8 @@ class BlinkGroupAttribute(object):
             return obj.__dict__.get(self.name, None)
         else:
             return getattr(obj.group, self.name)
+            
+    @objc.python_method
     def __set__(self, obj, value):
         if obj.group is None:
             obj.__dict__[self.name] = value
@@ -1718,6 +1764,7 @@ class BlinkGroup(NSObject):
     def copyWithZone_(self, zone):
         return self
 
+    @objc.python_method
     def sortContacts(self):
         self.contacts.sort(key=lambda item: unicode(getattr(item, 'name')).lower())
 
@@ -1732,6 +1779,7 @@ class VirtualBlinkGroup(BlinkGroup):
         self.name = name
         self.init_expanded = expanded
 
+    @objc.python_method
     def load_group(self):
         vgm = VirtualGroupsManager()
         try:
@@ -1853,11 +1901,13 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.timer.invalidate()
             self.timer = None
 
+    @objc.python_method
     def setInitialPeriod(self, days):
         self.days = days
         after_date=datetime.datetime.now()-datetime.timedelta(days=days)
         self.after_date=after_date.strftime("%Y-%m-%d")
 
+    @objc.python_method
     def setPeriod_(self, days):
         self.days = days
         after_date=datetime.datetime.now()-datetime.timedelta(days=days)
@@ -1865,6 +1915,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         results = self.get_history_entries()
         self.refresh_contacts(results)
 
+    @objc.python_method
     @run_in_green_thread
     def load_contacts(self, force_reload=False):
         if self.days is None:
@@ -1874,6 +1925,7 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
             self.last_results = results
             self.refresh_contacts(results)
 
+    @objc.python_method
     @run_in_gui_thread
     def refresh_contacts(self, results):
         for blink_contact in list(self.contacts):
@@ -1987,6 +2039,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
     def __init__(self, name=NSLocalizedString("Missed Calls", "Group name label")):
         objc.super(MissedCallsBlinkGroup, self).__init__(name, expanded=True)
 
+    @objc.python_method
     def get_history_entries(self):
         return SessionHistory().get_entries(hidden=0, after_date=self.after_date, count=200)
 
@@ -1997,6 +2050,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
     def __init__(self, name=NSLocalizedString("Outgoing Calls", "Group name label")):
         objc.super(OutgoingCallsBlinkGroup, self).__init__(name, expanded=True)
 
+    @objc.python_method
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='outgoing', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
 
@@ -2007,6 +2061,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
     def __init__(self, name=NSLocalizedString("Incoming Calls", "Group name label")):
         objc.super(IncomingCallsBlinkGroup, self).__init__(name, expanded=True)
 
+    @objc.python_method
     def get_history_entries(self):
         return SessionHistory().get_entries(direction='incoming', status='completed', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
 
@@ -2028,9 +2083,11 @@ class VoicemailBlinkGroup(VirtualBlinkGroup):
     def groupsList(self):
         return NSApp.delegate().contactsWindowController.model.groupsList
 
+    @objc.python_method
     def saveGroupPosition(self):
         NSApp.delegate().contactsWindowController.model.saveGroupPosition()
 
+    @objc.python_method
     def load_contacts(self):
         all_messages = 0
         for blink_contact in self.contacts:
@@ -2071,12 +2128,14 @@ class VoicemailBlinkGroup(VirtualBlinkGroup):
         self.sortContacts()
         NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
+    @objc.python_method
     def moveOnTop(self):
         self.original_position = self.groupsList.index(self)
         self.groupsList.remove(self)
         self.groupsList.insert(0, self)
         self.saveGroupPosition()
 
+    @objc.python_method
     def restorePosition(self):
         if self.original_position is not None:
             try:
@@ -2101,6 +2160,7 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
     def __init__(self, name=NSLocalizedString("Address Book", "Group name label")):
         objc.super(AddressBookBlinkGroup, self).__init__(name, expanded=False)
 
+    @objc.python_method
     @run_in_thread('addressbook')
     @allocate_autorelease_pool
     def loadAddressBook(self, changedRecords=None):
@@ -2674,6 +2734,7 @@ class ContactListModel(CustomListModel):
         if settings.contacts.enable_address_book:
             self.addressbook_group.loadAddressBook(notification.userInfo())
 
+    @objc.python_method
     def hasContactMatchingURI(self, uri, exact_match=False, skip_system_address_book=False):
         # add System AB group at the end so that we find contacts there as a last resort
         groupsList = self.groupsList[:]
@@ -2687,6 +2748,7 @@ class ContactListModel(CustomListModel):
 
         return any(blink_contact.matchesURI(uri, exact_match) for group in groupsList if not group.ignore_search for blink_contact in group.contacts)
 
+    @objc.python_method
     def getFirstContactMatchingURI(self, uri, exact_match=False):
         # add System AB group at the end so that we find contacts there as a last resort
         groupsList = self.groupsList[:]
@@ -2702,36 +2764,42 @@ class ContactListModel(CustomListModel):
         except StopIteration:
             return None
 
+    @objc.python_method
     def getBonjourContactMatchingDisplayName(self, display_name):
         try:
             return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.name.startswith(display_name))
         except StopIteration:
             return None
 
+    @objc.python_method
     def getBonjourContactMatchingDeviceId(self, device_id):
         try:
             return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.id == device_id)
         except StopIteration:
             return None
 
+    @objc.python_method
     def getBonjourContactMatchingUri(self, uri):
         try:
             return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.uri == uri)
         except StopIteration:
             return None
 
+    @objc.python_method
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
         try:
             return next(blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
         except StopIteration:
             return None
 
+    @objc.python_method
     def getPresenceContactsMatchingURI(self, uri, exact_match=False):
         try:
             return list((blink_contact, group) for group in self.groupsList if group != self.online_contacts_group for blink_contact in group.contacts if isinstance(blink_contact, BlinkPresenceContact) and blink_contact.contact.presence.subscribe and blink_contact.matchesURI(uri, exact_match))
         except StopIteration:
             return None
 
+    @objc.python_method
     def presencePolicyExistsForURI_(self, uri):
         uri = sip_prefix_pattern.sub('', uri)
         for policy in AddressbookManager().get_policies():
@@ -2745,6 +2813,7 @@ class ContactListModel(CustomListModel):
                         return True
         return False
 
+    @objc.python_method
     def watcherExistsForURI_(self, uri):
         return False
 
@@ -2763,6 +2832,7 @@ class ContactListModel(CustomListModel):
         else:
             self.backup_contacts(silent=True)
 
+    @objc.python_method
     def backup_contacts(self, silent=False):
         backup_contacts = []
         backup_groups = []
@@ -2808,6 +2878,7 @@ class ContactListModel(CustomListModel):
             if not silent:
                 NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Window title"), NSLocalizedString("There are no contacts available for backup.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
 
+    @objc.python_method
     def restore_contacts(self, backup):
         restored_contacts = 0
         restored_groups = 0
@@ -2962,6 +3033,7 @@ class ContactListModel(CustomListModel):
 
         NSRunAlertPanel(NSLocalizedString("Contacts Restore", "Window title"), panel_text , NSLocalizedString("OK", "Button title"), None, None)
 
+    @objc.python_method
     def renderPendingWatchersGroupIfNecessary(self, bring_in_focus=False):
         added = False
         if self.pending_watchers_group.contacts:
@@ -2989,6 +3061,7 @@ class ContactListModel(CustomListModel):
             self.groupsList.remove(self.pending_watchers_group)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+    @objc.python_method
     def addPendingWatchers(self):
         for watcher_dict in self.pending_watchers_map.itervalues():
             for watcher in watcher_dict.values():
@@ -3002,22 +3075,27 @@ class ContactListModel(CustomListModel):
                         self.pending_watchers_group.sortContacts()
         self.renderPendingWatchersGroupIfNecessary()
 
+    @objc.python_method
     def reload_history_groups(self, force_reload=False):
         if not NSApp.delegate().history_enabled:
             return
 
+    @objc.python_method
     @run_in_thread('file-io')
     def _atomic_update(self, save=(), delete=()):
         with AddressbookManager.transaction():
             [item.save() for item in save]
             [item.delete() for item in delete]
 
+    @objc.python_method
     def getBlinkContactsForName(self, name):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.name == name)
 
+    @objc.python_method
     def getBlinkContactsForURI(self, uri, exact_match=False):
         return (blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.matchesURI(uri, exact_match))
 
+    @objc.python_method
     def getBlinkGroupsForBlinkContact(self, blink_contact):
         allowed_groups = [group for group in self.groupsList if group.add_contact_allowed]
         if not isinstance(blink_contact, BlinkPresenceContact):
@@ -3025,6 +3103,7 @@ class ContactListModel(CustomListModel):
         else:
             return [group for group in allowed_groups if blink_contact.contact in (item.contact for item in group.contacts if isinstance(item, BlinkPresenceContact))]
 
+    @objc.python_method
     def saveGroupPosition(self):
         # save groups position
         addressbook_manager = AddressbookManager()
@@ -3041,12 +3120,13 @@ class ContactListModel(CustomListModel):
                         group.position = self.groupsList.index(blink_group)
                         group.save()
 
+    @objc.python_method
     def createInitialGroupAndContacts(self):
         BlinkLogger().log_debug(u"Creating initial contacts")
 
         test_contacts = [dict(id='test_call',       name='Test Call',       preferred_media='audio+chat', uri='echo@conference.sip2sip.info'),
                          dict(id='test_conference', name='Test Conference', preferred_media='audio+chat', uri='test@conference.sip2sip.info')]
-
+        @objc.python_method
         def create_contact(id, name, preferred_media, uri):
             contact = Contact(id)
             contact.name = name
@@ -3066,6 +3146,7 @@ class ContactListModel(CustomListModel):
         modified_items = list(group.contacts) + [group]
         self._atomic_update(save=modified_items)
 
+    @objc.python_method
     def moveBonjourGroupFirst(self):
         if self.bonjour_group in self.groupsList:
             self.bonjour_group.original_position = self.groupsList.index(self.bonjour_group)
@@ -3073,17 +3154,20 @@ class ContactListModel(CustomListModel):
             self.groupsList.insert(0, self.bonjour_group)
             self.saveGroupPosition()
 
+    @objc.python_method
     def restoreBonjourGroupPosition(self):
         if self.bonjour_group in self.groupsList:
             self.groupsList.remove(self.bonjour_group)
             self.groupsList.insert(self.bonjour_group.original_position or 0, self.bonjour_group)
             self.saveGroupPosition()
 
+    @objc.python_method
     def removeContactFromGroups(self, blink_contact, blink_groups):
         for blink_group in blink_groups:
             blink_group.group.contacts.remove(blink_contact.contact)
             blink_group.group.save()
 
+    @objc.python_method
     def removeContactFromBlinkGroups(self, contact, groups):
         for group in groups:
             try:
@@ -3095,6 +3179,7 @@ class ContactListModel(CustomListModel):
                 blink_contact.destroy()
                 group.sortContacts()
 
+    @objc.python_method
     def removePolicyForContactURIs(self, contact):
         addressbook_manager = AddressbookManager()
         # remove any policies for the same uris
@@ -3103,6 +3188,7 @@ class ContactListModel(CustomListModel):
                 if policy_contact.uri == address.uri:
                     policy_contact.delete()
 
+    @objc.python_method
     def addBlockedPolicyForContactURIs(self, contact):
         addressbook_manager = AddressbookManager()
         for address in contact.uris:
@@ -3123,6 +3209,7 @@ class ContactListModel(CustomListModel):
                 policy_contact.dialog.policy = 'block'
                 policy_contact.save()
 
+    @objc.python_method
     def addGroup(self):
         controller = AddGroupController()
         name = controller.runModal()
@@ -3134,6 +3221,7 @@ class ContactListModel(CustomListModel):
         group.position = max(len(self.groupsList)-1, 0)
         group.save()
 
+    @objc.python_method
     def editGroup(self, blink_group):
         controller = AddGroupController()
         name = controller.runModalForRename_(blink_group.name)
@@ -3142,6 +3230,7 @@ class ContactListModel(CustomListModel):
         blink_group.group.name = name
         blink_group.group.save()
 
+    @objc.python_method
     def addGroupsForContact(self, contact, groups):
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
@@ -3149,6 +3238,7 @@ class ContactListModel(CustomListModel):
                 blink_group.group.contacts.add(contact)
                 blink_group.group.save()
 
+    @objc.python_method
     def addContact(self, uris=[], group=None, name=None):
         controller = AddContactController(uris, name=name, group=group)
         new_contact = controller.runModal()
@@ -3186,6 +3276,7 @@ class ContactListModel(CustomListModel):
 
         return True
 
+    @objc.python_method
     def editContact(self, item):
         if not item:
             return
@@ -3239,6 +3330,7 @@ class ContactListModel(CustomListModel):
             self.removeContactFromGroups(item, old_groups - new_groups)
             self.addGroupsForContact(contact, new_groups)
 
+    @objc.python_method
     def deleteContact(self, blink_contact):
         if not blink_contact.deletable:
             return
@@ -3255,6 +3347,7 @@ class ContactListModel(CustomListModel):
                 blink_contact.contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+    @objc.python_method
     def deleteGroup(self, blink_group):
         message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. ", "Label") % blink_group.name
         message = re.sub("%", "%%", message)
@@ -3264,11 +3357,13 @@ class ContactListModel(CustomListModel):
                 blink_group.group.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_SIPApplicationWillStart(self, notification):
         # Load virtual groups
         vgm = VirtualGroupsManager()
@@ -3317,10 +3412,12 @@ class ContactListModel(CustomListModel):
                 except (IOError, cPickle.PicklingError):
                     pass
 
+    @objc.python_method
     def _NH_BlinkAccountGotMessageSummary(self, notification):
         if self.voicemail_group:
             self.voicemail_group.load_contacts()
 
+    @objc.python_method
     def _NH_SIPAccountGotPresenceWinfo(self, notification):
         watcher_list = notification.data.watcher_list
         tmp_pending_watchers = dict((watcher.sipuri, watcher) for watcher in chain(watcher_list.pending, watcher_list.waiting))
@@ -3411,6 +3508,7 @@ class ContactListModel(CustomListModel):
 
         self.renderPendingWatchersGroupIfNecessary()
 
+    @objc.python_method
     def _NH_SIPApplicationDidStart(self, notification):
         # Load virtual groups
         self.all_contacts_group.load_group()
@@ -3439,11 +3537,13 @@ class ContactListModel(CustomListModel):
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30.0, self, "checkContactBackup:", None, False)
 
+    @objc.python_method
     def _NH_SIPApplicationWillEnd(self, notification):
         if self.contact_backup_timer is not None and self.contact_backup_timer.isValid():
             self.contact_backup_timer.invalidate()
         self.contact_backup_timer = None
 
+    @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
         if NSApp.delegate().history_enabled:
             return
@@ -3460,6 +3560,7 @@ class ContactListModel(CustomListModel):
             if settings.contacts.enable_outgoing_calls_group:
                 self.outgoing_calls_group.load_contacts(force_reload=True)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
         if notification.data.modified.has_key("contacts.enable_address_book"):
@@ -3563,6 +3664,7 @@ class ContactListModel(CustomListModel):
             if set(['enabled', 'message_summary.voicemail_uri', 'message_summary.enabled']).intersection(notification.data.modified):
                 self.voicemail_group.load_contacts()
 
+    @objc.python_method
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount():
             self.bonjour_group.load_group()
@@ -3579,6 +3681,7 @@ class ContactListModel(CustomListModel):
 
         self.voicemail_group.load_contacts()
 
+    @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, notification):
         if notification.sender is BonjourAccount():
             for blink_contact in  self.bonjour_group.not_filtered_contacts:
@@ -3599,6 +3702,7 @@ class ContactListModel(CustomListModel):
 
         self.voicemail_group.load_contacts()
 
+    @objc.python_method
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
         neighbour = notification.data.neighbour
         record = notification.data.record
@@ -3663,6 +3767,7 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
 
+    @objc.python_method
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
         neighbour = notification.data.neighbour
         record = notification.data.record
@@ -3690,6 +3795,7 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=blink_contact)
 
+    @objc.python_method
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
         record = notification.data.record
         display_name = record.name
@@ -3732,6 +3838,7 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
 
+    @objc.python_method
     def _NH_BlinkOnlineContactMustBeRemoved(self, notification):
         blink_contact = notification.sender
         try:
@@ -3742,6 +3849,7 @@ class ContactListModel(CustomListModel):
             blink_contact.destroy()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.online_contacts_group)
 
+    @objc.python_method
     def _NH_AddressbookPolicyWasActivated(self, notification):
         policy = notification.sender
 
@@ -3761,6 +3869,7 @@ class ContactListModel(CustomListModel):
                 self.pending_watchers_group.contacts.remove(gui_watcher)
                 self.renderPendingWatchersGroupIfNecessary()
 
+    @objc.python_method
     def _NH_AddressbookPolicyWasDeleted(self, notification):
         policy = notification.sender
         if policy.presence.policy == 'block':
@@ -3791,6 +3900,7 @@ class ContactListModel(CustomListModel):
             if changes:
                 self.renderPendingWatchersGroupIfNecessary()
 
+    @objc.python_method
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
 
@@ -3816,6 +3926,7 @@ class ContactListModel(CustomListModel):
                     self.pending_watchers_group.contacts.remove(gui_watcher)
                     self.renderPendingWatchersGroupIfNecessary()
 
+    @objc.python_method
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
         blink_contact = next(blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.contact == contact)
@@ -3825,6 +3936,7 @@ class ContactListModel(CustomListModel):
         self.addPendingWatchers()
         NSApp.delegate().contactsWindowController.tellMeWhenContactBecomesAvailableList.discard(contact)
 
+    @objc.python_method
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
 
@@ -3878,7 +3990,7 @@ class ContactListModel(CustomListModel):
 
         self.addPendingWatchers()
 
-
+    @objc.python_method
     def _NH_AddressbookGroupWasActivated(self, notification):
         group = notification.sender
 
@@ -3902,6 +4014,7 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @objc.python_method
     def _NH_AddressbookGroupWasDeleted(self, notification):
         group = notification.sender
         try:
@@ -3922,6 +4035,7 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @objc.python_method
     def _NH_AddressbookGroupDidChange(self, notification):
         group = notification.sender
         try:
@@ -3957,9 +4071,11 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @objc.python_method
     def _NH_AddressbookGroupWasCreated(self, notification):
         self.saveGroupPosition()
 
+    @objc.python_method
     def _NH_VirtualGroupWasActivated(self, notification):
         group = notification.sender
         settings = SIPSimpleSettings()
@@ -4055,6 +4171,7 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @objc.python_method
     def _NH_VirtualGroupWasDeleted(self, notification):
         group = notification.sender
         try:
@@ -4068,6 +4185,7 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 
+    @objc.python_method
     def _NH_VirtualGroupDidChange(self, notification):
         group = notification.sender
         try:

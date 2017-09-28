@@ -14,6 +14,7 @@ from Foundation import (NSBundle,
                         NSTimer,
                         NSURL,
                         NSWorkspace)
+
 from AppKit import NSEventTrackingRunLoopMode, NSRunAlertPanel
 import objc
 
@@ -42,6 +43,7 @@ from MediaStream import (MediaStream,
                          STATE_DNS_FAILED,
                          STATE_FAILED,
                          STATE_CONNECTED)
+
 from util import run_in_gui_thread
 
 
@@ -65,6 +67,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
         self.address = self.vnc_server_socket.getsockname()
         self._reconnect_event = event()
 
+    @objc.python_method
     def _msrp_reader(self):
         while True:
             try:
@@ -79,6 +82,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='sending', reason=str(e)))
                 break
 
+    @objc.python_method
     def _msrp_writer(self):
         while True:
             try:
@@ -104,6 +108,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='reading', reason=str(e)))
                 break
 
+    @objc.python_method
     def _start_vnc_connection(self):
         try:
             sock, addr = self.vnc_server_socket.accept()
@@ -117,9 +122,11 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
         finally:
             self.vnc_starter_thread = None
 
+    @objc.python_method
     def _NH_MediaStreamDidStart(self, notification):
         self.vnc_starter_thread = spawn(self._start_vnc_connection)
 
+    @objc.python_method
     def _NH_MediaStreamWillEnd(self, notification):
         if self.vnc_starter_thread is not None:
             self.vnc_starter_thread.kill()
@@ -140,6 +147,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
         self.vnc_socket = None
         self._reconnect_event = event()
 
+    @objc.python_method
     def _msrp_reader(self):
         while True:
             try:
@@ -162,6 +170,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='sending', reason=str(e)))
                 break
 
+    @objc.python_method
     def _msrp_writer(self):
         while True:
             try:
@@ -178,6 +187,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='reading', reason=str(e)))
                 break
 
+    @objc.python_method
     def _start_vnc_connection(self):
         try:
             self.vnc_socket = GreenSocket(tcp_socket())
@@ -193,9 +203,11 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
         finally:
             self.vnc_starter_thread = None
 
+    @objc.python_method
     def _NH_MediaStreamDidStart(self, notification):
         self.vnc_starter_thread = spawn(self._start_vnc_connection)
 
+    @objc.python_method
     def _NH_MediaStreamWillEnd(self, notification):
         if self.vnc_starter_thread is not None:
             self.vnc_starter_thread.kill()
@@ -214,6 +226,7 @@ class StatusItem(NSObject):
     menu = None
     statusItem = None
 
+    @objc.python_method
     def show(self, item):
         if not self.items:
             #self.statusItem = NSStatusBar.systemStatusBar().statusItemWithLength_(30)
@@ -228,12 +241,14 @@ class StatusItem(NSObject):
         mitem.setTag_(item.sessionController.identifier)
         mitem.setTarget_(self)
 
+    @objc.python_method
     def activateItem_(self, sender):
         for item in self.items:
             if item.sessionController.identifier == sender.tag():
                 item.end()
                 break
 
+    @objc.python_method
     def remove(self, item):
         if self.menu:
             mitem = self.menu.itemWithTag_(item.sessionController.identifier)
@@ -245,6 +260,7 @@ class StatusItem(NSObject):
                 self.statusItem = None
                 self.menu = None
 
+    @objc.python_method
     def update(self, item, state):
         if self.menu:
             mitem = self.menu.itemWithTag_(item.sessionController.identifier)
@@ -289,6 +305,7 @@ class ScreenSharingController(MediaStream):
         self.close_timer = None
         return self
 
+    @objc.python_method
     def startIncoming(self, is_update):
         if self.direction == "active":
             self.sessionController.log_info("Requesting remote screen...")
@@ -309,6 +326,7 @@ class ScreenSharingController(MediaStream):
         NotificationCenter().add_observer(self, sender=self.stream)
         self.changeStatus(STREAM_INCOMING)
 
+    @objc.python_method
     def startOutgoing(self, is_update):
         if self.direction == "active":
             self.sessionController.log_info("Requesting remote screen...")
@@ -332,6 +350,7 @@ class ScreenSharingController(MediaStream):
     def end_(self, sender):
         self.end()
 
+    @objc.python_method
     def end(self):
         self.stopButton.setHidden_(True)
         if self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_IDLE, STREAM_FAILED):
@@ -351,9 +370,11 @@ class ScreenSharingController(MediaStream):
             self.sessionController.end()
             self.changeStatus(STREAM_DISCONNECTING)
 
+    @objc.python_method
     def updateStatusIcon(self):
         pass
 
+    @objc.python_method
     def sessionStateChanged(self, newstate, detail):
         if newstate == STATE_DNS_FAILED:
             if self.statusWindow:
@@ -380,6 +401,7 @@ class ScreenSharingController(MediaStream):
                     self.statusLabel.setStringValue_(NSLocalizedString("Error starting screen sharing session.", "Label"))
                     self.statusProgress.stopAnimation_(None)
 
+    @objc.python_method
     def changeStatus(self, newstate, fail_reason=None):
         if self.direction == "active":
             if newstate == STREAM_CONNECTED:
@@ -432,6 +454,7 @@ class ScreenSharingController(MediaStream):
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
 
+    @objc.python_method
     def start_auto_close_timer(self):
         if not self.close_timer:
             # auto-close everything in 5s
@@ -447,11 +470,13 @@ class ScreenSharingController(MediaStream):
             self.close_timer.invalidate()
             self.close_timer = None
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_MediaStreamDidStart(self, sender, data):
         self.sessionController.log_info("Screen sharing started")
         self.changeStatus(STREAM_CONNECTED)
@@ -460,6 +485,7 @@ class ScreenSharingController(MediaStream):
         if videoStream:
             self.sessionController.removeVideoFromSession()
 
+    @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
         if data.reason == 'MSRPRelayAuthError':
             reason = NSLocalizedString("MSRP relay authentication failed", "Label")
@@ -470,6 +496,7 @@ class ScreenSharingController(MediaStream):
         NotificationCenter().remove_observer(self, sender=self.stream.handler)
         NotificationCenter().remove_observer(self, sender=self.stream)
 
+    @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
         if data.error is None:
             self.sessionController.log_info("Screen sharing ended")
@@ -486,6 +513,7 @@ class ScreenSharingController(MediaStream):
         NotificationCenter().remove_observer(self, sender=self.stream)
         self.resetTrace()
 
+    @objc.python_method
     def _NH_MSRPTransportTrace(self, sender, data):
         if sender is self.stream.msrp:
             self.exhanged_bytes += len(data.data)
@@ -499,9 +527,11 @@ class ScreenSharingController(MediaStream):
                     self.stopButton.setTitle_(NSLocalizedString("Stop Screen Sharing", "Button title"))
                 self.resetTrace()
 
+    @objc.python_method
     def _NH_ScreenSharingHandlerDidFail(self, sender, data):
         self.sessionController.log_info("%s" % data.reason.title())
 
+    @objc.python_method
     def resetTrace(self):
         if self.must_reset_trace_msrp:
             settings = SIPSimpleSettings()
@@ -510,6 +540,7 @@ class ScreenSharingController(MediaStream):
             self.must_reset_trace_msrp = False
         NotificationCenter().discard_observer(self, name="MSRPTransportTrace")
 
+    @objc.python_method
     def dealloc(self):
         BlinkLogger().log_debug(u"Dealloc %s" % self)
         self.resetTrace()

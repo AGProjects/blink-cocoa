@@ -238,12 +238,14 @@ class ChatWindowController(NSWindowController):
     def sessionControllersManager(self):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
+    @objc.python_method
     def addTimer(self):
         if not self.contact_timer:
             self.contact_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateContactTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.contact_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.contact_timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     def removeContactTimer(self):
         if self.contact_timer:
            self.contact_timer.invalidate()
@@ -254,6 +256,7 @@ class ChatWindowController(NSWindowController):
         if path:
             self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
 
+    @objc.python_method
     def setScreenSharingToolbarIconSize(self):
         frame = self.screenSharingPopUpButton.frame()
         frame.size.height = 38
@@ -299,6 +302,7 @@ class ChatWindowController(NSWindowController):
     def shouldPopUpDocumentPathMenu_(self, menu):
         return False
 
+    @objc.python_method
     def _findInactiveSessionCompatibleWith_(self, session):
         session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteAOR)
         for k, s in self.sessions.iteritems():
@@ -357,6 +361,7 @@ class ChatWindowController(NSWindowController):
             NSApp.delegate().contactsWindowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
+    @objc.python_method
     def closeDrawer(self):
         return
         self.drawer.close()
@@ -389,12 +394,14 @@ class ChatWindowController(NSWindowController):
     def hasSession_(self, session):
         return self.sessions.has_key(session.identifier)
 
+    @objc.python_method
     def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
         if activeTab and self.sessions.has_key(activeTab.identifier()):
             return self.sessions[activeTab.identifier()]
         return None
 
+    @objc.python_method
     def setVideoProducer(self, producer=None):
         self.videoView.setProducer(producer)
         self.refresh_drawer_counter += 1
@@ -408,11 +415,13 @@ class ChatWindowController(NSWindowController):
             self.closeDrawer()
         self.refreshDrawer()
 
+    @objc.python_method
     def detachVideo(self, sessionController):
         if self.selectedSessionController() == sessionController:
             self.setVideoProducer(None)
             self.videoView.aspect_ratio = None
 
+    @objc.python_method
     def updateTitle(self):
         title = self.getConferenceTitle()
         icon = None
@@ -432,6 +441,7 @@ class ChatWindowController(NSWindowController):
     def window_shouldDragDocumentWithEvent_from_withPasteboard_(self, window, event, point, pasteboard):
         return False
 
+    @objc.python_method
     def getConferenceTitle(self):
         title = None
         session = self.selectedSessionController()
@@ -464,7 +474,6 @@ class ChatWindowController(NSWindowController):
         if item:
             item.setScreenSharing_(flag)
 
-
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
         if index == NSNotFound:
@@ -484,42 +493,50 @@ class ChatWindowController(NSWindowController):
         if session and session.streamHandlerOfType("chat"):
             self.window().makeFirstResponder_(session.streamHandlerOfType("chat").chatViewController.inputText)
 
+    @objc.python_method
     def init_aspect_ratio(self, width, height):
         self.refresh_drawer_counter += 1
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window():
             self.window().orderOut_(self)
 
+    @objc.python_method
     def _NH_SIPApplicationWillEnd(self, sender, data):
         if self.refresh_drawer_timer:
             self.refresh_drawer_timer.invalidate()
         if self.contact_timer:
             self.contact_timer.invalidate()
 
+    @objc.python_method
     def _NH_BonjourAccountPresenceStateDidChange(self, sender, data):
         selectedSession = self.selectedSessionController()
         if selectedSession:
             if selectedSession.account == sender:
                 self.refreshDrawer()
 
+    @objc.python_method
     def _NH_SIPAccountGotSelfPresenceState(self, sender, data):
         selectedSession = self.selectedSessionController()
         if selectedSession:
             if selectedSession.account == sender:
                 self.refreshDrawer()
 
+    @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, sender, data):
         selectedSession = self.selectedSessionController()
         if selectedSession:
             if selectedSession.account == sender:
                 self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkStreamHandlerChangedState(self, sender, data):
         session = sender.sessionController
         if session:
@@ -561,6 +578,7 @@ class ChatWindowController(NSWindowController):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkSessionChangedState(self, sender, data):
         session = sender
         if session:
@@ -584,53 +602,67 @@ class ChatWindowController(NSWindowController):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkAudioStreamChangedHoldState(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkStreamHandlersChanged(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkDidRenegotiateStreams(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkVideoEnteredFullScreen(self, sender, data):
         self.toolbar.setVisible_(False)
 
+    @objc.python_method
     def _NH_BlinkVideoExitedFullScreen(self, sender, data):
         self.toolbar.setVisible_(True)
 
+    @objc.python_method
     def _NH_AudioStreamDidStartRecording(self, sender, data):
         self.revalidateToolbar()
 
+    @objc.python_method
     def _NH_AudioStreamDidStopRecording(self, sender, data):
         self.revalidateToolbar()
 
+    @objc.python_method
     def _NH_BlinkGotProposal(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkProposalGotRejected(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkSentAddProposal(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkSentRemoveProposal(self, sender, data):
         self.revalidateToolbar()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkConferenceGotUpdate(self, sender, data):
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, sender, data):
         self.setOwnIcon()
         self.refreshDrawer()
 
+    @objc.python_method
     def _NH_BlinkMuteChangedState(self, sender, data):
         if self.backend.is_muted():
             self.muteButton.setImage_(NSImage.imageNamed_("muted"))
@@ -639,11 +671,13 @@ class ChatWindowController(NSWindowController):
             self.muteButton.setState_(NSOffState)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
+    @objc.python_method
     def _NH_BlinkCollaborationEditorContentHasChanged(self, sender, data):
         if not sender.editorVisible:
             self.noteSession_isComposing_(sender.delegate.sessionController, True)
         self.revalidateToolbar()
 
+    @objc.python_method
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
         if selectedSession:
@@ -653,6 +687,7 @@ class ChatWindowController(NSWindowController):
         else:
             return False
 
+    @objc.python_method
     def _NH_BlinkConferenceContactPresenceHasChanged(self, sender, data):
         try:
             idx = self.participants.index(sender)
@@ -757,6 +792,7 @@ class ChatWindowController(NSWindowController):
 
         return True
 
+    @objc.python_method
     def joinConferenceWindow(self, session, participants=[]):
         media_type = []
         if session.hasStreamOfType("chat"):
@@ -771,6 +807,7 @@ class ChatWindowController(NSWindowController):
         if conference is not None:
             NSApp.delegate().contactsWindowController.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
 
+    @objc.python_method
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()
         if not self.participantsTableView.isRowSelected_(row):
@@ -781,6 +818,7 @@ class ChatWindowController(NSWindowController):
         except IndexError:
             return None
 
+    @objc.python_method
     def isConferenceParticipant(self, uri):
         session = self.selectedSessionController()
         if session and hasattr(session.conference_info, "users"):
@@ -791,6 +829,7 @@ class ChatWindowController(NSWindowController):
 
         return False
 
+    @objc.python_method
     def isInvitedParticipant(self, uri):
         session = self.selectedSessionController()
         try:
@@ -798,6 +837,7 @@ class ChatWindowController(NSWindowController):
         except AttributeError:
            return False
 
+    @objc.python_method
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()
         session = self.selectedSessionController()
@@ -854,6 +894,7 @@ class ChatWindowController(NSWindowController):
             conference_file = self.conference_shared_files[row]
             self.sharedFileMenu.itemWithTag_(100).setEnabled_(conference_file.file.status == 'OK')
 
+    @objc.python_method
     def resizeDrawerSplitter(self):
         session = self.selectedSessionController()
         if session:
@@ -934,6 +975,7 @@ class ChatWindowController(NSWindowController):
                 if must_resize:
                     self.resizeDrawerSplitter()
 
+    @objc.python_method
     def sendPrivateMessage(self):
         session = self.selectedSessionController()
         if session:
@@ -956,7 +998,7 @@ class ChatWindowController(NSWindowController):
                 chat_stream = session.streamHandlerOfType("chat")
                 chat_stream.outgoing_message_handler.send(message, recipient, True)
 
-
+    @objc.python_method
     def setNickname(self):
         session = self.selectedSessionController()
         if session:
@@ -967,6 +1009,7 @@ class ChatWindowController(NSWindowController):
                 if nickname or (not nickname and session.nickname):
                     chat_handler.setNickname(nickname)
 
+    @objc.python_method
     def setSubject(self):
         session = self.selectedSessionController()
         if session:
@@ -980,12 +1023,14 @@ class ChatWindowController(NSWindowController):
                 if subject or (not subject and session.subject):
                     session.subject = subject if subject else None
 
+    @objc.python_method
     def canGoToConferenceWebsite(self):
         session = self.selectedSessionController()
         if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
             return True
         return False
 
+    @objc.python_method
     def canSetNickname(self):
         session = self.selectedSessionController()
         if session is not None and session.hasStreamOfType("chat"):
@@ -996,6 +1041,7 @@ class ChatWindowController(NSWindowController):
                 pass
         return False
 
+    @objc.python_method
     def canSetSubject(self):
         session = self.selectedSessionController()
         if session is not None and session.hasStreamOfType("chat"):
@@ -1006,11 +1052,13 @@ class ChatWindowController(NSWindowController):
                 pass
         return False
 
+    @objc.python_method
     def canBeRemovedFromConference(self, uri):
         session = self.selectedSessionController()
         own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
         return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
+    @objc.python_method
     def removeParticipant(self, uri):
         session = self.selectedSessionController()
         if session:
@@ -1035,6 +1083,7 @@ class ChatWindowController(NSWindowController):
             self.participantsTableView.deselectAll_(self)
             self.refreshDrawer()
 
+    @objc.python_method
     def addParticipants(self):
         session = self.selectedSessionController()
         if session:
@@ -1172,6 +1221,7 @@ class ChatWindowController(NSWindowController):
             uri = object.uri
             self.removeParticipant(uri)
 
+    @objc.python_method
     def showRemoteScreenIfNecessary(self, participant):
         uri = participant.uri
         if uri not in self.remote_screens_closed_by_user:
@@ -1559,6 +1609,7 @@ class ChatWindowController(NSWindowController):
                     settings.chat.font_size -= 1
                     settings.save()
 
+    @objc.python_method
     def viewSharedScreen(self, uri, display_name, url):
         session = self.selectedSessionController()
         if session:
@@ -1567,6 +1618,7 @@ class ChatWindowController(NSWindowController):
             remoteScreen.show(display_name, uri, unquote(url))
             self.remoteScreens[uri] = remoteScreen
 
+    @objc.python_method
     def showConferenceSharedScreen(self, url):
         session = self.selectedSessionController()
         if session and session.conference_info is not None:
@@ -1626,6 +1678,7 @@ class ChatWindowController(NSWindowController):
             self.backend.mute(False)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
+    @objc.python_method
     def revalidateToolbar(self, got_proposal=False):
         # update the toolbar buttons depending on session and stream state
         if self.tabView.selectedTabViewItem():
@@ -1646,11 +1699,12 @@ class ChatWindowController(NSWindowController):
             self.refresh_drawer_counter = 0
             self.refreshDrawerIfNecessary()
 
-
+    @objc.python_method
     @run_in_gui_thread
     def refreshDrawer(self):
         self.refresh_drawer_counter += 1
 
+    @objc.python_method
     def refreshDrawerIfNecessary(self):
         session = self.selectedSessionController()
         video_stream = None
@@ -2119,6 +2173,7 @@ class ChatWindowController(NSWindowController):
         contact = sender.representedObject()['contact']
         self.inviteContactToConferenceSessionWithUri(session, uri, contact)
 
+    @objc.python_method
     def inviteContactToConferenceSessionWithUri(self, session, uri, contact=None):
         if uri:
             uri = sip_prefix_pattern.sub("", str(uri))

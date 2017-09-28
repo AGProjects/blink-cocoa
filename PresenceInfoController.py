@@ -54,11 +54,13 @@ class PresenceInfoController(NSObject):
         self.statusLabel.setStringValue_("")
         NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged")
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BlinkContactPresenceHasChanged(self, notification):
         if self.contact == notification.sender:
             self.render_pidf()
@@ -70,6 +72,7 @@ class PresenceInfoController(NSObject):
 
         return NSNumber.numberWithInt_(0)
 
+    @objc.python_method
     def show(self, contact):
         NSApp.activateIgnoringOtherApps_(True)
         self.contact =  contact
@@ -80,6 +83,7 @@ class PresenceInfoController(NSObject):
         self.icon.setImage_(self.contact.avatar.icon)
         self.render_pidf()
 
+    @objc.python_method
     def render_pidf(self):
         if not self.contact:
             return
@@ -146,6 +150,7 @@ class PresenceInfoController(NSObject):
     def close(self):
         self.window.orderOut_(None)
 
+    @objc.python_method
     def _format_note(self, note):
         text = "Note"
         if note.lang is not None:
@@ -153,6 +158,7 @@ class PresenceInfoController(NSObject):
         text += ": %s" % note
         return text
 
+    @objc.python_method
     def _format_person(self, person, pidf):
         buf = []
         # display class
@@ -262,6 +268,7 @@ class PresenceInfoController(NSObject):
                 buf.append(u"          Idle threshold: %s seconds" % person.user_input.idle_threshold)
         return buf
 
+    @objc.python_method
     def _format_service(self, service, pidf):
         buf = []
         # display class
@@ -344,6 +351,7 @@ class PresenceInfoController(NSObject):
                 buf.append(u"          Idle threshold: %s seconds" % service.user_input.idle_threshold)
         return buf
 
+    @objc.python_method
     def _format_device(self, device, pidf):
         buf = []
         # display device ID
@@ -367,6 +375,7 @@ class PresenceInfoController(NSObject):
                 buf.append(u"          Idle threshold: %s seconds" % device.user_input.idle_threshold)
         return buf
 
+    @objc.python_method
     def build_pidf_text(self, pidf):
         buf = []
         buf.append(u"Internet address: %s" % urllib.unquote(pidf.entity))
@@ -415,6 +424,3 @@ class PresenceInfoController(NSObject):
                     buf.extend(self._format_device(device, pidf))
 
         return u'\n'.join(buf)
-
-
-

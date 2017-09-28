@@ -144,6 +144,7 @@ class VideoWidget(NSView):
     def canBecomeKeyView(self):
         return True
     
+    @objc.python_method
     def setProducer(self, producer):
         BlinkLogger().log_debug("%s setProducer %s" % (self, producer))
         if producer is None:
@@ -203,7 +204,8 @@ class VideoWidget(NSView):
         if hasattr(self.delegate, "mouseDraggedView_"):
             self.delegate.mouseDraggedView_(event)
 
-    @allocate_autorelease_pool
+    @objc.python_method
+    @run_in_gui_thread
     def handle_frame(self, frame):
         if self.isHidden():
             return
@@ -213,10 +215,9 @@ class VideoWidget(NSView):
         aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
         if self.aspect_ratio != aspect_ratio:
             self.aspect_ratio = aspect_ratio
-            call_in_gui_thread(self.delegate.init_aspect_ratio, *frame.size)
-            call_in_gui_thread(self.setNeedsDisplay_, True)
-        else:
-            self.setNeedsDisplay_(True)
+            self.delegate.init_aspect_ratio(*frame.size)
+
+        self.setNeedsDisplay_(True)
 
     def drawRect_(self, rect):
         if self.delegate and self.delegate.full_screen_in_progress:
@@ -232,20 +233,22 @@ class VideoWidget(NSView):
                                                                                 frame.size,
                                                                                 kCIFormatARGB8,
                                                                                 kCGColorSpaceGenericRGB)
-
         context = NSGraphicsContext.currentContext().CIContext()
         context.drawImage_inRect_fromRect_(image, rect, image.extent())
 
+    @objc.python_method
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
         self.setHidden_(False)
 
+    @objc.python_method
     def toggle(self):
         if not self.isHidden():
             self.hide()
         else:
             self.show()
     
+    @objc.python_method
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
         self.setHidden_(True)
@@ -280,6 +283,7 @@ class remoteVideoWidget(VideoWidget):
             return self.sendFiles(filenames)
         return False
     
+    @objc.python_method
     def sendFiles(self, fnames):
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
         if filenames and hasattr(self.delegate, "sessionController"):
@@ -355,6 +359,7 @@ class myVideoWidget(VideoWidget):
         self.is_dragging = False
         self.goToFinalOrigin()
 
+    @objc.python_method
     def goToFinalOrigin(self):
         if not self.allow_drag:
             return
@@ -412,6 +417,7 @@ class myVideoWidget(VideoWidget):
         NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
         self.setFrameOrigin_(newOrigin)
 
+    @objc.python_method
     def snapToCorner(self):
         newOrigin = self.frame().origin
         if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
@@ -432,6 +438,7 @@ class myVideoWidget(VideoWidget):
         self.is_dragging = True
         self.currentLocation = event.locationInWindow()
         self.performDrag()
+
 
 class VideoWindowController(NSWindowController):
     implements(IObserver)
@@ -512,6 +519,7 @@ class VideoWindowController(NSWindowController):
 
         loadRecordingImages()
 
+    @objc.python_method
     def initLocalVideoWindow(self):
         if self.sessionController.video_consumer == "standalone":
             sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
@@ -519,12 +527,15 @@ class VideoWindowController(NSWindowController):
             if not other_video_sessions:
                 self.localVideoWindow = VideoLocalWindowController(self)
 
+    @objc.python_method
     def _NH_BlinkMuteChangedState(self, sender, data):
         self.updateMuteButton()
 
+    @objc.python_method
     def _NH_BlinkAudioStreamChangedHoldState(self, sender, data):
         self.updateHoldButton()
 
+    @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, sender, data):
         self.myVideoView.setProducer(data.new_camera)
 
@@ -532,9 +543,11 @@ class VideoWindowController(NSWindowController):
     def media_received(self):
         return self.streamController.media_received
     
+    @objc.python_method
     def updateMuteButton(self):
         self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
 
+    @objc.python_method
     def updateHoldButton(self):
         audio_stream = self.sessionController.streamHandlerOfType("audio")
         if audio_stream:
@@ -553,6 +566,7 @@ class VideoWindowController(NSWindowController):
         else:
             self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -590,6 +604,7 @@ class VideoWindowController(NSWindowController):
         else:
             return None
 
+    @objc.python_method
     def init_aspect_ratio(self, width, height):
         self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
         self.aspect_ratio = floor((float(width) / height) * 100)/100
@@ -620,6 +635,7 @@ class VideoWindowController(NSWindowController):
         if self.initial_aspect_ratio is None:
             self.initial_aspect_ratio = self.aspect_ratio
 
+    @objc.python_method
     def init_window(self):
         if self.window() is not None:
             return
@@ -645,6 +661,7 @@ class VideoWindowController(NSWindowController):
 
         self.startIdleTimer()
 
+    @objc.python_method
     def showTitleBar(self):
         if self.streamController.ended:
             return
@@ -664,6 +681,7 @@ class VideoWindowController(NSWindowController):
         self.titleBarView.view.setFrame_(newFrame)
         themeFrame.addSubview_(self.titleBarView.view)
 
+    @objc.python_method
     def hideTitleBar(self):
         self.titleBarView.view.removeFromSuperview()
 
@@ -845,11 +863,13 @@ class VideoWindowController(NSWindowController):
         self.mouse_in_window = False
         self.startMouseOutTimer()
 
+    @objc.python_method
     def hideStatusLabel(self):
         if self.disconnectLabel:
             self.disconnectLabel.setStringValue_("")
             self.disconnectLabel.superview().hide()
 
+    @objc.python_method
     def showStatusLabel(self, label):
         self.last_label = label
         if self.window():
@@ -862,17 +882,20 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.window().delegate().disconnectLabel.superview().show()
             self.localVideoWindow.window().delegate().disconnectLabel.setHidden_(False)
 
+    @objc.python_method
     def startIdleTimer(self):
         if self.idle_timer is None:
             self.idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "updateIdleTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.idle_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.idle_timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     def stopIdleTimer(self):
         if self.idle_timer is not None and self.idle_timer.isValid():
             self.idle_timer.invalidate()
             self.idle_timer = None
 
+    @objc.python_method
     def changeAspectRatio(self):
         try:
             idx = self.valid_aspect_ratios.index(self.aspect_ratio)
@@ -894,6 +917,7 @@ class VideoWindowController(NSWindowController):
 
         self.updateAspectRatio()
 
+    @objc.python_method
     def updateAspectRatio(self):
         if self.closed:
             return
@@ -933,6 +957,7 @@ class VideoWindowController(NSWindowController):
 
         self.updating_aspect_ratio = False
 
+    @objc.python_method
     @run_in_gui_thread
     def show(self):
         if self.closed:
@@ -983,6 +1008,7 @@ class VideoWindowController(NSWindowController):
             return
         self.repositionMyVideo()
 
+    @objc.python_method
     def repositionMyVideo(self):
         userdef = NSUserDefaults.standardUserDefaults()
         last_corner = userdef.stringForKey_("MyVideoCorner")
@@ -995,6 +1021,7 @@ class VideoWindowController(NSWindowController):
         elif last_corner == "BL":
             self.moveMyVideoView(self.myVideoViewBL)
 
+    @objc.python_method
     def moveMyVideoView(self, view):
         if self.closed:
             return
@@ -1052,6 +1079,7 @@ class VideoWindowController(NSWindowController):
         status_view.setFrameOrigin_(origin)
         status_view.setAutoresizingMask_(mask)
     
+    @objc.python_method
     @run_in_gui_thread
     def hide(self):
         if self.localVideoWindow:
@@ -1063,24 +1091,28 @@ class VideoWindowController(NSWindowController):
 
         self.hideButtons()
 
+    @objc.python_method
     def removeVideo(self):
         self.window().orderOut_(None)
         if self.sessionController:
             self.sessionController.removeVideoFromSession()
         NSApp.delegate().contactsWindowController.showAudioDrawer()
     
+    @objc.python_method
     @run_in_gui_thread
     def goToFullScreen(self):
         self.sessionController.log_debug('goToFullScreen %s' % self)
         if not self.full_screen:
             self.window().toggleFullScreen_(None)
 
+    @objc.python_method
     @run_in_gui_thread
     def goToWindowMode(self, window=None):
         if self.full_screen:
             self.show_window_after_full_screen_ends = window
             self.window().toggleFullScreen_(None)
 
+    @objc.python_method
     @run_in_gui_thread
     def toggleFullScreen(self):
         self.sessionController.log_debug('toggleFullScreen %s' % self)
@@ -1160,6 +1192,7 @@ class VideoWindowController(NSWindowController):
         self.sessionController.log_debug('windowShouldClose_ %s' % self)
         return True
 
+    @objc.python_method
     @run_in_gui_thread
     def close(self):
         if self.closed:
@@ -1203,6 +1236,7 @@ class VideoWindowController(NSWindowController):
         self.localVideoWindow = None
         objc.super(VideoWindowController, self).dealloc()
 
+    @objc.python_method
     def toogleAlwaysOnTop(self):
         self.always_on_top  = not self.always_on_top
         self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
@@ -1212,17 +1246,20 @@ class VideoWindowController(NSWindowController):
     def toogleAlwaysOnTop_(self, sender):
         self.toogleAlwaysOnTop()
 
+    @objc.python_method
     def stopRecordingTimer(self):
         if self.recording_timer is not None and self.recording_timer.isValid():
             self.recording_timer.invalidate()
         self.recording_timer = None
 
+    @objc.python_method
     def stopMouseOutTimer(self):
         if self.mouse_timer is not None:
             if self.mouse_timer.isValid():
                 self.mouse_timer.invalidate()
             self.mouse_timer = None
 
+    @objc.python_method
     def startMouseOutTimer(self):
         if self.mouse_timer is None:
             self.mouse_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "mouseOutTimer:", None, False)
@@ -1233,6 +1270,7 @@ class VideoWindowController(NSWindowController):
         self.hideButtons()
         self.mouse_timer = None
 
+    @objc.python_method
     def getSecondaryScreen(self):
         try:
             secondaryScreen = (screen for screen in NSScreen.screens() if screen != NSScreen.mainScreen() and screen.deviceDescription()[NSDeviceIsScreen] == 'YES').next()
@@ -1347,6 +1385,7 @@ class VideoWindowController(NSWindowController):
         NSSound.soundNamed_("Grab").play()
         self.sessionController.log_info("Screenshot saved in %s" % filename)
 
+    @objc.python_method
     def screenshot_filename(self, for_remote=False):
         screenshots_folder = ApplicationData.get('screenshots')
         if not os.path.exists(screenshots_folder):
@@ -1382,6 +1421,7 @@ class VideoWindowController(NSWindowController):
         self.screenshot_task = None
         self.screencapture_file = None
 
+    @objc.python_method
     def sendFiles(self, fnames):
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
         if filenames:
@@ -1409,7 +1449,7 @@ class VideoWindowController(NSWindowController):
                 self.showButtons()
             self.is_idle = False
 
-
+    @objc.python_method
     def hideButtons(self):
         if not self.window():
             return
@@ -1432,6 +1472,7 @@ class VideoWindowController(NSWindowController):
         else:
             self.recordButton.setHidden_(True)
 
+    @objc.python_method
     def showButtons(self):
         if not self.window():
             return
@@ -1470,6 +1511,7 @@ class VideoWindowController(NSWindowController):
             self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
             self.recordButton.setImage_(RecordingImages[0])
 
+    @objc.python_method
     def update_encryption_icon(self):
         if not self.window():
             return
@@ -1534,7 +1576,6 @@ class TitleBarView(NSObject):
 
 
 class RoundedCornersView(NSView):
-    
     def hide(self):
         self.setHidden_(True)
     

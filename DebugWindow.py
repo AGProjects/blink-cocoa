@@ -5,6 +5,7 @@ from AppKit import (NSFontAttributeName,
                     NSForegroundColorAttributeName,
                     NSOnState,
                     NSOffState)
+
 from Foundation import (NSAttributedString,
                         NSBundle,
                         NSColor,
@@ -217,6 +218,7 @@ class DebugWindow(NSObject):
     def sipRadioClicked_(self, sender):
         self.syncSIPtrace(sender.selectedCell().tag())
 
+    @objc.python_method
     def syncSIPtrace(self, trace):
         settings = SIPSimpleSettings()
         notification_center = NotificationCenter()
@@ -354,6 +356,7 @@ class DebugWindow(NSObject):
 
         objc.super(DebugWindow, self).dealloc()
 
+    @objc.python_method
     def append_line(self, textView, line):
         if isinstance(line, NSAttributedString):
             textView.textStorage().appendAttributedString_(line)
@@ -363,6 +366,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def append_error_line(self, textView, line):
         red = NSDictionary.dictionaryWithObject_forKey_(NSColor.redColor(), NSForegroundColorAttributeName)
         textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", red))
@@ -370,6 +374,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
 
+    @objc.python_method
     @run_in_gui_thread
     def renderActivity(self, text):
         iserror = text.lower().startswith("error")
@@ -379,10 +384,12 @@ class DebugWindow(NSObject):
         else:
             self.append_line(self.activityTextView, text)
 
+    @objc.python_method
     def renderRTP(self, session):
         self.renderAudio(session)
         self.renderVideo(session)
 
+    @objc.python_method
     def renderAudio(self, session):
         try:
             audio_stream = (s for s in session.streams or [] if s.type=='audio').next()
@@ -417,6 +424,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def renderVideo(self, session):
         try:
             video_stream = (s for s in session.streams or [] if s.type=='video').next()
@@ -451,6 +459,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def renderSIP(self, notification):
         settings = SIPSimpleSettings()
         if settings.logs.trace_sip_in_gui == Disabled:
@@ -556,6 +565,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.sipTextView.scrollRangeToVisible_(NSMakeRange(self.sipTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def renderDNS(self, text):
         settings = SIPSimpleSettings()
         if settings.logs.trace_sip_in_gui == Disabled:
@@ -564,6 +574,7 @@ class DebugWindow(NSObject):
         self.lastSIPMessageWasDNS = True
         self.append_line(self.sipTextView, text)
 
+    @objc.python_method
     def renderPJSIP(self, text):
         if self.pjsipCheckBox.state() == NSOnState:
             iserror = 'error' in text.lower()
@@ -576,11 +587,13 @@ class DebugWindow(NSObject):
 
             self.pjsipInfoLabel.setStringValue_("%d lines, %sytes" % (self.pjsipCount, format_size(self.pjsipBytes)))
 
+    @objc.python_method
     def renderXCAP(self, text):
         settings = SIPSimpleSettings()
         if settings.logs.trace_xcap_in_gui != Disabled:
             self.append_line(self.xcapTextView, text)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -613,17 +626,21 @@ class DebugWindow(NSObject):
                                             NSString.stringWithString_(str(ts))))
             self.renderNotifications()
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         sender = notification.sender
         settings = SIPSimpleSettings()
 
+    @objc.python_method
     def _NH_SIPSessionDidStart(self, notification):
         self.renderRTP(notification.sender)
 
+    @objc.python_method
     def _NH_SIPSessionDidRenegotiateStreams(self, notification):
         if notification.data.added_streams:
             self.renderRTP(notification.sender)
 
+    @objc.python_method
     def _NH_AudioSessionHasQualityIssues(self, notification):
         text = '%s Audio call quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss_rx, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
@@ -631,6 +648,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_AudioSessionQualityRestored(self, notification):
         text = '%s Audio call quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss_rx, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_(text)
@@ -638,6 +656,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_MSRPTransportTrace(self, notification):
         settings = SIPSimpleSettings()
         if settings.logs.trace_msrp_in_gui == Disabled:
@@ -691,6 +710,7 @@ class DebugWindow(NSObject):
 
         self.msrpInfoLabel.setStringValue_("%d MSRP messages sent, %d MRSP messages received, %sytes" % (self.msrpOutCount, self.msrpInCount, format_size(self.msrpBytes)))
 
+    @objc.python_method
     def _NH_MSRPLibraryLog(self, notification):
         settings = SIPSimpleSettings()
         if settings.logs.trace_msrp_in_gui == Disabled:
@@ -700,6 +720,7 @@ class DebugWindow(NSObject):
         text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
         self.append_line(self.msrpTextView, text)
 
+    @objc.python_method
     def _NH_RTPStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
 
@@ -719,6 +740,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
         stream = notification.sender
@@ -747,6 +769,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
         stream = notification.sender
@@ -775,6 +798,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
         data = notification.data
 
@@ -784,6 +808,7 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
         data = notification.data
 
@@ -793,13 +818,16 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
+    @objc.python_method
     def _NH_SIPEngineLog(self, notification):
         if self.pjsipCheckBox.state() == NSOnState:
             self.renderPJSIP("(%d) %s" % (notification.data.level, notification.data.message))
 
+    @objc.python_method
     def _NH_SIPEngineSIPTrace(self, notification):
         self.renderSIP(notification)
 
+    @objc.python_method
     def _NH_DNSLookupTrace(self, notification):
         data = notification.data
         message = '%s: DNS lookup %s %s' % (notification.datetime, data.query_type, data.query_name)
@@ -824,6 +852,7 @@ class DebugWindow(NSObject):
             message += ' failed: %s' % message_map.get(data.error.__class__, '')
         self.renderDNS(message)
 
+    @objc.python_method
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
         account = notification.sender.account
         xcap_root = notification.sender.xcap_root
@@ -835,12 +864,14 @@ class DebugWindow(NSObject):
         message = (u"%s XCAP server capabilities: %s" % (notification.datetime, ", ".join(notification.data.auids)))
         self.renderXCAP(message)
 
+    @objc.python_method
     def _NH_XCAPSubscriptionGotNotify(self, notification):
         settings = SIPSimpleSettings()
         message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body))
         if notification.data.body is not None and settings.logs.trace_xcap_in_gui == Full:
             self.renderXCAP(message)
 
+    @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, notification):
         message = (u"%s XCAP manager of account %s changed state from %s to %s" % (notification.datetime, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
         self.renderXCAP(message)

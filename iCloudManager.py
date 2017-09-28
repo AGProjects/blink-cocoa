@@ -2,6 +2,7 @@
 #
 
 import cjson
+import objc
 import platform
 
 from Foundation import NSObject, NSUserDefaults, NSNotificationCenter, NSUbiquitousKeyValueStore
@@ -68,6 +69,7 @@ class iCloudManager(NSObject):
     def first_sync_completed(self, value):
         NSUserDefaults.standardUserDefaults().setBool_forKey_(value, "iCloudFirstSyncCompleted")
 
+    @objc.python_method
     def start(self):
         BlinkLogger().log_debug(u"Starting iCloud Manager")
         self.cloud_storage = NSUbiquitousKeyValueStore.defaultStore()
@@ -81,6 +83,7 @@ class iCloudManager(NSObject):
 
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "cloudStorageDidChange:", u"NSUbiquitousKeyValueStoreDidChangeExternallyNotification", self.cloud_storage)
 
+    @objc.python_method
     def stop(self):
         self.cloud_storage = None
         self.notification_center.remove_observer(self, name='SIPAccountManagerDidAddAccount')
@@ -93,6 +96,7 @@ class iCloudManager(NSObject):
         self.first_sync_completed = False
         BlinkLogger().log_info(u"iCloud Manager stopped")
 
+    @objc.python_method
     @run_in_thread('file-io')
     @allocate_autorelease_pool
     def sync(self):
@@ -145,16 +149,19 @@ class iCloudManager(NSObject):
             BlinkLogger().log_info(u"Synchronization with iCloud completed")
         self.sync_active = False
 
+    @objc.python_method
     @allocate_autorelease_pool
     def purge_storage(self):
         self.first_sync_completed = False
         for key in self.storage_keys:
             self.cloud_storage.removeObjectForKey_(key)
 
+    @objc.python_method
     def _get_account_data(self, account):
         data = self._get_state(account, skip=self.skip_settings)
         return cjson.encode(data)
 
+    @objc.python_method
     def _update_account_from_cloud(self, key):
         account_manager = AccountManager()
         json_data = self.cloud_storage.stringForKey_(key)
@@ -194,6 +201,7 @@ class iCloudManager(NSObject):
 
         self.notification_center.post_notification("SIPAccountChangedByICloud", sender=self, data=NotificationData(account=key))
 
+    @objc.python_method
     def _has_difference(self, account, local_json, remote_json, icloud=False):
         changed_keys = set()
         BlinkLogger().log_debug(u"Computing differences from iCloud for %s" % account.id)
@@ -251,6 +259,7 @@ class iCloudManager(NSObject):
 
         return bool(diffs)
 
+    @objc.python_method
     def _get_state(self, account, obj=None, skip=()):
         state = {}
         if obj is None:
@@ -286,6 +295,7 @@ class iCloudManager(NSObject):
                 state[name] = value
         return state
 
+    @objc.python_method
     def _set_state(self, obj, state):
         for name, value in state.iteritems():
             attribute = getattr(obj.__class__, name, None)
@@ -332,12 +342,14 @@ class iCloudManager(NSObject):
                     BlinkLogger().log_info(u"Adding %s from iCloud" % key)
                     self._update_account_from_cloud(key)
 
+    @objc.python_method
     @run_in_thread('file-io')
     @allocate_autorelease_pool
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidAddAccount(self, sender, data):
         account = data.account
         if self.first_sync_completed and account.id not in self.storage_keys and isinstance(account, Account):
@@ -346,12 +358,14 @@ class iCloudManager(NSObject):
                 BlinkLogger().log_info(u"Adding %s to iCloud (%s bytes)" % (account.id, len(json_data)))
                 self.cloud_storage.setString_forKey_(json_data, account.id)
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidRemoveAccount(self, sender, data):
         account = data.account
         if self.first_sync_completed and account.id in self.storage_keys and isinstance(account, Account):
             BlinkLogger().log_info(u"Removing %s from iCloud" % account.id)
             self.cloud_storage.removeObjectForKey_(account.id)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             local_json = self._get_account_data(account)
@@ -370,6 +384,7 @@ class iCloudManager(NSObject):
                     json_data = self._get_account_data(account)
                     self.cloud_storage.setString_forKey_(json_data, account.id)
 
+    @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.sync()
 

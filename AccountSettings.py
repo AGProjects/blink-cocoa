@@ -6,6 +6,7 @@ from AppKit import (NSFileHandlingPanelOKButton,
                     NSRunAlertPanel,
                     NSSavePanel,
                     NSWorkspace)
+
 from Foundation import (NSBundle,
                         NSIndexSet,
                         NSNotFound,
@@ -16,6 +17,7 @@ from Foundation import (NSBundle,
                         NSURLCredentialPersistenceForSession,
                         NSURLRequest,
                         NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
+
 from WebKit import WebActionOriginalURLKey
 import objc
 
@@ -69,6 +71,7 @@ class AccountSettings(NSObject):
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.showAccountRequest(account, request)
 
+    @objc.python_method
     def showAccountRequest(self, account, request):
         self._account = account
         self._authRequestCount = 0
@@ -106,6 +109,7 @@ class AccountSettings(NSObject):
         self.webView.mainFrame().loadRequest_(request)
         self.window.makeKeyAndOrderFront_(self)
 
+    @objc.python_method
     def showIncomingCall(self, session, url):
         self._account = session.account
 

@@ -134,16 +134,19 @@ class Option(HorizontalBoxView):
 
         self.setSpacing_(8)
 
+    @objc.python_method
     def get(self, default=None):
         v = getattr(self.object, self.option, default)
         return v
 
+    @objc.python_method
     def set(self, value):
         if self.get() != value:
             setattr(self.object, self.option, value)
             if self.delegate:
                 self.delegate.optionDidChange(self)
 
+    @objc.python_method
     def restore(self):
         print "Restore not implemented for "+self.option
 
@@ -154,12 +157,15 @@ class Option(HorizontalBoxView):
             NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e.decode('utf-8'))), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
 
+    @objc.python_method
     def _store(self):
         print "Store not implemented for "+self.option
 
+    @objc.python_method
     def setTooltip(self, text):
         pass
 
+    @objc.python_method
     def setPlaceHolder(self, text):
         pass
 
@@ -179,18 +185,21 @@ class BoolOption(Option):
         self.check.setTarget_(self)
         self.check.setAction_("toggled:")
 
-
+    @objc.python_method
     def toggled_(self, sender):
         self.store()
 
+    @objc.python_method
     def _store(self):
         if (self.check.state() == NSOnState) != self.get(False):
             self.set(self.check.state() == NSOnState)
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         self.check.setState_(value and NSOnState or NSOffState)
 
+    @objc.python_method
     def setTooltip(self, text):
         self.check.setToolTip_(text)
 
@@ -230,6 +239,7 @@ class StringOption(Option):
     def controlTextDidEndEditing_(self, notification):
         self.store()
 
+    @objc.python_method
     def _store(self):
         try:
             current = self.get()
@@ -242,13 +252,16 @@ class StringOption(Option):
             NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Invalid value: %s" %e, NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         self.text.setStringValue_(value and str(value.encode('utf-8')) or "")
 
+    @objc.python_method
     def setTooltip(self, text):
         self.text.setToolTip_(text)
 
+    @objc.python_method
     def setPlaceHolder(self, text):
         self.text.cell().setPlaceholderString_(text)
 
@@ -288,6 +301,7 @@ class UnicodeOption(Option):
     def controlTextDidEndEditing_(self, notification):
         self.store()
 
+    @objc.python_method
     def _store(self):
         current = self.get()
         nvalue = unicode(self.text.stringValue())
@@ -296,13 +310,16 @@ class UnicodeOption(Option):
         if current != nvalue:
             self.set(nvalue)
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         self.text.setStringValue_(value and unicode(value) or u'')
 
+    @objc.python_method
     def setTooltip(self, text):
         self.text.setToolTip_(text)
 
+    @objc.python_method
     def setPlaceHolder(self, text):
         self.text.cell().setPlaceholderString_(text)
 
@@ -314,6 +331,7 @@ class NullableUnicodeOption(UnicodeOption):
 
 
 class MSRPRelayAddresOption(UnicodeOption):
+    @objc.python_method
     def _store(self):
         current = self.get()
         if current != unicode(self.text.stringValue()) and not (current is None and self.text.stringValue().length() == 0):
@@ -321,6 +339,7 @@ class MSRPRelayAddresOption(UnicodeOption):
 
 
 class StringTupleOption(StringOption):
+    @objc.python_method
     def _store(self):
         current = ",".join(self.get([]))
 
@@ -334,6 +353,7 @@ class StringTupleOption(StringOption):
         if ", ".join(values) != current:
             self.set(values)
 
+    @objc.python_method
     def restore(self):
         value = self.get([])
         self.text.setStringValue_(", ".join(value))
@@ -366,18 +386,21 @@ class NonNegativeIntegerOption(StringOption):
         self.text.setFormatter_(self.formatter)
         self.setViewExpands(self.text, False)
 
+    @objc.python_method
     def _store(self):
         current = self.get(0)
         new = self.text.integerValue()
         if current != new:
             self.set(new)
 
+    @objc.python_method
     def restore(self):
         value = self.get(0)
         self.text.setIntegerValue_(value)
 
 
 class NegativeSIPCodeOption(NonNegativeIntegerOption):
+    @objc.python_method
     def _store(self):
         current = self.get(0)
         new = self.text.integerValue()
@@ -391,6 +414,7 @@ class NegativeSIPCodeOption(NonNegativeIntegerOption):
 
 
 class DigitsOption(StringOption):
+    @objc.python_method
     def _store(self):
         current = self.get()
         nvalue = str(self.text.stringValue())
@@ -404,6 +428,7 @@ class DigitsOption(StringOption):
         self.set(nvalue)
 
 class DTMFDelimiterOption(StringOption):
+    @objc.python_method
     def _store(self):
         current = self.get()
         nvalue = str(self.text.stringValue())
@@ -423,6 +448,7 @@ class PortOption(NonNegativeIntegerOption):
 
 
 class TCPPortOption(PortOption):
+    @objc.python_method
     def _store(self):
         new_value = self.text.integerValue()
         settings = SIPSimpleSettings()
@@ -432,6 +458,7 @@ class TCPPortOption(PortOption):
 
 
 class TLSPortOption(PortOption):
+    @objc.python_method
     def _store(self):
         new_value = self.text.integerValue()
         settings = SIPSimpleSettings()
@@ -550,6 +577,7 @@ class SIPTransportListOption(MultipleSelectionOption):
 
         self.options = SIPTransportList.available_values
 
+    @objc.python_method
     def _store(self):
         value = []
         for opt in self.options:
@@ -557,6 +585,7 @@ class SIPTransportListOption(MultipleSelectionOption):
                 value.append(opt)
         self.set(tuple(value))
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         if not value:
@@ -612,7 +641,6 @@ class AudioCodecListOption(MultipleSelectionOption):
 
         self.tableViewSelectionDidChange_(None)
 
-
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         if column.identifier() == "check":
             if len(self.selection) == 1 and not object:
@@ -640,6 +668,7 @@ class AudioCodecListOption(MultipleSelectionOption):
         self.table.reloadData()
         self.store()
 
+    @objc.python_method
     def _store(self):
         value = []
         for opt in self.options:
@@ -652,6 +681,7 @@ class AudioCodecListOption(MultipleSelectionOption):
 
         self.set(tuple(value))
 
+    @objc.python_method
     def restore(self):
         value = self.get() or []
         options = []
@@ -669,10 +699,12 @@ class AudioCodecListOption(MultipleSelectionOption):
                 options.append(opt)
         self.options = options
 
+
 class VideoCodecListOption(AudioCodecListOption):
     available_codec_list = VideoCodecList
     beautified_codecs = video_codecs
     type = 'video'
+
 
 class AccountAudioCodecListOption(AudioCodecListOption):
     def __init__(self, object, name, option, description=None):
@@ -686,6 +718,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         self.check.setAction_("customizeCodecs:")
         self.sideView.addSubview_(self.check)
 
+    @objc.python_method
     def loadGlobalSettings(self):
         value = SIPSimpleSettings().rtp.audio_codec_list or []
         options = []
@@ -710,12 +743,14 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         self.table.reloadData()
         self.store()
 
+    @objc.python_method
     def _store(self):
         if self.check.state() == NSOnState:
             AudioCodecListOption._store(self)
         else:
             self.set(None)
 
+    @objc.python_method
     def restore(self):
         if self.get() is None:
             self.check.setState_(NSOffState)
@@ -742,6 +777,7 @@ class AccountVideoCodecListOption(VideoCodecListOption):
         self.check.setAction_("customizeCodecs:")
         self.sideView.addSubview_(self.check)
 
+    @objc.python_method
     def loadGlobalSettings(self):
         value = SIPSimpleSettings().rtp.video_codec_list or []
         options = []
@@ -766,6 +802,7 @@ class AccountVideoCodecListOption(VideoCodecListOption):
         self.table.reloadData()
         self.store()
 
+    @objc.python_method
     def _store(self):
         if self.check.state() == NSOnState:
             VideoCodecListOption._store(self)
@@ -819,6 +856,7 @@ class PopUpMenuOption(Option):
     def changed_(self, sender):
         self.store()
 
+    @objc.python_method
     def _store(self):
         if self.useRepresentedObject:
             item = self.popup.selectedItem().representedObject()
@@ -828,6 +866,7 @@ class PopUpMenuOption(Option):
             if unicode(self.popup.titleOfSelectedItem()) != unicode(self.get()):
                 self.set(unicode(self.popup.titleOfSelectedItem()))
 
+    @objc.python_method
     def restore(self):
         if self.useRepresentedObject:
             value = self.get()
@@ -896,6 +935,7 @@ class AudioInputDeviceOption(PopUpMenuOption):
         frame.size.width = 300
         self.popup.setFrame_(frame)
 
+    @objc.python_method
     def refresh(self):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
@@ -917,6 +957,7 @@ class AudioOutputDeviceOption(PopUpMenuOption):
         frame.size.width = 300
         self.popup.setFrame_(frame)
 
+    @objc.python_method
     def refresh(self):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
@@ -1064,6 +1105,7 @@ class VideoDeviceOption(PopUpMenuOption):
 
         # TODO: show local video
 
+    @objc.python_method
     def refresh(self):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
@@ -1072,6 +1114,7 @@ class VideoDeviceOption(PopUpMenuOption):
             self.popup.addItemWithTitle_(item)
             self.popup.lastItem().setRepresentedObject_(item)
 
+    @objc.python_method
     def get(self, default=None):
         v = getattr(self.object, self.option, default)
         if v == 'system_default':
@@ -1109,6 +1152,7 @@ class PathOption(NullableUnicodeOption):
 
 
 class TLSCAListPathOption(PathOption):
+    @objc.python_method
     def _store(self):
         cert_path = unicode(self.text.stringValue()) or None
         if cert_path is not None:
@@ -1282,11 +1326,13 @@ class SoundFileOption(Option):
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
 
+    @objc.python_method
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if notification.sender is self.sound:
             self.performSelectorOnMainThread_withObject_waitUntilDone_("finished:", None, False)  # it seems this doesn't need an autorelease pool
 
+    @objc.python_method
     def finished_(self, data):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
         self.sound = None
@@ -1306,6 +1352,7 @@ class SoundFileOption(Option):
                 self.popup.selectItemAtIndex_(self.oldIndex)
         self.store()
 
+    @objc.python_method
     def addItemForPath(self, path):
         for i in range(self.popup.numberOfItems()):
             item = self.popup.itemAtIndex_(i)
@@ -1318,6 +1365,7 @@ class SoundFileOption(Option):
         self.popup.selectItemAtIndex_(i)
         return i
 
+    @objc.python_method
     def _store(self):
         value = self.popup.selectedItem().representedObject()
         if value:
@@ -1329,6 +1377,7 @@ class SoundFileOption(Option):
             self.slider.setEnabled_(False)
             self.play.setEnabled_(False)
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         if value:
@@ -1407,6 +1456,7 @@ class NightVolumeOption(Option):
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
 
+    @objc.python_method
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if notification.sender is self.sound:
@@ -1416,6 +1466,7 @@ class NightVolumeOption(Option):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
         self.sound = None
 
+    @objc.python_method
     def _store(self):
         try:
             start_hour = int(self.start_hour.stringValue())
@@ -1433,6 +1484,7 @@ class NightVolumeOption(Option):
         self.set(NightVolume(self.start_hour.stringValue(), self.end_hour.stringValue(), volume=self.slider.integerValue()*10))
         self.slider.setEnabled_(True)
 
+    @objc.python_method
     def restore(self):
         value = self.get()
 
@@ -1478,9 +1530,11 @@ class AecSliderOption(Option):
         self.labelText.setStringValue_("%i ms" % (sender.integerValue()))
         self.store()
 
+    @objc.python_method
     def _store(self):
         self.set(self.slider.integerValue())
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         self.slider.setIntegerValue_(value)
@@ -1541,6 +1595,7 @@ class AnsweringMessageOption(Option):
         NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
         self.sound.start()
 
+    @objc.python_method
     def handle_notification(self, notification):
         NotificationCenter().remove_observer(self, sender=notification.sender, name="WavePlayerDidEnd")
         if notification.sender is self.sound:
@@ -1550,12 +1605,14 @@ class AnsweringMessageOption(Option):
         self.play.setImage_(NSImage.imageNamed_("NSRightFacingTriangleTemplate"))
         self.sound = None
 
+    @objc.python_method
     def _store(self):
         if self.radio.selectedCell().tag() == 1:
             self.set(DefaultValue)
         else:
             self.set(self.custom_file)
 
+    @objc.python_method
     def restore(self):
         value = self.get()
         if value:
@@ -1571,7 +1628,6 @@ class AccountSoundFileOption(SoundFileOption):
         self.popup.insertItemWithTitle_atIndex_(NSLocalizedString("Default", "Menu item"), 0)
         self.popup.itemAtIndex_(0).setRepresentedObject_("DEFAULT")
 
-
     def dummy_(self, sender):
         if self.popup.indexOfSelectedItem() == 0:
             value = self.get()
@@ -1584,7 +1640,7 @@ class AccountSoundFileOption(SoundFileOption):
         else:
             SoundFileOption.dummy_(self, sender)
 
-
+    @objc.python_method
     def _store(self):
         value = unicode(self.popup.selectedItem().representedObject())
         if value == u"DEFAULT":
@@ -1597,7 +1653,7 @@ class AccountSoundFileOption(SoundFileOption):
             self.slider.setEnabled_(False)
             self.set(None)
 
-
+    @objc.python_method
     def restore(self):
         value = self.get()
         if unicode(value) == u"DEFAULT":
@@ -1746,12 +1802,14 @@ class STUNServerAddressListOption(ObjectTupleOption):
         self.store()
         table.reloadData()
 
+    @objc.python_method
     def _store(self):
         l = []
         for host, port in self.values:
             l.append(STUNServerAddress(host, port))
         self.set(l)
 
+    @objc.python_method
     def restore(self):
         self.values = []
         value = self.get()
@@ -1792,11 +1850,13 @@ class NumberPairOption(Option):
 
 
 class PortRangeOption(NumberPairOption):
+    @objc.python_method
     def _store(self):
         res = PortRange(int(self.first.integerValue()), int(self.second.integerValue()))
         if res != self.get():
             self.set(res)
 
+    @objc.python_method
     def restore(self):
         res = self.get()
         if res:
@@ -1805,10 +1865,12 @@ class PortRangeOption(NumberPairOption):
 
 
 class ResolutionOption(NumberPairOption):
+    @objc.python_method
     def _store(self):
         res = Resolution(int(self.first.integerValue()), int(self.second.integerValue()))
         self.set(res)
 
+    @objc.python_method
     def restore(self):
         res = self.get()
         if res:
@@ -1817,6 +1879,7 @@ class ResolutionOption(NumberPairOption):
 
 
 class SIPProxyAddressOption(UnicodeOption):
+    @objc.python_method
     def _store(self):
         current = self.get()
         value = SIPProxyAddress.from_description(unicode(self.text.stringValue()))

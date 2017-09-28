@@ -14,6 +14,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSTableViewSelectionDidChangeNotification,
                     NSModalPanelRunLoopMode,
                     NSToolbarPrintItemIdentifier)
+
 from Foundation import (NSBundle,
                         NSDate,
                         NSMutableDictionary,
@@ -129,6 +130,7 @@ class HistoryViewer(NSWindowController):
                     -6: datetime.datetime.now()-datetime.timedelta(days=365)
                     }
 
+    @objc.python_method
     def format_media_type(self, media_type):
         if media_type == 'sms':
             media_type_formated = NSLocalizedString("Short Messages", "Label")
@@ -186,6 +188,7 @@ class HistoryViewer(NSWindowController):
 
             self.selectedTableView = self.contactTable
 
+    @objc.python_method
     def setPeriod(self, days):
         if days <= -365:
             tag = -6
@@ -248,6 +251,7 @@ class HistoryViewer(NSWindowController):
     def close_(self, sender):
         self.window().close()
 
+    @objc.python_method
     @run_in_green_thread
     def delete_messages(self, local_uri=None, remote_uri=None, date=None, after_date=None, before_date=None, media_type=None):
         block_on(self.chat_history.delete_messages(local_uri=local_uri, remote_uri=remote_uri, date=date, after_date=after_date, before_date=before_date, media_type=media_type))
@@ -257,11 +261,13 @@ class HistoryViewer(NSWindowController):
         self.search_local = None
         self.refreshViewer()
 
+    @objc.python_method
     def refreshViewer(self):
         self.refreshContacts()
         self.refreshDailyEntries()
         self.refreshMessages()
 
+    @objc.python_method
     @run_in_green_thread
     def refreshContacts(self):
         if self.refresh_in_progress:
@@ -280,6 +286,7 @@ class HistoryViewer(NSWindowController):
             self.renderContacts(results)
             self.updateBusyIndicator(False)
 
+    @objc.python_method
     @run_in_gui_thread
     def renderContacts(self, results):
         index = 0
@@ -366,11 +373,13 @@ class HistoryViewer(NSWindowController):
         self.updateContactsColumnHeader()
         self.refresh_in_progress = False
 
+    @objc.python_method
     @run_in_green_thread
     def update_display_names(self, uris_without_display_name):
         results = self.session_history.get_display_names(uris_without_display_name)
         self.updateDisplayNames(results)
 
+    @objc.python_method
     @run_in_gui_thread
     def updateDisplayNames(self, results):
         must_reload = False
@@ -398,6 +407,7 @@ class HistoryViewer(NSWindowController):
         self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
         self.indexTable.reloadData()
 
+    @objc.python_method
     @run_in_green_thread
     def refreshDailyEntries(self, order_text=None):
         if self.chat_history:
@@ -413,11 +423,13 @@ class HistoryViewer(NSWindowController):
             self.renderDailyEntries(results)
             self.updateBusyIndicator(False)
 
+    @objc.python_method
     @run_in_gui_thread
     def resetDailyEntries(self):
         self.dayly_entries = NSMutableArray.array()
         self.indexTable.reloadData()
 
+    @objc.python_method
     @run_in_gui_thread
     def renderDailyEntries(self, results):
         getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
@@ -450,6 +462,7 @@ class HistoryViewer(NSWindowController):
         if self.search_uris and not self.dayly_entries:
             self.contactTable.deselectAll_(True)
 
+    @objc.python_method
     @run_in_green_thread
     def refreshMessages(self, count=SQL_LIMIT, remote_uri=None, local_uri=None, media_type=None, date=None, after_date=None, before_date=None):
         if self.chat_history:
@@ -469,6 +482,7 @@ class HistoryViewer(NSWindowController):
             self.renderMessages(results)
             self.updateBusyIndicator(False)
 
+    @objc.python_method
     @run_in_gui_thread
     def renderMessages(self, messages=None):
         self.chatViewController.clear()
@@ -505,6 +519,7 @@ class HistoryViewer(NSWindowController):
 
         self.foundMessagesLabel.setStringValue_(text)
 
+    @objc.python_method
     @run_in_gui_thread
     def renderMessage(self, message):
         if message.direction == 'outgoing':
@@ -591,6 +606,7 @@ class HistoryViewer(NSWindowController):
         if not text:
             self.refreshContacts()
 
+    @objc.python_method
     def updateContactsColumnHeader(self):
         found_contacts = len(self.contacts)-2
         if found_contacts == 1:
@@ -678,6 +694,7 @@ class HistoryViewer(NSWindowController):
     def showWindow_(self, sender):
         self.window().makeKeyAndOrderFront_(None)
 
+    @objc.python_method
     @run_in_gui_thread
     def filterByURIs(self, uris=(), media_type=None):
 
@@ -778,6 +795,7 @@ class HistoryViewer(NSWindowController):
                 except IndexError:
                     pass
 
+    @objc.python_method
     def showDeleteConfirmationDialog(self, row):
         media_print = self.search_media or NSLocalizedString("all", "Label")
         tag = self.period.selectedItem().tag()
@@ -806,6 +824,7 @@ class HistoryViewer(NSWindowController):
             if ret == NSAlertDefaultReturn:
                 self.delete_messages(remote_uri=remote_uri, media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
 
+    @objc.python_method
     @run_in_gui_thread
     def updateBusyIndicator(self, busy=False):
         if busy:
@@ -819,27 +838,32 @@ class HistoryViewer(NSWindowController):
             self.busyIndicator.setHidden_(True)
             self.queryDatabaseLabel.setHidden_(True)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):
         if self.window():
             self.window().orderOut_(self)
 
+    @objc.python_method
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
         if notification.data.local_party != 'bonjour.local':
             exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
             if not exists:
                 self.refreshContacts()
 
+    @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
         if notification.data.local_party != 'bonjour.local':
             exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
             if not exists:
                 self.refreshContacts()
 
+    @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, notification):
         self.refresh_contacts_counter += 1
 
@@ -848,10 +872,12 @@ class HistoryViewer(NSWindowController):
             self.refreshContacts()
             self.toolbar.validateVisibleItems()
 
+    @objc.python_method
     def _NH_BlinkTableViewSelectionChaged(self, notification):
         self.selectedTableView = notification.sender
         self.toolbar.validateVisibleItems()
 
+    @objc.python_method
     def _NH_BlinkConferenceContactPresenceHasChanged(self, notification):
         try:
             contact = (contact for contact in self.contacts[2:] if contact == notification.sender).next()

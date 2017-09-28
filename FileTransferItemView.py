@@ -57,7 +57,6 @@ class FileTransferItemView(NSView):
     transfer = None
     oldTransferInfo = None
 
-
     def initWithFrame_oldTransfer_(self, frame, transferInfo):
         self = NSView.initWithFrame_(self, frame)
         if self:
@@ -161,6 +160,7 @@ class FileTransferItemView(NSView):
     def dealloc(self):
         objc.super(FileTransferItemView, self).dealloc()
 
+    @objc.python_method
     def updateIcon(self, icon):
         image = NSImage.alloc().initWithSize_(NSMakeSize(48,48))
         image.lockFocus()
@@ -178,6 +178,7 @@ class FileTransferItemView(NSView):
 
         self.icon.setImage_(image)
 
+    @objc.python_method
     def relayoutForDone(self):
         self.progressBar.stopAnimation_(None)
         self.progressBar.setHidden_(True)
@@ -188,8 +189,8 @@ class FileTransferItemView(NSView):
         frame.size.height = 52
         self.setFrame_(frame)
 
+    @objc.python_method
     def relayoutForRetry(self):
-
         self.stopButton.setHidden_(False)
         self.retryButton.setHidden_(True)
 
@@ -203,10 +204,12 @@ class FileTransferItemView(NSView):
         frame.size.height = self.originalHeight
         self.setFrame_(frame)
 
+    @objc.python_method
     def updateProgressInfo(self):
         self.fromText.setStringValue_(self.transfer.target_text)
         self.sizeText.setStringValue_(self.transfer.progress_text)
 
+    @objc.python_method
     def updateChecksumProgressInfo(self, progress):
         self.checksumProgressBar.setDoubleValue_(progress)
         self.sizeText.setStringValue_('Calculating checksum: %d%%' % progress)
@@ -287,24 +290,29 @@ class FileTransferItemView(NSView):
         dirname = os.path.dirname(path)
         NSWorkspace.sharedWorkspace().selectFile_inFileViewerRootedAtPath_(path, dirname)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BlinkFileTransferDidInitialize(self, notification):
         self.sizeText.setStringValue_(self.transfer.status)
         self.progressBar.setHidden_(False)
         self.checksumProgressBar.setHidden_(True)
 
+    @objc.python_method
     def _NH_BlinkFileTransferWillRestart(self, notification):
         self.sizeText.setStringValue_(self.transfer.status)
 
+    @objc.python_method
     def _NH_BlinkFileTransferDidStart(self, notification):
         self.progressBar.setIndeterminate_(False)
         # update path
         self.nameText.setStringValue_(os.path.basename(self.transfer.file_path))
 
+    @objc.python_method
     def _NH_BlinkFileTransferDidEnd(self, notification):
         if notification.data.error:
             self.sizeText.setTextColor_(NSColor.redColor())
@@ -320,11 +328,13 @@ class FileTransferItemView(NSView):
         self.done = True
         self.relayoutForDone()
 
+    @objc.python_method
     def _NH_BlinkFileTransferProgress(self, notification):
         self.fromText.setStringValue_(self.transfer.target_text)
         self.sizeText.setStringValue_(self.transfer.progress_text)
         self.progressBar.setDoubleValue_(notification.data.progress)
 
+    @objc.python_method
     def _NH_BlinkFileTransferHashProgress(self, notification):
         self.updateChecksumProgressInfo(notification.data.progress)
 

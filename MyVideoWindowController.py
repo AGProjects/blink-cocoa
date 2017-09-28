@@ -44,19 +44,19 @@ from Foundation import (NSBundle,
                         )
 
 # TODO: Video broken since 10.13
-#from AVFoundation import (AVCaptureDeviceInput,
-#                          AVCaptureVideoDataOutput,
-#                          AVCaptureDevice,
-#                          AVCaptureSession,
-#                          AVCaptureVideoPreviewLayer,
-#                          AVCaptureStillImageOutput,
-#                          AVCaptureSessionPresetHigh,
-#                          AVLayerVideoGravityResizeAspectFill,
-#                          AVMediaTypeVideo,
-#                          AVMediaTypeMuxed,
-#                          AVVideoCodecJPEG,
-#                          AVVideoCodecKey
-#                          )
+from AVFoundation import (AVCaptureDeviceInput,
+                          AVCaptureVideoDataOutput,
+                          AVCaptureDevice,
+                          AVCaptureSession,
+                          AVCaptureVideoPreviewLayer,
+                          AVCaptureStillImageOutput,
+                          AVCaptureSessionPresetHigh,
+                          AVLayerVideoGravityResizeAspectFill,
+                          AVMediaTypeVideo,
+                          AVMediaTypeMuxed,
+                          AVVideoCodecJPEG,
+                          AVVideoCodecKey
+                          )
 
 import objc
 
@@ -92,7 +92,6 @@ ALPHA = 1.0
 class MyVideoWindowController(NSWindowController):
     implements(IObserver)
 
-
     visible = False
     full_screen = False
     full_screen_in_progress = False
@@ -110,6 +109,7 @@ class MyVideoWindowController(NSWindowController):
     def init(self):
         self = objc.super(MyVideoWindowController, self).init()
         if self:
+            print "loading local window"
             NSBundle.loadNibNamed_owner_("MyVideoLocalWindow", self)
             self.window().setAlphaValue_(ALPHA)
             self.window().setLevel_(NSFloatingWindowLevel)
@@ -175,14 +175,17 @@ class MyVideoWindowController(NSWindowController):
         self.videoView.mirrored = not self.videoView.mirrored
         self.videoView.setMirroring()
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.videoView.reloadCamera()
 
+    @objc.python_method
     @run_in_gui_thread
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
@@ -392,6 +395,7 @@ class LocalVideoView(NSView):
         NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
         self.setFrameOrigin_(newOrigin)
 
+    @objc.python_method
     def snapToCorner(self):
         newOrigin = self.frame().origin
         if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
@@ -431,6 +435,7 @@ class LocalVideoView(NSView):
             
             self.window().setFrameOrigin_(newOrigin)
 
+    @objc.python_method
     def getDevice(self):
         # Find a video camera
         try:
@@ -441,6 +446,7 @@ class LocalVideoView(NSView):
         else:
             return device
 
+    @objc.python_method
     def reloadCamera(self):
         if not self.captureSession:
             return
@@ -456,6 +462,7 @@ class LocalVideoView(NSView):
         if reopen:
             self.show()
 
+    @objc.python_method
     def show(self):
         BlinkLogger().log_debug('Show %s' % self)
         self.active = True
@@ -540,6 +547,7 @@ class LocalVideoView(NSView):
         if self.captureSession and self.captureSession.isRunning():
             self.captureSession.stopRunning()
 
+    @objc.python_method
     def setMirroring(self):
         self.videoPreviewLayer.connection().setAutomaticallyAdjustsVideoMirroring_(False)
         if self.mirrored:
@@ -547,6 +555,7 @@ class LocalVideoView(NSView):
         else:
             self.videoPreviewLayer.connection().setVideoMirrored_(False)
 
+    @objc.python_method
     def getSnapshot(self):
         def capture_handler(sampleBuffer):
             if not sampleBuffer:
@@ -570,9 +579,11 @@ class LocalVideoView(NSView):
             connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
             self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, capture_handler)
 
+    @objc.python_method
     def visible(self):
         return self.captureSession is not None
     
+    @objc.python_method
     def toggle(self):
         if self.visible():
             self.hide()
@@ -581,6 +592,7 @@ class LocalVideoView(NSView):
             NSUserDefaults.standardUserDefaults().setBool_forKey_(True, "ShowMyVideo")
             self.show()
     
+    @objc.python_method
     def hide(self):
         BlinkLogger().log_debug('Hide %s' % self)
         self.active = False

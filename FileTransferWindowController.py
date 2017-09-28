@@ -4,6 +4,7 @@
 from AppKit import (NSApp,
                     NSInformationalRequest,
                     NSOKButton)
+
 from Foundation import (NSBundle,
                         NSHeight,
                         NSLocalizedString,
@@ -11,8 +12,8 @@ from Foundation import (NSBundle,
                         NSObject,
                         NSOpenPanel,
                         NSURL)
-import objc
 
+import objc
 import unicodedata
 
 from application.notification import NotificationCenter, IObserver
@@ -73,6 +74,7 @@ class FileTransferWindowController(NSObject):
             self.transferSpeed.setStringValue_('')
             self.load_transfers_from_history()
 
+    @objc.python_method
     @run_in_green_thread
     def get_previous_transfers(self, active_items=()):
         results = FileTransferHistory().get_transfers(20)
@@ -88,6 +90,7 @@ class FileTransferWindowController(NSObject):
             transfers.append(transfer)
         self.render_previous_transfers(reversed(transfers))
 
+    @objc.python_method
     @run_in_gui_thread
     def render_previous_transfers(self, transfers):
         last_displayed_item = self.listView.subviews().lastObject()
@@ -112,6 +115,7 @@ class FileTransferWindowController(NSObject):
 
         self.loaded = True
 
+    @objc.python_method
     def load_transfers_from_history(self):
         active_items = []
         for item in self.listView.subviews().copy():
@@ -127,6 +131,7 @@ class FileTransferWindowController(NSObject):
 
         self.get_previous_transfers(active_items)
 
+    @objc.python_method
     def refresh_transfer_rate(self):
         incoming_transfer_rate = 0
         outgoing_transfer_rate = 0
@@ -154,6 +159,7 @@ class FileTransferWindowController(NSObject):
         else:
             self.transferSpeed.setStringValue_('')
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -163,6 +169,7 @@ class FileTransferWindowController(NSObject):
     def close_(self, sender):
         self.window.close()
 
+    @objc.python_method
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window:
             self.window.orderOut_(self)
@@ -172,6 +179,7 @@ class FileTransferWindowController(NSObject):
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
             self.window.makeKeyAndOrderFront_(None)
 
+    @objc.python_method
     def delete_history_transfers(self):
         return FileTransferHistory().delete_transfers()
 
@@ -180,9 +188,11 @@ class FileTransferWindowController(NSObject):
         self.delete_history_transfers()
         self.load_transfers_from_history()
 
+    @objc.python_method
     def _NH_BlinkFileTransferWillRestart(self, sender, data):
         self.listView.relayout()
 
+    @objc.python_method
     def _NH_BlinkFileTransferNewOutgoing(self, sender, data):
         try:
             item = (item for item in self.listView.subviews().copy() if item.file_path == sender.ft_info.file_path and item.remote_uri == sender.ft_info.remote_uri).next()
@@ -206,9 +216,11 @@ class FileTransferWindowController(NSObject):
 
     _NH_BlinkFileTransferNewIncoming = _NH_BlinkFileTransferNewOutgoing
 
+    @objc.python_method
     def _NH_BlinkFileTransferSpeedDidUpdate(self, sender, data):
         self.refresh_transfer_rate()
 
+    @objc.python_method
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
         self.refresh_transfer_rate()

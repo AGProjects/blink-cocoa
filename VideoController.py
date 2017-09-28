@@ -47,10 +47,12 @@ class VideoController(MediaStream):
     
     paused = False
 
+    @objc.python_method
     @classmethod
     def createStream(self):
         return MediaStreamRegistry.VideoStream()
 
+    @objc.python_method
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
@@ -96,6 +98,7 @@ class VideoController(MediaStream):
         except Exception:
             pass
 
+    @objc.python_method
     def decline_sas(self):
         if not self.zrtp_active:
             return
@@ -104,6 +107,7 @@ class VideoController(MediaStream):
         except Exception:
             pass
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -200,11 +204,13 @@ class VideoController(MediaStream):
             self.sessionController.log_info(u'Video channel received data')
             self.markMediaReceived()
 
+    @objc.python_method
     def markMediaReceived(self):
         self.media_received = True
         if self.videoWindowController and self.videoWindowController.disconnectLabel and self.videoWindowController.disconnectLabel.stringValue() == self.waiting_label:
             self.videoWindowController.hideStatusLabel()
 
+    @objc.python_method
     def togglePause(self):
         if self.stream is None:
             return
@@ -221,10 +227,12 @@ class VideoController(MediaStream):
             self.sessionController.log_debug("Pause Video")
             self.stream.pause()
 
+    @objc.python_method
     def showVideoWindow(self):
         if self.videoWindowController:
             self.videoWindowController.show()
 
+    @objc.python_method
     def hideVideoWindow(self):
         if self.videoWindowController:
             if self.videoWindowController.window():
@@ -235,14 +243,17 @@ class VideoController(MediaStream):
                 else:
                     self.videoWindowController.window().orderOut_(None)
 
+    @objc.python_method
     def hide(self):
         if self.videoWindowController:
             self.videoWindowController.hide()
 
+    @objc.python_method
     def goToFullScreen(self):
         if self.videoWindowController:
             self.videoWindowController.goToFullScreen()
 
+    @objc.python_method
     def startOutgoing(self, is_update):
         if self.videoWindowController:
             self.videoWindowController.initLocalVideoWindow()
@@ -264,6 +275,7 @@ class VideoController(MediaStream):
         self.notification_center.post_notification("BlinkLocalVideoReady", sender=self.sessionController)
         self.wait_for_camera_timer = None
 
+    @objc.python_method
     def startIncoming(self, is_update):
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
@@ -286,6 +298,7 @@ class VideoController(MediaStream):
     def deallocTimer_(self, timer):
         self.release()
 
+    @objc.python_method
     def end(self):
         if self.ended:
             return
@@ -324,6 +337,7 @@ class VideoController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     def sessionStateChanged(self, state, detail):
         if state == STATE_CONNECTING:
             self.changeStatus(STREAM_CONNECTING)
@@ -336,6 +350,7 @@ class VideoController(MediaStream):
                 self.videoWindowController.showStatusLabel(detail)
                 self.changeStatus(STREAM_FAILED, detail)
 
+    @objc.python_method
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
         if self.status == newstate:
@@ -362,13 +377,16 @@ class VideoController(MediaStream):
             elif newstate == STREAM_PROPOSING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 
+    @objc.python_method
     def _NH_MediaStreamDidInitialize(self, sender, data):
         pass
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
         self.ice_negotiation_status = data.reason
 
+    @objc.python_method
     @run_in_gui_thread
     def _NH_RTPStreamICENegotiationStateDidChange(self, sender, data):
         if self.videoWindowController:
@@ -385,6 +403,7 @@ class VideoController(MediaStream):
             elif data.state == 'FAILED':
                 self.videoWindowController.showStatusLabel(NSLocalizedString("ICE Negotiation Failed", "Audio status label"))
 
+    @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
         self.sessionController.log_info(u'Video ICE negotiation succeeded')
         self.sessionController.log_info(u'Video RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, ice_candidates[self.stream.local_rtp_candidate.type.lower()], self.stream.remote_rtp_address, self.stream.remote_rtp_port,
@@ -392,11 +411,13 @@ class VideoController(MediaStream):
 
         self.ice_negotiation_status = 'Success'
 
+    @objc.python_method
     def _NH_VideoStreamReceivedKeyFrame(self, sender, data):
         if not self.media_received:
             self.sessionController.log_info(u'Video channel received key frame')
             self.markMediaReceived()
 
+    @objc.python_method
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
         if self.videoWindowController:
@@ -404,6 +425,7 @@ class VideoController(MediaStream):
             if self.videoWindowController.window():
                 self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
+    @objc.python_method
     def _NH_MediaStreamDidStart(self, sender, data):
         self.started = True
         sample_rate = self.stream.sample_rate/1000
@@ -417,6 +439,7 @@ class VideoController(MediaStream):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
 
+    @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
         self.sessionController.log_info(u"Video call failed: %s" % data.reason)
 
@@ -430,9 +453,11 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
+    @objc.python_method
     def _NH_MediaStreamDidFail(self, sender, data):
         pass
 
+    @objc.python_method
     def _NH_MediaStreamWillEnd(self, sender, data):
         self.stopTimers()
         if self.videoWindowController:
@@ -444,6 +469,7 @@ class VideoController(MediaStream):
         self.rx_speed_history = None
         self.tx_speed_history = None
 
+    @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
         if data.error is not None:
             self.sessionController.log_info(u"Video call failed: %s" % data.error)
@@ -455,22 +481,27 @@ class VideoController(MediaStream):
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
+    @objc.python_method
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
         self.changeStatus(STREAM_RINGING)
 
+    @objc.python_method
     def _NH_VideoRemovedByRemoteParty(self, sender, data):
         if self.videoWindowController:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
 
+    @objc.python_method
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if self.stream in data.proposed_streams:
             if self.videoWindowController:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Proposal rejected", "Label"))
 
+    @objc.python_method
     def _NH_BlinkWillCancelProposal(self, sender, data):
         self.sessionController.log_info(u"Video proposal cancelled")
         self.changeStatus(STREAM_FAILED, "Proposal Cancelled")
 
+    @objc.python_method
     def _NH_BlinkSessionDidStart(self, sender, data):
         if self.status != STREAM_CONNECTED:
             if self.videoWindowController:
@@ -480,6 +511,7 @@ class VideoController(MediaStream):
             if audio_stream and audio_stream.status in (STREAM_CONNECTING, STREAM_CONNECTED) and self.sessionController.video_consumer == 'audio':
                 NSApp.delegate().contactsWindowController.showAudioDrawer()
 
+    @objc.python_method
     def _NH_BlinkSessionDidFail(self, sender, data):
         if host is None or host.default_ip is None:
             reason = NSLocalizedString("No Internet connection", "Label")
@@ -508,22 +540,26 @@ class VideoController(MediaStream):
         self.stopTimers()
         self.changeStatus(STREAM_FAILED)
 
+    @objc.python_method
     def _NH_BlinkSessionWillEnd(self, sender, data):
         if self.videoWindowController:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
 
+    @objc.python_method
     def stopTimers(self):
         if self.statistics_timer is not None:
             if self.statistics_timer.isValid():
                 self.statistics_timer.invalidate()
             self.statistics_timer = None
 
+    @objc.python_method
     def stop_wait_for_camera_timer(self):
         if self.wait_for_camera_timer is not None:
             if self.wait_for_camera_timer.isValid():
                 self.wait_for_camera_timer.invalidate()
             self.wait_for_camera_timer = None
 
+    @objc.python_method
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
         try:
@@ -535,6 +571,7 @@ class VideoController(MediaStream):
         if self.videoWindowController:
             self.videoWindowController.update_encryption_icon()
 
+    @objc.python_method
     def _NH_RTPStreamDidNotEncryption(self, sender, data):
         self.sessionController.log_info("Video encryption not enabled: %s" % data.reason)
         if sender.encryption.type != 'ZRTP':
@@ -542,10 +579,12 @@ class VideoController(MediaStream):
         if self.videoWindowController:
             self.videoWindowController.update_encryption_icon()
 
+    @objc.python_method
     def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
         if self.videoWindowController:
             self.videoWindowController.update_encryption_icon()
 
+    @objc.python_method
     def _NH_RTPStreamZRTPVerifiedStateChanged(self, sender, data):
         if self.videoWindowController:
             try:

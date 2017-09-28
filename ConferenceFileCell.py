@@ -4,6 +4,7 @@
 from AppKit import (NSCompositeSourceOver,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName)
+
 from Foundation import (NSColor,
                         NSDictionary,
                         NSFont,
@@ -34,6 +35,7 @@ class ConferenceFileCell(NSTextFieldCell):
     def drawingRectForBounds_(self, rect):
         return rect
 
+    @objc.python_method
     def cellSize(self):
         if self.conference_file is None:
             return objc.super(ConferenceFileCell, self).cellSize()
@@ -58,6 +60,7 @@ class ConferenceFileCell(NSTextFieldCell):
         attrs = self.infoAttrs if not self.isHighlighted() else self.infoAttrs_highlighted
         self.conference_file.sender.drawAtPoint_withAttributes_(point, attrs)
 
+    @objc.python_method
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):
         size = icon.size()
         rect = NSMakeRect(0, 0, size.width, size.height)

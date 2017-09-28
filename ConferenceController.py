@@ -139,7 +139,6 @@ class JoinConferenceWindowController(NSObject):
 
         self.updatePopupButtons()
 
-
     def dealloc(self):
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidRemoveServer')
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidUpdateServer')
@@ -147,20 +146,25 @@ class JoinConferenceWindowController(NSObject):
         self.notification_center.remove_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
         objc.super(JoinConferenceWindowController, self).dealloc()
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BonjourConferenceServicesDidRemoveServer(self, notification):
         self.updateBonjourServersPopupButton()
 
+    @objc.python_method
     def _NH_BonjourConferenceServicesDidUpdateServer(self, notification):
         self.updateBonjourServersPopupButton()
 
+    @objc.python_method
     def _NH_BonjourConferenceServicesDidAddServer(self, notification):
         self.updateBonjourServersPopupButton()
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.room.setStringValue_('')
         self.nickname_textfield.setStringValue_('')
@@ -172,6 +176,7 @@ class JoinConferenceWindowController(NSObject):
                 self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
         self.updatePopupButtons()
 
+    @objc.python_method
     def loadConfigurations(self):
         path = ApplicationData.get('conference')
         makedirs(path)
@@ -194,6 +199,7 @@ class JoinConferenceWindowController(NSObject):
         except:
             self.conference_configurations = {}
 
+    @objc.python_method
     def updatePopupButtons(self):
         account = AccountManager().default_account
         if isinstance(account, BonjourAccount):
@@ -281,6 +287,7 @@ class JoinConferenceWindowController(NSObject):
 
         self.updateConfigurationsPopupButton()
 
+    @objc.python_method
     def updateConfigurationsPopupButton(self):
         self.configurationsButton.removeAllItems()
         if self.conference_configurations:
@@ -307,6 +314,7 @@ class JoinConferenceWindowController(NSObject):
         self.configurationsButton.addItemWithTitle_(NSLocalizedString("Delete configuration", "Menu item"))
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
 
+    @objc.python_method
     def updateBonjourServersPopupButton(self):
         settings = SIPSimpleSettings()
         account = AccountManager().default_account
@@ -338,6 +346,7 @@ class JoinConferenceWindowController(NSObject):
         else:
             self.ok_button.setEnabled_(False)
 
+    @objc.python_method
     def setDefaults(self):
         self.selected_configuration = None
         self.room.setStringValue_(u'')
@@ -413,6 +422,7 @@ class JoinConferenceWindowController(NSObject):
         participant = sender.representedObject()
         self.addContactUriToInvitationList(participant)
 
+    @objc.python_method
     def addContactUriToInvitationList(self, participant):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
@@ -430,6 +440,7 @@ class JoinConferenceWindowController(NSObject):
         except:
             pass
 
+    @objc.python_method
     def run(self):
         contactsWindow = NSApp.delegate().contactsWindowController.window()
         worksWhenModal = contactsWindow.worksWhenModal()
@@ -488,6 +499,7 @@ class JoinConferenceWindowController(NSObject):
         self.participantsTable.reloadData()
         self.removeAllParticipants.setHidden_(True)
 
+    @objc.python_method
     def addParticipant(self, participant):
         if participant and "@" not in participant:
             participant = participant + '@' + self.default_domain
@@ -523,6 +535,7 @@ class JoinConferenceWindowController(NSObject):
         NSApp.stopModalWithCode_(NSCancelButton)
         return True
 
+    @objc.python_method
     def selectedParticipant(self):
         try:
             row = self.participantsTable.selectedRow()
@@ -530,6 +543,7 @@ class JoinConferenceWindowController(NSObject):
         except IndexError:
             return None
 
+    @objc.python_method
     def validateRoom(self, allow_random_room=True):
         if not self.room.stringValue().strip() and allow_random_room:
             room = random_room()
@@ -545,6 +559,7 @@ class JoinConferenceWindowController(NSObject):
         else:
             return room
 
+    @objc.python_method
     def validateConference(self, allow_random_room=True):
         self.nickname = self.nickname_textfield.stringValue().strip()
         room = self.validateRoom(allow_random_room)
@@ -594,6 +609,7 @@ class JoinConferenceWindowController(NSObject):
             return False
 
         return True
+
 
 class AddParticipantsWindowController(NSObject):
     window = objc.IBOutlet()
@@ -678,6 +694,7 @@ class AddParticipantsWindowController(NSObject):
         participant = sender.representedObject()
         self.addContactUriToInvitationList(participant)
 
+    @objc.python_method
     def addContactUriToInvitationList(self, participant):
         if participant and "@" not in participant and self.default_domain:
             participant = '%s@%s' % (participant, self.default_domain)
@@ -695,6 +712,7 @@ class AddParticipantsWindowController(NSObject):
         except:
             pass
 
+    @objc.python_method
     def run(self):
         self._participants = []
         contactsWindow = NSApp.delegate().contactsWindowController.window()
@@ -752,6 +770,7 @@ class AddParticipantsWindowController(NSObject):
                     self.startWhenParticipantsAvailable.setState_(NSOffState)
                 self.participantsTable.reloadData()
 
+    @objc.python_method
     def addParticipant(self, participant):
         if participant and "@" not in participant:
             participant = participant + '@' + self.default_domain
@@ -788,6 +807,7 @@ class AddParticipantsWindowController(NSObject):
         NSApp.stopModalWithCode_(NSCancelButton)
         return True
 
+    @objc.python_method
     def selectedParticipant(self):
         row = self.participantsTable.selectedRow()
         try:

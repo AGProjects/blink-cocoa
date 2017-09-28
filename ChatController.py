@@ -222,11 +222,12 @@ class ChatController(MediaStream):
         else:
             return None
     
-
+    @objc.python_method
     @classmethod
     def createStream(self):
         return BlinkChatStream()
 
+    @objc.python_method
     def resetStream(self):
         self.sessionController.log_debug(u"Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
@@ -236,7 +237,7 @@ class ChatController(MediaStream):
         self.databaseLoggingButton.setState_(NSOffState)
 
     def initWithOwner_stream_(self, sessionController, stream):
-        self = super(ChatController, self).initWithOwner_stream_(sessionController, stream)
+        self = objc.super(ChatController, self).initWithOwner_stream_(sessionController, stream)
         sessionController.log_debug(u"Creating %s" % self)
         self.mediastream_ended = False
         self.session_succeeded = False
@@ -301,12 +302,14 @@ class ChatController(MediaStream):
 
         return self
 
+    @objc.python_method
     def toggle_silence_notifications(self):
         if self.sessionController.contact:
             self.sessionController.contact.contact.silence_notifications = not self.sessionController.contact.contact.silence_notifications
 
         self.silence_notifications = not self.silence_notifications
 
+    @objc.python_method
     def updateDatabaseRecordingButton(self):
         settings = SIPSimpleSettings()
         remote = self.sessionController.remoteAOR
@@ -402,17 +405,21 @@ class ChatController(MediaStream):
     def drawerSplitViewDidResize_(self, notification):
         self.chatViewController.scrollToBottom()
 
+    @objc.python_method
     def saveSplitterPosition(self):
         self.mainViewSplitterPosition={'output_frame': self.outputContainer.frame(), 'input_frame': self.inputContainer.frame()}
 
+    @objc.python_method
     def restoreSplitterPosition(self):
         if self.mainViewSplitterPosition:
             self.outputContainer.setFrame_(self.mainViewSplitterPosition['output_frame'])
             self.inputContainer.setFrame_(self.mainViewSplitterPosition['input_frame'])
 
+    @objc.python_method
     def getContentView(self):
         return self.chatViewController.view
 
+    @objc.python_method
     def showSystemMessage(self, message, timestamp, is_error=False):
         if self.chatViewController:
             self.chatViewController.showSystemMessage(self.sessionController.call_id, message, timestamp, is_error)
@@ -421,11 +428,13 @@ class ChatController(MediaStream):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
+    @objc.python_method
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
         self.status = newstate
         MediaStream.changeStatus(self, newstate, fail_reason)
 
+    @objc.python_method
     def openChatWindow(self):
         old_session = self.chatWindowController.replaceInactiveWithCompatibleSession_(self.sessionController)
         if not old_session:
@@ -441,11 +450,13 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_IDLE)
         self.sessionController.setVideoConsumer("chat")
 
+    @objc.python_method
     def closeWindow(self):
         self.chatWindowController.removeSession_(self.sessionController)
         if not self.chatWindowController.sessions:
             self.chatWindowController.window().orderOut_(None)
 
+    @objc.python_method
     def startOutgoing(self, is_update):
         self.sessionController.log_debug("Start outgoing...")
         self.sessionController.video_consumer = "chat"
@@ -461,6 +472,7 @@ class ChatController(MediaStream):
         else:
             self.changeStatus(STREAM_WAITING_DNS_LOOKUP)
 
+    @objc.python_method
     def startIncoming(self, is_update):
         self.sessionController.log_debug("Start incoming...")
         self.sessionController.video_consumer = "chat"
@@ -473,6 +485,7 @@ class ChatController(MediaStream):
         self.openChatWindow()
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
+    @objc.python_method
     def sendFiles(self, fnames):
         filenames = [unicodedata.normalize('NFC', file) for file in fnames if os.path.isfile(file) or os.path.isdir(file)]
         if filenames:
@@ -480,6 +493,7 @@ class ChatController(MediaStream):
             return True
         return False
 
+    @objc.python_method
     def sendOwnIcon(self):
         if not self.send_icon_allowed:
             return
@@ -488,6 +502,7 @@ class ChatController(MediaStream):
             base64icon = encode_icon(self.chatWindowController.own_icon)
             self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=ISOTimestamp.now())
 
+    @objc.python_method
     def sendLoggingState(self):
         if not self.history_control_allowed:
             return
@@ -496,6 +511,7 @@ class ChatController(MediaStream):
             content = 'enabled' if not self.disable_chat_history else 'disabled'
             self.stream.send_message(content, content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
 
+    @objc.python_method
     def sendZRTPSas(self):
         if not self.zrtp_sas_allowed:
             return
@@ -511,6 +527,7 @@ class ChatController(MediaStream):
         if sas and all(len(path)==1 for path in (full_local_path, full_remote_path)):
             self.stream.send_message(sas, 'application/blink-zrtp-sas')
 
+    @objc.python_method
     def setNickname(self, nickname):
         if self.stream and self.stream.nickname_allowed:
             try:
@@ -555,9 +572,11 @@ class ChatController(MediaStream):
 
         self.revalidateToolbar()
 
+    @objc.python_method
     def revalidateToolbar(self):
         self.chatWindowController.revalidateToolbar()
 
+    @objc.python_method
     @run_in_gui_thread
     def resetStyle(self):
         str_attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.fontWithName_size_("Lucida Grande", 11), NSFontAttributeName)
@@ -633,6 +652,7 @@ class ChatController(MediaStream):
     def isOutputFrameVisible(self):
         return True if self.outputContainer.frame().size.height > 10 else False
 
+    @objc.python_method
     def scroll_back_in_time(self):
         try:
             msgid = self.history_msgid_list[0]
@@ -643,6 +663,7 @@ class ChatController(MediaStream):
         self.chatViewController.resetRenderedMessages()
         self.replay_history(msgid)
 
+    @objc.python_method
     @run_in_green_thread
     @allocate_autorelease_pool
     def replay_history(self, scrollToMessageId=None):
@@ -710,6 +731,7 @@ class ChatController(MediaStream):
 
         self.send_pending_message()
 
+    @objc.python_method
     @run_in_gui_thread
     def render_history_messages(self, messages, scrollToMessageId=None):
         if self.chatViewController.scrolling_zoom_factor:
@@ -799,6 +821,7 @@ class ChatController(MediaStream):
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
 
+    @objc.python_method
     @run_in_gui_thread
     def resend_last_failed_message(self, messages):
         if self.sessionController.account is BonjourAccount():
@@ -817,6 +840,7 @@ class ChatController(MediaStream):
             private = True if message.private == "1" else False
             self.outgoing_message_handler.resend(message.msgid, message.body, recipient, private, message.content_type)
 
+    @objc.python_method
     @run_in_gui_thread
     def send_pending_message(self):
         if self.sessionController.pending_chat_messages:
@@ -829,6 +853,7 @@ class ChatController(MediaStream):
         if self.mustShowUnreadMessages:
             self.chatWindowController.noteNewMessageForSession_(self.sessionController)
 
+    @objc.python_method
     def updateEncryptionWidgets(self):
         if self.status == STREAM_CONNECTED:
             if self.is_encrypted:
@@ -843,6 +868,7 @@ class ChatController(MediaStream):
         else:
             self.chatWindowController.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
 
+    @objc.python_method
     def connectButtonEnabled(self):
         if self.status in (STREAM_IDLE, STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_CONNECTED):
             return True
@@ -853,6 +879,7 @@ class ChatController(MediaStream):
         else:
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
+    @objc.python_method
     def audioButtonEnabled(self):
         if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING, STREAM_CANCELLING):
             return False
@@ -870,6 +897,7 @@ class ChatController(MediaStream):
         else:
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
+    @objc.python_method
     def videoButtonEnabled(self):
         if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING, STREAM_CANCELLING):
             return False
@@ -887,6 +915,7 @@ class ChatController(MediaStream):
         else:
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
+    @objc.python_method
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
         settings = SIPSimpleSettings()
@@ -988,6 +1017,7 @@ class ChatController(MediaStream):
             elif identifier == 'sendfile':
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
 
+    @objc.python_method
     def validateToolbarButton(self, item):
         """
         Called automatically by Cocoa in ChatWindowController to enable/disable each toolbar item
@@ -1052,6 +1082,7 @@ class ChatController(MediaStream):
 
         return False
 
+    @objc.python_method
     def userClickedToolbarButton(self, sender):
         """
         Called by ChatWindowController when dispatching toolbar button clicks to the selected Session tab
@@ -1256,6 +1287,7 @@ class ChatController(MediaStream):
                 elif screen_sharing_stream.status == STREAM_CONNECTED:
                     self.sessionController.removeScreenFromSession()
 
+    @objc.python_method
     def toggleScreensharingWithConferenceParticipants(self):
         self.share_screen_in_conference = True if not self.share_screen_in_conference else False
         if self.share_screen_in_conference and self.stream is not None:
@@ -1267,6 +1299,7 @@ class ChatController(MediaStream):
 
         self.setScreenSharingToolbarIcon()
 
+    @objc.python_method
     def setScreenSharingToolbarIcon(self):
         if self.sessionController.remote_focus:
             menu = self.chatWindowController.conferenceScreenSharingMenu
@@ -1283,6 +1316,7 @@ class ChatController(MediaStream):
 
         self.chatWindowController.setScreenSharingToolbarIconSize()
 
+    @objc.python_method
     def resetEditorToolbarIcon(self):
         try:
             item = (item for item in self.chatWindowController.toolbar.visibleItems() if item.tag() == 109).next()
@@ -1299,6 +1333,7 @@ class ChatController(MediaStream):
         self.chatWindowController.window().orderFront_(None)
         self.screenshot_task = None
 
+    @objc.python_method
     def toggleEditor(self):
         self.chatViewController.editorIsComposing = False
         self.chatViewController.toggleCollaborationEditor()
@@ -1310,11 +1345,13 @@ class ChatController(MediaStream):
         self.remoteTypingTimer = None
         self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _do_smp_verification(self):
         session = self.sessionController.session
         try:
@@ -1326,6 +1363,7 @@ class ChatController(MediaStream):
             self.stream.encryption.smp_verify(audio_stream.encryption.zrtp.sas, question=self.smp_verification_question)
             self.sessionController.log_info("Performing OTR SMP verification using ZRTP SAS...")
 
+    @objc.python_method
     def _NH_ChatStreamSMPVerificationDidStart(self, stream, data):
         if data.originator == 'remote':
             self.sessionController.log_info("OTR SMP verification requested by remote")
@@ -1344,10 +1382,12 @@ class ChatController(MediaStream):
         else:
             self._do_smp_verification()
 
+    @objc.python_method
     def _NH_ChatStreamSMPVerificationDidNotStart(self, stream, data):
         self.sessionController.log_info("OTR SMP verification did not start: %s", data.reason)
         self.chatOtrSmpWindow.handle_remote_response()
 
+    @objc.python_method
     def _NH_ChatStreamSMPVerificationDidEnd(self, stream, data):
         self.sessionController.log_info("OTR SMP verification ended")
         if data.status is SMPStatus.Success:
@@ -1366,10 +1406,11 @@ class ChatController(MediaStream):
                 if self.smp_verification_tries > 0:
                     call_later(self.smp_verification_delay, self._do_smp_verification)
 
-
+    @objc.python_method
     def _NH_ChatStreamOTRError(self, stream, data):
         self.sessionController.log_info("Chat encryption error: %s", data.error)
 
+    @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         if data.new_state is OTRState.Encrypted:
             self.showSystemMessage("Encryption enabled", ISOTimestamp.now())
@@ -1403,6 +1444,7 @@ class ChatController(MediaStream):
 
         self.updateEncryptionWidgets()
 
+    @objc.python_method
     def _NH_ChatStreamGotMessage(self, stream, data):
         message = data.message
         if message.content_type == 'application/blink-logging-status':
@@ -1533,6 +1575,7 @@ class ChatController(MediaStream):
                 message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, content=content, private=private, status="delivered", content_type='html' if is_html else 'text', encryption=encryption)
                 self.outgoing_message_handler.add_to_history(message)
 
+    @objc.python_method
     def _NH_ChatStreamGotComposingIndication(self, stream, data):
         flag = data.state == "active"
         if flag:
@@ -1550,13 +1593,16 @@ class ChatController(MediaStream):
 
         self.chatWindowController.noteSession_isComposing_(self.sessionController, flag)
 
+    @objc.python_method
     def _NH_ChatStreamDidSetNickname(self, stream, data):
         nickname = self.nickname_request_map.pop(data.message_id)
         self.sessionController.nickname = nickname
 
+    @objc.python_method
     def _NH_ChatStreamDidNotSetNickname(self, stream, data):
         self.nickname_request_map.pop(data.message_id)
 
+    @objc.python_method
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         if self.sessionController.session is None:
             return
@@ -1597,6 +1643,7 @@ class ChatController(MediaStream):
             if self.chatViewController:
                 self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), sender.direction, name, icon, content, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
+    @objc.python_method
     def _NH_BlinkSessionDidEnd(self, sender, data):
         self.outgoing_message_handler.setDisconnected()
         self.screensharing_handler.setDisconnected()
@@ -1604,6 +1651,7 @@ class ChatController(MediaStream):
         self.reset()
         self.chatWindowController.closeDrawer()
 
+    @objc.python_method
     def _NH_BlinkSessionDidFail(self, sender, data):
         reason = data.failure_reason or data.reason
         if reason != 'Session Cancelled':
@@ -1625,6 +1673,7 @@ class ChatController(MediaStream):
         self.screensharing_handler.setDisconnected()
         self.reset()
 
+    @objc.python_method
     def _NH_BlinkSessionDidStart(self, sender, data):
         self.session_succeeded = True
         # toggle collaborative editor to initialize the java script to be able to receive is-composing
@@ -1637,16 +1686,19 @@ class ChatController(MediaStream):
         if self.sessionController.remote_focus:
             self.chatWindowController.drawer.open()
 
+    @objc.python_method
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
         self.chatWindowController.updateTitle()
 
+    @objc.python_method
     def _NH_BlinkProposalDidFail(self, sender, data):
         if self.last_failure_reason != data.failure_reason:
             message = NSLocalizedString("Proposal failed", "Label")
             self.last_failure_reason = data.failure_reason
             self.showSystemMessage(message, ISOTimestamp.now(), True)
 
+    @objc.python_method
     def _NH_BlinkProposalGotRejected(self, sender, data):
         if data.code != 487:
             if self.last_failure_reason != data.reason:
@@ -1655,6 +1707,7 @@ class ChatController(MediaStream):
                 message = NSLocalizedString("Proposal rejected", "Label") if data.code < 500 else NSLocalizedString("Proposal failed", "Label")
                 self.showSystemMessage(message, ISOTimestamp.now(), True)
 
+    @objc.python_method
     def _NH_MediaStreamDidStart(self, sender, data):
         self.chatOtrSmpWindow = ChatOtrSmp(self)
         self.media_started = True
@@ -1685,9 +1738,11 @@ class ChatController(MediaStream):
         self.sendLoggingState()
         self.sendZRTPSas()
 
+    @objc.python_method
     def _NH_MediaStreamDidInitialize(self, sender, data):
         self.sessionController.log_info(u"Chat stream initialized")
 
+    @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
         if data.reason == 'MSRPRelayAuthError':
             reason = NSLocalizedString("MSRP relay authentication failed", "Label")
@@ -1699,6 +1754,7 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_FAILED, data.reason)
         self.outgoing_message_handler.setDisconnected()
 
+    @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.mediastream_ended = True
         self.databaseLoggingButton.setHidden_(True)
@@ -1717,6 +1773,7 @@ class ChatController(MediaStream):
         self.outgoing_message_handler.setDisconnected()
         self.chatViewController.hideEncryptionFinishedConfirmationDialog()
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         settings = SIPSimpleSettings()
         if data.modified.has_key("chat.disable_history"):
@@ -1736,6 +1793,7 @@ class ChatController(MediaStream):
 
             self.revalidateToolbar()
 
+    @objc.python_method
     def _NH_ChatReplicationJournalEntryReceived(self, sender, data):
         if self.status == STREAM_CONNECTED:
             return
@@ -1748,6 +1806,7 @@ class ChatController(MediaStream):
         timestamp = ISOTimestamp(data['cpim_timestamp'])
         self.chatViewController.showMessage(data['call_id'], data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True, media_type='chat', encryption=data['encryption'])
 
+    @objc.python_method
     def resetIsComposingTimer(self, refresh):
         if self.remoteTypingTimer:
             # if we don't get any indications in the request refresh, then we assume remote to be idle
@@ -1755,6 +1814,7 @@ class ChatController(MediaStream):
         else:
             self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
+    @objc.python_method
     def endStream(self, closeTab=False):
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self)
@@ -1773,6 +1833,7 @@ class ChatController(MediaStream):
     # 3. Session ends by remote: mediaDidEnd -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
     # 4. User clicks on disconnect button: endStream -> reset
 
+    @objc.python_method
     def closeTab(self):
         self.closed = True
         self.sessionController.setVideoConsumer("standalone")
@@ -1798,6 +1859,7 @@ class ChatController(MediaStream):
 
         self.startDeallocTimer()
 
+    @objc.python_method
     def reset(self):
         self.mediastream_ended = False
         self.session_succeeded = False
@@ -1815,6 +1877,7 @@ class ChatController(MediaStream):
         self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
         self.chatWindowController.noteSession_isScreenSharing_(self.sessionController, False)
 
+    @objc.python_method
     def startDeallocTimer(self):
         self.removeFromSession()
         self.otr_account = None
@@ -1864,7 +1927,7 @@ class ChatController(MediaStream):
 
         self.sessionController.log_debug(u"Dealloc %s" % self)
         self.sessionController = None
-        super(ChatController, self).dealloc()
+        objc.super(ChatController, self).dealloc()
 
 
 class MessageInfo(object):
@@ -1928,11 +1991,13 @@ class OutgoingMessageHandler(NSObject):
         self.delegate = None
         objc.super(OutgoingMessageHandler, self).dealloc()
 
+    @objc.python_method
     def close(self):
         self.stream = None
         self.connected = None
         self.history = None
 
+    @objc.python_method
     def _send(self, msgid):
         message = self.messages.pop(msgid)
         message.status = "sent"
@@ -1972,6 +2037,7 @@ class OutgoingMessageHandler(NSObject):
 
         return id
 
+    @objc.python_method
     def send(self, content, recipient=None, private=False, content_type='text'):
         timestamp = ISOTimestamp.now()
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
@@ -1998,6 +2064,7 @@ class OutgoingMessageHandler(NSObject):
 
         return True
 
+    @objc.python_method
     def resend(self, msgid, content, recipient=None, private=False, content_type='text'):
         timestamp = ISOTimestamp.now()
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
@@ -2018,6 +2085,7 @@ class OutgoingMessageHandler(NSObject):
             self.messages[msgid].pending=True
             self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="queued", recipient=recipient_html, is_html=is_html)
 
+    @objc.python_method
     def setConnected(self, stream):
         self.stream = stream
         self.no_report_received_messages = {}
@@ -2026,6 +2094,7 @@ class OutgoingMessageHandler(NSObject):
 
         NotificationCenter().add_observer(self, sender=stream)
 
+    @objc.python_method
     def sendPendingMessages(self):
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
         for msgid in pending:
@@ -2041,6 +2110,7 @@ class OutgoingMessageHandler(NSObject):
                 else:
                     self.delegate.markMessage(msgid, MSG_STATE_SENDING, private)
 
+    @objc.python_method
     def setDisconnected(self):
         self.connected = False
         pending = (msgid for msgid in self.messages.keys() if self.messages[msgid].pending)
@@ -2070,15 +2140,18 @@ class OutgoingMessageHandler(NSObject):
             NotificationCenter().discard_observer(self, sender=self.stream)
             self.stream = None
 
+    @objc.python_method
     def markMessage(self, message, state):
         message.state = state
         self.delegate.markMessage(message.msgid, state, message.private)
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_ChatStreamDidDeliverMessage(self, sender, data):
         try:
             message = self.messages.pop(data.message_id)
@@ -2098,6 +2171,7 @@ class OutgoingMessageHandler(NSObject):
         except KeyError:
             pass
 
+    @objc.python_method
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
         try:
             message = self.messages.pop(data.message_id)
@@ -2114,6 +2188,7 @@ class OutgoingMessageHandler(NSObject):
         except KeyError:
             pass
 
+    @objc.python_method
     def add_to_history(self, message):
         if self.delegate.delegate.disable_chat_history:
             return

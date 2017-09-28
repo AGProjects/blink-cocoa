@@ -556,10 +556,12 @@ class ContactWindowController(NSWindowController):
 
         self.loaded = True
 
+    @objc.python_method
     def initFileTransfersWindow(self):
         if not self.fileTransfersWindow:
             self.fileTransfersWindow = FileTransferWindowController()
 
+    @objc.python_method
     def setCollapsed(self, flag):
         if self.loaded:
             self.collapsedState = flag
@@ -567,6 +569,7 @@ class ContactWindowController(NSWindowController):
         if flag:
             self.contactOutline.deselectAll_(None)
 
+    @objc.python_method
     @run_in_gui_thread
     def refreshAccountList(self):
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
@@ -645,9 +648,11 @@ class ContactWindowController(NSWindowController):
         else:
             self.nameText.setStringValue_(u'')
 
+    @objc.python_method
     def activeAccount(self):
         return self.accountPopUp.selectedItem().representedObject()
 
+    @objc.python_method
     def refreshContactsList(self, sender=None):
         if sender is None:
             sender = self.model
@@ -659,6 +664,7 @@ class ContactWindowController(NSWindowController):
         else:
             self.contactOutline.reloadItem_reloadChildren_(sender, True)
 
+    @objc.python_method
     def getSelectedContacts(self, includeGroups=False):
         contacts = []
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
@@ -687,6 +693,7 @@ class ContactWindowController(NSWindowController):
 
         return contacts
 
+    @objc.python_method
     @run_in_gui_thread
     def renderLastCallsEntriesForContact(self, results, contact):
         while self.last_calls_submenu.numberOfItems() > 0:
@@ -731,6 +738,7 @@ class ContactWindowController(NSWindowController):
                     icon.setSize_(NSMakeSize(14, 14))
                     r_item.setImage_(icon)
 
+    @objc.python_method
     @run_in_gui_thread
     def renderHistoryEntriesInStatusBarMenu(self, entries):
         menu = self.statusBarMenu
@@ -753,6 +761,7 @@ class ContactWindowController(NSWindowController):
             tag += 1
             index += 1
 
+    @objc.python_method
     @run_in_gui_thread
     def renderHistoryEntriesInHistoryMenu(self, entries):
         def get_icon_history_result(media_types, direction, status):
@@ -826,9 +835,11 @@ class ContactWindowController(NSWindowController):
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
 
+    @objc.python_method
     def showHelp(self, append_url=''):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(NSApp.delegate().help_url+append_url))
 
+    @objc.python_method
     def updateBlinkMenu(self):
         settings = SIPSimpleSettings()
 
@@ -871,6 +882,7 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(5).setHidden_(True)
             self.blinkMenu.itemWithTag_(6).setHidden_(True)
 
+    @objc.python_method
     def updateCallMenu(self):
         menu = self.callMenu
 
@@ -960,6 +972,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setTarget_(self)
                 lastItem.setRepresentedObject_(account)
 
+    @objc.python_method
     def updateRecordingsMenu(self):
         if not NSApp.delegate().recording_enabled:
             return
@@ -992,6 +1005,7 @@ class ContactWindowController(NSWindowController):
             item.setImage_(icon)
             item.setAttributedTitle_(format_item(remote_party, timestamp))
 
+    @objc.python_method
     def updateRestoreContactsMenu(self):
         while not self.restoreContactsMenu.itemAtIndex_(0).isSeparatorItem():
             self.restoreContactsMenu.removeItemAtIndex_(0)
@@ -1008,6 +1022,7 @@ class ContactWindowController(NSWindowController):
             item.setTarget_(self)
             item.setRepresentedObject_((file, timestamp))
 
+    @objc.python_method
     def updateWindowMenu(self):
         account = self.activeAccount()
         item = self.windowMenu.itemWithTag_(40)  # Settings on SIP server
@@ -1016,6 +1031,7 @@ class ContactWindowController(NSWindowController):
         else:
             item.setEnabled_(False)
 
+    @objc.python_method
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
             self.chatMenu.removeItemAtIndex_(0)
@@ -1038,6 +1054,7 @@ class ContactWindowController(NSWindowController):
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
             item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
 
+    @objc.python_method
     def updateGroupMenu(self):
         while self.groupMenu.numberOfItems() > 0:
             self.groupMenu.removeItemAtIndex_(0)
@@ -1102,6 +1119,7 @@ class ContactWindowController(NSWindowController):
         item.setRepresentedObject_(self.model.no_group)
         item.setState_(NSOnState if settings.contacts.enable_no_group else NSOffState)
 
+    @objc.python_method
     def updateHistoryMenu(self):
         if NSApp.delegate().recording_enabled:
             idx = self.historyMenu.indexOfItem_(self.recordingsSubMenu)
@@ -1115,6 +1133,7 @@ class ContactWindowController(NSWindowController):
 
         self.get_session_history_entries(NSApp.delegate().last_history_entries)
 
+    @objc.python_method
     def getAccountWitDialPlan(self, uri):
         try:
             account = next(account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.pstn.dial_plan and any(prefix for prefix in account.pstn.dial_plan.split(" ") if uri.startswith(prefix)))
@@ -1123,6 +1142,7 @@ class ContactWindowController(NSWindowController):
             account = AccountManager().default_account
         return account
 
+    @objc.python_method
     def callPendingURIs(self):
         NSApp.delegate().ready = True
         if NSApp.delegate().urisToOpen:
@@ -1130,6 +1150,7 @@ class ContactWindowController(NSWindowController):
                 self.joinConference(uri, media_type, participants)
             NSApp.delegate().urisToOpen = []
 
+    @objc.python_method
     def sendSMSToURI(self, uri=None):
         account = self.activeAccount()
         if not account:
@@ -1159,6 +1180,7 @@ class ContactWindowController(NSWindowController):
         except Exception:
             pass
 
+    @objc.python_method
     def addParticipants(self):
         session = self.getSelectedAudioSession()
         if session:
@@ -1191,6 +1213,7 @@ class ContactWindowController(NSWindowController):
                         session.log_info(u"Invite %s to conference" % uri)
                         session.session.conference.add_participant(uri)
 
+    @objc.python_method
     def removeParticipant(self, uri):
         session = self.getSelectedAudioSession()
         if session:
@@ -1214,6 +1237,7 @@ class ContactWindowController(NSWindowController):
 
             self.participantsTableView.deselectAll_(self)
 
+    @objc.python_method
     def isConferenceParticipant(self, uri):
         session = self.getSelectedAudioSession()
         if session and hasattr(session.conference_info, "users"):
@@ -1223,6 +1247,7 @@ class ContactWindowController(NSWindowController):
                     return True
         return False
 
+    @objc.python_method
     def isInvitedParticipant(self, uri):
         session = self.getSelectedAudioSession()
         try:
@@ -1230,17 +1255,20 @@ class ContactWindowController(NSWindowController):
         except AttributeError:
             return False
 
+    @objc.python_method
     def canGoToConferenceWebsite(self):
         session = self.getSelectedAudioSession()
         if session.conference_info and session.conference_info.host_info and session.conference_info.host_info.web_page:
             return True
         return False
 
+    @objc.python_method
     def canBeRemovedFromConference(self, uri):
         session = self.getSelectedAudioSession()
         own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
         return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
+    @objc.python_method
     def getConferenceTitle(self):
         title = None
         session = self.getSelectedAudioSession()
@@ -1252,6 +1280,7 @@ class ContactWindowController(NSWindowController):
                 title = u"%s" % session.titleShort if isinstance(session.account, BonjourAccount) else u"%s" % session.titleLong
         return title
 
+    @objc.python_method
     def updateParticipantsView(self):
         session = self.getSelectedAudioSession()
 
@@ -1316,16 +1345,19 @@ class ContactWindowController(NSWindowController):
         self.participantsTableView.reloadData()
         self.recalculateDrawerSplitter()
 
+    @objc.python_method
     def detachVideo(self, sessionController):
         session = self.getSelectedAudioSession()
         if session == sessionController:
             self.videoView.aspect_ratio = None
             self.setVideoProducer(None)
 
+    @objc.python_method
     def setVideoProducer(self, producer=None):
         if self.videoView.setProducer(producer):
             self.recalculateDrawerSplitter()
 
+    @objc.python_method
     def updateContactContextMenu(self):
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             sel = self.contactOutline.selectedRow()
@@ -2007,6 +2039,7 @@ class ContactWindowController(NSWindowController):
                 p_item.setState_(NSOnState if item.days == 30 else NSOffState)
                 p_item.setRepresentedObject_({'group': item, 'days': 30})
 
+    @objc.python_method
     def photoClicked(self, sender):
         picker = PhotoPicker()
         path, image = picker.runModal()
@@ -2039,6 +2072,7 @@ class ContactWindowController(NSWindowController):
             data_hash = hashlib.sha512(data).hexdigest()
             self.saveUserIcon(data, data_hash)
 
+    @objc.python_method
     def loadUserIcon(self):
         # Call this in the GUI thread
         settings = SIPSimpleSettings()
@@ -2048,6 +2082,7 @@ class ContactWindowController(NSWindowController):
             path = DefaultUserAvatar().path
         self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
 
+    @objc.python_method
     @run_in_thread('file-io')
     def saveUserIcon(self, data, data_hash):
         settings = SIPSimpleSettings()
@@ -2062,6 +2097,7 @@ class ContactWindowController(NSWindowController):
         settings.presence_state.icon = UserIcon(path, data_hash)
         settings.save()
 
+    @objc.python_method
     def getSelectedParticipant(self):
         row = self.participantsTableView.selectedRow()
         if not self.participantsTableView.isRowSelected_(row):
@@ -2072,6 +2108,7 @@ class ContactWindowController(NSWindowController):
         except IndexError:
             return None
 
+    @objc.python_method
     @run_in_gui_thread
     def resizeDrawerSplitter(self):
         if self.drawerSplitterPosition is not None:
@@ -2091,6 +2128,7 @@ class ContactWindowController(NSWindowController):
         elif not self.getSelectedAudioSession():
             self.setVideoProducer(SIPApplication.video_device.producer)
 
+    @objc.python_method
     @run_in_gui_thread
     def recalculateDrawerSplitter(self):
         if not self.drawer.isOpen():
@@ -2153,6 +2191,7 @@ class ContactWindowController(NSWindowController):
         if must_resize:
             self.resizeDrawerSplitter()
 
+    @objc.python_method
     def getSelectedAudioSession(self):
         session = None
         try:
@@ -2164,6 +2203,7 @@ class ContactWindowController(NSWindowController):
 
         return session
 
+    @objc.python_method
     def setMainTabView(self, identifier):
         self.mainTabView.selectTabViewItemWithIdentifier_(identifier)
 
@@ -2216,6 +2256,7 @@ class ContactWindowController(NSWindowController):
 
             self.searchContacts()
 
+    @objc.python_method
     def playSilence(self):
         # used to keep the audio device open
         audio_active = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
@@ -2227,6 +2268,7 @@ class ContactWindowController(NSWindowController):
             if not self.silence_player.is_active:
                 self.silence_player.start()
 
+    @objc.python_method
     def fillPresenceMenu(self, presenceMenu):
         if presenceMenu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -2278,15 +2320,18 @@ class ContactWindowController(NSWindowController):
             lastItem.setTarget_(self)
             presenceMenu.addItem_(lastItem)
 
+    @objc.python_method
     def setSpeechSynthesis(self):
         settings = SIPSimpleSettings()
         self.useSpeechSynthesisMenuItem.setState_(NSOnState if settings.sounds.enable_speech_synthesizer else False)
 
+    @objc.python_method
     def setAlwaysOnTop(self):
         always_on_top = NSUserDefaults.standardUserDefaults().boolForKey_("AlwaysOnTop")
         self.window().setLevel_(NSFloatingWindowLevel if always_on_top else NSNormalWindowLevel)
         self.alwaysOnTopMenuItem.setState_(NSOnState if always_on_top else NSOffState)
 
+    @objc.python_method
     def removePresenceContactForOurselves(self):
         # myself contact was used in the past to replicate our own presence
         addressbook_manager = AddressbookManager()
@@ -2297,6 +2342,7 @@ class ContactWindowController(NSWindowController):
         else:
             contact.delete()
 
+    @objc.python_method
     def loadPresenceStates(self):
         settings = SIPSimpleSettings()
 
@@ -2320,6 +2366,7 @@ class ContactWindowController(NSWindowController):
         if note:
             self.presenceNoteText.setStringValue_(note if note.lower() != on_the_phone_activity['note'] else '')
 
+    @objc.python_method
     def setLastPresenceActivity(self):
         settings = SIPSimpleSettings()
         status = settings.presence_state.status
@@ -2329,6 +2376,7 @@ class ContactWindowController(NSWindowController):
             for item in self.presenceMenu.itemArray():
                 item.setState_(NSOnState if item.title() == status else NSOffState)
 
+    @objc.python_method
     def changeMyPresenceFromStatus(self, status='Available'):
         tag = 1
         # update presence activity popup menu
@@ -2346,6 +2394,7 @@ class ContactWindowController(NSWindowController):
 
         self.setStatusBarIcon(status)
 
+    @objc.python_method
     def savePresenceActivityToHistory(self, object):
         if not object['note']:
             return
@@ -2367,6 +2416,7 @@ class ContactWindowController(NSWindowController):
             except (cPickle.PickleError, IOError):
                 pass
 
+    @objc.python_method
     def toggleOnThePhonePresenceActivity(self):
         # check if there are any active voice sessions
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers if sess.account.presence.enable_on_the_phone)
@@ -2397,6 +2447,7 @@ class ContactWindowController(NSWindowController):
                 self.presenceActivityBeforeOnThePhone = current_presence_activity
                 self.setStatusBarIcon('busy')
 
+    @objc.python_method
     def updatePresenceWatchersMenu(self, menu):
         while self.presenceWatchersMenu.numberOfItems() > 0:
             self.presenceWatchersMenu.removeItemAtIndex_(0)
@@ -2454,6 +2505,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
             self.presenceWatchersMenu.addItem_(lastItem)
 
+    @objc.python_method
     def updatePresenceActivityMenu(self, menu):
         if menu == self.presenceMenu:
             attributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
@@ -2519,6 +2571,7 @@ class ContactWindowController(NSWindowController):
             #     lastItem.setTarget_(self)
             #     menu.addItem_(lastItem)
 
+    @objc.python_method
     def setStatusBarIcon(self, status=None):
         if status is None:
             return
@@ -2535,6 +2588,7 @@ class ContactWindowController(NSWindowController):
         icon.setSize_(NSMakeSize(18, 18))
         self.statusBarItem.setImage_(icon)
 
+    @objc.python_method
     def refreshLdapDirectory(self):
         active_account = self.activeAccount()
         if active_account and active_account.ldap.hostname and active_account.ldap.enabled:
@@ -2548,10 +2602,12 @@ class ContactWindowController(NSWindowController):
                 self.ldap_directory = None
                 self.ldap_search = None
 
+    @objc.python_method
     def setup(self, sipManager):
         self.backend = sipManager
         self.backend.set_delegate(self)
 
+    @objc.python_method
     def setupFinished(self):
         if self.backend.is_muted():
             self.muteButton.setImage_(NSImage.imageNamed_("muted"))
@@ -2575,6 +2631,7 @@ class ContactWindowController(NSWindowController):
         # selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
         # self.setMainTabView(selected_tab if selected_tab else "contacts")
 
+    @objc.python_method
     def contactSupportsMedia(self, media, contact, uri=None):
         if isinstance(contact, BonjourBlinkContact):
             return media != 'sms'
@@ -2608,6 +2665,7 @@ class ContactWindowController(NSWindowController):
 
         return any(device for device in devices if media in device['caps'])
 
+    @objc.python_method
     def switchAudioDevice(self, device):
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllersManager.sessionControllers)
         settings = SIPSimpleSettings()
@@ -2641,6 +2699,7 @@ class ContactWindowController(NSWindowController):
 
         self.menuWillOpen_(self.devicesMenu)
 
+    @objc.python_method
     def showAudioSession(self, streamController, add_to_conference=False):
         self.audioSessionsListView.addItemView_(streamController.view)
         self.updateAudioButtons()
@@ -2655,12 +2714,14 @@ class ContactWindowController(NSWindowController):
                 self.window().makeFirstResponder_(streamController.view)
                 self.showAudioDrawer()
 
+    @objc.python_method
     def showAudioDrawer(self):
         if not self.drawer.isOpen() and self.has_audio:
             # self.drawer.setContentSize_(self.window().frame().size)
             self.showWindow_(None)
             self.drawer.open()
 
+    @objc.python_method
     def shuffleUpAudioSession(self, audioSessionView):
         # move up the given view in the audio call list so that it is after
         # all other conferenced sessions already at the top and before anything else
@@ -2680,6 +2741,7 @@ class ContactWindowController(NSWindowController):
             audioSessionView.release()
             audioSessionView.setNeedsDisplay_(True)
 
+    @objc.python_method
     def shuffleDownAudioSession(self, audioSessionView):
         # move down the given view in the audio call list so that it is after
         # all other conferenced sessions
@@ -2688,6 +2750,7 @@ class ContactWindowController(NSWindowController):
         self.audioSessionsListView.addItemView_(audioSessionView)
         audioSessionView.release()
 
+    @objc.python_method
     def addAudioSessionToConference(self, stream):
         if self.conference is None:
             self.conference = AudioConference()
@@ -2700,6 +2763,7 @@ class ContactWindowController(NSWindowController):
         self.conferenceButton.setState_(NSOnState)
         stream.view.setSelected_(True)
 
+    @objc.python_method
     def removeAudioSessionFromConference(self, stream):
         # if we're in a conference and the session is selected, then select back the conference
         # after removing
@@ -2721,14 +2785,17 @@ class ContactWindowController(NSWindowController):
         if count < 2 and not self.disbandingConference:
             self.disbandConference()
 
+    @objc.python_method
     def holdConference(self):
         if self.conference is not None:
             self.conference.hold()
 
+    @objc.python_method
     def unholdConference(self):
         if self.conference is not None:
             self.conference.unhold()
 
+    @objc.python_method
     def disbandConference(self):
         self.disbandingConference = True
         for session in self.sessionControllersManager.sessionControllers:
@@ -2741,6 +2808,7 @@ class ContactWindowController(NSWindowController):
         self.conferenceButton.setState_(NSOffState)
         BlinkLogger().log_info(u"Audio conference ended")
 
+    @objc.python_method
     def moveConferenceToServer(self):
         participants = []
         for session in self.sessionControllersManager.sessionControllers:
@@ -2761,6 +2829,7 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_info(u"Move conference to server root %s" % target)
             self.disbandConference()
 
+    @objc.python_method
     def finalizeAudioSession(self, streamController):
         if streamController.isConferencing and self.conference is not None:
             self.removeAudioSessionFromConference(streamController)
@@ -2771,6 +2840,7 @@ class ContactWindowController(NSWindowController):
         if self.drawer.isOpen() and count == 0:
             self.drawer.close()
 
+    @objc.python_method
     def updateAudioButtons(self):
         c = self.audioSessionsListView.subviews().count()
         cview = self.drawer.contentView()
@@ -2782,6 +2852,7 @@ class ContactWindowController(NSWindowController):
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         conference.setEnabled_(c > 1)
 
+    @objc.python_method
     def updateStartSessionButtons(self):
         tabItem = self.mainTabView.selectedTabViewItem().identifier()
         audioOk = False
@@ -2822,21 +2893,27 @@ class ContactWindowController(NSWindowController):
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) and self.searchBox.stringValue().strip() != u"")
 
+    @objc.python_method
     def isJoinConferenceWindowOpen(self):
         return any(window for window in NSApp().windows() if window.title() == 'Join Conference' and window.isVisible())
 
+    @objc.python_method
     def isAddParticipantsWindowOpen(self):
         return any(window for window in NSApp().windows() if window.title() == 'Add Participants' and window.isVisible())
 
+    @objc.python_method
     def getFirstContactMatchingURI(self, uri, exact_match=False):
         return self.model.getFirstContactMatchingURI(uri, exact_match)
 
+    @objc.python_method
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
         return self.model.getFirstContactFromAllContactsGroupMatchingURI(uri, exact_match)
 
+    @objc.python_method
     def hasContactMatchingURI(self, uri, exact_match=False, skip_system_address_book=False):
         return self.model.hasContactMatchingURI(uri, exact_match, skip_system_address_book)
 
+    @objc.python_method
     def iconPathForURI(self, uri, is_focus=False):
         if AccountManager().has_account(uri):
             return self.iconPathForSelf()
@@ -2847,6 +2924,7 @@ class ContactWindowController(NSWindowController):
                 return path
         return DefaultUserAvatar().path if not is_focus else DefaultMultiUserAvatar().path
 
+    @objc.python_method
     def iconPathForSelf(self):
         settings = SIPSimpleSettings()
         if settings.presence_state.icon and os.path.exists(settings.presence_state.icon.path):
@@ -2854,16 +2932,19 @@ class ContactWindowController(NSWindowController):
         else:
             return DefaultUserAvatar().path
 
+    @objc.python_method
     def addContact(self, uris=(), name=None):
         self.model.addContact(uris=uris, name=name)
         self.contactOutline.reloadData()
 
+    @objc.python_method
     def resetWidgets(self):
         self.searchBox.setStringValue_("")
         self.addContactToConferenceDialPad.setEnabled_(False)
         self.addContactButtonDialPad.setEnabled_(False)
         self.updateStartSessionButtons()
 
+    @objc.python_method
     def startConferenceIfAppropriate(self, conference, play_initial_announcement=False):
         start_now = True
         if conference.start_when_participants_available and conference.participants:
@@ -2906,16 +2987,19 @@ class ContactWindowController(NSWindowController):
 
         return False
 
+    @objc.python_method
     def showJoinConferenceWindow(self, target=None, participants=None, media_type=None, default_domain=None, autostart=False):
         self.joinConferenceWindow = JoinConferenceWindowController(target=target, participants=participants, media_type=media_type, default_domain=default_domain, autostart=autostart)
         conference = self.joinConferenceWindow.run()
         return conference
 
+    @objc.python_method
     def showAddParticipantsWindow(self, target=None, default_domain=None):
         self.addParticipantsWindow = AddParticipantsWindowController(target=target, default_domain=default_domain)
         participants = self.addParticipantsWindow.run()
         return participants
 
+    @objc.python_method
     def searchContacts(self):
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             self.updateStartSessionButtons()
@@ -2978,6 +3062,7 @@ class ContactWindowController(NSWindowController):
                 self.searchResultsModel.groupsList = self.local_found_contacts
                 self.searchOutline.reloadData()
 
+    @objc.python_method
     def startSessionToSelectedContact(self, media_type, uri=None):
         selected_contact = None
         account = None
@@ -3030,6 +3115,7 @@ class ContactWindowController(NSWindowController):
         local_uri = account.id if account is not None else None
         self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
 
+    @objc.python_method
     def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
@@ -3097,6 +3183,7 @@ class ContactWindowController(NSWindowController):
 
         return session_controller
 
+    @objc.python_method
     def joinConference(self, target, media_type, participants=(), nickname=None):
         BlinkLogger().log_info(u"Join conference %s with media %s" % (target, media_type))
         if participants:
@@ -3139,10 +3226,12 @@ class ContactWindowController(NSWindowController):
             if not session_controller.startSessionWithStreamOfType(media_type):
                 BlinkLogger().log_error(u"Failed to start session with stream of type %s" % media_type)
 
+    @objc.python_method
     def focusSearchTextField(self):
         self.searchBox.window().makeFirstResponder_(self.searchBox)
         self.searchBox.window().makeKeyAndOrderFront_(None)
 
+    @objc.python_method
     def play_dtmf(self, key):
         self.playSilence()
         if SIPApplication.voice_audio_bridge:
@@ -3151,6 +3240,7 @@ class ContactWindowController(NSWindowController):
             SIPApplication.voice_audio_bridge.add(wave_player)
             wave_player.start()
 
+    @objc.python_method
     @run_in_green_thread
     def get_last_outgoing_session_from_history(self):
         results = SessionHistory().get_entries(direction='outgoing', count=1)
@@ -3161,6 +3251,7 @@ class ContactWindowController(NSWindowController):
         else:
             self.redial(session_info)
 
+    @objc.python_method
     @run_in_gui_thread
     def redial(self, session_info):
         display_name = session_info.display_name
@@ -3212,11 +3303,13 @@ class ContactWindowController(NSWindowController):
         elif 'chat' in streams:
             session_controller.startChatSession()
 
+    @objc.python_method
     @run_in_green_thread
     def show_last_sms_conversations(self):
         results = SessionHistory().get_last_sms_conversations(4)
         self.open_last_sms_conversations(results)
 
+    @objc.python_method
     @run_in_gui_thread
     def open_last_sms_conversations(self, conversations=()):
         if SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
@@ -3242,16 +3335,19 @@ class ContactWindowController(NSWindowController):
 
             SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
 
+    @objc.python_method
     @run_in_green_thread
     def show_last_chat_conversations(self):
         results = SessionHistory().get_last_chat_conversations()
         self.open_last_chat_conversations(results)
 
+    @objc.python_method
     @run_in_gui_thread
     def open_last_chat_conversations(self, conversations=()):
         for parties in conversations:
             self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0])
 
+    @objc.python_method
     @run_in_green_thread
     def get_last_calls_entries_for_contact(self, contact):
         session_history = SessionHistory()
@@ -3264,6 +3360,7 @@ class ContactWindowController(NSWindowController):
         results = session_history.get_entries(count=10, remote_uris=remote_uris)
         self.renderLastCallsEntriesForContact(results, contact)
 
+    @objc.python_method
     @run_in_green_thread
     @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
@@ -3387,6 +3484,7 @@ class ContactWindowController(NSWindowController):
         self.renderHistoryEntriesInHistoryMenu(entries)
         self.renderHistoryEntriesInStatusBarMenu(entries)
 
+    @objc.python_method
     def format_history_menu_item(self, item):
         a = NSMutableAttributedString.alloc().init()
         n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  " % item, normal_font_color)
@@ -3410,11 +3508,13 @@ class ContactWindowController(NSWindowController):
         a.appendAttributedString_(t)
         return a
 
+    @objc.python_method
     def sip_session_missed(self, session, stream_types):
         BlinkLogger().log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
         if 'audio' in stream_types:
             NSApp.delegate().noteMissedCall()
 
+    @objc.python_method
     def speak_text(self, text):
         settings = SIPSimpleSettings()
         if not settings.audio.silent:
@@ -5216,11 +5316,13 @@ class ContactWindowController(NSWindowController):
     def speechSynthesizer_didFinishSpeaking_(self, sender, success):
         self.speech_synthesizer_active = False
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
+    @objc.python_method
     def _NH_BlinkContactBecameAvailable(self, notification):
         contact = notification.sender
         if contact in self.tellMeWhenContactBecomesAvailableList:
@@ -5245,9 +5347,11 @@ class ContactWindowController(NSWindowController):
                 speak_text = NSLocalizedString("%s is now available", "Spoken text by synthesiser") % contact.name
                 self.speech_synthesizer.startSpeakingString_(speak_text)
 
+    @objc.python_method
     def _NH_HistoryEntriesVisibilityChanged(self, notification):
         self.model.reload_history_groups(force_reload=True)
 
+    @objc.python_method
     def _NH_PresenceSubscriptionDidFail(self, notification):
         try:
             position = self.accounts.index(notification.sender.account)
@@ -5258,6 +5362,7 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_debug("Presence subscriptions for account %s failed" % notification.sender.account.id)
             self.accounts[position].subscribe_presence_state = 'failed'
 
+    @objc.python_method
     def _NH_PresenceSubscriptionDidEnd(self, notification):
         try:
             position = self.accounts.index(notification.sender.account)
@@ -5269,6 +5374,7 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_state = 'ended'
             self.accounts[position].subscribe_presence_timestamp = None
 
+    @objc.python_method
     def _NH_SIPAccountGotPresenceState(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -5281,12 +5387,15 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_state = 'active'
             self.accounts[position].subscribe_presence_purged = False
 
+    @objc.python_method
     def _NH_AddressbookGroupWasActivated(self, notification):
         self.updateGroupMenu()
 
+    @objc.python_method
     def _NH_AddressbookGroupWasDeleted(self, notification):
         self.updateGroupMenu()
 
+    @objc.python_method
     def _NH_AddressbookGroupDidChange(self, notification):
         self.updateGroupMenu()
 
@@ -5294,30 +5403,37 @@ class ContactWindowController(NSWindowController):
     _NH_VirtualGroupWasDeleted = _NH_AddressbookGroupWasDeleted
     _NH_VirtualGroupDidChange = _NH_AddressbookGroupDidChange
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidAddAccount(self, notification):
         account = notification.data.account
         self.accounts.insert(account.order, AccountInfo(account))
         self.refreshAccountList()
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
         position = self.accounts.index(notification.data.account)
         del self.accounts[position]
         self.refreshAccountList()
 
+    @objc.python_method
     def _NH_SIPAccountDidActivate(self, notification):
         self.refreshAccountList()
 
+    @objc.python_method
     def _NH_BonjourGroupWasActivated(self, notification):
         self.updateGroupMenu()
 
+    @objc.python_method
     def _NH_BonjourGroupWasDeactivated(self, notification):
         self.updateGroupMenu()
 
+    @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, notification):
         self.refreshAccountList()
         if notification.sender is BonjourAccount():
             self.updateGroupMenu()
 
+    @objc.python_method
     def _NH_SIPAccountManagerDidChangeDefaultAccount(self, notification):
         self.refreshAccountList()
         self.refreshLdapDirectory()
@@ -5326,6 +5442,7 @@ class ContactWindowController(NSWindowController):
         status = settings.presence_state.status
         self.setStatusBarIcon(status)
 
+    @objc.python_method
     def _NH_SIPAccountWillRegister(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -5334,6 +5451,7 @@ class ContactWindowController(NSWindowController):
         self.accounts[position].register_state = 'started'
         self.refreshAccountList()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -5350,6 +5468,7 @@ class ContactWindowController(NSWindowController):
 
         self.refreshAccountList()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
         if notification.data.code > 200:
             reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
@@ -5367,6 +5486,7 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].register_failure_code = None
             self.accounts[position].register_failure_reason = None
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidFail(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -5401,6 +5521,7 @@ class ContactWindowController(NSWindowController):
                     # NSRunAlertPanel(u"SIP Registration Error", u"The account %s could not be registered at this time: %s" % (notification.sender.id, notification.data.error),  u"OK", None, None)
                 self.authFailPopupShown = False
 
+    @objc.python_method
     def _NH_SystemDidWakeUpFromSleep(self, notification):
         settings = SIPSimpleSettings()
         last_video_device = settings.video.device
@@ -5426,6 +5547,7 @@ class ContactWindowController(NSWindowController):
         # wait for system to stabilize
         reactor.callLater(5, wakeup)
 
+    @objc.python_method
     def _NH_NetworkConditionsDidChange(self, notification):
         if host.default_ip is not None:
             for account in self.accounts:
@@ -5433,6 +5555,7 @@ class ContactWindowController(NSWindowController):
                     account.register_failure_reason = None
             self.refreshAccountList()
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
         try:
             position = self.accounts.index(notification.sender)
@@ -5446,6 +5569,7 @@ class ContactWindowController(NSWindowController):
     _NH_BonjourAccountRegistrationDidFail = _NH_SIPAccountRegistrationDidFail
     _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
+    @objc.python_method
     def _NH_AudioDevicesDidChange(self, notification):
         old_devices = notification.data.old_devices
         new_devices = notification.data.new_devices
@@ -5462,21 +5586,26 @@ class ContactWindowController(NSWindowController):
         else:
             self.menuWillOpen_(self.devicesMenu)
 
+    @objc.python_method
     def _NH_DefaultAudioDeviceDidChange(self, notification):
         self.menuWillOpen_(self.devicesMenu)
 
+    @objc.python_method
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
             self.updateAudioButtons()
 
+    @objc.python_method
     def _NH_MediaStreamDidEnd(self, notification):
         if notification.sender.type == "audio":
             self.updateAudioButtons()
 
+    @objc.python_method
     def _NH_SIPApplicationWillEnd(self, notification):
         self.conference_timer.invalidate()
         self.purge_presence_timer.invalidate()
 
+    @objc.python_method
     def _NH_SIPApplicationWillStart(self, notification):
         self.alertPanel = AlertPanel.alloc().init()
         self.loadUserIcon()
@@ -5487,6 +5616,7 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_debug('Starting main user interface')
             self.showWindow_(None)
 
+    @objc.python_method
     def _NH_SIPApplicationDidStart(self, notification):
         BlinkLogger().log_debug('Application is ready')
         self.callPendingURIs()
@@ -5496,12 +5626,14 @@ class ContactWindowController(NSWindowController):
         self.removePresenceContactForOurselves()
         self.fileTransfersWindow = FileTransferWindowController()
 
+    @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):
         NotificationCenter().remove_observer(self, name="BlinkContactsHaveChanged")
         self.model.groupsList = []
         self.refreshContactsList()
         self.window().orderOut_(self)
 
+    @objc.python_method
     def _NH_BlinkMuteChangedState(self, notification):
         if self.backend.is_muted():
             self.muteButton.setState_(NSOnState)
@@ -5510,6 +5642,7 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setState_(NSOffState)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
+    @objc.python_method
     def _NH_BlinkChatWindowClosed(self, notification):
         session = self.getSelectedAudioSession()
         if not session:
@@ -5520,6 +5653,7 @@ class ContactWindowController(NSWindowController):
         elif session.hasStreamOfType("audio"):
             self.showAudioDrawer()
 
+    @objc.python_method
     def _NH_BlinkVideoWindowClosed(self, notification):
         session = self.getSelectedAudioSession()
         if not session:
@@ -5530,28 +5664,35 @@ class ContactWindowController(NSWindowController):
             if audio_stream.status in (STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING):
                 self.showAudioDrawer()
 
+    @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, notification):
         self.refreshContactsList(notification.sender)
         self.searchContacts()
 
+    @objc.python_method
     def _NH_BlinkSessionChangedState(self, notification):
         self.toggleOnThePhonePresenceActivity()
 
+    @objc.python_method
     def _NH_BlinkStreamHandlersChanged(self, notification):
         self.toggleOnThePhonePresenceActivity()
 
+    @objc.python_method
     def _NH_BlinkConferenceGotUpdate(self, notification):
         self.updateParticipantsView()
 
+    @objc.python_method
     def _NH_BlinkDidRenegotiateStreams(self, notification):
         self.recalculateDrawerSplitter()
 
+    @objc.python_method
     def _NH_ActiveAudioSessionChanged(self, notification):
         self.updateParticipantsView()
         session = self.getSelectedAudioSession()
         if session:
             session.setVideoConsumer(session.video_consumer)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectWasCreated(self, notification):
         if isinstance(notification.sender, Account):
             account = notification.sender
@@ -5585,6 +5726,7 @@ class ContactWindowController(NSWindowController):
                         panel.close()
                         NSReleaseAlertPanel(panel)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
         if "audio.silent" in notification.data.modified:
@@ -5634,6 +5776,7 @@ class ContactWindowController(NSWindowController):
             NSUserDefaults.standardUserDefaults().synchronize()
             NSRunAlertPanel(NSLocalizedString("Restart Required", "Window title"), NSLocalizedString("You must restart the software to apply this change", "Label"), NSLocalizedString("OK", "Button title"), None, None)
 
+    @objc.python_method
     def _NH_LDAPDirectorySearchFoundContact(self, notification):
         if notification.sender == self.ldap_search:
             for type, uri in notification.data.uris:
@@ -5648,6 +5791,7 @@ class ContactWindowController(NSWindowController):
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
 
+    @objc.python_method
     def _NH_ChatReplicationJournalEntryReceived(self, notification):
         data = notification.data.chat_message
         hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteAOR == data['remote_uri'])
@@ -5655,6 +5799,7 @@ class ContactWindowController(NSWindowController):
         if not hasChat:
             self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
 
+    @objc.python_method
     def _NH_BlinkProposalDidFail(self, notification):
         media_type = notification.data.proposed_streams[0].type
         if media_type == "video":
@@ -5664,6 +5809,7 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_info(u"Starting new %s session to %s because adding stream failed" % (media_type, target_uri))
         self.startSessionWithTarget(target_uri, media_type=media_type, local_uri=local_uri)
 
+    @objc.python_method
     def _NH_SIPSessionLoggedToHistory(self, notification):
         self.updateHistoryMenu()
         if self.new_audio_sample_rate and not self.has_audio:
@@ -5674,6 +5820,7 @@ class ContactWindowController(NSWindowController):
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
+    @objc.python_method
     def _NH_SIPAccountGotSelfPresenceState(self, notification):
         settings = SIPSimpleSettings()
         own_service_id = 'SID-%s' % str(uuid.UUID(settings.instance_id))

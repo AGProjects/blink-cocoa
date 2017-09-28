@@ -15,6 +15,7 @@ from AppKit import (NSApp,
                     NSViewMinXMargin,
                     NSViewMinYMargin,
                     NSViewWidthSizable)
+
 from Foundation import (NSArray,
                         NSBezierPath,
                         NSButton,
@@ -36,6 +37,7 @@ from Foundation import (NSArray,
                         )
 
 from ContactListModel import presence_status_icons
+
 import objc
 
 country_iso_map = {
@@ -522,6 +524,7 @@ class MapView(NSView):
 
         return self
 
+    @objc.python_method
     def setContact(self, contact):
         self.contact = contact
         self.selectedCountries = {}

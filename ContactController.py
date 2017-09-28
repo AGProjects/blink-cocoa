@@ -12,6 +12,7 @@ from AppKit import (NSApp,
                     NSRunAlertPanel,
                     NSTableViewDropOn,
                     NSTableViewDropAbove)
+
 from Foundation import (NSArray,
                         NSBundle,
                         NSImage,
@@ -120,6 +121,7 @@ class AddContactController(NSObject):
         self.subscriptions = None
         self.defaultPhotoImage = None
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -131,10 +133,12 @@ class AddContactController(NSObject):
         self.addressTable.setDraggingSourceOperationMask_forLocal_(NSDragOperationGeneric, True)
         self.addressTable.registerForDraggedTypes_(NSArray.arrayWithObject_("dragged-row"))
 
+    @objc.python_method
     def _NH_BlinkGroupsHaveChanged(self, notification):
         self.all_groups = list(g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed)
         self.loadGroupNames()
 
+    @objc.python_method
     def runModal(self):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
@@ -162,6 +166,7 @@ class AddContactController(NSObject):
             return contact
         return False
 
+    @objc.python_method
     def checkURI(self, uri):
         if checkValidPhoneNumber(uri):
             return True
@@ -181,6 +186,7 @@ class AddContactController(NSObject):
 
         return True
 
+    @objc.python_method
     def update_default_uri(self):
         if self.default_uri:
             self.addressText.setStringValue_(self.default_uri.uri)
@@ -197,6 +203,7 @@ class AddContactController(NSObject):
         NSApp.stopModalWithCode_(NSCancelButton)
         return True
 
+    @objc.python_method
     def loadGroupNames(self):
         if self.belonging_groups is None:
             return
@@ -251,6 +258,7 @@ class AddContactController(NSObject):
 
         self.updatePreferredMediaMenus()
 
+    @objc.python_method
     def updatePreferredMediaMenus(self):
         items = self.preferredMediaPopUpButton.itemArray()
         for menu_item in items:
@@ -270,6 +278,7 @@ class AddContactController(NSObject):
 
         self.preferredMediaPopUpButton.selectItemWithTag_(tag)
 
+    @objc.python_method
     def updateSubscriptionMenus(self):
         self.subscribePopUp.selectItemAtIndex_(0)
         menu_item = self.subscribePopUp.itemAtIndex_(0)
@@ -344,6 +353,7 @@ class AddContactController(NSObject):
         row = self.addressTable.selectedRow()
         self.defaultButton.setEnabled_(row < len(self.uris))
 
+    @objc.python_method
     def selectedContactURI(self):
         row = self.addressTable.selectedRow()
         try:
@@ -501,6 +511,7 @@ class EditContactController(AddContactController):
         self.updatePreferredMediaMenus()
         self.loadGroupNames()
 
+    @objc.python_method
     def runModal(self):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)

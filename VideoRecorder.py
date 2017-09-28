@@ -3,15 +3,15 @@
 
 
 # TODO: Video broken since 10.13
-#from AVFoundation import (AVCaptureScreenInput,
-#                          AVCaptureDeviceInput,
-#                          AVCaptureDevice,
-#                          AVCaptureMovieFileOutput,
-#                          AVCaptureSession,
-#                          AVCaptureSessionPresetHigh,
-#                          AVMediaTypeAudio,
-#                          AVMediaTypeMuxed
-#                          )
+from AVFoundation import (AVCaptureScreenInput,
+                          AVCaptureDeviceInput,
+                          AVCaptureDevice,
+                          AVCaptureMovieFileOutput,
+                          AVCaptureSession,
+                          AVCaptureSessionPresetHigh,
+                          AVMediaTypeAudio,
+                          AVMediaTypeMuxed
+                          )
 
 from Foundation import NSObject, NSURL, NSString
 from Quartz import CGMainDisplayID

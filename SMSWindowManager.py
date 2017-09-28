@@ -46,6 +46,7 @@ class SMSWindowController(NSWindowController):
             self.unreadMessageCounts = {}
         return self
 
+    @objc.python_method
     def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
         if activeTab:
@@ -66,11 +67,13 @@ class SMSWindowController(NSWindowController):
             title = NSLocalizedString("Short Messages", "Window Title")
         return title
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window():
             self.window().orderOut_(self)
@@ -223,6 +226,7 @@ class SMSWindowManagerClass(NSObject):
     def setOwner_(self, owner):
         self._owner = owner
 
+    @objc.python_method
     def raiseLastWindowFront(self):
         try:
             window = self.windows[0]
@@ -232,6 +236,7 @@ class SMSWindowManagerClass(NSObject):
         window.window().makeKeyAndOrderFront_(None)
         return True
 
+    @objc.python_method
     def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True):
         for window in self.windows:
             for viewer in window.viewers:
@@ -262,6 +267,7 @@ class SMSWindowManagerClass(NSObject):
 
         return viewer
 
+    @objc.python_method
     def dettachSMSViewer(self, viewer):
         oldWindow = self.windowForViewer(viewer)
         oldWindow.removeViewer_(viewer)
@@ -271,6 +277,7 @@ class SMSWindowManagerClass(NSObject):
         window.window().makeKeyAndOrderFront_(None)
         return window
 
+    @objc.python_method
     def windowForViewer(self, viewer):
         for window in self.windows:
             if viewer in window.viewers:
@@ -278,11 +285,13 @@ class SMSWindowManagerClass(NSObject):
         else:
             return None
 
+    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):
         account = AccountManager().find_account(data.request_uri)
         if not account:

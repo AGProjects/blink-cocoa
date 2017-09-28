@@ -1,7 +1,6 @@
 # Copyright (C) 2013 AG Projects. See LICENSE for details.
 #
 
-
 from AppKit import NSApp, NSOKButton, NSCancelButton, NSOnState, NSControlTextDidChangeNotification
 from Foundation import NSObject, NSBundle, NSColor, NSLocalizedString, NSTimer, NSRunLoop, NSRunLoopCommonModes, NSNotificationCenter
 
@@ -58,7 +57,7 @@ class ChatOtrSmp(NSObject):
         self.release()
 
     def dealloc(self):
-        super(ChatOtrSmp, self).dealloc()
+        objc.super(ChatOtrSmp, self).dealloc()
 
     @objc.IBAction
     def okClicked_(self, sender):
