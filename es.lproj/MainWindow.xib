@@ -528,7 +528,7 @@ CA
                             <action selector="accountSelectionChanged:" target="389" id="667"/>
                         </connections>
                     </popUpButton>
-                    <searchField verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
+                    <searchField wantsLayer="YES" verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <string key="toolTip">Puedes escribibir un texto, para buscar un contacto, o presiona Enter, para comenzar una llamada a una dirección en particular o un número telefónico</string>
@@ -616,7 +616,7 @@ CA
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <clipView key="contentView" id="7tk-Pf-Fob">
                                                 <rect key="frame" x="1" y="1" width="272" height="346"/>
-                                                <autoresizingMask key="autoresizingMask"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" autosaveName="contactList" indentationPerLevel="14" indentationMarkerFollowsCell="NO" autoresizesOutlineColumn="YES" outlineTableColumn="507" id="504" customClass="ContactOutlineView">
                                                         <rect key="frame" x="0.0" y="0.0" width="272" height="346"/>
@@ -1020,6 +1020,29 @@ ABC</string>
                             <action selector="silentClicked:" target="389" id="882"/>
                         </connections>
                     </button>
+                    <segmentedControl verticalHuggingPriority="750" misplaced="YES" id="Ehj-vS-brq" userLabel="Start Session Buttons">
+                        <rect key="frame" x="90" y="6" width="94" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="w3P-Yo-vMJ" userLabel="Session Types ">
+                            <font key="font" metaFont="system"/>
+                            <segments>
+                                <segment toolTip="Comenzar Llamada de Audio" image="audio" width="30">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Sesiones de Chat" image="pencil" width="30" tag="1">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Compartir Pantalla" image="display" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                    <nil key="label"/>
+                                </segment>
+                            </segments>
+                            <accessibility description="Comenzar Sesiones"/>
+                        </segmentedCell>
+                        <accessibility description="Botones para Comenzar Sesiones"/>
+                        <connections>
+                            <action selector="actionButtonClicked:" target="389" id="PVV-c7-G83"/>
+                        </connections>
+                    </segmentedControl>
                 </subviews>
             </view>
             <connections>
@@ -1540,6 +1563,7 @@ ABC</string>
             <connections>
                 <outlet property="accountPopUp" destination="446" id="468"/>
                 <outlet property="actionButtons" destination="457" id="467"/>
+                <outlet property="actionButtonsNoVideo" destination="Ehj-vS-brq" id="SPX-Ek-DF2"/>
                 <outlet property="addContactButton" destination="459" id="471"/>
                 <outlet property="addContactButtonDialPad" destination="1459" id="1501"/>
                 <outlet property="addContactButtonSearch" destination="607" id="659"/>

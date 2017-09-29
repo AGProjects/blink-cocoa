@@ -498,6 +498,7 @@ CA
             <connections>
                 <outlet property="delegate" destination="389" id="762"/>
             </connections>
+            <point key="canvasLocation" x="129" y="-168"/>
         </menu>
         <window title="Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="ContactWindow" animationBehavior="default" id="371" userLabel="Blink Contacts Window" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
@@ -1019,6 +1020,29 @@ ABC</string>
                             <action selector="silentClicked:" target="389" id="882"/>
                         </connections>
                     </button>
+                    <segmentedControl hidden="YES" verticalHuggingPriority="750" misplaced="YES" id="LX5-iZ-PEK" userLabel="Start Session Buttons">
+                        <rect key="frame" x="90" y="6" width="94" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="nch-cL-UVU" userLabel="Session Types ">
+                            <font key="font" metaFont="system"/>
+                            <segments>
+                                <segment toolTip="Start Audio Call" image="audio" width="30">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Chat Sessions" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="1">
+                                    <nil key="label"/>
+                                </segment>
+                                <segment toolTip="Chat Sessions" image="display" imageScaling="proportionallyUpOrDown" width="30" tag="2">
+                                    <nil key="label"/>
+                                </segment>
+                            </segments>
+                            <accessibility description="Start Sessions"/>
+                        </segmentedCell>
+                        <accessibility description="Start Session Buttons"/>
+                        <connections>
+                            <action selector="actionButtonClicked:" target="389" id="rHY-Kq-y1M"/>
+                        </connections>
+                    </segmentedControl>
                 </subviews>
             </view>
             <connections>
@@ -1539,6 +1563,7 @@ ABC</string>
             <connections>
                 <outlet property="accountPopUp" destination="446" id="468"/>
                 <outlet property="actionButtons" destination="457" id="467"/>
+                <outlet property="actionButtonsNoVideo" destination="LX5-iZ-PEK" id="JUM-eW-Mvs"/>
                 <outlet property="addContactButton" destination="459" id="471"/>
                 <outlet property="addContactButtonDialPad" destination="1459" id="1501"/>
                 <outlet property="addContactButtonSearch" destination="607" id="659"/>

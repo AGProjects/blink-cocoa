@@ -250,6 +250,7 @@ class ContactWindowController(NSWindowController):
     contactOutline = objc.IBOutlet()
     groupMenu = objc.IBOutlet()
     actionButtons = objc.IBOutlet()
+    actionButtonsNoVideo = objc.IBOutlet()
     addContactButton = objc.IBOutlet()
     groupButton = objc.IBOutlet()
     addContactButtonSearch = objc.IBOutlet()
@@ -473,11 +474,19 @@ class ContactWindowController(NSWindowController):
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Audio Call'), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Video Call'), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Text Chat'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Request Screen Sharing'), NSAccessibilityDescriptionAttribute)
+        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Screen Sharing'), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+
+        segmentChildren2 = NSAccessibilityUnignoredDescendant(self.actionButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute)
+        segmentChildren2.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Audio Call'), NSAccessibilityDescriptionAttribute)
+        segmentChildren2.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Text Chat'), NSAccessibilityDescriptionAttribute)
+        segmentChildren2.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Screen Sharing'), NSAccessibilityDescriptionAttribute)
+        segmentChildren2.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren2.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
+        segmentChildren2.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
         self.setAlwaysOnTop()
 
@@ -572,6 +581,13 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     @run_in_gui_thread
     def refreshAccountList(self):
+        if not self.sessionControllersManager.isMediaTypeSupported('video'):
+            self.actionButtonsNoVideo.setHidden_(False)
+            self.actionButtons.setHidden_(True)
+        else:
+            self.actionButtonsNoVideo.setHidden_(True)
+            self.actionButtons.setHidden_(False)
+
         style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
         style.setLineBreakMode_(NSLineBreakByTruncatingTail)
         grayAttrs = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.disabledControlTextColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
@@ -2885,10 +2901,15 @@ class ContactWindowController(NSWindowController):
                 chatOk = False
                 videoOk = False
 
-        self.actionButtons.setEnabled_forSegment_(audioOk, 0)
-        self.actionButtons.setEnabled_forSegment_(videoOk and self.sessionControllersManager.isMediaTypeSupported('video'), 1)
-        self.actionButtons.setEnabled_forSegment_(chatOk, 2)
-        self.actionButtons.setEnabled_forSegment_(screenOk, 3)
+        if self.sessionControllersManager.isMediaTypeSupported('video'):
+            self.actionButtons.setEnabled_forSegment_(audioOk, 0)
+            self.actionButtons.setEnabled_forSegment_(videoOk, 1)
+            self.actionButtons.setEnabled_forSegment_(chatOk, 2)
+            self.actionButtons.setEnabled_forSegment_(screenOk, 3)
+        else:
+            self.actionButtons.setEnabled_forSegment_(audioOk, 0)
+            self.actionButtons.setEnabled_forSegment_(chatOk, 1)
+            self.actionButtons.setEnabled_forSegment_(screenOk, 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) and self.searchBox.stringValue().strip() != u"")
@@ -4327,6 +4348,15 @@ class ContactWindowController(NSWindowController):
             self.searchBox.setStringValue_(u"")
             self.addContactToConferenceDialPad.setEnabled_(False)
         else:
+            if self.sessionControllersManager.isMediaTypeSupported('video'):
+                video_segment = 1
+                chat_segment = 2
+                screen_segment = 3
+            else:
+                video_segment = 10000000 # not available
+                chat_segment = 1
+                screen_segment = 2
+
             media_type = "audio"
             try:
                 contact = self.getSelectedContacts()[0]
@@ -4343,9 +4373,9 @@ class ContactWindowController(NSWindowController):
                     media_type = ("audio", "video")
                 else:
                     media_type = "audio"
-            elif sender.selectedSegment() == 1:
+            elif sender.selectedSegment() == video_segment:
                 media_type = ("audio", "video")
-            elif sender.selectedSegment() == 2:
+            elif sender.selectedSegment() == chat_segment:
                 # IM button
                 if self.sessionControllersManager.isMediaTypeSupported('chat') and self.sessionControllersManager.isMediaTypeSupported('sms'):
                     point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
@@ -4362,7 +4392,7 @@ class ContactWindowController(NSWindowController):
                         self.sendSMSToURI(None)
                 return
 
-            elif sender.selectedSegment() == 3:
+            elif sender.selectedSegment() == screen_segment:
                 # DS button
                 point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                 event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
