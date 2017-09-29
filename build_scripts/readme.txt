@@ -17,10 +17,11 @@ structure:
 * Distribution/Frameworks/
 * Distribution/Resources/lib
  
+
 Building the Python Framework itself
 ------------------------------------
 
-* Install it using Homebrew
+Install it using Homebrew:
 
 brew install python
 
@@ -30,11 +31,14 @@ and SQLite versions.  Those libraries will need to be copied too.
 NOTE: Be careful when copying the framework around, it contains symlinks and
 if cp -r is used the size will we doubled, use cp -a instead.
 
-The Python framework is found in
+The Python framework is found in this folder (may be another version number):
 
-cp -a /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework ~/work/blink/Distribution/Frameworks/
+/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework
 
-* Reduce the size of the Python Framework:
+Copy the framework to Blink:
+
+cp -a /usr/local/Cellar/python/2.7.14/Frameworks/Python.framework \
+~/work/blink/Distribution/Frameworks/
 
 There are a number of things that can (and must when submitting a sandbox
 app to Mac App Store) be removed from the framework directory to make it
@@ -59,7 +63,7 @@ rm -r Versions/2.7/lib/python2.7/site-packages
 
 Replace Versions/Current/lib/python2.7/site.py with an empty file.
 
-rm ~/work/blink/Distribution/Frameworks//Python.framework/Versions/Current/lib/python2.7/site.py
+rm ~/work/blink/Distribution/Frameworks/Python.framework/Versions/Current/lib/python2.7/site.py
 touch ~/work/blink/Distribution/Frameworks/Python.framework/Versions/Current/lib/python2.7/site.py
 
 Python Framework needs file a Info.plist file under Resources in order to be
@@ -73,13 +77,61 @@ Installing PyObjC
 
 Since September 28th, 2017, Blink works with latest PyObjc 4.X.
 
-pip install pyobjc
-
-Then copy the Frameworks listed below into Blink/Distribution/Resources/lib
-folder.
-
 Some frameworks may not load becuase of missing __init__.py if so create an
 empty one inside the corespondent folder.
+
+This guide assumes all software is being installed in a virtualenv (except for
+the packages installed with Homebrew, of course). 
+
+sudo easy_install pip
+sudo -H pip install virtualenv --upgrade --ignore-installed six
+sudo -H pip install virtualenvwrapper --upgrade --ignore-installed six
+
+The above are instaleld in /Library/Python/2.7/site-packages
+
+Add to ~.bashrc:
+
+export WORKON_HOME=$HOME/.virtualenvs
+export PIP_VIRTUALENV_BASE=$WORKON_HOME
+export PIP_RESPECT_VIRTUALENV=true
+[[ -f /usr/share/virtualenvwrapper/virtualenvwrapper_lazy.sh ]] && source /usr/share/virtualenvwrapper/virtualenvwrapper_lazy.sh
+[[ -f /usr/local/bin/virtualenvwrapper_lazy.sh ]] && source /usr/local/bin/virtualenvwrapper_lazy.sh
+
+Create pyobjc virtual environment
+
+mkvirtualenv -p $(which python2.7) pyobjc
+
+You'll be dropped right into it. If you want to exit it:
+
+deactivate
+
+And to activate the virtualenv again:
+
+workon pyobjc
+
+pip install pyobjc
+
+Which installs Python Objective C modules in this folder:
+
+~/.virtualenvs/pyobjc/lib/python2.7/site-packages
+
+Copy the Frameworks listed below into Blink/Distribution/Resources/lib folder.
+
+pyobjc_modules="AVFoundation AddressBook AppKit Cocoa CoreFoundation \
+Foundation LaunchServices PyObjCTools Quartz ScriptingBridge WebKit objc"
+
+for m in $pyobjc_modules; do \
+rm -r ~/work/blink/Distribution/Resources/lib/$m; done
+
+for m in $pyobjc_modules; do \
+cp -a ~/.virtualenvs/pyobjc/lib/python2.7/site-packages/$m \
+~/work/blink/Distribution/Resources/lib/; done
+
+find ~/work/blink/Distribution/Resources/lib/ -name *.pyc -exec rm -r "{}" \; 
+find ~/work/blink/Distribution/Resources/lib/ -name *.pyo -exec rm -r "{}" \; 
+
+Create missing file for PyObjCTools module:
+touch ~/work/blink/Distribution/Resources/lib/PyObjCTools/__init__.py
 
 
 For older version 2.5
@@ -96,20 +148,6 @@ python install.py
 When compiling PyObjC a Python package will be created for every system
 framework, but not all of them are needed (at the moment), so just pick the
 ones we use:
-
-AVFoundation
-AddressBook
-AppKit
-Cocoa
-CoreFoundation
-Foundation
-LaunchServices
-PyObjCTools
-Quartz
-ScriptingBridge
-StoreKit
-WebKit
-objc
 
 For example this is the content of a Resources/lib bundled with Blink Cocoa
 as of November 3rd, 2016 (including sipsimple dependencies & all):
