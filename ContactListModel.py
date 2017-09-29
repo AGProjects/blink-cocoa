@@ -691,8 +691,7 @@ class BlinkBlockedPresenceContact(BlinkContact):
 class BlinkPresenceContactAttribute(object):
     def __init__(self, name):
         self.name = name
-    
-    @objc.python_method
+
     def __get__(self, obj, objtype):
         if obj is None:
             return self
@@ -701,7 +700,6 @@ class BlinkPresenceContactAttribute(object):
         except AttributeError:
             return None
 
-    @objc.python_method
     def __set__(self, obj, value):
         if obj.contact is not None:
             setattr(obj.contact, self.name, value)
@@ -1725,8 +1723,7 @@ class SystemAddressBookBlinkContact(BlinkContact):
 class BlinkGroupAttribute(object):
     def __init__(self, name):
         self.name = name
-    
-    @objc.python_method
+
     def __get__(self, obj, objtype):
         if obj is None:
             return self
@@ -1734,8 +1731,7 @@ class BlinkGroupAttribute(object):
             return obj.__dict__.get(self.name, None)
         else:
             return getattr(obj.group, self.name)
-            
-    @objc.python_method
+
     def __set__(self, obj, value):
         if obj.group is None:
             obj.__dict__[self.name] = value
