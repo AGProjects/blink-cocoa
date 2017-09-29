@@ -499,11 +499,15 @@ class PreferencesController(NSWindowController, object):
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
                 continue
+        
+            if option_name == 'video_codec_list' and not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
+                continue
+            
             option = getattr(section_class, option_name, None)
             if option is None:
                 continue
 
-            controlFactory = PreferenceOptionTypes.get(section_name+"."+option_name, None)
+            controlFactory = PreferenceOptionTypes.get(section_name + "." + option_name, None)
             if not controlFactory:
                 controlFactory = None
                 if forAccount:
