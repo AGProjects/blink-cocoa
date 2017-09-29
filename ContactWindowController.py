@@ -4732,8 +4732,16 @@ class ContactWindowController(NSWindowController):
             setupAudioDeviceMenu(menu, 402, self.backend._app.engine.input_devices,  "input_device",  "selectInputDevice:")
             setupAudioDeviceMenu(menu, 401, self.backend._app.engine.output_devices, "output_device", "selectOutputDevice:")
             setupAudioDeviceMenu(menu, 403, self.backend._app.engine.output_devices, "alert_device",  "selectAlertDevice:")
-            if hasattr(self.backend._app.engine, "video_devices"):
-                setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
+            if not self.sessionControllersManager.isMediaTypeSupported('video'):
+                old = menu.itemWithTag_(500)
+                if old:
+                    menu.removeItem_(old)
+                old = menu.itemWithTag_(600)
+                if old:
+                    menu.removeItem_(old)
+            else:
+                if hasattr(self.backend._app.engine, "video_devices"):
+                    setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
 
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()

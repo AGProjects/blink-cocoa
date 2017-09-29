@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
         <capability name="box content view" minToolsVersion="7.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
@@ -267,7 +268,7 @@ CA
                             <menuItem title="Dispositivo de Alerta de Áudio" image="bell" tag="403" enabled="NO" id="860">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" id="s0l-sF-xRK"/>
+                            <menuItem isSeparatorItem="YES" tag="600" id="s0l-sF-xRK"/>
                             <menuItem title="Dispositivos de Vídeo" tag="500" enabled="NO" id="mbW-k8-Lkd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
@@ -610,10 +611,10 @@ CA
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <clipView key="contentView" id="7tk-Pf-Fob">
                                                 <rect key="frame" x="1" y="1" width="272" height="346"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" autosaveName="contactList" indentationPerLevel="14" indentationMarkerFollowsCell="NO" autoresizesOutlineColumn="YES" outlineTableColumn="507" id="504" customClass="ContactOutlineView">
-                                                        <rect key="frame" x="0.0" y="0.0" width="272" height="19"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="272" height="346"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <size key="intercellSpacing" width="3" height="2"/>
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -641,7 +642,6 @@ CA
                                                         </connections>
                                                     </outlineView>
                                                 </subviews>
-                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </clipView>
                                             <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="505">
                                                 <rect key="frame" x="1" y="282" width="229" height="15"/>
@@ -710,7 +710,7 @@ para iniciar a sessão.</string>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveName="SearchResultTable" rowHeight="34" id="621" customClass="ContactOutlineView">
-                                                        <rect key="frame" x="0.0" y="0.0" width="272" height="36"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="272" height="300"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <size key="intercellSpacing" width="3" height="2"/>
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -738,7 +738,6 @@ para iniciar a sessão.</string>
                                                         </connections>
                                                     </tableView>
                                                 </subviews>
-                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </clipView>
                                             <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="620">
                                                 <rect key="frame" x="1" y="173" width="251" height="15"/>
@@ -942,8 +941,6 @@ ABC</string>
                                                         <rect key="frame" x="3" y="3" width="274" height="345"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     </view>
-                                                    <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                                                    <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                 </box>
                                             </subviews>
                                         </customView>
@@ -1293,8 +1290,8 @@ ABC</string>
                             <rect key="frame" x="0.0" y="0.0" width="280" height="299"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
-                                <rect key="frame" x="1" y="1" width="278" height="354"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <rect key="frame" x="1" y="1" width="278" height="297"/>
+                                <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <customView id="547" userLabel="Audio Sessions List View" customClass="ListView">
                                         <rect key="frame" x="0.0" y="0.0" width="259" height="16"/>
@@ -1322,7 +1319,7 @@ ABC</string>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" id="Atq-KM-J9c">
                                 <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>
@@ -1353,7 +1350,6 @@ ABC</string>
                                         </connections>
                                     </tableView>
                                 </subviews>
-                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                             </clipView>
                             <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="1536">
                                 <rect key="frame" x="-100" y="-100" width="223" height="15"/>
@@ -1420,7 +1416,7 @@ ABC</string>
                         <levelIndicator toolTip="Sinal de Entrada do Microfone" verticalHuggingPriority="750" id="1820">
                             <rect key="frame" x="214" y="8" width="27.5" height="12"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                            <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" warningValue="2" criticalValue="8" levelIndicatorStyle="relevancy" id="1821">
+                            <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" levelIndicatorStyle="relevancy" id="1821">
                                 <font key="font" metaFont="miniSystem"/>
                             </levelIndicatorCell>
                             <accessibility description="Sinal de Entrada do Microfone"/>
