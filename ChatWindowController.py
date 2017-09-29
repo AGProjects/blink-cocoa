@@ -677,7 +677,6 @@ class ChatWindowController(NSWindowController):
             self.noteSession_isComposing_(sender.delegate.sessionController, True)
         self.revalidateToolbar()
 
-    @objc.python_method
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
         if selectedSession:
@@ -837,7 +836,6 @@ class ChatWindowController(NSWindowController):
         except AttributeError:
            return False
 
-    @objc.python_method
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()
         session = self.selectedSessionController()

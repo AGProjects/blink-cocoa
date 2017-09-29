@@ -241,7 +241,6 @@ class StatusItem(NSObject):
         mitem.setTag_(item.sessionController.identifier)
         mitem.setTarget_(self)
 
-    @objc.python_method
     def activateItem_(self, sender):
         for item in self.items:
             if item.sessionController.identifier == sender.tag():

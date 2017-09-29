@@ -241,7 +241,6 @@ class ChatViewController(NSObject):
     def resetRenderedMessages(self):
         self.rendered_messages=[]
 
-    @objc.python_method
     def setAccount_(self, account):
         self.account = account
 

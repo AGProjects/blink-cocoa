@@ -185,11 +185,9 @@ class BoolOption(Option):
         self.check.setTarget_(self)
         self.check.setAction_("toggled:")
 
-    @objc.python_method
     def toggled_(self, sender):
         self.store()
 
-    @objc.python_method
     def _store(self):
         if (self.check.state() == NSOnState) != self.get(False):
             self.set(self.check.state() == NSOnState)
@@ -273,7 +271,6 @@ class NullableStringOption(StringOption):
 
 
 class UnicodeOption(Option):
-
     def __init__(self, object, name, option, description=None):
         Option.__init__(self, object, name, option, description)
 
