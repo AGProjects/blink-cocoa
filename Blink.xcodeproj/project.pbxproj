@@ -2602,7 +2602,7 @@
 			isa = PBXGroup;
 			children = (
 				1F2271F112B551B40010A8B2 /* PythonPackages */,
-				1FEDE7CF17AFD4C50038C579 /* C-Libraries */,
+				1FEDE7CF17AFD4C50038C579 /* c */,
 				1F2271F012B551AC0010A8B2 /* CustomFrameworks */,
 				29B97323FDCFA39411CA2CEA /* SystemFrameworks */,
 				1FB30809146D5598001430B5 /* mime.types */,
@@ -2750,7 +2750,7 @@
 			path = icons/presence;
 			sourceTree = "<group>";
 		};
-		1FEDE7CF17AFD4C50038C579 /* C-Libraries */ = {
+		1FEDE7CF17AFD4C50038C579 /* c */ = {
 			isa = PBXGroup;
 			children = (
 				1FC8983A1D9C267500DB4CB5 /* libavcodec.57.dylib */,
@@ -2774,7 +2774,7 @@
 				1FC8984C1D9C267500DB4CB5 /* Python.framework */,
 				1FC8984D1D9C267500DB4CB5 /* Sparkle.framework */,
 			);
-			name = "C-Libraries";
+			name = c;
 			sourceTree = "<group>";
 		};
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
