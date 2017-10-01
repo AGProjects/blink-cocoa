@@ -3395,11 +3395,14 @@
 					1F8DC324135084FA0034815C = {
 						DevelopmentTeam = 4DFEFUDLKZ;
 						SystemCapabilities = {
+							com.apple.ApplicationGroups.Mac = {
+								enabled = 0;
+							};
 							com.apple.InAppPurchase = {
 								enabled = 0;
 							};
 							com.apple.iCloud = {
-								enabled = 1;
+								enabled = 0;
 							};
 						};
 					};
