@@ -737,7 +737,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
         NotificationCenter().add_observer(self, name="BlinkPresenceFailed")
-        NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
+        #NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
 
     @property
     def id(self):
@@ -890,7 +890,7 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().discard_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().discard_observer(self, name="BlinkPresenceFailed")
         NotificationCenter().discard_observer(self, name="SystemDidWakeUpFromSleep")
-        NotificationCenter().discard_observer(self, name="SIPAccountGotPresenceState")
+        #NotificationCenter().discard_observer(self, name="SIPAccountGotPresenceState")
 
         if self.timer:
             self.timer.invalidate()
@@ -1015,6 +1015,7 @@ class BlinkPresenceContact(BlinkContact):
         return True
 
     @objc.python_method
+    @allocate_autorelease_pool
     def handle_pidfs(self, log=False):
         # log should be True when updating contacts in all contacts group to avoid duplicates
         if self.application_will_end:
@@ -1386,6 +1387,7 @@ class BlinkPresenceContact(BlinkContact):
         contact.updating_remote_icon = False
 
     @objc.python_method
+    @run_in_gui_thread
     def addToOrRemoveFromOnlineGroup(self):
         status = presence_status_for_contact(self)
         model = NSApp.delegate().contactsWindowController.model
@@ -1512,6 +1514,7 @@ class BlinkPresenceContact(BlinkContact):
 
     @objc.python_method
     def _NH_SIPAccountGotPresenceState(self, notification):
+        # not used anymore because is inefficient, now update_presence is called
         resource_map = notification.data.resource_map
         for key, value in resource_map.iteritems():
             if self.matchesURI(key, True) and self.contact is not None:
@@ -1526,6 +1529,19 @@ class BlinkPresenceContact(BlinkContact):
                             online_group_changed = self.addToOrRemoveFromOnlineGroup()
                             if online_group_changed:
                                 self.reloadModelItem(online_group_changed)
+
+    @objc.python_method
+    @run_in_thread('addressbook')
+    def update_presence(self, resources, account, full_state):
+        changed = self.handle_presence_resources(resources, account, full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
+
+        if changed:
+            self.reloadModelItem(self)
+            if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
+                online_group_changed = self.addToOrRemoveFromOnlineGroup()
+                if online_group_changed:
+                    self.reloadModelItem(online_group_changed)
+
 
     @objc.python_method
     def _NH_BlinkPresenceFailed(self, notification):
@@ -3098,6 +3114,20 @@ class ContactListModel(CustomListModel):
             return [group for group in allowed_groups if blink_contact in group.contacts]
         else:
             return [group for group in allowed_groups if blink_contact.contact in (item.contact for item in group.contacts if isinstance(item, BlinkPresenceContact))]
+
+    @objc.python_method
+    def getBlinkPresenceContactsForURI(self, uri):
+        blink_contacts = []
+        allowed_groups = [group for group in self.groupsList if (group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup))]
+        for group in allowed_groups:
+            for blink_contact in group.contacts:
+                if not isinstance(blink_contact, BlinkPresenceContact):
+                    continue
+
+                if blink_contact.matchesURI(uri, True):
+                    blink_contacts.append(blink_contact)
+
+        return blink_contacts
 
     @objc.python_method
     def saveGroupPosition(self):

@@ -5413,7 +5413,9 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_timestamp = None
 
     @objc.python_method
+    @run_in_thread('addressbook')
     def _NH_SIPAccountGotPresenceState(self, notification):
+        BlinkLogger().log_debug("Got presence update for for account %s" % notification.sender.id)
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
@@ -5424,6 +5426,14 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_timestamp = time.time()
             self.accounts[position].subscribe_presence_state = 'active'
             self.accounts[position].subscribe_presence_purged = False
+
+        resource_map = notification.data.resource_map
+        for key, value in resource_map.iteritems():
+            resources = {key: value}
+            blink_contacts = self.model.getBlinkPresenceContactsForURI(key)
+            for blink_contact in blink_contacts:
+                blink_contact.update_presence(resources, notification.sender.id, notification.data.full_state)
+
 
     @objc.python_method
     def _NH_AddressbookGroupWasActivated(self, notification):
