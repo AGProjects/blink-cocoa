@@ -1,22 +1,22 @@
 Building a Python Framework to bundle inside Blink
 --------------------------------------------------
 
-In order to avoid using the system Python a custom Framework build is
-needed.  Using a bundled Python version will make the package bigger in
-size, but all package versions are controlled and not up to the environment. 
-Also, we can use the latest Python version, with latest bugfixes and
-features, since Apple only updates the system Python version on every major
-OS release.
-
-The following instructions only apply for 64bit builds, 32bit builds are no
-longer supported.
 
 Blink dependencies must be installed under the following directory
 structure:
 
 * Distribution/Frameworks/
 * Distribution/Resources/lib
- 
+
+python-sipsimple itself and all its python related dependenies must be
+copied into the Resources/lib folder.  The libraries linked to the core of
+python-sipsimple must be also copied to the Frameworks folder.  These are
+found, when using python-sipsimple macOS installation instructions in these
+folders:
+
+/usr/local/Cellar/ffmpeg/X.X.X/lib/
+/usr/local/Cellar/x264/rXXXX/lib/
+
 
 Building the Python Framework itself
 ------------------------------------
