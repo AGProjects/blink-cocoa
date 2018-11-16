@@ -3571,7 +3571,7 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
-        if NSApp.delegate().history_enabled:
+        if not NSApp.delegate().history_enabled:
             return
 
         settings = SIPSimpleSettings()
