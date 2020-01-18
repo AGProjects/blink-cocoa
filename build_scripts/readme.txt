@@ -1,6 +1,7 @@
 Building a Python Framework to bundle inside Blink
 --------------------------------------------------
 
+home_dir=/Users/adigeo/work/blink
 
 Blink dependencies must be installed under the following directory
 structure:
@@ -10,20 +11,15 @@ structure:
 
 python-sipsimple itself and all its python related dependenies must be
 copied into the Resources/lib folder.  The libraries linked to the core of
-python-sipsimple must be also copied to the Frameworks folder.  These are
-found, when using python-sipsimple macOS installation instructions in these
-folders:
-
-/usr/local/Cellar/ffmpeg/X.X.X/lib/
-/usr/local/Cellar/x264/rXXXX/lib/
+python-sipsimple must be also copied to the Frameworks folder.
 
 
-Building the Python Framework itself
-------------------------------------
+Building the Python Framework
+-----------------------------
 
 Install it using Homebrew:
 
-brew install python
+brew install python2
 
 The framework will be installed and linked with Homebrew supplied OpenSSL
 and SQLite versions.  Those libraries will need to be copied too.
@@ -31,22 +27,27 @@ and SQLite versions.  Those libraries will need to be copied too.
 NOTE: Be careful when copying the framework around, it contains symlinks and
 if cp -r is used the size will we doubled, use cp -a instead.
 
-The Python framework is found in this folder (may be another version number):
+Copy the Python framework to Blink Distribution folder and make it
+compatible with OSX bundle structure.  There are a number of things that can
+(and must when submitting a sandbox app to Mac App Store) be removed from
+the framework directory to make it smaller in size:
 
-/usr/local/Cellar/python/2.7.14/Frameworks/Python.framework
+home_dir=/Users/adigeo/work/blink
+cd $home_dir
+cd Distribution/Frameworks/
 
-Copy the framework to Blink:
-
-cp -a /usr/local/Cellar/python/2.7.14/Frameworks/Python.framework \
-~/work/blink/Distribution/Frameworks/
-
-There are a number of things that can (and must when submitting a sandbox
-app to Mac App Store) be removed from the framework directory to make it
-smaller in size:
-
-cd ~/work/blink/Distribution/Frameworks//Python.framework
+rm -r Python.framework
+cp -a /usr/local/opt/python2/Frameworks/Python.framework .
+cd Python.framework
+cd Versions
+ln -s 2.7 Current 
+cd ..
+ln -s Versions/Current/Headers .
+ln -s Versions/Current/Python .
+ln -s Versions/Current/Resources .
 find . -name *.pyc -exec rm -r "{}" \; 
 find . -name *.pyo -exec rm -r "{}" \; 
+mv Versions/Current/Resources/Info.plist .
 rm -r Versions/Current/lib/python2.7/config/python.o
 rm -r Versions/Current/bin
 rm -r Versions/Current/Resources/*
@@ -60,16 +61,31 @@ rm -r Versions/Current/lib/python2.7/bsddb
 rm -r Versions/Current/lib/python2.7/lib-dynload/gdbm.so
 rm -r Versions/Current/lib/python2.7/lib-dynload/readline.so
 rm -r Versions/2.7/lib/python2.7/site-packages
+rm Versions/Current/lib/python2.7/site.py
+touch Versions/Current/lib/python2.7/site.py
+mv Info.plist  Versions/Current/Resources/Info.plist
+$home_dir/build_scripts/change_lib_names.sh Python
+$home_dir/build_scripts/change_lib_names.sh Versions/Current/lib/python2.7/lib-dynload/*.so
+cd ..
+codesign -v -s "Developer ID Application: AG Projects" Python.framework
 
-Replace Versions/Current/lib/python2.7/site.py with an empty file.
+# Copy related C dependencies
 
-rm ~/work/blink/Distribution/Frameworks/Python.framework/Versions/Current/lib/python2.7/site.py
-touch ~/work/blink/Distribution/Frameworks/Python.framework/Versions/Current/lib/python2.7/site.py
+cp /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib .
+cp /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib .
+cp /usr/local/opt/sqlite/lib/libsqlite3.0.dylib .
+cp /usr/local/opt/ffmpeg/lib/libavformat.58.dylib .
+cp /usr/local/opt/ffmpeg/lib/libavcodec.58.dylib .
+cp /usr/local/opt/ffmpeg/lib/libswscale.5.dylib .
+cp /usr/local/opt/ffmpeg/lib/libavutil.56.dylib .
+cp /usr/local/opt/gnutls/lib/libgnutls.30.dylib .
+cp /usr/local/opt/gettext/lib/libintl.8.dylib .
+cp /usr/local/opt/nettle/lib/libhogweed.4.dylib .
 
-Python Framework needs file a Info.plist file under Resources in order to be
-compatible with latest OSX bundle structure:
+$home_dir/build_scripts/change_lib_names.sh *.dylib 
 
-cp build_scripts/PythonFramework.plist Distribution/Frameworks/Python.framework/Resources/Info.plist           
+$home_dir/build_scripts/change_lib_names.sh $home_dir/Distribution/Resources/lib/sipsimple/core/_core.so 
+codesign -v -s "Developer ID Application: AG Projects" $home_dir/Distribution/Resources/lib/sipsimple/core/_core.so 
 
 
 Installing PyObjC
@@ -89,7 +105,7 @@ sudo -H pip install virtualenvwrapper --upgrade --ignore-installed six
 
 The above are instaleld in /Library/Python/2.7/site-packages
 
-Add to ~.bashrc:
+Add to ~/.bashrc:
 
 export WORKON_HOME=$HOME/.virtualenvs
 export PIP_VIRTUALENV_BASE=$WORKON_HOME
@@ -117,8 +133,8 @@ Which installs Python Objective C modules in this folder:
 
 Copy the Frameworks listed below into Blink/Distribution/Resources/lib folder.
 
-pyobjc_modules="AVFoundation AddressBook AppKit Cocoa CoreFoundation \
-Foundation LaunchServices PyObjCTools Quartz ScriptingBridge WebKit objc"
+pyobjc_modules="AVFoundation AddressBook AppKit Cocoa CoreFoundation CoreServices \
+Foundation LaunchServices PyObjCTools Quartz ScriptingBridge WebKit FSEvents objc"
 
 for m in $pyobjc_modules; do \
 rm -r ~/work/blink/Distribution/Resources/lib/$m; done
@@ -131,80 +147,7 @@ find ~/work/blink/Distribution/Resources/lib/ -name *.pyc -exec rm -r "{}" \;
 find ~/work/blink/Distribution/Resources/lib/ -name *.pyo -exec rm -r "{}" \; 
 
 Create missing file for PyObjCTools module:
-touch ~/work/blink/Distribution/Resources/lib/PyObjCTools/__init__.py
-
-
-For older version 2.5
-
-In order to get a PyObjC version that will work with the framework created
-above (Python 2.7, 64bits) an equivalent Python must be used to compile it.
-That is, if has to be a Python 2.7 version (it doesn't have to be the exact
-version) and it has to be a 64bit version.
-
-darcs get darcs@devel.ag-projects.com:repositories/thirdparty/pyobjc-25
-cd pyobjc-25
-python install.py
-
-When compiling PyObjC a Python package will be created for every system
-framework, but not all of them are needed (at the moment), so just pick the
-ones we use:
-
-For example this is the content of a Resources/lib bundled with Blink Cocoa
-as of November 3rd, 2016 (including sipsimple dependencies & all):
-
-AVFoundation
-AddressBook
-AppKit
-Cocoa
-CoreFoundation
-Crypto
-Foundation
-LaunchServices
-PyObjCTools
-Quartz
-ScriptingBridge
-WebKit
-_cffi_backend.so
-_ldap.so
-_markerlib
-application
-cffi
-cjson.so
-cryptography
-cryptography-1.5.1.dist-info
-dateutil
-dns
-dsml.py
-enum
-eventlib
-formencode
-gmpy2.so
-gnutls
-greenlet.so
-idna
-ipaddress.py
-ldap
-ldapurl.py
-ldif.py
-lxml
-msrplib
-objc
-otr
-pkg_resources
-pyasn1
-pycparser
-pydispatch
-pytz
-service_identity
-sipsimple
-six.py
-sqlobject
-twisted
-xcaplib
-
-
-NOTE: The objc package is located inside a PyObjC directory, just copy
-it from there, without the parent directory.
+cp ~/work/blink/build_scripts/PyObjCTools.init ~/work/blink/Distribution/Resources/lib/PyObjCTools/__init__.py
 
 
 Fix library paths
@@ -241,6 +184,7 @@ option is disabled for Python.framework.  This script can be used to sign
 all libraries and frameworks
 
 ./build_scripts/codesign.sh 
+
 
 Module exceptions
 -----------------
