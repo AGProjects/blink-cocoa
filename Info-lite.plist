@@ -53,5 +53,7 @@
 	<string>NSApplication</string>
 	<key>NSUbiquitousDisplaySet</key>
 	<string>com.agprojects.BlinkLite</string>
-</dict>
+        <key>NSCameraUsageDescription</key>
+        <string>Required for VoIP calls</string>
+        </dict>
 </plist>

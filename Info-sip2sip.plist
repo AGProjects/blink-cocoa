@@ -57,5 +57,7 @@
 	<string>com.agprojects.SIP2SIP</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/SIP2SIPAppcast.xml</string>
-</dict>
+        <key>NSCameraUsageDescription</key>
+        <string>Required for VoIP calls</string>
+        </dict>
 </plist>

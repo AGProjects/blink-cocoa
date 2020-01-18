@@ -55,5 +55,7 @@
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/BlinkAppcast.xml</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Required for VoIP calls</string>
 </dict>
 </plist>
