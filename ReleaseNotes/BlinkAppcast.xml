@@ -6,6 +6,18 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 6.1.5</title>
+            <sparkle:minimumSystemVersion>10.11.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sat Jan 18 12:44:25 CET 2020</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="6.1.5"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 6.1.4</title>
             <sparkle:minimumSystemVersion>10.11.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
