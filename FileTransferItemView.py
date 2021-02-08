@@ -24,7 +24,7 @@ import unicodedata
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.system import makedirs, unlink
-from zope.interface import implements
+from zope.interface import implementer
 
 from sipsimple.account import AccountManager
 from resources import ApplicationData
@@ -32,8 +32,8 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from util import format_size, format_date, run_in_gui_thread, normalize_sip_uri_for_outgoing_session
 
 
+@implementer(IObserver)
 class FileTransferItemView(NSView):
-    implements(IObserver)
 
     view = objc.IBOutlet()
     icon = objc.IBOutlet()
@@ -124,14 +124,14 @@ class FileTransferItemView(NSView):
             self.local_uri = self.transfer.ft_info.local_uri
 
             if type(self.transfer) == OutgoingPushFileTransferHandler:
-                self.fromText.setStringValue_(u"To:  %s" % self.transfer.account.id)
+                self.fromText.setStringValue_("To:  %s" % self.transfer.account.id)
             else:
-                self.fromText.setStringValue_(u"From:  %s" % self.transfer.account.id)
+                self.fromText.setStringValue_("From:  %s" % self.transfer.account.id)
             self.revealButton.setHidden_(True)
 
             # XXX: there should be a better way to do this!
             tmp_folder = ApplicationData.get('.tmp_file_transfers')
-            makedirs(tmp_folder, 0700)
+            makedirs(tmp_folder, 0o700)
             tmpf = tmp_folder + "/tmpf-" + self.file_path
             with open(tmpf, "w+"):
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(tmpf))
@@ -248,7 +248,7 @@ class FileTransferItemView(NSView):
     def retryTransfer_(self, sender):
         if self.oldTransferInfo:
             try:
-                account = (account for account in AccountManager().iter_accounts() if account.id == self.oldTransferInfo.local_uri).next()
+                account = next((account for account in AccountManager().iter_accounts() if account.id == self.oldTransferInfo.local_uri))
             except StopIteration:
                 account = AccountManager().default_account
             target_uri = normalize_sip_uri_for_outgoing_session(self.oldTransferInfo.remote_uri, AccountManager().default_account)

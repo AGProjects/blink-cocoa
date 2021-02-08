@@ -28,7 +28,7 @@ from Foundation import (NSArray,
                         NSTimer)
 import objc
 
-import urlparse
+import urllib.parse
 import sys
 
 from application.notification import NotificationCenter, IObserver
@@ -36,7 +36,7 @@ from application.python import Null
 from operator import attrgetter
 from sipsimple.addressbook import ContactURI
 from sipsimple.core import SIPCoreError, SIPURI
-from zope.interface import implements
+from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
 from util import checkValidPhoneNumber, format_uri_type, run_in_gui_thread
@@ -48,8 +48,8 @@ class MyImageThing(NSImageView):
         self.target().performSelector_withObject_(self.action(), self)
 
 
+@implementer(IObserver)
 class AddContactController(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
     addButton = objc.IBOutlet()
@@ -156,8 +156,8 @@ class AddContactController(NSObject):
             contact = {'default_uri'     : self.default_uri,
                        'uris'            : self.uris,
                        'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
-                       'name'            : unicode(self.nameText.stringValue()),
-                       'organization'    : unicode(self.organizationText.stringValue()),
+                       'name'            : str(self.nameText.stringValue()),
+                       'organization'    : str(self.organizationText.stringValue()),
                        'groups'          : self.belonging_groups,
                        'icon'            : None if self.photoImage.image() == self.defaultPhotoImage else self.photoImage.image(),
                        'preferred_media' : self.preferred_media,
@@ -172,8 +172,8 @@ class AddContactController(NSObject):
             return True
 
         if uri.startswith(('https:', 'http:')):
-            url = urlparse.urlparse(uri)
-            if url.scheme not in (u'http', u'https'):
+            url = urllib.parse.urlparse(uri)
+            if url.scheme not in ('http', 'https'):
                 return False
             return True
 
@@ -252,7 +252,7 @@ class AddContactController(NSObject):
     def preferredMediaPopUpClicked_(self, sender):
         item = self.preferredMediaPopUpButton.selectedItem()
         try:
-            self.preferred_media = (media for media in self.media_tags.keys() if self.media_tags[media] == item.tag()).next()
+            self.preferred_media = next((media for media in list(self.media_tags.keys()) if self.media_tags[media] == item.tag()))
         except StopIteration:
             self.preferred_media == 'audio'
 
@@ -380,7 +380,7 @@ class AddContactController(NSObject):
         if column == 0:
             return contact_uri.uri
         elif column == 1:
-            return cell.indexOfItemWithTitle_(contact_uri.type or u'SIP')
+            return cell.indexOfItemWithTitle_(contact_uri.type or 'SIP')
 
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         cell = column.dataCell()
@@ -491,7 +491,7 @@ class EditContactController(AddContactController):
         self.default_uri = self.blink_contact.contact.uris.default
         self.autoanswerCheckbox.setState_(NSOnState if blink_contact.auto_answer else NSOffState)
 
-        self.uris = sorted(blink_contact.contact.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxint)
+        self.uris = sorted(blink_contact.contact.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize)
         # TODO: how to handle xmmp: uris?
         #for uri in self.uris:
             #if uri.type is not None and uri.type.lower() == 'xmpp' and ';xmpp' in uri.uri:
@@ -530,8 +530,8 @@ class EditContactController(AddContactController):
             contact = {
                     'default_uri'     : self.default_uri,
                     'uris'            : self.uris,
-                    'name'            : unicode(self.nameText.stringValue()),
-                    'organization'    : unicode(self.organizationText.stringValue()),
+                    'name'            : str(self.nameText.stringValue()),
+                    'organization'    : str(self.organizationText.stringValue()),
                     'groups'          : self.belonging_groups,
                     'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                     'icon'            : None if self.photoImage.image() is self.defaultPhotoImage else self.photoImage.image(),

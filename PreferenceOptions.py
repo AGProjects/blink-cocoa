@@ -62,7 +62,7 @@ from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, 
 from sipsimple.configuration.datatypes import VideoCodecList, H264Profile
 from sipsimple.configuration.settings import SIPSimpleSettings
 from configuration.settings import EchoCancellerSettingsExtension
-from zope.interface import implements
+from zope.interface import implementer
 
 from HorizontalBoxView import HorizontalBoxView
 from TableView import TableView
@@ -148,18 +148,18 @@ class Option(HorizontalBoxView):
 
     @objc.python_method
     def restore(self):
-        print "Restore not implemented for "+self.option
+        print("Restore not implemented for "+self.option)
 
     def store(self):
         try:
             self._store()
-        except Exception, e:
+        except Exception as e:
             NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Can't set option '%s'.\nError: %s"%(self.option,str(e.decode('utf-8'))), NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
 
     @objc.python_method
     def _store(self):
-        print "Store not implemented for "+self.option
+        print("Store not implemented for "+self.option)
 
     @objc.python_method
     def setTooltip(self, text):
@@ -246,7 +246,7 @@ class StringOption(Option):
                 nvalue = None
             if current != nvalue:
                 self.set(nvalue)
-        except Exception, e:
+        except Exception as e:
             NSRunAlertPanel(NSLocalizedString("Error", "Window title"), "Invalid value: %s" %e, NSLocalizedString("OK", "Button title"), None, None)
             self.restore()
 
@@ -301,7 +301,7 @@ class UnicodeOption(Option):
     @objc.python_method
     def _store(self):
         current = self.get()
-        nvalue = unicode(self.text.stringValue())
+        nvalue = str(self.text.stringValue())
         if self.emptyIsNone and not nvalue:
             nvalue = None
         if current != nvalue:
@@ -310,7 +310,7 @@ class UnicodeOption(Option):
     @objc.python_method
     def restore(self):
         value = self.get()
-        self.text.setStringValue_(value and unicode(value) or u'')
+        self.text.setStringValue_(value and str(value) or '')
 
     @objc.python_method
     def setTooltip(self, text):
@@ -331,8 +331,8 @@ class MSRPRelayAddresOption(UnicodeOption):
     @objc.python_method
     def _store(self):
         current = self.get()
-        if current != unicode(self.text.stringValue()) and not (current is None and self.text.stringValue().length() == 0):
-            self.set(MSRPRelayAddress.from_description(unicode(self.text.stringValue())))
+        if current != str(self.text.stringValue()) and not (current is None and self.text.stringValue().length() == 0):
+            self.set(MSRPRelayAddress.from_description(str(self.text.stringValue())))
 
 
 class StringTupleOption(StringOption):
@@ -671,7 +671,7 @@ class AudioCodecListOption(MultipleSelectionOption):
         for opt in self.options:
             if opt in self.selection:
                 try:
-                    opt = (k for k, v in self.beautified_codecs.iteritems() if opt == v).next()
+                    opt = next((k for k, v in self.beautified_codecs.items() if opt == v))
                 except StopIteration:
                     pass
                 value.append(opt)
@@ -684,7 +684,7 @@ class AudioCodecListOption(MultipleSelectionOption):
         options = []
         for val in list(value):
             try:
-                v = (v for k, v in self.beautified_codecs.iteritems() if val == k).next()
+                v = next((v for k, v in self.beautified_codecs.items() if val == k))
             except StopIteration:
                 options.append(val)
             else:
@@ -721,7 +721,7 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         options = []
         for val in list(value):
             try:
-                v = (v for k, v in audio_codecs.iteritems() if val == k).next()
+                v = next((v for k, v in audio_codecs.items() if val == k))
             except StopIteration:
                 options.append(val)
             else:
@@ -780,7 +780,7 @@ class AccountVideoCodecListOption(VideoCodecListOption):
         options = []
         for val in list(value):
             try:
-                v = (v for k, v in video_codecs.iteritems() if val == k).next()
+                v = next((v for k, v in video_codecs.items() if val == k))
             except StopIteration:
                 options.append(val)
             else:
@@ -860,8 +860,8 @@ class PopUpMenuOption(Option):
             if item != self.get():
                 self.set(item)
         else:
-            if unicode(self.popup.titleOfSelectedItem()) != unicode(self.get()):
-                self.set(unicode(self.popup.titleOfSelectedItem()))
+            if str(self.popup.titleOfSelectedItem()) != str(self.get()):
+                self.set(str(self.popup.titleOfSelectedItem()))
 
     @objc.python_method
     def restore(self):
@@ -876,13 +876,13 @@ class PopUpMenuOption(Option):
                 i += 1
 
             if index < 0 and self.addMissingOptions:
-                print "adding unknown item %s to popup for %s"%(value, self.option)
-                self.popup.addItemWithTitle_(unicode(value))
+                print("adding unknown item %s to popup for %s"%(value, self.option))
+                self.popup.addItemWithTitle_(str(value))
                 self.popup.lastItem().setRepresentedObject_(value)
                 index = self.popup.numberOfItems()
             self.popup.selectItemAtIndex_(index)
         else:
-            value = unicode(self.get(False))
+            value = str(self.get(False))
             if self.popup.indexOfItemWithTitle_(value) < 0:
               self.popup.addItemWithTitle_(value)
             self.popup.selectItemWithTitle_(value)
@@ -890,7 +890,7 @@ class PopUpMenuOption(Option):
 class LanguagesOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, description=description, useRepresented=True)
-        for key in NSApp.delegate().supported_languages.keys():
+        for key in list(NSApp.delegate().supported_languages.keys()):
             self.popup.addItemWithTitle_(NSApp.delegate().supported_languages[key])
             self.popup.lastItem().setRepresentedObject_(key)
 
@@ -1151,7 +1151,7 @@ class PathOption(NullableUnicodeOption):
 class TLSCAListPathOption(PathOption):
     @objc.python_method
     def _store(self):
-        cert_path = unicode(self.text.stringValue()) or None
+        cert_path = str(self.text.stringValue()) or None
         if cert_path is not None:
             if os.path.isabs(cert_path) or cert_path.startswith('~/'):
                 contents = open(os.path.expanduser(cert_path)).read()
@@ -1163,8 +1163,8 @@ class TLSCAListPathOption(PathOption):
 
 class TLSCertificatePathOption(PathOption):
     def _store(self):
-        cert_path = unicode(self.text.stringValue()) or None
-        if cert_path is not None and cert_path.lower() != u'default':
+        cert_path = str(self.text.stringValue()) or None
+        if cert_path is not None and cert_path.lower() != 'default':
             if os.path.isabs(cert_path) or cert_path.startswith('~/'):
                 contents = open(os.path.expanduser(cert_path)).read()
             else:
@@ -1225,7 +1225,7 @@ class MessageRecorder(NSObject):
                 self.bridge.add(self.file)
                 self.bridge.add(SIPApplication.voice_audio_device)
                 self.file.start()
-                print "Recording to %s" % self.path
+                print("Recording to %s" % self.path)
 
             self.recording = True
             self.label.setStringValue_(NSLocalizedString("Recording...", "Audio recording text label"))
@@ -1264,8 +1264,8 @@ class MessageRecorder(NSObject):
         return self.path
 
 
+@implementer(IObserver)
 class SoundFileOption(Option):
-    implements(IObserver)
 
     view = objc.IBOutlet()
     popup = objc.IBOutlet()
@@ -1318,7 +1318,7 @@ class SoundFileOption(Option):
             if not path:
                 return
             self.play.setImage_(NSImage.imageNamed_("pause"))
-            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
+            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path), volume=self.slider.integerValue()*10)
             NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
@@ -1342,7 +1342,7 @@ class SoundFileOption(Option):
             panel.setCanChooseFiles_(True)
             panel.setCanChooseDirectories_(False)
 
-            if panel.runModalForTypes_(NSArray.arrayWithObject_(u"wav")) == NSOKButton:
+            if panel.runModalForTypes_(NSArray.arrayWithObject_("wav")) == NSOKButton:
                 path = unicodedata.normalize('NFC', panel.filename())
                 self.oldIndex = self.addItemForPath(path)
             else:
@@ -1353,7 +1353,7 @@ class SoundFileOption(Option):
     def addItemForPath(self, path):
         for i in range(self.popup.numberOfItems()):
             item = self.popup.itemAtIndex_(i)
-            if unicode(item.representedObject()) == path:
+            if str(item.representedObject()) == path:
                 break
         else:
             i = self.popup.numberOfItems() - 2
@@ -1366,7 +1366,7 @@ class SoundFileOption(Option):
     def _store(self):
         value = self.popup.selectedItem().representedObject()
         if value:
-            self.set(SoundFile(unicode(value), volume=self.slider.integerValue()*10))
+            self.set(SoundFile(str(value), volume=self.slider.integerValue()*10))
             self.slider.setEnabled_(True)
             self.play.setEnabled_(True)
         else:
@@ -1381,7 +1381,7 @@ class SoundFileOption(Option):
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.volume/10)
             self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value.volume)
-            value = unicode(value.path)
+            value = str(value.path)
             self.play.setEnabled_(True)
         else:
             self.slider.setEnabled_(False)
@@ -1390,7 +1390,7 @@ class SoundFileOption(Option):
         found = False
         for i in range(self.popup.numberOfItems()):
             item = self.popup.itemAtIndex_(i)
-            if unicode(item.representedObject()) == value:
+            if str(item.representedObject()) == value:
                 self.popup.selectItemAtIndex_(i)
                 found = True
                 break
@@ -1398,8 +1398,8 @@ class SoundFileOption(Option):
             self.oldIndex = self.addItemForPath(value)
 
 
+@implementer(IObserver)
 class NightVolumeOption(Option):
-    implements(IObserver)
 
     view = objc.IBOutlet()
     slider = objc.IBOutlet()
@@ -1448,7 +1448,7 @@ class NightVolumeOption(Option):
             if not path:
                 return
             self.play.setImage_(NSImage.imageNamed_("pause"))
-            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
+            self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path), volume=self.slider.integerValue()*10)
             NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
             SIPApplication.voice_audio_bridge.add(self.sound)
             self.sound.start()
@@ -1538,8 +1538,8 @@ class AecSliderOption(Option):
         self.labelText.setStringValue_("%i ms"%value)
 
 
+@implementer(IObserver)
 class AnsweringMessageOption(Option):
-    implements(IObserver)
 
     view = objc.IBOutlet()
     radio = objc.IBOutlet()
@@ -1613,7 +1613,7 @@ class AnsweringMessageOption(Option):
     def restore(self):
         value = self.get()
         if value:
-            if unicode(value) == u"DEFAULT":
+            if str(value) == "DEFAULT":
                 self.radio.selectCellWithTag_(1)
             else:
                 self.radio.selectCellWithTag_(2)
@@ -1630,7 +1630,7 @@ class AccountSoundFileOption(SoundFileOption):
             value = self.get()
             if value and value.sound_file:
                 path = value.sound_file.path
-                self.sound = WavePlayer(SIPApplication.voice_audio_mixer, unicode(path), volume=self.slider.integerValue()*10)
+                self.sound = WavePlayer(SIPApplication.voice_audio_mixer, str(path), volume=self.slider.integerValue()*10)
                 NotificationCenter().add_observer(self, sender=self.sound, name="WavePlayerDidEnd")
                 SIPApplication.voice_audio_bridge.add(self.sound)
                 self.sound.start()
@@ -1639,8 +1639,8 @@ class AccountSoundFileOption(SoundFileOption):
 
     @objc.python_method
     def _store(self):
-        value = unicode(self.popup.selectedItem().representedObject())
-        if value == u"DEFAULT":
+        value = str(self.popup.selectedItem().representedObject())
+        if value == "DEFAULT":
             self.set(DefaultValue)
             self.slider.setEnabled_(False)
         elif value:
@@ -1653,7 +1653,7 @@ class AccountSoundFileOption(SoundFileOption):
     @objc.python_method
     def restore(self):
         value = self.get()
-        if unicode(value) == u"DEFAULT":
+        if str(value) == "DEFAULT":
             self.popup.selectItemAtIndex_(0)
             self.slider.setEnabled_(False)
         elif value is None or value.sound_file is None:
@@ -1663,9 +1663,9 @@ class AccountSoundFileOption(SoundFileOption):
             self.slider.setEnabled_(True)
             self.slider.setIntegerValue_(value.sound_file.volume/10)
             self.volumeText.setStringValue_(NSLocalizedString("Volume: %i%%", "Label") % value.sound_file.volume)
-            path = unicode(value.sound_file.path)
+            path = str(value.sound_file.path)
             for i in range(self.popup.numberOfItems()):
-                if unicode(self.popup.itemAtIndex_(i).representedObject()) == path:
+                if str(self.popup.itemAtIndex_(i).representedObject()) == path:
                     self.popup.selectItemAtIndex_(i)
                     break
             else:
@@ -1793,7 +1793,7 @@ class STUNServerAddressListOption(ObjectTupleOption):
             else:
                 address = STUNServerAddress(self.values[row][0], int(object))
                 self.values[row] = (address.host, address.port)
-        except Exception, e:
+        except Exception as e:
             NSRunAlertPanel(NSLocalizedString("Enter STUN server", "Window title"), NSLocalizedString("Invalid server address: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
             return
         self.store()
@@ -1879,7 +1879,7 @@ class SIPProxyAddressOption(UnicodeOption):
     @objc.python_method
     def _store(self):
         current = self.get()
-        value = SIPProxyAddress.from_description(unicode(self.text.stringValue()))
+        value = SIPProxyAddress.from_description(str(self.text.stringValue()))
         if current != value:
             self.set(value)
 

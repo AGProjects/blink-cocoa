@@ -5,7 +5,7 @@ from Foundation import NSBundle, NSLocalizedString
 from AppKit import NSApp, NSRunAlertPanel
 import AppKit
 
-import cjson
+import json
 import os
 import re
 
@@ -21,7 +21,7 @@ from eventlib.green import select
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from gnutls.errors import GNUTLSError
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from sipsimple.core import CORE_REVISION as core_version
 from sipsimple import __version__ as sdk_version
@@ -47,13 +47,11 @@ from resources import ApplicationData, Resources
 from util import beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread
 
 
-class SIPManager(object):
-    __metaclass__ = Singleton
-
-    implements(IObserver)
+@implementer(IObserver)
+class SIPManager(object, metaclass=Singleton):
 
     def __init__(self):
-        BlinkLogger().log_info(u"Using SIP SIMPLE client SDK version %s" % sdk_version)
+        BlinkLogger().log_info("Using SIP SIMPLE client SDK version %s" % sdk_version)
 
         self._app = SIPApplication()
         self._delegate = None
@@ -112,7 +110,7 @@ class SIPManager(object):
             contacts = configuration_manager.get(['Addressbook', 'Contacts'])
         except Exception:
             return
-        for data in contacts.itervalues():
+        for data in contacts.values():
             if 'icon' in data:
                 del data['icon']
                 save = True
@@ -153,13 +151,13 @@ class SIPManager(object):
         ca = open(Resources.get('ca.crt'), "r").read().strip()
         try:
             X509Certificate(ca)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
+        except GNUTLSError as e:
+            BlinkLogger().log_error("Invalid Certificate Authority: %s" % e)
             return
 
         tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
-            os.mkdir(tls_folder, 0700)
+            os.mkdir(tls_folder, 0o700)
         ca_path = os.path.join(tls_folder, 'ca.crt')
 
         try:
@@ -171,9 +169,9 @@ class SIPManager(object):
             return
 
         with open(ca_path, "w") as f:
-            os.chmod(ca_path, 0600)
+            os.chmod(ca_path, 0o600)
             f.write(ca)
-        BlinkLogger().log_debug(u"Added default Certificate Authority to %s" % ca_path)
+        BlinkLogger().log_debug("Added default Certificate Authority to %s" % ca_path)
         settings.tls.ca_list = ca_path
         settings.save()
 
@@ -181,8 +179,8 @@ class SIPManager(object):
         # not used anymore, let users add CAs in keychain instead
         try:
             X509Certificate(ca)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid Certificate Authority: %s" % e)
+        except GNUTLSError as e:
+            BlinkLogger().log_error("Invalid Certificate Authority: %s" % e)
             return False
 
         settings = SIPSimpleSettings()
@@ -192,7 +190,7 @@ class SIPManager(object):
         else:
             tls_folder = ApplicationData.get('tls')
             if not os.path.exists(tls_folder):
-                os.mkdir(tls_folder, 0700)
+                os.mkdir(tls_folder, 0o700)
             ca_path = os.path.join(tls_folder, 'ca.crt')
             must_save_ca = True
 
@@ -206,10 +204,10 @@ class SIPManager(object):
 
         if ca_list != existing_cas:
             f = open(ca_path, "w")
-            os.chmod(ca_path, 0600)
+            os.chmod(ca_path, 0o600)
             f.write(ca_list)
             f.close()
-            BlinkLogger().log_debug(u"Added new Certificate Authority to %s" % ca_path)
+            BlinkLogger().log_debug("Added new Certificate Authority to %s" % ca_path)
             must_save_ca = True
 
         if must_save_ca:
@@ -224,7 +222,7 @@ class SIPManager(object):
 
         tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
-            os.mkdir(tls_folder, 0700)
+            os.mkdir(tls_folder, 0o700)
 
         ca = passport["ca"].strip() + os.linesep
         self.add_certificate_authority(ca)
@@ -232,24 +230,24 @@ class SIPManager(object):
         crt = passport["crt"].strip() + os.linesep
         try:
             X509Certificate(crt)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid TLS certificate: %s" % e)
+        except GNUTLSError as e:
+            BlinkLogger().log_error("Invalid TLS certificate: %s" % e)
             return None
 
         key = passport["key"].strip() + os.linesep
         try:
             X509PrivateKey(key)
-        except GNUTLSError, e:
-            BlinkLogger().log_error(u"Invalid Private Key: %s" % e)
+        except GNUTLSError as e:
+            BlinkLogger().log_error("Invalid Private Key: %s" % e)
             return None
 
         crt_path = os.path.join(tls_folder, address + ".crt")
         f = open(crt_path, "w")
-        os.chmod(crt_path, 0600)
+        os.chmod(crt_path, 0o600)
         f.write(crt)
         f.write(key)
         f.close()
-        BlinkLogger().log_info(u"Saved new TLS Certificate and Private Key to %s" % crt_path)
+        BlinkLogger().log_info("Saved new TLS Certificate and Private Key to %s" % crt_path)
 
         return crt_path
 
@@ -260,12 +258,12 @@ class SIPManager(object):
             return
         try:
             data = open(filename).read()
-            data = cjson.decode(data.replace('\\/', '/'))
-        except (OSError, IOError), e:
-            BlinkLogger().log_error(u"Failed to read json data from ~/.blink_account: %s" % e)
+            data = json.loads(data.replace('\\/', '/'))
+        except (OSError, IOError, json.decoder.JSONDecodeError) as e:
+            BlinkLogger().log_error("Failed to read json data from ~/.blink_account: %s" % e)
             return
-        except cjson.DecodeError, e:
-            BlinkLogger().log_error(u"Failed to decode json data from ~/.blink_account: %s" % e)
+        except cjson.DecodeError as e:
+            BlinkLogger().log_error("Failed to decode json data from ~/.blink_account: %s" % e)
             return
         finally:
             unlink(filename)
@@ -423,13 +421,13 @@ class SIPManager(object):
         handler(notification.sender, notification.data)
 
     def _NH_SIPApplicationFailedToStartTLS(self, sender, data):
-        BlinkLogger().log_info(u'Failed to start TLS transport: %s' % data.error)
+        BlinkLogger().log_info('Failed to start TLS transport: %s' % data.error)
 
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, _version)
-        BlinkLogger().log_debug(u"SIP User Agent: %s" % settings.user_agent)
+        BlinkLogger().log_debug("SIP User Agent: %s" % settings.user_agent)
         settings.save()
 
         self.migratePasswordsToKeychain()
@@ -445,8 +443,8 @@ class SIPManager(object):
             settings.service_provider.name = NSApp.delegate().service_provider_name
             settings.save()
 
-        BlinkLogger().log_debug(u"Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
-        BlinkLogger().log_debug(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
+        BlinkLogger().log_debug("Audio engine sampling rate %dKHz covering 0-%dKHz spectrum" % (settings.audio.sample_rate/1000, settings.audio.sample_rate/1000/2))
+        BlinkLogger().log_debug("Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
 
         account_manager = AccountManager()
         for account in account_manager.iter_accounts():
@@ -486,21 +484,21 @@ class SIPManager(object):
         settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
         #self._app.engine.enable_colorbar_device = True
 
-        BlinkLogger().log_debug(u"SDK loaded")
-        BlinkLogger().log_debug(u"SIP device ID: %s" % settings.instance_id)
+        BlinkLogger().log_debug("SDK loaded")
+        BlinkLogger().log_debug("SIP device ID: %s" % settings.instance_id)
         codecs_print = []
         for codec in settings.rtp.audio_codec_list:
             codecs_print.append(beautify_audio_codec(codec))
-        BlinkLogger().log_info(u"Enabled audio codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_info("Enabled audio codecs: %s" % ", ".join(codecs_print))
 
         if settings.audio.input_device is None:
-            BlinkLogger().log_info(u"Switching audio input device to system default")
+            BlinkLogger().log_info("Switching audio input device to system default")
             settings.audio.input_device = 'system_default'
         if settings.audio.output_device is None:
-            BlinkLogger().log_info(u"Switching audio output device to system default")
+            BlinkLogger().log_info("Switching audio output device to system default")
             settings.audio.output_device = 'system_default'
         if settings.audio.alert_device is None:
-            BlinkLogger().log_info(u"Switching audio alert device to system default")
+            BlinkLogger().log_info("Switching audio alert device to system default")
             settings.audio.alert_device = 'system_default'
 
         try:
@@ -521,17 +519,17 @@ class SIPManager(object):
             elif settings.video.device is None:
                 devices = list(device for device in self._app.engine.video_devices if device not in ('system_default', None))
                 if devices:
-                    BlinkLogger().log_info(u"Switching video camera to %s" % devices[0])
+                    BlinkLogger().log_info("Switching video camera to %s" % devices[0])
                     settings.video.device = devices[0]
             else:
-                BlinkLogger().log_debug(u"Using video camera %s" % self._app.video_device.real_name)
+                BlinkLogger().log_debug("Using video camera %s" % self._app.video_device.real_name)
         settings.save()
 
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
             for transport in settings.sip.transport_list:
                 try:
-                    BlinkLogger().log_debug(u'Bonjour Account listens on %s' % bonjour_account.contact[transport])
+                    BlinkLogger().log_debug('Bonjour Account listens on %s' % bonjour_account.contact[transport])
                 except KeyError:
                     pass
 
@@ -541,23 +539,23 @@ class SIPManager(object):
         self.ip_address_monitor.stop()
 
     def _NH_SIPEngineGotException(self, sender, data):
-        print "SIP Engine Exception", data
+        print("SIP Engine Exception", data)
 
     def _NH_SIPEngineDidFail(self, sender, data):
         NSRunAlertPanel(NSLocalizedString("Fatal Error Encountered", "Window title"), NSLocalizedString("There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.", "Label"),
                         NSLocalizedString("Shut Down", "Button title"), None, None)
         import signal
-        BlinkLogger().log_info(u"A fatal error occurred, forcing termination of Blink")
+        BlinkLogger().log_info("A fatal error occurred, forcing termination of Blink")
         os.kill(os.getpid(), signal.SIGTERM)
     
     def _NH_SIPAccountDidActivate(self, account, data):
-        BlinkLogger().log_info(u"Account %s activated" % account.id)
+        BlinkLogger().log_info("Account %s activated" % account.id)
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
             call_in_green_thread(self.bonjour_conference_services.start)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
-        BlinkLogger().log_info(u"Account %s deactivated" % account.id)
+        BlinkLogger().log_info("Account %s deactivated" % account.id)
         MWIData.remove(account)
         # Deactivate BonjourConferenceServer discovery
         if account is BonjourAccount():
@@ -588,27 +586,27 @@ class SIPManager(object):
                 contact_changed = True
 
         if contact_changed and registrar_changed:
-            message = u'Account %s registered contact %s at %s:%d;transport=%s for %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
+            message = 'Account %s registered contact %s at %s:%d;transport=%s for %d seconds' % (account.id, data.contact_header.uri, data.registrar.address, data.registrar.port, data.registrar.transport, data.expires)
             BlinkLogger().log_info(message)
         elif contact_changed:
-            message = u'Account %s changed contact to %s' % (account.id, data.contact_header.uri)
+            message = 'Account %s changed contact to %s' % (account.id, data.contact_header.uri)
             BlinkLogger().log_debug(message)
         elif registrar_changed:
-            message = u'Account %s changed registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
+            message = 'Account %s changed registrar to %s:%d;transport=%s' % (account.id, data.registrar.address, data.registrar.port, data.registrar.transport)
             BlinkLogger().log_debug(message)
 
         self.registrar_addresses[account.id] = _address
         self.contact_addresses[account.id] = data.contact_header.uri
 
         if account.contact.public_gruu is not None:
-            message = u'Account %s has public SIP GRUU %s' % (account.id, account.contact.public_gruu)
+            message = 'Account %s has public SIP GRUU %s' % (account.id, account.contact.public_gruu)
             BlinkLogger().log_debug(message)
         if account.contact.temporary_gruu is not None:
-            message = u'Account %s has temporary SIP GRUU %s' % (account.id, account.contact.temporary_gruu)
+            message = 'Account %s has temporary SIP GRUU %s' % (account.id, account.contact.temporary_gruu)
             BlinkLogger().log_debug(message)
 
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
-        BlinkLogger().log_info(u"Account %s was unregistered" % account.id)
+        BlinkLogger().log_info("Account %s was unregistered" % account.id)
         try:
             del self.registrar_addresses[account.id]
         except KeyError:
@@ -620,7 +618,7 @@ class SIPManager(object):
             pass
 
     def _NH_SIPAccountGotMessageSummary(self, account, data):
-        BlinkLogger().log_debug(u"Received voicemail notification for account %s" % account.id)
+        BlinkLogger().log_debug("Received voicemail notification for account %s" % account.id)
         summary = data.message_summary
         if summary.summaries.get('voice-message') is None:
             return
@@ -649,10 +647,10 @@ class SIPManager(object):
             settings = SIPSimpleSettings()
             settings.audio.sample_rate = 32000 if settings.audio.echo_canceller.enabled and settings.audio.sample_rate not in ('16000', '32000') else 48000
             spectrum = settings.audio.sample_rate/1000/2 if settings.audio.sample_rate/1000/2 < 20 else 20
-            BlinkLogger().log_info(u"Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum))
-            BlinkLogger().log_debug(u"Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
+            BlinkLogger().log_info("Audio sample rate is set to %dkHz covering 0-%dkHz spectrum" % (settings.audio.sample_rate/1000, spectrum))
+            BlinkLogger().log_debug("Acoustic Echo Canceller is %s" % ('enabled' if settings.audio.echo_canceller.enabled else 'disabled'))
             if spectrum >=20:
-                BlinkLogger().log_debug(u"For studio quality disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section.")
+                BlinkLogger().log_debug("For studio quality disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section.")
             settings.save()
         elif 'audio.sample_rate' in data.modified:
             settings = SIPSimpleSettings()
@@ -669,16 +667,16 @@ class SIPManager(object):
     def _NH_SystemWillSleep(self, sender, data):
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
-            BlinkLogger().log_info(u"Computer will go to sleep")
-            BlinkLogger().log_debug(u"Disabling Bonjour discovery during sleep")
+            BlinkLogger().log_info("Computer will go to sleep")
+            BlinkLogger().log_debug("Disabling Bonjour discovery during sleep")
             bonjour_account.enabled=False
             self.bonjour_disabled_on_sleep=True
 
     def _NH_SystemDidWakeUpFromSleep(self, sender, data):
-        BlinkLogger().log_info(u"Computer wake up from sleep")
+        BlinkLogger().log_info("Computer wake up from sleep")
         bonjour_account = BonjourAccount()
         if not bonjour_account.enabled and self.bonjour_disabled_on_sleep:
-            BlinkLogger().log_debug(u"Enabling Bonjour discovery after wakeup from sleep")
+            BlinkLogger().log_debug("Enabling Bonjour discovery after wakeup from sleep")
             bonjour_account.enabled=True
             self.bonjour_disabled_on_sleep=False
 
@@ -689,8 +687,8 @@ class SIPManager(object):
             # The XCAP manager might be stopped because this notification is processed in a different
             # thread from which it was posted
             return
-        BlinkLogger().log_debug(u"Using XCAP root %s for account %s" % (xcap_root, account.id))
-        BlinkLogger().log_debug(u"XCAP server capabilities: %s" % ", ".join(data.auids))
+        BlinkLogger().log_debug("Using XCAP root %s for account %s" % (xcap_root, account.id))
+        BlinkLogger().log_debug("XCAP server capabilities: %s" % ", ".join(data.auids))
 
     def validateAddAccountAction(self):
         if NSApp.delegate().maximum_accounts:
@@ -728,8 +726,8 @@ class BonjourConferenceServerDescription(object):
         self.host = host
         self.name = name
 
+@implementer(IObserver)
 class BonjourConferenceServices(object):
-    implements(IObserver)
 
     def __init__(self):
         BlinkLogger().log_debug('Starting Bonjour Conference Services')
@@ -743,7 +741,7 @@ class BonjourConferenceServices(object):
 
     @property
     def servers(self):
-        return self._servers.values()
+        return list(self._servers.values())
 
     def start(self):
         notification_center = NotificationCenter()
@@ -791,11 +789,11 @@ class BonjourConferenceServices(object):
             return
         if flags & _bonjour.kDNSServiceFlagsAdd:
             try:
-                resolution_file = (f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description).next()
+                resolution_file = next((f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description))
             except StopIteration:
                 try:
                     resolution_file = _bonjour.DNSServiceResolve(0, interface_index, service_name, regtype, reply_domain, self._resolve_cb)
-                except _bonjour.BonjourError, e:
+                except _bonjour.BonjourError as e:
                     notification_center.post_notification('BonjourConferenceServicesDiscoveryFailure', sender=self, data=NotificationData(error=str(e), transport=file.transport))
                 else:
                     resolution_file = BonjourResolutionFile(resolution_file, discovery_file=file, service_description=service_description)
@@ -803,7 +801,7 @@ class BonjourConferenceServices(object):
                     self._select_proc.kill(RestartSelect)
         else:
             try:
-                resolution_file = (f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description).next()
+                resolution_file = next((f for f in self._files if isinstance(f, BonjourResolutionFile) and f.discovery_file==file and f.service_description==service_description))
             except StopIteration:
                 pass
             else:
@@ -889,7 +887,7 @@ class BonjourConferenceServices(object):
         self._select_proc.kill(RestartSelect)
         for file in old_files:
             file.close()
-        for service_description in [service for service, description in self._servers.iteritems() if description.uri.transport not in supported_transports]:
+        for service_description in [service for service, description in self._servers.items() if description.uri.transport not in supported_transports]:
             del self._servers[service_description]
             notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
         discovered_transports = set(file.transport for file in self._files if isinstance(file, BonjourDiscoveryFile))
@@ -899,7 +897,7 @@ class BonjourConferenceServices(object):
             notification_center.post_notification('BonjourConferenceServicesWillInitiateDiscovery', sender=self, data=NotificationData(transport=transport))
             try:
                 file = _bonjour.DNSServiceBrowse(regtype="_sipfocus._%s" % transport, callBack=self._browse_cb)
-            except _bonjour.BonjourError, e:
+            except _bonjour.BonjourError as e:
                 notification_center.post_notification('BonjourConferenceServicesDiscoveryDidFail', sender=self, data=NotificationData(reason=str(e), transport=transport))
             else:
                 self._files.append(BonjourDiscoveryFile(file, transport))

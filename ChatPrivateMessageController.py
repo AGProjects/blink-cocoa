@@ -41,7 +41,7 @@ class ChatPrivateMessageController(NSObject):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
-            return unicode(self.inputText.string().rstrip("\n"))
+            return str(self.inputText.string().rstrip("\n"))
         return None
 
     def awakeFromNib(self):
@@ -53,7 +53,7 @@ class ChatPrivateMessageController(NSObject):
         for text, file in smileys:
             image = NSImage.alloc().initWithContentsOfFile_(file)
             if not image:
-                print "cant load %s"%file
+                print("cant load %s"%file)
                 continue
             image.setScalesWhenResized_(True)
             image.setSize_(NSMakeSize(16, 16))

@@ -11,9 +11,7 @@ from util import escape_html
 SMILEY_STYLE="MSN"
 
 
-class SmileyManager(object):
-    __metaclass__ = Singleton
-
+class SmileyManager(object, metaclass=Singleton):
     def __init__(self):
         self.smiley_directory = None
         self.icon = None
@@ -70,19 +68,19 @@ class SmileyManager(object):
         f.close()
 
         self.smileys_html = {}
-        for k, v in self.smileys.iteritems():
+        for k, v in self.smileys.items():
             # pre-escape the smiley so that it matches escaped text later
             ek = escape_html(k)
             self.smileys_html[ek] = "<img src='file:%s' class='smiley' />"%(self.get_smiley(k))
 
     def get_smiley(self, text):
-        if self.smileys.has_key(text):
+        if text in self.smileys:
             return os.path.join(self.smiley_directory, self.theme, self.smileys[text])
         return None
 
 
     def subst_smileys_html(self, text):
-        items = self.smileys_html.items()
+        items = list(self.smileys_html.items())
         items.sort(lambda a,b:cmp(a[0],b[0]))
         items.reverse() # reverse list so that longer ones are substituted 1st
         for k, v in items:

@@ -8,7 +8,7 @@ from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from application.system import host
 from collections import deque
-from zope.interface import implements
+from zope.interface import implementer
 from sipsimple.streams import MediaStreamRegistry
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
@@ -29,8 +29,9 @@ RTP_PACKET_OVERHEAD = 54
 STATISTICS_INTERVAL = 1.0
 
 
+@implementer(IObserver)
 class VideoController(MediaStream):
-    implements(IObserver)
+
     type = "video"
     ended = False
     started = False
@@ -54,7 +55,7 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def resetStream(self):
-        self.sessionController.log_debug(u"Reset stream %s" % self)
+        self.sessionController.log_debug("Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = MediaStreamRegistry.VideoStream()
         self.started = False
@@ -116,7 +117,7 @@ class VideoController(MediaStream):
     def initWithOwner_stream_(self, sessionController, stream):
         self = objc.super(VideoController, self).initWithOwner_stream_(sessionController, stream)
         self.notification_center = NotificationCenter()
-        sessionController.log_debug(u"Init %s" % self)
+        sessionController.log_debug("Init %s" % self)
         self.videoRecorder = VideoRecorder(self)
         self.videoWindowController = VideoWindowController(self)
 
@@ -201,7 +202,7 @@ class VideoController(MediaStream):
                     self.videoWindowController.goToFullScreen()
 
         if self.all_rx_bytes > 200000 and not self.media_received:
-            self.sessionController.log_info(u'Video channel received data')
+            self.sessionController.log_info('Video channel received data')
             self.markMediaReceived()
 
     @objc.python_method
@@ -284,7 +285,7 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def dealloc(self):
-        self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.sessionController.log_debug("Dealloc %s" % self)
         self.notification_center.discard_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.videoWindowController.release()
@@ -303,7 +304,7 @@ class VideoController(MediaStream):
         if self.ended:
             return
     
-        self.sessionController.log_debug(u"End %s" % self)
+        self.sessionController.log_debug("End %s" % self)
         self.ended = True
 
         if self.sessionController.waitingForLocalVideo:
@@ -383,7 +384,7 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
-        self.sessionController.log_info(u'Video ICE negotiation failed: %s' % data.reason)
+        self.sessionController.log_info('Video ICE negotiation failed: %s' % data.reason)
         self.ice_negotiation_status = data.reason
 
     @objc.python_method
@@ -405,8 +406,8 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
-        self.sessionController.log_info(u'Video ICE negotiation succeeded')
-        self.sessionController.log_info(u'Video RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, ice_candidates[self.stream.local_rtp_candidate.type.lower()], self.stream.remote_rtp_address, self.stream.remote_rtp_port,
+        self.sessionController.log_info('Video ICE negotiation succeeded')
+        self.sessionController.log_info('Video RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address, self.stream.local_rtp_port, ice_candidates[self.stream.local_rtp_candidate.type.lower()], self.stream.remote_rtp_address, self.stream.remote_rtp_port,
             ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
 
         self.ice_negotiation_status = 'Success'
@@ -414,7 +415,7 @@ class VideoController(MediaStream):
     @objc.python_method
     def _NH_VideoStreamReceivedKeyFrame(self, sender, data):
         if not self.media_received:
-            self.sessionController.log_info(u'Video channel received key frame')
+            self.sessionController.log_info('Video channel received key frame')
             self.markMediaReceived()
 
     @objc.python_method
@@ -441,7 +442,7 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
-        self.sessionController.log_info(u"Video call failed: %s" % data.reason)
+        self.sessionController.log_info("Video call failed: %s" % data.reason)
 
         self.stopTimers()
         self.changeStatus(STREAM_FAILED, data.reason)
@@ -472,12 +473,12 @@ class VideoController(MediaStream):
     @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
         if data.error is not None:
-            self.sessionController.log_info(u"Video call failed: %s" % data.error)
+            self.sessionController.log_info("Video call failed: %s" % data.error)
             self.changeStatus(STREAM_FAILED, data.reason)
         elif self.started:
-            self.sessionController.log_info(u"Video stream ended")
+            self.sessionController.log_info("Video stream ended")
         else:
-            self.sessionController.log_info(u"Video stream canceled")
+            self.sessionController.log_info("Video stream canceled")
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
@@ -498,7 +499,7 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def _NH_BlinkWillCancelProposal(self, sender, data):
-        self.sessionController.log_info(u"Video proposal cancelled")
+        self.sessionController.log_info("Video proposal cancelled")
         self.changeStatus(STREAM_FAILED, "Proposal Cancelled")
 
     @objc.python_method

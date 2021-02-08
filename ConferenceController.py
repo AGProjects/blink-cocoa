@@ -21,7 +21,7 @@ from Foundation import (NSArray,
                         NSObject)
 import objc
 
-import cPickle
+import pickle
 import random
 import re
 import shutil
@@ -33,7 +33,7 @@ from resources import ApplicationData
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPCoreError, SIPURI
-from zope.interface import implements
+from zope.interface import implementer
 
 from SIPManager import SIPManager
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
@@ -75,8 +75,8 @@ def validateParticipant(uri):
         return sip_uri.user is not None and sip_uri.host is not None
 
 
+@implementer(IObserver)
 class JoinConferenceWindowController(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
     room = objc.IBOutlet()
@@ -195,7 +195,7 @@ class JoinConferenceWindowController(NSObject):
 
         self.storage_path = ApplicationData.get('conference/conference_configurations.pickle')
         try:
-            self.conference_configurations = cPickle.load(open(self.storage_path))
+            self.conference_configurations = pickle.load(open(self.storage_path))
         except:
             self.conference_configurations = {}
 
@@ -231,7 +231,7 @@ class JoinConferenceWindowController(NSObject):
                     media_type = "audio"
 
                 if configuration_name:
-                    if configuration_name in self.conference_configurations.keys():
+                    if configuration_name in list(self.conference_configurations.keys()):
                         self.conference_configurations[configuration_name].name = configuration_name
                         self.conference_configurations[configuration_name].target = self.target
                         self.conference_configurations[configuration_name].participants = self._participants
@@ -242,7 +242,7 @@ class JoinConferenceWindowController(NSObject):
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
-                    cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+                    pickle.dump(self.conference_configurations, open(self.storage_path, "w"))
             else:
                 self.selected_configuration = None
 
@@ -255,11 +255,11 @@ class JoinConferenceWindowController(NSObject):
                 self.conference_configurations[configuration_name] = old_configuration
                 del self.conference_configurations[self.selected_configuration]
                 self.selected_configuration = configuration_name
-                cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+                pickle.dump(self.conference_configurations, open(self.storage_path, "w"))
 
         elif sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Delete configuration", "Menu item")) and self.selected_configuration:
            del self.conference_configurations[self.selected_configuration]
-           cPickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+           pickle.dump(self.conference_configurations, open(self.storage_path, "w"))
            self.setDefaults()
         else:
             configuration = sender.selectedItem().representedObject()
@@ -296,7 +296,7 @@ class JoinConferenceWindowController(NSObject):
             self.configurationsButton.selectItem_(self.configurationsButton.lastItem())
             self.configurationsButton.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
             self.configurationsButton.lastItem().setEnabled_(True)
-            for key in self.conference_configurations.keys():
+            for key in list(self.conference_configurations.keys()):
                 self.configurationsButton.addItemWithTitle_(key)
                 item = self.configurationsButton.lastItem()
                 item.setRepresentedObject_(self.conference_configurations[key])
@@ -326,9 +326,9 @@ class JoinConferenceWindowController(NSObject):
                 for server in (server for server in SIPManager().bonjour_conference_services.servers if server.uri.transport in settings.sip.transport_list):
                     servers_dict.setdefault("%s@%s" % (server.uri.user, server.uri.host), []).append(server)
                 for transport in (transport for transport in ('tls', 'tcp', 'udp') if transport in settings.sip.transport_list):
-                    for k, v in servers_dict.iteritems():
+                    for k, v in servers_dict.items():
                         try:
-                            server = (server for server in v if server.uri.transport == transport).next()
+                            server = next((server for server in v if server.uri.transport == transport))
                         except StopIteration:
                             pass
                         else:
@@ -349,8 +349,8 @@ class JoinConferenceWindowController(NSObject):
     @objc.python_method
     def setDefaults(self):
         self.selected_configuration = None
-        self.room.setStringValue_(u'')
-        self.nickname_textfield.setStringValue_(u'')
+        self.room.setStringValue_('')
+        self.nickname_textfield.setStringValue_('')
         self._participants = []
         self.removeAllParticipants.setHidden_(True)
         self.participantsTable.reloadData()
@@ -574,7 +574,7 @@ class JoinConferenceWindowController(NSObject):
             return False
 
         if "@" in room:
-            self.target = u'%s' % room
+            self.target = '%s' % room
         else:
             account = AccountManager().default_account
             if isinstance(account, BonjourAccount):
@@ -588,7 +588,7 @@ class JoinConferenceWindowController(NSObject):
 
                 object = item.representedObject()
                 if hasattr(object, 'host'):
-                    self.target = u'%s@%s:%s;transport=%s' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
+                    self.target = '%s@%s:%s;transport=%s' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
                 else:
                     NSRunAlertPanel(NSLocalizedString("Start a new Conference", "Window title"),
                                     NSLocalizedString("No conference server in this neighbourhood", "Label"),
@@ -597,9 +597,9 @@ class JoinConferenceWindowController(NSObject):
                     return False
             else:
                 if account.conference.server_address:
-                    self.target = u'%s@%s' % (room, account.conference.server_address)
+                    self.target = '%s@%s' % (room, account.conference.server_address)
                 else:
-                    self.target = u'%s@%s' % (room, default_conference_server)
+                    self.target = '%s@%s' % (room, default_conference_server)
 
         if not validateParticipant(self.target):
             NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),

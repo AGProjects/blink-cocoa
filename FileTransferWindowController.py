@@ -19,7 +19,7 @@ import unicodedata
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.threading.green import run_in_green_thread
-from zope.interface import implements
+from zope.interface import implementer
 
 import ListView
 from BlinkLogger import BlinkLogger
@@ -46,8 +46,8 @@ def openFileTransferSelectionDialog(account, dest_uri, filename=None):
     NSApp.delegate().contactsWindowController.sessionControllersManager.send_files_to_contact(account, dest_uri, filenames)
 
 
+@implementer(IObserver)
 class FileTransferWindowController(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
     listView = objc.IBOutlet()
@@ -111,7 +111,7 @@ class FileTransferWindowController(NSObject):
         if count == 1:
             self.bottomLabel.setStringValue_(NSLocalizedString("1 item", "Label"))
         else:
-            self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count if count else u"")
+            self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count if count else "")
 
         self.loaded = True
 
@@ -195,7 +195,7 @@ class FileTransferWindowController(NSObject):
     @objc.python_method
     def _NH_BlinkFileTransferNewOutgoing(self, sender, data):
         try:
-            item = (item for item in self.listView.subviews().copy() if item.file_path == sender.ft_info.file_path and item.remote_uri == sender.ft_info.remote_uri).next()
+            item = next((item for item in self.listView.subviews().copy() if item.file_path == sender.ft_info.file_path and item.remote_uri == sender.ft_info.remote_uri))
             item.replaceWithTransfer_(sender)
             self.listView.relayout()
 

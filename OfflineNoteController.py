@@ -28,7 +28,7 @@ class OfflineNoteController(NSObject):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
-            note = unicode(self.nameText.stringValue())
+            note = str(self.nameText.stringValue())
             settings = SIPSimpleSettings()
             settings.presence_state.offline_note = note
             settings.save()

@@ -27,7 +27,7 @@ import Foundation
 import LaunchServices
 import objc
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 import os
 import platform
@@ -43,7 +43,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
-from zope.interface import implements
+from zope.interface import implementer
 
 from SIPManager import SIPManager
 from DebugWindow import DebugWindow
@@ -61,9 +61,10 @@ from util import external_url_pattern, run_in_gui_thread
 
 
 def fourcharToInt(fourCharCode):
-    return struct.unpack('>l', fourCharCode)[0]
+    return struct.unpack('>l', fourCharCode.encode())[0]
 
 
+@implementer(IObserver)
 class BlinkAppDelegate(NSObject):
     """Responsible for starting and stopping the application
        Register URL types handled by Blink
@@ -73,8 +74,6 @@ class BlinkAppDelegate(NSObject):
        Calling Initial SIP URL if necessary
        Handle wake up from sleep
        Show about panel"""
-
-    implements(IObserver)
 
     contactsWindowController = objc.IBOutlet()
     chatWindowController = objc.IBOutlet()
@@ -169,7 +168,7 @@ class BlinkAppDelegate(NSObject):
 
             branding.init(self)
 
-            BlinkLogger().log_info(u"Starting %s %s" % (self.applicationNamePrint, build))
+            BlinkLogger().log_info("Starting %s %s" % (self.applicationNamePrint, build))
 
             self.registerURLHandler()
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerDidWake:", NSWorkspaceDidWakeNotification, None)
@@ -307,7 +306,7 @@ class BlinkAppDelegate(NSObject):
         self.updateDockTile()
 
     def applicationDidFinishLaunching_(self, sender):
-        BlinkLogger().log_debug(u"Application launched")
+        BlinkLogger().log_debug("Application launched")
 
         branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")
         try:
@@ -344,18 +343,18 @@ class BlinkAppDelegate(NSObject):
                     self.enroll()
                 break
 
-            except FileParserError, exc:
-                BlinkLogger().log_warning(u"Error parsing configuration file: %s" % exc)
+            except FileParserError as exc:
+                BlinkLogger().log_warning("Error parsing configuration file: %s" % exc)
                 if NSRunAlertPanel(NSLocalizedString("Error", "Window title"),
                     NSLocalizedString("The configuration file is corrupted. You will need to replace it and re-enter your account information. \n\nYour current configuration file will be backed up to %s.corrupted. ", "Label") % config_file,
                     NSLocalizedString("Replace", "Button title"), NSLocalizedString("Quit", "Button title"), None) != NSAlertDefaultReturn:
                     NSApp.terminate_(None)
                     return
                 os.rename(config_file, config_file+".corrupted")
-                BlinkLogger().log_info(u"Renamed configuration file to %s" % config_file+".corrupted")
-            except BaseException, exc:
+                BlinkLogger().log_info("Renamed configuration file to %s" % config_file+".corrupted")
+            except BaseException as exc:
                 import traceback
-                print traceback.print_exc()
+                print(traceback.print_exc())
                 NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was an error during startup of core functionality:\n%s", "Label") % exc,
                         NSLocalizedString("Quit", "Button title"), None, None)
                 NSApp.terminate_(None)
@@ -375,7 +374,7 @@ class BlinkAppDelegate(NSObject):
 
     def killSelfAfterTimeout_(self, arg):
         time.sleep(15)
-        BlinkLogger().log_info(u"Application forcefully terminated because core engine did not be stop in a timely manner")
+        BlinkLogger().log_info("Application forcefully terminated because core engine did not be stop in a timely manner")
         os._exit(0)
 
     def applicationShouldTerminate_(self, sender):
@@ -439,7 +438,7 @@ class BlinkAppDelegate(NSObject):
             account.presence_state = presence_state
 
         if notification.data.reason != 'Success':
-            BlinkLogger().log_info(u"%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+            BlinkLogger().log_info("%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
             #nc_title = NSLocalizedString("Connection failed", "Label")
             #nc_body = NSLocalizedString("Remote Address", "Label") + " %s:%s" % (notification.data.transport, notification.data.remote_address)
             #self.gui_notify(nc_title, nc_body)
@@ -451,25 +450,25 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPEngineTransportDidConnect(self, notification):
         transport = "%s:%s" %(notification.data.transport, notification.data.remote_address)
         if transport not in self.active_transports:
-            BlinkLogger().log_info(u"%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+            BlinkLogger().log_info("%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
             self.active_transports.add(transport)
 
     @objc.python_method
     def _NH_DNSNameserversDidChange(self, notification):
-        BlinkLogger().log_info(u"DNS servers changed to %s" % ", ".join(notification.data.nameservers))
+        BlinkLogger().log_info("DNS servers changed to %s" % ", ".join(notification.data.nameservers))
 
     @objc.python_method
     def _NH_NetworkConditionsDidChange(self, notification):
         self.ip_change_timestamp = int(time.time())
-        BlinkLogger().log_info(u"Network conditions changed")
+        BlinkLogger().log_info("Network conditions changed")
         if host.default_ip is None:
-            BlinkLogger().log_info(u"No IP address")
+            BlinkLogger().log_info("No IP address")
         else:
-            BlinkLogger().log_info(u"IP address changed to %s" % host.default_ip)
+            BlinkLogger().log_info("IP address changed to %s" % host.default_ip)
 
     @objc.python_method
     def _NH_SIPApplicationWillEnd(self, notification):
-        BlinkLogger().log_info(u"Core engine will be stopped")
+        BlinkLogger().log_info("Core engine will be stopped")
         self.purge_temporary_files()
 
     @objc.python_method
@@ -486,12 +485,12 @@ class BlinkAppDelegate(NSObject):
 
     @objc.python_method
     def _NH_SIPApplicationDidEnd(self, notification):
-        BlinkLogger().log_info(u"Core engine stopped")
+        BlinkLogger().log_info("Core engine stopped")
         NSApp.terminate_(self)
 
     def applicationWillTerminate_(self, notification):
         NotificationCenter().post_notification("BlinkWillTerminate", None)
-        BlinkLogger().log_info(u"Application terminated")
+        BlinkLogger().log_info("Application terminated")
 
     def computerDidWake_(self, notification):
         self.wake_up_timestamp = int(time.time())
@@ -505,11 +504,11 @@ class BlinkAppDelegate(NSObject):
         name = notification.userInfo()["DisplayName"]
         url = self.normalizeExternalURL(url)
 
-        BlinkLogger().log_info(u"Will start outgoing session to %s %s from Address Book" % (name, url))
+        BlinkLogger().log_info("Will start outgoing session to %s %s from Address Book" % (name, url))
         if not self.ready:
-            self.urisToOpen.append((unicode(url), ('audio'), list()))
+            self.urisToOpen.append((str(url), ('audio'), list()))
         else:
-            self.contactsWindowController.joinConference(unicode(url), ('audio'))
+            self.contactsWindowController.joinConference(str(url), ('audio'))
 
     @objc.IBAction
     def orderFrontAboutPanel_(self, sender):
@@ -532,9 +531,9 @@ class BlinkAppDelegate(NSObject):
         url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
         url = self.normalizeExternalURL(url)
 
-        BlinkLogger().log_info(u"Will start outgoing session from external link: %s" % url)
+        BlinkLogger().log_info("Will start outgoing session from external link: %s" % url)
 
-        url = urllib.unquote(url).replace(" ", "")
+        url = urllib.parse.unquote(url).replace(" ", "")
         _split = url.split(';')
         _url = []
         for item in _split[:]:
@@ -551,9 +550,9 @@ class BlinkAppDelegate(NSObject):
         url = ";".join(_url)
 
         if not self.ready:
-            self.urisToOpen.append((unicode(url), list(media_type), list(participants)))
+            self.urisToOpen.append((str(url), list(media_type), list(participants)))
         else:
-            self.contactsWindowController.joinConference(unicode(url), list(media_type), list(participants))
+            self.contactsWindowController.joinConference(str(url), list(media_type), list(participants))
 
     @objc.python_method
     def registerURLHandler(self):

@@ -18,13 +18,13 @@ from AppKit import (NSApp,
 
 from Foundation import NSLocalizedString
 
-import cjson
-import cPickle
+import json
+import pickle
 import os
 import shutil
 import time
-import urlparse
-import urllib
+import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 import pytz
 
 from datetime import datetime
@@ -55,7 +55,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
-from zope.interface import implements
+from zope.interface import implementer
 
 
 pool = ThreadPool(minthreads=1, maxthreads=1, name='db-ops')
@@ -78,9 +78,7 @@ class TableVersionEntry(SQLObject):
     version           = IntCol()
 
 
-class TableVersions(object):
-    __metaclass__ = Singleton
-
+class TableVersions(object, metaclass=Singleton):
     def __init__(self):
         path = ApplicationData.get('history')
         makedirs(path)
@@ -93,15 +91,15 @@ class TableVersions(object):
         TableVersionEntry._connection = self.db
         try:
             TableVersionEntry.createTable(ifNotExists=True)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error checking table %s: %s" % (TableVersionEntry.sqlmeta.table, e))
+        except Exception as e:
+            BlinkLogger().log_error("Error checking table %s: %s" % (TableVersionEntry.sqlmeta.table, e))
 
     def get_table_version(self, table):
         # Caller needs to be in the db thread
         try:
             result = list(TableVersionEntry.selectBy(table_name=table))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting %s table version: %s" % (table, e))
+        except Exception as e:
+            BlinkLogger().log_error("Error getting %s table version: %s" % (table, e))
             return None
         else:
             return result[0] if result else None
@@ -117,10 +115,10 @@ class TableVersions(object):
                 record = results.getOne()
                 record.version = version
                 return True
-            except Exception, e:
-                BlinkLogger().log_error(u"Error updating record: %s" % e)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error adding record to versions table: %s" % e)
+            except Exception as e:
+                BlinkLogger().log_error("Error updating record: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error adding record to versions table: %s" % e)
         return False
 
 
@@ -153,8 +151,7 @@ class SessionHistoryEntry(SQLObject):
     am_filename       = UnicodeCol(sqlType='LONGTEXT')
 
 
-class SessionHistory(object):
-    __metaclass__ = Singleton
+class SessionHistory(object, metaclass=Singleton):
     __version__ = 6
 
     def __init__(self):
@@ -177,14 +174,14 @@ class SessionHistory(object):
             else:
                 try:
                     SessionHistoryEntry.createTable()
-                    BlinkLogger().log_debug(u"Created sessions table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
+                    BlinkLogger().log_debug("Created sessions table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error creating table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
                 else:
                     TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
-        except Exception, e:
-            BlinkLogger().log_error(u"Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
+        except Exception as e:
+            BlinkLogger().log_error("Error checking table %s: %s" % (SessionHistoryEntry.sqlmeta.table,e))
 
     @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
@@ -192,8 +189,8 @@ class SessionHistory(object):
             query = "SELECT id, local_uri, remote_uri FROM sessions"
             try:
                 results = list(self.db.queryAll(query))
-            except Exception, e:
-                BlinkLogger().log_error(u"Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
             else:
                 for result in results:
                     id, local_uri, remote_uri = result
@@ -202,87 +199,87 @@ class SessionHistory(object):
                     query = "UPDATE sessions SET local_uri=%s, remote_uri=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(id))
                     try:
                         self.db.queryAll(query)
-                    except Exception, e:
-                        BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    except Exception as e:
+                        BlinkLogger().log_error("Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         else:
             if previous_version.version < 3:
                 query = "ALTER TABLE sessions add column 'hidden' INTEGER DEFAULT 0"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_debug("Added column 'hidden' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
             if previous_version.version < 4:
                 query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON sessions (sip_callid)"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_debug("Added index sip_callid_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error adding index sip_callid_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "CREATE INDEX IF NOT EXISTS sip_fromtag_index ON sessions (sip_fromtag)"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error adding index sip_fromtag_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_debug("Added index sip_fromtag_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error adding index sip_fromtag_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "CREATE INDEX IF NOT EXISTS start_time_index ON sessions (start_time)"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_debug(u"Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_debug("Added index start_time_index to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error adding index start_time_index to table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
             if previous_version.version < 5:
                 query = "ALTER TABLE sessions add column 'am_filename' LONGTEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_info(u"Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_info("Added column 'am_filename' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
             if previous_version.version < 6:
                 query = "ALTER TABLE sessions add column 'encryption' TEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_info(u"Added column 'encryption' to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_info("Added column 'encryption' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "ALTER TABLE sessions add column 'display_name' TEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_info(u"Added column 'display_name' to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_info("Added column 'display_name' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "ALTER TABLE sessions add column 'device_id' TEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_info(u"Added column 'device_id' to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_info("Added column 'device_id' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "ALTER TABLE sessions add column 'remote_full_uri' TEXT DEFAULT ''"
                 try:
                     self.db.queryAll(query)
-                    BlinkLogger().log_info(u"Added column 'remote_full_uri' to table %s" % SessionHistoryEntry.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                    BlinkLogger().log_info("Added column 'remote_full_uri' to table %s" % SessionHistoryEntry.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "update chat_messages set local_uri = 'bonjour.local' where local_uri = 'bonjour'"
                 try:
                     self.db.queryAll(query)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                except Exception as e:
+                    BlinkLogger().log_error("Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
                 query = "update sessions set local_uri = 'bonjour.local' where local_uri = 'bonjour'"
                 try:
                     self.db.queryAll(query)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+                except Exception as e:
+                    BlinkLogger().log_error("Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
@@ -314,8 +311,8 @@ class SessionHistory(object):
             return True
         except dberrors.DuplicateEntryError:
             return True
-        except Exception, e:
-            BlinkLogger().log_debug(u"Error adding record %s to sessions table: %s" % (session_id, e))
+        except Exception as e:
+            BlinkLogger().log_debug("Error adding record %s to sessions table: %s" % (session_id, e))
             return False
 
     def get_display_names(self, uris):
@@ -331,8 +328,8 @@ class SessionHistory(object):
         query += " and remote_uri in (%s)" % uris_sql
         try:
             return list(self.db.queryAll(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting contacts from chat history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting contacts from chat history table: %s" % e)
             return []
 
     @run_in_db_thread
@@ -358,15 +355,15 @@ class SessionHistory(object):
         if remote_uris:
             remote_uris_sql = ''
             for uri in remote_uris:
-                remote_uris_sql += "%s," % SessionHistoryEntry.sqlrepr(unicode(uri))
+                remote_uris_sql += "%s," % SessionHistoryEntry.sqlrepr(str(uri))
             remote_uris_sql = remote_uris_sql.rstrip(",")
             query += " and remote_uri in (%s)" % remote_uris_sql
 
         query += " order by start_time desc limit %d" % count
         try:
             return list(SessionHistoryEntry.select(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting entries from sessions history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting entries from sessions history table: %s" % e)
             return []
 
     def get_entries(self, direction=None, status=None, remote_focus=None, count=12, call_id=None, from_tag=None, to_tag=None, remote_uris=None, hidden=None, after_date=None):
@@ -383,8 +380,8 @@ class SessionHistory(object):
         query += "id in (%s)" % session_ids_sql
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error hiding session: %s" % e)
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
@@ -393,8 +390,8 @@ class SessionHistory(object):
         query = "update sessions set hidden = 0 where status = 'missed'"
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error hiding session: %s" % e)
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
@@ -403,8 +400,8 @@ class SessionHistory(object):
         query = "update sessions set hidden = 0 where direction = 'incoming' and status != 'missed'"
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error hiding session: %s" % e)
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
@@ -413,8 +410,8 @@ class SessionHistory(object):
         query = "update sessions set hidden = 0 where direction = 'outgoing'"
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error hiding session: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error hiding session: %s" % e)
 
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
@@ -424,8 +421,8 @@ class SessionHistory(object):
         results = []
         try:
             rows = list(self.db.queryAll(query))
-        except dberrors.OperationalError, e:
-            BlinkLogger().log_error(u"Error getting last chat sessions: %s" % e)
+        except dberrors.OperationalError as e:
+            BlinkLogger().log_error("Error getting last chat sessions: %s" % e)
             return results
         for row in rows:
             if not row[2]:
@@ -436,8 +433,8 @@ class SessionHistory(object):
                 nr_messages = list(self.db.queryAll(query))
                 if nr_messages[0][0] == 0:
                     continue
-            except dberrors.OperationalError, e:
-                BlinkLogger().log_error(u"Error getting count of chat messages: %s" % e)
+            except dberrors.OperationalError as e:
+                BlinkLogger().log_error("Error getting count of chat messages: %s" % e)
                 continue
 
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
@@ -460,8 +457,8 @@ class SessionHistory(object):
         results = []
         try:
             rows = list(self.db.queryAll(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting last sms conversations: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting last sms conversations: %s" % e)
             return results
         for row in rows:
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
@@ -492,8 +489,8 @@ class SessionHistory(object):
             query += " and start_time < %s" % ChatMessage.sqlrepr(before_date)
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error deleting messages from session history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error deleting messages from session history table: %s" % e)
             return False
         else:
             self.db.queryAll('vacuum')
@@ -529,8 +526,7 @@ class ChatMessage(SQLObject):
     encryption        = StringCol(default='')
 
 
-class ChatHistory(object):
-    __metaclass__ = Singleton
+class ChatHistory(object, metaclass=Singleton):
     __version__ = 5
 
     def __init__(self):
@@ -553,14 +549,14 @@ class ChatHistory(object):
             else:
                 try:
                     ChatMessage.createTable()
-                    BlinkLogger().log_debug(u"Created history table %s" % ChatMessage.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
+                    BlinkLogger().log_debug("Created history table %s" % ChatMessage.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error creating history table %s: %s" % (ChatMessage.sqlmeta.table,e))
                 else:
                     TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
-        except Exception, e:
-            BlinkLogger().log_error(u"Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
+        except Exception as e:
+            BlinkLogger().log_error("Error checking history table %s: %s" % (ChatMessage.sqlmeta.table,e))
 
     @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
@@ -569,8 +565,8 @@ class ChatHistory(object):
             query = "SELECT id, local_uri, remote_uri, cpim_from, cpim_to FROM chat_messages"
             try:
                 results = list(self.db.queryAll(query))
-            except Exception, e:
-                BlinkLogger().log_error(u"Error selecting table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error selecting table %s: %s" % (ChatMessage.sqlmeta.table, e))
             else:
                 for result in results:
                     id, local_uri, remote_uri, cpim_from, cpim_to = result
@@ -581,8 +577,8 @@ class ChatHistory(object):
                     query = "UPDATE chat_messages SET local_uri=%s, remote_uri=%s, cpim_from=%s, cpim_to=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(cpim_from), SessionHistoryEntry.sqlrepr(cpim_to), SessionHistoryEntry.sqlrepr(id))
                     try:
                         self.db.queryAll(query)
-                    except Exception, e:
-                        BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    except Exception as e:
+                        BlinkLogger().log_error("Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         else:
             next_upgrade_version = previous_version.version
 
@@ -591,54 +587,54 @@ class ChatHistory(object):
             query = "alter table chat_messages add column 'uuid' TEXT";
             try:
                 self.db.queryAll(query)
-            except dberrors.OperationalError, e:
+            except dberrors.OperationalError as e:
                 if not str(e).startswith('duplicate column name'):
-                    BlinkLogger().log_error(u"Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    BlinkLogger().log_error("Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
             query = "alter table chat_messages add column 'journal_id' TEXT";
             try:
                 self.db.queryAll(query)
-            except dberrors.OperationalError, e:
+            except dberrors.OperationalError as e:
                 if not str(e).startswith('duplicate column name'):
-                    BlinkLogger().log_error(u"Error adding column journal_id to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    BlinkLogger().log_error("Error adding column journal_id to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
             query = "UPDATE chat_messages SET uuid = %s, journal_id = '0'" % SessionHistoryEntry.sqlrepr(settings.instance_id)
             try:
                 self.db.queryAll(query)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
         if next_upgrade_version < 4:
             query = "CREATE INDEX IF NOT EXISTS date_index ON chat_messages (date)"
             try:
                 self.db.queryAll(query)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error adding index date_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index date_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
             query = "CREATE INDEX IF NOT EXISTS time_index ON chat_messages (time)"
             try:
                 self.db.queryAll(query)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error adding index time_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index time_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
             query = "CREATE INDEX IF NOT EXISTS sip_callid_index ON chat_messages (sip_callid)"
             try:
                 self.db.queryAll(query)
-            except Exception, e:
-                BlinkLogger().log_error(u"Error adding index sip_callid_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index sip_callid_index to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
         if next_upgrade_version < 5:
             query = "update chat_messages set status = 'failed' where status = 'sent'"
             try:
                 self.db.queryAll(query)
-            except Exception, e:
+            except Exception as e:
                 pass
 
             query = "alter table chat_messages add column 'encryption' TEXT default '' ";
             try:
                 self.db.queryAll(query)
-            except dberrors.OperationalError, e:
+            except dberrors.OperationalError as e:
                 if not str(e).startswith('duplicate column name'):
-                    BlinkLogger().log_error(u"Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    BlinkLogger().log_error("Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
@@ -719,10 +715,10 @@ class ChatHistory(object):
                     message.journal_id = journal_id
 
                 return True
-            except Exception, e:
-                BlinkLogger().log_debug(u"Error updating record %s: %s" % (msgid, e))
-        except Exception, e:
-            BlinkLogger().log_debug(u"Error adding record %s to history table: %s" % (msgid, e))
+            except Exception as e:
+                BlinkLogger().log_debug("Error updating record %s: %s" % (msgid, e))
+        except Exception as e:
+            BlinkLogger().log_debug("Error adding record %s to history table: %s" % (msgid, e))
         return False
 
     @run_in_db_thread
@@ -766,8 +762,8 @@ class ChatHistory(object):
         query += " order by remote_uri asc"
         try:
             return list(self.db.queryAll(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting contacts from chat history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting contacts from chat history table: %s" % e)
             return []
 
     def get_contacts(self, remote_uri=None, media_type=None, search_text=None, after_date=None, before_date=None):
@@ -852,8 +848,8 @@ class ChatHistory(object):
 
         try:
             return list(self.db.queryAll(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting daily entries from chat history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting daily entries from chat history table: %s" % e)
             return []
 
     def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None, before_date=None):
@@ -898,8 +894,8 @@ class ChatHistory(object):
 
         try:
             return list(ChatMessage.select(query))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting chat messages from chat history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting chat messages from chat history table: %s" % e)
             return []
 
     def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100):
@@ -918,8 +914,8 @@ class ChatHistory(object):
 
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error deleting messages from chat history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error deleting messages from chat history table: %s" % e)
 
     @run_in_db_thread
     def delete_messages(self, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None):
@@ -956,8 +952,8 @@ class ChatHistory(object):
             NotificationCenter().post_notification('ChatReplicationJournalEntryDeleted', sender=self, data=NotificationData(entries=entries))
             query = "delete from chat_messages %s" % where
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error deleting messages from chat history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error deleting messages from chat history table: %s" % e)
             return False
         else:
             self.db.queryAll('vacuum')
@@ -986,8 +982,7 @@ class FileTransfer(SQLObject):
     ft_idx            = DatabaseIndex('transfer_id', unique=True)
 
 
-class FileTransferHistory(object):
-    __metaclass__ = Singleton
+class FileTransferHistory(object, metaclass=Singleton):
     __version__ = 2
 
     def __init__(self):
@@ -1010,11 +1005,11 @@ class FileTransferHistory(object):
             else:
                 try:
                     FileTransfer.createTable()
-                    BlinkLogger().log_debug(u"Created file history table %s" % FileTransfer.sqlmeta.table)
-                except Exception, e:
-                    BlinkLogger().log_error(u"Error creating history table %s: %s" % (FileTransfer.sqlmeta.table, e))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
+                    BlinkLogger().log_debug("Created file history table %s" % FileTransfer.sqlmeta.table)
+                except Exception as e:
+                    BlinkLogger().log_error("Error creating history table %s: %s" % (FileTransfer.sqlmeta.table, e))
+        except Exception as e:
+            BlinkLogger().log_error("Error checking history table %s: %s" % (FileTransfer.sqlmeta.table, e))
 
     @allocate_autorelease_pool
     def _migrate_version(self, previous_version):
@@ -1022,8 +1017,8 @@ class FileTransferHistory(object):
             query = "SELECT id, local_uri, remote_uri FROM file_transfers"
             try:
                 results = list(self.db.queryAll(query))
-            except Exception, e:
-                BlinkLogger().log_error(u"Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
+            except Exception as e:
+                BlinkLogger().log_error("Error selecting from table %s: %s" % (ChatMessage.sqlmeta.table, e))
             else:
                 for result in results:
                     id, local_uri, remote_uri = result
@@ -1032,8 +1027,8 @@ class FileTransferHistory(object):
                     query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     try:
                         self.db.queryAll(query)
-                    except Exception, e:
-                        BlinkLogger().log_error(u"Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
+                    except Exception as e:
+                        BlinkLogger().log_error("Error updating table %s: %s" % (ChatMessage.sqlmeta.table, e))
         TableVersions().set_table_version(FileTransfer.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
@@ -1064,18 +1059,18 @@ class FileTransferHistory(object):
                     ft.time             = datetime.utcnow()
                     ft.date             = datetime.utcnow().date()
                 return True
-            except Exception, e:
-                BlinkLogger().log_debug(u"Error updating record %s: %s" % (transfer_id, e))
-        except Exception, e:
-            BlinkLogger().log_debug(u"Error adding record %s to history table: %s" % (transfer_id, e))
+            except Exception as e:
+                BlinkLogger().log_debug("Error updating record %s: %s" % (transfer_id, e))
+        except Exception as e:
+            BlinkLogger().log_debug("Error adding record %s to history table: %s" % (transfer_id, e))
         return False
 
     @run_in_db_thread
     def _get_transfers(self, limit):
         try:
             return list(FileTransfer.select(orderBy=DESC(FileTransfer.q.id), limit=limit))
-        except Exception, e:
-            BlinkLogger().log_error(u"Error getting transfers from history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error getting transfers from history table: %s" % e)
             return []
 
     def get_transfers(self, limit=100):
@@ -1086,16 +1081,16 @@ class FileTransferHistory(object):
         query = "delete from file_transfers"
         try:
             self.db.queryAll(query)
-        except Exception, e:
-            BlinkLogger().log_error(u"Error deleting transfers from history table: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error deleting transfers from history table: %s" % e)
             return False
         else:
             self.db.queryAll('vacuum')
             return True
 
 
+@implementer(IObserver)
 class SessionHistoryReplicator(object):
-    implements(IObserver)
 
     last_calls_connections = {}
     last_calls_connections_authRequestCount = {}
@@ -1140,9 +1135,9 @@ class SessionHistoryReplicator(object):
         if not account.server.settings_url:
             return
         query_string = "action=get_history&realm=%s" % account.id.domain
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         nsurl = NSURL.URLWithString_(url)
-        BlinkLogger().log_debug(u"Retrieving calls history for %s from %s" % (account.id, url))
+        BlinkLogger().log_debug("Retrieving calls history for %s from %s" % (account.id, url))
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
         timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(300, self, "updateGetCallsTimer:", None, True)
@@ -1176,7 +1171,7 @@ class SessionHistoryReplicator(object):
 
     def updateGetCallsTimer_(self, timer):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['timer'] == timer).next()
+            key = next((account for account in list(self.last_calls_connections.keys()) if self.last_calls_connections[account]['timer'] == timer))
         except StopIteration:
             return
         else:
@@ -1197,7 +1192,7 @@ class SessionHistoryReplicator(object):
     # NSURLConnection delegate method
     def connection_didReceiveData_(self, connection, data):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
+            key = next((account for account in list(self.last_calls_connections.keys()) if self.last_calls_connections[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
@@ -1210,30 +1205,30 @@ class SessionHistoryReplicator(object):
 
     def connectionDidFinishLoading_(self, connection):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
+            key = next((account for account in list(self.last_calls_connections.keys()) if self.last_calls_connections[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
+            BlinkLogger().log_debug("Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
                 pass
             else:
                 try:
-                    calls = cjson.decode(self.last_calls_connections[key]['data'])
-                except (TypeError, cjson.DecodeError):
-                    BlinkLogger().log_debug(u"Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+                    calls = json.loads(self.last_calls_connections[key]['data'])
+                except (TypeError, json.decoder.JSONDecodeError):
+                    BlinkLogger().log_debug("Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
 
     # NSURLConnection delegate method
     def connection_didFailWithError_(self, connection, error):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
+            key = next((account for account in list(self.last_calls_connections.keys()) if self.last_calls_connections[account]['connection'] == connection))
         except StopIteration:
             return
-        BlinkLogger().log_error(u"Failed to retrieve calls history for %s from %s: %s" % (key, self.last_calls_connections[key]['url'], error.userInfo()['NSLocalizedDescription']))
+        BlinkLogger().log_error("Failed to retrieve calls history for %s from %s: %s" % (key, self.last_calls_connections[key]['url'], error.userInfo()['NSLocalizedDescription']))
 
     @run_in_green_thread
     @allocate_autorelease_pool
@@ -1246,7 +1241,7 @@ class SessionHistoryReplicator(object):
         notification_center = NotificationCenter()
         try:
             if calls['received']:
-                BlinkLogger().log_debug(u"%d received calls retrieved from call history server of %s" % (len(calls['received']),account.id))
+                BlinkLogger().log_debug("%d received calls retrieved from call history server of %s" % (len(calls['received']),account.id))
                 for call in calls['received']:
                     direction = 'incoming'
                     local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
@@ -1290,7 +1285,7 @@ class SessionHistoryReplicator(object):
 
                         success = 'completed' if duration > 0 else 'missed'
 
-                        BlinkLogger().log_debug(u"Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
+                        BlinkLogger().log_debug("Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
                         received_synced += 1
                         self.sessionControllersManager.add_to_session_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
@@ -1329,10 +1324,10 @@ class SessionHistoryReplicator(object):
 
         except (KeyError, ValueError):
             pass
-        except Exception, e:
-            BlinkLogger().log_error(u"Error: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error: %s" % e)
             import traceback
-            print traceback.print_exc()
+            print(traceback.print_exc())
 
         try:
             if calls['placed']:
@@ -1382,7 +1377,7 @@ class SessionHistoryReplicator(object):
                         else:
                             success = 'cancelled' if status == "487" else 'failed'
 
-                        BlinkLogger().log_debug(u"Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
+                        BlinkLogger().log_debug("Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
                         placed_synced += 1
                         self.sessionControllersManager.add_to_session_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
@@ -1407,21 +1402,21 @@ class SessionHistoryReplicator(object):
                             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=False))
         except (KeyError, ValueError):
             pass
-        except Exception, e:
-            BlinkLogger().log_error(u"Error: %s" % e)
+        except Exception as e:
+            BlinkLogger().log_error("Error: %s" % e)
             import traceback
-            print traceback.print_exc()
+            print(traceback.print_exc())
 
         if placed_synced:
-            BlinkLogger().log_info(u"%d placed calls synced from server history of %s" % (placed_synced, account))
+            BlinkLogger().log_info("%d placed calls synced from server history of %s" % (placed_synced, account))
 
         if received_synced:
-            BlinkLogger().log_info(u"%d received calls synced from server history of %s" % (received_synced, account))
+            BlinkLogger().log_info("%d received calls synced from server history of %s" % (received_synced, account))
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
-            key = (account for account in self.last_calls_connections.keys() if self.last_calls_connections[account]['connection'] == connection).next()
+            key = next((account for account in list(self.last_calls_connections.keys()) if self.last_calls_connections[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
@@ -1439,12 +1434,11 @@ class SessionHistoryReplicator(object):
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
-                    BlinkLogger().log_error(u"Error: invalid web authentication when retrieving call history of %s" % key)
+                    BlinkLogger().log_error("Error: invalid web authentication when retrieving call history of %s" % key)
 
 
-class ChatHistoryReplicator(object):
-    __metaclass__ = Singleton
-    implements(IObserver)
+@implementer(IObserver)
+class ChatHistoryReplicator(object, metaclass=Singleton):
 
     outgoing_entries = {}
     for_delete_entries = {}
@@ -1512,39 +1506,39 @@ class ChatHistoryReplicator(object):
                 pass
 
         try:
-            with open(ApplicationData.get('chat_replication/chat_replication_journal.pickle'), 'r') as f:
-                self.outgoing_entries = cPickle.load(f)
+            with open(ApplicationData.get('chat_replication/chat_replication_journal.pickle'), 'rb') as f:
+                self.outgoing_entries = pickle.load(f)
         except Exception:
             pass
         else:
-            replication_accounts = self.outgoing_entries.keys()
+            replication_accounts = list(self.outgoing_entries.keys())
             for key in replication_accounts:
                 if key not in valid_accounts:
                     del self.outgoing_entries[key]
 
-            for key in self.outgoing_entries.keys():
+            for key in list(self.outgoing_entries.keys()):
                 if len(self.outgoing_entries[key]):
-                    BlinkLogger().log_debug(u"%d new chat entries not yet replicated to chat history server for account %s" % (len(self.outgoing_entries[key]), key))
+                    BlinkLogger().log_debug("%d new chat entries not yet replicated to chat history server for account %s" % (len(self.outgoing_entries[key]), key))
                 else:
-                    BlinkLogger().log_debug(u"No pending chat entries for chat history server of account %s" % key)
+                    BlinkLogger().log_debug("No pending chat entries for chat history server of account %s" % key)
 
         try:
-            with open(ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle'), 'r') as f:
-                self.for_delete_entries = cPickle.load(f)
+            with open(ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle'), 'rb') as f:
+                self.for_delete_entries = pickle.load(f)
         except Exception:
             pass
         else:
-            replication_accounts = self.for_delete_entries.keys()
+            replication_accounts = list(self.for_delete_entries.keys())
             for key in replication_accounts:
                 if key not in valid_accounts:
                     del self.for_delete_entries[key]
 
-            for key in self.for_delete_entries.keys():
-                BlinkLogger().log_debug(u"%d chat deleted entries not yet replicated to chat history server of account %s" % (len(self.for_delete_entries[key]), key))
+            for key in list(self.for_delete_entries.keys()):
+                BlinkLogger().log_debug("%d chat deleted entries not yet replicated to chat history server of account %s" % (len(self.for_delete_entries[key]), key))
 
         try:
-            with open(ApplicationData.get('chat_replication/chat_replication_timestamp.pickle'), 'r') as f:
-                self.last_journal_timestamp = cPickle.load(f)
+            with open(ApplicationData.get('chat_replication/chat_replication_timestamp.pickle'), 'rb') as f:
+                self.last_journal_timestamp = pickle.load(f)
         except Exception:
             pass
 
@@ -1555,22 +1549,22 @@ class ChatHistoryReplicator(object):
     def save_delete_journal_on_disk(self):
         storage_path = ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle')
         try:
-            cPickle.dump(self.for_delete_entries, open(storage_path, "w+"))
-        except (cPickle.PickleError, IOError):
+            pickle.dump(self.for_delete_entries, open(storage_path, "w+"))
+        except (pickle.PickleError, IOError):
             pass
 
     def save_journal_on_disk(self):
         storage_path = ApplicationData.get('chat_replication/chat_replication_journal.pickle')
         try:
-            cPickle.dump(self.outgoing_entries, open(storage_path, "w+"))
-        except (cPickle.PickleError, IOError):
+            pickle.dump(self.outgoing_entries, open(storage_path, "w+"))
+        except (pickle.PickleError, IOError):
             pass
 
     def save_journal_timestamp_on_disk(self):
         storage_path = ApplicationData.get('chat_replication/chat_replication_timestamp.pickle')
         try:
-            cPickle.dump(self.last_journal_timestamp, open(storage_path, "w+"))
-        except (cPickle.PickleError, IOError):
+            pickle.dump(self.last_journal_timestamp, open(storage_path, "w+"))
+        except (pickle.PickleError, IOError):
             pass
 
     @run_in_gui_thread
@@ -1607,7 +1601,7 @@ class ChatHistoryReplicator(object):
 
                 self.for_delete_entries.setdefault(account, set())
                 self.for_delete_entries[account].add(journal_id)
-                BlinkLogger().log_debug(u"Scheduling deletion of chat journal id %s for account %s" % (journal_id, account))
+                BlinkLogger().log_debug("Scheduling deletion of chat journal id %s for account %s" % (journal_id, account))
 
     def _NH_ChatReplicationJournalEntryAdded(self, sender, data):
         try:
@@ -1627,7 +1621,7 @@ class ChatHistoryReplicator(object):
 
             try:
                 entry = cjson.encode(data.entry)
-            except (TypeError, cjson.EncodeError), e:
+            except (TypeError, cjson.EncodeError) as e:
                 BlinkLogger().log_debug("Failed to json encode replication data for %s: %s" % (account, e))
                 return
 
@@ -1635,8 +1629,8 @@ class ChatHistoryReplicator(object):
             if replication_password:
                 try:
                     entry = encrypt(entry, replication_password).encode('base64')
-                except Exception, e:
-                    BlinkLogger().log_debug(u"Failed to encrypt replication data for %s: %s" % (account, e))
+                except Exception as e:
+                    BlinkLogger().log_debug("Failed to encrypt replication data for %s: %s" % (account, e))
                     return
 
                 self.outgoing_entries[account][data.entry['msgid']] = {'data': entry,
@@ -1651,7 +1645,7 @@ class ChatHistoryReplicator(object):
                 pass
 
     def disableReplication(self, account, reason=None):
-        BlinkLogger().log_debug(u"Disabled chat history replication for %s: %s" % (account, reason))
+        BlinkLogger().log_debug("Disabled chat history replication for %s: %s" % (account, reason))
         self.disabled_accounts.add(account)
 
     def get_last_journal_timestamp(self, account):
@@ -1667,15 +1661,15 @@ class ChatHistoryReplicator(object):
         try:
             success = journal['success']
         except KeyError:
-            BlinkLogger().log_debug(u"Invalid answer from chat history server")
+            BlinkLogger().log_debug("Invalid answer from chat history server")
             self.disableReplication(account, 'Invalid server answer')
             return
 
         if not success:
             try:
-                BlinkLogger().log_debug(u"Error from chat history server of %s: %s" % (account, journal['error_message']))
+                BlinkLogger().log_debug("Error from chat history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
-                BlinkLogger().log_debug(u"Unknown error from chat history server of %s" % account)
+                BlinkLogger().log_debug("Unknown error from chat history server of %s" % account)
                 self.disableReplication(account)
             else:
                 self.disableReplication(account, journal['error_message'])
@@ -1684,7 +1678,7 @@ class ChatHistoryReplicator(object):
         try:
             results = journal['results']
         except KeyError:
-            BlinkLogger().log_debug(u"No outgoing results returned by chat history server push of %s" % account)
+            BlinkLogger().log_debug("No outgoing results returned by chat history server push of %s" % account)
             #self.disableReplication(account, 'No results')
             return
 
@@ -1693,9 +1687,9 @@ class ChatHistoryReplicator(object):
                 msgid          = entry['id']
                 journal_id     = str(entry['journal_id'])
             except KeyError:
-                BlinkLogger().log_debug(u"Failed to update journal id from chat history server of %s" % account)
+                BlinkLogger().log_debug("Failed to update journal id from chat history server of %s" % account)
             else:
-                BlinkLogger().log_debug(u"Update local chat history message %s with remote journal id %s" % (msgid, journal_id))
+                BlinkLogger().log_debug("Update local chat history message %s with remote journal id %s" % (msgid, journal_id))
                 ChatHistory().update_from_journal_put_results(msgid, journal_id)
 
     @run_in_green_thread
@@ -1711,15 +1705,15 @@ class ChatHistoryReplicator(object):
         try:
             success = journal['success']
         except KeyError:
-            BlinkLogger().log_debug(u"Invalid answer from chat history server of %s" % account)
+            BlinkLogger().log_debug("Invalid answer from chat history server of %s" % account)
             self.disableReplication(account, 'Invalid answer')
             return
 
         if not success:
             try:
-                BlinkLogger().log_debug(u"Error from chat history server of %s: %s" % (account, journal['error_message']))
+                BlinkLogger().log_debug("Error from chat history server of %s: %s" % (account, journal['error_message']))
             except KeyError:
-                BlinkLogger().log_debug(u"Unknown error from chat history server of %s" % account)
+                BlinkLogger().log_debug("Unknown error from chat history server of %s" % account)
                 self.disableReplication(account)
             else:
                 self.disableReplication(account, journal['error_message'])
@@ -1738,7 +1732,7 @@ class ChatHistoryReplicator(object):
             else:
                 self.replication_server_summary[account] = results
                 oldest = datetime.fromtimestamp(int(first_row['timestamp'])).strftime('%Y-%m-%d %H:%M:%S')
-                BlinkLogger().log_debug(u"Account %s has %d messages on chat history server since %s" % (account, len(results), oldest))
+                BlinkLogger().log_debug("Account %s has %d messages on chat history server since %s" % (account, len(results), oldest))
                 try:
                     journal_ids = (result['journal_id'] for result in results)
                 except KeyError:
@@ -1749,11 +1743,11 @@ class ChatHistoryReplicator(object):
         try:
             results = journal['results']
         except KeyError:
-            BlinkLogger().log_debug(u"No incoming results returned by chat history server of %s" % account)
+            BlinkLogger().log_debug("No incoming results returned by chat history server of %s" % account)
             #self.disableReplication(account, 'No results')
             return
         else:
-            BlinkLogger().log_debug(u"Received %s results from chat history server of %s" % (len(results) or 'no new', account))
+            BlinkLogger().log_debug("Received %s results from chat history server of %s" % (len(results) or 'no new', account))
 
         replication_password = None
         try:
@@ -1784,20 +1778,20 @@ class ChatHistoryReplicator(object):
                         self.last_journal_timestamp[account] = {'timestamp': timestamp, 'msgid_list': []}
 
             except KeyError:
-                BlinkLogger().log_debug(u"Failed to parse chat history server results for %s" % account)
+                BlinkLogger().log_debug("Failed to parse chat history server results for %s" % account)
                 self.disableReplication(account)
                 return
 
             if replication_password:
                 try:
                     data = decrypt(data.decode('base64'), replication_password)
-                except Exception, e:
-                    BlinkLogger().log_debug(u"Failed to decrypt chat history server journal id %s for %s: %s" % (journal_id, account, e))
+                except Exception as e:
+                    BlinkLogger().log_debug("Failed to decrypt chat history server journal id %s for %s: %s" % (journal_id, account, e))
                     continue
 
             try:
                 data = cjson.decode(data)
-            except (TypeError, cjson.DecodeError), e:
+            except (TypeError, cjson.DecodeError) as e:
                 BlinkLogger().log_debug("Failed to decode chat history server journal id %s for %s: %s" % (journal_id, account, e))
                 continue
 
@@ -1834,16 +1828,16 @@ class ChatHistoryReplicator(object):
                             NotificationCenter().post_notification('ChatReplicationJournalEntryReceived', sender=self, data=notification_data)
 
                     if data['direction'] == 'incoming':
-                        BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, data['remote_uri'], account, uuid))
+                        BlinkLogger().log_debug("Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, data['remote_uri'], account, uuid))
                     else:
-                        BlinkLogger().log_debug(u"Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
+                        BlinkLogger().log_debug("Save %s chat message id %s with journal id %s from %s to %s on device %s" % (data['direction'], data['msgid'], journal_id, account, data['remote_uri'], uuid))
 
                 except KeyError:
-                    BlinkLogger().log_debug(u"Failed to apply chat history server journal to local chat history database for %s" % account)
+                    BlinkLogger().log_debug("Failed to apply chat history server journal to local chat history database for %s" % account)
                     return
 
         if notify_data:
-            for key in notify_data.keys():
+            for key in list(notify_data.keys()):
                 log_text = '%d new chat messages for %s replicated from chat history server' % (notify_data[key], key)
                 BlinkLogger().log_info(log_text)
         else:
@@ -1869,15 +1863,15 @@ class ChatHistoryReplicator(object):
                 if not connection and outgoing_entries:
                     try:
                         entries = cjson.encode(outgoing_entries)
-                    except (TypeError, cjson.EncodeError), e:
+                    except (TypeError, cjson.EncodeError) as e:
                         BlinkLogger().log_debug("Failed to encode chat journal entries for %s: %s" % (account, e))
                     else:
                         query_string = "action=put_journal_entries&realm=%s" % account.id.domain
-                        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+                        url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
                         nsurl = NSURL.URLWithString_(url)
                         settings = SIPSimpleSettings()
                         query_string_variables = {'uuid': settings.instance_id, 'data': entries}
-                        query_string = urllib.urlencode(query_string_variables)
+                        query_string = urllib.parse.urlencode(query_string_variables)
                         data = NSString.stringWithString_(query_string)
                         request = NSMutableURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
                         request.setHTTPMethod_("POST")
@@ -1900,15 +1894,15 @@ class ChatHistoryReplicator(object):
                     BlinkLogger().log_debug("Removing journal entries for %s from chat history server" % account.id)
                     try:
                         entries = cjson.encode(list(delete_entries))
-                    except (TypeError, cjson.EncodeError), e:
+                    except (TypeError, cjson.EncodeError) as e:
                         BlinkLogger().log_debug("Failed to encode chat journal delete entries for %s: %s" % (account, e))
                     else:
                         query_string = "action=delete_journal_entries&realm=%s" % account.id.domain
-                        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+                        url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
                         nsurl = NSURL.URLWithString_(url)
                         settings = SIPSimpleSettings()
                         query_string_variables = {'data': entries}
-                        query_string = urllib.urlencode(query_string_variables)
+                        query_string = urllib.parse.urlencode(query_string_variables)
                         data = NSString.stringWithString_(query_string)
                         request = NSMutableURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
                         request.setHTTPMethod_("POST")
@@ -1946,10 +1940,10 @@ class ChatHistoryReplicator(object):
         except KeyError:
             query_string_variables['summary']=1
 
-        query_string = "&".join(("%s=%s" % (key, value) for key, value in query_string_variables.items()))
+        query_string = "&".join(("%s=%s" % (key, value) for key, value in list(query_string_variables.items())))
 
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-        BlinkLogger().log_debug(u"Retrieving chat history for %s from %s after %s" % (account.id, url, datetime.fromtimestamp(after_timestamp).strftime("%Y-%m-%d %H:%M:%S")))
+        url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        BlinkLogger().log_debug("Retrieving chat history for %s from %s after %s" % (account.id, url, datetime.fromtimestamp(after_timestamp).strftime("%Y-%m-%d %H:%M:%S")))
         nsurl = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(nsurl, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         connection = NSURLConnection.alloc().initWithRequest_delegate_(request, self)
@@ -1958,21 +1952,21 @@ class ChatHistoryReplicator(object):
     # NSURLConnection delegate methods
     def connection_didReceiveData_(self, connection, data):
         try:
-            key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_outgoing_replication.keys()) if self.connections_for_outgoing_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
             self.connections_for_outgoing_replication[key]['responseData'] = self.connections_for_outgoing_replication[key]['responseData'] + str(data)
 
         try:
-            key = (account for account in self.connections_for_incoming_replication.keys() if self.connections_for_incoming_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_incoming_replication.keys()) if self.connections_for_incoming_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
             self.connections_for_incoming_replication[key]['responseData'] = self.connections_for_incoming_replication[key]['responseData'] + str(data)
 
         try:
-            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_delete_replication.keys()) if self.connections_for_delete_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
@@ -1980,11 +1974,11 @@ class ChatHistoryReplicator(object):
 
     def connectionDidFinishLoading_(self, connection):
         try:
-            key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_outgoing_replication.keys()) if self.connections_for_outgoing_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Outgoing chat journal for %s pushed to %s" % (key, self.connections_for_outgoing_replication[key]['url']))
+            BlinkLogger().log_debug("Outgoing chat journal for %s pushed to %s" % (key, self.connections_for_outgoing_replication[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -1996,13 +1990,13 @@ class ChatHistoryReplicator(object):
                 self.connections_for_outgoing_replication[account.id]['connection'] = None
                 try:
                     data = cjson.decode(self.connections_for_outgoing_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError), e:
+                except (TypeError, cjson.DecodeError) as e:
                     BlinkLogger().log_debug("Failed to parse chat journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
                 else:
                     self.updateLocalHistoryWithRemoteJournalId(data, key)
 
                 try:
-                    for key in self.connections_for_outgoing_replication[key]['postData'].keys():
+                    for key in list(self.connections_for_outgoing_replication[key]['postData'].keys()):
                         try:
                             del self.outgoing_entries[account.id][key]
                         except KeyError:
@@ -2016,11 +2010,11 @@ class ChatHistoryReplicator(object):
                     pass
 
         try:
-            key = (account for account in self.connections_for_incoming_replication.keys() if self.connections_for_incoming_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_incoming_replication.keys()) if self.connections_for_incoming_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Incoming chat journal for %s received from %s" % (key, self.connections_for_incoming_replication[key]['url']))
+            BlinkLogger().log_debug("Incoming chat journal for %s received from %s" % (key, self.connections_for_incoming_replication[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -2031,18 +2025,18 @@ class ChatHistoryReplicator(object):
             else:
                 try:
                     data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError), e:
+                except (TypeError, cjson.DecodeError) as e:
                     BlinkLogger().log_debug("Failed to parse chat journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
                 del self.connections_for_incoming_replication[key]
 
         try:
-            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_delete_replication.keys()) if self.connections_for_delete_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
-            BlinkLogger().log_debug(u"Delete chat journal entries for %s pushed to %s" % (key, self.connections_for_delete_replication[key]['url']))
+            BlinkLogger().log_debug("Delete chat journal entries for %s pushed to %s" % (key, self.connections_for_delete_replication[key]['url']))
             try:
                 account = AccountManager().get_account(key)
             except KeyError:
@@ -2054,23 +2048,23 @@ class ChatHistoryReplicator(object):
                 self.connections_for_delete_replication[account.id]['connection'] = None
                 try:
                     data = cjson.decode(self.connections_for_delete_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError), e:
+                except (TypeError, cjson.DecodeError) as e:
                     BlinkLogger().log_debug("Failed to parse chat journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
                 else:
                     try:
                         result = data['success']
                     except KeyError:
-                        BlinkLogger().log_debug(u"Invalid answer from chat history server of %s for delete journal entries" % account.id)
+                        BlinkLogger().log_debug("Invalid answer from chat history server of %s for delete journal entries" % account.id)
                     else:
                         if not result:
                             try:
                                 error_message = data['error_message']
                             except KeyError:
-                                BlinkLogger().log_debug(u"Invalid answer from chat history server of %s" % account.id)
+                                BlinkLogger().log_debug("Invalid answer from chat history server of %s" % account.id)
                             else:
-                                BlinkLogger().log_debug(u"Delete journal entries failed for account %s: %s" % (account.id, error_message))
+                                BlinkLogger().log_debug("Delete journal entries failed for account %s: %s" % (account.id, error_message))
                         else:
-                            BlinkLogger().log_debug(u"Delete journal entries succeeded for account %s" % account.id)
+                            BlinkLogger().log_debug("Delete journal entries succeeded for account %s" % account.id)
 
                     try:
                         for entry in self.connections_for_delete_replication[key]['postData'].copy():
@@ -2085,7 +2079,7 @@ class ChatHistoryReplicator(object):
 
     def connection_didFailWithError_(self, connection, error):
         try:
-            key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_outgoing_replication.keys()) if self.connections_for_outgoing_replication[account]['connection'] == connection))
         except StopIteration:
             return
         else:
@@ -2094,11 +2088,11 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                BlinkLogger().log_error(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], error.userInfo()['NSLocalizedDescription']))
+                BlinkLogger().log_error("Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], error.userInfo()['NSLocalizedDescription']))
                 self.connections_for_outgoing_replication[key]['connection'] = None
 
         try:
-            key = (account for account in self.connections_for_incoming_replication.keys() if self.connections_for_incoming_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_incoming_replication.keys()) if self.connections_for_incoming_replication[account]['connection'] == connection))
         except StopIteration:
             return
         else:
@@ -2107,12 +2101,12 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], error))
+                BlinkLogger().log_debug("Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], error))
                 self.connections_for_incoming_replication[key]['connection'] = None
                 del self.connections_for_incoming_replication[key]
 
         try:
-            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_delete_replication.keys()) if self.connections_for_delete_replication[account]['connection'] == connection))
         except StopIteration:
             return
         else:
@@ -2121,13 +2115,13 @@ class ChatHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                BlinkLogger().log_debug(u"Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], error))
+                BlinkLogger().log_debug("Failed to retrieve chat messages for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], error))
                 self.connections_for_delete_replication[key]['connection'] = None
                 del self.connections_for_delete_replication[key]
 
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
         try:
-            key = (account for account in self.connections_for_outgoing_replication.keys() if self.connections_for_outgoing_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_outgoing_replication.keys()) if self.connections_for_outgoing_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
@@ -2145,10 +2139,10 @@ class ChatHistoryReplicator(object):
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
-                    BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
+                    BlinkLogger().log_error("Error: Invalid web authentication when retrieving chat history of %s" % key)
 
         try:
-            key = (account for account in self.connections_for_incoming_replication.keys() if self.connections_for_incoming_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_incoming_replication.keys()) if self.connections_for_incoming_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
@@ -2166,10 +2160,10 @@ class ChatHistoryReplicator(object):
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
-                    BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
+                    BlinkLogger().log_error("Error: Invalid web authentication when retrieving chat history of %s" % key)
 
         try:
-            key = (account for account in self.connections_for_delete_replication.keys() if self.connections_for_delete_replication[account]['connection'] == connection).next()
+            key = next((account for account in list(self.connections_for_delete_replication.keys()) if self.connections_for_delete_replication[account]['connection'] == connection))
         except StopIteration:
             pass
         else:
@@ -2187,4 +2181,4 @@ class ChatHistoryReplicator(object):
                     credential = NSURLCredential.credentialWithUser_password_persistence_(account.id.username, account.server.web_password or account.auth.password, NSURLCredentialPersistenceNone)
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
-                    BlinkLogger().log_error(u"Error: Invalid web authentication when retrieving chat history of %s" % key)
+                    BlinkLogger().log_error("Error: Invalid web authentication when retrieving chat history of %s" % key)

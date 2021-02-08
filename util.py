@@ -19,8 +19,8 @@ import threading
 
 
 from datetime import datetime
-from htmlentitydefs import name2codepoint
-from HTMLParser import HTMLParser, HTMLParseError
+from html.entities import name2codepoint
+from html.parser import HTMLParser
 
 from application.python.decorator import decorator, preserve_signature
 
@@ -113,7 +113,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     transport = 'udp'
     if isinstance(identity, (SIPURI, FrozenSIPURI)):
         if format == 'aor':
-            return u"%s@%s" % (identity.user, identity.host)
+            return "%s@%s" % (identity.user, identity.host)
 
         user = identity.user
         host = identity.host
@@ -125,7 +125,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
         uri = sip_prefix_pattern.sub("", str(identity))
     else:
         if format == 'aor':
-            return u"%s@%s" % (identity.uri.user, identity.uri.host)
+            return "%s@%s" % (identity.uri.user, identity.uri.host)
 
         user = identity.uri.user
         host = identity.uri.host
@@ -143,11 +143,11 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
         del pool
 
     if port == 5060 and transport == 'udp':
-        address = u"%s@%s" % (user, host)
+        address = "%s@%s" % (user, host)
     elif transport == 'udp':
-        address = u"%s@%s:%d" % (user, host, port)
+        address = "%s@%s:%d" % (user, host, port)
     else:
-        address = u"%s@%s:%d;transport=%s" % (user, host, port, transport)
+        address = "%s@%s:%d;transport=%s" % (user, host, port, transport)
 
     match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
     if contact:
@@ -185,7 +185,7 @@ def sipuri_components_from_string(text):
     fancy_uri = ""
 
     # the shlex module doesn't support unicode
-    uri = text.encode('utf8') if isinstance(text, unicode) else text
+    uri = text.encode('utf8') if isinstance(text, str) else text
 
     toks = shlex.split(uri)
 
@@ -226,7 +226,7 @@ def sipuri_components_from_string(text):
     else:
         fancy_uri = address
 
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return address.decode('utf8'), display_name.decode('utf8'), full_uri.decode('utf8'), fancy_uri.decode('utf8')
     else:
         return address, display_name, full_uri, fancy_uri
@@ -413,7 +413,7 @@ def translate_alpha2digit(key):
         letter_map = translate_alpha2digit.letter_map
     except AttributeError:
         digit_map  = {'2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'}
-        letter_map = dict((letter, digit) for digit, letter_group in digit_map.iteritems() for letter in letter_group)
+        letter_map = dict((letter, digit) for digit, letter_group in digit_map.items() for letter in letter_group)
         translate_alpha2digit.letter_map = letter_map
     return letter_map.get(key.upper(), key)
 
@@ -493,14 +493,14 @@ class AccountInfo(object):
 
     @property
     def name(self):
-        return u'Bonjour' if isinstance(self.account, BonjourAccount) else unicode(self.account.id)
+        return 'Bonjour' if isinstance(self.account, BonjourAccount) else str(self.account.id)
 
     @property
     def order(self):
         return self.account.order
 
     def __eq__(self, other):
-        if isinstance(other, basestring):
+        if isinstance(other, str):
             return self.name == other
         elif isinstance(other, (Account, BonjourAccount)):
             return self.account == other
@@ -567,13 +567,13 @@ class _HTMLToText(HTMLParser):
 
     def handle_entityref(self, name):
         if name in name2codepoint and not self.hide_output:
-            c = unichr(name2codepoint[name])
+            c = chr(name2codepoint[name])
             self._buf.append(c)
 
     def handle_charref(self, name):
         if not self.hide_output:
             n = int(name[1:], 16) if name.startswith('x') else int(name)
-            self._buf.append(unichr(n))
+            self._buf.append(chr(n))
 
     def get_text(self):
         return re.sub(r' +', ' ', ''.join(self._buf))
@@ -588,7 +588,7 @@ def html2txt(html):
     try:
         parser.feed(html)
         parser.close()
-    except HTMLParseError:
+    except Exception:
         pass
     return parser.get_text()
 

@@ -530,16 +530,16 @@ class MapView(NSView):
         self.selectedCountries = {}
         self.icons = {}
 
-        for view in self.labels.values():
+        for view in list(self.labels.values()):
             view.removeFromSuperview()
         self.labels = {}
 
-        for view in self.buttons.values():
+        for view in list(self.buttons.values()):
             view.removeFromSuperview()
         self.buttons = {}
 
         if self.contact.presence_state['devices']:
-            devices_with_location = [device for device in self.contact.presence_state['devices'].values() if device['location'] is not None]
+            devices_with_location = [device for device in list(self.contact.presence_state['devices'].values()) if device['location'] is not None]
             for device in devices_with_location:
                 country = device['location'].split("/")[0]
                 try:
@@ -548,7 +548,7 @@ class MapView(NSView):
                     pass
                 else:
                     device['country'] = country
-                    if iso_code in self.selectedCountries.keys():
+                    if iso_code in list(self.selectedCountries.keys()):
                         self.selectedCountries[iso_code].append(device)
                     else:
                         self.selectedCountries[iso_code] = [device]
@@ -602,7 +602,7 @@ class MapView(NSView):
                 NSColor.grayColor().set();
                 path.stroke()
 
-                if key in self.selectedCountries.keys():
+                if key in list(self.selectedCountries.keys()):
                     middle_point = (most_right_point + most_left_point ) /2
                     country_start_points[key] = NSMakePoint(middle_point, highest_point)
                     self.selectedColor.set()
@@ -614,7 +614,7 @@ class MapView(NSView):
 
         size = NSMakeSize(12,12)
         shift_y = 0
-        for key in country_start_points.keys():
+        for key in list(country_start_points.keys()):
             shift_x = 0
             for device in self.selectedCountries[key]:
                 icon = None
@@ -655,7 +655,7 @@ class MapView(NSView):
                 labelView = self.labels[key]
             except KeyError:
                 text = key
-                for country_name, country_iso_code in country_iso_map.iteritems():
+                for country_name, country_iso_code in country_iso_map.items():
                     if country_iso_code == key:
                         text = country_name
                         break
@@ -676,7 +676,7 @@ class MapView(NSView):
 
     def startSession_(self, sender):
         device = None
-        for device_id, button in self.buttons.iteritems():
+        for device_id, button in self.buttons.items():
             if button == sender:
                 try:
                     device = self.contact.presence_state['devices'][device_id]
@@ -693,7 +693,7 @@ class MapView(NSView):
 
         if device is not None:
             title = '%s (%s)' % (device['description'], device['contact'])
-            item = menu.addItemWithTitle_action_keyEquivalent_(unicode(title), "", "")
+            item = menu.addItemWithTitle_action_keyEquivalent_(str(title), "", "")
             item.setEnabled_(False)
             menu.addItem_(NSMenuItem.separatorItem())
         item = menu.addItemWithTitle_action_keyEquivalent_("Start Audio Call", "startAudioSessionWithSIPURI:", "")

@@ -23,7 +23,7 @@ from datetime import datetime
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -59,8 +59,8 @@ Simplified = Simplified()
 Full = Full()
 
 
+@implementer(IObserver)
 class DebugWindow(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
 
@@ -324,7 +324,7 @@ class DebugWindow(NSObject):
         self.renderNotifications()
 
     def renderNotifications(self):
-        text = unicode(self.filterNotificationsSearchBox.stringValue().strip().lower())
+        text = str(self.filterNotificationsSearchBox.stringValue().strip().lower())
         self.notifications = [notification for notification in self.notifications_unfiltered if text in notification[0].lower()] if text else self.notifications_unfiltered
         self.notificationsTextView.noteNumberOfRowsChanged()
         self.notificationsTextView.scrollRowToVisible_(len(self.notifications)-1)
@@ -392,11 +392,11 @@ class DebugWindow(NSObject):
     @objc.python_method
     def renderAudio(self, session):
         try:
-            audio_stream = (s for s in session.streams or [] if s.type=='audio').next()
+            audio_stream = next((s for s in session.streams or [] if s.type=='audio'))
         except StopIteration:
             return
 
-        text = u'\n%s New Audio call %s\n' % (session.start_time, session.remote_identity)
+        text = '\n%s New Audio call %s\n' % (session.start_time, session.remote_identity)
         if audio_stream.local_rtp_address and audio_stream.local_rtp_port and audio_stream.remote_rtp_address and audio_stream.remote_rtp_port:
             if audio_stream.ice_active and audio_stream.local_rtp_candidate and audio_stream.remote_rtp_candidate:
                 text += '%s Audio RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time,
@@ -427,11 +427,11 @@ class DebugWindow(NSObject):
     @objc.python_method
     def renderVideo(self, session):
         try:
-            video_stream = (s for s in session.streams or [] if s.type=='video').next()
+            video_stream = next((s for s in session.streams or [] if s.type=='video'))
         except StopIteration:
             return
 
-        text = u'\n%s New Video call %s\n' % (session.start_time, session.remote_identity)
+        text = '\n%s New Video call %s\n' % (session.start_time, session.remote_identity)
         if video_stream.local_rtp_address and video_stream.local_rtp_port and video_stream.remote_rtp_address and video_stream.remote_rtp_port:
             if video_stream.ice_active and video_stream.local_rtp_candidate and video_stream.remote_rtp_candidate:
                 text += '%s Video RTP endpoints %s:%d (ICE type %s) <-> %s:%d (ICE type %s)\n' % (session.start_time,
@@ -612,10 +612,10 @@ class DebugWindow(NSObject):
                     attribs["data"] = "<%i bytes>"%len(attribs["data"])
             elif notification.name in ("FileTransferStreamGotChunk", "ScreenSharingStreamGotData"):
                 attribs["content"] = "..."
-                if attribs.has_key("data"):
+                if "data" in attribs:
                     attribs["data"] = "..."
 
-            attribs = ", ".join("%s=%s" % (k, v) for k, v in attribs.iteritems())
+            attribs = ", ".join("%s=%s" % (k, v) for k, v in attribs.items())
             ts = notification.datetime
             ts = ts.replace(microsecond=0) if type(ts) == datetime else ""
 
@@ -724,7 +724,7 @@ class DebugWindow(NSObject):
     def _NH_RTPStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
 
-        text = u'%s Audio call to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
+        text = '%s Audio call to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
         if stream.local_rtp_address and stream.local_rtp_port and stream.remote_rtp_address and stream.remote_rtp_port:
             text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime,
                                                                   stream.local_rtp_address,
@@ -745,7 +745,7 @@ class DebugWindow(NSObject):
         data = notification.data
         stream = notification.sender
 
-        text = u'%s Audio call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        text = '%s Audio call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
         if stream.local_rtp_candidate and stream.remote_rtp_candidate:
             text += '%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
                                                                                              stream.local_rtp_address,
@@ -774,7 +774,7 @@ class DebugWindow(NSObject):
         data = notification.data
         stream = notification.sender
 
-        text = u'%s Video call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        text = '%s Video call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
         if stream.local_rtp_candidate and stream.remote_rtp_candidate:
             text += '%s Video RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
                                                                                              stream.local_rtp_address,
@@ -860,20 +860,20 @@ class DebugWindow(NSObject):
             # The XCAP manager might be stopped because this notification is processed in a different
             # thread from which it was posted
             return
-        self.renderXCAP(u"%s Using XCAP root %s for account %s" % (notification.datetime, xcap_root, account.id))
-        message = (u"%s XCAP server capabilities: %s" % (notification.datetime, ", ".join(notification.data.auids)))
+        self.renderXCAP("%s Using XCAP root %s for account %s" % (notification.datetime, xcap_root, account.id))
+        message = ("%s XCAP server capabilities: %s" % (notification.datetime, ", ".join(notification.data.auids)))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPSubscriptionGotNotify(self, notification):
         settings = SIPSimpleSettings()
-        message = (u"%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body))
+        message = ("%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body))
         if notification.data.body is not None and settings.logs.trace_xcap_in_gui == Full:
             self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, notification):
-        message = (u"%s XCAP manager of account %s changed state from %s to %s" % (notification.datetime, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
+        message = ("%s XCAP manager of account %s changed state from %s to %s" % (notification.datetime, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
         self.renderXCAP(message)
 
 

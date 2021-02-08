@@ -56,7 +56,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 from util import run_in_gui_thread
 
 
@@ -77,7 +77,7 @@ class MyCollectionView(NSCollectionView):
         if selection.count() > 0:
             obj = selection.lastObject()
             path = obj.objectForKey_("path")
-            if own_icon_path is not None and path == unicode(own_icon_path):
+            if own_icon_path is not None and path == str(own_icon_path):
                 return
 
             if path.endswith("default_user_icon.tiff"):
@@ -167,8 +167,8 @@ class EditImageView(NSImageView):
             NSBezierPath.bezierPathWithRect_(rect).fill()
 
 
+@implementer(IObserver)
 class PhotoPicker(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
     tabView = objc.IBOutlet()
@@ -289,7 +289,7 @@ class PhotoPicker(NSObject):
         array = NSMutableArray.array()
         knownFiles = set()
         for item in self.contentArrayController.arrangedObjects():
-            knownFiles.add(unicode(item.objectForKey_("path")))
+            knownFiles.add(str(item.objectForKey_("path")))
 
         seen_md5sum = {}
         i = 0
@@ -310,7 +310,7 @@ class PhotoPicker(NSObject):
                         continue
                     item = NSDictionary.dictionaryWithObjectsAndKeys_(image, "picture", p, "path")
                     array.addObject_(item)
-                    if own_icon_path is not None and filename == unicode(own_icon_path):
+                    if own_icon_path is not None and filename == str(own_icon_path):
                         selected_icon = i
                     i += 1
 
@@ -508,7 +508,7 @@ class PhotoPicker(NSObject):
         panel.setTitle_(NSLocalizedString("Select a Picture", "Label"))
 
         if panel.runModalForTypes_(NSArray.arrayWithObjects_("png", "tiff", "jpeg", "jpg", "tif")) == NSOKButton:
-            path = unicode(panel.filename())
+            path = str(panel.filename())
             self.cropAndAddImage(path)
 
     @objc.IBAction

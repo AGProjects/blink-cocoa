@@ -9,12 +9,12 @@ from Foundation import (NSBundle,
                         NSRunLoopCommonModes,
                         NSTimer)
 
-import cjson
+import json
 import hashlib
 import objc
 import socket
 import uuid
-import urlparse
+import urllib.parse
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -30,7 +30,7 @@ from sipsimple.util import ISOTimestamp
 from sipsimple.threading import run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from configuration.datatypes import UserIcon
@@ -39,7 +39,7 @@ from util import run_in_gui_thread
 from Quartz import kCGEventMouseMoved, kCGEventSourceStateHIDSystemState
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
-objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
+objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', b'diI')])
 
 on_the_phone_activity = {'title': NSLocalizedString("Busy", "Menu item"),
                          'note': "On the Phone",
@@ -117,8 +117,8 @@ PresenceActivityList = (
                       )
 
 
+@implementer(IObserver)
 class PresencePublisher(object):
-    implements(IObserver)
 
     user_input = {'state': 'active', 'last_input': None}
     idle_mode = False
@@ -306,7 +306,7 @@ class PresencePublisher(object):
                     i = self.owner.presenceActivityPopUp.indexOfItemWithTitle_('Away')
                     self.owner.presenceActivityPopUp.selectItemAtIndex_(i)
                     self.presenceStateBeforeIdle = activity_object
-                    self.presenceStateBeforeIdle['note'] = unicode(settings.presence_state.note)
+                    self.presenceStateBeforeIdle['note'] = str(settings.presence_state.note)
                 self.idle_mode = True
                 must_publish = True
         else:
@@ -353,14 +353,14 @@ class PresencePublisher(object):
         status.extended = activity_object['extended_status']
 
         person.activities = rpid.Activities()
-        person.activities.add(unicode(status.extended))
+        person.activities.add(str(status.extended))
         service = pidf.Service("SID-%s" % instance_id, status=status)
         service.timestamp = pidf.ServiceTimestamp(settings.presence_state.timestamp)
 
         if offline:
             note = settings.presence_state.offline_note
             if note:
-                service.notes.add(unicode(note))
+                service.notes.add(str(note))
             pidf_doc.add(service)
             return pidf_doc
 
@@ -382,8 +382,8 @@ class PresencePublisher(object):
         if account.presence.homepage is not None:
             service.homepage = cipid.Homepage(account.presence.homepage)
 
-        service.notes.add(unicode(settings.presence_state.note))
-        service.device_info = pidf.DeviceInfo(instance_id, description=unicode(self.hostname), user_agent=settings.user_agent)
+        service.notes.add(str(settings.presence_state.note))
+        service.device_info = pidf.DeviceInfo(instance_id, description=str(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
             service.device_info.time_offset = pidf.TimeOffset()
         service.capabilities = caps.ServiceCapabilities(audio=True, text=True)
@@ -404,7 +404,7 @@ class PresencePublisher(object):
 
         device = pidf.Device("DID-%s" % instance_id, device_id=pidf.DeviceID(instance_id))
         device.timestamp = pidf.DeviceTimestamp(settings.presence_state.timestamp)
-        device.notes.add(u'%s at %s' % (settings.user_agent, self.hostname))
+        device.notes.add('%s at %s' % (settings.user_agent, self.hostname))
         pidf_doc.add(device)
         self.last_service_timestamp[account.id] = service.timestamp
         return pidf_doc
@@ -419,14 +419,14 @@ class PresencePublisher(object):
         person = pidf.Person("PID-%s" % account_hash)
         person.activities = rpid.Activities()
         person.activities.add('offline')
-        person.notes.add(unicode(note))
+        person.notes.add(str(note))
         pidf_doc.add(person)
         service = pidf.Service("SID-%s" % account_hash)
         service.status = pidf.Status(basic='closed')
         service.status.extended = 'offline'
         service.contact = pidf.Contact(str(account.uri))
         service.capabilities = caps.ServiceCapabilities()
-        service.notes.add(unicode(note))
+        service.notes.add(str(note))
         pidf_doc.add(service)
         return pidf_doc
 
@@ -435,7 +435,7 @@ class PresencePublisher(object):
         if not settings.presence_state.icon:
             return None
         try:
-            return open(settings.presence_state.icon.path, 'r').read()
+            return open(settings.presence_state.icon.path, 'rb').read()
         except OSError:
             return None
 
@@ -457,7 +457,7 @@ class PresencePublisher(object):
             self.first_start_logged = True
 
         if self.last_logged_status != activity_object['extended_status']:
-            BlinkLogger().log_debug(u"My availability changed to %s" % activity_object['extended_status'])
+            BlinkLogger().log_debug("My availability changed to %s" % activity_object['extended_status'])
             self.last_logged_status = activity_object['extended_status']
 
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
@@ -495,15 +495,15 @@ class PresencePublisher(object):
             if not account.server.settings_url or account.presence.disable_location:
                 continue
             query_string = "action=get_location"
-            url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
-            req = urllib2.Request(url)
+            url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+            req = urllib.request.Request(url)
             try:
-                data = urllib2.urlopen(req).read()
+                data = urllib.request.urlopen(req).read()
             except Exception:
                 continue
             try:
-                response = cjson.decode(data.replace('\\/', '/'))
-            except TypeError:
+                response = json.loads(data.replace('\\/', '/'))
+            except (TypeError, json.decoder.JSONDecodeError):
                 continue
             if response and self.location != response:
                 self.location = response

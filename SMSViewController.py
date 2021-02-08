@@ -38,7 +38,7 @@ import hashlib
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.system import host
-from zope.interface import implements
+from zope.interface import implementer
 
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI
@@ -93,8 +93,8 @@ class SMSSplitView(NSSplitView):
             self.text.drawAtPoint_withAttributes_(point, self.attributes)
 
 
+@implementer(IObserver)
 class SMSViewController(NSObject):
-    implements(IObserver)
 
     chatViewController = objc.IBOutlet()
     splitView = objc.IBOutlet()
@@ -175,7 +175,7 @@ class SMSViewController(NSObject):
         for text, file in smileys:
             image = NSImage.alloc().initWithContentsOfFile_(file)
             if not image:
-                print "Can't load %s" % file
+                print("Can't load %s" % file)
                 continue
             image.setScalesWhenResized_(True)
             image.setSize_(NSMakeSize(16, 16))
@@ -198,7 +198,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def log_info(self, text):
-        BlinkLogger().log_info(u"[SMS %s with %s] %s" % (self.session_id, self.remote_uri, text))
+        BlinkLogger().log_info("[SMS %s with %s] %s" % (self.session_id, self.remote_uri, text))
 
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
@@ -243,7 +243,7 @@ class SMSViewController(NSObject):
             nc_subtitle = format_identity_to_string(sender, format='full')
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-        self.log_info(u"Incoming message %s received" % call_id)
+        self.log_info("Incoming message %s received" % call_id)
 
         self.chatViewController.showMessage(call_id, msgid, 'incoming', format_identity_to_string(sender), icon, content, timestamp, is_html=is_html, state="delivered", media_type='sms', encryption=encryption)
 
@@ -297,7 +297,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     def _NH_DNSLookupDidFail(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
-        message = u"DNS lookup of SIP proxies for %s failed: %s" % (unicode(self.target_uri.host), data.error)
+        message = "DNS lookup of SIP proxies for %s failed: %s" % (str(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
 
     @objc.python_method
@@ -305,7 +305,7 @@ class SMSViewController(NSObject):
         self.notification_center.remove_observer(self, sender=lookup)
 
         result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
-        self.log_info(u"DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
+        self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
         routes = data.result
         if not routes:
             self.setRoutesFailed("No routes found to SIP Proxy")
@@ -324,7 +324,7 @@ class SMSViewController(NSObject):
             call_id = data.headers['Call-ID'].body
             self.composeReplicationMessage(message, data.code)
             if message.content_type != "application/im-iscomposing+xml":
-                self.log_info(u"Outgoing message %s delivered" % (call_id))
+                self.log_info("Outgoing message %s delivered" % (call_id))
                 if data.code == 202:
                     self.chatViewController.markMessage(message.msgid, MSG_STATE_DEFERRED)
                     message.status='deferred'
@@ -352,7 +352,7 @@ class SMSViewController(NSObject):
                 self.chatViewController.markMessage(message.msgid, MSG_STATE_FAILED)
                 message.status='failed'
                 self.add_to_history(message)
-                self.log_info(u"Outgoing message %s delivery failed: %s" % (call_id, data.reason))
+                self.log_info("Outgoing message %s delivery failed: %s" % (call_id, data.reason))
         self.notification_center.remove_observer(self, sender=sender)
 
     @objc.python_method
@@ -477,7 +477,7 @@ class SMSViewController(NSObject):
             message_request.send(15)
             message.status = 'sent'
             message.call_id = message_request._request.call_id
-            self.log_info(u"Sending message %s" % (message_request._request.call_id))
+            self.log_info("Sending message %s" % (message_request._request.call_id))
             id=str(message_request)
         else:
             route = self.last_route or self.routes[0]
@@ -501,13 +501,13 @@ class SMSViewController(NSObject):
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port,
                          parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+            self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
-            self.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
         else:
             uri = target_uri
-            self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
+            self.log_info("Starting DNS lookup for %s" % target_uri.host)
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     @objc.python_method
@@ -539,7 +539,7 @@ class SMSViewController(NSObject):
 
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
-            content = unicode(textView.string())
+            content = str(textView.string())
             textView.setString_("")
             textView.didChangeText()
 

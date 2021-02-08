@@ -68,7 +68,7 @@ from Quartz.CoreVideo import kCVPixelBufferPixelFormatTypeKey
 from Quartz.CoreVideo import kCVPixelFormatType_32BGRA
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('CoreMedia.framework'))
-objc.loadBundleFunctions(bundle, globals(), [('CMSampleBufferGetImageBuffer', '@@')])
+objc.loadBundleFunctions(bundle, globals(), [('CMSampleBufferGetImageBuffer', b'@@')])
 
 import objc
 
@@ -83,14 +83,14 @@ from sipsimple.threading.green import run_in_green_thread
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 from util import run_in_gui_thread
 
 
 ALPHA = 1.0
 
+@implementer(IObserver)
 class MyVideoWindowController(NSWindowController):
-    implements(IObserver)
 
     visible = False
     full_screen = False
@@ -109,7 +109,7 @@ class MyVideoWindowController(NSWindowController):
     def init(self):
         self = objc.super(MyVideoWindowController, self).init()
         if self:
-            print "loading local window"
+            print("loading local window")
             NSBundle.loadNibNamed_owner_("MyVideoLocalWindow", self)
             self.window().setAlphaValue_(ALPHA)
             self.window().setLevel_(NSFloatingWindowLevel)
@@ -439,7 +439,7 @@ class LocalVideoView(NSView):
     def getDevice(self):
         # Find a video camera
         try:
-            device = (device for device in AVCaptureDevice.devices() if device.localizedName() == SIPApplication.video_device.real_name).next()
+            device = next((device for device in AVCaptureDevice.devices() if device.localizedName() == SIPApplication.video_device.real_name))
         except StopIteration:
             BlinkLogger().log_error('No video camera found')
             return None

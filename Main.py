@@ -1,7 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-debug_memory = True  # turn it on to enable tracing some of the memory leaks
+debug_memory = False  # turn it on to enable tracing some of the memory leaks
 
 # this import has to come first
 
@@ -21,7 +21,7 @@ assert Foundation.NSThread.isMultiThreaded()
 
 # Make mimetypes use our copy of the file in order to work with sandboxing
 import mimetypes
-resource_path = unicode(Foundation.NSBundle.mainBundle().resourcePath())
+resource_path = str(Foundation.NSBundle.mainBundle().resourcePath())
 mimetypes.init(os.path.join(resource_path, "mime.types"))
 
 class NSLogger(object):
@@ -35,7 +35,7 @@ class NSLogger(object):
     def flush(self): pass
     def fileno(self): return -1
     def isatty(self): return False
-    def next(self): raise IOError("cannot read from NSLogger")
+    def __next__(self): raise IOError("cannot read from NSLogger")
     def read(self): raise IOError("cannot read from NSLogger")
     def readline(self): raise IOError("cannot read from NSLogger")
     def readlines(self): raise IOError("cannot read from NSLogger")
@@ -45,7 +45,7 @@ class NSLogger(object):
     def truncate(self, size=0): raise IOError("cannot truncate NSLogger")
     def write(self, text):
         pool = Foundation.NSAutoreleasePool.alloc().init()
-        if isinstance(text, basestring):
+        if isinstance(text, str):
             text = text.rstrip()
         elif not isinstance(text, buffer):
             raise TypeError("write() argument must be a string or read-only buffer")
@@ -54,7 +54,7 @@ class NSLogger(object):
     def writelines(self, lines):
         pool = Foundation.NSAutoreleasePool.alloc().init()
         for line in lines:
-            if isinstance(line, basestring):
+            if isinstance(line, str):
                 line = line.rstrip()
             elif not isinstance(line, buffer):
                 raise TypeError("writelines() argument must be a sequence of strings")

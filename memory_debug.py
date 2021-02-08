@@ -14,9 +14,7 @@ class NSAppTracerType(type):
         return getattr(NSApp, name)
 
 
-class NSAppTracer(object):
-    __metaclass__ = NSAppTracerType
-
+class NSAppTracer(object, metaclass=NSAppTracerType):
     def __getattr__(self, name):
         return getattr(NSApp, name)
 
@@ -26,7 +24,7 @@ class NSAppTracer(object):
             thread = threading.current_thread()
             pool = getattr(thread, 'ns_autorelease_pool', None)
             if pool is None:
-                print "--- calling NSApp.delegate() without an autorelease pool from {}".format(thread)
+                print("--- calling NSApp.delegate() without an autorelease pool from {}".format(thread))
                 traceback.print_stack()
         return NSApp.delegate()
 

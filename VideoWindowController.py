@@ -110,11 +110,11 @@ from ZRTPAuthentication import ZRTPAuthentication
 from util import run_in_gui_thread
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 from BlinkLogger import BlinkLogger
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
-objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', 'diI')])
+objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', b'diI')])
 
 IDLE_TIME = 5
 
@@ -440,8 +440,8 @@ class myVideoWidget(VideoWidget):
         self.performDrag()
 
 
+@implementer(IObserver)
 class VideoWindowController(NSWindowController):
-    implements(IObserver)
 
     valid_aspect_ratios = [None, 1.33, 1.77]
     aspect_ratio_descriptions = {1.33: '4/3', 1.77: '16/9'}
@@ -1273,7 +1273,7 @@ class VideoWindowController(NSWindowController):
     @objc.python_method
     def getSecondaryScreen(self):
         try:
-            secondaryScreen = (screen for screen in NSScreen.screens() if screen != NSScreen.mainScreen() and screen.deviceDescription()[NSDeviceIsScreen] == 'YES').next()
+            secondaryScreen = next((screen for screen in NSScreen.screens() if screen != NSScreen.mainScreen() and screen.deviceDescription()[NSDeviceIsScreen] == 'YES'))
         except (StopIteration, KeyError):
             secondaryScreen = None
         return secondaryScreen
@@ -1389,7 +1389,7 @@ class VideoWindowController(NSWindowController):
     def screenshot_filename(self, for_remote=False):
         screenshots_folder = ApplicationData.get('screenshots')
         if not os.path.exists(screenshots_folder):
-           os.mkdir(screenshots_folder, 0700)
+           os.mkdir(screenshots_folder, 0o700)
 
         label = format_identity_to_string(self.sessionController.target_uri) if not for_remote else self.sessionController.account.id
         filename = '%s/%s_screencapture_%s.png' % (screenshots_folder, datetime.datetime.now(tzlocal()).strftime("%Y-%m-%d_%H-%M"), label)
@@ -1416,7 +1416,7 @@ class VideoWindowController(NSWindowController):
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
         if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
-            self.sendFiles([unicode(self.screencapture_file)])
+            self.sendFiles([str(self.screencapture_file)])
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, self.screenshot_task)
         self.screenshot_task = None
         self.screencapture_file = None

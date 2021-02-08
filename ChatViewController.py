@@ -11,7 +11,7 @@ import objc
 import os
 import re
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import uuid
 
 from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification, NSOnState
@@ -63,7 +63,7 @@ def processHTMLText(content='', usesmileys=True, is_html=False):
     for token in tokens:
         if not is_html and _url_pattern_exact.match(token):
             type, d, rest = token.partition(":")
-            url = type + d + urllib.quote(rest.encode('utf-8'), "/%?&=;:,@+$#!")
+            url = type + d + urllib.parse.quote(rest.encode('utf-8'), "/%?&=;:,@+$#!")
             token = r'<a href=\"%s\">%s</a>' % (url, escape_html(token))
         else:
             if not is_html:
@@ -266,7 +266,7 @@ class ChatViewController(NSObject):
         for message in self.rendered_messages:
             self.unmarkFound(message.msgid)
 
-        self.search_text = unicode(self.searchMessagesBox.stringValue()).strip() or None
+        self.search_text = str(self.searchMessagesBox.stringValue()).strip() or None
 
         call_ids = set()
         if self.search_text is not None:
@@ -626,7 +626,7 @@ class ChatViewController(NSObject):
             listener.use()
         else:
             # use system wide web browser
-            if theURL.absoluteString() in self.delegate.sessionController.screensharing_urls.values():
+            if theURL.absoluteString() in list(self.delegate.sessionController.screensharing_urls.values()):
                 self.delegate.chatWindowController.showConferenceSharedScreen(theURL.absoluteString())
             else:
                 listener.ignore()

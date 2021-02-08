@@ -26,7 +26,7 @@ from eventlib.coros import event
 from eventlib.greenio import GreenSocket
 from eventlib.proc import spawn
 from eventlib.util import tcp_socket, set_reuse_addr
-from zope.interface import implements
+from zope.interface import implementer
 from sipsimple.streams.msrp.screensharing import ScreenSharingStream, ScreenSharingServerHandler, ScreenSharingViewerHandler, VNCConnectionError
 from sipsimple.configuration.settings import SIPSimpleSettings
 
@@ -77,7 +77,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
                 # Wait until the viewer reconnects and self.vnc_socket is replaced
                 self._reconnect_event.wait()
                 self._reconnect_event.reset()
-            except Exception, e:
+            except Exception as e:
                 self.msrp_reader_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='sending', reason=str(e)))
                 break
@@ -103,7 +103,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
                     self._reconnect_event.send()
                     continue
                 self.outgoing_msrp_queue.send(data)
-            except Exception, e:
+            except Exception as e:
                 self.msrp_writer_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='reading', reason=str(e)))
                 break
@@ -113,7 +113,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
         try:
             sock, addr = self.vnc_server_socket.accept()
             self.vnc_socket = sock
-        except Exception, e:
+        except Exception as e:
             self.vnc_starter_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
             NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='connecting', reason=str(e)))
         else:
@@ -165,7 +165,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
                     self._reconnect_event.send()
                     continue
                 self.vnc_socket.sendall(data)
-            except Exception, e:
+            except Exception as e:
                 self.msrp_reader_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='sending', reason=str(e)))
                 break
@@ -182,7 +182,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
                 # Wait until we reconnect to the VNC server and self.vnc_socket is replaced
                 self._reconnect_event.wait()
                 self._reconnect_event.reset()
-            except Exception, e:
+            except Exception as e:
                 self.msrp_writer_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
                 NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='reading', reason=str(e)))
                 break
@@ -194,7 +194,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
             self.vnc_socket.settimeout(self.connect_timeout)
             self.vnc_socket.connect(self.address)
             self.vnc_socket.settimeout(None)
-        except Exception, e:
+        except Exception as e:
             self.vnc_starter_thread = None # avoid issues caused by the notification handler killing this greenlet during post_notification
             NotificationCenter().post_notification('ScreenSharingHandlerDidFail', sender=self, data=NotificationData(context='connecting', reason=str(e)))
         else:
@@ -279,10 +279,10 @@ class StatusItem(NSObject):
                     mitem.setEnabled_(False)
 
 
+@implementer(IObserver)
 class ScreenSharingController(MediaStream):
     # TODO video: stop stream if video is added
     type = "screen-sharing"
-    implements(IObserver)
 
     viewer = None
     exhanged_bytes = 0
@@ -297,7 +297,7 @@ class ScreenSharingController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = objc.super(ScreenSharingController, self).initWithOwner_stream_(scontroller, stream)
-        BlinkLogger().log_debug(u"Creating %s" % self)
+        BlinkLogger().log_debug("Creating %s" % self)
         self.stream = stream
         self.direction = stream.handler.type
         self.vncViewerTask = None
@@ -541,7 +541,7 @@ class ScreenSharingController(MediaStream):
 
     @objc.python_method
     def dealloc(self):
-        BlinkLogger().log_debug(u"Dealloc %s" % self)
+        BlinkLogger().log_debug("Dealloc %s" % self)
         self.resetTrace()
         self.stream = None
         self.sessionController = None

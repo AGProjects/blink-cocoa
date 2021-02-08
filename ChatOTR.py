@@ -69,13 +69,13 @@ class ChatOtrSmp(NSObject):
         secret = self.secretText.stringValue().encode('utf-8')
 
         if self.requested_by_remote:
-            self.controller.sessionController.log_info(u"OTR SMP verification will be answered")
+            self.controller.sessionController.log_info("OTR SMP verification will be answered")
             self.stream.encryption.smp_answer(secret)
             self.smp_running = True
             self.progressBar.setDoubleValue_(6)
         else:
             qtext = self.questionText.stringValue()
-            self.controller.sessionController.log_info(u"OTR SMP verification will be requested")
+            self.controller.sessionController.log_info("OTR SMP verification will be requested")
             self.stream.encryption.smp_verify(secret, qtext.encode('utf-8') if qtext else None)
             self.progressBar.setIndeterminate_(False)
             self.smp_running = True
@@ -95,7 +95,7 @@ class ChatOtrSmp(NSObject):
     def cancelClicked_(self, sender):
         self.window.orderOut_(self)
         if self.smp_running:
-            self.controller.sessionController.log_info(u"OTR SMP verification will be aborted")
+            self.controller.sessionController.log_info("OTR SMP verification will be aborted")
             self.stream.encryption.smp_abort()
             self.smp_running = False
 

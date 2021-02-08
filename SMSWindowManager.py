@@ -15,7 +15,7 @@ import objc
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
@@ -29,8 +29,8 @@ from SMSViewController import SMSViewController
 from util import format_identity_to_string, html2txt, run_in_gui_thread
 
 
+@implementer(IObserver)
 class SMSWindowController(NSWindowController):
-    implements(IObserver)
 
     tabView = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
@@ -127,20 +127,20 @@ class SMSWindowController(NSWindowController):
 
     def close_(self, sender):
         selected = self.selectedSessionController()
-        if self.unreadMessageCounts.has_key(selected):
+        if selected in self.unreadMessageCounts:
             del self.unreadMessageCounts[selected]
         self.tabSwitcher.removeTabViewItem_(self.tabView.selectedTabViewItem())
         if self.tabView.numberOfTabViewItems() == 0:
             self.window().performClose_(None)
 
     def tabView_shouldCloseTabViewItem_(self, sender, item):
-        if self.unreadMessageCounts.has_key(item.identifier()):
+        if item.identifier() in self.unreadMessageCounts:
             del self.unreadMessageCounts[item.identifier()]
         return True
 
     def tabView_didSelectTabViewItem_(self, sender, item):
         self.window().setTitle_(self.titleLong)
-        if self.unreadMessageCounts.has_key(item.identifier()):
+        if item.identifier() in self.unreadMessageCounts:
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
         selectedSession = self.selectedSessionController()
@@ -208,8 +208,8 @@ def SMSWindowManager():
     return SMSWindowManagerInstance
 
 
+@implementer(IObserver)
 class SMSWindowManagerClass(NSObject):
-    implements(IObserver)
 
     #__metaclass__ = Singleton
 
@@ -295,7 +295,7 @@ class SMSWindowManagerClass(NSObject):
     def _NH_SIPEngineGotMessage(self, sender, data):
         account = AccountManager().find_account(data.request_uri)
         if not account:
-            BlinkLogger().log_warning(u"Could not find local account for incoming SMS to %s, using default" % data.request_uri)
+            BlinkLogger().log_warning("Could not find local account for incoming SMS to %s, using default" % data.request_uri)
             account = AccountManager().default_account
 
         call_id = data.headers.get('Call-ID', Null).body
@@ -315,7 +315,7 @@ class SMSWindowManagerClass(NSObject):
             try:
                 cpim_message = CPIMPayload.decode(data.body)
             except CPIMParserError:
-                BlinkLogger().log_warning(u"Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
+                BlinkLogger().log_warning("Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
                 return
             else:
                 is_cpim = True
@@ -352,7 +352,7 @@ class SMSWindowManagerClass(NSObject):
                 viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         else:
-            BlinkLogger().log_warning(u"Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, data.content_type))
+            BlinkLogger().log_warning("Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, data.content_type))
             return
 
         # display the message

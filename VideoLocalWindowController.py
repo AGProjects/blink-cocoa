@@ -58,11 +58,11 @@ from sipsimple.core import VideoCamera
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 
 
+@implementer(IObserver)
 class VideoLocalWindowController(NSWindowController):
-    implements(IObserver)
 
     finished = False
     tracking_area = None

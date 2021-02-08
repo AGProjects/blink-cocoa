@@ -28,7 +28,7 @@ class ZRTPAuthentication(NSObject):
     @objc.IBAction
     def userPressedZRTPPeerName_(self, sender):
         if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active and not self.streamController.sessionController.remote_focus:
-            name = unicode(self.peerName.stringValue())
+            name = str(self.peerName.stringValue())
             if name != self.stream.encryption.zrtp.peer_name:
                 self.stream.encryption.zrtp.peer_name = name
                 self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())
@@ -62,7 +62,7 @@ class ZRTPAuthentication(NSObject):
         if self.stream.encryption.type == 'ZRTP' and self.stream.encryption.active :
             self.stream.encryption.zrtp.verified = not self.stream.encryption.zrtp.verified
             if not self.streamController.sessionController.remote_focus:
-                name = unicode(self.peerName.stringValue())
+                name = str(self.peerName.stringValue())
                 if name != self.stream.encryption.zrtp.peer_name:
                     self.stream.encryption.zrtp.peer_name = name
                     self.streamController.sessionController.updateDisplayName(self.peerName.stringValue())

@@ -73,8 +73,8 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.msrp.chat import ChatIdentity
 from sipsimple.configuration.settings import SIPSimpleSettings
-from urllib import unquote
-from zope.interface import implements
+from urllib.parse import unquote
+from zope.interface import implementer
 
 import FancyTabSwitcher
 import ParticipantsTableView
@@ -130,8 +130,8 @@ TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 SKIP_SCREENSHARING_FOR_APPS= ('SystemUIServer', 'Dock', 'Window Server')
 
 
+@implementer(IObserver)
 class ChatWindowController(NSWindowController):
-    implements(IObserver)
 
     tabView = objc.IBOutlet()
     toolbar = objc.IBOutlet()
@@ -269,7 +269,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             change = False
-            for uri in session.failed_to_join_participants.keys():
+            for uri in list(session.failed_to_join_participants.keys()):
                 for contact in session.invited_participants:
                     try:
                         uri_time = session.failed_to_join_participants[uri]
@@ -305,7 +305,7 @@ class ChatWindowController(NSWindowController):
     @objc.python_method
     def _findInactiveSessionCompatibleWith_(self, session):
         session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteAOR)
-        for k, s in self.sessions.iteritems():
+        for k, s in self.sessions.items():
             if s == session or s.identifier == session.identifier:
                 return k, s
             if not s.isActive():
@@ -392,12 +392,12 @@ class ChatWindowController(NSWindowController):
         self.tabView.selectTabViewItemWithIdentifier_(session.identifier)
 
     def hasSession_(self, session):
-        return self.sessions.has_key(session.identifier)
+        return session.identifier in self.sessions
 
     @objc.python_method
     def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
-        if activeTab and self.sessions.has_key(activeTab.identifier()):
+        if activeTab and activeTab.identifier() in self.sessions:
             return self.sessions[activeTab.identifier()]
         return None
 
@@ -448,12 +448,12 @@ class ChatWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 if session.subject is not None:
-                    title = u"%s" % session.subject
+                    title = "%s" % session.subject
                 else:
                     conf_desc = session.conference_info.conference_description
-                    title = u"%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remoteIdentity)) if conf_desc.display_text else u"%s" % session.titleLong
+                    title = "%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remoteIdentity)) if conf_desc.display_text else "%s" % session.titleLong
             else:
-                title = u"%s" % session.titleShort if isinstance(session.account, BonjourAccount) else u"%s" % session.titleLong
+                title = "%s" % session.titleShort if isinstance(session.account, BonjourAccount) else "%s" % session.titleLong
         return title
 
     def noteSession_isComposing_(self, session, flag):
@@ -746,7 +746,7 @@ class ChatWindowController(NSWindowController):
             objc.super(ChatWindowController, self).keyDown_(event)
 
     def close_(self, sender):
-        chat_sessions = len([s for s in self.sessions.values() if s.hasStreamOfType("chat")])
+        chat_sessions = len([s for s in list(self.sessions.values()) if s.hasStreamOfType("chat")])
         if chat_sessions > 1:
             selectedSession = self.selectedSessionController()
             if selectedSession:
@@ -760,7 +760,7 @@ class ChatWindowController(NSWindowController):
         self.removeContactTimer()
 
     def windowShouldClose_(self, sender):
-        active = len([s for s in self.sessions.values() if s.hasStreamOfType("chat") and s.state == STATE_CONNECTED])
+        active = len([s for s in list(self.sessions.values()) if s.hasStreamOfType("chat") and s.state == STATE_CONNECTED])
         if active > 1:
             ret = NSRunAlertPanel(NSLocalizedString("Close Chat Window", "Window Title"),
                                   NSLocalizedString("There are %i Chat sessions, click Close to terminate them all.", "Label") % active,
@@ -774,13 +774,13 @@ class ChatWindowController(NSWindowController):
         self.closing = True
 
         # close active sessions
-        for s in self.sessions.values(): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
+        for s in list(self.sessions.values()): # we need a copy of the dict contents as it will change as a side-effect of removeSession_()
             chat_stream = s.streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
 
         # close idle sessions
-        for chat_stream in self.stream_controllers.values():
+        for chat_stream in list(self.stream_controllers.values()):
             if chat_stream:
                 chat_stream.closeTab()
 
@@ -1016,7 +1016,7 @@ class ChatWindowController(NSWindowController):
                 controller = SubjectController()
                 subject = controller.runModal(session.subject)
                 if chat_handler.stream:
-                    body = u'SUBJECT %s' % subject if subject else u'SUBJECT'
+                    body = 'SUBJECT %s' % subject if subject else 'SUBJECT'
                     chat_handler.stream.send_message(body, content_type='sylkserver/control', timestamp=ISOTimestamp.now())
                 if subject or (not subject and session.subject):
                     session.subject = subject if subject else None
@@ -1062,7 +1062,7 @@ class ChatWindowController(NSWindowController):
         if session:
             # remove uri from invited participants
             try:
-               contact = (contact for contact in session.invited_participants if contact.uri == uri).next()
+               contact = next((contact for contact in session.invited_participants if contact.uri == uri))
             except StopIteration:
                pass
             else:
@@ -1074,7 +1074,7 @@ class ChatWindowController(NSWindowController):
                    contact.destroy()
 
             if session.remote_focus and self.isConferenceParticipant(uri):
-                session.log_info(u"Request server for removal of %s from conference" % uri)
+                session.log_info("Request server for removal of %s from conference" % uri)
                 session.pending_removal_participants.add(uri)
                 session.session.conference.remove_participant(uri)
 
@@ -1100,7 +1100,7 @@ class ChatWindowController(NSWindowController):
                             sip_uri = 'sip:%s' % uri if not uri.startswith("sip:") else uri
                             sip_uri = SIPURI.parse(sip_uri)
                         except SIPCoreError:
-                            session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
+                            session.log_info("Error inviting to conference: invalid URI %s" % uri)
                             continue
 
                         presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
@@ -1113,7 +1113,7 @@ class ChatWindowController(NSWindowController):
                         session.log_info('Adding %s to list of invited partipants' % uri)
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
-                        session.log_info(u"Invite %s to conference" % uri)
+                        session.log_info("Invite %s to conference" % uri)
                         session.session.conference.add_participant(uri)
 
                 self.refreshDrawer()
@@ -1337,7 +1337,7 @@ class ChatWindowController(NSWindowController):
             try:
                 object = self.participants[row]
                 uri = object.uri
-                item.setState_(NSOnState if self.remoteScreens.has_key(uri) else NSOffState)
+                item.setState_(NSOnState if uri in self.remoteScreens else NSOffState)
                 item.setEnabled_(True if 'screen' in object.active_media else False)
             except IndexError:
                 item.setState_(NSOffState)
@@ -1511,7 +1511,7 @@ class ChatWindowController(NSWindowController):
                 display_name = None
                 if session.conference_info is not None:
                     conf_desc = session.conference_info.conference_description
-                    display_name = unicode(conf_desc.display_text)
+                    display_name = str(conf_desc.display_text)
                 NSApp.delegate().contactsWindowController.addContact(uris=[(remote_uri, 'sip')], name=display_name)
             elif tag == CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE:
                 ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Window title"),
@@ -1611,7 +1611,7 @@ class ChatWindowController(NSWindowController):
     def viewSharedScreen(self, uri, display_name, url):
         session = self.selectedSessionController()
         if session:
-            session.log_info(u"Opening Shared Screen of %s from %s" % (uri, unquote(url)))
+            session.log_info("Opening Shared Screen of %s from %s" % (uri, unquote(url)))
             remoteScreen = ConferenceScreenSharing.createWithOwner_(self)
             remoteScreen.show(display_name, uri, unquote(url))
             self.remoteScreens[uri] = remoteScreen
@@ -1621,7 +1621,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session and session.conference_info is not None:
             try:
-                user = (user for user in session.conference_info.users if user.screen_image_url and user.screen_image_url.value == url).next()
+                user = next((user for user in session.conference_info.users if user.screen_image_url and user.screen_image_url.value == url))
             except StopIteration:
                 pass
             else:
@@ -1658,7 +1658,7 @@ class ChatWindowController(NSWindowController):
             file = conference_file.file
             if file.status != 'OK':
                 return
-            session.log_info(u"Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteAOR))
+            session.log_info("Request transfer of file %s with hash %s from %s" % (file.name, file.hash, session.remoteAOR))
             transfer_handler = OutgoingPullFileTransferHandler(session.account, session.target_uri, file.name.encode('utf-8'), file.hash)
             transfer_handler.start()
 
@@ -1919,7 +1919,7 @@ class ChatWindowController(NSWindowController):
                         hd_label = NSLocalizedString("Narrowband", "Label")
 
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
-                    self.audioStatus.setStringValue_(u"%s (%s)" % (hd_label, beautify_audio_codec(audio_stream.stream.codec)))
+                    self.audioStatus.setStringValue_("%s (%s)" % (hd_label, beautify_audio_codec(audio_stream.stream.codec)))
                     self.audioStatus.setHidden_(False)
 
             elif session.hasStreamOfType("chat") and chat_stream.status == STREAM_CONNECTED:
@@ -2010,7 +2010,7 @@ class ChatWindowController(NSWindowController):
         pass
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
-        if self.sessions.has_key(item.identifier()):
+        if item.identifier() in self.sessions:
             self.revalidateToolbar()
             self.refreshDrawer()
             self.updateTitle()
@@ -2048,7 +2048,7 @@ class ChatWindowController(NSWindowController):
             sitem.setBadgeLabel_("")
 
     def tabView_shouldCloseTabViewItem_(self, tabView, item):
-        if self.sessions.has_key(item.identifier()):
+        if item.identifier() in self.sessions:
             chat_stream = self.sessions[item.identifier()].streamHandlerOfType("chat")
             if chat_stream:
                 chat_stream.closeTab()
@@ -2071,7 +2071,7 @@ class ChatWindowController(NSWindowController):
         if tableView == self.participantsTableView:
             try:
                 if row < len(self.participants):
-                    if type(self.participants[row]) in (str, unicode):
+                    if type(self.participants[row]) in (str, str):
                         return self.participants[row]
                     else:
                         return self.participants[row].name
@@ -2086,7 +2086,7 @@ class ChatWindowController(NSWindowController):
         if tableView == self.participantsTableView:
             try:
                 if row < len(self.participants):
-                    if type(self.participants[row]) in (str, unicode):
+                    if type(self.participants[row]) in (str, str):
                         cell.setContact_(None)
                     else:
                         cell.setContact_(self.participants[row])
@@ -2183,7 +2183,7 @@ class ChatWindowController(NSWindowController):
             sip_uri = 'sip:%s' % uri if not uri.startswith("sip:") else uri
             sip_uri = SIPURI.parse(sip_uri)
         except SIPCoreError:
-            session.log_info(u"Error inviting to conference: invalid URI %s" % uri)
+            session.log_info("Error inviting to conference: invalid URI %s" % uri)
             return False
 
         # do not invite remote party itself
@@ -2219,7 +2219,7 @@ class ChatWindowController(NSWindowController):
             session.invited_participants.append(new_contact)
             session.participants_log.add(uri)
             self.refreshDrawer()
-            session.log_info(u"Invite %s to conference" % uri)
+            session.log_info("Invite %s to conference" % uri)
             session.session.conference.add_participant(uri)
         elif not isinstance(session.account, BonjourAccount):
             self.joinConferenceWindow(session, [uri])

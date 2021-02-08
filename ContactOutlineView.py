@@ -39,9 +39,9 @@ class ContactOutlineView(NSOutlineView):
         if item != NSNotFound:
             object = self.itemAtRow_(item)
             if isinstance(object, BlinkContact):
-                text = u'%s <%s>' % (object.name, object.uri) if object.name != object.uri else object.uri
+                text = '%s <%s>' % (object.name, object.uri) if object.name != object.uri else object.uri
             elif isinstance(object, BlinkGroup):
-                text = u'%s' % object.name
+                text = '%s' % object.name
         if text:
             pb = NSPasteboard.generalPasteboard()
             pb.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), self)

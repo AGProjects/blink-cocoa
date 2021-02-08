@@ -3,12 +3,11 @@
 
 __all__ = ['VirtualGroupsManager', 'VirtualGroup']
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from application import log
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
-from application.python.decorator import execute_once
 from application.python.types import Singleton
 
 from sipsimple.addressbook import unique_id
@@ -30,7 +29,7 @@ class VirtualGroup(SettingsState):
     __key__   = VirtualGroupKey()
 
     id = __id__
-    name = Setting(type=unicode, default='')
+    name = Setting(type=str, default='')
     position = Setting(type=int, nillable=True)
     expanded = Setting(type=bool, default=True)
 
@@ -40,7 +39,7 @@ class VirtualGroup(SettingsState):
                 raise RuntimeError("cannot instantiate %s before calling VirtualGroupsManager.load" % cls.__name__)
         if id is None:
             id = unique_id()
-        elif not isinstance(id, basestring):
+        elif not isinstance(id, str):
             raise TypeError("id needs to be a string or unicode object")
         instance = SettingsState.__new__(cls)
         instance.__id__ = id
@@ -98,7 +97,7 @@ class VirtualGroup(SettingsState):
 
         try:
             configuration.save()
-        except Exception, e:
+        except Exception as e:
             log.err()
             notification_center.post_notification('CFGManagerSaveFailed', sender=configuration, data=NotificationData(object=self, operation='save', modified=modified_data, exception=e))
 
@@ -116,7 +115,7 @@ class VirtualGroup(SettingsState):
         notification_center.post_notification('VirtualGroupWasDeleted', sender=self)
         try:
             configuration.save()
-        except Exception, e:
+        except Exception as e:
             log.err()
             notification_center.post_notification('CFGManagerSaveFailed', sender=configuration, data=NotificationData(object=self, operation='delete', exception=e))
 
@@ -125,9 +124,8 @@ class VirtualGroup(SettingsState):
         raise NotImplementedError
 
 
-class VirtualGroupsManager(object):
-    __metaclass__ = Singleton
-    implements(IObserver)
+@implementer(IObserver)
+class VirtualGroupsManager(object, metaclass=Singleton):
 
     def __init__(self):
         self.groups = {}
@@ -135,7 +133,7 @@ class VirtualGroupsManager(object):
         notification_center.add_observer(self, name='VirtualGroupWasActivated')
         notification_center.add_observer(self, name='VirtualGroupWasDeleted')
 
-    @execute_once
+#    @execute_once
     def load(self):
         configuration = ConfigurationManager()
         [VirtualGroup(id=id) for id in configuration.get_names(VirtualGroup.__key__)]
@@ -147,7 +145,7 @@ class VirtualGroupsManager(object):
         return self.groups[id]
 
     def get_groups(self):
-        return self.groups.values()
+        return list(self.groups.values())
 
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)

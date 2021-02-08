@@ -29,7 +29,7 @@ import re
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
-from zope.interface import implements
+from zope.interface import implementer
 from sipsimple.util import ISOTimestamp
 
 from MediaStream import STREAM_CONNECTED
@@ -42,8 +42,8 @@ ice_candidates= {'srflx': 'Server Reflexive',
                  'relay': 'Server Relay'
                  }
 
+@implementer(IObserver)
 class SessionInfoController(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
 
@@ -499,7 +499,7 @@ class SessionInfoController(NSObject):
                 h = elapsed.days * 24 + elapsed.seconds / (60*60)
                 m = (elapsed.seconds / 60) % 60
                 s = elapsed.seconds % 60
-                text = u"%02i:%02i:%02i"%(h,m,s)
+                text = "%02i:%02i:%02i"%(h,m,s)
                 self.duration.setStringValue_(text)
             else:
                 self.duration.setStringValue_('')
@@ -570,7 +570,7 @@ class SessionInfoController(NSObject):
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
-        if notification.data.modified.has_key("gui.rtt_threshold"):
+        if "gui.rtt_threshold" in notification.data.modified:
             self.audio_rtt_graph.setAboveLimit_(settings.gui.rtt_threshold)
             self.audio_rtt_graph.setMinimumHeigth_(settings.gui.rtt_threshold)
 

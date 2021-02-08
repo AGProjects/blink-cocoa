@@ -17,11 +17,11 @@ from AppKit import (NSApp,
                     NSWorkspace)
 import objc
 
-import cjson
+import json
 import datetime
 import re
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 from collections import defaultdict
 from dateutil.tz import tzlocal
@@ -33,15 +33,15 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import Account, AccountManager
 
 from util import run_in_gui_thread
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 
 
 
+@implementer(IObserver)
 class EnrollmentController(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
 
@@ -145,9 +145,9 @@ class EnrollmentController(NSObject):
     def validate(self):
         if self.radioMatrix.selectedCell().tag() == 1:
             # Login
-            display_name = unicode(self.displayNameText.stringValue().strip())
-            address = unicode(self.addressText.stringValue().strip())
-            password = unicode(self.passwordText.stringValue().strip())
+            display_name = str(self.displayNameText.stringValue().strip())
+            address = str(self.addressText.stringValue().strip())
+            password = str(self.passwordText.stringValue().strip())
 
             if not address or "@" not in address:
                 NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your SIP address provided by your SIP service provider. The address must be in user@domain format, for example alice@example.com", "Label"),
@@ -166,11 +166,11 @@ class EnrollmentController(NSObject):
             return True
         else:
             # Enroll
-            display_name = unicode(self.newDisplayNameText.stringValue().strip())
-            username = unicode(self.newUsernameText.stringValue().strip())
-            password = unicode(self.newPasswordText.stringValue().strip())
-            password2 = unicode(self.newConfirmText.stringValue().strip())
-            email = unicode(self.newEmailText.stringValue())
+            display_name = str(self.newDisplayNameText.stringValue().strip())
+            username = str(self.newUsernameText.stringValue().strip())
+            password = str(self.newPasswordText.stringValue().strip())
+            password2 = str(self.newConfirmText.stringValue().strip())
+            email = str(self.newEmailText.stringValue())
 
             if not display_name:
                 NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Please enter your Display Name.", "Label"),
@@ -205,9 +205,9 @@ class EnrollmentController(NSObject):
     @objc.python_method
     def addExistingAccount(self):
         try:
-            display_name = unicode(self.displayNameText.stringValue().strip())
-            address = unicode(self.addressText.stringValue().strip())
-            password = unicode(self.passwordText.stringValue().strip())
+            display_name = str(self.displayNameText.stringValue().strip())
+            address = str(self.addressText.stringValue().strip())
+            password = str(self.passwordText.stringValue().strip())
             sync_with_icloud = True if self.syncWithiCloudCheckbox.state() == NSOnState else False
 
             account = Account(str(address))
@@ -227,7 +227,7 @@ class EnrollmentController(NSObject):
                 account.rtp.srtp_encryption = 'optional'
 
             account.save()
-        except ValueError, e:
+        except ValueError as e:
             NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
             return False
 
@@ -262,10 +262,10 @@ class EnrollmentController(NSObject):
     @objc.python_method
     def createNewAccount(self):
         sip_address = None
-        display_name = unicode(self.newDisplayNameText.stringValue().strip())
-        username = unicode(self.newUsernameText.stringValue().strip())
-        password = unicode(self.newPasswordText.stringValue().strip())
-        email = unicode(self.newEmailText.stringValue())
+        display_name = str(self.newDisplayNameText.stringValue().strip())
+        username = str(self.newUsernameText.stringValue().strip())
+        password = str(self.newPasswordText.stringValue().strip())
+        email = str(self.newEmailText.stringValue())
 
         self.progressIndicator.setHidden_(False)
         self.domainButton.setHidden_(True)
@@ -278,7 +278,7 @@ class EnrollmentController(NSObject):
 
         tzname = datetime.datetime.now(tzlocal()).tzname() or ""
         if not tzname:
-            BlinkLogger().log_warning(u"Unable to determine timezone")
+            BlinkLogger().log_warning("Unable to determine timezone")
 
         values = {'password'     : password.encode("utf8"),
                   'username'     : username.encode("utf8"),
@@ -286,30 +286,30 @@ class EnrollmentController(NSObject):
                   'display_name' : display_name.encode("utf8"),
                   'tzinfo'       : tzname }
 
-        BlinkLogger().log_info(u"Requesting creation of a new SIP account at %s" % url)
+        BlinkLogger().log_info("Requesting creation of a new SIP account at %s" % url)
 
-        data = urllib.urlencode(values)
-        req = urllib2.Request(url, data)
+        data = urllib.parse.urlencode(values)
+        req = urllib.request.Request(url, data)
         try:
-            raw_response = urllib2.urlopen(req)
-        except urllib2.URLError, e:
+            raw_response = urllib.request.urlopen(req)
+        except urllib.error.URLError as e:
             error_message = NSLocalizedString("Cannot connect to enrollment server: %s", "Enrollment panel label") % e
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
             error_message = NSLocalizedString("Error from enrollment server: %s", "Enrollment panel label") % e
         else:
             response = None
             json_data = raw_response.read()
 
             try:
-                response = cjson.decode(json_data.replace('\\/', '/'))
-            except (TypeError, cjson.DecodeError):
+                response = json.loads(json_data.replace('\\/', '/'))
+            except (TypeError, json.decoder.JSONDecodeError):
                 error_message = NSLocalizedString("Cannot decode data from enrollment server", "Enrollment panel label")
             else:
                 if not response["success"]:
-                    BlinkLogger().log_info(u"Enrollment Server failed to create SIP account: %(error_message)s" % response)
+                    BlinkLogger().log_info("Enrollment Server failed to create SIP account: %(error_message)s" % response)
                     error_message = response["error_message"]
                 else:
-                    BlinkLogger().log_info(u"Enrollment Server successfully created SIP account %(sip_address)s" % response)
+                    BlinkLogger().log_info("Enrollment Server successfully created SIP account %(sip_address)s" % response)
                     data = defaultdict(lambda: None, response)
                     tls_path = None if data['passport'] is None else SIPManager().save_certificates(data)
 
@@ -396,7 +396,7 @@ class EnrollmentController(NSObject):
 
         try:
             account = Account(str(sip_address))
-        except ValueError, e:
+        except ValueError as e:
             NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
             return False
         else:

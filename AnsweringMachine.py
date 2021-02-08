@@ -6,11 +6,11 @@ from AppKit import NSApp
 import datetime
 import os
 import uuid
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
-from zope.interface import implements
+from zope.interface import implementer
 
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
@@ -24,8 +24,8 @@ from resources import Resources
 from util import allocate_autorelease_pool, format_identity_to_string
 
 
+@implementer(IObserver)
 class AnsweringMachine(object):
-    implements(IObserver)
 
     def __init__(self, session, audio_stream):
         self.session = session
@@ -50,11 +50,11 @@ class AnsweringMachine(object):
         self.stream.device.input_muted = True
 
     def mute_output(self):
-        BlinkLogger().log_info(u"Mute output of Answering Machine")
+        BlinkLogger().log_info("Mute output of Answering Machine")
         self.stream.device.output_muted = True
 
     def unmute_output(self):
-        BlinkLogger().log_info(u"Unmute output of Answering Machine")
+        BlinkLogger().log_info("Unmute output of Answering Machine")
         self.stream.device.output_muted = False
 
     def start(self):
@@ -133,10 +133,10 @@ class AnsweringMachine(object):
         notification_center.remove_observer(self, sender=self.stream)
 
     def _NH_AudioStreamDidStartRecording(self, notification):
-        BlinkLogger().log_info(u"Recording message from %s" % self.session.remote_identity)
+        BlinkLogger().log_info("Recording message from %s" % self.session.remote_identity)
 
     def _NH_AudioStreamDidStopRecording(self, notification):
-        BlinkLogger().log_info(u"Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
+        BlinkLogger().log_info("Message from %s finished recording (duration: %s seconds)" % (self.session.remote_identity, self.duration))
         self.addAnsweringMachineRecordingToHistory(notification.data.filename, self.duration)
         data = NotificationData(filename=notification.data.filename)
         NotificationCenter().post_notification("AnsweringMachineRecordingDidEnd", sender=self.session, data=data)
@@ -145,7 +145,7 @@ class AnsweringMachine(object):
         message = "<h3>Answering Machine Recording</h3>"
         message += "<p>%s" % filename
         message += "<br>Duration: %s seconds" % duration
-        message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
+        message += "<p><audio src='%s' controls='controls'>" %  urllib.parse.quote(filename)
         media_type = 'voicemail'
         local_uri = format_identity_to_string(self.session.account)
         remote_uri = format_identity_to_string(self.session.remote_identity)
@@ -159,7 +159,7 @@ class AnsweringMachine(object):
 
     def add_to_history(self, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
         try:
-            controller = (controller for controller in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers if controller.session == self.session).next()
+            controller = next((controller for controller in NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers if controller.session == self.session))
         except StopIteration:
             history_id = str(uuid.uuid1())
         else:

@@ -4,7 +4,7 @@
 import re
 import os
 import platform
-import cjson
+import json
 
 from AppKit import (NSAccessibilityTitleAttribute,
                     NSAlertDefaultReturn,
@@ -52,7 +52,7 @@ from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import FileLogger
 from EnrollmentController import EnrollmentController
@@ -63,8 +63,8 @@ from resources import ApplicationData
 from util import run_in_gui_thread, AccountInfo, osx_version
 
 
+@implementer(IObserver)
 class PreferencesController(NSWindowController, object):
-    implements(IObserver)
 
     toolbar = objc.IBOutlet()
     mainTabView = objc.IBOutlet()
@@ -143,7 +143,7 @@ class PreferencesController(NSWindowController, object):
             except ValueError:
                 pass
 
-        for view in self.settingViews.values():
+        for view in list(self.settingViews.values()):
             view.restore()
 
         self.validateAddAccountButton()
@@ -210,7 +210,7 @@ class PreferencesController(NSWindowController, object):
 
         if not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
             try:
-                item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'video').next()
+                item = next((item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'video'))
                 self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
             except StopIteration:
                 pass
@@ -218,7 +218,7 @@ class PreferencesController(NSWindowController, object):
         if not NSApp.delegate().advanced_options_enabled:
             for identifier in ('answering_machine', 'advanced'):
                 try:
-                    item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
+                    item = next((item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier))
                     self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
                 except StopIteration:
                     pass
@@ -226,7 +226,7 @@ class PreferencesController(NSWindowController, object):
         if not NSApp.delegate().answering_machine_enabled:
             for identifier in ('answering_machine'):
                 try:
-                    item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier).next()
+                    item = next((item for item in self.toolbar.visibleItems() if item.itemIdentifier() == identifier))
                     self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
                 except StopIteration:
                     pass
@@ -522,7 +522,7 @@ class PreferencesController(NSWindowController, object):
                     pass
 
             if not controlFactory:
-                print "Error: Option %s is not supported (while reading %s)" % (option, option_name)
+                print("Error: Option %s is not supported (while reading %s)" % (option, option_name))
                 controlFactory = PreferenceOptionTypes[str.__name__]
 
             if controlFactory is HiddenOption:
@@ -571,10 +571,10 @@ class PreferencesController(NSWindowController, object):
         if account.display_name:
             self.displayNameText.setStringValue_(account.display_name)
         else:
-            self.displayNameText.setStringValue_(u"")
+            self.displayNameText.setStringValue_("")
 
         if account is not BonjourAccount():
-            self.addressText.setStringValue_(unicode(account.id))
+            self.addressText.setStringValue_(str(account.id))
             self.passwordText.setStringValue_(account.auth.password)
 
             userdef = NSUserDefaults.standardUserDefaults()
@@ -615,7 +615,7 @@ class PreferencesController(NSWindowController, object):
             account_manager = AccountManager()
             if account_manager.default_account is account:
                 try:
-                    account_manager.default_account = (acc for acc in account_manager.iter_accounts() if acc is not account and acc.enabled).next()
+                    account_manager.default_account = next((acc for acc in account_manager.iter_accounts() if acc is not account and acc.enabled))
                 except StopIteration:
                     account_manager.default_account = None
 
@@ -626,10 +626,10 @@ class PreferencesController(NSWindowController, object):
         if account_info:
             account = account_info.account
             if notification.object() == self.displayNameText:
-                account.display_name = unicode(self.displayNameText.stringValue())
+                account.display_name = str(self.displayNameText.stringValue())
                 account.save()
             elif notification.object() == self.passwordText:
-                account.auth.password = unicode(self.passwordText.stringValue()).encode("utf8")
+                account.auth.password = str(self.passwordText.stringValue()).encode("utf8")
                 account.save()
 
     @objc.python_method
@@ -820,7 +820,7 @@ class PreferencesController(NSWindowController, object):
             for option in (o for o in notification.data.modified if o in self.settingViews):
                 self.settingViews[option].restore()
             if 'display_name' in notification.data.modified:
-                self.displayNameText.setStringValue_(sender.display_name or u'')
+                self.displayNameText.setStringValue_(sender.display_name or '')
 
         if 'logs.trace_pjsip_to_file' in notification.data.modified:
             if settings.logs.trace_pjsip_to_file:
@@ -921,10 +921,10 @@ class PreferencesController(NSWindowController, object):
                 help_line += ".\n" + NSLocalizedString("For studio quality, disable the option 'Use ambient noise reduction' in System Preferences > Sound > Input section. ", "Label")
             self.sectionHelpPlaceholder.setStringValue_(help_line)
 
-        if notification.data.modified.has_key("audio.input_device"):
+        if "audio.input_device" in notification.data.modified:
             self.update_per_device_aec()
 
-        if notification.data.modified.has_key("audio.output_device"):
+        if "audio.output_device" in notification.data.modified:
             self.update_per_device_aec()
 
         if 'audio.enable_aec' in notification.data.modified:
@@ -942,15 +942,15 @@ class PreferencesController(NSWindowController, object):
             data = {}
             if settings.audio.per_device_aec is not None:
                 try:
-                    data = cjson.decode(settings.audio.per_device_aec)
-                except (TypeError, cjson.DecodeError), e:
+                    data = json.loads(settings.audio.per_device_aec)
+                except (TypeError, json.decoder.JSONDecodeError) as e:
                     pass
 
             data[combined_audio_device] = settings.audio.enable_aec
 
             try:
                 encoded_data = cjson.encode(data)
-            except (TypeError, cjson.EncodeError), e:
+            except (TypeError, cjson.EncodeError) as e:
                 pass
             else:
                 settings.audio.per_device_aec = encoded_data
@@ -968,7 +968,7 @@ class PreferencesController(NSWindowController, object):
         if settings.audio.per_device_aec is not None:
             try:
                 data = cjson.decode(settings.audio.per_device_aec)
-            except (TypeError, cjson.DecodeError), e:
+            except (TypeError, cjson.DecodeError) as e:
                 pass
 
         try:
@@ -977,7 +977,7 @@ class PreferencesController(NSWindowController, object):
             data[combined_audio_device] = settings.audio.enable_aec
             try:
                 encoded_data = cjson.encode(data)
-            except (TypeError, cjson.EncodeError), e:
+            except (TypeError, cjson.EncodeError) as e:
                 pass
             else:
                 settings.audio.per_device_aec = encoded_data
@@ -985,7 +985,7 @@ class PreferencesController(NSWindowController, object):
 
         else:
             if per_device_aec != settings.audio.enable_aec:
-                print "Changing AEC to %s" % per_device_aec
+                print("Changing AEC to %s" % per_device_aec)
                 settings.audio.enable_aec = per_device_aec
                 settings.save()
 
@@ -1009,7 +1009,7 @@ class PreferencesController(NSWindowController, object):
     @objc.python_method
     def updateAudioDevices_(self, object):
         audio_device_option_types = (PreferenceOptionTypes["audio.input_device"], PreferenceOptionTypes["audio.output_device"])
-        for view in (v for v in self.settingViews.itervalues() if isinstance(v, audio_device_option_types)):
+        for view in (v for v in self.settingViews.values() if isinstance(v, audio_device_option_types)):
             view.refresh()
             view.restore()
 
@@ -1209,7 +1209,7 @@ class PreferencesController(NSWindowController, object):
             if draggedRow < row:
                 row -= 1
             self.accounts.insert(row, account_info)
-            for i in xrange(len(self.accounts)):
+            for i in range(len(self.accounts)):
                 account_info = self.accounts[i]
                 if account_info.account.order != i:
                     account_info.account.order = i

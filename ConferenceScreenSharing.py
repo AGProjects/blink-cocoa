@@ -12,12 +12,12 @@ from Foundation import (NSBundle,
                         NSURLRequestReloadIgnoringLocalAndRemoteCacheData)
 import objc
 
-from urllib import unquote
+from urllib.parse import unquote
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from util import run_in_gui_thread
@@ -31,8 +31,8 @@ class NSURLRequest(objc.Category(NSURLRequest)):
         return not settings.tls.verify_server
 
 
+@implementer(IObserver)
 class ConferenceScreenSharing(NSObject):
-    implements(IObserver)
 
     window = objc.IBOutlet()
     toolbar = objc.IBOutlet()
@@ -72,12 +72,12 @@ class ConferenceScreenSharing(NSObject):
         screen_sharing_urls = list(unquote(user.screen_image_url.value) for user in notification.data.conference_info.users if user.screen_image_url is not None)
 
         if self.screensharing_url not in screen_sharing_urls and self.loading:
-            BlinkLogger().log_info(u"%s stopped sharing her screen" % self.display_name)
+            BlinkLogger().log_info("%s stopped sharing her screen" % self.display_name)
             #self.stopLoading()   # unfortunately stop loading does not prevent the view to refresh based on html refresh meta tag
             self.closed_by_user = False
             self.window.performClose_(None)
         elif self.screensharing_url in screen_sharing_urls and not self.loading:
-            BlinkLogger().log_info(u"%s re-started sharing her screen" % self.display_name)
+            BlinkLogger().log_info("%s re-started sharing her screen" % self.display_name)
             self.startLoading()
 
     @objc.python_method
@@ -136,12 +136,12 @@ class ConferenceScreenSharing(NSObject):
     def webView_didFailProvisionalLoadWithError_forFrame_(self, sender, error, frame):
         self.errorText.setStringValue_(error.localizedDescription())
         self.errorText.setHidden_(False)
-        BlinkLogger().log_error(u"Could not load web page: %s" % error)
+        BlinkLogger().log_error("Could not load web page: %s" % error)
 
     def webView_didFailLoadWithError_forFrame_(self, sender, error, frame):
         self.errorText.setStringValue_(error.localizedDescription())
         self.errorText.setHidden_(False)
-        BlinkLogger().log_error(u"Could not load web page: %s" % error)
+        BlinkLogger().log_error("Could not load web page: %s" % error)
 
     def webView_didFinishLoadForFrame_(self, sender, frame):
         self.errorText.setStringValue_('')

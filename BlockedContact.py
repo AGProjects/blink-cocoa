@@ -23,8 +23,8 @@ class BlockedContact(NSObject):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
-            return {'name': unicode(self.name.stringValue()),
-                    'address': unicode(self.address.stringValue())
+            return {'name': str(self.name.stringValue()),
+                    'address': str(self.address.stringValue())
                     }
         return None
 

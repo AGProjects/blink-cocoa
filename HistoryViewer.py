@@ -42,7 +42,7 @@ from application.python import Null
 from eventlib.twistedutil import block_on
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
@@ -70,8 +70,8 @@ class MyTableView(NSTableView):
         NSTableView.mouseDown_(self, event)
 
 
+@implementer(IObserver)
 class HistoryViewer(NSWindowController):
-    implements(IObserver)
 
     chatViewController = objc.IBOutlet()
     indexTable = objc.IBOutlet()
@@ -159,8 +159,8 @@ class HistoryViewer(NSWindowController):
             BlinkLogger().log_debug('Starting History Viewer')
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
-            self.all_contacts = BlinkHistoryViewerContact('Any Address', name=u'All Contacts')
-            self.bonjour_contact = BlinkHistoryViewerContact('bonjour.local', name=u'Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+            self.all_contacts = BlinkHistoryViewerContact('Any Address', name='All Contacts')
+            self.bonjour_contact = BlinkHistoryViewerContact('bonjour.local', name='Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
@@ -326,7 +326,7 @@ class HistoryViewer(NSWindowController):
                     if uri in found_uris:
                         continue
                     found_uris.append(uri)
-                    contact = BlinkHistoryViewerContact(unicode(uri), name=unicode(uri))
+                    contact = BlinkHistoryViewerContact(str(uri), name=str(uri))
 
                 try:
                     index = self.contacts.index(contact)
@@ -358,9 +358,9 @@ class HistoryViewer(NSWindowController):
                     try:
                         display_name = self.display_name_cache[row[0]]
                     except KeyError:
-                        display_name = unicode(row[0])
+                        display_name = str(row[0])
                         uris_without_display_name.append(row[0])
-                    contact = BlinkHistoryViewerContact(unicode(row[0]), name=display_name)
+                    contact = BlinkHistoryViewerContact(str(row[0]), name=display_name)
 
                 self.contacts.append(contact)
     
@@ -509,13 +509,13 @@ class HistoryViewer(NSWindowController):
         self.paginationButton.setEnabled_forSegment_(start + MAX_MESSAGES_PER_PAGE * 2 < message_count, 3)
 
         if message_count == 0:
-            text = NSLocalizedString(u"No entry found", "Label")
+            text = NSLocalizedString("No entry found", "Label")
         elif message_count == 1:
-            text = NSLocalizedString(u"Displaying 1 entry", "Label")
+            text = NSLocalizedString("Displaying 1 entry", "Label")
         elif message_count < MAX_MESSAGES_PER_PAGE:
-            text = NSLocalizedString(u"Displaying {} entries".format(end), "Label")
+            text = NSLocalizedString("Displaying {} entries".format(end), "Label")
         else:
-            text = NSLocalizedString(u"Displaying {} to {} out of {} entries", "Label").format(start+1, end, message_count)
+            text = NSLocalizedString("Displaying {} to {} out of {} entries", "Label").format(start+1, end, message_count)
 
         self.foundMessagesLabel.setStringValue_(text)
 
@@ -578,7 +578,7 @@ class HistoryViewer(NSWindowController):
     @objc.IBAction
     def search_(self, sender):
         if self.chat_history:
-            self.search_text = unicode(sender.stringValue()).lower()
+            self.search_text = str(sender.stringValue()).lower()
             self.refreshContacts()
             row = self.indexTable.selectedRow()
             if row > 0:
@@ -595,7 +595,7 @@ class HistoryViewer(NSWindowController):
 
     @objc.IBAction
     def searchContacts_(self, sender):
-        text = unicode(self.searchContactBox.stringValue().strip())
+        text = str(self.searchContactBox.stringValue().strip())
         contacts = [contact for contact in self.contacts[2:] if text in contact] if text else self.contacts[2:]
         self.contacts = [self.all_contacts, self.bonjour_contact] + contacts
         self.contactTable.reloadData()
@@ -635,11 +635,11 @@ class HistoryViewer(NSWindowController):
                 elif row > 1:
                     self.search_local = None
                     if self.contacts[row].presence_contact is not None:
-                        self.search_uris = list(unicode(contact_uri.uri) for contact_uri in self.contacts[row].presence_contact.uris)
+                        self.search_uris = list(str(contact_uri.uri) for contact_uri in self.contacts[row].presence_contact.uris)
                         self.chatViewController.expandSmileys = not self.contacts[row].presence_contact.contact.disable_smileys
                         self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
                         try:
-                            item = (item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'smileys').next()
+                            item = next((item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'smileys'))
                         except StopIteration:
                             pass
                         else:
@@ -667,12 +667,12 @@ class HistoryViewer(NSWindowController):
                 return self.format_media_type(self.dayly_entries[row].objectForKey_(ident))
 
             try:
-                return unicode(self.dayly_entries[row].objectForKey_(ident))
+                return str(self.dayly_entries[row].objectForKey_(ident))
             except IndexError:
                 return None
         elif table == self.contactTable:
             try:
-                if type(self.contacts[row]) in (str, unicode):
+                if type(self.contacts[row]) in (str, str):
                     return self.contacts[row]
                 else:
                     return self.contacts[row].name
@@ -684,7 +684,7 @@ class HistoryViewer(NSWindowController):
         if table == self.contactTable:
             try:
                 if row < len(self.contacts):
-                    if type(self.contacts[row]) in (str, unicode):
+                    if type(self.contacts[row]) in (str, str):
                         cell.setContact_(None)
                     else:
                         cell.setContact_(self.contacts[row])
@@ -701,7 +701,7 @@ class HistoryViewer(NSWindowController):
         self.search_text = None
         self.search_local = None
         if media_type != self.search_media:
-            for tag in self.media_type_array.keys():
+            for tag in list(self.media_type_array.keys()):
                 if self.media_type_array[tag] == media_type:
                     self.searchMedia.selectItemAtIndex_(tag)
 
@@ -816,7 +816,7 @@ class HistoryViewer(NSWindowController):
         else:
             contact = self.contacts[row]
             if contact.presence_contact is not None:
-                remote_uri = list(unicode(contact.uri) for contact in contact.presence_contact.uris)
+                remote_uri = list(str(contact.uri) for contact in contact.presence_contact.uris)
             else:
                 remote_uri = contact.uri
             label = NSLocalizedString("Please confirm the deletion of %s history entries", "Label") % media_print + NSLocalizedString(" from ", "Label") + contact.name + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Label")
@@ -880,7 +880,7 @@ class HistoryViewer(NSWindowController):
     @objc.python_method
     def _NH_BlinkConferenceContactPresenceHasChanged(self, notification):
         try:
-            contact = (contact for contact in self.contacts[2:] if contact == notification.sender).next()
+            contact = next((contact for contact in self.contacts[2:] if contact == notification.sender))
         except StopIteration:
             return
         else:

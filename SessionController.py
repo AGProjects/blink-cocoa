@@ -15,14 +15,14 @@ from Foundation import (NSBundle,
                         NSURL,
                         NSWorkspace)
 import objc
-import cjson
+import json
 
 import hashlib
 import os
 import re
 import socket
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import uuid
 import zipfile
 import zlib
@@ -35,7 +35,7 @@ from application.python import Null
 from application.python.types import Singleton
 from application.system import host
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from resources import ApplicationData
 from resources import Resources
@@ -85,10 +85,8 @@ StreamHandlerForType = {
     "video": VideoController
 }
 
-class SessionControllersManager(object):
-    __metaclass__ = Singleton
-
-    implements(IObserver)
+@implementer(IObserver)
+class SessionControllersManager(object, metaclass=Singleton):
 
     def __init__(self):
         BlinkLogger().log_debug('Starting Sessions Manager')
@@ -173,7 +171,7 @@ class SessionControllersManager(object):
 
     def sessionControllerForSession(self, session):
         try:
-            controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+            controller = next((controller for controller in self.sessionControllers if controller.session == session))
         except StopIteration:
             return None
         else:
@@ -219,18 +217,18 @@ class SessionControllersManager(object):
             ds = [s for s in streams if s.type == "screen-sharing"]
             if ds and ds[0].handler.type != "active":
                 if settings.screen_sharing_server.disabled:
-                    BlinkLogger().log_info(u"Screen Sharing is disabled in Blink Preferences")
+                    BlinkLogger().log_info("Screen Sharing is disabled in Blink Preferences")
                     return False
                 if not self.isScreenSharingEnabled():
-                    BlinkLogger().log_info(u"Screen Sharing is disabled in System Preferences")
+                    BlinkLogger().log_info("Screen Sharing is disabled in System Preferences")
                     return False
 
         if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
-            BlinkLogger().log_info(u"File Transfers are disabled")
+            BlinkLogger().log_info("File Transfers are disabled")
             return False
 
         if settings.chat.disabled and 'chat' in stream_type_list:
-            BlinkLogger().log_info(u"Chat sessions are disabled")
+            BlinkLogger().log_info("Chat sessions are disabled")
             return False
 
         if 'video' in stream_type_list:
@@ -248,18 +246,18 @@ class SessionControllersManager(object):
                 return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
-            BlinkLogger().log_info(u"File Transfers are disabled")
+            BlinkLogger().log_info("File Transfers are disabled")
             return False
 
         if settings.chat.disabled and type == 'chat':
-            BlinkLogger().log_info(u"Chat sessions are disabled")
+            BlinkLogger().log_info("Chat sessions are disabled")
             return False
 
         if type == 'sms':
             return settings.chat.enable_sms
 
         if type == 'video':
-            BlinkLogger().log_debug(u"Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
+            BlinkLogger().log_debug("Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
             return False
         
         return True
@@ -277,7 +275,7 @@ class SessionControllersManager(object):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Call</h3>'
@@ -346,7 +344,7 @@ class SessionControllersManager(object):
         message = '<h3>Incoming Call</h3>'
         message += '<p>Call duration: %s' % duration
         message += '<p>Media: %s' % ', '.join(data.streams)
-        enc_keys = controller.encryption.keys()
+        enc_keys = list(controller.encryption.keys())
         if enc_keys:
             message += '<h4>Encryption</h4>'
             message += '<ul>'
@@ -504,7 +502,7 @@ class SessionControllersManager(object):
             message += '<p>Media: %s' % ', '.join(data.streams)
             message += '<p>Call duration: %s' % duration
             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            enc_keys = controller.encryption.keys()
+            enc_keys = list(controller.encryption.keys())
             if enc_keys:
                 message += '<h4>Encryption</h4>'
                 message += '<ul>'
@@ -578,7 +576,7 @@ class SessionControllersManager(object):
                 dir_name = os.path.dirname(dir)
                 zip_folder = ApplicationData.get('.tmp_file_transfers')
                 if not os.path.exists(zip_folder):
-                    os.mkdir(zip_folder, 0700)
+                    os.mkdir(zip_folder, 0o700)
                 zip_file = '%s/%s.zip' % (zip_folder, base_name)
                 if os.path.isfile(zip_file):
                     i = 1
@@ -590,14 +588,14 @@ class SessionControllersManager(object):
 
                 zf = zipfile.ZipFile(zip_file, mode='w')
                 try:
-                    BlinkLogger().log_error(u"Compressing folder %s to %s" % (dir, zip_file))
+                    BlinkLogger().log_error("Compressing folder %s to %s" % (dir, zip_file))
                     for root, dirs, files in os.walk(file):
                         for name in files:
                             _file = os.path.join(root, name)
                             arcname = _file[len(dir_name)+1:]
                             zf.write(_file, compress_type=zipfile.ZIP_DEFLATED, arcname=arcname)
-                except Exception, exc:
-                    BlinkLogger().log_error(u"Error compressing %s to %s: %s" % (dir, zip_file, exc))
+                except Exception as exc:
+                    BlinkLogger().log_error("Error compressing %s to %s: %s" % (dir, zip_file, exc))
                     continue
                 finally:
                     zf.close()
@@ -607,8 +605,8 @@ class SessionControllersManager(object):
             try:
                 xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
                 xfer.start()
-            except Exception, exc:
-                BlinkLogger().log_error(u"Error while attempting to transfer file %s: %s" % (file, exc))
+            except Exception as exc:
+                BlinkLogger().log_error("Error while attempting to transfer file %s: %s" % (file, exc))
 
     @run_in_gui_thread
     def show_web_alert_page(self, session):
@@ -617,31 +615,31 @@ class SessionControllersManager(object):
             return
 
         try:
-            session_controller = (controller for controller in self.sessionControllers if controller.session == session).next()
+            session_controller = next((controller for controller in self.sessionControllers if controller.session == session))
         except StopIteration:
             return
 
         if session.account is not BonjourAccount() and session.account.web_alert.alert_url:
-            url = unicode(session.account.web_alert.alert_url)
+            url = str(session.account.web_alert.alert_url)
 
-            replace_caller = urllib.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
+            replace_caller = urllib.parse.urlencode({'x:': '%s@%s' % (session.remote_identity.uri.user, session.remote_identity.uri.host)})
             caller_key = replace_caller[5:]
             url = url.replace('$caller_party', caller_key)
 
-            replace_username = urllib.urlencode({'x:': '%s' % session.remote_identity.uri.user})
+            replace_username = urllib.parse.urlencode({'x:': '%s' % session.remote_identity.uri.user})
             url = url.replace('$caller_username', replace_username[5:])
 
-            replace_account = urllib.urlencode({'x:': '%s' % session.account.id})
+            replace_account = urllib.parse.urlencode({'x:': '%s' % session.account.id})
             url = url.replace('$called_party', replace_account[5:])
 
             settings = SIPSimpleSettings()
 
             if settings.gui.use_default_web_browser_for_alerts or not url.startswith('http'):
-                session_controller.log_info(u"Opening Alert URL %s"% url)
+                session_controller.log_info("Opening Alert URL %s"% url)
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
             else:
-                session_controller.log_info(u"Opening Alert URL %s"% url)
-                if not SIPManager()._delegate.accountSettingsPanels.has_key(caller_key):
+                session_controller.log_info("Opening Alert URL %s"% url)
+                if caller_key not in SIPManager()._delegate.accountSettingsPanels:
                     SIPManager()._delegate.accountSettingsPanels[caller_key] = AccountSettings.createWithOwner_(self)
                 SIPManager()._delegate.accountSettingsPanels[caller_key].showIncomingCall(session, url)
 
@@ -729,13 +727,13 @@ class SessionControllersManager(object):
         caller_name = match_contact.name if match_contact else format_identity_to_string(session.remote_identity)
 
         if data.streams and not streams:
-            BlinkLogger().log_info(u"Rejecting session for unsupported media type")
+            BlinkLogger().log_info("Rejecting session for unsupported media type")
             nc_title = 'Incompatible Media'
             nc_body = 'Call from %s refused' % match_contact.name
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             try:
                 session.reject(488)
-            except IllegalStateError, e:
+            except IllegalStateError as e:
                 BlinkLogger().log_error(e)
             return
         elif not streams:
@@ -743,10 +741,10 @@ class SessionControllersManager(object):
             streams = [AudioStream()]
 
         if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
-            BlinkLogger().log_info(u"Blocked contact rejected")
+            BlinkLogger().log_info("Blocked contact rejected")
             try:
                 session.reject(603)
-            except IllegalStateError, e:
+            except IllegalStateError as e:
                 BlinkLogger().log_error(e)
             nc_title = 'Blocked Contact Rejected'
             nc_body = 'Call from %s refused' % caller_name
@@ -757,20 +755,20 @@ class SessionControllersManager(object):
             nc_title = 'Call Rejected'
             nc_body = 'Do not disturb until done with other calls'
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-            BlinkLogger().log_info(u"Rejecting call until we finish existing calls")
+            BlinkLogger().log_info("Rejecting call until we finish existing calls")
             try:
                 session.reject(600)
-            except IllegalStateError, e:
+            except IllegalStateError as e:
                 BlinkLogger().log_error(e)
             return
 
         # if call waiting is disabled and we have audio calls reject with busy
         hasAudio = any(sess.hasStreamOfType("audio") for sess in self.sessionControllers)
         if 'audio' in stream_type_list and hasAudio and session.account is not BonjourAccount() and session.account.audio.call_waiting is False:
-            BlinkLogger().log_info(u"Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
+            BlinkLogger().log_info("Refusing audio call from %s because we are busy and call waiting is disabled" % format_identity_to_string(session.remote_identity))
             try:
                 session.reject(486)
-            except IllegalStateError, e:
+            except IllegalStateError as e:
                 BlinkLogger().log_error(e)
             return
 
@@ -779,10 +777,10 @@ class SessionControllersManager(object):
                 nc_title = 'Do Not Disturb'
                 nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
                 NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-                BlinkLogger().log_info(u"Refusing audio call from %s because do not disturb is enabled" % caller_name)
+                BlinkLogger().log_info("Refusing audio call from %s because do not disturb is enabled" % caller_name)
                 try:
                     session.reject(session.account.sip.do_not_disturb_code, 'Do Not Disturb')
-                except IllegalStateError, e:
+                except IllegalStateError as e:
                     BlinkLogger().log_error(e)
                 return
 
@@ -791,10 +789,10 @@ class SessionControllersManager(object):
                     nc_title = 'Anonymous Call Rejected'
                     nc_body = 'Call refused'
                     NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=None)
-                    BlinkLogger().log_info(u"Rejecting audio call from anonymous caller")
+                    BlinkLogger().log_info("Rejecting audio call from anonymous caller")
                     try:
                         session.reject(603)  # todo: an alternative to this is 433 "Anonymity Disallowed" (see RFC 5079), but is not a global reject code and is not present in sipsimple -Dan
-                    except IllegalStateError, e:
+                    except IllegalStateError as e:
                         BlinkLogger().log_error(e)
                     return
 
@@ -804,20 +802,20 @@ class SessionControllersManager(object):
                         nc_title = 'Unauthorized Caller Rejected'
                         nc_body = 'Call from %s refused' % caller_name
                         NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-                        BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                        BlinkLogger().log_info("Rejecting audio call from unauthorized contact")
                         try:
                             session.reject(603)
-                        except IllegalStateError, e:
+                        except IllegalStateError as e:
                             BlinkLogger().log_error(e)
                         return
                 else:
-                    BlinkLogger().log_info(u"Rejecting audio call from unauthorized contact")
+                    BlinkLogger().log_info("Rejecting audio call from unauthorized contact")
                     nc_title = 'Unauthorized Caller Rejected'
                     nc_body = 'Call refused from blocked contact'
                     NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                     try:
                         session.reject(603)
-                    except IllegalStateError, e:
+                    except IllegalStateError as e:
                         BlinkLogger().log_error(e)
                     return
 
@@ -841,24 +839,24 @@ class SessionControllersManager(object):
 
         if match_contact:
             if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
-                BlinkLogger().log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
+                BlinkLogger().log_info("Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
         elif session.account is BonjourAccount() and stream_type_list == ['chat']:
-            BlinkLogger().log_info(u"Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
+            BlinkLogger().log_info("Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
             self.startIncomingSession(session, streams)
             return
 
         if stream_type_list == ['file-transfer'] and 'screencapture' in streams[0].file_selector.name:
             if NSApp.delegate().contactsWindowController.my_device_is_active:
-                BlinkLogger().log_info(u"Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
+                BlinkLogger().log_info("Automatically accepting screenshot from %s" % format_identity_to_string(session.remote_identity))
                 self.startIncomingSession(session, streams)
                 return
 
         try:
             session.send_ring_indication()
-        except IllegalStateError, e:
-            BlinkLogger().log_info(u"IllegalStateError: %s" % e)
+        except IllegalStateError as e:
+            BlinkLogger().log_info("IllegalStateError: %s" % e)
         else:
             if settings.answering_machine.enabled and settings.answering_machine.answer_delay == 0:
                 self.startIncomingSession(session, [s for s in streams if s.type=='audio'], answeringMachine=True)
@@ -917,7 +915,7 @@ class SessionControllersManager(object):
             elif data.streams == ['file-transfer']:
                 pass
             else:
-                session_controller.log_info(u"Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
+                session_controller.log_info("Missed incoming session from %s" % format_identity_to_string(session.remote_identity))
                 if 'audio' in data.streams:
                     NSApp.delegate().noteMissedCall()
 
@@ -927,8 +925,8 @@ class SessionControllersManager(object):
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
 
+@implementer(IObserver)
 class SessionController(NSObject):
-    implements(IObserver)
 
     session = None
     state = STATE_IDLE
@@ -974,7 +972,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         SessionIdentifierSerial += 1
-        BlinkLogger().log_debug(u"Creating %s" % self)
+        BlinkLogger().log_debug("Creating %s" % self)
         self.display_name = sip_prefix_pattern.sub("", display_name)
         self.remoteIdentity = target_uri
         self.contact = contact
@@ -1023,7 +1021,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         SessionIdentifierSerial += 1
-        BlinkLogger().log_debug(u"Creating %s" % self)
+        BlinkLogger().log_debug("Creating %s" % self)
         self.remoteIdentity = session.remote_identity
         self.account = session.account
         self.session = session
@@ -1068,7 +1066,7 @@ class SessionController(NSObject):
         settings = SIPSimpleSettings()
         self.video_consumer = settings.video.container
 
-        self.log_info(u'Invite from: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
+        self.log_info('Invite from: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
         self.log_info('Local contact: %s' % self.contact)
 
         self.notification_center = NotificationCenter()
@@ -1086,7 +1084,7 @@ class SessionController(NSObject):
         global SessionIdentifierSerial
         self = objc.super(SessionController, self).init()
         SessionIdentifierSerial += 1
-        BlinkLogger().log_debug(u"Creating %s" % self)
+        BlinkLogger().log_debug("Creating %s" % self)
         self.remoteIdentity = session.remote_identity
         self.target_uri = SIPURI.new(session.remote_identity.uri)
         self.account = session.account
@@ -1126,7 +1124,7 @@ class SessionController(NSObject):
         settings = SIPSimpleSettings()
         self.video_consumer = settings.video.container
 
-        self.log_info(u'Invite to: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
+        self.log_info('Invite to: "%s" <%s> with %s' % (session.remote_identity.display_name, session.remote_identity.uri, ", ".join(self.streams_log)))
 
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='SystemWillSleep')
@@ -1181,15 +1179,15 @@ class SessionController(NSObject):
 
     @objc.python_method
     def log_info(self, text):
-        BlinkLogger().log_info(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
+        BlinkLogger().log_info("[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     @objc.python_method
     def log_debug(self, text):
-        BlinkLogger().log_debug(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
+        BlinkLogger().log_debug("[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     @objc.python_method
     def log_error(self, text):
-        BlinkLogger().log_error(u"[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
+        BlinkLogger().log_error("[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     @objc.python_method
     def isActive(self):
@@ -1229,7 +1227,7 @@ class SessionController(NSObject):
             for stream in sorted_streams:
                 if self.sessionControllersManager.isMediaTypeSupported(stream.type):
                     if stream.type in handled_types:
-                        self.log_info(u"Stream type %s has already been handled" % stream.type)
+                        self.log_info("Stream type %s has already been handled" % stream.type)
                         continue
 
                     controller = self.streamHandlerOfType(stream.type)
@@ -1254,20 +1252,20 @@ class SessionController(NSObject):
                     else:
                         controller.startIncoming(is_update=is_update)
                 else:
-                    self.log_info(u"Unknown incoming Stream type: %s (%s)" % (stream, stream.type))
+                    self.log_info("Unknown incoming Stream type: %s (%s)" % (stream, stream.type))
                     raise TypeError("Unsupported stream type %s" % stream.type)
 
             if not is_update:
                 self.session.accept(streams)
-        except Exception, exc:
+        except Exception as exc:
             # if there was some exception, reject the session
             if is_update:
-                self.log_info(u"Error initializing additional streams: %s" % exc)
+                self.log_info("Error initializing additional streams: %s" % exc)
             else:
-                self.log_info(u"Error initializing incoming session, rejecting it: %s" % exc)
+                self.log_info("Error initializing incoming session, rejecting it: %s" % exc)
                 try:
                     self.session.reject(500)
-                except (IllegalDirectionError, IllegalStateError), e:
+                except (IllegalDirectionError, IllegalStateError) as e:
                     BlinkLogger().log_error(e)
                 log_data = NotificationData(direction='incoming', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=500, originator='local', reason='Session already terminated', failure_reason=exc, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
                 self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
@@ -1283,14 +1281,14 @@ class SessionController(NSObject):
     @objc.python_method
     def streamHandlerOfType(self, stype):
         try:
-            return (s for s in self.streamHandlers if s.stream and s.stream.type==stype).next()
+            return next((s for s in self.streamHandlers if s.stream and s.stream.type==stype))
         except StopIteration:
             return None
 
     @objc.python_method
     def streamHandlerForStream(self, stream):
         try:
-            return (s for s in self.streamHandlers if s.stream==stream).next()
+            return next((s for s in self.streamHandlers if s.stream==stream))
         except StopIteration:
             return None
 
@@ -1384,7 +1382,7 @@ class SessionController(NSObject):
                     try:
                         self.session.remove_streams(streams_to_remove)
                         self.notification_center.post_notification("BlinkSentRemoveProposal", sender=self)
-                    except IllegalStateError, e:
+                    except IllegalStateError as e:
                         self.log_info("IllegalStateError: %s" % e)
                         if streamHandler.stream.type == "audio":
                             # end the whole session otherwise we keep hearing each other after audio tile is gone
@@ -1425,7 +1423,7 @@ class SessionController(NSObject):
                     self.notification_center.post_notification("BlinkWillCancelProposal", sender=self.session)
                     self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
-                except IllegalStateError, e:
+                except IllegalStateError as e:
                     self.log_info("IllegalStateError: %s" % e)
                     self.session.end()
             else:
@@ -1519,16 +1517,16 @@ class SessionController(NSObject):
             if self.account.sip.outbound_proxy is not None:
                 proxy = self.account.sip.outbound_proxy
                 uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
-                self.log_info(u"Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+                self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
             elif self.account.sip.always_use_my_proxy:
                 uri = SIPURI(host=self.account.id.domain)
-                self.log_info(u"Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+                self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
             else:
                 uri = target_uri
-                self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
+                self.log_info("Starting DNS lookup for %s" % target_uri.host)
         else:
             uri = target_uri
-            self.log_info(u"Starting DNS lookup for %s" % target_uri.host)
+            self.log_info("Starting DNS lookup for %s" % target_uri.host)
 
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
@@ -1647,13 +1645,13 @@ class SessionController(NSObject):
 
                     outdev = SIPSimpleSettings().audio.output_device
                     indev = SIPSimpleSettings().audio.input_device
-                    if outdev == u"system_default":
-                        outdev = u"System Default"
-                    if indev == u"system_default":
-                        indev = u"System Default"
+                    if outdev == "system_default":
+                        outdev = "System Default"
+                    if indev == "system_default":
+                        indev = "System Default"
 
                     if any(streamHandler.stream.type=='audio' for streamHandler in self.streamHandlers):
-                        self.log_info(u"Selected audio input/output devices: %s/%s" % (indev, outdev))
+                        self.log_info("Selected audio input/output devices: %s/%s" % (indev, outdev))
                         global OUTBOUND_AUDIO_CALLS
                         OUTBOUND_AUDIO_CALLS += 1
                         self.outbound_audio_calls = OUTBOUND_AUDIO_CALLS
@@ -1675,7 +1673,7 @@ class SessionController(NSObject):
                 try:
                    self.session.add_streams(add_streams)
                    self.notification_center.post_notification("BlinkSentAddProposal", sender=self)
-                except IllegalStateError, e:
+                except IllegalStateError as e:
                     self.inProposal = False
                     self.log_info("IllegalStateError: %s" % e)
                     log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=add_streams)
@@ -1867,7 +1865,7 @@ class SessionController(NSObject):
             self.log_info("Transfer request rejected by user")
             try:
                 self.session.reject_transfer()
-            except (IllegalDirectionError, IllegalStateError), e:
+            except (IllegalDirectionError, IllegalStateError) as e:
                 BlinkLogger().log_error(e)
         self.transfer_window = None
 
@@ -1876,7 +1874,7 @@ class SessionController(NSObject):
         if self.session is not None:
             try:
                 self.session.reject(code, reason)
-            except (IllegalDirectionError, IllegalStateError),e:
+            except (IllegalDirectionError, IllegalStateError) as e:
                 pass
 
     @objc.python_method
@@ -1891,14 +1889,14 @@ class SessionController(NSObject):
         if host is None or host.default_ip is None:
             message = NSLocalizedString("No Internet connection", "Label")
         else:
-            message = u"SIP DNS lookup for %s failed: %s" % (unicode(self.target_uri.host), data.error)
+            message = "SIP DNS lookup for %s failed: %s" % (str(self.target_uri.host), data.error)
         self.setRoutesFailed(message)
 
     @objc.python_method
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.notification_center.remove_observer(self, sender=lookup)
         result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
-        self.log_info(u"DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
+        self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
         routes = data.result
         if not routes:
             self.setRoutesFailed("No routes found to SIP Proxy")
@@ -2023,10 +2021,10 @@ class SessionController(NSObject):
             status = NSLocalizedString("Server error", "Label")
             self.failureReason = 'Server error'
         elif data.failure_reason != 'user request':
-            status = u"%s" % data.failure_reason.decode('utf-8')
+            status = "%s" % data.failure_reason.decode('utf-8')
             self.failureReason = status
         elif data.reason:
-            status = u"%s" % data.reason
+            status = "%s" % data.reason
             self.failureReason = data.reason
         else:
             status = NSLocalizedString("Session Failed", "Label")
@@ -2091,7 +2089,7 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionNewOutgoing(self, session, data):
-        self.log_info(u"Proposed media: %s" % ', '.join([s.type for s in data.streams]))
+        self.log_info("Proposed media: %s" % ', '.join([s.type for s in data.streams]))
 
     @objc.python_method
     def _NH_SIPSessionDidEnd(self, sender, data):
@@ -2139,14 +2137,14 @@ class SessionController(NSObject):
 
         if data.originator != "local":
             stream_names = ', '.join(stream.type for stream in data.proposed_streams)
-            self.log_info(u"Received %s proposal" % stream_names)
+            self.log_info("Received %s proposal" % stream_names)
             streams = data.proposed_streams
 
             settings = SIPSimpleSettings()
             stream_type_list = list(set(stream.type for stream in streams))
 
             if not self.sessionControllersManager.isProposedMediaTypeSupported(streams):
-                self.log_info(u"Unsupported media type, proposal rejected")
+                self.log_info("Unsupported media type, proposal rejected")
                 session.reject_proposal()
                 return
 
@@ -2159,18 +2157,18 @@ class SessionController(NSObject):
 
                 if accepted_streams:
                     stream_type_list = list(set(stream.type for stream in accepted_streams))
-                    self.log_info(u"Automatically accepting addition of %s streams for established session from %s" % (",".join(stream_type_list), format_identity_to_string(session.remote_identity)))
+                    self.log_info("Automatically accepting addition of %s streams for established session from %s" % (",".join(stream_type_list), format_identity_to_string(session.remote_identity)))
                     self.acceptIncomingProposal(accepted_streams)
                     return
 
             if stream_type_list == ['chat'] and 'audio' in (s.type for s in session.streams):
-                self.log_info(u"Automatically accepting chat for established audio call from %s" % format_identity_to_string(session.remote_identity))
+                self.log_info("Automatically accepting chat for established audio call from %s" % format_identity_to_string(session.remote_identity))
                 self.acceptIncomingProposal(streams)
                 return
 
             if session.account is BonjourAccount():
                 if stream_type_list == ['chat']:
-                    self.log_info(u"Automatically accepting addition of chat session from %s" % format_identity_to_string(session.remote_identity))
+                    self.log_info("Automatically accepting addition of chat session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(streams)
                     return
                 elif 'audio' in stream_type_list and session.account.audio.auto_accept:
@@ -2178,30 +2176,30 @@ class SessionController(NSObject):
                     have_audio_call = any(s for s in session_manager.sessions if s is not session and s.streams and 'audio' in (stream.type for stream in s.streams))
                     if not have_audio_call:
                         accepted_streams = [s for s in streams if s.type in ("audio", "chat")]
-                        self.log_info(u"Automatically accepting addition of audio and chat session from %s" % format_identity_to_string(session.remote_identity))
+                        self.log_info("Automatically accepting addition of audio and chat session from %s" % format_identity_to_string(session.remote_identity))
                         self.acceptIncomingProposal(accepted_streams)
                         return
                 elif 'video' in stream_type_list and session.account.audio.auto_accept and settings.video.enable_when_auto_answer:
                     session_manager = SessionManager()
-                    self.log_info(u"Automatically accepting addition of video session from %s" % format_identity_to_string(session.remote_identity))
+                    self.log_info("Automatically accepting addition of video session from %s" % format_identity_to_string(session.remote_identity))
                     accepted_streams = [s for s in streams if s.type in ("video")]
                     self.acceptIncomingProposal(accepted_streams)
                     return
 
             if self.contact:
                 if settings.chat.auto_accept and stream_type_list == ['chat']:
-                    self.log_info(u"Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
+                    self.log_info("Automatically accepting chat session from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(streams)
                     return
                 elif settings.file_transfer.auto_accept and stream_type_list == ['file-transfer']:
-                    self.log_info(u"Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
+                    self.log_info("Automatically accepting file transfer from %s" % format_identity_to_string(session.remote_identity))
                     self.acceptIncomingProposal(streams)
                     return
 
             try:
                 session.send_ring_indication()
-            except IllegalStateError, e:
-                self.log_info(u"IllegalStateError: %s" % e)
+            except IllegalStateError as e:
+                self.log_info("IllegalStateError: %s" % e)
                 return
             else:
                 self.sessionControllersManager.alertPanel.addIncomingStreamProposal(session, streams)
@@ -2265,7 +2263,7 @@ class SessionController(NSObject):
                 try:
                     self.session.remove_stream(stream)
                     self.cancelledStream = None
-                except IllegalStateError, e:
+                except IllegalStateError as e:
                     self.log_info("IllegalStateError: %s" % e)
         # notify by Chat Window controller to update the toolbar buttons
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
@@ -2331,7 +2329,7 @@ class SessionController(NSObject):
         if self.state == STATE_FINISHED:
             return
 
-        self.log_debug(u"Received conference-info update")
+        self.log_debug("Received conference-info update")
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.conference_shared_files = []
@@ -2355,7 +2353,7 @@ class SessionController(NSObject):
 
             # remove invited participants that joined the conference
             try:
-                contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+                contact = next((contact for contact in self.invited_participants if uri == contact.uri))
             except StopIteration:
                 pass
             else:
@@ -2376,10 +2374,10 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPConferenceDidAddParticipant(self, sender, data):
-        self.log_info(u"Added participant to conference: %s" % data.participant)
+        self.log_info("Added participant to conference: %s" % data.participant)
         uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
-            contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+            contact = next((contact for contact in self.invited_participants if uri == contact.uri))
         except StopIteration:
             pass
         else:
@@ -2390,16 +2388,16 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPConferenceDidNotAddParticipant(self, sender, data):
-        self.log_info(u"Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
+        self.log_info("Failed to add participant %s to conference: %s %s" % (data.participant, data.code, data.reason))
         uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
-            contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+            contact = next((contact for contact in self.invited_participants if uri == contact.uri))
         except StopIteration:
-            self.log_info(u"Cannot find %s in the invited list" % uri)
+            self.log_info("Cannot find %s in the invited list" % uri)
         else:
             contact.detail = '%s (%s)' % (data.reason, data.code)
             self.failed_to_join_participants[uri]=time.time()
-            self.log_info(u"Adding %s to failed list" % uri)
+            self.log_info("Adding %s to failed list" % uri)
             if data.code >= 400 or data.code == 0:
                 if data.code == 487:
                     contact.detail = NSLocalizedString("Nobody answered", "Contact detail")
@@ -2418,7 +2416,7 @@ class SessionController(NSObject):
     def _NH_SIPConferenceGotAddParticipantProgress(self, sender, data):
         uri = sip_prefix_pattern.sub("", str(data.participant))
         try:
-            contact = (contact for contact in self.invited_participants if uri == contact.uri).next()
+            contact = next((contact for contact in self.invited_participants if uri == contact.uri))
         except StopIteration:
             pass
         else:
@@ -2437,10 +2435,10 @@ class SessionController(NSObject):
     @objc.python_method
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
         target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
-        self.log_info(u'Incoming transfer request to %s' % target)
+        self.log_info('Incoming transfer request to %s' % target)
         self.notification_center.post_notification("BlinkSessionTransferNewIncoming", sender=self, data=data)
         if self.account.audio.auto_transfer:
-            self.log_info(u'Auto-accepting transfer request')
+            self.log_info('Auto-accepting transfer request')
             sender.accept_transfer()
         else:
             self.transfer_window = CallTransferWindowController(self, target)
@@ -2452,22 +2450,22 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionTransferDidStart(self, sender, data):
-        self.log_info(u'Transfer started')
+        self.log_info('Transfer started')
         self.notification_center.post_notification("BlinkSessionTransferDidStart", sender=self, data=data)
 
     @objc.python_method
     def _NH_SIPSessionTransferDidEnd(self, sender, data):
-        self.log_info(u'Transfer succeeded')
+        self.log_info('Transfer succeeded')
         self.notification_center.post_notification("BlinkSessionTransferDidEnd", sender=self, data=data)
 
     @objc.python_method
     def _NH_SIPSessionTransferDidFail(self, sender, data):
-        self.log_info(u'Transfer failed %s: %s' % (data.code, data.reason))
+        self.log_info('Transfer failed %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferDidFail", sender=self, data=data)
 
     @objc.python_method
     def _NH_SIPSessionTransferGotProgress(self, sender, data):
-        self.log_info(u'Transfer got progress %s: %s' % (data.code, data.reason))
+        self.log_info('Transfer got progress %s: %s' % (data.code, data.reason))
         self.notification_center.post_notification("BlinkSessionTransferGotProgress", sender=self, data=data)
 
     @objc.python_method

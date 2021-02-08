@@ -39,12 +39,12 @@ import os
 import string
 import time
 import uuid
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from collections import deque
-from zope.interface import implements
+from zope.interface import implementer
 from util import sip_prefix_pattern, format_size
 
 from sipsimple.account import BonjourAccount, AccountManager
@@ -85,8 +85,9 @@ STATISTICS_INTERVAL = 1.0
 RTP_PACKET_OVERHEAD = 54
 
 
+@implementer(IObserver)
 class AudioController(MediaStream):
-    implements(IObserver)
+
     type = "audio"
 
     view = objc.IBOutlet()
@@ -159,7 +160,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def resetStream(self):
-        self.sessionController.log_debug(u"Reset stream %s" % self)
+        self.sessionController.log_debug("Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
         self.stream = MediaStreamRegistry.AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
@@ -199,7 +200,7 @@ class AudioController(MediaStream):
 
     def initWithOwner_stream_(self, scontroller, stream):
         self = objc.super(AudioController, self).initWithOwner_stream_(scontroller, stream)
-        scontroller.log_debug(u"Creating %s" % self)
+        scontroller.log_debug("Creating %s" % self)
 
         self.statistics = {'loss_rx': 0, 'loss_tx': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0}
         # 5 minutes of history data for Session Info graphs
@@ -288,13 +289,13 @@ class AudioController(MediaStream):
         self.hangup_reason = None
         self.view.removeFromSuperview()
         self.view.release()
-        self.sessionController.log_debug(u"Dealloc %s" % self)
+        self.sessionController.log_debug("Dealloc %s" % self)
         self.sessionController = None
         objc.super(AudioController, self).dealloc()
 
     @objc.python_method
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
-        self.sessionController.log_debug(u"Start incoming %s" % self)
+        self.sessionController.log_debug("Start incoming %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
 
@@ -318,7 +319,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
-        self.sessionController.log_debug(u"Start outgoing %s" % self)
+        self.sessionController.log_debug("Start outgoing %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.label.setStringValue_(self.sessionController.titleShort)
@@ -445,7 +446,7 @@ class AudioController(MediaStream):
         except RuntimeError:
             pass
         else:
-            self.sessionController.log_info(u"Sent DTMF code %s" % key)
+            self.sessionController.log_info("Sent DTMF code %s" % key)
             filename = 'dtmf_%s_tone.wav' % {'*': 'star', '#': 'pound'}.get(key, key)
             wave_player = WavePlayer(SIPApplication.voice_audio_mixer, Resources.get(filename))
             if self.session.account.rtp.inband_dtmf:
@@ -483,7 +484,7 @@ class AudioController(MediaStream):
             return
 
         if type(peer) == str:
-            self.sessionController.log_info(u"New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.titleLong,
+            self.sessionController.log_info("New session and conference of %s to contact %s initiated through drag&drop" % (self.sessionController.titleLong,
                   peer))
             # start Audio call to peer and add it to conference
             self.view.setConferencing_(True)
@@ -498,7 +499,7 @@ class AudioController(MediaStream):
 
             return False
         else:
-            self.sessionController.log_info(u"Conference of %s with %s initiated through drag&drop" % (self.sessionController.titleLong,
+            self.sessionController.log_info("Conference of %s with %s initiated through drag&drop" % (self.sessionController.titleLong,
                   peer.sessionController.titleLong))
             # if conference already exists and neither self nor peer are part of it:
             #     return False
@@ -515,7 +516,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def sessionBoxDidRemoveFromConference(self, sender):
-        self.sessionController.log_info(u"Removed %s from conference through drag&drop" % self.sessionController.titleLong)
+        self.sessionController.log_info("Removed %s from conference through drag&drop" % self.sessionController.titleLong)
         self.removeFromConference()
 
     @objc.python_method
@@ -648,7 +649,7 @@ class AudioController(MediaStream):
                     self.audioStatus.setTextColor_(NSColor.blackColor())
                     hd_label = NSLocalizedString("Narrowband", "Label")
                 #self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
-                self.audioStatus.setStringValue_(u"%s (%s)" % (hd_label, codec))
+                self.audioStatus.setStringValue_("%s (%s)" % (hd_label, codec))
 
         self.audioStatus.sizeToFit()
 
@@ -865,7 +866,7 @@ class AudioController(MediaStream):
             h = elapsed.seconds / (60*60)
             m = (elapsed.seconds / 60) % 60
             s = elapsed.seconds % 60
-            text = u"%02i:%02i:%02i" % (h,m,s)
+            text = "%02i:%02i:%02i" % (h,m,s)
             #speed = self.statistics['rx_bytes']
             #speed_text = '   %s/s' % format_size(speed, bits=True) if speed else ''
             #text = text + speed_text
@@ -874,14 +875,14 @@ class AudioController(MediaStream):
             if self.status == STREAM_CONNECTING and self.sessionController.routes:
                 if time.time() - self.timestamp < 2.1:
                     # for the first two seconds display the selected account
-                    label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else u"Bonjour"
+                    label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else "Bonjour"
                     self.elapsed.setStringValue_(label)
                 else:
                     self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
             elif self.status == STREAM_RINGING:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Ringing...", "Audio status label"))
             else:
-                label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else u"Bonjour"
+                label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else "Bonjour"
                 self.elapsed.setStringValue_(label)
 
     @objc.python_method
@@ -1131,7 +1132,7 @@ class AudioController(MediaStream):
     @objc.IBAction
     def userClickedTransferMenuItem_(self, sender):
         target_session_controller = sender.representedObject()
-        self.sessionController.log_info(u'Initiating call transfer from %s to %s' % (self.sessionController.titleLong, target_session_controller.titleLong))
+        self.sessionController.log_info('Initiating call transfer from %s to %s' % (self.sessionController.titleLong, target_session_controller.titleLong))
         try:
             target_contact_uri = target_session_controller.session._invitation.remote_contact_header.uri
         except AttributeError:
@@ -1143,7 +1144,7 @@ class AudioController(MediaStream):
     @objc.IBAction
     def userClickedBlindTransferMenuItem_(self, sender):
         uri = sender.representedObject()
-        self.sessionController.log_info(u'Initiating blind call transfer from %s to %s' % (self.sessionController.titleLong, uri))
+        self.sessionController.log_info('Initiating blind call transfer from %s to %s' % (self.sessionController.titleLong, uri))
         self.transferSession(uri)
 
     @objc.IBAction
@@ -1249,7 +1250,7 @@ class AudioController(MediaStream):
     def addRecordingToHistory(self, filename):
         message = "<h3>Audio Call Recorded</h3>"
         message += "<p>%s" % filename
-        message += "<p><audio src='%s' controls='controls'>" %  urllib.quote(filename)
+        message += "<p><audio src='%s' controls='controls'>" %  urllib.parse.quote(filename)
         media_type = 'audio-recording'
         local_uri = format_identity_to_string(self.sessionController.account)
         remote_uri = format_identity_to_string(self.sessionController.target_uri)
@@ -1278,14 +1279,14 @@ class AudioController(MediaStream):
     @objc.python_method
     def _NH_RTPStreamDidTimeout(self, sender, data):
         if self.sessionController.account.rtp.hangup_on_timeout:
-            self.sessionController.log_info(u'Audio stream timeout')
+            self.sessionController.log_info('Audio stream timeout')
             self.hangup_reason = NSLocalizedString("Audio Timeout", "Audio status label")
             self.updateAudioStatusWithSessionState(self.hangup_reason, True)
             self.end()
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
-        self.sessionController.log_info(u'Audio ICE negotiation failed: %s' % data.reason)
+        self.sessionController.log_info('Audio ICE negotiation failed: %s' % data.reason)
         self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
         self.ice_negotiation_status = data.reason
         # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
@@ -1293,8 +1294,8 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, sender, data):
-        self.sessionController.log_info(u'Audio ICE negotiation succeeded')
-        self.sessionController.log_info(u'Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
+        self.sessionController.log_info('Audio ICE negotiation succeeded')
+        self.sessionController.log_info('Audio RTP endpoints: %s:%d (%s) <-> %s:%d (%s)' % (self.stream.local_rtp_address,
                                                                                              self.stream.local_rtp_port,
                                                                                              ice_candidates[self.stream.local_rtp_candidate.type.lower()],
                                                                                              self.stream.remote_rtp_address,
@@ -1302,9 +1303,9 @@ class AudioController(MediaStream):
                                                                                              ice_candidates[self.stream.remote_rtp_candidate.type.lower()]))
 
         if self.stream.local_rtp_candidate.type.lower() != 'relay' and self.stream.remote_rtp_candidate.type.lower() != 'relay':
-            self.sessionController.log_info(u'Audio stream is peer to peer')
+            self.sessionController.log_info('Audio stream is peer to peer')
         else:
-            self.sessionController.log_info(u'Audio stream is relayed by server')
+            self.sessionController.log_info('Audio stream is relayed by server')
 
         self.ice_negotiation_status = 'Success'
 
@@ -1319,13 +1320,13 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_AudioStreamDidStartRecording(self, sender, data):
-        self.sessionController.log_info(u'Start recording audio to %s\n' % data.filename)
+        self.sessionController.log_info('Start recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("recording1"), self.conference_record_segment)
 
     @objc.python_method
     def _NH_AudioStreamDidStopRecording(self, sender, data):
-        self.sessionController.log_info(u'Stop recording audio to %s\n' % data.filename)
+        self.sessionController.log_info('Stop recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
         self.addRecordingToHistory(data.filename)
@@ -1337,7 +1338,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamDidChangeHoldState(self, sender, data):
-        self.sessionController.log_info(u"%s requested %s"%(data.originator.title(),(data.on_hold and "hold" or "unhold")))
+        self.sessionController.log_info("%s requested %s"%(data.originator.title(),(data.on_hold and "hold" or "unhold")))
         if data.originator != "local":
             self.holdByRemote = data.on_hold
             self.changeStatus(self.status)

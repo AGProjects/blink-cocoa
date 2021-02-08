@@ -20,7 +20,7 @@ from sipsimple.session import Session
 from sipsimple.streams.msrp.filetransfer import FileTransferStream, FileSelector
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
-from zope.interface import implements
+from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import FileTransferHistory, ChatHistory
@@ -47,8 +47,8 @@ class FileTransferInfo(object):
         self.status            = status
 
 
+@implementer(IObserver)
 class FileTransfer(object):
-    implements(IObserver)
 
     direction = None    # to be set by subclasses
 
@@ -88,7 +88,7 @@ class FileTransfer(object):
 
     @property
     def file_path(self):
-        return self.file_selector.name if self.file_selector is not None else u''
+        return self.file_selector.name if self.file_selector is not None else ''
 
     @property
     def file_pos(self):
@@ -236,7 +236,7 @@ class FileTransfer(object):
             notification.center.post_notification("BlinkFileTransferProgress", sender=self, data=NotificationData(progress=progress))
 
     def log_info(self, text):
-        BlinkLogger().log_info(u"[%s file transfer with %s] %s" % (self.direction.title(), self.remote_identity, text))
+        BlinkLogger().log_info("[%s file transfer with %s] %s" % (self.direction.title(), self.remote_identity, text))
 
 
 class IncomingFileTransferHandler(FileTransfer):
@@ -265,7 +265,7 @@ class IncomingFileTransferHandler(FileTransfer):
                                         file_size=self.file_selector.size,
                                         remote_uri=self.remote_identity,
                                         file_path=self.file_path)
-        self.log_info(u"Will write file to %s" % self.file_path)
+        self.log_info("Will write file to %s" % self.file_path)
 
         self.status = NSLocalizedString("Accepting File Transfer...", "Label")
 
@@ -328,19 +328,19 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.status = NSLocalizedString("Offering File...", "Label")
         self.ft_info.status = "proposing"
 
-        self.log_info(u"Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
+        self.log_info("Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
         lookup = DNSLookup()
         notification_center.add_observer(self, sender=lookup)
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info(u"Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
+            self.log_info("Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
-            self.log_info(u"Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
+            self.log_info("Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
         else:
             uri = self.target_uri
-            self.log_info(u"Initiating DNS Lookup for %s" % self.target_uri)
+            self.log_info("Initiating DNS Lookup for %s" % self.target_uri)
 
         settings = SIPSimpleSettings()
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
@@ -427,19 +427,19 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.status = NSLocalizedString("Requesting File...", "Label")
         self.ft_info.status = "requesting"
 
-        self.log_info(u"Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
+        self.log_info("Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
         lookup = DNSLookup()
         notification_center.add_observer(self, sender=lookup)
 
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info(u"Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
+            self.log_info("Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
-            self.log_info(u"Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
+            self.log_info("Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
         else:
             uri = self.target_uri
-            self.log_info(u"Initiating DNS Lookup for %s" % self.target_uri)
+            self.log_info("Initiating DNS Lookup for %s" % self.target_uri)
 
         settings = SIPSimpleSettings()
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)

@@ -177,7 +177,7 @@ class ContactCell(NSTextFieldCell):
         has_locations = None
         if isinstance(self.contact, (BlinkOnlineContact, BlinkPresenceContact)):
             try:
-                has_locations = any(device['location'] for device in self.contact.presence_state['devices'].values() if device['location'] is not None)
+                has_locations = any(device['location'] for device in list(self.contact.presence_state['devices'].values()) if device['location'] is not None)
             except KeyError:
                 pass
 

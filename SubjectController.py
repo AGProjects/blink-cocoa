@@ -25,7 +25,7 @@ class SubjectController(NSObject):
         rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         if rc == NSOKButton:
-            return unicode(self.nameText.stringValue())
+            return str(self.nameText.stringValue())
         return None
 
     @objc.IBAction

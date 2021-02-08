@@ -20,7 +20,7 @@ import datetime
 import os
 import time
 import uuid
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from application.system import makedirs
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -83,7 +83,7 @@ class VideoRecorder(object):
     def addRecordingToHistory(self, filename):
         message = "<h3>Video Call Recorded</h3>"
         message += "<p>%s" % filename
-        message += "<p><video src='%s' width=800 controls='controls'>" %  urllib.quote(filename)
+        message += "<p><video src='%s' width=800 controls='controls'>" %  urllib.parse.quote(filename)
         media_type = 'video-recording'
         local_uri = format_identity_to_string(self.sessionController.account)
         remote_uri = format_identity_to_string(self.sessionController.target_uri)

@@ -13,13 +13,11 @@ from application.python.queue import EventQueue
 from application.python.types import Singleton
 from application.system import makedirs
 from sipsimple.configuration.settings import SIPSimpleSettings
-from zope.interface import implements
+from zope.interface import implementer
 from pprint import pformat
 
 
-class BlinkLogger(object):
-    __metaclass__ = Singleton
-
+class BlinkLogger(object, metaclass=Singleton):
     def __init__(self):
         self.gui_backlog = []
         self.gui_logger = self.backlog_keeper
@@ -43,29 +41,28 @@ class BlinkLogger(object):
         self.gui_backlog = []
 
     def log_error(self, message):
-        print message
-        self.gui_logger(u"Error: "+message)
+        print(message)
+        self.gui_logger("Error: "+message)
 
     def log_warning(self, message):
-        print message
-        self.gui_logger(u"Warning: "+message)
+        print(message)
+        self.gui_logger("Warning: "+message)
 
     def log_info(self, message):
-        print message
+        print(message)
         self.gui_logger(message)
 
     def log_debug(self, message):
         if self.app_delegate.debug:  # todo: log_debug is called 13-14 times before this flag is initialized from the configuration, meaning they can never be displayed
-            print message
+            print(message)
             self.gui_logger(message)
 
     def get_status_messages(self):
         return self.messages
 
 
-class FileLogger(object):
-    __metaclass__ = Singleton
-    implements(IObserver)
+@implementer(IObserver)
+class FileLogger(object, metaclass=Singleton):
 
     # public methods
     #
@@ -296,9 +293,9 @@ class FileLogger(object):
         log_directory = settings.logs.directory.normalized
         try:
             makedirs(log_directory)
-        except Exception, e:
+        except Exception as e:
             if not self._log_directory_error:
-                print "failed to create logs directory '%s': %s" % (log_directory, e)
+                print("failed to create logs directory '%s': %s" % (log_directory, e))
                 self._log_directory_error = True
             self._siptrace_error = True
             self._pjsiptrace_error = True
@@ -332,9 +329,9 @@ class FileLogger(object):
             filename = getattr(self, '_%s_filename' % type)
             try:
                 setattr(self, '_%s_file' % type, open(filename, 'a'))
-            except Exception, e:
+            except Exception as e:
                 if not getattr(self, '_%s_error' % type):
-                    print "failed to create log file '%s': %s" % (filename, e)
+                    print("failed to create log file '%s': %s" % (filename, e))
                     setattr(self, '_%s_error' % type, True)
                 raise
             else:

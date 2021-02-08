@@ -13,7 +13,7 @@ import time
 from dateutil.tz import tzlocal
 from itertools import chain
 
-from zope.interface import implements
+from zope.interface import implementer
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 
@@ -33,8 +33,8 @@ CHAT_TONE_THROTLE_DELAY = 3.0
 
 
 
+@implementer(IObserver)
 class Ringer(object):
-    implements(IObserver)
 
     """
     Manages ringtone playing for incoming sessions.
@@ -99,7 +99,7 @@ class Ringer(object):
         outgoing_sessions = list(sessionController.session for sessionController in self.sessionControllersManager.sessionControllers if sessionController.session is not None and sessionController.session.direction == 'outgoing')
         incoming_sessions = list(sessionController.session for sessionController in self.sessionControllersManager.sessionControllers if sessionController.session is not None and sessionController.session.direction == 'incoming')
 
-        for session in self.incoming_audio_sessions.keys():
+        for session in list(self.incoming_audio_sessions.keys()):
             if session not in incoming_sessions:
                 self.handle_session_end(session)
 

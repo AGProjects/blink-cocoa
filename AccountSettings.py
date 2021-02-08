@@ -23,7 +23,7 @@ import objc
 
 from BlinkLogger import BlinkLogger
 
-import urlparse
+import urllib.parse
 
 accountWindowList = []
 
@@ -66,7 +66,7 @@ class AccountSettings(NSObject):
         query_string = "realm=%s&tab=settings&user_agent=blink" % account.id.domain
         if account.server.settings_url.query:
             query_string = "%s&%s" % (account.server.settings_url.query, query_string)
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         url = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.showAccountRequest(account, request)
@@ -103,7 +103,7 @@ class AccountSettings(NSObject):
         query_string = "realm=%s&tab=payments&user_agent=blink" % self._account.id
         if account.server.settings_url.query:
             query_string = "%s&%s" % (account.server.settings_url.query, query_string)
-        url = urlparse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
+        url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
         url = NSURL.URLWithString_(url)
         request = NSURLRequest.requestWithURL_cachePolicy_timeoutInterval_(url, NSURLRequestReloadIgnoringLocalAndRemoteCacheData, 15)
         self.webView.mainFrame().loadRequest_(request)
@@ -155,7 +155,7 @@ class AccountSettings(NSObject):
         e = error.localizedDescription()
         self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s", "Label") % e)
         self.errorText.setHidden_(False)
-        BlinkLogger().log_error(u"Could not load Server Tools page: %s" % error)
+        BlinkLogger().log_error("Could not load Server Tools page: %s" % error)
 
     def webView_didFailLoadWithError_forFrame_(self, sender, error, frame):
         self.spinWheel.stopAnimation_(None)
@@ -165,7 +165,7 @@ class AccountSettings(NSObject):
         self.errorText.setHidden_(False)
         e = error.localizedDescription()
         self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s", "Label") % e)
-        BlinkLogger().log_error(u"Could not load Server Tools page: %s" % error)
+        BlinkLogger().log_error("Could not load Server Tools page: %s" % error)
 
     def webView_createWebViewWithRequest_(self, sender, request):
         window = AccountSettings.createWithOwner_(self.owner)
@@ -175,7 +175,7 @@ class AccountSettings(NSObject):
     def webView_resource_didReceiveAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
         self._authRequestCount += 1
         if self._authRequestCount > 2:
-            BlinkLogger().log_debug(u"Could not load Server Tools page: authentication failure")
+            BlinkLogger().log_debug("Could not load Server Tools page: authentication failure")
             self.errorText.setHidden_(False)
             e = NSLocalizedString("Authentication failure", "Label")
             self.errorText.setStringValue_(NSLocalizedString("Could not load page: %s", "Label") % e)
@@ -217,7 +217,7 @@ class AccountSettings(NSObject):
 
 
     def webView_resource_didCancelAuthenticationChallenge_fromDataSource_(self, sender, identifier, challenge, dataSource):
-        BlinkLogger().log_info(u"Cancelled authentication request")
+        BlinkLogger().log_info("Cancelled authentication request")
 
     # download delegate
     def download_decideDestinationWithSuggestedFilename_(self, download, filename):
@@ -225,30 +225,30 @@ class AccountSettings(NSObject):
         panel.setTitle_(NSLocalizedString("Download File", "Window title"))
         if panel.runModalForDirectory_file_("", filename) == NSFileHandlingPanelOKButton:
             download.setDestination_allowOverwrite_(panel.filename(), True)
-            BlinkLogger().log_info(u"Downloading file to %s" % panel.filename())
+            BlinkLogger().log_info("Downloading file to %s" % panel.filename())
         else:
             download.cancel()
-            BlinkLogger().log_info(u"Download cancelled")
+            BlinkLogger().log_info("Download cancelled")
 
     def downloadDidBegin_(self, download):
-        BlinkLogger().log_info(u"Download started...")
+        BlinkLogger().log_info("Download started...")
 
     def downloadDidFinish_(self, download):
-        BlinkLogger().log_info(u"Download finished")
+        BlinkLogger().log_info("Download finished")
 
     def download_didReceiveDataOfLength_(self, download, length):
         pass
 
     def download_didFailWithError_(self, download, error):
         download.cancel()
-        BlinkLogger().log_info(u"Download error: %s" % error.localizedDescription())
+        BlinkLogger().log_info("Download error: %s" % error.localizedDescription())
         e = error.localizedDescription()
         NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("Error downloading file: %s", "Label") % e, NSLocalizedString("OK", "Button title"), "", "")
 
     # API exported to webpage. Be careful with what you export.
 
     def addContact_withDisplayName_(self, uri, display_name):
-        BlinkLogger().log_info(u"Adding contact %s <%s>" % (display_name, uri))
+        BlinkLogger().log_info("Adding contact %s <%s>" % (display_name, uri))
 
         contact = self.owner.model.addContact(uri=[(uri, 'sip')], name=display_name)
         self.owner.contactOutline.reloadData()
