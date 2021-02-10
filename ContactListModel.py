@@ -3156,10 +3156,21 @@ class ContactListModel(CustomListModel):
             avatar.save()
             return contact
 
-        group = Group(id='test')
+        try:
+            group = Group(id='test')
+        except DuplicateIDError as e:
+            BlinkLogger().log_debug('Duplicate group: test')
+            return
+        
         group.name = 'Test'
         group.expanded = True
-        group.contacts = [create_contact(**entry) for entry in test_contacts]
+        for entry in test_contacts:
+            try:
+                c = create_contact(**entry)
+            except DuplicateIDError as e:
+                BlinkLogger().log_debug('Duplicate contact %s' % entry)
+            else:
+                group.contacts.append(c)
 
         modified_items = list(group.contacts) + [group]
         self._atomic_update(save=modified_items)
@@ -3688,7 +3699,7 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.load_group()
             positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None]
             positions.sort()
-            self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position), self.bonjour_group)
+            self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position or 0), self.bonjour_group)
             self.nc.post_notification("BonjourGroupWasActivated", sender=self)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         else:
@@ -4100,7 +4111,8 @@ class ContactListModel(CustomListModel):
 
         positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
         positions.sort()
-        index = bisect.bisect_left(positions, group.position)
+        
+        index = bisect.bisect_left(positions, group.position or 0)
 
         if group.id == "all_contacts":
             if not group.position:

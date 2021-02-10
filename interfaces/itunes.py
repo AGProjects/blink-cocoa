@@ -14,7 +14,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 
 from util import allocate_autorelease_pool
-from zope.interface import implements
+from zope.interface import implementer
 
 
 class MusicApplications(object):

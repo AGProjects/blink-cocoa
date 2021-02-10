@@ -47,16 +47,16 @@ class EchoCancellerSettingsExtension(EchoCancellerSettings):
 
 class AudioSettingsExtension(AudioSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('history'))
-    alert_device = Setting(type=unicode, default=u'system_default', nillable=True)
-    input_device = Setting(type=unicode, default=u'system_default', nillable=True)
-    output_device = Setting(type=unicode, default=u'system_default', nillable=True)
+    alert_device = Setting(type=str, default='system_default', nillable=True)
+    input_device = Setting(type=str, default='system_default', nillable=True)
+    output_device = Setting(type=str, default='system_default', nillable=True)
     sample_rate = Setting(type=SampleRate, default=32000)
     echo_canceller = EchoCancellerSettingsExtension
     enable_aec = RuntimeSetting(type=bool, default=True)
     sound_card_delay = RuntimeSetting(type=NonNegativeInteger, default=2)
     automatic_device_switch = Setting(type=bool, default=True)
     pause_music = Setting(type=bool, default=True)
-    per_device_aec = Setting(type=unicode, default=None, nillable=True)
+    per_device_aec = Setting(type=str, default=None, nillable=True)
 
 
 class ChatSettingsExtension(ChatSettings):
@@ -161,9 +161,9 @@ class ContactsSettings(SettingsGroup):
 
 
 class PresenceStateSettings(SettingsGroup):
-    status = Setting(type=unicode, default=None, nillable=True)
-    note = Setting(type=unicode, default=None, nillable=True)
-    offline_note = Setting(type=unicode, default=None, nillable=True)
+    status = Setting(type=str, default=None, nillable=True)
+    note = Setting(type=str, default=None, nillable=True)
+    offline_note = Setting(type=str, default=None, nillable=True)
     icon = Setting(type=UserIcon, default=None, nillable=True)
     timestamp = Setting(type=ISOTimestamp, default=None, nillable=True)
 

@@ -5,7 +5,7 @@ __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
            'MSG_STATE_SENDING', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED']
 
 import calendar
-import cgi
+import html
 import datetime
 import objc
 import os
@@ -507,12 +507,12 @@ class ChatViewController(NSObject):
         private = 1 if is_private else "null"
 
         if is_private and recipient:
-            label = NSLocalizedString("Private message to %s", "Label") % cgi.escape(recipient) if direction == 'outgoing' else NSLocalizedString("Private message from %s", "Label") % cgi.escape(sender)
+            label = NSLocalizedString("Private message to %s", "Label") % html.escape(recipient) if direction == 'outgoing' else NSLocalizedString("Private message from %s", "Label") % html.escape(sender)
         else:
             if hasattr(self.delegate, "sessionController"):
-                label = cgi.escape(self.delegate.sessionController.nickname or self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
+                label = html.escape(self.delegate.sessionController.nickname or self.account.display_name or self.account.id) if sender is None else html.escape(sender)
             else:
-                label = cgi.escape(self.account.display_name or self.account.id) if sender is None else cgi.escape(sender)
+                label = html.escape(self.account.display_name or self.account.id) if sender is None else html.escape(sender)
 
         try:
             script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)

@@ -147,7 +147,7 @@ class BlinkChatStream(ChatStream):
 
     def _create_local_media(self, uri_path):
         local_media = super(BlinkChatStream, self)._create_local_media(uri_path)
-        local_media.attributes.append(SDPAttribute('blink-features', 'history-control icon'))
+        local_media.attributes.append(SDPAttribute(b'blink-features', b'history-control icon'))
         return local_media
 
 
@@ -211,14 +211,14 @@ class ChatController(MediaStream):
     @property
     def local_fingerprint(self):
         if self.stream.encryption.active:
-            return self.stream.encryption.key_fingerprint.encode('hex').upper()
+            return self.stream.encryption.key_fingerprint.hex().upper()
         else:
             return None
 
     @property
     def remote_fingerprint(self):
         if self.stream.encryption.active:
-            return self.stream.encryption.peer_fingerprint.encode('hex').upper()
+            return self.stream.encryption.peer_fingerprint.hex().upper()
         else:
             return None
     
@@ -1523,7 +1523,7 @@ class ChatController(MediaStream):
             return
 
         hash = hashlib.sha1()
-        hash.update(message.content.encode("utf-8")+str(message.timestamp))
+        hash.update((message.content+str(message.timestamp)).encode("utf-8"))
         msgid = hash.hexdigest()
 
         if msgid not in self.history_msgid_list:

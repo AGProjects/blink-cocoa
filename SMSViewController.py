@@ -229,7 +229,7 @@ class SMSViewController(NSObject):
         timestamp = timestamp or ISOTimestamp.now()
 
         hash = hashlib.sha1()
-        hash.update(content.encode('utf-8')+str(timestamp)+str(sender))
+        hash.update((content+str(timestamp)+str(sender)).encode('utf-8'))
         msgid = hash.hexdigest()
         encryption = ''
 
@@ -458,7 +458,7 @@ class SMSViewController(NSObject):
             self.notification_center.add_observer(self, sender=message_request)
             recipient = ChatIdentity(self.target_uri, self.display_name)
             hash = hashlib.sha1()
-            hash.update(content.encode("utf-8")+str(timestamp))
+            hash.update((content+str(timestamp)).encode("utf-8"))
             msgid = hash.hexdigest()
             id=str(message_request)
             self.messages[id] = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content)
@@ -514,7 +514,7 @@ class SMSViewController(NSObject):
     def sendMessage(self, content, content_type="text/plain"):
         timestamp = ISOTimestamp.now()
         hash = hashlib.sha1()
-        hash.update(content.encode("utf-8")+str(timestamp))
+        hash.update((content+str(timestamp)).encode("utf-8"))
         msgid = hash.hexdigest()
         call_id = ''
 

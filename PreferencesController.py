@@ -629,7 +629,7 @@ class PreferencesController(NSWindowController, object):
                 account.display_name = str(self.displayNameText.stringValue())
                 account.save()
             elif notification.object() == self.passwordText:
-                account.auth.password = str(self.passwordText.stringValue()).encode("utf8")
+                account.auth.password = self.passwordText.stringValue()
                 account.save()
 
     @objc.python_method
@@ -759,7 +759,7 @@ class PreferencesController(NSWindowController, object):
 
         if notification.data.code > 200:
             self.accounts[position].register_failure_code = notification.data.code
-            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason.decode()
         else:
             self.accounts[position].register_failure_code = None
             self.accounts[position].register_failure_reason = None
@@ -777,7 +777,7 @@ class PreferencesController(NSWindowController, object):
         self.accounts[position].registrar = None
 
         if self.accounts[position].register_failure_reason is None and hasattr(notification.data, 'error'):
-            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error.decode()
 
         self.refresh_account_table()
         self.updateRegistrationStatus()
@@ -949,8 +949,8 @@ class PreferencesController(NSWindowController, object):
             data[combined_audio_device] = settings.audio.enable_aec
 
             try:
-                encoded_data = cjson.encode(data)
-            except (TypeError, cjson.EncodeError) as e:
+                encoded_data = json.dumps(data)
+            except (TypeError, ValueError) as e:
                 pass
             else:
                 settings.audio.per_device_aec = encoded_data
@@ -967,8 +967,8 @@ class PreferencesController(NSWindowController, object):
         data = {}
         if settings.audio.per_device_aec is not None:
             try:
-                data = cjson.decode(settings.audio.per_device_aec)
-            except (TypeError, cjson.DecodeError) as e:
+                data = json.loads(settings.audio.per_device_aec)
+            except (TypeError, ValueError) as e:
                 pass
 
         try:
@@ -976,8 +976,8 @@ class PreferencesController(NSWindowController, object):
         except KeyError:
             data[combined_audio_device] = settings.audio.enable_aec
             try:
-                encoded_data = cjson.encode(data)
-            except (TypeError, cjson.EncodeError) as e:
+                encoded_data = json.dumps(data)
+            except (TypeError, ValueError) as e:
                 pass
             else:
                 settings.audio.per_device_aec = encoded_data

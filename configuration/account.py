@@ -114,7 +114,7 @@ class ConferenceSettings(SettingsGroup):
 
 
 class GUISettings(SettingsGroup):
-    account_label = Setting(type=unicode, default='', nillable=True)
+    account_label = Setting(type=str, default='', nillable=True)
     sync_with_icloud = Setting(type=bool, default=True)
 
 

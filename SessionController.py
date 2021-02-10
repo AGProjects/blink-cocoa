@@ -26,6 +26,7 @@ import urllib.request, urllib.parse, urllib.error
 import uuid
 import zipfile
 import zlib
+import traceback
 
 from itertools import chain
 from datetime import datetime
@@ -257,8 +258,9 @@ class SessionControllersManager(object, metaclass=Singleton):
             return settings.chat.enable_sms
 
         if type == 'video':
-            BlinkLogger().log_debug("Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
-            return False
+            #BlinkLogger().log_debug("Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
+            #return False
+            pass
         
         return True
 
@@ -304,7 +306,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             message = '<h3>Missed Incoming Call</h3>'
@@ -337,7 +339,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -388,7 +390,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             message= '<h3>Incoming Audio Call</h3>'
@@ -420,7 +422,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             message = '<h3>Failed Outgoing Call</h3>'
@@ -453,7 +455,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             message= '<h3>Cancelled Outgoing Call</h3>'
@@ -494,7 +496,7 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         duration = session.end_time - session.start_time
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, cjson.encode(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -1495,9 +1497,12 @@ class SessionController(NSObject):
     @objc.python_method
     def initInfoPanel(self):
         if self.info_panel is None:
-            self.info_panel = SessionInfoController(self)
-            self.info_panel_was_visible = False
-            self.info_panel_last_frame = False
+            try:
+                self.info_panel = SessionInfoController(self)
+                self.info_panel_was_visible = False
+                self.info_panel_last_frame = False
+            except Exception:
+                traceback.print_exc()
 
     @objc.python_method
     def destroyInfoPanel(self):
@@ -1506,6 +1511,7 @@ class SessionController(NSObject):
             self.info_panel = None
 
     @objc.python_method
+    @run_in_green_thread
     def lookup_destination(self, target_uri):
         self.changeSessionState(STATE_DNS_LOOKUP)
 
@@ -1517,16 +1523,16 @@ class SessionController(NSObject):
             if self.account.sip.outbound_proxy is not None:
                 proxy = self.account.sip.outbound_proxy
                 uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
-                self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+                self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host.decode(), uri))
             elif self.account.sip.always_use_my_proxy:
                 uri = SIPURI(host=self.account.id.domain)
-                self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+                self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
             else:
                 uri = target_uri
-                self.log_info("Starting DNS lookup for %s" % target_uri.host)
+                self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
         else:
             uri = target_uri
-            self.log_info("Starting DNS lookup for %s" % target_uri.host)
+            self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
@@ -1815,15 +1821,16 @@ class SessionController(NSObject):
         streams = [s.stream for s in self.streamHandlers]
         target_uri = SIPURI.new(self.target_uri)
         if self.account is not BonjourAccount() and checkValidPhoneNumber(target_uri.user):
+            user = target_uri.user.decode()
             try:
-                idx = target_uri.user.index(",")
+                idx = user.index(",")
             except ValueError:
                 pass
             else:
                 _dtmf_match_regexp = re.compile("^,[0-9,#\*]+$")
-                if _dtmf_match_regexp.match(target_uri.user[idx:]):
-                    self.postdial_string = target_uri.user[idx:]
-                    target_uri.user = target_uri.user[0:idx]
+                if _dtmf_match_regexp.match(user[idx:]):
+                    self.postdial_string = user[idx:]
+                    target_uri.user = user[0:idx].encode()
                     self.log_info("Post dial string  set to %s" % self.postdial_string)
 
         self.log_info('Starting outgoing session to %s' % format_identity_to_string(target_uri, format='compact'))
@@ -1885,18 +1892,20 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_DNSLookupDidFail(self, lookup, data):
+        self.log_debug('DNS Lookup Failed')
         self.notification_center.remove_observer(self, sender=lookup)
         if host is None or host.default_ip is None:
             message = NSLocalizedString("No Internet connection", "Label")
         else:
-            message = "SIP DNS lookup for %s failed: %s" % (str(self.target_uri.host), data.error)
+            message = "SIP DNS lookup for %s failed: %s" % (self.target_uri.host.decode(), data.error)
         self.setRoutesFailed(message)
 
     @objc.python_method
     def _NH_DNSLookupDidSucceed(self, lookup, data):
+        self.log_debug('DNS Lookup Succeeded')
         self.notification_center.remove_observer(self, sender=lookup)
         result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
-        self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host, result_text))
+        self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host.decode(), result_text))
         routes = data.result
         if not routes:
             self.setRoutesFailed("No routes found to SIP Proxy")
@@ -1981,7 +1990,7 @@ class SessionController(NSObject):
         # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path -adi
         hash = hashlib.sha1()
         id = '%s' % (self.remoteAOR) if self.remote_focus else self.session._invitation.call_id
-        hash.update(id)
+        hash.update(id.encode())
         self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
         if self.hasStreamOfType("audio"):
@@ -2021,7 +2030,7 @@ class SessionController(NSObject):
             status = NSLocalizedString("Server error", "Label")
             self.failureReason = 'Server error'
         elif data.failure_reason != 'user request':
-            status = "%s" % data.failure_reason.decode('utf-8')
+            status = "%s" % data.failure_reason
             self.failureReason = status
         elif data.reason:
             status = "%s" % data.reason

@@ -253,7 +253,7 @@ class StringOption(Option):
     @objc.python_method
     def restore(self):
         value = self.get()
-        self.text.setStringValue_(value and str(value.encode('utf-8')) or "")
+        self.text.setStringValue_(value or "")
 
     @objc.python_method
     def setTooltip(self, text):

@@ -4,7 +4,7 @@
 __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
-           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local']
+           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once']
 
 from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSBundle, NSTimer, NSThread, NSLocalizedString
@@ -50,6 +50,7 @@ def show_error_panel(message):
 
 
 def checkValidPhoneNumber(number):
+    number = number.decode() if isinstance(number, bytes) else number
     return bool(_pstn_match_regexp.match(number))
 
 
@@ -113,10 +114,10 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     transport = 'udp'
     if isinstance(identity, (SIPURI, FrozenSIPURI)):
         if format == 'aor':
-            return "%s@%s" % (identity.user, identity.host)
+            return "%s@%s" % (identity.user.decode(), identity.host.decode())
 
-        user = identity.user
-        host = identity.host
+        user = identity.user.decode()
+        host = identity.host.decode()
         if identity.port is not None and identity.port != 5060:
             port = identity.port
         if identity.transport != 'udp':
@@ -176,6 +177,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
 
 
 def sipuri_components_from_string(text):
+
     """
     Takes a SIP URI in text format and returns formatted strings with various sub-parts
     """
@@ -185,10 +187,10 @@ def sipuri_components_from_string(text):
     fancy_uri = ""
 
     # the shlex module doesn't support unicode
-    uri = text.encode('utf8') if isinstance(text, str) else text
+    uri = text
 
     toks = shlex.split(uri)
-
+    
     if len(toks) == 2:
         display_name = toks[0]
         address = toks[1]
@@ -226,10 +228,7 @@ def sipuri_components_from_string(text):
     else:
         fancy_uri = address
 
-    if isinstance(text, str):
-        return address.decode('utf8'), display_name.decode('utf8'), full_uri.decode('utf8'), fancy_uri.decode('utf8')
-    else:
-        return address, display_name, full_uri, fancy_uri
+    return address, display_name, full_uri, fancy_uri
 
 
 def is_sip_aor_format(uri):
@@ -421,6 +420,7 @@ audio_codecs = {'PCMA': 'G.711a', 'PCMU': 'G.711u', 'opus': 'OPUS', 'speex': 'Sp
 video_codecs = {'H263': 'H.263', 'H263-1998': 'H.263 1998', 'H264': 'H.264'}
 
 def beautify_audio_codec(codec):
+    codec = codec.decode() if isinstance(codec, bytes) else codec
     try:
         codec = audio_codecs[codec]
     except KeyError:
@@ -623,3 +623,13 @@ def local_to_utc(t):
 def utc_to_local(t):
     secs = calendar.timegm(t.timetuple())
     return datetime.fromtimestamp(time.mktime(time.localtime(secs)))
+
+
+def execute_once(func):
+    def wrapper(*args, **kwargs):
+        if not wrapper.has_run:
+            wrapper.has_run = True
+            return func(*args, **kwargs)
+    wrapper.has_run = False
+    return wrapper
+

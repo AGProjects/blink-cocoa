@@ -519,14 +519,15 @@ class ContactWindowController(NSWindowController):
         else:
             unlink(ApplicationData.get('presence_offline_note.pickle'))
 
-        try:
-            with open(ApplicationData.get('presence/presence_notes_history.pickle'), 'rb') as f:
-                self.presence_notes_history.extend(pickle.load(f))
-        except TypeError:
-            # data is corrupted, reset it
-            self.deletePresenceHistory_(None)
-        except (IOError, pickle.UnpicklingError):
-            pass
+        # TODO3
+        #try:
+        #    with open(ApplicationData.get('presence/presence_notes_history.pickle'), 'rb') as f:
+        #        self.presence_notes_history.extend(pickle.load(f))
+        #except (TypeError, EOFError):
+        #    # data is corrupted, reset it
+        #    self.deletePresenceHistory_(None)
+        #except (IOError, pickle.UnpicklingError):
+        #    pass
 
         self.presencePublisher = PresencePublisher(self)
 
@@ -3191,7 +3192,7 @@ class ContactWindowController(NSWindowController):
         if media_type == "video":
             media_type = ("audio", "video")
 
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, str(display_name), selected_contact)
+        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, display_name, selected_contact)
         session_controller.log_info('Using local account %s' % account.id)
 
         if type(media_type) is not tuple:
@@ -5534,7 +5535,7 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.code > 200:
             self.accounts[position].register_failure_code = notification.data.code
-            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason.decode()
         else:
             self.accounts[position].register_failure_code = None
             self.accounts[position].register_failure_reason = None
@@ -5553,10 +5554,10 @@ class ContactWindowController(NSWindowController):
             elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
                     self.accounts[position].register_failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
-                elif notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error:
+                elif notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error.decode():
                     self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label")
                 else:
-                    self.accounts[position].register_failure_reason = notification.data.error
+                    self.accounts[position].register_failure_reason = notification.data.error.decode()
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):

@@ -1620,8 +1620,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                 return
 
             try:
-                entry = cjson.encode(data.entry)
-            except (TypeError, cjson.EncodeError) as e:
+                entry = json.dumps(data.entry)
+            except (TypeError, ValueError) as e:
                 BlinkLogger().log_debug("Failed to json encode replication data for %s: %s" % (account, e))
                 return
 
@@ -1790,8 +1790,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                     continue
 
             try:
-                data = cjson.decode(data)
-            except (TypeError, cjson.DecodeError) as e:
+                data = json.loads(data)
+            except (TypeError, json.decoder.JSONDecodeError) as e:
                 BlinkLogger().log_debug("Failed to decode chat history server journal id %s for %s: %s" % (journal_id, account, e))
                 continue
 
@@ -1862,8 +1862,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
 
                 if not connection and outgoing_entries:
                     try:
-                        entries = cjson.encode(outgoing_entries)
-                    except (TypeError, cjson.EncodeError) as e:
+                        entries = json.dumps(outgoing_entries)
+                    except (TypeError, ValueError) as e:
                         BlinkLogger().log_debug("Failed to encode chat journal entries for %s: %s" % (account, e))
                     else:
                         query_string = "action=put_journal_entries&realm=%s" % account.id.domain
@@ -1893,8 +1893,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                 if not connection and delete_entries:
                     BlinkLogger().log_debug("Removing journal entries for %s from chat history server" % account.id)
                     try:
-                        entries = cjson.encode(list(delete_entries))
-                    except (TypeError, cjson.EncodeError) as e:
+                        entries = json.dumps(list(delete_entries))
+                    except (TypeError, ValueError) as e:
                         BlinkLogger().log_debug("Failed to encode chat journal delete entries for %s: %s" % (account, e))
                     else:
                         query_string = "action=delete_journal_entries&realm=%s" % account.id.domain
@@ -1989,8 +1989,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
             else:
                 self.connections_for_outgoing_replication[account.id]['connection'] = None
                 try:
-                    data = cjson.decode(self.connections_for_outgoing_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError) as e:
+                    data = json.loads(self.connections_for_outgoing_replication[key]['responseData'])
+                except (TypeError, json.decoder.JSONDecodeError) as e:
                     BlinkLogger().log_debug("Failed to parse chat journal push response for %s from %s: %s" % (key, self.connections_for_outgoing_replication[key]['url'], e))
                 else:
                     self.updateLocalHistoryWithRemoteJournalId(data, key)
@@ -2024,8 +2024,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                     pass
             else:
                 try:
-                    data = cjson.decode(self.connections_for_incoming_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError) as e:
+                    data = json.loads(self.connections_for_incoming_replication[key]['responseData'])
+                except (TypeError, json.decoder.JSONDecodeError) as e:
                     BlinkLogger().log_debug("Failed to parse chat journal for %s from %s: %s" % (key, self.connections_for_incoming_replication[key]['url'], e))
                 else:
                     self.addLocalHistoryFromRemoteJournalEntries(data, key)
@@ -2047,8 +2047,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
             else:
                 self.connections_for_delete_replication[account.id]['connection'] = None
                 try:
-                    data = cjson.decode(self.connections_for_delete_replication[key]['responseData'])
-                except (TypeError, cjson.DecodeError) as e:
+                    data = json.loads(self.connections_for_delete_replication[key]['responseData'])
+                except (TypeError, json.decoder.JSONDecodeError) as e:
                     BlinkLogger().log_debug("Failed to parse chat journal delete response for %s from %s: %s" % (key, self.connections_for_delete_replication[key]['url'], e))
                 else:
                     try:

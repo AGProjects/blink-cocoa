@@ -9,15 +9,21 @@ __all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTL
 
 from Foundation import NSLocalizedString
 
-import ldap
 import os
 import hashlib
-import urlparse
+import urllib.parse
 
+from application.python import Null
 from application.python.descriptor import WriteOnceAttribute
 
 from resources import ApplicationData, Resources
 from sipsimple.configuration.datatypes import Hostname
+
+try:
+    import ldap
+except ModuleNotFoundError:
+    ldap = Null
+
 
 ## PSTN datatypes
 
@@ -26,12 +32,12 @@ class Digits(str):
 
 ## Path datatypes
 
-class UserDataPath(unicode):
+class UserDataPath(str):
     def __new__(cls, path):
         path = os.path.expanduser(os.path.normpath(path))
         if path.startswith(ApplicationData.directory+os.path.sep):
             path = path[len(ApplicationData.directory+os.path.sep):]
-        return unicode.__new__(cls, path)
+        return str.__new__(cls, path)
 
     @property
     def normalized(self):
@@ -46,11 +52,11 @@ class SoundFile(object):
             raise ValueError(NSLocalizedString("Illegal volume level: %d", "Preference option error") % self.volume)
 
     def __getstate__(self):
-        return u'%s,%s' % (self.__dict__['path'], self.volume)
+        return '%s,%s' % (self.__dict__['path'], self.volume)
 
     def __setstate__(self, state):
         try:
-            path, volume = state.rsplit(u',', 1)
+            path, volume = state.rsplit(',', 1)
         except ValueError:
             self.__init__(state)
         else:
@@ -86,11 +92,11 @@ class NightVolume(object):
             raise ValueError(NSLocalizedString("Illegal end hour value: %d", "Preference option error") % self.end_hour)
 
     def __getstate__(self):
-        return u'%s,%s,%s' % (self.start_hour, self.end_hour, self.volume)
+        return '%s,%s,%s' % (self.start_hour, self.end_hour, self.volume)
 
     def __setstate__(self, state):
         try:
-            start_hour, end_hour, volume = state.split(u',')
+            start_hour, end_hour, volume = state.split(',')
         except ValueError:
             self.__init__(state)
         else:
@@ -118,15 +124,15 @@ class AccountSoundFile(object):
 
     def __getstate__(self):
         if isinstance(self._sound_file, self.DefaultSoundFile):
-            return u'default:%s' % self._sound_file.setting
+            return 'default:%s' % self._sound_file.setting
         else:
-            return u'file:%s' % self._sound_file.__getstate__()
+            return 'file:%s' % self._sound_file.__getstate__()
 
     def __setstate__(self, state):
-        type, value = state.split(u':', 1)
-        if type == u'default':
+        type, value = state.split(':', 1)
+        if type == 'default':
             self._sound_file = self.DefaultSoundFile(value)
-        elif type == u'file':
+        elif type == 'file':
             self._sound_file = SoundFile.__new__(SoundFile)
             self._sound_file.__setstate__(value)
 
@@ -149,9 +155,9 @@ class AccountSoundFile(object):
 
     def __unicode__(self):
         if isinstance(self._sound_file, self.DefaultSoundFile):
-            return u'DEFAULT'
+            return 'DEFAULT'
         else:
-            return u'%s,%d' % (self._sound_file.path, self._sound_file.volume)
+            return '%s,%d' % (self._sound_file.path, self._sound_file.volume)
 
 
 class AnsweringMachineSoundFile(object):
@@ -170,15 +176,15 @@ class AnsweringMachineSoundFile(object):
 
     def __getstate__(self):
         if isinstance(self._sound_file, self.DefaultSoundFile):
-            return u'default:%s' % self._sound_file.setting
+            return 'default:%s' % self._sound_file.setting
         else:
-            return u'file:%s' % self._sound_file.__getstate__()
+            return 'file:%s' % self._sound_file.__getstate__()
 
     def __setstate__(self, state):
-        type, value = state.split(u':', 1)
-        if type == u'default':
+        type, value = state.split(':', 1)
+        if type == 'default':
             self._sound_file = self.DefaultSoundFile(value)
-        elif type == u'file':
+        elif type == 'file':
             self._sound_file = UserSoundFile.__new__(UserSoundFile)
             self._sound_file.__setstate__(value)
 
@@ -197,9 +203,9 @@ class AnsweringMachineSoundFile(object):
 
     def __unicode__(self):
         if isinstance(self._sound_file, self.DefaultSoundFile):
-            return u'DEFAULT'
+            return 'DEFAULT'
         else:
-            return u'%s,%d' % (self._sound_file.path, self._sound_file.volume)
+            return '%s,%d' % (self._sound_file.path, self._sound_file.volume)
 
 
 class UserSoundFile(SoundFile):
@@ -216,16 +222,16 @@ class UserSoundFile(SoundFile):
 
 
 class AccountTLSCertificate(object):
-    class DefaultTLSCertificate(unicode): pass
+    class DefaultTLSCertificate(str): pass
 
     def __init__(self, path):
-        if not path or path.lower() == u'default':
+        if not path or path.lower() == 'default':
             path = self.DefaultTLSCertificate()
         self.path = path
 
     def __getstate__(self):
         if isinstance(self.__dict__['path'], self.DefaultTLSCertificate):
-            return u'default'
+            return 'default'
         else:
             return self.path
 
@@ -234,7 +240,7 @@ class AccountTLSCertificate(object):
 
     def __unicode__(self):
         if isinstance(self.__dict__['path'], self.DefaultTLSCertificate):
-            return u'Default'
+            return 'Default'
         else:
             return self.__dict__['path']
 
@@ -244,7 +250,7 @@ class AccountTLSCertificate(object):
         else:
             return ApplicationData.get(self.__dict__['path'])
     def _set_path(self, path):
-        if not path or path.lower() == u'default':
+        if not path or path.lower() == 'default':
             path = self.DefaultTLSCertificate()
         if not isinstance(path, self.DefaultTLSCertificate):
             path = os.path.normpath(path)
@@ -261,12 +267,12 @@ class AccountTLSCertificate(object):
 
 ## Miscellaneous datatypes
 
-class HTTPURL(object):
+class HTTPURL(str):
     url = WriteOnceAttribute()
 
     def __init__(self, value):
-        url = urlparse.urlparse(value)
-        if url.scheme not in (u'http', u'https'):
+        url = urllib.parse.urlparse(value)
+        if url.scheme not in ('http', 'https'):
             raise ValueError(NSLocalizedString("Illegal HTTP URL scheme (http and https only): %s", "Preference option error") % url.scheme)
         # check port and hostname
         Hostname(url.hostname)
@@ -276,7 +282,7 @@ class HTTPURL(object):
         self.url = url
 
     def __getstate__(self):
-        return unicode(self.url.geturl())
+        return str(self.url.geturl())
 
     def __setstate__(self, state):
         self.__init__(state)
@@ -291,7 +297,7 @@ class HTTPURL(object):
             raise AttributeError("'%s' object has no attribute '%s'" % (self.__class__.__name__, attr))
 
     def __unicode__(self):
-        return unicode(self.url.geturl())
+        return str(self.url.geturl())
 
 
 class LDAPdn(str):
@@ -325,11 +331,11 @@ class UserIcon(object):
         self.etag = etag
 
     def __getstate__(self):
-        return u'%s,%s' % (self.path, self.etag)
+        return '%s,%s' % (self.path, self.etag)
 
     def __setstate__(self, state):
         try:
-            path, etag = state.rsplit(u',', 1)
+            path, etag = state.rsplit(',', 1)
         except ValueError:
             self.__init__(state)
         else:

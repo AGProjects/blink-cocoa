@@ -15,6 +15,8 @@ from sipsimple.configuration import ConfigurationManager, Setting, SettingsObjec
 from sipsimple.payloads.datatypes import ID
 from sipsimple.threading import run_in_thread
 
+from util import execute_once
+
 
 class VirtualGroupKey(object):
     def __get__(self, obj, objtype):
@@ -34,9 +36,9 @@ class VirtualGroup(SettingsState):
     expanded = Setting(type=bool, default=True)
 
     def __new__(cls, id=None):
-        with VirtualGroupsManager.load.lock:
-            if not VirtualGroupsManager.load.called:
-                raise RuntimeError("cannot instantiate %s before calling VirtualGroupsManager.load" % cls.__name__)
+#        with VirtualGroupsManager.load.lock:
+#            if not VirtualGroupsManager.load.called:
+#                raise RuntimeError("cannot instantiate %s before calling VirtualGroupsManager.load" % cls.__name__)
         if id is None:
             id = unique_id()
         elif not isinstance(id, str):
@@ -133,7 +135,7 @@ class VirtualGroupsManager(object, metaclass=Singleton):
         notification_center.add_observer(self, name='VirtualGroupWasActivated')
         notification_center.add_observer(self, name='VirtualGroupWasDeleted')
 
-#    @execute_once
+    @execute_once
     def load(self):
         configuration = ConfigurationManager()
         [VirtualGroup(id=id) for id in configuration.get_names(VirtualGroup.__key__)]

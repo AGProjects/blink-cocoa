@@ -286,7 +286,7 @@ class SessionInfoController(NSObject):
                 if self.sessionController.session.transport is not None:
                     transport = self.sessionController.session.transport
                     if self.sessionController.session.peer_address is not None:
-                        self.remote_endpoint.setStringValue_('%s:%s' % (transport, str(self.sessionController.session.peer_address)))
+                        self.remote_endpoint.setStringValue_('%s:%s' % (transport, self.sessionController.session.peer_address))
                         self.tls_lock.setHidden_(False if transport == 'tls' else True)
                     elif self.sessionController.routes:
                         route = self.sessionController.routes[0]
@@ -310,7 +310,7 @@ class SessionInfoController(NSObject):
         if sub_state is None:
             sub_state = self.sessionController.session.state if self.sessionController.session is not None else 'none'
 
-        sub_state = re.sub("_", " ", sub_state.encode('utf-8').title()) if sub_state is not None else ''
+        sub_state = re.sub("_", " ", sub_state.title()) if sub_state is not None else ''
         state = self.sessionController.state.title()
 
         self.status.setStringValue_('%s (%s)' % (state, sub_state) if state != sub_state and sub_state != 'None' else state)
@@ -375,7 +375,7 @@ class SessionInfoController(NSObject):
                 self.audio_codec.setStringValue_('')
                 self.audio_srtp_lock.setHidden_(True)
 
-            self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
+            self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address.decode(), self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
 
             if self.audio_stream.stream.ice_active:
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
@@ -390,9 +390,9 @@ class SessionInfoController(NSObject):
                             ice_status = NSLocalizedString("Server Relayed", "Label")
             else:
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
-                if ice_status == "All ICE checklists failed (PJNATH_EICEFAILED)":
+                if ice_status == b"All ICE checklists failed (PJNATH_EICEFAILED)":
                     ice_status = NSLocalizedString("Probing Failed", "Label")
-                elif ice_status == "Remote answer doesn't support ICE":
+                elif ice_status == b"Remote answer doesn't support ICE":
                     ice_status = NSLocalizedString("Not Supported", "Label")
 
             self.audio_ice_negotiation.setStringValue_(ice_status)
@@ -443,7 +443,7 @@ class SessionInfoController(NSObject):
                 self.video_codec.setStringValue_('')
                 self.video_srtp_lock.setHidden_(True)
 
-            self.video_remote_endpoint.setStringValue_('%s:%s' % (self.video_stream.stream.remote_rtp_address, self.video_stream.stream.remote_rtp_port) if self.video_stream.stream.remote_rtp_address else '')
+            self.video_remote_endpoint.setStringValue_('%s:%s' % (self.video_stream.stream.remote_rtp_address.decode(), self.video_stream.stream.remote_rtp_port) if self.video_stream.stream.remote_rtp_address else '')
 
             if self.video_stream.stream.ice_active:
                 ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''

@@ -93,7 +93,7 @@ class BlinkAppDelegate(NSObject):
     ip_change_timestamp = None
     transport_lost_timestamp = None
 
-    debug = False
+    debug = True
 
     blinkMenu = objc.IBOutlet()
     ready = False
@@ -403,7 +403,7 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPEngineTransportDidDisconnect(self, notification):
         self.transport_lost_timestamp = int(time.time())
 
-        transport = '%s:%s' % (notification.data.transport.lower(), notification.data.remote_address)
+        transport = '%s:%s' % (notification.data.transport, notification.data.remote_address)
         try:
             self.active_transports.remove(transport)
         except KeyError:
@@ -438,7 +438,7 @@ class BlinkAppDelegate(NSObject):
             account.presence_state = presence_state
 
         if notification.data.reason != 'Success':
-            BlinkLogger().log_info("%s connection %s <-> %s lost" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+            BlinkLogger().log_info("%s connection %s <-> %s lost" % (notification.data.transport, notification.data.local_address, notification.data.remote_address))
             #nc_title = NSLocalizedString("Connection failed", "Label")
             #nc_body = NSLocalizedString("Remote Address", "Label") + " %s:%s" % (notification.data.transport, notification.data.remote_address)
             #self.gui_notify(nc_title, nc_body)
@@ -450,7 +450,7 @@ class BlinkAppDelegate(NSObject):
     def _NH_SIPEngineTransportDidConnect(self, notification):
         transport = "%s:%s" %(notification.data.transport, notification.data.remote_address)
         if transport not in self.active_transports:
-            BlinkLogger().log_info("%s connection %s <-> %s established" % (notification.data.transport.upper(), notification.data.local_address, notification.data.remote_address))
+            BlinkLogger().log_info("%s connection %s <-> %s established" % (notification.data.transport, notification.data.local_address, notification.data.remote_address))
             self.active_transports.add(transport)
 
     @objc.python_method

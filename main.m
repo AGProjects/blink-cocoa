@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     }
 
     Py_Initialize();
-    PySys_SetArgv(argc, (char **)argv);
+    /* PySys_SetArgv(argc, (char **)argv); */
 
     const char *mainFilePathPtr = [mainFilePath UTF8String];
     FILE *mainFile = fopen(mainFilePathPtr, "r");

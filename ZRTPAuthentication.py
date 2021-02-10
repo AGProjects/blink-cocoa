@@ -35,7 +35,7 @@ class ZRTPAuthentication(NSObject):
         self.window.makeFirstResponder_(self.validateButton)
 
     def open(self):
-        self.sasLabel.setStringValue_(self.stream.encryption.zrtp.sas)
+        self.sasLabel.setStringValue_(self.stream.encryption.zrtp.sas.decode().upper())
         self.cipherLabel.setStringValue_(NSLocalizedString("Encrypted using %s", "Label") % self.stream.encryption.cipher)
         if self.streamController.sessionController.remote_focus:
             self.peerName.setEnabled_(False)

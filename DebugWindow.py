@@ -609,13 +609,28 @@ class DebugWindow(NSObject):
             # remove some data that would be too big to log
             if notification.name == "MSRPTransportTrace":
                 if len(attribs["data"]) > 30:
-                    attribs["data"] = "<%i bytes>"%len(attribs["data"])
+                    attribs["data"] = "<%i bytes>" % len(attribs["data"])
             elif notification.name in ("FileTransferStreamGotChunk", "ScreenSharingStreamGotData"):
                 attribs["content"] = "..."
                 if "data" in attribs:
                     attribs["data"] = "..."
 
-            attribs = ", ".join("%s=%s" % (k, v) for k, v in attribs.items())
+            attribs_list = []
+            import traceback
+
+            for k, v in attribs.items():
+                try:
+                    item = "%s=%s" % (k, v)
+                    attribs_list.append(item)
+                except TypeError:
+                    print('k = %s' % k)
+                    print(type(v))
+                    traceback.print_exc()
+                    return
+
+            attribs = ", ".join(attribs_list)
+            #attribs = ", ".join("%s=%s" % (k, v) for k, v in attribs.items())
+
             ts = notification.datetime
             ts = ts.replace(microsecond=0) if type(ts) == datetime else ""
 
@@ -716,7 +731,7 @@ class DebugWindow(NSObject):
         if settings.logs.trace_msrp_in_gui == Disabled:
             return
 
-        message = '%s %s%s\n\n' % (notification.datetime, notification.data.level.prefix, notification.data.message)
+        message = '%s %s%s\n\n' % (notification.datetime, notification.data.level, notification.data.message)
         text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
         self.append_line(self.msrpTextView, text)
 
@@ -837,7 +852,7 @@ class DebugWindow(NSObject):
                 message += ", ".join(record.address for record in data.answer)
             elif data.query_type == 'TXT':
                 for record in data.answer:
-                    message += ", ".join(s for s in record.strings)
+                    message += ", ".join(s.decode() if isinstance(s, bytes) else s for s in record.strings)
                 self.renderXCAP(message)
             elif data.query_type == 'SRV':
                 message += ", ".join('%d %d %d %s' % (record.priority, record.weight, record.port, record.target) for record in data.answer)

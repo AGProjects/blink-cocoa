@@ -343,7 +343,7 @@ class PresencePublisher(object):
         instance_id = str(uuid.UUID(settings.instance_id))
 
         pidf_doc = pidf.PIDF(str(account.uri))
-        person = pidf.Person("PID-%s" % hashlib.md5(account.id).hexdigest())
+        person = pidf.Person("PID-%s" % hashlib.md5(account.id.encode()).hexdigest())
         person.timestamp = pidf.PersonTimestamp(settings.presence_state.timestamp)
         if not account.presence.disable_timezone and not offline:
             person.time_offset = rpid.TimeOffset()
@@ -415,7 +415,7 @@ class PresencePublisher(object):
         if not note:
             return None
         pidf_doc = pidf.PIDF(account.id)
-        account_hash = hashlib.md5(account.id).hexdigest()
+        account_hash = hashlib.md5(account.id.encode()).hexdigest()
         person = pidf.Person("PID-%s" % account_hash)
         person.activities = rpid.Activities()
         person.activities.add('offline')

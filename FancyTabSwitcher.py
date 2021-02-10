@@ -387,7 +387,7 @@ class FancyTabSwitcher(NSView):
         def centerx(rect):
             return rect.origin.x + rect.size.width/2
 
-        self.items.sort(lambda a,b: int(centerx(a.frame()) - centerx(b.frame())))
+        self.items.sort(key=lambda a,b: int(centerx(a.frame()) - centerx(b.frame())))
 
         frame = self.frame()
         x = 5

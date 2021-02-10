@@ -18,22 +18,22 @@ class KeychainPasswordSetting(Setting):
         self.label = label
 
     def __getstate__(self, obj):
-        return u'keychain'
+        return 'keychain'
 
     def __setstate__(self, obj, value):
         with self.lock:
             if value is None and not self.nillable:
                 raise ValueError("setting attribute is not nillable")
             if value is not None:
-                if value == u'keychain':
+                if value == 'keychain':
                     pool = NSAutoreleasePool.alloc().init()
-                    account = (account for account, group in chain(*(attr.values.iteritems() for attr in Account.__dict__.itervalues() if isinstance(attr, SettingsGroupMeta))) if group is obj).next()
+                    account = next((account for account, group in chain(*(iter(attr.values.items()) for attr in Account.__dict__.values() if isinstance(attr, SettingsGroupMeta))) if group is obj))
                     if self.label is None:
                         label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
                     else:
                         label = '%s %s (%s)' % (NSApp.delegate().applicationName, self.label, account.id)
                     k = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                    value = unicode(k.password()) if k is not None else u''
+                    value = str(k.password()) if k is not None else ''
                 value = self.type(value)
             self.oldvalues[obj] = self.values[obj] = value
             self.dirty[obj] = False
@@ -45,7 +45,7 @@ class KeychainPasswordSetting(Setting):
                     pool = NSAutoreleasePool.alloc().init()
                     old_password = self.oldvalues.get(obj, self.default)
                     new_password = self.values.get(obj, self.default)
-                    account = (account for account, group in chain(*(attr.values.iteritems() for attr in Account.__dict__.itervalues() if isinstance(attr, SettingsGroupMeta))) if group is obj).next()
+                    account = next((account for account, group in chain(*(iter(attr.values.items()) for attr in Account.__dict__.values() if isinstance(attr, SettingsGroupMeta))) if group is obj))
                     if self.label is None:
                         label = '%s (%s)' % (NSApp.delegate().applicationName, account.id)
                     else:

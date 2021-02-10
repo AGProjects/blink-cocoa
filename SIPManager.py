@@ -258,11 +258,11 @@ class SIPManager(object, metaclass=Singleton):
             return
         try:
             data = open(filename).read()
-            data = json.loads(data.replace('\\/', '/'))
-        except (OSError, IOError, json.decoder.JSONDecodeError) as e:
+            data = json.loads(data.decode().replace('\\/', '/'))
+        except (OSError, IOError) as e:
             BlinkLogger().log_error("Failed to read json data from ~/.blink_account: %s" % e)
             return
-        except cjson.DecodeError as e:
+        except ValueError as e:
             BlinkLogger().log_error("Failed to decode json data from ~/.blink_account: %s" % e)
             return
         finally:
@@ -378,7 +378,7 @@ class SIPManager(object, metaclass=Singleton):
                 except Exception:
                     pass
 
-        result.sort(lambda a,b: cmp(a[0],b[0]))
+        result.sort(key=lambda a,b: cmp(a[0],b[0]))
         return result
 
     def get_contact_backups(self):

@@ -16,13 +16,13 @@ SharedSetting.set_namespace('ag-projects:blink')
 
 
 class IconSettings(SettingsGroup):
-    url = Setting(type=unicode, nillable=True)
-    etag = Setting(type=unicode, nillable=True)
+    url = Setting(type=str, nillable=True)
+    etag = Setting(type=str, nillable=True)
     local = Setting(type=Boolean, default=False)
 
 
 class BlinkContactExtension(ContactExtension):
-    organization = SharedSetting(type=unicode, default='')
+    organization = SharedSetting(type=str, default='')
     auto_answer = SharedSetting(type=Boolean, default=False)
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)

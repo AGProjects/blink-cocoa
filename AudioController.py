@@ -1357,7 +1357,7 @@ class AudioController(MediaStream):
         codec = beautify_audio_codec(self.stream.codec)
         if self.stream.codec == 'opus':
             settings = SIPSimpleSettings()
-        self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
+        self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address.decode(), self.stream.remote_rtp_port, codec))
 
         self.updateTileStatistics()
 
@@ -1598,7 +1598,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamZRTPReceivedSAS(self, sender, data):
-        self.sessionController.log_info("ZRTP authentication string is '%s'" % data.sas)
+        self.sessionController.log_info("ZRTP authentication string is %s" % data.sas)
         if not data.verified:
             NSSound.soundNamed_("zrtp-security-failed").play()
         else:

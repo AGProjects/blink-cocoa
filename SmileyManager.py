@@ -81,8 +81,7 @@ class SmileyManager(object, metaclass=Singleton):
 
     def subst_smileys_html(self, text):
         items = list(self.smileys_html.items())
-        items.sort(lambda a,b:cmp(a[0],b[0]))
-        items.reverse() # reverse list so that longer ones are substituted 1st
+        sorted(items, key=lambda x: x[0], reverse=True)
         for k, v in items:
             text = text.replace(k, v)
         return text

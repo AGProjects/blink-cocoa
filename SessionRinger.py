@@ -388,7 +388,11 @@ class Ringer(object):
         # play hangup tone
         if has_audio:
             self.play_hangup()
-        NotificationCenter().remove_observer(self, sender=session)
+            
+        try:
+            NotificationCenter().remove_observer(self, sender=session)
+        except KeyError:
+            pass
 
         self.active_sessions.discard(session)
         self.stop_ringing(session)
