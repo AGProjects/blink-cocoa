@@ -1,7 +1,7 @@
 Building a Python Framework to bundle inside Blink
 --------------------------------------------------
 
-home_dir=/Users/adigeo/work/blink
+home_dir=$HOME/work/blink
 
 Blink dependencies must be installed under the following directory
 structure:
@@ -32,7 +32,6 @@ compatible with OSX bundle structure.  There are a number of things that can
 (and must when submitting a sandbox app to Mac App Store) be removed from
 the framework directory to make it smaller in size:
 
-home_dir=/Users/adigeo/work/blink
 cd $home_dir
 cd Distribution/Frameworks/
 
@@ -77,10 +76,18 @@ cp /usr/local/opt/sqlite/lib/libsqlite3.0.dylib .
 cp /usr/local/opt/ffmpeg/lib/libavformat.58.dylib .
 cp /usr/local/opt/ffmpeg/lib/libavcodec.58.dylib .
 cp /usr/local/opt/ffmpeg/lib/libswscale.5.dylib .
+cp /usr/local/opt/ffmpeg/lib/libswresample.3.dylib .
 cp /usr/local/opt/ffmpeg/lib/libavutil.56.dylib .
+cp /usr/local/opt/ffmpeg/lib/libswresample.3.dylib .
 cp /usr/local/opt/gnutls/lib/libgnutls.30.dylib .
 cp /usr/local/opt/gettext/lib/libintl.8.dylib .
-cp /usr/local/opt/nettle/lib/libhogweed.4.dylib .
+cp /usr/local/opt/nettle/lib/libhogweed.6.dylib .
+
+# copy all dependencies:
+
+for j in *.dylib; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .; done; done
+for j in *.so; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .; done; done
+
 
 $home_dir/build_scripts/change_lib_names.sh *.dylib 
 
@@ -140,8 +147,8 @@ for m in $pyobjc_modules; do \
 rm -r ~/work/blink/Distribution/Resources/lib/$m; done
 
 for m in $pyobjc_modules; do \
-cp -a ~/.virtualenvs/pyobjc/lib/python2.7/site-packages/$m \
-~/work/blink/Distribution/Resources/lib/; done
+cp -a  ~/Library/Python/3.9/lib/python/site-packages/$m \
+~/work/blink3/Distribution/Resources/lib/; done
 
 find ~/work/blink/Distribution/Resources/lib/ -name *.pyc -exec rm -r "{}" \; 
 find ~/work/blink/Distribution/Resources/lib/ -name *.pyo -exec rm -r "{}" \; 
