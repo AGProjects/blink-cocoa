@@ -69,6 +69,7 @@ class SIPManager(object, metaclass=Singleton):
         self.notification_center.add_observer(self, name='SIPAccountRegistrationDidEnd')
         self.notification_center.add_observer(self, name='SIPAccountGotMessageSummary')
         self.notification_center.add_observer(self, name='XCAPManagerDidDiscoverServerCapabilities')
+        self.notification_center.add_observer(self, name='XCAPManagerClientError')
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         self.registrar_addresses = {}
@@ -689,6 +690,10 @@ class SIPManager(object, metaclass=Singleton):
             return
         BlinkLogger().log_debug("Using XCAP root %s for account %s" % (xcap_root, account.id))
         BlinkLogger().log_debug("XCAP server capabilities: %s" % ", ".join(data.auids))
+
+    def _NH_XCAPManagerClientError(self, sender, data):
+        account = sender.account
+        BlinkLogger().log_info("XCAP error for account %s (%s): %s" % (account.id, sender.xcap_root, data.error))
 
     def validateAddAccountAction(self):
         if NSApp.delegate().maximum_accounts:

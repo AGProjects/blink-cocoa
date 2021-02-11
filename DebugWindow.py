@@ -261,15 +261,56 @@ class DebugWindow(NSObject):
             notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
             notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.discard_observer(self, name="XCAPManagerDidStart")
+            notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.discard_observer(self, name="XCAPManagerDidReloadData")
+            notification_center.discard_observer(self, name="XCAPManagerDidInitialize")
+            notification_center.discard_observer(self, name="XCAPManagerDidAddContact")
+            notification_center.discard_observer(self, name="XCAPManagerDidUpdateContact")
+            notification_center.discard_observer(self, name="XCAPManagerDidDeleteContact")
+            notification_center.discard_observer(self, name="XCAPManagerDidAddGroup")
+            notification_center.discard_observer(self, name="XCAPManagerDidUpdateGroup")
+            notification_center.discard_observer(self, name="XCAPManagerDidRemoveGroup")
+            notification_center.discard_observer(self, name="XCAPManagerDidAddGroup")
+            notification_center.discard_observer(self, name="XCAPManageDidAddGroupMember")
+            notification_center.discard_observer(self, name="XCAPManageDidRemoveGroupMember")
+            notification_center.discard_observer(self, name="XCAPManagerClientWillInitialize")
+            notification_center.discard_observer(self, name="XCAPManagerClientDidInitialize")
+            notification_center.discard_observer(self, name="XCAPManagerClientDidNotInitialize")
+            notification_center.discard_observer(self, name="XCAPManagerClientError")
+
             settings.logs.trace_xcap = settings.logs.trace_xcap_to_file
         elif trace == Simplified:
             notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.add_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.add_observer(self, name="XCAPManagerClientWillInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientDidInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientDidNotInitialize")
+            notification_center.add_observer(self, name="XCAPManagerDidStart")
+            notification_center.add_observer(self, name="XCAPManagerClientError")
             settings.logs.trace_xcap = True
         elif trace == Full:
             notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.add_observer(self, name="XCAPManagerDidChangeState")
+            notification_center.add_observer(self, name="XCAPManagerDidStart")
             notification_center.add_observer(self, name="XCAPSubscriptionGotNotify")
+            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+            notification_center.add_observer(self, name="XCAPManagerDidReloadData")
+            notification_center.add_observer(self, name="XCAPManagerDidInitialize")
+            notification_center.add_observer(self, name="XCAPManagerDidAddContact")
+            notification_center.add_observer(self, name="XCAPManagerDidUpdateContact")
+            notification_center.add_observer(self, name="XCAPManagerDidDeleteContact")
+            notification_center.add_observer(self, name="XCAPManagerDidAddGroup")
+            notification_center.add_observer(self, name="XCAPManagerDidUpdateGroup")
+            notification_center.add_observer(self, name="XCAPManagerDidRemoveGroup")
+            notification_center.add_observer(self, name="XCAPManagerDidAddGroup")
+            notification_center.add_observer(self, name="XCAPManageDidAddGroupMember")
+            notification_center.add_observer(self, name="XCAPManageDidRemoveGroupMember")
+            notification_center.add_observer(self, name="XCAPManagerClientWillInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientDidInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientDidNotInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientError")
+
             settings.logs.trace_xcap = True
 
         settings.save()
@@ -888,8 +929,80 @@ class DebugWindow(NSObject):
             self.renderXCAP(message)
 
     @objc.python_method
+    def _NH_XCAPManagerDidStart(self, notification):
+        message = ("%s XCAP manager of account %s started" % (notification.datetime, notification.sender.account.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, notification):
         message = ("%s XCAP manager of account %s changed state from %s to %s" % (notification.datetime, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
         self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidAddContact(self, notification):
+        message = ("%s XCAP manager added contact %s" % (notification.datetime, notification.data.contact.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidUpdateContact(self, notification):
+        message = ("%s XCAP manager updated contact %s" % (notification.datetime, notification.data.contact.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidRemoveContact(self, notification):
+        message = ("%s XCAP manager removed contact %s" % (notification.datetime, notification.data.contact.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidAddGroup(self, notification):
+        message = ("%s XCAP manager added group %s" % (notification.datetime, notification.data.group.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidUpdateGroup(self, notification):
+        message = ("%s XCAP manager updated group %s" % (notification.datetime, notification.data.group.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidRemoveGroup(self, notification):
+        message = ("%s XCAP manager removed group %s" % (notification.datetime, notification.data.group.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManageDidAddGroupMember(self, notification):
+        message = ("%s XCAP manager added member %s to group %s" % (notification.datetime,  notification.data.contact.id, notification.data.group.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManageDidRemoveGroupMember(self, notification):
+        message = ("%s XCAP manager removed member %s from group %s" % (notification.datetime, notification.data.contact.id, notification.data.group.id))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerClientWillInitialize(self, notification):
+        message = ("%s XCAP manager client will initialized for XCAP root %s" % (notification.datetime, notification.data.root))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidInitialize(self, notification):
+        message = ("%s XCAP manager initialized with XCAP client %s" % (notification.datetime, notification.data.client))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerClientDidInitialize(self, notification):
+        message = ("%s XCAP manager client %s initialized for XCAP root %s" % (notification.datetime, notification.data.client, notification.data.root))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerClientDidNotInitialize(self, notification):
+        message = ("%s XCAP manager client did not initialize: %s" % (notification.datetime, notification.data.error))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPManagerClientError(self, notification):
+        message = ("%s XCAP manager client error for %s: %s" % (notification.datetime, notification.data.context, notification.data.error))
+        self.renderXCAP(message)
+
+
 
 
