@@ -520,14 +520,14 @@ class ContactWindowController(NSWindowController):
             unlink(ApplicationData.get('presence_offline_note.pickle'))
 
         # TODO3
-        #try:
-        #    with open(ApplicationData.get('presence/presence_notes_history.pickle'), 'rb') as f:
-        #        self.presence_notes_history.extend(pickle.load(f))
-        #except (TypeError, EOFError):
-        #    # data is corrupted, reset it
-        #    self.deletePresenceHistory_(None)
-        #except (IOError, pickle.UnpicklingError):
-        #    pass
+        try:
+            with open(ApplicationData.get('presence/presence_notes_history.pickle'), 'rb') as f:
+                self.presence_notes_history.extend(pickle.load(f))
+        except (TypeError, EOFError):
+            # data is corrupted, reset it
+            self.deletePresenceHistory_(None)
+        except (IOError, pickle.UnpicklingError):
+            pass
 
         self.presencePublisher = PresencePublisher(self)
 
@@ -583,6 +583,10 @@ class ContactWindowController(NSWindowController):
             self.updateParticipantsView()
         if flag:
             self.contactOutline.deselectAll_(None)
+
+    @objc.python_method
+    def init_aspect_ratio(self, width, height):
+        self.refresh_drawer_counter += 1
 
     @objc.python_method
     @run_in_gui_thread
@@ -4184,7 +4188,6 @@ class ContactWindowController(NSWindowController):
             enroll.setupForAdditionalAccounts()
             enroll.runModal()
             self.refreshAccountList()
-            enroll.release()
 
     @objc.IBAction
     def backToContacts_(self, sender):
@@ -5557,7 +5560,7 @@ class ContactWindowController(NSWindowController):
                 elif notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error.decode():
                     self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label")
                 else:
-                    self.accounts[position].register_failure_reason = notification.data.error.decode()
+                    self.accounts[position].register_failure_reason = notification.data.error.decode() if isinstance(notification.data.error, bytes) else notification.data.error
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):

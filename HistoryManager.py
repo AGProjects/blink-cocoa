@@ -1549,21 +1549,21 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
     def save_delete_journal_on_disk(self):
         storage_path = ApplicationData.get('chat_replication/chat_replication_delete_journal.pickle')
         try:
-            pickle.dump(self.for_delete_entries, open(storage_path, "w+"))
+            pickle.dump(self.for_delete_entries, open(storage_path, "wb+"))
         except (pickle.PickleError, IOError):
             pass
 
     def save_journal_on_disk(self):
         storage_path = ApplicationData.get('chat_replication/chat_replication_journal.pickle')
         try:
-            pickle.dump(self.outgoing_entries, open(storage_path, "w+"))
+            pickle.dump(self.outgoing_entries, open(storage_path, "wb+"))
         except (pickle.PickleError, IOError):
             pass
 
     def save_journal_timestamp_on_disk(self):
         storage_path = ApplicationData.get('chat_replication/chat_replication_timestamp.pickle')
         try:
-            pickle.dump(self.last_journal_timestamp, open(storage_path, "w+"))
+            pickle.dump(self.last_journal_timestamp, open(storage_path, "wb+"))
         except (pickle.PickleError, IOError):
             pass
 

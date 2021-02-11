@@ -378,7 +378,7 @@ class SIPManager(object, metaclass=Singleton):
                 except Exception:
                     pass
 
-        result.sort(key=lambda a,b: cmp(a[0],b[0]))
+        sorted(result, key=lambda x: x[0])
         return result
 
     def get_contact_backups(self):

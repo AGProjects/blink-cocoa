@@ -259,8 +259,8 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         if type == 'video':
             #BlinkLogger().log_debug("Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
-            #return False
-            pass
+            return False
+            #pass
         
         return True
 

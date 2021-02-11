@@ -112,30 +112,24 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     """
     port = 5060
     transport = 'udp'
-    if isinstance(identity, (SIPURI, FrozenSIPURI)):
-        if format == 'aor':
-            return "%s@%s" % (identity.user.decode(), identity.host.decode())
 
-        user = identity.user.decode()
-        host = identity.host.decode()
-        if identity.port is not None and identity.port != 5060:
-            port = identity.port
-        if identity.transport != 'udp':
-            transport = identity.transport
-        display_name = None
-        uri = sip_prefix_pattern.sub("", str(identity))
-    else:
-        if format == 'aor':
-            return "%s@%s" % (identity.uri.user, identity.uri.host)
+    identity = identity if isinstance(identity, (SIPURI, FrozenSIPURI)) else identity.uri;
 
-        user = identity.uri.user
-        host = identity.uri.host
-        if identity.uri.port is not None and identity.uri.port != 5060:
-            port = identity.uri.port
-        if identity.uri.transport != 'udp':
-            transport = identity.uri.transport
-        display_name = identity.display_name
-        uri = sip_prefix_pattern.sub("", str(identity.uri))
+    user = identity.user.decode() if isinstance(identity.user, bytes) else identity.user
+    host = identity.host.decode() if isinstance(identity.host, bytes) else identity.host
+    uri = "%s@%s" % (user, host)
+
+    if format == 'aor':
+        return "%s@%s" % (user, host)
+
+    if identity.port is not None and identity.port != 5060:
+        port = identity.port
+
+    if identity.transport != 'udp':
+        transport = identity.transport
+
+    display_name = identity.display_name if hasattr(identity, 'display_name') else None
+    uri = sip_prefix_pattern.sub("", uri)
 
     pool = NSAutoreleasePool.alloc().init()
     try:
@@ -162,6 +156,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
                 return "%s <%s>" % (contact.name, address)
             else:
                 return "%s <%s>" % (display_name, address)
+
     elif match is not None:
         if format == 'compact':
             return match.group('number')

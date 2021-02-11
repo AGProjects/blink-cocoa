@@ -620,6 +620,7 @@ class DebugWindow(NSObject):
 
             for k, v in attribs.items():
                 try:
+                    v = v.decode() if isinstance(v, bytes) else v
                     item = "%s=%s" % (k, v)
                     attribs_list.append(item)
                 except TypeError:

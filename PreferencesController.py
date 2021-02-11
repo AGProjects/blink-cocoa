@@ -596,7 +596,6 @@ class PreferencesController(NSWindowController, object):
         enroll = EnrollmentController.alloc().init()
         enroll.setupForAdditionalAccounts()
         enroll.runModal()
-        enroll.release()
 
     @objc.python_method
     def removeSelectedAccount(self):
@@ -777,7 +776,7 @@ class PreferencesController(NSWindowController, object):
         self.accounts[position].registrar = None
 
         if self.accounts[position].register_failure_reason is None and hasattr(notification.data, 'error'):
-            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error.decode()
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.error == 'Unknown error 61' else notification.data.error.decode() if isinstance(notification.data.error, bytes) else notification.data.error
 
         self.refresh_account_table()
         self.updateRegistrationStatus()

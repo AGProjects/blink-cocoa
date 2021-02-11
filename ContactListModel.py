@@ -2873,7 +2873,7 @@ class ContactListModel(CustomListModel):
 
         if backup_contacts or backup_groups:
             try:
-                pickle.dump(backup_data, open(storage_path, "w+"))
+                pickle.dump(backup_data, open(storage_path, "wb+"))
                 if not silent:
                     NSRunAlertPanel(NSLocalizedString("Contacts Backup",  "Window title"), NSLocalizedString("%d contacts have been saved. You can restore them at a later time from Contacts/Restore menu.", "Label") % len(backup_contacts), NSLocalizedString("OK", "Button title"), None, None)
             except (IOError, pickle.PicklingError):
@@ -3437,7 +3437,7 @@ class ContactListModel(CustomListModel):
                 storage_path = ApplicationData.get(filename)
                 makedirs(os.path.dirname(storage_path))
                 try:
-                    pickle.dump(backup_data, open(storage_path, "w+"))
+                    pickle.dump(backup_data, open(storage_path, "wb+"))
                 except (IOError, pickle.PicklingError):
                     pass
 

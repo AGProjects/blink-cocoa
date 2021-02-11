@@ -193,9 +193,9 @@ class JoinConferenceWindowController(NSObject):
             except shutil.Error:
                 pass
 
-        self.storage_path = ApplicationData.get('conference/conference_configurations.pickle')
         try:
-            self.conference_configurations = pickle.load(open(self.storage_path))
+            with open(ApplicationData.get('conference/conference_configurations.pickle'), 'rb') as f:
+                self.conference_configurations = pickle.load(f)
         except:
             self.conference_configurations = {}
 
@@ -242,7 +242,7 @@ class JoinConferenceWindowController(NSObject):
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
-                    pickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+                    pickle.dump(self.conference_configurations, open(self.storage_path, "wb"))
             else:
                 self.selected_configuration = None
 
@@ -255,7 +255,7 @@ class JoinConferenceWindowController(NSObject):
                 self.conference_configurations[configuration_name] = old_configuration
                 del self.conference_configurations[self.selected_configuration]
                 self.selected_configuration = configuration_name
-                pickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+                pickle.dump(self.conference_configurations, open(self.storage_path, "wb"))
 
         elif sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Delete configuration", "Menu item")) and self.selected_configuration:
            del self.conference_configurations[self.selected_configuration]

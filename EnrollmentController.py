@@ -276,7 +276,10 @@ class EnrollmentController(NSObject):
 
         url = SIPSimpleSettings().server.enrollment_url
 
+        sip_address = None
+
         tzname = datetime.datetime.now(tzlocal()).tzname() or ""
+
         if not tzname:
             BlinkLogger().log_warning("Unable to determine timezone")
 
@@ -289,7 +292,8 @@ class EnrollmentController(NSObject):
         BlinkLogger().log_info("Requesting creation of a new SIP account at %s" % url)
 
         data = urllib.parse.urlencode(values)
-        req = urllib.request.Request(url, data)
+        req = urllib.request.Request(url, data.encode("utf-8"))
+
         try:
             raw_response = urllib.request.urlopen(req)
         except urllib.error.URLError as e:
@@ -297,91 +301,97 @@ class EnrollmentController(NSObject):
         except urllib.error.HTTPError as e:
             error_message = NSLocalizedString("Error from enrollment server: %s", "Enrollment panel label") % e
         else:
-            response = None
-            json_data = raw_response.read()
+            raw_data = raw_response.read().decode().replace('\\/', '/')
 
             try:
-                response = json.loads(json_data.replace('\\/', '/'))
+                json_data = json.loads(raw_data)
             except (TypeError, json.decoder.JSONDecodeError):
                 error_message = NSLocalizedString("Cannot decode data from enrollment server", "Enrollment panel label")
             else:
-                if not response["success"]:
-                    BlinkLogger().log_info("Enrollment Server failed to create SIP account: %(error_message)s" % response)
-                    error_message = response["error_message"]
+
+                try:
+                    success = json_data["success"]
+                except (TypeError, KeyError):
+                    success = False
+                
+                if not success:
+                    BlinkLogger().log_info("Enrollment Server failed to create SIP account")
+                    try:
+                        error_message = json_data["error_message"]
+                    except (TypeError, KeyError):
+                        error_message == 'Cannot read server response'
                 else:
-                    BlinkLogger().log_info("Enrollment Server successfully created SIP account %(sip_address)s" % response)
-                    data = defaultdict(lambda: None, response)
+                    BlinkLogger().log_info("Enrollment Server successfully created SIP account")
+
+                    data = defaultdict(lambda: None, json_data)
                     tls_path = None if data['passport'] is None else SIPManager().save_certificates(data)
 
+                    sip_address = data['sip_address']
                     try:
-                        sip_address = data['sip_address']
-                        try:
-                            outbound_proxy = data['outbound_proxy']
-                        except KeyError:
-                            outbound_proxy = None
-
-                        try:
-                            xcap_root = data['xcap_root']
-                        except KeyError:
-                            xcap_root = None
-
-                        try:
-                            msrp_relay = data['msrp_relay']
-                        except KeyError:
-                            msrp_relay = None
-
-                        try:
-                            settings_url = data['settings_url']
-                        except KeyError:
-                            settings_url = None
-
-                        try:
-                            web_alert_url = data['web_alert_url']
-                        except KeyError:
-                            web_alert_url = None
-
-                        try:
-                            web_password = data['web_password']
-                        except KeyError:
-                            web_password = None
-
-                        try:
-                            conference_server = data['conference_server']
-                        except KeyError:
-                            conference_server = None
-
-                        try:
-                            ldap_hostname = data['ldap_hostname']
-                        except KeyError:
-                            ldap_hostname = None
-
-                        try:
-                            ldap_transport = data['ldap_transport']
-                        except KeyError:
-                            ldap_transport = None
-
-                        try:
-                            ldap_port = data['ldap_port']
-                        except KeyError:
-                            ldap_port = None
-
-                        try:
-                            ldap_username = data['ldap_username']
-                        except KeyError:
-                            ldap_username = None
-
-                        try:
-                            ldap_password = data['ldap_password']
-                        except KeyError:
-                            ldap_password = None
-
-                        try:
-                            ldap_dn = data['ldap_dn']
-                        except KeyError:
-                            ldap_dn = None
-
+                        outbound_proxy = data['outbound_proxy']
                     except KeyError:
-                        sip_address = None
+                        outbound_proxy = None
+
+                    try:
+                        xcap_root = data['xcap_root']
+                    except KeyError:
+                        xcap_root = None
+
+                    try:
+                        msrp_relay = data['msrp_relay']
+                    except KeyError:
+                        msrp_relay = None
+
+                    try:
+                        settings_url = data['settings_url']
+                    except KeyError:
+                        settings_url = None
+
+                    try:
+                        web_alert_url = data['web_alert_url']
+                    except KeyError:
+                        web_alert_url = None
+
+                    try:
+                        web_password = data['web_password']
+                    except KeyError:
+                        web_password = None
+
+                    try:
+                        conference_server = data['conference_server']
+                    except KeyError:
+                        conference_server = None
+
+                    try:
+                        ldap_hostname = data['ldap_hostname']
+                    except KeyError:
+                        ldap_hostname = None
+
+                    try:
+                        ldap_transport = data['ldap_transport']
+                    except KeyError:
+                        ldap_transport = None
+
+                    try:
+                        ldap_port = data['ldap_port']
+                    except KeyError:
+                        ldap_port = None
+
+                    try:
+                        ldap_username = data['ldap_username']
+                    except KeyError:
+                        ldap_username = None
+
+                    try:
+                        ldap_password = data['ldap_password']
+                    except KeyError:
+                        ldap_password = None
+
+                    try:
+                        ldap_dn = data['ldap_dn']
+                    except KeyError:
+                        ldap_dn = None
+
 
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
