@@ -1501,7 +1501,7 @@ class ChatController(MediaStream):
                         break
 
                 self.sessionController.log_info('Image %s received inline' % file_path)
-                fd = open(file_path, "w+")
+                fd = open(file_path, "wb+")
                 fd.write(message.content)
                 fd.close()
 

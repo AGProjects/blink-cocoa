@@ -499,7 +499,7 @@ class ContactWindowController(NSWindowController):
         makedirs(path)
 
         try:
-            with open(ApplicationData.get('presence_notes_history.pickle')):
+            with open(ApplicationData.get('presence_notes_history.pickle'), 'rb'):
                 pass
         except IOError:
             pass
@@ -512,7 +512,7 @@ class ContactWindowController(NSWindowController):
                 pass
 
         try:
-            with open(ApplicationData.get('presence_offline_note.pickle')):
+            with open(ApplicationData.get('presence_offline_note.pickle'), 'rb'):
                 pass
         except IOError:
             pass
@@ -2118,7 +2118,7 @@ class ContactWindowController(NSWindowController):
             unlink(settings.presence_state.icon.path)
         filename = '%s.png' % unique_id(prefix='user_icon')
         path = ApplicationData.get(os.path.join('photos', filename))
-        with open(path, 'w') as f:
+        with open(path, 'wb') as f:
             f.write(data)
         settings.presence_state.icon = UserIcon(path, data_hash)
         settings.save()
@@ -2438,7 +2438,7 @@ class ContactWindowController(NSWindowController):
             self.presence_notes_history.append(object)
             storage_path = ApplicationData.get('presence/presence_notes_history.pickle')
             try:
-                pickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+                pickle.dump(self.presence_notes_history, open(storage_path, "wb+"))
             except (pickle.PickleError, IOError):
                 pass
 
@@ -4485,7 +4485,7 @@ class ContactWindowController(NSWindowController):
         self.presence_notes_history.clear()
         storage_path = ApplicationData.get('presence/presence_notes_history.pickle')
         try:
-            pickle.dump(self.presence_notes_history, open(storage_path, "w+"))
+            pickle.dump(self.presence_notes_history, open(storage_path, "wb+"))
         except (pickle.PickleError, IOError):
             pass
 

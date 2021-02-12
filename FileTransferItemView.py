@@ -133,7 +133,7 @@ class FileTransferItemView(NSView):
             tmp_folder = ApplicationData.get('.tmp_file_transfers')
             makedirs(tmp_folder, 0o700)
             tmpf = tmp_folder + "/tmpf-" + self.file_path
-            with open(tmpf, "w+"):
+            with open(tmpf, "wb+"):
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(tmpf))
             unlink(tmpf)
 

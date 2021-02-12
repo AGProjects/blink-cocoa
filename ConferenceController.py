@@ -182,7 +182,7 @@ class JoinConferenceWindowController(NSObject):
         makedirs(path)
 
         try:
-            with open(ApplicationData.get('conference_configurations.pickle')): pass
+            with open(ApplicationData.get('conference_configurations.pickle'), 'rb'): pass
         except IOError:
             pass
         else:

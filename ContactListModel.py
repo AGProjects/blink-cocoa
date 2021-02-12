@@ -1371,7 +1371,7 @@ class BlinkPresenceContact(BlinkContact):
             return
         del icon
 
-        with open(PresenceContactAvatar.path_for_contact(contact), 'w') as f:
+        with open(PresenceContactAvatar.path_for_contact(contact), 'wb') as f:
             f.write(content)
         contact.icon_info.url = icon_url
         contact.icon_info.etag = etag

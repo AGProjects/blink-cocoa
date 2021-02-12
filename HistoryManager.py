@@ -1470,7 +1470,7 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
         valid_accounts = list(account.id for account in AccountManager().get_accounts() if account is not BonjourAccount() and account.server.settings_url)
         
         try:
-            with open(ApplicationData.get('chat_replication_journal.pickle')): pass
+            with open(ApplicationData.get('chat_replication_journal.pickle'), 'rb'): pass
         except IOError:
             pass
         else:
@@ -1482,7 +1482,7 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                 pass
 
         try:
-            with open(ApplicationData.get('chat_replication_delete_journal.pickle')): pass
+            with open(ApplicationData.get('chat_replication_delete_journal.pickle'), 'rb'): pass
         except IOError:
             pass
         else:
@@ -1494,7 +1494,7 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                 pass
 
         try:
-            with open(ApplicationData.get('chat_replication_timestamp.pickle')): pass
+            with open(ApplicationData.get('chat_replication_timestamp.pickle'), 'rb'): pass
         except IOError:
             pass
         else:

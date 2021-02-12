@@ -277,7 +277,7 @@ class PhotoPicker(NSObject):
         selected_icon = None
         def md5sum(filename):
             md5 = hashlib.md5()
-            with open(filename,'rb') as f:
+            with open(filename, 'rb') as f:
                 for chunk in iter(lambda: f.read(128*md5.block_size), b''):
                     md5.update(chunk)
             return md5.hexdigest()
@@ -437,7 +437,7 @@ class PhotoPicker(NSObject):
         path = self.storage_folder + "/photo%s.jpg" % dt
         jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
         data = jpg_data.bytes().tobytes()
-        with open(path, 'w') as f:
+        with open(path, 'wb') as f:
             f.write(data)
 
         self.refreshLibrary()
@@ -466,7 +466,7 @@ class PhotoPicker(NSObject):
             path = self.storage_folder + "/photo%s.png" % dt
             jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
             data = jpg_data.bytes().tobytes()
-            with open(path, 'w') as f:
+            with open(path, 'wb') as f:
                 f.write(data)
 
             self.cropWindow.orderOut_(None)
