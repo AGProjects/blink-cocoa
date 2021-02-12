@@ -51,6 +51,8 @@
 	<string>10.11.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Required for VoIP calls</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Required for VoIP calls</string>
 	<key>NSMainNibFile</key>
 	<string>MainWindow</string>
 	<key>NSPrincipalClass</key>
