@@ -70,8 +70,12 @@ if memory_stick_mode():
     ApplicationData._cached_directory = os.path.join(os.path.dirname(NSBundle.mainBundle().bundlePath()), 'Data')
 
 # import modules containing classes required to start application and load MainMenu.nib
-import BlinkAppDelegate
-import ContactWindowController
+try:
+    import BlinkAppDelegate
+    import ContactWindowController
+except Exception:
+    import traceback
+    traceback.print_exc()
 
 import signal
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)
