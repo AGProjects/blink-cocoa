@@ -2849,7 +2849,7 @@
 			isa = PBXGroup;
 			children = (
 				1F2271F112B551B40010A8B2 /* PythonPackages */,
-				1FEDE7CF17AFD4C50038C579 /* c */,
+				1FEDE7CF17AFD4C50038C579 /* C libraries */,
 				1F2271F012B551AC0010A8B2 /* CustomFrameworks */,
 				29B97323FDCFA39411CA2CEA /* SystemFrameworks */,
 				1FB30809146D5598001430B5 /* mime.types */,
@@ -3005,7 +3005,7 @@
 			path = icons/presence;
 			sourceTree = "<group>";
 		};
-		1FEDE7CF17AFD4C50038C579 /* c */ = {
+		1FEDE7CF17AFD4C50038C579 /* C libraries */ = {
 			isa = PBXGroup;
 			children = (
 				1F3F8FB725D16517001DA381 /* libffi.7.dylib */,
@@ -3055,7 +3055,7 @@
 				1F3F8ECD25D163C0001DA381 /* Python.framework */,
 				1F3F8EC325D163BF001DA381 /* Sparkle.framework */,
 			);
-			name = c;
+			name = "C libraries";
 			sourceTree = "<group>";
 		};
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
@@ -3334,6 +3334,7 @@
 		2B5DE51D0FFC5C5D00701821 /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				85E8550210F643350083D346 /* configuration */,
 				1F789C9214ADD9DD00437EA4 /* iCloudManager.py */,
 				2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */,
 				2BB376411103C98300DA4577 /* SoundRecorder.xib */,
@@ -3494,7 +3495,6 @@
 				2B2400FE1018AB9400079580 /* util.py */,
 				2BE7632910732DC000A1DF24 /* About.xib */,
 				8547A6C5114EB6E200AD84BF /* interfaces */,
-				85E8550210F643350083D346 /* configuration */,
 				1FC66E0C139E208700D03D71 /* MigrationPanel.xib */,
 			);
 			name = Common;
