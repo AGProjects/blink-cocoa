@@ -80,6 +80,13 @@ rm -r Distribution/Resources/lib/$m; done
 for m in $pyobjc_modules; do \
 cp -a  ~/Library/Python/3.9/lib/python/site-packages/$m Distribution/Resources/lib/; done
 
+id="Developer ID Application: AG Projects"
+for m in $pyobjc_modules; do
+    libs=`find Distribution/Resources/lib/$m -name *.so`
+    for l in $libs; do
+        codesign -v -f -s "$id" $l
+    done
+done
 
 
 find Distribution/Resources/lib/ -name *.pyc -exec rm -r "{}" \; 
