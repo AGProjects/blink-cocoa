@@ -138,7 +138,7 @@ class SMSViewController(NSObject):
             self.history=ChatHistory()
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
-            self.remote_uri = '%s@%s' % (self.target_uri.user, self.target_uri.host)
+            self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
             self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
 
             NSBundle.loadNibNamed_owner_("SMSView", self)

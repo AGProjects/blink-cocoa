@@ -249,10 +249,10 @@ def is_anonymous(uri):
     anon_users = ('asterisk', 'unknown', 'anonymous')
 
     if isinstance(uri, (SIPURI, FrozenSIPURI)):
-        if uri.user.lower() in anon_users:
+        if uri.user.decode().lower() in anon_users:
             return True
 
-        return (uri.user is None or uri.user.lower() == 'anonymous') and (uri.host is None or uri.host.lower() == 'anonymous.invalid')
+        return (uri.user is None or uri.user.decode().lower() == 'anonymous') and (uri.host is None or uri.host.decode().lower() == 'anonymous.invalid')
     else:
         if not (uri.startswith('sip:') or uri.startswith('sips:')):
             uri = "sip:%s" % uri
@@ -261,10 +261,10 @@ def is_anonymous(uri):
         except:
             return False
         else:
-            if sip_uri.user is not None and sip_uri.user.lower() in anon_users:
+            if sip_uri.user is not None and sip_uri.user.decode().lower() in anon_users:
                 return True
 
-            return (sip_uri.user is None or sip_uri.user.lower() == 'anonymous') and (sip_uri.host is None or sip_uri.host.lower() == 'anonymous.invalid')
+            return (sip_uri.user is None or sip_uri.user.decode().lower() == 'anonymous') and (sip_uri.host is None or sip_uri.host.decode().lower() == 'anonymous.invalid')
 
 def format_size(s, minsize=0, bits=False):
     if bits:

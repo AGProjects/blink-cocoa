@@ -458,6 +458,9 @@ class BlinkContact(NSObject):
 
     @objc.python_method
     def matchesURI(self, uri, exact_match=False):
+        if isinstance(uri, SIPURI):
+            uri = '%s@%s' % (uri.user.decode(), uri.host.decode())
+
         def match(me, candidate, exact_match=False):
             # check exact match
             if not len(candidate[1]):
