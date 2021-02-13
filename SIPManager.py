@@ -171,7 +171,8 @@ class SIPManager(object, metaclass=Singleton):
 
         with open(ca_path, "wb") as f:
             os.chmod(ca_path, 0o600)
-            f.write(ca)
+            f.write(ca.encode())
+
         BlinkLogger().log_debug("Added default Certificate Authority to %s" % ca_path)
         settings.tls.ca_list = ca_path
         settings.save()
