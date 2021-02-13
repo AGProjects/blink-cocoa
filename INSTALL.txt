@@ -1,0 +1,151 @@
+Building Blink for Mac
+----------------------
+
+Dependencies must be installed as follwos:
+
+- Distribution/Frameworks/
+     -> Contain all C libraries and Frameworks
+
+- Distribution/Resources/lib
+     -> Contain all Python packages
+
+
+Download Python Framework from:
+
+https://www.python.org/downloads/release/python-391/
+
+cp -a /Library/Frameworks/Python.framework Distribution/Frameworks/
+
+Codesign Python Framework using your Xcode identity:
+
+codesign -v -s "Developer ID Application: AG Projects" Distribution/Frameworks/
+
+Copy all related C dependencies installed using Brew to Distribution/Frameworks/
+
+Python.framework          libhogweed.6.dylib        
+Sparkle.framework         libidn2.0.dylib           
+libavcodec.58.dylib       libintl.8.dylib           
+libavformat.58.dylib      liblzma.5.dylib           
+libavutil.56.dylib        libmp3lame.0.dylib        
+libbluray.2.dylib         libmpc.3.dylib            
+libcrypto.1.1.dylib       libmpfr.6.dylib           
+libdav1d.4.dylib          libnettle.8.dylib         
+libffi.7.dylib            libogg.0.dylib            
+libfontconfig.1.dylib     libopencore-amrnb.0.dylib 
+libfreetype.6.dylib       libopencore-amrwb.0.dylib 
+libgmp.10.dylib           libopenjp2.7.dylib        
+libgnutls.30.dylib        libopus.0.dylib           
+libp11-kit.0.dylib        libswscale.5.dylib
+libpng16.16.dylib         libtasn1.6.dylib
+libpython3.9.dylib        libtheoradec.1.dylib
+libpython3.9.dylib.orig   libtheoraenc.1.dylib
+librav1e.0.3.4.dylib      libunistring.2.dylib
+librtmp.1.dylib           libvorbis.0.dylib
+libsnappy.1.dylib         libvorbisenc.2.dylib
+libsoxr.0.dylib           libwebp.7.dylib
+libspeex.1.dylib          libwebpmux.3.dylib
+libsqlite3.0.dylib        libx264.161.dylib
+libsrt.1.dylib            libx265.192.dylib
+libssl.1.1.dylib          libswresample.3.dylib
+
+# Find and copy all their dependencies:
+
+cd Distribution/Frameworks/
+for j in *.dylib; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .; done; done
+for j in *.so; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .; done; done
+
+Change the relative path inside all libraries to point to @executable_path/../Frameworks/
+
+./build_scripts/change_lib_names.sh Distribution/Frameworks/*.dylib
+
+./build_scripts/change_lib_names.sh Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
+codesign -v -s "Developer ID Application: AG Projects" Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
+
+
+Installing PyObjC
+-----------------
+
+pip3 install pyobjc
+
+Which installs Python Objective C modules in this folder:
+
+Copy the Frameworks listed below into Blink/Distribution/Resources/lib folder.
+
+pyobjc_modules="AVFoundation AddressBook AppKit Cocoa CoreFoundation CoreServices \
+Foundation LaunchServices PyObjCTools Quartz ScriptingBridge WebKit FSEvents objc CoreMedia"
+
+for m in $pyobjc_modules; do \
+rm -r Distribution/Resources/lib/$m; done
+
+for m in $pyobjc_modules; do \
+cp -a  ~/Library/Python/3.9/lib/python/site-packages/$m Distribution/Resources/lib/; done
+
+
+
+find Distribution/Resources/lib/ -name *.pyc -exec rm -r "{}" \; 
+find Distribution/Resources/lib/ -name *.pyo -exec rm -r "{}" \; 
+
+
+Distribution/Resources/lib content:
+
+
+AVFoundation                       exampleproj
+AddressBook                        formencode
+AppKit                             gmpy2.cpython-39-darwin.so
+Cocoa                              gnutls
+CoreFoundation                     greenlet
+CoreMedia                          hamcrest
+CoreServices                       hyperlink
+Crypto                             idna
+FSEvents                           incremental
+Foundation                         lxml
+LaunchServices                     msrplib
+OpenSSL                            objc
+PyObjCTools                        otr
+Quartz                             pkg_resources
+ScriptingBridge                    pyasn1
+WebKit                             pyasn1_modules
+_cffi_backend.cpython-39-darwin.so pycparser
+_distutils_hack                    pydispatch
+application                        pytz
+attr                               semantic_version
+automat                            service_identity
+certifi                            sipsimple
+cffi                               six.py
+constantly                         sqlobject
+cryptography                       toml
+dateutil                           twisted
+dns                                xcaplib
+enum.py                            zope
+eventlib
+
+
+Fix library paths
+-----------------
+
+All libraries must have their relative path change to the Framework path
+bundled within Blink.app
+
+#!/bin/sh
+
+old_path="local/lib/\|local/Cellar/\|/usr/local/opt/libmpc/lib/\|/usr/local/opt/mpfr/lib/\|Frameworks/Frameworks/\|/Users/adigeo/work/ag-projects/video/local/lib/"
+new_path="@executable_path/../Frameworks/"
+
+for library in $@; do
+  install_name_tool -id $new_path$library $library
+  dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
+  for dependency in $dependencies; do
+      new_basename=$(basename $dependency)
+      new_name="$new_path$new_basename"
+      echo $dependency $new_name $library
+      install_name_tool -change $dependency $new_name $library
+  done
+done
+
+This script is available in ./build_scripts/ directory.
+
+./build_scripts/change_lib_names.sh Distribution/Frameworks/Python.framework/Versions/Current/lib/*.dylib
+./build_scripts/change_lib_names.sh Distribution/Frameworks/Python.framework/Versions/Current/Python
+
+./build_scripts/codesign.sh 
+
