@@ -3170,7 +3170,7 @@ class ContactListModel(CustomListModel):
             except DuplicateIDError as e:
                 BlinkLogger().log_debug('Duplicate contact %s' % entry)
             else:
-                group.contacts.append(c)
+                group.contacts.add(c)
 
         modified_items = list(group.contacts) + [group]
         self._atomic_update(save=modified_items)
@@ -4025,7 +4025,7 @@ class ContactListModel(CustomListModel):
 
         positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None and g.id != 'bonjour']
         positions.sort()
-        index = bisect.bisect_left(positions, group.position)
+        index = bisect.bisect_left(positions, group.position or 0)
 
         if not group.position:
             position = 0
