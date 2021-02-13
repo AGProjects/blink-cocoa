@@ -758,7 +758,7 @@ class PreferencesController(NSWindowController, object):
 
         if notification.data.code > 200:
             self.accounts[position].register_failure_code = notification.data.code
-            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason.decode()
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Error label") if notification.data.reason == 'Unknown error 61' else notification.data.reason.decode() if isinstance(notification.data.reason, bytes) else notification.data.reason
         else:
             self.accounts[position].register_failure_code = None
             self.accounts[position].register_failure_reason = None
