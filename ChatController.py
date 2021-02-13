@@ -2043,7 +2043,7 @@ class OutgoingMessageHandler(NSObject):
         recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
 
         hash = hashlib.sha1()
-        hash.update(content.encode("utf-8")+str(timestamp))
+        hash.update((content+str(timestamp)).encode("utf-8"))
         msgid = hash.hexdigest()
 
         self.messages[msgid] = MessageInfo(msgid, sender=self.delegate.account, recipient=recipient, timestamp=timestamp, content=content, private=private, status="queued", content_type=content_type)

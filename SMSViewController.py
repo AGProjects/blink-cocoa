@@ -402,10 +402,9 @@ class SMSViewController(NSObject):
             route = self.last_route
 
         if route:
-            utf8_encode = content_type not in ('application/im-iscomposing+xml', 'message/cpim')
             extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
-                                      RouteHeader(route.uri), content_type, content.encode('utf-8') if utf8_encode else content, credentials=self.account.credentials, extra_headers=extra_headers)
+                                      RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
     @objc.python_method
@@ -501,17 +500,18 @@ class SMSViewController(NSObject):
         if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
             uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port,
                          parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host, uri))
+            self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host.decode(), uri))
         elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
-            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host, self.account.id))
+            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
         else:
             uri = target_uri
-            self.log_info("Starting DNS lookup for %s" % target_uri.host)
+            self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
 
     @objc.python_method
     def sendMessage(self, content, content_type="text/plain"):
+        content = content.decode() if isinstance(content, bytes) else content
         timestamp = ISOTimestamp.now()
         hash = hashlib.sha1()
         hash.update((content+str(timestamp)).encode("utf-8"))
@@ -538,6 +538,7 @@ class SMSViewController(NSObject):
             self.setRoutesResolved([self.last_route])
 
     def textView_doCommandBySelector_(self, textView, selector):
+        
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
             content = str(textView.string())
             textView.setString_("")
