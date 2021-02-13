@@ -266,6 +266,21 @@
 		1F2D05C615A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2D05C715A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2D05C815A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
+		1F31732B25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */; };
+		1F31732C25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */; };
+		1F31732D25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */; };
+		1F31732E25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */; };
+		1F31732F25D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */; };
+		1F31733025D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */; };
+		1F31733125D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */; };
+		1F31733225D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */; };
+		1F31733325D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */; };
+		1F31733425D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */; };
+		1F31733525D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */; };
+		1F31733625D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */; };
+		1F31733725D7EC1900EA5135 /* libfontconfig.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F31733825D7EC1900EA5135 /* libfreetype.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F31733925D7EC1900EA5135 /* libpng16.16.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1F32884A17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
 		1F32884B17DB8192003A7F12 /* ChatOtrSmp.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F32884F17DB8192003A7F12 /* ChatOtrSmp.xib */; };
@@ -1911,6 +1926,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F31733725D7EC1900EA5135 /* libfontconfig.1.dylib in Copy Frameworks */,
+				1F31733825D7EC1900EA5135 /* libfreetype.6.dylib in Copy Frameworks */,
+				1F31733925D7EC1900EA5135 /* libpng16.16.dylib in Copy Frameworks */,
 				1F3F8FBC25D16523001DA381 /* libffi.7.dylib in Copy Frameworks */,
 				1F3F8F8D25D16478001DA381 /* libavcodec.58.dylib in Copy Frameworks */,
 				1F3F8F8E25D16478001DA381 /* libavformat.58.dylib in Copy Frameworks */,
@@ -2035,6 +2053,9 @@
 		1F29D0FC1906D55E0051B1BC /* video-paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-paused.png"; path = "icons/video-paused.png"; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
+		1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfontconfig.1.dylib; path = Distribution/Frameworks/libfontconfig.1.dylib; sourceTree = "<group>"; };
+		1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = Distribution/Frameworks/libfreetype.6.dylib; sourceTree = "<group>"; };
+		1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpng16.16.dylib; path = Distribution/Frameworks/libpng16.16.dylib; sourceTree = "<group>"; };
 		1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "200901@login.zipdx.com.tiff"; path = "icons/200901@login.zipdx.com.tiff"; sourceTree = "<group>"; };
 		1F32884E17DB8192003A7F12 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatOtrSmp.xib; sourceTree = "<group>"; };
 		1F331DC4193B5CB600831F31 /* voicemail.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = voicemail.png; path = icons/voicemail.png; sourceTree = "<group>"; };
@@ -2640,6 +2661,7 @@
 				1F3F8F1625D163C1001DA381 /* librav1e.0.3.4.dylib in Frameworks */,
 				1F3F8EEA25D163C1001DA381 /* libp11-kit.0.dylib in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
+				1F31732C25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */,
 				1F3F8F8225D163C2001DA381 /* liblzma.5.dylib in Frameworks */,
 				1F3F8EE625D163C1001DA381 /* libx265.192.dylib in Frameworks */,
 				1F3F8F3A25D163C2001DA381 /* libsrt.1.dylib in Frameworks */,
@@ -2658,7 +2680,9 @@
 				1F3F8EFA25D163C1001DA381 /* libmp3lame.0.dylib in Frameworks */,
 				1F3F8F6A25D163C2001DA381 /* libopus.0.dylib in Frameworks */,
 				1F3F8F2625D163C2001DA381 /* Sparkle.framework in Frameworks */,
+				1F31733425D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
 				1F3F8EF625D163C1001DA381 /* libswscale.5.dylib in Frameworks */,
+				1F31733025D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
 				1F3F8F4225D163C2001DA381 /* libopenjp2.7.dylib in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 			);
@@ -2672,6 +2696,7 @@
 				1F3F8F3825D163C2001DA381 /* libopencore-amrwb.0.dylib in Frameworks */,
 				1F3F8FBB25D16517001DA381 /* libffi.7.dylib in Frameworks */,
 				1F2436881912B29000E71253 /* AVFoundation.framework in Frameworks */,
+				1F31733225D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
 				1F3F8F2025D163C1001DA381 /* libsoxr.0.dylib in Frameworks */,
 				1F3F8EE025D163C1001DA381 /* libdav1d.4.dylib in Frameworks */,
 				1F3F8F7825D163C2001DA381 /* libnettle.8.dylib in Frameworks */,
@@ -2691,6 +2716,7 @@
 				1F3F8F0025D163C1001DA381 /* libtasn1.6.dylib in Frameworks */,
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F3F8F2425D163C1001DA381 /* libmpc.3.dylib in Frameworks */,
+				1F31733625D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
 				1F3F8F7C25D163C2001DA381 /* libintl.8.dylib in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
 				1F3F8F4425D163C2001DA381 /* libopenjp2.7.dylib in Frameworks */,
@@ -2705,6 +2731,7 @@
 				1F3F8F4825D163C2001DA381 /* libunistring.2.dylib in Frameworks */,
 				1F3F8F6C25D163C2001DA381 /* libopus.0.dylib in Frameworks */,
 				1F3F8F3025D163C2001DA381 /* libavutil.56.dylib in Frameworks */,
+				1F31732E25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */,
 				1F3F8F4C25D163C2001DA381 /* libgnutls.30.dylib in Frameworks */,
 				1F3F8F1C25D163C1001DA381 /* libvorbisenc.2.dylib in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
@@ -2761,6 +2788,7 @@
 				1F3F8F1725D163C1001DA381 /* librav1e.0.3.4.dylib in Frameworks */,
 				1F3F8EEB25D163C1001DA381 /* libp11-kit.0.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
+				1F31732D25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */,
 				1F3F8F8325D163C2001DA381 /* liblzma.5.dylib in Frameworks */,
 				1F3F8EE725D163C1001DA381 /* libx265.192.dylib in Frameworks */,
 				1F3F8F3B25D163C2001DA381 /* libsrt.1.dylib in Frameworks */,
@@ -2779,7 +2807,9 @@
 				1F3F8EFB25D163C1001DA381 /* libmp3lame.0.dylib in Frameworks */,
 				1F3F8F6B25D163C2001DA381 /* libopus.0.dylib in Frameworks */,
 				1F3F8F2725D163C2001DA381 /* Sparkle.framework in Frameworks */,
+				1F31733525D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
 				1F3F8EF725D163C1001DA381 /* libswscale.5.dylib in Frameworks */,
+				1F31733125D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
 				1F3F8F4325D163C2001DA381 /* libopenjp2.7.dylib in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
 			);
@@ -2789,13 +2819,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F31733325D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
 				1FF63CD619128C4800A502FB /* AVFoundation.framework in Frameworks */,
 				1F3F8F2525D163C1001DA381 /* Sparkle.framework in Frameworks */,
 				1FC6343318F9D38A0098945F /* ScriptingBridge.framework in Frameworks */,
 				1F3F8F6D25D163C2001DA381 /* libsqlite3.0.dylib in Frameworks */,
+				1F31732F25D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
 				1F6EF80F18E64FF0008592D2 /* QuartzCore.framework in Frameworks */,
 				1F6EF80E18E64FEB008592D2 /* OpenGL.framework in Frameworks */,
 				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
+				1F31732B25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
@@ -3034,6 +3067,9 @@
 				1F3F8EB425D163BE001DA381 /* libp11-kit.0.dylib */,
 				1F3F8EBF25D163BF001DA381 /* librav1e.0.3.4.dylib */,
 				1F3F8EBA25D163BE001DA381 /* librtmp.1.dylib */,
+				1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */,
+				1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */,
+				1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */,
 				1F3F8ED925D163C1001DA381 /* libsnappy.1.dylib */,
 				1F3F8EC125D163BF001DA381 /* libsoxr.0.dylib */,
 				1F3F8EBB25D163BE001DA381 /* libspeex.1.dylib */,
