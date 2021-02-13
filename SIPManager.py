@@ -554,6 +554,8 @@ class SIPManager(object, metaclass=Singleton):
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
             call_in_green_thread(self.bonjour_conference_services.start)
+        else:
+            BlinkLogger().log_info("Account %s loaded %d CAs from %s" % (account.id, len(account.tls_credentials._trusted), account.ca_list))
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info("Account %s deactivated" % account.id)
