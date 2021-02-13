@@ -878,7 +878,9 @@ class AudioController(MediaStream):
                     label = self.sessionController.account.gui.account_label or self.sessionController.account.id if self.sessionController.account is not BonjourAccount() else "Bonjour"
                     self.elapsed.setStringValue_(label)
                 else:
-                    self.elapsed.setStringValue_(sip_prefix_pattern.sub("", str(self.sessionController.routes[0])))
+                    route = self.sessionController.routes[0]
+                    dest = "%s:%s" % (route.uri.transport.decode().upper(), route.uri.host.decode())
+                    self.elapsed.setStringValue_(dest)
             elif self.status == STREAM_RINGING:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Ringing...", "Audio status label"))
             else:
