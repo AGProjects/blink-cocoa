@@ -93,7 +93,7 @@ class BlinkAppDelegate(NSObject):
     ip_change_timestamp = None
     transport_lost_timestamp = None
 
-    debug = True
+    debug = False
 
     blinkMenu = objc.IBOutlet()
     ready = False
