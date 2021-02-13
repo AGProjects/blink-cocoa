@@ -2245,8 +2245,11 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
                 blink_contact.destroy()
 
             if book is None:
+                BlinkLogger().log_info('Could not load OS Address Book')
                 nc.post_notification("BlinkContactsHaveChanged", sender=self)
                 return
+            else:
+                BlinkLogger().log_info('Loaded OS Address Book')
 
             for i, ab_contact in enumerate(book.people()):
                 if i % 10  == 0:
