@@ -1745,7 +1745,7 @@ class ChatWindowController(NSWindowController):
 
         if session is not None and session.session is None:
             if session.account is BonjourAccount():
-                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+                own_uri = '%s@%s' % (session.account.uri.user.decode(), session.account.uri.host.decode())
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
@@ -1776,7 +1776,7 @@ class ChatWindowController(NSWindowController):
             self.participants.append(contact)
         elif session is not None and session.session is not None:
             if session.account is BonjourAccount():
-                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+                own_uri = '%s@%s' % (session.account.uri.user.decode(), session.account.uri.host.decode())
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
@@ -1831,7 +1831,7 @@ class ChatWindowController(NSWindowController):
                 else:
                     try:
                         sip_uri = SIPURI.parse(str(contact.uri))
-                        puri = '%s@%s' % (sip_uri.user, sip_uri.host)
+                        puri = '%s@%s' % (sip_uri.user.decode(), sip_uri.host.decode())
                     except SIPCoreError:
                         puri = contact.uri
                     contact.detail = puri

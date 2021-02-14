@@ -635,7 +635,7 @@ class BlinkMyselfConferenceContact(BlinkContact):
 
     def __init__(self, account):
         if account is BonjourAccount():
-            uri = '%s@%s' % (account.uri.user, account.uri.host)
+            uri = '%s@%s' % (account.uri.user.decode(), account.uri.host.decode())
         else:
             uri = '%s@%s' % (account.id.username, account.id.domain)
         self.account = account

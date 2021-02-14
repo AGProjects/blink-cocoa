@@ -1323,7 +1323,7 @@ class ContactWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
 
             if session.account is BonjourAccount():
-                own_uri = '%s@%s' % (session.account.uri.user, session.account.uri.host)
+                own_uri = '%s@%s' % (session.account.uri.user.decode(), session.account.uri.host.decode())
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 

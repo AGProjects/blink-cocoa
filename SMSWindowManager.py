@@ -58,7 +58,7 @@ class SMSWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             display_name = session.display_name
-            sip_address = '%s@%s' % (session.target_uri.user, session.target_uri.host)
+            sip_address = '%s@%s' % (session.target_uri.user.decode(), session.target_uri.host.decode())
             if display_name and display_name != sip_address:
                 title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
             else:
@@ -106,7 +106,7 @@ class SMSWindowController(NSWindowController):
     def addViewer_(self, viewer):
         tabItem = NSTabViewItem.alloc().initWithIdentifier_(viewer)
         tabItem.setView_(viewer.getContentView())
-        sip_address = '%s@%s' % (viewer.target_uri.user, viewer.target_uri.host)
+        sip_address = '%s@%s' % (viewer.target_uri.user.decode(), viewer.target_uri.host.decode())
         if viewer.display_name and viewer.display_name != sip_address:
             tabItem.setLabel_("%s" % viewer.display_name)
         else:

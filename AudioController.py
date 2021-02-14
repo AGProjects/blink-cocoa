@@ -1242,7 +1242,7 @@ class AudioController(MediaStream):
         settings = SIPSimpleSettings()
         session = self.sessionController.session
         direction = session.direction
-        remote = "%s@%s" % (session.remote_identity.uri.user, session.remote_identity.uri.host)
+        remote = "%s@%s" % (session.remote_identity.uri.user.decode(), session.remote_identity.uri.host.decode())
         filename = "%s-%s.wav" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), remote)
         path = os.path.join(settings.audio.directory.normalized, session.account.id)
         self.recording_path=os.path.join(path, filename)
