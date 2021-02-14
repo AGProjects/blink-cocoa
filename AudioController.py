@@ -563,7 +563,7 @@ class AudioController(MediaStream):
         if self.status == STREAM_CONNECTED and self.answeringMachine:
             duration = self.answeringMachine.duration
 
-            if duration >= settings.answering_machine.max_recording_duration:
+            if duration and duration >= settings.answering_machine.max_recording_duration:
                 self.sessionController.log_info("Answering machine recording time limit reached, hanging up...")
                 self.end()
                 return
@@ -642,7 +642,7 @@ class AudioController(MediaStream):
                 sample_rate = self.stream.sample_rate/1000
                 codec = beautify_audio_codec(self.stream.codec)
                 
-                if self.stream.sample_rate >= 16000:
+                if self.stream.sample_rate and self.stream.sample_rate >= 16000:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     hd_label = NSLocalizedString("Wideband", "Label")
                 else:
