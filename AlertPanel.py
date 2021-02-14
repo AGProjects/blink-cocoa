@@ -549,7 +549,7 @@ class AlertPanel(NSObject, object):
         alt_action = None
         alt_object = ONLY_CHAT
 
-         subject = session.subject.decode() if isinstance(session.subject, bytes) else None
+        subject = session.subject.decode() if isinstance(session.subject, bytes) else None
 
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
