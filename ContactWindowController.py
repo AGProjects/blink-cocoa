@@ -670,13 +670,17 @@ class ContactWindowController(NSWindowController):
             self.accountPopUp.addItemWithTitle_(NSLocalizedString("Add Account...", "Account popup menu item"))
 
         if account_manager.default_account is not None:
-            self.nameText.setStringValue_(account_manager.default_account.display_name or account_manager.default_account.id)
+            self.updateNameLabel(account_manager.default_account.display_name or account_manager.default_account.id)
         else:
-            self.nameText.setStringValue_('')
+            self.updateNameLabel('')
 
     @objc.python_method
     def activeAccount(self):
         return self.accountPopUp.selectedItem().representedObject()
+
+    @objc.python_method
+    def updateNameLabel(self, name):
+        self.nameText.setStringValue_(name)
 
     @objc.python_method
     def refreshContactsList(self, sender=None):
@@ -2650,7 +2654,7 @@ class ContactWindowController(NSWindowController):
             self.silentButton.setState_(NSOffState)
         active = self.activeAccount()
         if active and active.display_name != self.nameText.stringValue():
-            self.nameText.setStringValue_(active.display_name or "")
+            self.updateNameLabel(active.display_name or "")
 
         self.contactOutline.reloadData()
 
@@ -4167,7 +4171,7 @@ class ContactWindowController(NSWindowController):
         account = sender.selectedItem().representedObject()
         if account:
             name = format_identity_to_string(account, format='compact')
-            self.nameText.setStringValue_(name)
+            self.updateNameLabel(name)
             AccountManager().default_account = account
 
             if account is BonjourAccount():

@@ -117,6 +117,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
 
     user = identity.user.decode() if isinstance(identity.user, bytes) else identity.user
     host = identity.host.decode() if isinstance(identity.host, bytes) else identity.host
+    transport = identity.transport.decode() if isinstance(identity.transport, bytes) else identity.transport
     uri = "%s@%s" % (user, host)
 
     if format == 'aor':
@@ -124,9 +125,6 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
 
     if identity.port is not None and identity.port != 5060:
         port = identity.port
-
-    if identity.transport != 'udp':
-        transport = identity.transport
 
     display_name = identity.display_name if hasattr(identity, 'display_name') else None
     uri = sip_prefix_pattern.sub("", uri)
