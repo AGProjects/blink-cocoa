@@ -12,6 +12,11 @@ if debug_memory:
 
 import os
 import sys
+
+remove_paths = list(path for path in sys.path if 'site-packages' in path)
+for path in remove_paths:
+     sys.path.remove(path)
+
 from util import memory_stick_mode
 
 from Foundation import NSBundle
@@ -63,6 +68,7 @@ class NSLogger(object):
 
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
+
 
 if memory_stick_mode():
     from resources import ApplicationData
