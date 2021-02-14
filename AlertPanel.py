@@ -549,6 +549,8 @@ class AlertPanel(NSObject, object):
         alt_action = None
         alt_object = ONLY_CHAT
 
+         subject = session.subject.decode() if isinstance(session.subject, bytes) else None
+
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
             if "Chat" in type_names:
@@ -558,9 +560,7 @@ class AlertPanel(NSObject, object):
                 alt_action = NSLocalizedString("Audio Only", "Button title")
                 alt_object = ONLY_AUDIO
 
-        if session.subject:
-            subject = session.subject
-        else:
+        if not subject:
             subject = NSLocalizedString("Audio call requested by", "Label")
             if len(streams) != 1:
                 if "Screen sharing" in type_names:
