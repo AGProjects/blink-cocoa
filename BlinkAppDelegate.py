@@ -144,7 +144,7 @@ class BlinkAppDelegate(NSObject):
                            }
 
     statusbar_menu_icon = 'invisible'
-    about_copyright = "Copyright 2009-2014 AG Projects"
+    about_copyright = "Copyright 2009-2021 AG Projects"
     active_transports = set()
     terminating = False
 
