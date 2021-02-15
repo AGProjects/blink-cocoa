@@ -9,16 +9,7 @@ Dependencies must be installed as follwos:
 - Distribution/Resources/lib
      -> Contain all Python packages
 
-
-Download Python Framework from:
-
-https://www.python.org/downloads/release/python-391/
-
-cp -a /Library/Frameworks/Python.framework Distribution/Frameworks/
-
-Codesign Python Framework using your Xcode identity:
-
-codesign -v -s "Developer ID Application: AG Projects" Distribution/Frameworks/
+Download and install Python Framework using copy_python.sh script
 
 Copy all related C dependencies installed using Brew to Distribution/Frameworks/
 
@@ -58,43 +49,14 @@ Change the relative path inside all libraries to point to @executable_path/../Fr
 
 ./build_scripts/change_lib_names.sh Distribution/Frameworks/*.dylib
 
-./build_scripts/change_lib_names.sh Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
-codesign -v -s "Developer ID Application: AG Projects" Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
+Download and install Python Framework using this script inside Distribution
+folder: copy_python.sh
 
+Download and install python3-sipsimple and its dependencies:
 
-Installing PyObjC
------------------
+https://github.com/AGProjects/python3-sipsimple/blob/master/docs/Install.osx
 
-pip3 install pyobjc
-
-Which installs Python Objective C modules in this folder:
-
-Copy the Frameworks listed below into Blink/Distribution/Resources/lib folder.
-
-pyobjc_modules="AVFoundation AddressBook AppKit Cocoa CoreFoundation CoreServices \
-Foundation LaunchServices PyObjCTools Quartz ScriptingBridge WebKit FSEvents objc CoreMedia"
-
-for m in $pyobjc_modules; do \
-rm -r Distribution/Resources/lib/$m; done
-
-for m in $pyobjc_modules; do \
-cp -a  ~/Library/Python/3.9/lib/python/site-packages/$m Distribution/Resources/lib/; done
-
-id="Developer ID Application: AG Projects"
-for m in $pyobjc_modules; do
-    libs=`find Distribution/Resources/lib/$m -name *.so`
-    for l in $libs; do
-        codesign -v -f -s "$id" $l
-    done
-done
-
-
-find Distribution/Resources/lib/ -name *.pyc -exec rm -r "{}" \; 
-find Distribution/Resources/lib/ -name *.pyo -exec rm -r "{}" \; 
-
-
-Distribution/Resources/lib content:
-
+The final content of Distribution/Resources/lib folder:
 
 AVFoundation                       exampleproj
 AddressBook                        formencode
@@ -127,10 +89,15 @@ enum.py                            zope
 eventlib
 
 
+./build_scripts/change_lib_names.sh Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
+codesign -v -s "Developer ID Application" Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
+codesign -v -s "Developer ID Application" Distribution/Resources/lib/sipsimple/util/_sha1.cpython-39-darwin.so 
+
+
 Fix library paths
 -----------------
 
-All libraries must have their relative path change to the Framework path
+All libraries must have their relative path changed to the Frameworks path
 bundled within Blink.app
 
 #!/bin/sh
@@ -148,11 +115,4 @@ for library in $@; do
       install_name_tool -change $dependency $new_name $library
   done
 done
-
-This script is available in ./build_scripts/ directory.
-
-./build_scripts/change_lib_names.sh Distribution/Frameworks/Python.framework/Versions/Current/lib/*.dylib
-./build_scripts/change_lib_names.sh Distribution/Frameworks/Python.framework/Versions/Current/Python
-
-./build_scripts/codesign.sh 
 
