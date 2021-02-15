@@ -1,5 +1,5 @@
 #!/bin/sh
-id="Developer ID Application: AG Projects"
+id="Developer ID Application"
 sos=`find ./Resources/lib -name *.so`; for s in $sos; do codesign -f -s "$id" $s; done
 sos=`find ./Frameworks -name *.dylib`; for s in $sos; do codesign -f -s "$id" $s; done
 sos=`find ./Frameworks -name *.so`; for s in $sos; do codesign -f -s "$id" $s; done
