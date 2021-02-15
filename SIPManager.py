@@ -543,13 +543,11 @@ class SIPManager(object, metaclass=Singleton):
         self.ip_address_monitor.stop()
 
     def _NH_SIPEngineGotException(self, sender, data):
-        BlinkLogger().log_info("A fatal error occurred, forcing termination of Blink")
         BlinkLogger().log_info("SIP Engine Exception", data)
         NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was a critical error of core functionality:\n%s", "Label") % data.traceback,
                 NSLocalizedString("Quit", "Button title"), None, None)
         NSApp.terminate_(None)
         return
-
 
     def _NH_SIPEngineDidFail(self, sender, data):
         NSRunAlertPanel(NSLocalizedString("Fatal Error Encountered", "Window title"), NSLocalizedString("There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.", "Label"),
@@ -708,6 +706,10 @@ class SIPManager(object, metaclass=Singleton):
 
     def _NH_SIPEngineGotException(self, sender, data):
         BlinkLogger().log_info("SIP Engine got fatal error: %s" % data.traceback)
+        NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was a critical error of core functionality:\n%s", "Label") % data.traceback,
+                NSLocalizedString("Quit", "Button title"), None, None)
+        NSApp.terminate_(None)
+        return
 
     def validateAddAccountAction(self):
         if NSApp.delegate().maximum_accounts:
