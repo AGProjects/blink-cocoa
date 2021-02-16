@@ -2403,7 +2403,6 @@
 		1F889B7219EEC57200772E1F /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
-		1F8CB30A19546C9700D73F74 /* branding-elquijote-appstore.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote-appstore.py"; sourceTree = "<group>"; };
 		1F8DC412135084FA0034815C /* Blink Lite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Blink Lite.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
 		1F9268F414868A82006F2FD8 /* EMKeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EMKeychainItem.h; path = keychain/EMKeychainItem.h; sourceTree = "<group>"; };
@@ -2467,7 +2466,6 @@
 		1FC6342F18F9D3450098945F /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
 		1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ElQuijote.icns; sourceTree = "<group>"; };
-		1FC80F70192E414C00BD62F4 /* branding-elquijote.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-elquijote.py"; sourceTree = "<group>"; };
 		1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ElQuijote-logo.png"; sourceTree = "<group>"; };
 		1FC99CF519BC93700013C580 /* close-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "close-small.png"; path = "icons/close-small.png"; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
@@ -3046,8 +3044,6 @@
 				1F419C9519152F400051F3D9 /* branding-sip2sip.py */,
 				1F419C991915330B0051F3D9 /* branding-pro.py */,
 				1F419C97191530080051F3D9 /* branding-lite.py */,
-				1FC80F70192E414C00BD62F4 /* branding-elquijote.py */,
-				1F8CB30A19546C9700D73F74 /* branding-elquijote-appstore.py */,
 			);
 			name = Branding;
 			sourceTree = "<group>";
