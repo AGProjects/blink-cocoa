@@ -34,6 +34,7 @@ rm -r Frameworks/Python.framework/Versions/3.9/share/doc/python3.9/html
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtcl8.6.dylib
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtk8.6.dylib
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtkstub8.6.a
+sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/python.o
 
 #Sign
 sign_id="Developer ID Application"
