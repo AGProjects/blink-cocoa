@@ -633,7 +633,6 @@
 		1F3F8F2225D163C1001DA381 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; };
 		1F3F8F2325D163C1001DA381 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; };
 		1F3F8F2425D163C1001DA381 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; };
-		1F3F8F2525D163C1001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
 		1F3F8F2625D163C2001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
 		1F3F8F2725D163C2001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
 		1F3F8F2825D163C2001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
@@ -1232,6 +1231,54 @@
 		1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
 		1FC6343218F9D37F0098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
 		1FC6343318F9D38A0098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
+		1FC6562925DC27CB00C2AE06 /* libffi.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8FB725D16517001DA381 /* libffi.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6562A25DC27CB00C2AE06 /* libpython3.9.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6562B25DC27CB00C2AE06 /* libavcodec.58.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECE25D163C0001DA381 /* libavcodec.58.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6562C25DC27CB00C2AE06 /* libavformat.58.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBE25D163BF001DA381 /* libavformat.58.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6562D25DC27CB00C2AE06 /* libavutil.56.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC525D163BF001DA381 /* libavutil.56.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6562E25DC27CB00C2AE06 /* libbluray.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EDB25D163C1001DA381 /* libbluray.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6562F25DC27CB00C2AE06 /* libcrypto.1.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED225D163C0001DA381 /* libcrypto.1.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563025DC27CB00C2AE06 /* libdav1d.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB125D163BE001DA381 /* libdav1d.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563125DC27CB00C2AE06 /* libgmp.10.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC925D163C0001DA381 /* libgmp.10.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563225DC27CB00C2AE06 /* libgnutls.30.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECC25D163C0001DA381 /* libgnutls.30.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563325DC27CB00C2AE06 /* libhogweed.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EDC25D163C1001DA381 /* libhogweed.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563425DC27CB00C2AE06 /* libidn2.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED025D163C0001DA381 /* libidn2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563525DC27CB00C2AE06 /* libintl.8.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED825D163C1001DA381 /* libintl.8.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563625DC27CB00C2AE06 /* liblzma.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EDA25D163C1001DA381 /* liblzma.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563725DC27CB00C2AE06 /* libmp3lame.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB825D163BE001DA381 /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563825DC27CB00C2AE06 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563925DC27CB00C2AE06 /* libmpfr.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC425D163BF001DA381 /* libmpfr.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563A25DC27CB00C2AE06 /* libnettle.8.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED725D163C1001DA381 /* libnettle.8.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563B25DC27CB00C2AE06 /* libogg.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED325D163C0001DA381 /* libogg.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563C25DC27CB00C2AE06 /* libopencore-amrnb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB525D163BE001DA381 /* libopencore-amrnb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563D25DC27CB00C2AE06 /* libopencore-amrwb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC725D163BF001DA381 /* libopencore-amrwb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563E25DC27CB00C2AE06 /* libopenjp2.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECA25D163C0001DA381 /* libopenjp2.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6563F25DC27CB00C2AE06 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED425D163C1001DA381 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564025DC27CB00C2AE06 /* libp11-kit.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB425D163BE001DA381 /* libp11-kit.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564125DC27CB00C2AE06 /* librav1e.0.3.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBF25D163BF001DA381 /* librav1e.0.3.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564225DC27CB00C2AE06 /* librtmp.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBA25D163BE001DA381 /* librtmp.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564325DC27CB00C2AE06 /* libfontconfig.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564425DC27CB00C2AE06 /* libfreetype.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564525DC27CB00C2AE06 /* libpng16.16.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F31732A25D7EBF400EA5135 /* libpng16.16.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564625DC27CB00C2AE06 /* libsnappy.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED925D163C1001DA381 /* libsnappy.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564725DC27CB00C2AE06 /* libsoxr.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC125D163BF001DA381 /* libsoxr.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564825DC27CB00C2AE06 /* libspeex.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBB25D163BE001DA381 /* libspeex.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564925DC27CB00C2AE06 /* libsqlite3.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED525D163C1001DA381 /* libsqlite3.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564A25DC27CB00C2AE06 /* libsrt.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC825D163C0001DA381 /* libsrt.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564B25DC27CB00C2AE06 /* libssl.1.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB225D163BE001DA381 /* libssl.1.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564C25DC27CB00C2AE06 /* libswresample.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB625D163BE001DA381 /* libswresample.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564D25DC27CB00C2AE06 /* libswscale.5.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB725D163BE001DA381 /* libswscale.5.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564E25DC27CB00C2AE06 /* libtasn1.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB925D163BE001DA381 /* libtasn1.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6564F25DC27CB00C2AE06 /* libtheoradec.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECF25D163C0001DA381 /* libtheoradec.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565025DC27CB00C2AE06 /* libtheoraenc.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC625D163BF001DA381 /* libtheoraenc.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565125DC27CB00C2AE06 /* libunistring.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECB25D163C0001DA381 /* libunistring.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565225DC27CB00C2AE06 /* libvorbis.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED625D163C1001DA381 /* libvorbis.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565325DC27CB00C2AE06 /* libvorbisenc.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC025D163BF001DA381 /* libvorbisenc.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565425DC27CB00C2AE06 /* libwebp.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBC25D163BE001DA381 /* libwebp.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565525DC27CB00C2AE06 /* libwebpmux.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBD25D163BF001DA381 /* libwebpmux.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565625DC27CB00C2AE06 /* libx264.161.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED125D163C0001DA381 /* libx264.161.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565725DC27CB00C2AE06 /* libx265.192.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB325D163BE001DA381 /* libx265.192.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FC6565825DC27CB00C2AE06 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
@@ -1646,6 +1693,54 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FC6562925DC27CB00C2AE06 /* libffi.7.dylib in Copy Frameworks */,
+				1FC6562A25DC27CB00C2AE06 /* libpython3.9.dylib in Copy Frameworks */,
+				1FC6562B25DC27CB00C2AE06 /* libavcodec.58.dylib in Copy Frameworks */,
+				1FC6562C25DC27CB00C2AE06 /* libavformat.58.dylib in Copy Frameworks */,
+				1FC6562D25DC27CB00C2AE06 /* libavutil.56.dylib in Copy Frameworks */,
+				1FC6562E25DC27CB00C2AE06 /* libbluray.2.dylib in Copy Frameworks */,
+				1FC6562F25DC27CB00C2AE06 /* libcrypto.1.1.dylib in Copy Frameworks */,
+				1FC6563025DC27CB00C2AE06 /* libdav1d.4.dylib in Copy Frameworks */,
+				1FC6563125DC27CB00C2AE06 /* libgmp.10.dylib in Copy Frameworks */,
+				1FC6563225DC27CB00C2AE06 /* libgnutls.30.dylib in Copy Frameworks */,
+				1FC6563325DC27CB00C2AE06 /* libhogweed.6.dylib in Copy Frameworks */,
+				1FC6563425DC27CB00C2AE06 /* libidn2.0.dylib in Copy Frameworks */,
+				1FC6563525DC27CB00C2AE06 /* libintl.8.dylib in Copy Frameworks */,
+				1FC6563625DC27CB00C2AE06 /* liblzma.5.dylib in Copy Frameworks */,
+				1FC6563725DC27CB00C2AE06 /* libmp3lame.0.dylib in Copy Frameworks */,
+				1FC6563825DC27CB00C2AE06 /* libmpc.3.dylib in Copy Frameworks */,
+				1FC6563925DC27CB00C2AE06 /* libmpfr.6.dylib in Copy Frameworks */,
+				1FC6563A25DC27CB00C2AE06 /* libnettle.8.dylib in Copy Frameworks */,
+				1FC6563B25DC27CB00C2AE06 /* libogg.0.dylib in Copy Frameworks */,
+				1FC6563C25DC27CB00C2AE06 /* libopencore-amrnb.0.dylib in Copy Frameworks */,
+				1FC6563D25DC27CB00C2AE06 /* libopencore-amrwb.0.dylib in Copy Frameworks */,
+				1FC6563E25DC27CB00C2AE06 /* libopenjp2.7.dylib in Copy Frameworks */,
+				1FC6563F25DC27CB00C2AE06 /* libopus.0.dylib in Copy Frameworks */,
+				1FC6564025DC27CB00C2AE06 /* libp11-kit.0.dylib in Copy Frameworks */,
+				1FC6564125DC27CB00C2AE06 /* librav1e.0.3.4.dylib in Copy Frameworks */,
+				1FC6564225DC27CB00C2AE06 /* librtmp.1.dylib in Copy Frameworks */,
+				1FC6564325DC27CB00C2AE06 /* libfontconfig.1.dylib in Copy Frameworks */,
+				1FC6564425DC27CB00C2AE06 /* libfreetype.6.dylib in Copy Frameworks */,
+				1FC6564525DC27CB00C2AE06 /* libpng16.16.dylib in Copy Frameworks */,
+				1FC6564625DC27CB00C2AE06 /* libsnappy.1.dylib in Copy Frameworks */,
+				1FC6564725DC27CB00C2AE06 /* libsoxr.0.dylib in Copy Frameworks */,
+				1FC6564825DC27CB00C2AE06 /* libspeex.1.dylib in Copy Frameworks */,
+				1FC6564925DC27CB00C2AE06 /* libsqlite3.0.dylib in Copy Frameworks */,
+				1FC6564A25DC27CB00C2AE06 /* libsrt.1.dylib in Copy Frameworks */,
+				1FC6564B25DC27CB00C2AE06 /* libssl.1.1.dylib in Copy Frameworks */,
+				1FC6564C25DC27CB00C2AE06 /* libswresample.3.dylib in Copy Frameworks */,
+				1FC6564D25DC27CB00C2AE06 /* libswscale.5.dylib in Copy Frameworks */,
+				1FC6564E25DC27CB00C2AE06 /* libtasn1.6.dylib in Copy Frameworks */,
+				1FC6564F25DC27CB00C2AE06 /* libtheoradec.1.dylib in Copy Frameworks */,
+				1FC6565025DC27CB00C2AE06 /* libtheoraenc.1.dylib in Copy Frameworks */,
+				1FC6565125DC27CB00C2AE06 /* libunistring.2.dylib in Copy Frameworks */,
+				1FC6565225DC27CB00C2AE06 /* libvorbis.0.dylib in Copy Frameworks */,
+				1FC6565325DC27CB00C2AE06 /* libvorbisenc.2.dylib in Copy Frameworks */,
+				1FC6565425DC27CB00C2AE06 /* libwebp.7.dylib in Copy Frameworks */,
+				1FC6565525DC27CB00C2AE06 /* libwebpmux.3.dylib in Copy Frameworks */,
+				1FC6565625DC27CB00C2AE06 /* libx264.161.dylib in Copy Frameworks */,
+				1FC6565725DC27CB00C2AE06 /* libx265.192.dylib in Copy Frameworks */,
+				1FC6565825DC27CB00C2AE06 /* Sparkle.framework in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -2819,19 +2914,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F31733325D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
 				1FF63CD619128C4800A502FB /* AVFoundation.framework in Frameworks */,
-				1F3F8F2525D163C1001DA381 /* Sparkle.framework in Frameworks */,
+				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
+				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1FC6343318F9D38A0098945F /* ScriptingBridge.framework in Frameworks */,
-				1F3F8F6D25D163C2001DA381 /* libsqlite3.0.dylib in Frameworks */,
-				1F31732F25D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
 				1F6EF80F18E64FF0008592D2 /* QuartzCore.framework in Frameworks */,
 				1F6EF80E18E64FEB008592D2 /* OpenGL.framework in Frameworks */,
 				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
+				1F3F8F6D25D163C2001DA381 /* libsqlite3.0.dylib in Frameworks */,
+				1F31733325D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
+				1F31732F25D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
+				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
 				1F31732B25D7EBF400EA5135 /* libfontconfig.1.dylib in Frameworks */,
-				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
-				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
-				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				1F3F8FC725D17188001DA381 /* libpython3.9.dylib in Frameworks */,
 				1F3F8EE125D163C1001DA381 /* libssl.1.1.dylib in Frameworks */,
 			);
@@ -3695,7 +3790,8 @@
 				LastUpgradeCheck = 0700;
 				TargetAttributes = {
 					1F22729312B554F50010A8B2 = {
-						ProvisioningStyle = Manual;
+						DevelopmentTeam = 4DFEFUDLKZ;
+						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.InAppPurchase = {
 								enabled = 0;
@@ -5532,12 +5628,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_LINK_OBJC_RUNTIME = NO;
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					/System/Library/Frameworks,
@@ -5579,12 +5675,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_LINK_OBJC_RUNTIME = NO;
 				CODE_SIGN_ENTITLEMENTS = BlinkPro.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					/System/Library/Frameworks,
