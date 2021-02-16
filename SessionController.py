@@ -1664,7 +1664,7 @@ class SessionController(NSObject):
 
                     if host is None or host.default_ip is None:
                         self.setRoutesFailed("No Internet connection")
-                        self.changeSessionState(STATE_FAILED, NSLocalizedString("No Internet connection", "Label"))
+
                     else:
                         # used to start DNS lookup here, but not we are waiting for local camera
                         if any(streamHandler.stream.type=='video' for streamHandler in self.streamHandlers):
@@ -1785,7 +1785,8 @@ class SessionController(NSObject):
         self.log_info("Routing failure: '%s'"%msg)
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
-
+        self.changeSessionState(STATE_FAILED, NSLocalizedString(msg, "Label"))
+                        
     @objc.python_method
     @run_in_gui_thread
     def cancelBeforeDNSLookup(self):
