@@ -338,6 +338,7 @@ class ContactWindowController(NSWindowController):
     purge_presence_timer = None
     full_screen_in_progress = False
     myvideo = None
+    refresh_drawer_counter = 1
 
     @property
     def has_audio(self):
