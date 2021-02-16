@@ -263,6 +263,12 @@
 		1F29D1001906D55E0051B1BC /* video-paused.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F29D0FC1906D55E0051B1BC /* video-paused.png */; };
 		1F2A32351328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
 		1F2A32361328CEE00078F01D /* paused_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F2A32341328CEE00078F01D /* paused_16.png */; };
+		1F2C06EA25DC316A004701ED /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1F2C06E725DC316A004701ED /* mime.types */; };
+		1F2C06EB25DC316A004701ED /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1F2C06E725DC316A004701ED /* mime.types */; };
+		1F2C06ED25DC31C2004701ED /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1F2C06EC25DC31C1004701ED /* mime.types */; };
+		1F2C06EF25DC31C2004701ED /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1F2C06EC25DC31C1004701ED /* mime.types */; };
+		1F2C06F025DC31C2004701ED /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1F2C06EC25DC31C1004701ED /* mime.types */; };
+		1F2C06F225DC3490004701ED /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1F2C06EC25DC31C1004701ED /* mime.types */; };
 		1F2D05C615A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2D05C715A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
 		1F2D05C815A459DA00A7079A /* ContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F2D05C515A459DA00A7079A /* ContactController.py */; };
@@ -474,7 +480,6 @@
 		1F35D03517894FFF00C6FE38 /* ConferenceScreenSharing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FD2EF941439CCC300DFBB2A /* ConferenceScreenSharing.xib */; };
 		1F35D03617894FFF00C6FE38 /* BlinkPro.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */; };
 		1F35D03817894FFF00C6FE38 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
-		1F35D03917894FFF00C6FE38 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
 		1F35D03A17894FFF00C6FE38 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
 		1F35D03B17894FFF00C6FE38 /* NightVolumeSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F87B6EF1477D57000BDF25A /* NightVolumeSetting.xib */; };
 		1F35D03C17894FFF00C6FE38 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
@@ -633,7 +638,6 @@
 		1F3F8F2225D163C1001DA381 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; };
 		1F3F8F2325D163C1001DA381 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; };
 		1F3F8F2425D163C1001DA381 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC225D163BF001DA381 /* libmpc.3.dylib */; };
-		1F3F8F2625D163C2001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
 		1F3F8F2725D163C2001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
 		1F3F8F2825D163C2001DA381 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; };
 		1F3F8F2A25D163C2001DA381 /* libmpfr.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC425D163BF001DA381 /* libmpfr.6.dylib */; };
@@ -1185,9 +1189,6 @@
 		1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
 		1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
 		1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */; };
-		1FB3080A146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
-		1FB3080B146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
-		1FB3080C146D5598001430B5 /* mime.types in Resources */ = {isa = PBXBuildFile; fileRef = 1FB30809146D5598001430B5 /* mime.types */; };
 		1FB3AE7418F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FB3AE7518F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FB3AE7618F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
@@ -1278,7 +1279,6 @@
 		1FC6565525DC27CB00C2AE06 /* libwebpmux.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EBD25D163BF001DA381 /* libwebpmux.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FC6565625DC27CB00C2AE06 /* libx264.161.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ED125D163C0001DA381 /* libx264.161.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FC6565725DC27CB00C2AE06 /* libx265.192.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EB325D163BE001DA381 /* libx265.192.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1FC6565825DC27CB00C2AE06 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8EC325D163BF001DA381 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1FC66E0D139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0E139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
 		1FC66E0F139E208700D03D71 /* MigrationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FC66E0C139E208700D03D71 /* MigrationPanel.xib */; };
@@ -1740,7 +1740,6 @@
 				1FC6565525DC27CB00C2AE06 /* libwebpmux.3.dylib in Copy Frameworks */,
 				1FC6565625DC27CB00C2AE06 /* libx264.161.dylib in Copy Frameworks */,
 				1FC6565725DC27CB00C2AE06 /* libx265.192.dylib in Copy Frameworks */,
-				1FC6565825DC27CB00C2AE06 /* Sparkle.framework in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -2147,6 +2146,8 @@
 		1F29D0EB1905BD670051B1BC /* sip2sip.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = sip2sip.icns; sourceTree = "<group>"; };
 		1F29D0FC1906D55E0051B1BC /* video-paused.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "video-paused.png"; path = "icons/video-paused.png"; sourceTree = "<group>"; };
 		1F2A32341328CEE00078F01D /* paused_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = paused_16.png; path = icons/paused_16.png; sourceTree = "<group>"; };
+		1F2C06E725DC316A004701ED /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mime.types; sourceTree = "<group>"; };
+		1F2C06EC25DC31C1004701ED /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mime.types; sourceTree = "<group>"; };
 		1F2D05C515A459DA00A7079A /* ContactController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactController.py; sourceTree = "<group>"; };
 		1F31732825D7EBF400EA5135 /* libfontconfig.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfontconfig.1.dylib; path = Distribution/Frameworks/libfontconfig.1.dylib; sourceTree = "<group>"; };
 		1F31732925D7EBF400EA5135 /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.6.dylib; path = Distribution/Frameworks/libfreetype.6.dylib; sourceTree = "<group>"; };
@@ -2434,7 +2435,6 @@
 		1FB22A0A140308950024F921 /* zrtp-security-failed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "zrtp-security-failed.wav"; path = "sounds/zrtp-security-failed.wav"; sourceTree = "<group>"; };
 		1FB247E015D99AEB00703D24 /* OfflineNoteController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = OfflineNoteController.py; sourceTree = "<group>"; };
 		1FB30807146D540C001430B5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
-		1FB30809146D5598001430B5 /* mime.types */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = mime.types; path = /etc/apache2/mime.types; sourceTree = "<absolute>"; };
 		1FB3AE7318F1E73E001C612B /* close.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = close.png; path = icons/close.png; sourceTree = "<group>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
 		1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_0_tone.wav; path = sounds/dtmf_0_tone.wav; sourceTree = "<group>"; };
@@ -2772,7 +2772,6 @@
 				1F3F8F6625D163C2001DA381 /* libogg.0.dylib in Frameworks */,
 				1F3F8EFA25D163C1001DA381 /* libmp3lame.0.dylib in Frameworks */,
 				1F3F8F6A25D163C2001DA381 /* libopus.0.dylib in Frameworks */,
-				1F3F8F2625D163C2001DA381 /* Sparkle.framework in Frameworks */,
 				1F31733425D7EBF400EA5135 /* libpng16.16.dylib in Frameworks */,
 				1F3F8EF625D163C1001DA381 /* libswscale.5.dylib in Frameworks */,
 				1F31733025D7EBF400EA5135 /* libfreetype.6.dylib in Frameworks */,
@@ -2974,11 +2973,11 @@
 		1F226DE312B54FBE0010A8B2 /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				1F2C06EC25DC31C1004701ED /* mime.types */,
 				1F2271F112B551B40010A8B2 /* PythonPackages */,
 				1FEDE7CF17AFD4C50038C579 /* C libraries */,
 				1F2271F012B551AC0010A8B2 /* CustomFrameworks */,
 				29B97323FDCFA39411CA2CEA /* SystemFrameworks */,
-				1FB30809146D5598001430B5 /* mime.types */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -3213,6 +3212,7 @@
 		29B97323FDCFA39411CA2CEA /* SystemFrameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F2C06E725DC316A004701ED /* mime.types */,
 				1F1CEB4619C9BBEE00BD378A /* StoreKit.framework */,
 				1FF63CD519128C4800A502FB /* AVFoundation.framework */,
 				1FC6342F18F9D3450098945F /* ScriptingBridge.framework */,
@@ -3858,6 +3858,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F2C06F225DC3490004701ED /* mime.types in Resources */,
 				1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */,
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
 				1F22729712B554F50010A8B2 /* ContactCell.py in Resources */,
@@ -4069,7 +4070,6 @@
 				1FD2EF981439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FDCDAC31462914300476792 /* BlinkPro.entitlements in Resources */,
 				1FB30804146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
-				1FB3080B146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99714730F6F00F2C981 /* ldap.png in Resources */,
 				1FD0808918C02DA800A3B313 /* invisible.png in Resources */,
 				1FC99CF719BC93700013C580 /* close-small.png in Resources */,
@@ -4347,7 +4347,8 @@
 				1F35D03517894FFF00C6FE38 /* ConferenceScreenSharing.xib in Resources */,
 				1F35D03617894FFF00C6FE38 /* BlinkPro.entitlements in Resources */,
 				1F35D03817894FFF00C6FE38 /* JoinConferenceWindow.xib in Resources */,
-				1F35D03917894FFF00C6FE38 /* mime.types in Resources */,
+				1F2C06F025DC31C2004701ED /* mime.types in Resources */,
+				1F2C06EB25DC316A004701ED /* mime.types in Resources */,
 				1F35D03A17894FFF00C6FE38 /* ldap.png in Resources */,
 				1F35D03B17894FFF00C6FE38 /* NightVolumeSetting.xib in Resources */,
 				1F35D03C17894FFF00C6FE38 /* ScreensharingPreviewPanel.xib in Resources */,
@@ -4437,6 +4438,8 @@
 				1FD0808F18C02E1F00A3B313 /* offline.png in Resources */,
 				1F8DC337135084FA0034815C /* ChatController.py in Resources */,
 				1F4B789E19AEAED300F854CB /* VideoLocalWindow.xib in Resources */,
+				1F2C06EF25DC31C2004701ED /* mime.types in Resources */,
+				1F2C06EA25DC316A004701ED /* mime.types in Resources */,
 				1F8DC338135084FA0034815C /* pause.png in Resources */,
 				1F8DC339135084FA0034815C /* BlinkLogger.py in Resources */,
 				1F8DC33A135084FA0034815C /* mute.png in Resources */,
@@ -4626,7 +4629,6 @@
 				1FDCDAD41462945600476792 /* BlinkPro.entitlements in Resources */,
 				1FB30805146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
 				1F14255C1905335300CFEC42 /* aspect_ratio.png in Resources */,
-				1FB3080C146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99814730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EC1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C4011498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
@@ -4733,6 +4735,7 @@
 				2B5DE9EB100447D700701821 /* VerticalBoxView.py in Resources */,
 				1F08DB1B193DEDB200187373 /* online.aif in Resources */,
 				2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */,
+				1F2C06ED25DC31C2004701ED /* mime.types in Resources */,
 				2B7B9C661008D67500BFDAF7 /* TableView.py in Resources */,
 				2B103E371015721E00002158 /* AudioSession.py in Resources */,
 				2BFB33E4101674BD002D79FB /* muted.png in Resources */,
@@ -4904,7 +4907,6 @@
 				1FD2EF931439CCA900DFBB2A /* ConferenceScreenSharing.py in Resources */,
 				1FD2EF991439CCC300DFBB2A /* ConferenceScreenSharing.xib in Resources */,
 				1FB30803146D540C001430B5 /* JoinConferenceWindow.xib in Resources */,
-				1FB3080A146D5598001430B5 /* mime.types in Resources */,
 				1F7CC99614730F6F00F2C981 /* ldap.png in Resources */,
 				1F87B6EA1477D57000BDF25A /* NightVolumeSetting.xib in Resources */,
 				1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */,
