@@ -37,6 +37,20 @@ sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtkstub8.6.a
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/python.o
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python3.9/
 
+
+# Copy CA certificates
+# python3 -c "import ssl; print(ssl.get_default_verify_paths())"
+# sudo pip3 install certifi
+
+src_ca_list=`python3 -c "import certifi; print(certifi.where())"`
+dst_ca_list=`python3 -c"import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
+sudo cp $src_ca_list $dst_ca_list
+
+# Remove unused libraries
+sudo rm -r Resources/lib/greenlet/tests
+sudo rm -r Resources/lib/twisted/test
+
+
 #Sign
 sign_id="Developer ID Application"
 codesign -f -s "$sign_id" Frameworks/Python.framework/Versions/3.9/lib/*.dylib
