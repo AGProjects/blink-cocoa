@@ -27,7 +27,8 @@ assert Foundation.NSThread.isMultiThreaded()
 # Make mimetypes use our copy of the file in order to work with sandboxing
 import mimetypes
 resource_path = str(Foundation.NSBundle.mainBundle().resourcePath())
-mimetypes.init(os.path.join(resource_path, "mime.types"))
+mime_path = os.path.join(resource_path, "mime.types")
+mimetypes.init(files=[mime_path])
 
 class NSLogger(object):
     closed = False
