@@ -38,9 +38,10 @@ int main(int argc, char *argv[])
 
     if ( result != 0 )
         [NSException raise: NSInternalInconsistencyException
-                    format: @"%s:%d main() PyRun_SimpleFile failed with file '%@'.  See console for errors.", __FILE__, __LINE__, mainFilePath];
+                    format: @"%s:%d main() Running Python file '%@ failed'", __FILE__, __LINE__, mainFilePath];
 
     [pool drain];
 
     return result;
 }
+
