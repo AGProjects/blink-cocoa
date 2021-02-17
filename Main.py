@@ -1,31 +1,31 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2021 AG Projects. See LICENSE for details.
 #
 
 debug_memory = False  # turn it on to enable tracing some of the memory leaks
-
 # this import has to come first
 
 if debug_memory:
     import memory_debug
     del memory_debug
 
-
 import os
 import sys
+import signal
+import mimetypes
+import traceback
 
+import Foundation
+from PyObjCTools import AppHelper
+from Foundation import NSBundle
+
+assert Foundation.NSThread.isMultiThreaded()
+
+# Don't load Python modules from system paths
 remove_paths = list(path for path in sys.path if 'site-packages' in path)
 for path in remove_paths:
      sys.path.remove(path)
 
-from util import memory_stick_mode
-
-from Foundation import NSBundle
-import Foundation
-assert Foundation.NSThread.isMultiThreaded()
-
-
 # Make mimetypes use our copy of the file in order to work with sandboxing
-import mimetypes
 resource_path = str(Foundation.NSBundle.mainBundle().resourcePath())
 mime_path = os.path.join(resource_path, "mime.types")
 mimetypes.init(files=[mime_path])
@@ -70,28 +70,8 @@ class NSLogger(object):
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
-
-if memory_stick_mode():
-    from resources import ApplicationData
-    from Foundation import NSBundle
-    ApplicationData._cached_directory = os.path.join(os.path.dirname(NSBundle.mainBundle().bundlePath()), 'Data')
-
 # import modules containing classes required to start application and load MainMenu.nib
-try:
-    import BlinkAppDelegate
-    import ContactWindowController
-except Exception:
-    import traceback
-    traceback.print_exc()
-
-import signal
+import BlinkAppDelegate
+import ContactWindowController
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)
-
-# Start profiling, if applicable
-import Profiler
-Profiler.start()
-
-# pass control to AppKit
-from PyObjCTools import AppHelper
 AppHelper.runEventLoop()
-
