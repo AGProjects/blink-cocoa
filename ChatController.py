@@ -206,7 +206,7 @@ class ChatController(MediaStream):
     smp_verifified_using_zrtp = False
     smp_verification_delay = 0
     smp_verification_tries = 5
-    smp_verification_question = 'What is the ZRTP authentication string?'
+    smp_verification_question = b'What is the ZRTP authentication string?'
 
     @property
     def local_fingerprint(self):
