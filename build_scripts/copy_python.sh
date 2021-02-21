@@ -3,6 +3,9 @@
 # Download Python from https://www.python.org/downloads/release/python-391/
 # Then Install pyobjc pip3 install --user pyobjc
 
+This script must be run inside ./Distribution folder
+
+# This assumes packages are installed using pip3 in user folder 
 site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
 
 sudo rm -r Frameworks/Python.framework
@@ -80,8 +83,8 @@ done
 
 
 # Copy lxml
-
-#git clone https://github.com/lxml
+# LXML must be built from sctat as the pip version is too old
+# git clone https://github.com/lxml
 #python3 setup.py build --static-deps
 #python3 setup.py install
 # cp -a ~/Library/Python/3.9/lib/python/site-packages/lxml-4.6.2-py3.9-macosx-10.9-x86_64.egg/lxml Resources/lib/
@@ -89,3 +92,4 @@ done
 #sign_id="Developer ID Application"
 #codesign -f -s "$sign_id" Resources/lib/lxml/*.so
 
+# Other dependencies installed for python3-sipsimple must be copied io the same way

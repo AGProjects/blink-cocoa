@@ -9,7 +9,8 @@ Dependencies must be installed as follwos:
 - Distribution/Resources/lib
      -> Contain all Python packages
 
-Download and install Python Framework using copy_python.sh script
+Download and install Python Framework using build_scripts/copy_python.sh
+script.
 
 Copy all related C dependencies installed using Brew to Distribution/Frameworks/
 
