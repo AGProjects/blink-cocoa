@@ -917,15 +917,14 @@ class ChatWindowController(NSWindowController):
             chat_stream = session.streamHandlerOfType("chat")
             if chat_stream:
 
-                video_stream = session.streamHandlerOfType("video")
-
-                parent_frame = self.participantsView.superview().frame()
+                parent_frame = self.drawerSplitView.frame()
                 top_frame = self.participantsView.frame()
                 middle_frame = self.conferenceFilesView.frame()
                 bottom_frame = self.videoView.superview().frame()
 
                 must_resize = False
 
+                video_stream = session.streamHandlerOfType("video")
                 if video_stream:
                     if self.videoView.aspect_ratio is not None:
                         new_height = bottom_frame.size.width / self.videoView.aspect_ratio
