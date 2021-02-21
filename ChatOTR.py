@@ -66,7 +66,8 @@ class ChatOtrSmp(NSObject):
             self.window.orderOut_(self)
             return
 
-        secret = self.secretText.stringValue().encode('utf-8')
+        secret = self.secretText.stringValue()
+        secret = secret.encode() if secret else None
 
         if self.requested_by_remote:
             self.controller.sessionController.log_info("OTR SMP verification will be answered")
@@ -75,8 +76,9 @@ class ChatOtrSmp(NSObject):
             self.progressBar.setDoubleValue_(6)
         else:
             qtext = self.questionText.stringValue()
+            qtext = qtext.encode() if qtext else None
             self.controller.sessionController.log_info("OTR SMP verification will be requested")
-            self.stream.encryption.smp_verify(secret, qtext.encode('utf-8') if qtext else None)
+            self.stream.encryption.smp_verify(secret, qtext)
             self.progressBar.setIndeterminate_(False)
             self.smp_running = True
             self.progressBar.setDoubleValue_(3)
@@ -103,16 +105,19 @@ class ChatOtrSmp(NSObject):
         if not same_secrets:
             self.statusText.setTextColor_(NSColor.redColor())
             self.statusText.setStringValue_(NSLocalizedString("Identity verification failed. Try again later.", "Label"))
+            result = False
         else:
             self.stream.encryption.verified = True
             self.statusText.setTextColor_(NSColor.greenColor())
             self.statusText.setStringValue_(NSLocalizedString("Identity verification succeeded", "Label"))
             self.controller.revalidateToolbar()
             self.controller.updateEncryptionWidgets()
+            result = True
 
-        self._finish()
+        self._finish(result)
+        return result
 
-    def _finish(self):
+    def _finish(self, result=False):
         self.finished = True
         self.smp_running = False
         self.requested_by_remote = False
@@ -123,7 +128,8 @@ class ChatOtrSmp(NSObject):
         self.continueButton.setTitle_(NSLocalizedString("Finish", "Button Title"))
         self.cancelButton.setHidden_(True)
         self.continueButton.setEnabled_(True)
-        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "verificationFinished:", None, False)
+        wait_interval = 5 if result else 10
+        self.timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(wait_interval, self, "verificationFinished:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.timer, NSRunLoopCommonModes)
 
     def verificationFinished_(self, timer):
@@ -158,7 +164,7 @@ class ChatOtrSmp(NSObject):
             else:
                 self.questionText.setHidden_(False)
                 self.secretText.setHidden_(False)
-                self.questionText.setStringValue_(question)
+                self.questionText.setStringValue_(question.decode())
                 self.questionText.setEnabled_(False)
                 self.labelText.setStringValue_(NSLocalizedString("%s has asked you a question to verify your identity:", "Label") % self.remote_address)
         else:

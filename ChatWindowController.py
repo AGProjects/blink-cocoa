@@ -1299,8 +1299,8 @@ class ChatWindowController(NSWindowController):
                             item.setHidden_(False)
                             item.setState_(NSOnState if chat_stream.smp_verifified_using_zrtp else NSOffState)
 
-                            #item = menu.itemWithTag_(9)
-                            #item.setHidden_(not chat_stream.stream.encryption.active)
+                            item = menu.itemWithTag_(9)
+                            item.setHidden_(not chat_stream.stream.encryption.active)
                         else:
                             item = menu.itemWithTag_(9)
                             item.setHidden_(True)

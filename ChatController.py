@@ -211,14 +211,14 @@ class ChatController(MediaStream):
     @property
     def local_fingerprint(self):
         if self.stream.encryption.active:
-            return self.stream.encryption.key_fingerprint.hex().upper()
+            return self.stream.encryption.key_fingerprint.upper()
         else:
             return None
 
     @property
     def remote_fingerprint(self):
         if self.stream.encryption.active:
-            return self.stream.encryption.peer_fingerprint.hex().upper()
+            return self.stream.encryption.peer_fingerprint.upper()
         else:
             return None
     
@@ -1391,10 +1391,11 @@ class ChatController(MediaStream):
     def _NH_ChatStreamSMPVerificationDidEnd(self, stream, data):
         self.sessionController.log_info("OTR SMP verification ended")
         if data.status is SMPStatus.Success:
-            self.sessionController.log_info("OTR SMP verification succeeded")
-            self.chatOtrSmpWindow.handle_remote_response(data.same_secrets)
-            self.showSystemMessage('Peer identity verification succeeded', ISOTimestamp.now(), False)
-            #self.showSystemMessage('Please validate the identity in the encryption lock menu', ISOTimestamp.now(), True)
+            result = self.chatOtrSmpWindow.handle_remote_response(data.same_secrets)
+            if result:
+                self.showSystemMessage('Peer identity verification succeeded', ISOTimestamp.now(), False)
+            else:
+                self.showSystemMessage('Please validate the identity in the encryption lock menu', ISOTimestamp.now(), True)
 
         elif data.status is SMPStatus.Interrupted:
             self.sessionController.log_info("OTR SMP verification aborted: %s" % data.reason)
@@ -1413,7 +1414,7 @@ class ChatController(MediaStream):
     @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         if data.new_state is OTRState.Encrypted:
-            self.showSystemMessage("Encryption enabled", ISOTimestamp.now())
+            #self.showSystemMessage("Encryption enabled", ISOTimestamp.now())
             self.sessionController.log_info("Chat encryption activated using OTR protocol")
             self.sessionController.log_info("OTR local fingerprint %s" % self.local_fingerprint)
             self.sessionController.log_info("OTR remote fingerprint %s" % self.remote_fingerprint)
