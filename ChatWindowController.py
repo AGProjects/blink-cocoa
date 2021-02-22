@@ -898,7 +898,7 @@ class ChatWindowController(NSWindowController):
         if session:
             chat_stream = session.streamHandlerOfType("chat")
             if chat_stream and chat_stream.drawerSplitterPosition is not None:
-                self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
+                #self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
                 self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['middleFrame'])
                 self.videoView.superview().setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
 
