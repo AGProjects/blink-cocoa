@@ -47,7 +47,7 @@ class SMSSettingsExtension(SettingsGroup):
 
 
 class MessageSummarySettingsExtension(MessageSummarySettings):
-    enabled = Setting(type=bool, default=True)
+    enabled = Setting(type=bool, default=False)
 
 
 class MSRPSettingsExtension(MSRPSettings):
