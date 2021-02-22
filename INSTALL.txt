@@ -87,7 +87,8 @@ cryptography                       toml
 dateutil                           twisted
 dns                                xcaplib
 enum.py                            zope
-eventlib
+eventlib                           ldap
+ldif.py                            _ldap.cpython-39-darwin.so
 
 
 ./build_scripts/change_lib_names.sh Distribution/Resources/lib/sipsimple/core/_core.cpython-39-darwin.so
