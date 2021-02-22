@@ -96,6 +96,17 @@ codesign -v -s "Developer ID Application" Distribution/Resources/lib/sipsimple/c
 codesign -v -s "Developer ID Application" Distribution/Resources/lib/sipsimple/util/_sha1.cpython-39-darwin.so 
 
 
+LDAP module
+-----------
+
+https://www.python-ldap.org/en/python-ldap-3.3.0/installing.html#installing-from-pypi
+
+pip3 install --user python-ldap \
+    --global-option=build_ext \
+    --global-option="-I$(xcrun --show-sdk-path)/usr/include/sasl"
+
+
+
 Fix library paths
 -----------------
 
