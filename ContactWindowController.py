@@ -82,6 +82,8 @@ import hashlib
 import os
 import re
 import random
+import ldap
+
 import shutil
 import string
 import sys
@@ -97,11 +99,6 @@ from itertools import chain
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from application.system import unlink, makedirs, host
-
-try:
-    import ldap
-except ModuleNotFoundError:
-    ldap = Null
 
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.addressbook import AddressbookManager, ContactURI, Policy, unique_id
