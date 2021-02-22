@@ -66,7 +66,7 @@ class ChatSettingsExtension(ChatSettings):
     disable_history = Setting(type=bool, default=False)
     enable_encryption = Setting(type=bool, default=True)
     font_size = Setting(type=int, default=0)
-    enable_sms = Setting(type=bool, default=False)
+    enable_sms = Setting(type=bool, default=True)
 
 
 class ScreenSharingSettingsExtension(ScreenSharingSettings):
