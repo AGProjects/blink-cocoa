@@ -6004,7 +6004,7 @@ class LdapDirectory(object):
         self.l = ldap.initialize(self.server)
         tls_folder = ApplicationData.get('tls')
         ca_path = os.path.join(tls_folder, 'ca.crt')
-        self.l.set_option(ldap.OPT_X_TLS_CERTFILE, ca_path)
+        #self.l.set_option(ldap.OPT_X_TLS_CACERTFILE, ca_path)
         self.l.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
         self.l.set_option(ldap.OPT_TIMEOUT, 5)
         self.l.set_option(ldap.OPT_TIMELIMIT, 10)
@@ -6050,7 +6050,7 @@ class LdapSearch(object):
         if self.ldap_directory.connected:
             extra_fields = self.ldap_directory.extra_fields.split(",")
 
-            filter = "cn=" + "*" + keyword.encode("utf-8") + "*"
+            filter = "cn=" + "*" + keyword + "*"
             try:
                 self.ldap_query_id = self.ldap_directory.l.search(self.ldap_directory.dn, ldap.SCOPE_SUBTREE, filter)
             except ldap.LDAPError:
@@ -6072,21 +6072,27 @@ class LdapSearch(object):
                             time.sleep(0.01)
                         uris = []
                         i += 1
-
+                        
+                        try:
+                            name = entry['cn'][0].decode()
+                        except (KeyError, IndexError, ValueError):
+                            name = None
+                        
                         for _entry in entry.get('telephoneNumber', []):
-                            uris.append(('telephone', str(_entry)))
+                            uris.append(('telephone', _entry.decode()))
                         for _entry in entry.get('workNumber', []):
-                            uris.append(('work', str(_entry)))
+                            uris.append(('work', _entry.decode()))
                         for _entry in entry.get('mobile', []):
-                            uris.append(('mobile', str(_entry)))
+                            uris.append(('mobile', _entry.decode()))
                         for _entry in entry.get('SIPIdentitySIPURI', []):
-                            uris.append(('sip', sip_prefix_pattern.sub("", str(_entry))))
+                            uris.append(('sip', sip_prefix_pattern.sub("", _entry.decode())))
                         for f in extra_fields:
                             f = f.strip()
                             for _entry in entry.get(f, []):
-                                uris.append(('other', sip_prefix_pattern.sub("", str(_entry))))
+                                uris.append(('other', sip_prefix_pattern.sub("", _entry.decode())))
                         if uris:
-                            data = NotificationData(name=entry['cn'][0], uris=uris)
+                            name = name or uris[0]
+                            data = NotificationData(name=name, uris=uris)
                             NotificationCenter().post_notification("LDAPDirectorySearchFoundContact", sender=self, data=data)
 
             self.ldap_query_id = None
