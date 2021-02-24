@@ -35,6 +35,8 @@ class SMSWindowController(NSWindowController):
     tabView = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
     toolbar = objc.IBOutlet()
+    encryptionMenu = objc.IBOutlet()
+    encryptionIconMenuItem = objc.IBOutlet()
 
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
@@ -43,6 +45,9 @@ class SMSWindowController(NSWindowController):
             NSBundle.loadNibNamed_owner_("SMSSession", self)
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="BlinkShouldTerminate")
+            self.notification_center.add_observer(self, name="ChatStreamOTREncryptionStateChanged")
+            self.notification_center.add_observer(self, name="OTREncryptionDidStop")
+            
             self.unreadMessageCounts = {}
         return self
 
@@ -77,6 +82,14 @@ class SMSWindowController(NSWindowController):
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window():
             self.window().orderOut_(self)
+
+    @objc.python_method
+    def _NH_ChatStreamOTREncryptionStateChanged(self, sender, data):
+        self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_OTREncryptionDidStop(self, sender, data):
+        self.updateEncryptionWidgets()
 
     def menuWillOpen_(self, menu):
         pass
@@ -144,7 +157,8 @@ class SMSWindowController(NSWindowController):
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
         selectedSession = self.selectedSessionController()
-
+        self.updateEncryptionWidgets(selectedSession)
+    
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0:
             self.window().performClose_(None)
@@ -180,6 +194,94 @@ class SMSWindowController(NSWindowController):
         elif sender.itemIdentifier() == 'history' and NSApp.delegate().history_enabled:
             contactWindow.showHistoryViewer_(None)
             contactWindow.historyViewer.filterByURIs((format_identity_to_string(session.target_uri),))
+
+    @objc.IBAction
+    def userClickedEncryptionMenu_(self, sender):
+        # dispatch the click to the active session
+        session = self.selectedSessionController()
+        if session:
+            session.userClickedEncryptionMenu_(sender)
+
+    def menuWillOpen_(self, menu):
+        if menu == self.encryptionMenu:
+            settings = SIPSimpleSettings()
+            item = menu.itemWithTag_(1)
+            item.setHidden_(not settings.chat.enable_encryption)
+
+            item = menu.itemWithTag_(2)
+            item.setEnabled_(False)
+            item.setState_(NSOffState)
+
+            item = menu.itemWithTag_(3)
+            item.setHidden_(True)
+            item.setState_(NSOffState)
+
+            item = menu.itemWithTag_(4)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(5)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(6)
+            item.setHidden_(True)
+
+            selectedSession = self.selectedSessionController()
+            if selectedSession:
+                chat_stream = selectedSession.encryption
+                display_name = selectedSession.display_name
+                item = menu.itemWithTag_(1)
+                if settings.chat.enable_encryption:
+                    item.setHidden_(False)
+                    item.setEnabled_(True)
+                    item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.active else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+
+                item = menu.itemWithTag_(2)
+                item.setHidden_(False)
+                if chat_stream.active:
+                    item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(chat_stream.key_fingerprint))
+
+                else:
+                    item.setEnabled_(False)
+                    item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
+
+                if settings.chat.enable_encryption:
+                    if chat_stream.peer_fingerprint:
+                        item = menu.itemWithTag_(3)
+                        item.setHidden_(False)
+
+                        item = menu.itemWithTag_(4)
+                        item.setHidden_(False)
+                        item.setEnabled_(False)
+
+                        _t = NSLocalizedString("%s's fingerprint is ", "Menu item") % display_name
+                        item.setTitle_( "%s %s" % (_t, chat_stream.peer_fingerprint))
+                        
+                        item = menu.itemWithTag_(5)
+                        item.setHidden_(False)
+                        item.setState_(NSOnState if chat_stream.verified else NSOffState)
+
+                        item = menu.itemWithTag_(6)
+                        item.setEnabled_(True)
+                        item.setHidden_(False)
+                        item.setTitle_(NSLocalizedString("Validate the identity of %s" % display_name, "Menu item"))
+
+
+    @objc.python_method
+    def updateEncryptionWidgets(self, selectedSession=None):
+        if selectedSession is None:
+            selectedSession = self.selectedSessionController()
+
+        if selectedSession and selectedSession.started:
+            if selectedSession.encryption.active:
+                if selectedSession.encryption.verified:
+                    self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
+                else:
+                    self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-red"))
+            else:
+                self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
+        else:
+            self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
+
 
     @objc.IBAction
     def printDocument_(self, sender):
@@ -299,6 +401,7 @@ class SMSWindowManagerClass(NSObject):
             account = AccountManager().default_account
 
         call_id = data.headers.get('Call-ID', Null).body
+
         try:
             self.received_call_ids.remove(call_id)
         except KeyError:
@@ -328,18 +431,15 @@ class SMSWindowManagerClass(NSObject):
                 else:
                     window_tab_identity = data.from_header
         else:
-            content = data.body.decode('utf-8')
+            content = data.body
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = sender_identity
-
-        is_html = content_type == 'text/html'
 
         if content_type in ('text/plain', 'text/html'):
             pass
             #BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type == 'application/im-iscomposing+xml':
-            # body must not be utf-8 decoded
             content = cpim_message.content if is_cpim else data.body
             msg = IsComposingMessage.parse(content)
             state = msg.state.value
@@ -377,5 +477,5 @@ class SMSWindowManagerClass(NSObject):
                 replication_timestamp = ISOTimestamp.now()
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, call_id, content, is_html, is_replication_message, replication_timestamp, window=window)
+        viewer.gotMessage(sender_identity, call_id, content, content_type, is_replication_message, replication_timestamp, window=window)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)

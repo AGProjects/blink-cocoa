@@ -51,17 +51,17 @@ from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
 from otr import OTRTransport, OTRState, SMPStatus
-from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError
+from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
 from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
+from ChatOTR import ChatOtrSmp
 
 
 MAX_MESSAGE_LENGTH = 1300
-
 
 
 class MessageInfo(object):
@@ -132,6 +132,10 @@ class SMSViewController(NSObject):
 
     windowController = None
     last_route = None
+    chatOtrSmpWindow = None
+    dns_lookup_in_progress = False
+    last_failure_reason = None
+    otr_negotiation_timer = None
 
     def initWithAccount_target_name_(self, account, target, display_name):
         self = objc.super(SMSViewController, self).init()
@@ -176,6 +180,10 @@ class SMSViewController(NSObject):
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
+
+        if self.encryption.active:
+            self.stopEncryption()
+
         self.chatViewController.close()
         objc.super(SMSViewController, self).dealloc()
 
@@ -242,16 +250,24 @@ class SMSViewController(NSObject):
     def gotMessage(self, sender, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None):
         is_html = content_type == 'text/html'
         encrypted = False
+
         try:
             content = self.encryption.otr_session.handle_input(content, content_type)
         except IgnoreMessage:
+            self.log_info('OTR message %s received' % call_id)
             return None
         except UnencryptedMessage:
+            self.log_info('OTR in use but unencrypted message received')
             encrypted = False
             encryption_active = True
         except EncryptedMessageError as e:
             self.log_info('OTP encrypted message error: %s' % str(e))
             return None
+        except OTRFinishedError:
+            self.chatViewController.showSystemMessage("0", "The other party finished encryption", ISOTimestamp.now(), is_error=True)
+            self.log_info('OTR has finished')
+            encrypted = False
+            encryption_active = False
         except OTRError as e:
             self.log_info('OTP error: %s' % str(e))
             return None
@@ -262,6 +278,10 @@ class SMSViewController(NSObject):
         
         if content.startswith('?OTR:'):
             self.log_info('Dropped OTR message that could not be decoded')
+            self.chatViewController.showSystemMessage("0", "The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+            if self.encryption.active:
+                self.stopEncryption()
+  
             return None
 
         self.enableIsComposing = True
@@ -336,19 +356,20 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def inject_otr_message(self, data):
-        if not self.encryption.active:
-            self.log_info('Negotiating OTR encryption...')
         messageObject = OTRInternalMessage(data)
         self.sendMessage(messageObject)
 
     @objc.python_method
     def _NH_DNSLookupDidFail(self, lookup, data):
+        self.dns_lookup_in_progress = False
         self.notification_center.remove_observer(self, sender=lookup)
-        message = "DNS lookup of SIP proxies for %s failed: %s" % (str(self.target_uri.host), data.error)
+        message = "DNS lookup of SIP proxies for %s failed: %s" % (self.target_uri.host.decode(), data.error)
         self.setRoutesFailed(message)
+        self.dns_lookup_in_progress = False
 
     @objc.python_method
     def _NH_DNSLookupDidSucceed(self, lookup, data):
+        self.dns_lookup_in_progress = False
         self.notification_center.remove_observer(self, sender=lookup)
         result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
         self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host.decode(), result_text))
@@ -360,61 +381,98 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
-        if data.new_state is OTRState.Encrypted:
-            local_fingerprint = stream.encryption.key_fingerprint
-            remote_fingerprint = stream.encryption.peer_fingerprint
-            self.log_info("Chat encryption activated using OTR protocol")
-            self.log_info("OTR local fingerprint %s" % local_fingerprint)
-            self.log_info("OTR remote fingerprint %s" % remote_fingerprint)
-            self.chatViewController.showSystemMessage("0", "Encryption enabled", ISOTimestamp.now())
-            self.showSystemMessage("Encryption enabled", ISOTimestamp.now())
-        elif data.new_state is OTRState.Finished:
-            self.log_info("Chat encryption deactivated")
-            self.chatViewController.showSystemMessage("0", "Encryption deactivated", ISOTimestamp.now(), is_error=True)
-        elif data.new_state is OTRState.Plaintext:
-            self.log_info("Chat encryption deactivated")
-            self.chatViewController.showSystemMessage("0", "Encryption deactivated", ISOTimestamp.now(), is_error=True)
+        try:
+            if data.new_state is OTRState.Encrypted:
+                local_fingerprint = stream.encryption.key_fingerprint
+                remote_fingerprint = stream.encryption.peer_fingerprint
+                self.log_info("Chat encryption activated using OTR protocol")
+                self.log_info("OTR local fingerprint %s" % local_fingerprint)
+                self.log_info("OTR remote fingerprint %s" % remote_fingerprint)
+                self.chatViewController.showSystemMessage("0", "Encryption enabled", ISOTimestamp.now())
+            elif data.new_state is OTRState.Finished:
+                self.log_info("Chat encryption deactivated")
+                self.chatViewController.showSystemMessage("0", "Encryption deactivated", ISOTimestamp.now(), is_error=True)
+            elif data.new_state is OTRState.Plaintext:
+                self.log_info("Chat encryption deactivated")
+                self.chatViewController.showSystemMessage("0", "Encryption deactivated", ISOTimestamp.now(), is_error=True)
+        except:
+            import traceback
+            traceback.print_exc()
 
     @objc.python_method
     def _NH_SIPMessageDidSucceed(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
+        self.last_failure_reason = None
+
         try:
             message = self.messages.pop(str(sender))
         except KeyError:
-            pass
-        else:
-            call_id = data.headers['Call-ID'].body
-            self.composeReplicationMessage(message, data.code)
-            if message.content_type != "application/im-iscomposing+xml":
-                self.log_info("Outgoing %s message %s delivered" % (message.content_type, call_id))
-                if data.code == 202:
-                    self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
-                    message.status='deferred'
-                else:
-                    self.chatViewController.markMessage(message.id, MSG_STATE_DELIVERED)
-                    message.status='delivered'
-                message.call_id = call_id
-                self.add_to_history(message)
+            self.log_info('Cannot find message %s' % str(sender))
+            return
 
-        self.notification_center.remove_observer(self, sender=sender)
+        if message.content_type == "application/im-iscomposing+xml":
+            return
+
+        call_id = data.headers['Call-ID'].body
+        user_agent = data.headers.get('User-Agent', Null).body
+        server = data.headers.get('Server', Null).body
+        client = data.headers.get('Client', Null).body
+        entity = user_agent or server or client
+        
+        message.call_id = call_id
+        self.composeReplicationMessage(message, data.code)
+
+        if message.id == 'OTR':
+            self.log_info("OTR message %s delivered to %s" % (call_id, entity))
+        else:
+            if data.code == 202:
+                self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
+                message.status='deferred'
+                self.log_info("Outgoing message %s deferred for later delivery to %s" % (call_id, entity))
+            else:
+                self.chatViewController.markMessage(message.id, MSG_STATE_DELIVERED)
+                message.status='delivered'
+                self.log_info("Outgoing message %s delivered to %s" % (call_id, entity))
+
+            self.add_to_history(message)
+
 
     @objc.python_method
     def _NH_SIPMessageDidFail(self, sender, data):
+        self.notification_center.remove_observer(self, sender=sender)
         try:
             message = self.messages.pop(str(sender))
         except KeyError:
-            pass
-        else:
-            if data.code == 408:
-                self.last_route = None
+            self.log_info('Cannot find message %s' % str(sender))
+            return
 
-            call_id = message.call_id
-            self.composeReplicationMessage(message, data.code)
-            if message.content_type != "application/im-iscomposing+xml":
-                self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-                message.status='failed'
-                self.add_to_history(message)
-                self.log_info("Outgoing message %s delivery failed: %s" % (call_id.decode(), data.reason))
-        self.notification_center.remove_observer(self, sender=sender)
+        if message.content_type == "application/im-iscomposing+xml":
+            return
+
+        if data.code == 408:
+            self.last_route = None
+
+        call_id = message.call_id
+        reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
+        reason += ' (%s)' % data.code
+        
+        self.composeReplicationMessage(message, data.code)
+
+        if message.id == 'OTR':
+            self.log_info("OTR message %s failed: %s" % (call_id, reason))
+        else:
+            message.status='failed'
+            self.log_info("Outgoing message %s delivery failed: %s" % (call_id, reason))
+            self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+            self.add_to_history(message)
+
+        if (data.code == 480 or 'not online' in reason) and reason != self.last_failure_reason:
+            self.chatViewController.showSystemMessage('0', 'User not online', ISOTimestamp.now(), True)
+            if self.otr_negotiation_timer:
+                self.otr_negotiation_timer.invalidate()
+            self.otr_negotiation_timer = None
+
+        self.last_failure_reason = reason
 
     @objc.python_method
     def add_to_history(self, message):
@@ -473,15 +531,22 @@ class SMSViewController(NSObject):
     def setRoutesResolved(self, routes):
         self.routes = routes
         self.last_route = self.routes[0]
-        self.log_info('Proceed using route: %s' % self.last_route)
+        #self.log_info('Proceed using route: %s' % self.last_route)
 
         if not self.started:
+            self.started = True
             self.message_queue.start()
 
-        if not self.encryption.active and not self.started:
-            self.encryption.start()
+            if not self.encryption.active:
+                self.startEncryption()
 
-        self.started = True
+            try:
+                pass
+                # do this after encryption is active
+                #self.chatOtrSmpWindow = ChatOtrSmp(self)
+            except Exception:
+                import traceback
+                traceback.print_exc()
 
     @objc.python_method
     @run_in_gui_thread
@@ -519,18 +584,34 @@ class SMSViewController(NSObject):
             except OTRError as e:
                 if 'has ended the private conversation' in str(e):
                     self.log_info('Encryption has been disabled by remote party, please resend the message again')
-                    self.encryption.stop()
+                    self.chatViewController.showSystemMessage("0", "The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+                    self.stopEncryption()
                 else:
                     self.log_info('Failed to encrypt outgoing message: %s' % str(e))
                 return
-            
+            except OTRFinishedError:
+                self.log_info('Encryption has been disabled by remote party, please resend the message again')
+                self.chatViewController.showSystemMessage("0", "The other party finished encryption", ISOTimestamp.now(), is_error=True)
+                self.stopEncryption()
+                return
+
+            if self.encryption.active and not content.startswith(b'?OTR:'):
+                self.chatViewController.showSystemMessage("0", "The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+                self.stopEncryption()
+                self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+                return None
+        else:
+            content = message.content
+
+        self.log_info('Currently encrypted = %s' % self.encryption.active)
+
         timeout = 5
         if message.content_type != "application/im-iscomposing+xml":
             self.enableIsComposing = True
             timeout = 15
 
         message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                  RouteHeader(self.last_route.uri), message.content_type, message.content, credentials=self.account.credentials)
+                                  RouteHeader(self.last_route.uri), message.content_type, content, credentials=self.account.credentials)
 
         self.notification_center.add_observer(self, sender=message_request)
         
@@ -539,10 +620,13 @@ class SMSViewController(NSObject):
         message.call_id = message_request._request.call_id.decode()
 
         if not isinstance(message, OTRInternalMessage):
-            if self.encryption.active:
-                self.log_info('Sending encrypted %s message %s to %s' % (message.content_type, message.id, self.last_route.uri))
-            else:
-                self.log_info('Sending %s message %s to %s' % (message.content_type, message.id, self.last_route.uri))
+            if message.content_type != "application/im-iscomposing+xml":
+                if self.encryption.active:
+                    self.log_info('Encrypted message %s sent to %s' % (message.call_id, self.last_route.uri))
+                else:
+                    self.log_info('Message %s sent to %s' % (message.call_id, self.last_route.uri))
+        else:
+            self.log_info('OTR message %s sent' % message.call_id)
 
         id=str(message_request)
         self.messages[id] = message
@@ -550,6 +634,10 @@ class SMSViewController(NSObject):
     @objc.python_method
     def lookup_destination(self, target_uri):
         assert isinstance(target_uri, SIPURI)
+        if self.dns_lookup_in_progress:
+            return
+
+        self.dns_lookup_in_progress = True
 
         lookup = DNSLookup()
         self.notification_center.add_observer(self, sender=lookup)
@@ -567,6 +655,12 @@ class SMSViewController(NSObject):
             self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+
+    @objc.python_method
+    def stopEncryption():
+        self.log_info('Stopping OTR...')
+        self.stopEncryption()
+        self.notification_center.post_notification('OTREncryptionDidStop', sender=self)
 
     @objc.python_method
     def sendMessage(self, content, content_type="text/plain"):
@@ -799,6 +893,43 @@ class SMSViewController(NSObject):
         else:
             listener.ignore()
             NSWorkspace.sharedWorkspace().openURL_(theURL)
+
+    @property
+    def chatWindowController(self):
+        return NSApp.delegate().chatWindowController
+
+    @objc.python_method
+    def startEncryption(self):
+        self.encryption.start()
+        self.otr_negotiation_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(15, self, "otrNegotiationTimeout:", None, False)
+ 
+    def otrNegotiationTimeout_(self, timer):
+        if not self.encryption.active:
+            self.chatViewController.showSystemMessage("0", "The other party did not answer", ISOTimestamp.now(), is_error=True)
+
+        if self.otr_negotiation_timer:
+            self.otr_negotiation_timer.invalidate()
+        self.otr_negotiation_timer = None
+
+    @objc.IBAction
+    def userClickedEncryptionMenu_(self, sender):
+        tag = sender.tag()
+        if tag == 1: # active
+            if self.encryption.active:
+                self.stopEncryption()
+            else:
+                self.startEncryption()
+                
+        elif tag == 5: # verified
+            self.encryption.verified = not self.encryption.verified
+
+        elif tag == 6: # SMP window
+            if self.encryption.active:
+                self.log_info('Show OTR window')
+                #self.chatOtrSmpWindow.show()
+
+        elif tag == 7:
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html"))
 
 
 OTRTransport.register(SMSViewController)
