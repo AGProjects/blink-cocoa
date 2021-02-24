@@ -51,6 +51,43 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="125"/>
+                    <toolbarItem implicitItemIdentifier="F236F79B-935B-4D92-8C05-27DA06F3E8E6" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="ZUL-vV-k0b">
+                        <size key="minSize" width="48" height="35"/>
+                        <size key="maxSize" width="55" height="47"/>
+                        <popUpButton key="view" id="NwY-cG-ibM">
+                            <rect key="frame" x="5" y="14" width="54" height="35"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="ijA-w1-Iar" id="m1W-dR-TZV">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="menu"/>
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="6Qw-V8-ZON">
+                                    <items>
+                                        <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="ijA-w1-Iar"/>
+                                        <menuItem title="Active" tag="1" id="7Kj-Js-6HU">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="My Fingerprint" tag="2" enabled="NO" id="dMv-WQ-ktQ">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" tag="3" id="hdJ-kc-tfl"/>
+                                        <menuItem title="No Fingerprint Discovered" tag="4" id="LAf-Ji-i97">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="I trust the remote identity" tag="5" id="lcn-19-WeJ">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Verify Remote Fingerprint using SMP Protocol" tag="6" id="f5k-fL-dcg">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="xRm-rL-3Jl"/>
+                                        <menuItem title="About OTR protocol" tag="7" id="aMn-IA-3xE">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </popUpButtonCell>
+                        </popUpButton>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Muda Exibição de carinhas" tag="100" image="smiley_on" id="127">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
@@ -84,5 +121,6 @@
         <image name="audio" width="240" height="240"/>
         <image name="smiley_on" width="32" height="32"/>
         <image name="time" width="128" height="128"/>
+        <image name="unlocked-darkgray" width="171" height="170"/>
     </resources>
 </document>

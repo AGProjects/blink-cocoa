@@ -8,6 +8,8 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="SMSWindowController">
             <connections>
+                <outlet property="encryptionIconMenuItem" destination="WWu-Xw-HBg" id="sQj-qU-d1F"/>
+                <outlet property="encryptionMenu" destination="dv8-rA-dV5" id="GRn-GE-Fau"/>
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="119" id="e2W-yg-gLN"/>
@@ -51,6 +53,58 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="125"/>
+                    <toolbarItem implicitItemIdentifier="E6016DE2-5FD0-4BB0-9F12-4D2C1644ECF1" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="aNE-Hh-xlN">
+                        <size key="minSize" width="48" height="35"/>
+                        <size key="maxSize" width="55" height="47"/>
+                        <popUpButton key="view" id="mmD-gS-u3c">
+                            <rect key="frame" x="5" y="14" width="54" height="35"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="f6e-tf-jo6">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="menu"/>
+                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="dv8-rA-dV5">
+                                    <items>
+                                        <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="WWu-Xw-HBg"/>
+                                        <menuItem title="Active" tag="1" id="8yC-Ho-zud">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedEncryptionMenu:" target="-2" id="GV6-UU-85Z"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="My Fingerprint" tag="2" enabled="NO" id="iMd-fT-B9t">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" tag="3" id="lhp-Zv-UwA"/>
+                                        <menuItem title="No Fingerprint Discovered" tag="4" id="Mzt-R4-yiE">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="I trust the remote identity" tag="5" id="Zbu-dW-8NF">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedEncryptionMenu:" target="-2" id="Kbx-Iq-5SN"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Verify Remote Fingerprint using SMP Protocol" tag="6" id="YrP-kF-Boc">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedEncryptionMenu:" target="-2" id="SGm-le-TRB"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="d7P-zm-tD6"/>
+                                        <menuItem title="About OTR protocol" tag="7" id="Onf-5o-LeQ">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedEncryptionMenu:" target="-2" id="7QQ-Xx-iQj"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                    <connections>
+                                        <outlet property="delegate" destination="-2" id="fHg-ac-j5Q"/>
+                                    </connections>
+                                </menu>
+                            </popUpButtonCell>
+                        </popUpButton>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="100" image="smiley_on" id="127">
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
@@ -66,6 +120,7 @@
                 <defaultToolbarItems>
                     <toolbarItem reference="133"/>
                     <toolbarItem reference="125"/>
+                    <toolbarItem reference="aNE-Hh-xlN"/>
                     <toolbarItem reference="127"/>
                     <toolbarItem reference="128"/>
                     <toolbarItem reference="131"/>
@@ -84,5 +139,6 @@
         <image name="audio" width="240" height="240"/>
         <image name="smiley_on" width="32" height="32"/>
         <image name="time" width="128" height="128"/>
+        <image name="unlocked-darkgray" width="171" height="170"/>
     </resources>
 </document>
