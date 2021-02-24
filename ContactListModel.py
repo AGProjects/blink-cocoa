@@ -2254,7 +2254,11 @@ class AddressBookBlinkGroup(VirtualBlinkGroup):
             for i, ab_contact in enumerate(book.people()):
                 if i % 10  == 0:
                     time.sleep(0.01)
-                blink_contact = SystemAddressBookBlinkContact(ab_contact)
+                try:
+                    blink_contact = SystemAddressBookBlinkContact(ab_contact)
+                except AttributeError:
+                    continue
+   
                 if blink_contact.uris:
                     self.contacts.append(blink_contact)
                 else:
