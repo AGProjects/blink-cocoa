@@ -336,6 +336,7 @@ class ContactWindowController(NSWindowController):
     full_screen_in_progress = False
     myvideo = None
     refresh_drawer_counter = 1
+    last_failure_reason = None
 
     @property
     def has_audio(self):
@@ -5523,7 +5524,7 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].registrar = registrar
             self.accounts[position].register_expires = notification.data.expires
             self.accounts[position].register_timestamp = time.time()
-            # print 'SIP account %s registration succeeded to %s for ' % (notification.sender.id, registrar)
+            BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
 
         self.refreshAccountList()
 
@@ -5547,6 +5548,19 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidFail(self, notification):
+        if hasattr(notification.data, 'error'):
+            reason = notification.data.error.decode() if isinstance(notification.data.error, bytes) else notification.data.error
+        elif hasattr(notification.data, 'reason'):
+            reason = notification.data.reason.decode() if isinstance(notification.data.reason, bytes) else notification.data.reason
+        else:
+            reason = 'Unknown reason'
+            
+        if self.last_failure_reason == reason:
+            return
+
+        self.last_failure_reason = reason
+
+        BlinkLogger().log_info('Account %s registration failed: %s' % (notification.sender.id, reason))
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
