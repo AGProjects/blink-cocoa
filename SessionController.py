@@ -1961,7 +1961,7 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionDidStart(self, sender, data):
-        self.transport = '%s:%s' % (self.session.transport, self.session.peer_address.decode())
+        self.transport = '%s:%s' % (self.session.transport, str(self.session.peer_address))
         self.log_info("Next SIP hop is %s" % self.transport)
         self.notification_center.add_observer(self, sender=self.session._invitation)
         self.mustCloseAudioDrawer = True
