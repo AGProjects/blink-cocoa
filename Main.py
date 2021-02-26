@@ -21,7 +21,7 @@ from Foundation import NSBundle
 assert Foundation.NSThread.isMultiThreaded()
 
 # Don't load Python modules from system paths
-remove_paths = list(path for path in sys.path if 'site-packages' in path)
+remove_paths = list(path for path in sys.path if 'site-packages' in path or path.startswith('/Library/Frameworks/'))
 for path in remove_paths:
      sys.path.remove(path)
 
