@@ -2219,6 +2219,7 @@
 		1F419C97191530080051F3D9 /* branding-lite.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-lite.py"; sourceTree = "<group>"; };
 		1F419C991915330B0051F3D9 /* branding-pro.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-pro.py"; sourceTree = "<group>"; };
 		1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoWindowController.py; sourceTree = "<group>"; };
+		1F46861F25E95D4A003EC986 /* Blink.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Blink.entitlements; sourceTree = "<group>"; };
 		1F4B789719AEAEC200F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
@@ -3187,6 +3188,7 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
+				1F46861F25E95D4A003EC986 /* Blink.entitlements */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F485725191595FA002543C7 /* Branding */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
@@ -5897,6 +5899,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_ENTITLEMENTS = Blink.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer: Adrian Georgescu (CKDX2RRZSK)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
@@ -5904,6 +5907,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 7.0.4;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
+				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					/System/Library/Frameworks,
@@ -5946,6 +5950,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_ENTITLEMENTS = Blink.entitlements;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
@@ -5953,6 +5958,7 @@
 				CURRENT_PROJECT_VERSION = 7.0.4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
+				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
 					/System/Library/Frameworks,
