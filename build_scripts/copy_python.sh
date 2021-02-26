@@ -3,34 +3,20 @@
 # Download Python from https://www.python.org/downloads/release/python-391/
 # Then Install pyobjc pip3 install --user pyobjc
 
-This script must be run inside ./Distribution folder
+# This script must be run inside ./Distribution folder
 
-# This assumes packages are installed using pip3 in user folder 
+# This script assumes packages are installed using pip3 in user folder 
 site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
 
 sudo rm -r Frameworks/Python.framework
 sudo cp -a /Library/Frameworks/Python.framework Frameworks/
 sudo chown -R adigeo Frameworks/Python.framework 
-
-# Change library paths 
-old_path="/Library/Frameworks/Python.framework/"
-new_path="@executable_path/../"
-	
-libs=`ls Frameworks/Python.framework/Versions/3.9/lib/*.dylib`
-for library in $libs; do
-  sudo install_name_tool -id $new_path$library $library
-  dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
-  for dependency in $dependencies; do
-      new_basename=$(basename $dependency)
-      new_name="$new_path$new_basename"
-      install_name_tool -change $dependency $new_name $library
-  done
-done
+sudo chmod -R u+rwX Frameworks/Python.framework 
 
 # Clean up
-find . -name __pycache__ -exec rm -rf {} \;
-find . -name \*~ -exec rm {} \;
-find . -name *.pyc -exec rm {} \;
+find Frameworks/Python.framework -name __pycache__ -exec rm -rf {} \;
+find Frameworks/Python.framework -name \*~ -exec rm {} \;
+find Frameworks/Python.framework -name *.pyc -exec rm {} \;
 
 sudo rm -r Frameworks/Python.framework/Versions/3.9/Resources/English.lproj
 sudo rm -r Frameworks/Python.framework/Versions/3.9/share/doc/python3.9/html
@@ -48,6 +34,7 @@ sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin
 
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python3.9/
 
+./changelibs-python.sh 
 
 # Copy CA certificates
 # python3 -c "import ssl; print(ssl.get_default_verify_paths())"
@@ -57,6 +44,8 @@ src_ca_list=`python3 -c "import certifi; print(certifi.where())"`
 dst_ca_list=`python3 -c"import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
 sudo cp $src_ca_list $dst_ca_list
 
+./codesign-python.sh
+
 # Remove unused libraries
 sudo rm -r Resources/lib/greenlet/tests
 sudo rm -r Resources/lib/twisted/test
@@ -65,7 +54,6 @@ sudo rm -r Resources/lib/twisted/test
 cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/
 
 # Copy Objc Python modules
-
 pyobjc_modules="objc AVFoundation AddressBook AppKit Cocoa \
 CoreFoundation CoreServices Foundation LaunchServices \
 PyObjCTools Quartz ScriptingBridge WebKit FSEvents CoreMedia"
@@ -79,7 +67,7 @@ done
 
 
 #Sign
-#./codesign.sh
+./codesign.sh
 
 
 # Copy lxml
