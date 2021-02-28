@@ -44,7 +44,7 @@ src_ca_list=`python3 -c "import certifi; print(certifi.where())"`
 dst_ca_list=`python3 -c"import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
 sudo cp $src_ca_list $dst_ca_list
 
-./codesign-python.sh
+#./codesign-python.sh
 
 # Remove unused libraries
 sudo rm -r Resources/lib/greenlet/tests
