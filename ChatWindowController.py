@@ -895,82 +895,96 @@ class ChatWindowController(NSWindowController):
     @objc.python_method
     def resizeDrawerSplitter(self):
         session = self.selectedSessionController()
-        if session:
-            chat_stream = session.streamHandlerOfType("chat")
-            if chat_stream and chat_stream.drawerSplitterPosition is not None:
-                #self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
-                self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['middleFrame'])
-                self.videoView.superview().setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
+        if not session:
+            return
+        
+        chat_stream = session.streamHandlerOfType("chat")
 
-            else:
-                frame = self.conferenceFilesView.frame()
-                frame.size.height = 0
-                self.conferenceFilesView.setFrame_(frame)
+        if chat_stream and chat_stream.drawerSplitterPosition is not None:
+            chat_stream.drawerSplitterPosition['topFrame'].origin.y=0
+            self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
+            self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['middleFrame'])
+            self.videoView.superview().setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
 
-                frame = self.videoView.superview().frame()
-                frame.size.height = 0
-                self.videoView.superview().setFrame_(frame)
+        else:
+            frame = self.conferenceFilesView.frame()
+            frame.size.height = 0
+            self.conferenceFilesView.setFrame_(frame)
+
+            frame = self.videoView.superview().frame()
+            frame.size.height = 0
+            self.videoView.superview().setFrame_(frame)
+
+        self.participantsTableView.reloadData()
+        self.conferenceFilesTableView.reloadData()
 
     def drawerSplitViewDidResize_(self, notification):
         session = self.selectedSessionController()
-        if session:
-            chat_stream = session.streamHandlerOfType("chat")
-            if chat_stream:
 
-                parent_frame = self.drawerSplitView.frame()
-                top_frame = self.participantsView.frame()
-                middle_frame = self.conferenceFilesView.frame()
-                bottom_frame = self.videoView.superview().frame()
+        if not session:
+            return
 
-                must_resize = False
+        chat_stream = session.streamHandlerOfType("chat")
+        if not chat_stream:
+            return
 
-                video_stream = session.streamHandlerOfType("video")
-                if video_stream:
-                    if self.videoView.aspect_ratio is not None:
-                        new_height = bottom_frame.size.width / self.videoView.aspect_ratio
-                    else:
-                        new_height = bottom_frame.size.width / 1.77
+        parent_frame = self.drawerSplitView.frame()
+        top_frame = self.participantsView.frame()
+        top_frame = self.participantsView.frame()
+        middle_frame = self.conferenceFilesView.frame()
+        bottom_frame = self.videoView.superview().frame()
 
-                    if new_height != bottom_frame.size.height:
-                        bottom_frame.size.height = new_height
-                        must_resize = True
-                        middle_frame.size.height = 170
-                else:
-                    if bottom_frame.size.height > 0:
-                        must_resize = True
-                        bottom_frame.size.height = 0
-                        middle_frame.size.height = 170
+        must_resize = False
 
-                    else:
-                        if bottom_frame.size.height != 0:
-                            bottom_frame.size.height = 0
-                            middle_frame.size.height = 170
-                            must_resize = True
-                        
-                if top_frame.size.height < 100:
+        video_stream = session.streamHandlerOfType("video")
+        if video_stream:
+            if self.videoView.aspect_ratio is not None:
+                new_height = bottom_frame.size.width / self.videoView.aspect_ratio
+            else:
+                new_height = bottom_frame.size.width / 1.77
+
+            if new_height != bottom_frame.size.height:
+                bottom_frame.size.height = new_height
+                must_resize = True
+                middle_frame.size.height = 170
+        else:
+            if bottom_frame.size.height > 0:
+                must_resize = True
+                bottom_frame.size.height = 0
+                middle_frame.size.height = 170
+
+            else:
+                if bottom_frame.size.height != 0:
+                    bottom_frame.size.height = 0
                     middle_frame.size.height = 170
                     must_resize = True
-                        
-                if middle_frame.size.height < 50:
-                    middle_frame.size.height = 0
-                    must_resize = True
+                
+        if top_frame.size.height < 100:
+            middle_frame.size.height = 170
+            must_resize = True
+                
+        if middle_frame.size.height < 50:
+            middle_frame.size.height = 0
+            must_resize = True
 
-                if not session.conference_shared_files:
-                    middle_frame.size.height = 0
-                    must_resize = True
+        if not session.conference_shared_files:
+            middle_frame.size.height = 0
+            must_resize = True
 
-                if not video_stream or session.video_consumer == "standalone":
-                    bottom_frame.size.height = 0
-                    must_resize = True
+        if not video_stream or session.video_consumer == "standalone":
+            bottom_frame.size.height = 0
+            must_resize = True
 
-                top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
+        top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
+        top_frame.origin.y = 0
 
-                chat_stream.drawerSplitterPosition = { 'topFrame':    top_frame,
-                                                       'middleFrame': middle_frame,
-                                                       'bottomFrame': bottom_frame
-                                                       }
-                if must_resize:
-                    self.resizeDrawerSplitter()
+        chat_stream.drawerSplitterPosition = { 'topFrame':    top_frame,
+                                               'middleFrame': middle_frame,
+                                               'bottomFrame': bottom_frame
+                                               }
+
+        if must_resize:
+            self.resizeDrawerSplitter()
 
     @objc.python_method
     def sendPrivateMessage(self):
@@ -1957,11 +1971,12 @@ class ChatWindowController(NSWindowController):
             middle_frame.size.height = 0
             bottom_frame.size.height = 0
 
-            if session.conference_shared_files or video_stream:
+            if chat_stream.status == STREAM_CONNECTED and (session.conference_shared_files or video_stream):
                 if session.conference_shared_files:
                     column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
                     if chat_stream and chat_stream.drawerSplitterPosition is None:
                         middle_frame.size.height = 130
+                        middle_frame.origin.y -= 130
                         top_frame.size.height -= middle_frame.size.height
                 else:
                     column_header_title = NSLocalizedString("Remote Conference Files", "Label")
@@ -1976,16 +1991,15 @@ class ChatWindowController(NSWindowController):
 
                     top_frame.size.height -= bottom_frame.size.height
 
-
             chat_stream.drawerSplitterPosition = {'topFrame'     : top_frame,
                                                   'middleFrame'  : middle_frame,
                                                   'bottomFrame'  : bottom_frame
                                                     }
+
             self.resizeDrawerSplitter()
 
         self.participantsTableView.reloadData()
         self.conferenceFilesTableView.reloadData()
-        self.drawerSplitView.setNeedsDisplay_(True)
 
     def drawerWillResizeContents_toSize_(self, drawer, size):
         self.drawerSplitViewDidResize_(None)
