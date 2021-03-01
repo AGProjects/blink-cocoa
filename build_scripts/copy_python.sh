@@ -23,14 +23,22 @@ sudo rm -r Frameworks/Python.framework/Versions/3.9/share/doc/python3.9/html
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/*
 sudo rm -r Frameworks/Python.framework/Versions/3.9/Resources/Python.app
 sudo rm -r Frameworks/Python.framework/Versions/3.9/share
-sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtcl8.6.dylib
-sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtk8.6.dylib
-sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtkstub8.6.a
+sudo rm -r Frameworks/Python.framework/Versions/3.9/bin
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/*tcl*
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/tk*
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/Tk*
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/td*
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/lib2to3
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/distutils
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/idlelib
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/ensurepip
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/pkgconfig 
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/python.o
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtclstub8.6.a
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/itcl4.1.1/libitclstub4.1.1.a
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/tdbc1.0.6/libtdbcstub1.0.6.a
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/libpython3.9.a
+find Frameworks/Python.framework -name *ncurses* -exec rm -r {} \;
 
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python3.9/
 
@@ -47,8 +55,8 @@ sudo cp $src_ca_list $dst_ca_list
 #./codesign-python.sh
 
 # Remove unused libraries
-sudo rm -r Resources/lib/greenlet/tests
-sudo rm -r Resources/lib/twisted/test
+find Resources/lib/ -name test -exec rm -r {} \;
+find Resources/lib/ -name tests -exec rm -r {} \;
 
 # Blink needs to by linked against Python in this location
 cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/
