@@ -956,7 +956,7 @@ class BlinkPresenceContact(BlinkContact):
             resources_uris.add(uri_text)
             if self.log_presence_transitions and log:
                 if resource.state == 'pending':
-                    self.presence_state['pending_authorizations'][resource.uri] = account
+                    self.presence_state['pending_authorizations'][str(resource.uri)] = account
                     if self.old_resource_state != resource.state:
                         BlinkLogger().log_debug("Availability subscription from %s to %s is pending" % (account, uri_text))
                 if resource.state == 'terminated':

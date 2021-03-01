@@ -5427,7 +5427,7 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     @run_in_thread('addressbook')
     def _NH_SIPAccountGotPresenceState(self, notification):
-        BlinkLogger().log_debug("Got presence update for for account %s" % notification.sender.id)
+        BlinkLogger().log_info("Got presence update for for account %s" % notification.sender.id)
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
