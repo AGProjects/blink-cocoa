@@ -2167,6 +2167,8 @@ class ContactWindowController(NSWindowController):
         top_frame = self.sessionsView.frame()
         middle_frame = self.participantsView.frame()
         bottom_frame = self.videoView.superview().frame()
+ 
+        h0 = parent_frame.size.height
         h1 = top_frame.size.height
         h2 = middle_frame.size.height
         h3 = bottom_frame.size.height
@@ -2210,13 +2212,19 @@ class ContactWindowController(NSWindowController):
             if session and session.hasStreamOfType("video") and session.video_consumer == "audio":
                 session.setVideoConsumer("standalone")
 
-        h1 = parent_frame.size.height - h2 - h3
-
+        h1 = h0 - h2 - h3
+        
         top_frame.size.height = h1
         middle_frame.size.height = h2
         bottom_frame.size.height = h3
+        top_frame.origin.y = 0
+        middle_frame.origin.y = h1
+        bottom_frame.origin.y = h1 + h2
 
-        self.drawerSplitterPosition = {'topFrame': top_frame, 'middleFrame': middle_frame, 'bottomFrame': bottom_frame}
+        position = {'topFrame': top_frame,
+                    'middleFrame': middle_frame,
+                    'bottomFrame': bottom_frame}
+        self.drawerSplitterPosition = position
         if must_resize:
             self.resizeDrawerSplitter()
 
