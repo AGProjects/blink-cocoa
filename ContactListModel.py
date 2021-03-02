@@ -932,7 +932,7 @@ class BlinkPresenceContact(BlinkContact):
 
     @objc.python_method
     def handle_presence_resources(self, resources, account, full_state=False, log=False):
-        # log should be set only for contacts in all contacs group
+        # log should be set only for contacts in all contacts group
         if self.application_will_end:
             return
 

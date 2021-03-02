@@ -153,7 +153,7 @@ class PresenceInfoController(NSObject):
     @objc.python_method
     def _format_note(self, note):
         text = "Note"
-        if note.lang is not None:
+        if hasattr(note, 'lang') and note.lang is not None:
             text += "(%s)" % note.lang
         text += ": %s" % note
         return text
