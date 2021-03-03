@@ -568,9 +568,6 @@
 		1F3C358515F522FA005356AE /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
 		1F3C358615F522FA005356AE /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
 		1F3C358715F522FA005356AE /* PresenceInfoController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3C358415F522FA005356AE /* PresenceInfoController.py */; };
-		1F3F8F4E25D163C2001DA381 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECD25D163C0001DA381 /* Python.framework */; };
-		1F3F8F4F25D163C2001DA381 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECD25D163C0001DA381 /* Python.framework */; };
-		1F3F8F5025D163C2001DA381 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8ECD25D163C0001DA381 /* Python.framework */; };
 		1F3F8FC325D16E85001DA381 /* libpython3.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */; };
 		1F3F8FC425D16E85001DA381 /* libpython3.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */; };
 		1F3F8FC525D16E85001DA381 /* libpython3.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */; };
@@ -583,8 +580,6 @@
 		1F447E7F18DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
 		1F447E8018DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
 		1F447E8118DF3522001EF4C9 /* VideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */; };
-		1F46872D25EA739F003EC986 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F46865925EA739E003EC986 /* Sparkle.framework */; };
-		1F46872E25EA739F003EC986 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F46865925EA739E003EC986 /* Sparkle.framework */; };
 		1F4B789119AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789219AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789319AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
@@ -2114,7 +2109,6 @@
 		1F3D0E8C19C1E27100681677 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1F3D0E8D19C1E27300681677 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1F3D0E8E19C1E27500681677 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1F3F8ECD25D163C0001DA381 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
 		1F3F8FBE25D16BE1001DA381 /* Python3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python3.framework; path = Library/Frameworks/Python3.framework; sourceTree = DEVELOPER_DIR; };
 		1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython3.9.dylib; path = Distribution/Frameworks/libpython3.9.dylib; sourceTree = "<group>"; };
 		1F419C9519152F400051F3D9 /* branding-sip2sip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-sip2sip.py"; sourceTree = "<group>"; };
@@ -2122,7 +2116,6 @@
 		1F419C991915330B0051F3D9 /* branding-pro.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-pro.py"; sourceTree = "<group>"; };
 		1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoWindowController.py; sourceTree = "<group>"; };
 		1F46861F25E95D4A003EC986 /* Blink.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Blink.entitlements; sourceTree = "<group>"; };
-		1F46865925EA739E003EC986 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		1F4B789719AEAEC200F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
@@ -2694,7 +2687,6 @@
 				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
 				1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
-				1F3F8F4E25D163C2001DA381 /* Python.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 			);
@@ -2740,7 +2732,6 @@
 				1F78AA9725EACDD600F43414 /* libicui18n.67.dylib in Frameworks */,
 				1F78AAB725EACDD600F43414 /* libiconv.2.dylib in Frameworks */,
 				1F78AA9F25EACDD600F43414 /* libavfilter.7.57.100.dylib in Frameworks */,
-				1F46872E25EA739F003EC986 /* Sparkle.framework in Frameworks */,
 				1F78AB3A25EACF2400F43414 /* libx264.dylib in Frameworks */,
 				1F78AB3E25EACF2400F43414 /* libx264.157.dylib in Frameworks */,
 				1F78AAE725EACDD600F43414 /* libicuuc.67.1.dylib in Frameworks */,
@@ -2771,7 +2762,6 @@
 				1F78AB4925EAD77300F43414 /* libxcb-xfixes.0.dylib in Frameworks */,
 				1F78AAF725EACDD600F43414 /* libz.1.2.11.dylib in Frameworks */,
 				1F78AAC725EACDD600F43414 /* libavutil.dylib in Frameworks */,
-				1F3F8F5025D163C2001DA381 /* Python.framework in Frameworks */,
 				1F78AA7B25EACDD500F43414 /* libunistring.2.dylib in Frameworks */,
 				1F78AB8025EAE1EC00F43414 /* libmpc.3.dylib in Frameworks */,
 				1F78AA8325EACDD500F43414 /* libavcodec.dylib in Frameworks */,
@@ -2816,8 +2806,6 @@
 				1F3F8FC425D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
 				1F78AB3925EACF2400F43414 /* libx264.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
-				1F46872D25EA739F003EC986 /* Sparkle.framework in Frameworks */,
-				1F3F8F4F25D163C2001DA381 /* Python.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
 				1F78AA8A25EACDD500F43414 /* libgnutls.30.dylib in Frameworks */,
 				1F78AA4625EACDD500F43414 /* libavdevice.58.8.100.dylib in Frameworks */,
@@ -3172,8 +3160,6 @@
 				1FA06CF725EF7D7A00268FF3 /* xml2 */,
 				1FA06CF625EF7C3700268FF3 /* ffmpeg */,
 				1FA06CF525EF7C2E00268FF3 /* gnutls */,
-				1F46865925EA739E003EC986 /* Sparkle.framework */,
-				1F3F8ECD25D163C0001DA381 /* Python.framework */,
 			);
 			name = "C libraries";
 			sourceTree = "<group>";
