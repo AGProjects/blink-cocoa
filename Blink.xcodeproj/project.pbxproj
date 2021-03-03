@@ -2109,7 +2109,6 @@
 		1F3D0E8C19C1E27100681677 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1F3D0E8D19C1E27300681677 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1F3D0E8E19C1E27500681677 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
-		1F3F8FBE25D16BE1001DA381 /* Python3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python3.framework; path = Library/Frameworks/Python3.framework; sourceTree = DEVELOPER_DIR; };
 		1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython3.9.dylib; path = Distribution/Frameworks/libpython3.9.dylib; sourceTree = "<group>"; };
 		1F419C9519152F400051F3D9 /* branding-sip2sip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-sip2sip.py"; sourceTree = "<group>"; };
 		1F419C97191530080051F3D9 /* branding-lite.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "branding-lite.py"; sourceTree = "<group>"; };
@@ -2958,14 +2957,6 @@
 			name = Conference;
 			sourceTree = "<group>";
 		};
-		1F3F8FBD25D16BE1001DA381 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1F3F8FBE25D16BE1001DA381 /* Python3.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		1F485725191595FA002543C7 /* Branding */ = {
 			isa = PBXGroup;
 			children = (
@@ -3174,7 +3165,6 @@
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
-				1F3F8FBD25D16BE1001DA381 /* Frameworks */,
 			);
 			name = MacSip;
 			sourceTree = "<group>";
