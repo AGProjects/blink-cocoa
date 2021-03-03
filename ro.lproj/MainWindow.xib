@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -493,18 +492,19 @@ CA
             <connections>
                 <outlet property="delegate" destination="389" id="762"/>
             </connections>
+            <point key="canvasLocation" x="140" y="153"/>
         </menu>
-        <window title="Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="ContactWindow" animationBehavior="default" id="371" userLabel="Blink Contacts Window" customClass="NSPanel">
+        <window title="Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" appearanceType="aqua" frameAutosaveName="ContactWindow" animationBehavior="default" id="371" userLabel="Blink Contacts Window" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="311" width="274" height="480"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <value key="minSize" type="size" width="274" height="132"/>
             <view key="contentView" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="274" height="480"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <popUpButton toolTip="Selectează Contul Folosit Pentru Apeluri" id="446" userLabel="Active Account Popup button">
+                    <popUpButton toolTip="Selectează Contul Folosit Pentru Apeluri" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="446" userLabel="Active Account Popup button">
                         <rect key="frame" x="5" y="452" width="264" height="26"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" title="Contul Activ" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" selectedItem="449" id="447">
@@ -523,7 +523,7 @@ CA
                             <action selector="accountSelectionChanged:" target="389" id="667"/>
                         </connections>
                     </popUpButton>
-                    <searchField toolTip="Poți introduce text pentru a căuta contacte sau pentru a porni un apel către o adresa arbitrară." wantsLayer="YES" verticalHuggingPriority="750" id="463" userLabel="Search Contacts Field">
+                    <searchField toolTip="Poți introduce text pentru a căuta contacte sau pentru a porni un apel către o adresa arbitrară." wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="463" userLabel="Search Contacts Field">
                         <rect key="frame" x="8" y="430" width="258" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Caută Contacte sau Apelează Adrese" bezelStyle="round" recentsAutosaveName="" id="464">
@@ -537,13 +537,13 @@ CA
                             <outlet property="nextKeyView" destination="504" id="741"/>
                         </connections>
                     </searchField>
-                    <imageView toolTip="Apasă pentru a schimba avatarul" id="656" userLabel="My Photo View" customClass="PhotoView">
+                    <imageView toolTip="Apasă pentru a schimba avatarul" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="656" userLabel="My Photo View" customClass="PhotoView">
                         <rect key="frame" x="8" y="390" width="32" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="photo" image="NSUser" id="657"/>
                         <accessibility description="Folosește Avatarul"/>
                     </imageView>
-                    <textField toolTip="Numele meu" focusRingType="none" verticalHuggingPriority="750" id="731" userLabel="Display Name">
+                    <textField toolTip="Numele meu" focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="731" userLabel="Display Name">
                         <rect key="frame" x="45" y="407" width="116" height="14"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" state="on" focusRingType="none" placeholderString="Nume Afișat" id="732">
@@ -558,7 +558,7 @@ CA
                             <outlet property="nextKeyView" destination="691" id="740"/>
                         </connections>
                     </textField>
-                    <popUpButton toolTip="Alege Disponibilitatea Mea" id="551" userLabel="Presence Activity Button">
+                    <popUpButton toolTip="Alege Disponibilitatea Mea" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="551" userLabel="Presence Activity Button">
                         <rect key="frame" x="155" y="407" width="112" height="15"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="right" controlSize="small" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" id="554">
@@ -580,7 +580,7 @@ CA
                             <action selector="presenceActivityChanged:" target="389" id="1713"/>
                         </connections>
                     </popUpButton>
-                    <textField toolTip="Publică o Notă Pentru Contactele Abonate La Disponbilitatea Mea " focusRingType="none" verticalHuggingPriority="750" id="691" userLabel="Presence Note">
+                    <textField toolTip="Publică o Notă Pentru Contactele Abonate La Disponbilitatea Mea " focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="691" userLabel="Presence Note">
                         <rect key="frame" x="45" y="390" width="224" height="16"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Publică o notă pentru contactele mele" usesSingleLineMode="YES" id="692">
@@ -595,20 +595,20 @@ CA
                             <outlet property="nextKeyView" destination="504" id="742"/>
                         </connections>
                     </textField>
-                    <tabView type="noTabsNoBorder" initialItem="499" id="498" userLabel="Main View">
+                    <tabView fixedFrame="YES" type="noTabsNoBorder" initialItem="499" translatesAutoresizingMaskIntoConstraints="NO" id="498" userLabel="Main View">
                         <rect key="frame" x="0.0" y="32" width="274" height="350"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="Contacte" identifier="contacts" id="499" userLabel="Contacts View">
-                                <view key="view" id="502">
+                                <view key="view" ambiguous="YES" id="502">
                                     <rect key="frame" x="0.0" y="0.0" width="274" height="350"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="503">
+                                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="503">
                                             <rect key="frame" x="0.0" y="0.0" width="274" height="348"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <clipView key="contentView" id="7tk-Pf-Fob">
+                                            <clipView key="contentView" ambiguous="YES" id="7tk-Pf-Fob">
                                                 <rect key="frame" x="1" y="1" width="272" height="346"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
@@ -642,31 +642,30 @@ CA
                                                     </outlineView>
                                                 </subviews>
                                             </clipView>
-                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="505">
+                                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="505">
                                                 <rect key="frame" x="1" y="282" width="229" height="15"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="506">
+                                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="506">
                                                 <rect key="frame" x="230" y="1" width="15" height="281"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                             <accessibility description="Lista De Contacte"/>
                                         </scrollView>
-                                        <customView hidden="YES" id="1629">
+                                        <customView hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1629">
                                             <rect key="frame" x="0.0" y="288" width="274" height="60"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                                         </customView>
                                     </subviews>
                                     <accessibility description="Lista De Contacte"/>
                                 </view>
-                                <accessibility description="Lista De Contacte"/>
                             </tabViewItem>
                             <tabViewItem label="Căutare" identifier="search" id="500" userLabel="Search Contacts View">
                                 <view key="view" id="501">
                                     <rect key="frame" x="0.0" y="0.0" width="274" height="350"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField verticalHuggingPriority="750" id="631">
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="631">
                                             <rect key="frame" x="24" y="139" width="230" height="68"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingMiddle" sendsActionOnEndEditing="YES" alignment="center" id="632">
@@ -678,7 +677,7 @@ un apel către aceasta adresă.</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button verticalHuggingPriority="750" id="607">
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="607">
                                             <rect key="frame" x="55" y="308" width="154" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="roundRect" title="Adaugă Contact" bezelStyle="roundedRect" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="608">
@@ -689,7 +688,7 @@ un apel către aceasta adresă.</string>
                                                 <action selector="addContact:" target="389" id="636"/>
                                             </connections>
                                         </button>
-                                        <button verticalHuggingPriority="750" id="891">
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="891">
                                             <rect key="frame" x="55" y="331" width="154" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="roundRect" title="Înapoi La Contacte" bezelStyle="roundedRect" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="892">
@@ -700,14 +699,14 @@ un apel către aceasta adresă.</string>
                                                 <action selector="backToContacts:" target="389" id="1511"/>
                                             </connections>
                                         </button>
-                                        <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="618">
+                                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="618">
                                             <rect key="frame" x="0.0" y="0.0" width="274" height="302"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <clipView key="contentView" id="BXG-1e-ihR">
+                                            <clipView key="contentView" ambiguous="YES" id="BXG-1e-ihR">
                                                 <rect key="frame" x="1" y="1" width="272" height="300"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
-                                                    <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveName="SearchResultTable" rowHeight="34" id="621" customClass="ContactOutlineView">
+                                                    <tableView verticalHuggingPriority="750" ambiguous="YES" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveName="SearchResultTable" rowHeight="34" id="621" customClass="ContactOutlineView">
                                                         <rect key="frame" x="0.0" y="0.0" width="272" height="300"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <size key="intercellSpacing" width="3" height="2"/>
@@ -737,11 +736,11 @@ un apel către aceasta adresă.</string>
                                                     </tableView>
                                                 </subviews>
                                             </clipView>
-                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="620">
+                                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="620">
                                                 <rect key="frame" x="1" y="173" width="251" height="15"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="619">
+                                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="619">
                                                 <rect key="frame" x="237" y="1" width="15" height="172"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
@@ -749,18 +748,17 @@ un apel către aceasta adresă.</string>
                                     </subviews>
                                     <accessibility description="Rezultatele Căutării"/>
                                 </view>
-                                <accessibility description="Rezultatele Căutării"/>
                             </tabViewItem>
                             <tabViewItem label="Tastatură Numerică" identifier="dialpad" id="1435" userLabel="Dialpad View">
                                 <view key="view" id="1436">
                                     <rect key="frame" x="0.0" y="0.0" width="274" height="350"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <customView id="1457" userLabel="DialPadView">
+                                        <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1457" userLabel="DialPadView">
                                             <rect key="frame" x="0.0" y="6" width="274" height="345"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <button verticalHuggingPriority="750" tag="11" id="1461">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="11" translatesAutoresizingMaskIntoConstraints="NO" id="1461">
                                                     <rect key="frame" x="174" y="6" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" title="#" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1482">
@@ -771,7 +769,7 @@ un apel către aceasta adresă.</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1493"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" id="1468">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1468">
                                                     <rect key="frame" x="104" y="6" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" title="0" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1475">
@@ -782,7 +780,7 @@ un apel către aceasta adresă.</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1487"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="10" id="1467">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="10" translatesAutoresizingMaskIntoConstraints="NO" id="1467">
                                                     <rect key="frame" x="34" y="6" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" title="*" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1476">
@@ -793,7 +791,7 @@ un apel către aceasta adresă.</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1498"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="9" id="1463">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="9" translatesAutoresizingMaskIntoConstraints="NO" id="1463">
                                                     <rect key="frame" x="174" y="76" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1480">
@@ -806,7 +804,7 @@ WXYZ</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1499"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="8" id="1469">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="8" translatesAutoresizingMaskIntoConstraints="NO" id="1469">
                                                     <rect key="frame" x="104" y="76" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1474">
@@ -819,7 +817,7 @@ TUV</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1489"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="7" id="1466">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="7" translatesAutoresizingMaskIntoConstraints="NO" id="1466">
                                                     <rect key="frame" x="34" y="76" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1477">
@@ -832,7 +830,7 @@ PQRS</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1495"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="5" id="1470">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="5" translatesAutoresizingMaskIntoConstraints="NO" id="1470">
                                                     <rect key="frame" x="104" y="146" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1473">
@@ -845,7 +843,7 @@ JKL</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1491"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="4" id="1465">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="4" translatesAutoresizingMaskIntoConstraints="NO" id="1465">
                                                     <rect key="frame" x="34" y="146" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1478">
@@ -858,7 +856,7 @@ GHI</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1497"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="6" id="1462">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="6" translatesAutoresizingMaskIntoConstraints="NO" id="1462">
                                                     <rect key="frame" x="174" y="146" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1481">
@@ -871,7 +869,7 @@ MNO</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1496"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="3" id="1471">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="3" translatesAutoresizingMaskIntoConstraints="NO" id="1471">
                                                     <rect key="frame" x="174" y="216" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1472">
@@ -884,7 +882,7 @@ DEF</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1486"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="2" id="1460">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="1460">
                                                     <rect key="frame" x="104" y="216" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1483">
@@ -897,7 +895,7 @@ ABC</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1492"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="1" id="1464">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="1464">
                                                     <rect key="frame" x="34" y="216" width="70" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="1479">
@@ -910,7 +908,7 @@ ABC</string>
                                                         <action selector="dialPadButtonClicked:" target="389" id="1494"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" id="1459">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1459">
                                                     <rect key="frame" x="62" y="319" width="154" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="roundRect" title="Adaugă Contact" bezelStyle="roundedRect" alignment="center" controlSize="small" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1484">
@@ -921,7 +919,7 @@ ABC</string>
                                                         <action selector="addContact:" target="389" id="1490"/>
                                                     </connections>
                                                 </button>
-                                                <button verticalHuggingPriority="750" tag="40" id="1458">
+                                                <button verticalHuggingPriority="750" fixedFrame="YES" tag="40" translatesAutoresizingMaskIntoConstraints="NO" id="1458">
                                                     <rect key="frame" x="62" y="296" width="154" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="roundRect" title="Adaugă în Conferință" bezelStyle="roundedRect" alignment="center" controlSize="small" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1485">
@@ -932,7 +930,7 @@ ABC</string>
                                                         </connections>
                                                     </buttonCell>
                                                 </button>
-                                                <box autoresizesSubviews="NO" borderType="bezel" titlePosition="noTitle" id="1505">
+                                                <box autoresizesSubviews="NO" fixedFrame="YES" borderType="bezel" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="1505">
                                                     <rect key="frame" x="-3" y="-4" width="280" height="351"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="wC7-B4-EYU">
@@ -944,11 +942,10 @@ ABC</string>
                                         </customView>
                                     </subviews>
                                 </view>
-                                <accessibility description="Tastatura Numerică"/>
                             </tabViewItem>
                         </tabViewItems>
                     </tabView>
-                    <button hidden="YES" toolTip="Adaugă Un Contact Nou" verticalHuggingPriority="750" id="459" userLabel="Add Contact Button ">
+                    <button hidden="YES" toolTip="Adaugă Un Contact Nou" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="459" userLabel="Add Contact Button ">
                         <rect key="frame" x="13" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Adaugă Contact" bezelStyle="texturedRounded" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="460">
@@ -961,7 +958,7 @@ ABC</string>
                             <action selector="addContact:" target="389" id="635"/>
                         </connections>
                     </button>
-                    <button toolTip="Apasă pentru a merge direct la un grup" verticalHuggingPriority="750" id="1689" userLabel="Navigate to Group Button">
+                    <button toolTip="Apasă pentru a merge direct la un grup" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1689" userLabel="Navigate to Group Button">
                         <rect key="frame" x="13" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Apasă pentru a naviga la un grup sau adaugă contact" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
@@ -974,8 +971,8 @@ ABC</string>
                             <action selector="groupButtonClicked:" target="389" id="1698"/>
                         </connections>
                     </button>
-                    <segmentedControl verticalHuggingPriority="750" id="457" userLabel="Start Session Buttons">
-                        <rect key="frame" x="75" y="6" width="125" height="25"/>
+                    <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="457" userLabel="Start Session Buttons">
+                        <rect key="frame" x="74.5" y="6" width="126" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="458" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
@@ -1000,8 +997,8 @@ ABC</string>
                             <action selector="actionButtonClicked:" target="389" id="497"/>
                         </connections>
                     </segmentedControl>
-                    <button toolTip="Oprește Soneria (Mod Silențios) " verticalHuggingPriority="750" id="589" userLabel="Silence Alerts Button">
-                        <rect key="frame" x="232" y="6" width="29" height="25"/>
+                    <button toolTip="Oprește Soneria (Mod Silențios) " verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="589" userLabel="Silence Alerts Button">
+                        <rect key="frame" x="231.5" y="6" width="30" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Mod Silențios" bezelStyle="texturedRounded" image="bellon" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" inset="2" id="590">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1013,8 +1010,8 @@ ABC</string>
                             <action selector="silentClicked:" target="389" id="882"/>
                         </connections>
                     </button>
-                    <segmentedControl hidden="YES" verticalHuggingPriority="750" misplaced="YES" id="rMO-VI-1UH" userLabel="Start Session Buttons">
-                        <rect key="frame" x="90" y="6" width="94" height="25"/>
+                    <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rMO-VI-1UH" userLabel="Start Session Buttons">
+                        <rect key="frame" x="89.5" y="6" width="95" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="jLD-y2-fS3" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
@@ -1039,12 +1036,13 @@ ABC</string>
                 <outlet property="delegate" destination="389" id="391"/>
                 <outlet property="initialFirstResponder" destination="463" id="660"/>
             </connections>
+            <point key="canvasLocation" x="139" y="-181"/>
         </window>
-        <customView id="474" userLabel="Audio Sessions Drawer View">
+        <customView appearanceType="aqua" id="474" userLabel="Audio Sessions Drawer View">
             <rect key="frame" x="0.0" y="0.0" width="280" height="395"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
             <subviews>
-                <textField verticalHuggingPriority="750" id="643" userLabel="Drawer Title Bar">
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="643" userLabel="Drawer Title Bar">
                     <rect key="frame" x="-23" y="381" width="327" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Convorbiri Audio" id="644">
@@ -1300,18 +1298,18 @@ ABC</string>
                         </allowedInputSourceLocales>
                     </textFieldCell>
                 </textField>
-                <splitView dividerStyle="thin" id="1524" userLabel="Drawer Main View">
+                <splitView fixedFrame="YES" dividerStyle="thin" translatesAutoresizingMaskIntoConstraints="NO" id="1524" userLabel="Drawer Main View">
                     <rect key="frame" x="0.0" y="25" width="280" height="357"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
-                        <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
+                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
                             <rect key="frame" x="0.0" y="0.0" width="280" height="318"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <clipView key="contentView" copiesOnScroll="NO" id="pYz-Y5-ScY">
+                            <clipView key="contentView" ambiguous="YES" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="316"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
-                                    <customView id="547" userLabel="Audio Sessions List View" customClass="ListView">
+                                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="547" userLabel="Audio Sessions List View" customClass="ListView">
                                         <rect key="frame" x="0.0" y="0.0" width="259" height="16"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                                         <accessibility description="Listă Convorbiri Audio"/>
@@ -1322,22 +1320,22 @@ ABC</string>
                                 </subviews>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             </clipView>
-                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="546">
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="546">
                                 <rect key="frame" x="-100" y="-100" width="199" height="15"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="545">
+                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="545">
                                 <rect key="frame" x="203" y="0.5" width="15" height="252"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <accessibility description="Listă Convorbiri Audio"/>
                         </scrollView>
-                        <scrollView autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1534" userLabel="Conference Participants Section View">
+                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1534" userLabel="Conference Participants Section View">
                             <rect key="frame" x="0.0" y="319" width="280" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <clipView key="contentView" id="Atq-KM-J9c">
+                            <clipView key="contentView" ambiguous="YES" id="Atq-KM-J9c">
                                 <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>
@@ -1369,11 +1367,11 @@ ABC</string>
                                     </tableView>
                                 </subviews>
                             </clipView>
-                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="1536">
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="1536">
                                 <rect key="frame" x="-100" y="-100" width="223" height="15"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="1535">
+                            <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="1535">
                                 <rect key="frame" x="263" y="0.0" width="16" height="0.0"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
@@ -1382,11 +1380,11 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <customView id="C73-Qs-jbr" customClass="BlackView">
+                        <customView fixedFrame="YES" id="C73-Qs-jbr" customClass="BlackView">
                             <rect key="frame" x="0.0" y="320" width="280" height="37"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
-                                <customView id="YUX-UC-DK5" customClass="VideoWidget">
+                                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YUX-UC-DK5" customClass="VideoWidget">
                                     <rect key="frame" x="0.0" y="-7" width="280" height="50"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
@@ -1403,12 +1401,12 @@ ABC</string>
                         <outlet property="delegate" destination="389" id="1541"/>
                     </connections>
                 </splitView>
-                <customView id="642" userLabel="Buttons View">
+                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="642" userLabel="Buttons View">
                     <rect key="frame" x="0.0" y="0.0" width="280" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
-                        <button toolTip="Închide Toate Convorbirile Audio" verticalHuggingPriority="750" tag="10" id="512">
-                            <rect key="frame" x="9" y="0.0" width="91" height="25"/>
+                        <button toolTip="Închide Toate Convorbirile Audio" verticalHuggingPriority="750" fixedFrame="YES" tag="10" translatesAutoresizingMaskIntoConstraints="NO" id="512">
+                            <rect key="frame" x="8.5" y="0.0" width="92" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Închide Tot" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -1419,8 +1417,8 @@ ABC</string>
                                 <action selector="hangupAllClicked:" target="389" id="665"/>
                             </connections>
                         </button>
-                        <button toolTip="Pornește o conferință cu mai mulți participanți." verticalHuggingPriority="750" tag="11" id="587">
-                            <rect key="frame" x="107.5" y="0.0" width="95" height="25"/>
+                        <button toolTip="Pornește o conferință cu mai mulți participanți." verticalHuggingPriority="750" fixedFrame="YES" tag="11" translatesAutoresizingMaskIntoConstraints="NO" id="587">
+                            <rect key="frame" x="106.5" y="0.0" width="96" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Conferință" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1431,7 +1429,7 @@ ABC</string>
                                 <action selector="conferenceClicked:" target="389" id="980"/>
                             </connections>
                         </button>
-                        <levelIndicator toolTip="Semnal Intrare Microfon" verticalHuggingPriority="750" id="1820">
+                        <levelIndicator toolTip="Semnal Intrare Microfon" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1820">
                             <rect key="frame" x="214" y="8" width="28" height="12"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" levelIndicatorStyle="relevancy" id="1821">
@@ -1441,8 +1439,8 @@ ABC</string>
                         </levelIndicator>
                     </subviews>
                 </customView>
-                <button toolTip="Dezactivează Microfonul" verticalHuggingPriority="750" id="878" userLabel="Mute Button">
-                    <rect key="frame" x="246" y="0.0" width="28" height="25"/>
+                <button toolTip="Dezactivează Microfonul" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="878" userLabel="Mute Button">
+                    <rect key="frame" x="245.5" y="0.0" width="29" height="25"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     <buttonCell key="cell" type="roundTextured" alternateTitle="Dezactivează Microfonul" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1456,6 +1454,7 @@ ABC</string>
                     </connections>
                 </button>
             </subviews>
+            <point key="canvasLocation" x="490" y="-172"/>
         </customView>
         <menu title="StatusBarMenu" id="1745">
             <items>

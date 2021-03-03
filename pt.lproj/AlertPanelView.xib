@@ -1,20 +1,22 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="5056" systemVersion="13D65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="5056"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AlertPanel"/>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
-        <box autoresizesSubviews="NO" boxType="secondary" borderType="bezel" titlePosition="noTitle" id="16">
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <box autoresizesSubviews="NO" appearanceType="aqua" boxType="secondary" borderType="bezel" titlePosition="noTitle" id="16">
             <rect key="frame" x="0.0" y="0.0" width="606" height="99"/>
             <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
-            <view key="contentView">
+            <view key="contentView" id="2dN-Xs-kYx">
                 <rect key="frame" x="3" y="3" width="600" height="93"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" tag="1" id="17">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="17">
                         <rect key="frame" x="65" y="71" width="352" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Recebendo sessão de áudio e chat de" id="28">
@@ -23,7 +25,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button verticalHuggingPriority="750" tag="6" id="19">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="6" translatesAutoresizingMaskIntoConstraints="NO" id="19">
                         <rect key="frame" x="409" y="-1" width="117" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Somente Chat" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="26">
@@ -35,7 +37,7 @@
                             <action selector="buttonClicked:" target="-2" id="30"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" tag="7" id="20">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="7" translatesAutoresizingMaskIntoConstraints="NO" id="20">
                         <rect key="frame" x="4" y="-1" width="100" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Rejeitar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="25">
@@ -46,7 +48,7 @@
                             <action selector="buttonClicked:" target="-2" id="31"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" tag="5" id="21">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="5" translatesAutoresizingMaskIntoConstraints="NO" id="21">
                         <rect key="frame" x="518" y="-1" width="84" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Aceitar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="24">
@@ -58,7 +60,7 @@
                             <action selector="buttonClicked:" target="-2" id="29"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" tag="2" id="22">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="22">
                         <rect key="frame" x="65" y="52" width="475" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" alignment="left" title="123456@exemplo.com" id="23">
@@ -67,7 +69,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" tag="3" id="32">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="3" translatesAutoresizingMaskIntoConstraints="NO" id="32">
                         <rect key="frame" x="65" y="30" width="252" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Para conta: 123436239237@exemplo.com" id="33">
@@ -76,7 +78,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button verticalHuggingPriority="750" tag="8" id="34">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="8" translatesAutoresizingMaskIntoConstraints="NO" id="34">
                         <rect key="frame" x="96" y="-1" width="100" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Ocupado" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="35">
@@ -87,13 +89,13 @@
                             <action selector="buttonClicked:" target="-2" id="36"/>
                         </connections>
                     </button>
-                    <imageView hidden="YES" tag="32" id="39">
+                    <imageView hidden="YES" fixedFrame="YES" tag="32" translatesAutoresizingMaskIntoConstraints="NO" id="39">
                         <rect key="frame" x="558" y="58" width="38" height="38"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="audio" id="40"/>
                         <accessibility description="Áudio"/>
                     </imageView>
-                    <textField hidden="YES" verticalHuggingPriority="750" tag="31" id="43">
+                    <textField hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" tag="31" translatesAutoresizingMaskIntoConstraints="NO" id="43">
                         <rect key="frame" x="525" y="61" width="34" height="39"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="MI" id="44">
@@ -103,25 +105,25 @@
                         </textFieldCell>
                         <accessibility description="Chat"/>
                     </textField>
-                    <imageView hidden="YES" tag="33" id="47">
+                    <imageView hidden="YES" fixedFrame="YES" tag="33" translatesAutoresizingMaskIntoConstraints="NO" id="47">
                         <rect key="frame" x="490" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSMultipleDocuments" id="48"/>
                         <accessibility description="Transferência de Arquivos"/>
                     </imageView>
-                    <imageView hidden="YES" tag="34" id="49">
+                    <imageView hidden="YES" fixedFrame="YES" tag="34" translatesAutoresizingMaskIntoConstraints="NO" id="49">
                         <rect key="frame" x="452" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="display" id="50"/>
                         <accessibility description="Compartilhamento de Tela"/>
                     </imageView>
-                    <imageView hidden="YES" tag="35" id="GNb-Wk-dV7">
+                    <imageView hidden="YES" fixedFrame="YES" tag="35" translatesAutoresizingMaskIntoConstraints="NO" id="GNb-Wk-dV7">
                         <rect key="frame" x="415" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="video" id="4rF-Lm-PHA"/>
                         <accessibility description="Compartilhamento de Tela"/>
                     </imageView>
-                    <textField hidden="YES" verticalHuggingPriority="750" tag="15" id="54">
+                    <textField hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" tag="15" translatesAutoresizingMaskIntoConstraints="NO" id="54">
                         <rect key="frame" x="196" y="9" width="210" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Secret. Elet. iniciando em %i s" id="55">
@@ -130,7 +132,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <imageView tag="99" id="56">
+                    <imageView fixedFrame="YES" tag="99" translatesAutoresizingMaskIntoConstraints="NO" id="56">
                         <rect key="frame" x="10" y="35" width="48" height="48"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSUser" id="57"/>
@@ -138,8 +140,7 @@
                     </imageView>
                 </subviews>
             </view>
-            <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <point key="canvasLocation" x="139" y="156"/>
         </box>
     </objects>
     <resources>
@@ -147,6 +148,6 @@
         <image name="NSUser" width="32" height="32"/>
         <image name="audio" width="240" height="240"/>
         <image name="display" width="32" height="32"/>
-        <image name="video" width="154" height="154"/>
+        <image name="video" width="520" height="520"/>
     </resources>
 </document>

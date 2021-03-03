@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="14C109" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="AudioController">
@@ -22,11 +24,11 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customView id="1" customClass="AudioSession">
+        <customView appearanceType="aqua" id="1" customClass="AudioSession">
             <rect key="frame" x="0.0" y="0.0" width="265" height="57"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <imageView hidden="YES" toolTip="Canalul audio este criptat cu sRTP" id="32">
+                <imageView hidden="YES" toolTip="Canalul audio este criptat cu sRTP" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="32">
                     <rect key="frame" x="5" y="5" width="17" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="srtp" id="33"/>
@@ -34,7 +36,7 @@
                         <outlet property="menu" destination="53" id="67"/>
                     </connections>
                 </imageView>
-                <textField verticalHuggingPriority="750" id="31">
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="31">
                     <rect key="frame" x="4" y="6" width="171" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Connectat" id="34">
@@ -47,7 +49,7 @@
                         <outlet property="menu" destination="53" id="66"/>
                     </connections>
                 </textField>
-                <segmentedControl hidden="YES" verticalHuggingPriority="750" id="71" userLabel="Session Control Buttons">
+                <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="71" userLabel="Session Control Buttons">
                     <rect key="frame" x="173" y="3" width="89" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="72">
@@ -72,7 +74,7 @@
                         <action selector="userClickedSegmentButton:" target="-2" id="74"/>
                     </connections>
                 </segmentedControl>
-                <segmentedControl hidden="YES" verticalHuggingPriority="750" id="198" userLabel="Session Control Buttons">
+                <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="198" userLabel="Session Control Buttons">
                     <rect key="frame" x="153" y="3" width="110" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="199">
@@ -100,7 +102,7 @@
                         <action selector="userClickedSegmentButton:" target="-2" id="200"/>
                     </connections>
                 </segmentedControl>
-                <textField verticalHuggingPriority="750" id="26">
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="26">
                     <rect key="frame" x="61" y="21" width="202" height="15"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" id="27">
@@ -112,7 +114,7 @@
                         <outlet property="menu" destination="53" id="65"/>
                     </connections>
                 </textField>
-                <imageView hidden="YES" toolTip="Semnalizarea SIP pîna la hopul următor este criptată cu TLS. Nu există garanția ca hopurile urmatoare folosesc criptare. " id="23">
+                <imageView hidden="YES" toolTip="Semnalizarea SIP pîna la hopul următor este criptată cu TLS. Nu există garanția ca hopurile urmatoare folosesc criptare. " fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="23">
                     <rect key="frame" x="7" y="37" width="14" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="bluelock" id="24"/>
@@ -120,7 +122,7 @@
                         <outlet property="menu" destination="53" id="64"/>
                     </connections>
                 </imageView>
-                <textField verticalHuggingPriority="750" id="6">
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6">
                     <rect key="frame" x="4" y="20" width="258" height="16"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="0:00:00" id="7">
@@ -133,7 +135,7 @@
                         <outlet property="menu" destination="53" id="63"/>
                     </connections>
                 </textField>
-                <textField verticalHuggingPriority="750" id="2">
+                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2">
                     <rect key="frame" x="4" y="37" width="244" height="16"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="test@example.com" id="3">
@@ -146,7 +148,7 @@
                         <outlet property="menu" destination="53" id="62"/>
                     </connections>
                 </textField>
-                <button id="166">
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="166">
                     <rect key="frame" x="245" y="37" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="panel-info" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="167">
@@ -163,6 +165,7 @@
             <connections>
                 <outlet property="menu" destination="53" id="57"/>
             </connections>
+            <point key="canvasLocation" x="140" y="155"/>
         </customView>
         <menu title="Apel" autoenablesItems="NO" id="53">
             <items>

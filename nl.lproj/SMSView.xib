@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="6245"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="SMSViewController">
@@ -17,15 +19,15 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <splitView id="19" customClass="SMSSplitView">
+        <splitView appearanceType="aqua" id="19" customClass="SMSSplitView">
             <rect key="frame" x="0.0" y="0.0" width="503" height="363"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <customView id="183">
+                <customView fixedFrame="YES" id="183">
                     <rect key="frame" x="0.0" y="0.0" width="503" height="323"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
-                        <webView id="38" customClass="ChatWebView">
+                        <webView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="38" customClass="ChatWebView">
                             <rect key="frame" x="0.0" y="0.0" width="503" height="297"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
@@ -38,7 +40,7 @@
                                 <outlet property="resourceLoadDelegate" destination="167" id="191"/>
                             </connections>
                         </webView>
-                        <textField verticalHuggingPriority="750" id="193">
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="193">
                             <rect key="frame" x="17" y="303" width="278" height="14"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Vorige berichten" id="194">
@@ -47,11 +49,11 @@
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                             </textFieldCell>
                         </textField>
-                        <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" id="199">
+                        <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="199">
                             <rect key="frame" x="235" y="138" width="32" height="32"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         </progressIndicator>
-                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="1tL-Y6-1yc">
+                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1tL-Y6-1yc">
                             <rect key="frame" x="17" y="85" width="468" height="45"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" id="Ila-en-eXf">
@@ -60,7 +62,7 @@
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                             </textFieldCell>
                         </textField>
-                        <searchField verticalHuggingPriority="750" id="201">
+                        <searchField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="201">
                             <rect key="frame" x="321" y="302" width="162" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                             <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Zoek berichten" usesSingleLineMode="YES" bezelStyle="round" id="202">
@@ -72,7 +74,7 @@
                                 <action selector="searchMessages:" target="167" id="208"/>
                             </connections>
                         </searchField>
-                        <button hidden="YES" verticalHuggingPriority="750" id="209">
+                        <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="209">
                             <rect key="frame" x="295" y="300" width="18" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSAddTemplate" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="210">
@@ -85,11 +87,11 @@
                         </button>
                     </subviews>
                 </customView>
-                <customView id="23">
+                <customView fixedFrame="YES" id="23">
                     <rect key="frame" x="0.0" y="332" width="503" height="31"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
-                        <popUpButton id="176">
+                        <popUpButton fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="176">
                             <rect key="frame" x="466" y="2" width="34" height="30"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="181" id="177">
@@ -106,34 +108,32 @@
                                 </menu>
                             </popUpButtonCell>
                         </popUpButton>
-                        <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="24">
+                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="24">
                             <rect key="frame" x="-1" y="0.0" width="471" height="31"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <clipView key="contentView" id="1JK-yF-jjK">
+                            <clipView key="contentView" ambiguous="YES" drawsBackground="NO" id="1JK-yF-jjK">
                                 <rect key="frame" x="1" y="1" width="469" height="29"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
-                                    <textView importsGraphics="NO" richText="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="25" customClass="ChatInputTextView">
+                                    <textView ambiguous="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" spellingCorrection="YES" smartInsertDelete="YES" id="25" customClass="ChatInputTextView">
                                         <rect key="frame" x="0.0" y="0.0" width="469" height="29"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <size key="minSize" width="469" height="29"/>
                                         <size key="maxSize" width="1004" height="10000000"/>
-                                        <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                        <size key="minSize" width="469" height="29"/>
-                                        <size key="maxSize" width="1004" height="10000000"/>
+                                        <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         <connections>
                                             <outlet property="delegate" destination="-2" id="175"/>
                                         </connections>
                                     </textView>
                                 </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </clipView>
-                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="26">
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="26">
                                 <rect key="frame" x="-100" y="-100" width="87" height="18"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="27">
+                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="27">
                                 <rect key="frame" x="452" y="1" width="15" height="30"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
@@ -145,6 +145,7 @@
                 <real value="250"/>
                 <real value="250"/>
             </holdingPriorities>
+            <point key="canvasLocation" x="140" y="155"/>
         </splitView>
         <customObject id="167" userLabel="ChatViewController" customClass="ChatViewController">
             <connections>
@@ -163,12 +164,12 @@
             <rect key="frame" x="0.0" y="0.0" width="498" height="29"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
             <subviews>
-                <imageView id="162">
+                <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="162">
                     <rect key="frame" x="8" y="1" width="24" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSUser" id="163"/>
                 </imageView>
-                <button verticalHuggingPriority="750" id="160">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="160">
                     <rect key="frame" x="447" y="4" width="40" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundRect" title="Nee" bezelStyle="roundedRect" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="161">
@@ -179,7 +180,7 @@
                         <action selector="addContactPanelClicked:" target="-2" id="187"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" tag="1" id="158">
+                <button verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="158">
                     <rect key="frame" x="399" y="4" width="40" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundRect" title="Toevoegen" bezelStyle="roundedRect" alignment="center" controlSize="mini" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="159">
@@ -190,7 +191,7 @@
                         <action selector="addContactPanelClicked:" target="-2" id="186"/>
                     </connections>
                 </button>
-                <textField verticalHuggingPriority="750" id="156">
+                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="346" translatesAutoresizingMaskIntoConstraints="NO" id="156">
                     <rect key="frame" x="36" y="-1" width="350" height="28"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="ag@ag-projects.com is not in your contacts list. Would you like to add?" id="157">
@@ -203,7 +204,7 @@
         </customView>
     </objects>
     <resources>
-        <image name="NSAddTemplate" width="8" height="8"/>
+        <image name="NSAddTemplate" width="11" height="11"/>
         <image name="NSUser" width="32" height="32"/>
     </resources>
 </document>

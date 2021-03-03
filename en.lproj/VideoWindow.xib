@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="VideoWindowController">
@@ -28,27 +30,27 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="QvC-M9-y7g">
+        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" visibleAtLaunch="NO" appearanceType="aqua" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowCollectionBehavior key="collectionBehavior" fullScreenPrimary="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="562" y="346" width="665" height="375"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <value key="minSize" type="size" width="400" height="300"/>
             <view key="contentView" id="EiT-Mj-1SZ" customClass="BlackView">
                 <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="U8k-ux-24e" customClass="remoteVideoWidget">
+                    <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="U8k-ux-24e" customClass="remoteVideoWidget">
                         <rect key="frame" x="0.0" y="0.0" width="665" height="375"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" id="uKH-pg-Ygf"/>
                     </imageView>
-                    <customView id="gXK-wO-PCf" customClass="RoundedCornersView">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gXK-wO-PCf" customClass="RoundedCornersView">
                         <rect key="frame" x="118" y="163" width="428" height="49"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="eVG-9y-W1v">
+                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eVG-9y-W1v">
                                 <rect key="frame" x="-117" y="4" width="663" height="39"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" alignment="center" title="Video Ended" id="MzQ-vj-Ben">
@@ -59,31 +61,31 @@
                             </textField>
                         </subviews>
                     </customView>
-                    <customView id="g4v-Xf-ipS" customClass="myVideoWidget">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g4v-Xf-ipS" customClass="myVideoWidget">
                         <rect key="frame" x="10" y="281" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </customView>
-                    <customView id="fxb-9f-6dz">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fxb-9f-6dz">
                         <rect key="frame" x="505" y="281" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     </customView>
-                    <customView id="7AV-gS-EuK">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="7AV-gS-EuK">
                         <rect key="frame" x="505" y="10" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                     </customView>
-                    <customView id="Mbl-8w-9fs">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Mbl-8w-9fs">
                         <rect key="frame" x="10" y="10" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     </customView>
-                    <customView id="clN-w5-T4L">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="clN-w5-T4L">
                         <rect key="frame" x="10" y="281" width="150" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </customView>
-                    <view focusRingType="none" id="Y9H-en-cNJ" customClass="RoundedCornersView">
+                    <view focusRingType="none" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Y9H-en-cNJ" customClass="RoundedCornersView">
                         <rect key="frame" x="193" y="20" width="279" height="35"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <button id="qgv-hv-8jn">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qgv-hv-8jn">
                                 <rect key="frame" x="40" y="8" width="35" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="aspect_ratio" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyDown" inset="2" id="DCj-Na-fmk">
@@ -94,7 +96,7 @@
                                     <action selector="userClickedAspectButton:" target="-2" id="rxA-Qp-dQa"/>
                                 </connections>
                             </button>
-                            <button id="APe-V0-I1B">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="APe-V0-I1B">
                                 <rect key="frame" x="2" y="6" width="37" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="fullscreen" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyDown" inset="2" id="ipd-M6-2bI">
@@ -105,7 +107,7 @@
                                     <action selector="userClickedFullScreenButton:" target="-2" id="vJE-Z7-5br"/>
                                 </connections>
                             </button>
-                            <button id="jY2-T6-DZT">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jY2-T6-DZT">
                                 <rect key="frame" x="74" y="5" width="32" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mute-white" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="P5Q-ng-o10">
@@ -116,7 +118,7 @@
                                     <action selector="userClickedMuteButton:" target="-2" id="dXr-H5-d6h"/>
                                 </connections>
                             </button>
-                            <button id="8Az-PJ-y76">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8Az-PJ-y76">
                                 <rect key="frame" x="129" y="7" width="31" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="hangup" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="YBv-AF-tXo">
@@ -127,7 +129,7 @@
                                     <action selector="userClickedHangupButton:" target="-2" id="fY3-9b-L9C"/>
                                 </connections>
                             </button>
-                            <button id="KKF-yB-vq1">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KKF-yB-vq1">
                                 <rect key="frame" x="100" y="6" width="31" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pause-white" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="u8N-mG-TdB">
@@ -138,7 +140,7 @@
                                     <action selector="userClickedHoldButton:" target="-2" id="4Wt-Mb-amF"/>
                                 </connections>
                             </button>
-                            <button id="5zy-g6-Zl6">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5zy-g6-Zl6">
                                 <rect key="frame" x="158" y="6" width="27" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="pencil" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="KDg-ji-9yE">
@@ -149,7 +151,7 @@
                                     <action selector="userClickedChatButton:" target="-2" id="YZi-X6-2wa"/>
                                 </connections>
                             </button>
-                            <button id="I9k-Br-fgq">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I9k-Br-fgq">
                                 <rect key="frame" x="188" y="4" width="22" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="NSInfo" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="QsW-aU-vEV">
@@ -160,7 +162,7 @@
                                     <action selector="userClickedInfoButton:" target="-2" id="IWa-cB-8nj"/>
                                 </connections>
                             </button>
-                            <button id="IeQ-BC-f6X">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IeQ-BC-f6X">
                                 <rect key="frame" x="244" y="9" width="24" height="20"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="recording1" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="wlp-on-h2g">
@@ -171,7 +173,7 @@
                                     <action selector="userClickedRecordButton:" target="-2" id="EHq-ZX-Lq4"/>
                                 </connections>
                             </button>
-                            <button id="BKQ-kq-DFD">
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BKQ-kq-DFD">
                                 <rect key="frame" x="206" y="5" width="46" height="27"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="screenshot" imagePosition="above" alignment="center" refusesFirstResponder="YES" imageScaling="proportionallyUpOrDown" inset="2" id="gy8-5m-BAn">
@@ -182,7 +184,7 @@
                                     <action selector="userClickedScreenshotButton:" target="-2" id="idy-ov-wXM"/>
                                 </connections>
                             </button>
-                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="pcT-2p-dF9">
+                            <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pcT-2p-dF9">
                                 <rect key="frame" x="278" y="-14" width="52" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" alignment="center" title="Info" id="9dh-F9-7hq">
@@ -198,6 +200,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="0hK-o1-dWX"/>
             </connections>
+            <point key="canvasLocation" x="140" y="147"/>
         </window>
     </objects>
     <resources>

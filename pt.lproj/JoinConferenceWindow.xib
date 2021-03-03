@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="JoinConferenceWindowController">
@@ -23,18 +25,18 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window title="Entrar Em Conferência" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" frameAutosaveName="startConferenceWindow" animationBehavior="default" id="1">
+        <window title="Entrar Em Conferência" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" appearanceType="aqua" frameAutosaveName="startConferenceWindow" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="154" width="539" height="424"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <value key="minSize" type="size" width="539" height="424"/>
             <value key="maxSize" type="size" width="539" height="424"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="539" height="424"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" id="3">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3">
                         <rect key="frame" x="160" y="382" width="354" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Entrar Em Conferência e Convidar Participantes:" id="10">
@@ -43,7 +45,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="27">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="27">
                         <rect key="frame" x="38" y="260" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Participante:" id="28">
@@ -52,7 +54,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="97">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="97">
                         <rect key="frame" x="12" y="234" width="147" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Lista de Participantes:" id="98">
@@ -61,7 +63,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="172">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="172">
                         <rect key="frame" x="38" y="91" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Mídia Proposta:" id="173">
@@ -70,7 +72,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="25">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="25">
                         <rect key="frame" x="38" y="319" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Sala:" id="26">
@@ -79,12 +81,12 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="17">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="17">
                         <rect key="frame" x="163" y="316" width="355" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Deixe vazio para criar uma aleatoriamente" drawsBackground="YES" id="18">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <accessibility description="Sala de Conferência"/>
@@ -92,7 +94,7 @@
                             <accessibilityConnection property="title" destination="25" id="158"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="161">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="161">
                         <rect key="frame" x="38" y="290" width="121" height="17"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Apelido:" id="164">
@@ -101,17 +103,17 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" id="162">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="162">
                         <rect key="frame" x="164" y="287" width="355" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Informe o apelido para seu nome exibido" drawsBackground="YES" id="163">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <accessibility description="Sala de Conferência"/>
                     </textField>
-                    <button verticalHuggingPriority="750" id="5">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5">
                         <rect key="frame" x="428" y="15" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="8">
@@ -125,7 +127,7 @@ DQ
                             <action selector="okClicked:" target="-2" id="14"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="6">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6">
                         <rect key="frame" x="331" y="15" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="7">
@@ -139,7 +141,7 @@ Gw
                             <action selector="cancelClicked:" target="-2" id="36"/>
                         </connections>
                     </button>
-                    <button id="44">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="44">
                         <rect key="frame" x="274" y="89" width="105" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Áudio" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="45">
@@ -148,7 +150,7 @@ Gw
                         </buttonCell>
                         <accessibility description="Propor Áudio"/>
                     </button>
-                    <button id="46">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="46">
                         <rect key="frame" x="162" y="89" width="108" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="check" title="Chat" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="47">
@@ -157,12 +159,12 @@ Gw
                         </buttonCell>
                         <accessibility description="Propor Chat"/>
                     </button>
-                    <textField verticalHuggingPriority="750" id="57">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="57">
                         <rect key="frame" x="164" y="257" width="291" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Informe endereço ou arraste contatos" drawsBackground="YES" id="58">
                             <font key="font" metaFont="system"/>
-                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <accessibility description="Novo Participante"/>
@@ -170,15 +172,15 @@ Gw
                             <accessibilityConnection property="title" destination="27" id="159"/>
                         </connections>
                     </textField>
-                    <scrollView focusRingType="none" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="59">
+                    <scrollView focusRingType="none" fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="59">
                         <rect key="frame" x="164" y="116" width="355" height="135"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <clipView key="contentView" id="Mi6-o7-dT3">
+                        <clipView key="contentView" ambiguous="YES" id="Mi6-o7-dT3">
                             <rect key="frame" x="1" y="1" width="353" height="133"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnSelection="YES" columnResizing="NO" multipleSelection="NO" emptySelection="NO" autosaveColumns="NO" typeSelect="NO" id="62">
-                                    <rect key="frame" x="0.0" y="0.0" width="353" height="19"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="353" height="133"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -205,13 +207,12 @@ Gw
                                     </connections>
                                 </tableView>
                             </subviews>
-                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </clipView>
-                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="61">
+                        <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="61">
                             <rect key="frame" x="1" y="75" width="142" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="60">
+                        <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="60">
                             <rect key="frame" x="224" y="17" width="15" height="102"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
@@ -220,7 +221,7 @@ Gw
                             <accessibilityConnection property="title" destination="97" id="160"/>
                         </connections>
                     </scrollView>
-                    <segmentedControl verticalHuggingPriority="750" id="92">
+                    <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="92">
                         <rect key="frame" x="463" y="256" width="56" height="24"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="93">
@@ -240,7 +241,7 @@ Gw
                             <action selector="addRemoveParticipant:" target="-2" id="95"/>
                         </connections>
                     </segmentedControl>
-                    <button hidden="YES" toolTip="Remover Todos Participantes" id="105">
+                    <button hidden="YES" toolTip="Remover Todos Participantes" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="105">
                         <rect key="frame" x="138" y="116" width="27" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="trash" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="106">
@@ -252,7 +253,7 @@ Gw
                             <action selector="removeAllParticipants:" target="-2" id="108"/>
                         </connections>
                     </button>
-                    <popUpButton id="115">
+                    <popUpButton fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="115">
                         <rect key="frame" x="151" y="355" width="373" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" title="Selecionar Configuração" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="118" id="116">
@@ -268,7 +269,7 @@ Gw
                             <action selector="configurationsButtonClicked:" target="-2" id="140"/>
                         </connections>
                     </popUpButton>
-                    <popUpButton id="150">
+                    <popUpButton fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="150">
                         <rect key="frame" x="151" y="355" width="373" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="bevel" title="Combo Bonjour" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" refusesFirstResponder="YES" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" autoenablesItems="NO" selectedItem="153" id="151">
@@ -281,12 +282,12 @@ Gw
                             </menu>
                         </popUpButtonCell>
                     </popUpButton>
-                    <imageView id="168">
+                    <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="168">
                         <rect key="frame" x="92" y="351" width="64" height="47"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="NSEveryone" id="169"/>
                     </imageView>
-                    <button id="170">
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="170">
                         <rect key="frame" x="160" y="47" width="351" height="39"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="check" title="Iniciar Quando Participantes Estiverem Disponíveis" bezelStyle="regularSquare" imagePosition="left" inset="2" id="171">
@@ -299,6 +300,7 @@ Gw
             <connections>
                 <outlet property="delegate" destination="-2" id="16"/>
             </connections>
+            <point key="canvasLocation" x="140" y="147"/>
         </window>
     </objects>
     <resources>

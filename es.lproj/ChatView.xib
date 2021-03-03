@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15D21" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ChatController">
@@ -19,15 +20,15 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <splitView id="19">
+        <splitView appearanceType="aqua" id="19">
             <rect key="frame" x="0.0" y="0.0" width="501" height="500"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <customView id="178">
+                <customView fixedFrame="YES" id="178">
                     <rect key="frame" x="0.0" y="0.0" width="501" height="418"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
-                        <webView id="38" customClass="ChatWebView">
+                        <webView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="38" customClass="ChatWebView">
                             <rect key="frame" x="0.0" y="0.0" width="501" height="391"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
@@ -41,7 +42,7 @@
                                 <outlet property="resourceLoadDelegate" destination="164" id="173"/>
                             </connections>
                         </webView>
-                        <textField verticalHuggingPriority="750" id="217">
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="217">
                             <rect key="frame" x="17" y="397" width="275" height="14"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Mensajes Anteriores" id="218">
@@ -50,11 +51,11 @@
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                             </textFieldCell>
                         </textField>
-                        <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" id="220">
+                        <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="220">
                             <rect key="frame" x="234" y="186" width="32" height="32"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         </progressIndicator>
-                        <searchField wantsLayer="YES" verticalHuggingPriority="750" id="222">
+                        <searchField wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="222">
                             <rect key="frame" x="319" y="396" width="162" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Buscar Mensajes" usesSingleLineMode="YES" bezelStyle="round" id="223">
@@ -66,7 +67,7 @@
                                 <action selector="searchMessages:" target="164" id="229"/>
                             </connections>
                         </searchField>
-                        <button hidden="YES" toolTip="Mostrar Todos los Mensajes Pertenecientes a la Misma Sesión" verticalHuggingPriority="750" id="230">
+                        <button hidden="YES" toolTip="Mostrar Todos los Mensajes Pertenecientes a la Misma Sesión" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="230">
                             <rect key="frame" x="297" y="395" width="18" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="231">
@@ -77,7 +78,7 @@
                                 <action selector="showRelatedMessages:" target="164" id="233"/>
                             </connections>
                         </button>
-                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="bS8-LL-yJQ">
+                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bS8-LL-yJQ">
                             <rect key="frame" x="10" y="133" width="483" height="45"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Lrh-hm-LDo">
@@ -88,11 +89,11 @@
                         </textField>
                     </subviews>
                 </customView>
-                <customView id="23">
+                <customView fixedFrame="YES" id="23">
                     <rect key="frame" x="0.0" y="427" width="501" height="73"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
-                        <popUpButton id="126">
+                        <popUpButton fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="126">
                             <rect key="frame" x="466" y="45" width="34" height="30"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="129" id="127">
@@ -110,40 +111,38 @@
                             </popUpButtonCell>
                             <accessibility description="Seleccionar Emoticón"/>
                         </popUpButton>
-                        <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="24">
+                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="24">
                             <rect key="frame" x="0.0" y="0.0" width="464" height="73"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <clipView key="contentView" id="TfF-ad-GAx">
+                            <clipView key="contentView" ambiguous="YES" drawsBackground="NO" id="TfF-ad-GAx">
                                 <rect key="frame" x="1" y="1" width="462" height="71"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
-                                    <textView importsGraphics="NO" findStyle="panel" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" id="25" customClass="ChatInputTextView">
+                                    <textView ambiguous="YES" importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" allowsUndo="YES" usesRuler="YES" id="25" customClass="ChatInputTextView">
                                         <rect key="frame" x="0.0" y="0.0" width="462" height="71"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <size key="minSize" width="462" height="71"/>
                                         <size key="maxSize" width="1000" height="10000000"/>
-                                        <color key="insertionPointColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                                        <size key="minSize" width="462" height="71"/>
-                                        <size key="maxSize" width="1000" height="10000000"/>
+                                        <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         <accessibility description="Escribe un texto para enviar al otro participante"/>
                                         <connections>
                                             <outlet property="delegate" destination="-2" id="177"/>
                                         </connections>
                                     </textView>
                                 </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </clipView>
-                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="26">
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="26">
                                 <rect key="frame" x="-100" y="-100" width="87" height="18"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="27">
+                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="27">
                                 <rect key="frame" x="451" y="1" width="16" height="71"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                         </scrollView>
-                        <button hidden="YES" id="234">
+                        <button hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="234">
                             <rect key="frame" x="472" y="8" width="22" height="23"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="database-on" imagePosition="above" alignment="left" imageScaling="proportionallyUpOrDown" id="235">
@@ -154,7 +153,7 @@
                                 <action selector="userClickedDatabaseLoggingButton:" target="-2" id="239"/>
                             </connections>
                         </button>
-                        <textField verticalHuggingPriority="750" id="253">
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="253">
                             <rect key="frame" x="380" y="53" width="83" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="PRIVADO" id="254">
@@ -163,7 +162,7 @@
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
                             </textFieldCell>
                         </textField>
-                        <button hidden="YES" verticalHuggingPriority="750" id="HDY-as-kcz">
+                        <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HDY-as-kcz">
                             <rect key="frame" x="105" y="19" width="291" height="32"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES"/>
                             <buttonCell key="cell" type="push" title="Continue without encryption" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" inset="2" id="ZYq-mI-VMT">
@@ -174,7 +173,7 @@
                                 <action selector="confirmWithoutEncryption:" target="164" id="eha-kW-Fx1"/>
                             </connections>
                         </button>
-                        <textField hidden="YES" verticalHuggingPriority="750" id="Z1v-ZF-M0q">
+                        <textField hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Z1v-ZF-M0q">
                             <rect key="frame" x="109" y="8" width="283" height="19"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Encryption has been disabled by remote party" id="PZi-98-2jg">
@@ -190,6 +189,7 @@
                 <real value="250"/>
                 <real value="250"/>
             </holdingPriorities>
+            <point key="canvasLocation" x="140" y="154"/>
         </splitView>
         <customObject id="164" customClass="ChatViewController">
             <connections>

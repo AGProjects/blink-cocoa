@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6254"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PhotoPicker">
@@ -28,27 +30,27 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window title="Panel de Selección de Fotografía" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" frameAutosaveName="own-avatar-panel" animationBehavior="default" id="1" customClass="NSPanel">
+        <window title="Panel de Selección de Fotografía" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" appearanceType="aqua" frameAutosaveName="own-avatar-panel" animationBehavior="default" id="1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="515" y="309" width="516" height="419"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <value key="minSize" type="size" width="357" height="312"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="516" height="419"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <tabView id="8">
+                    <tabView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8">
                         <rect key="frame" x="13" y="61" width="490" height="352"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="Fotografías Recientes" identifier="recent" id="10">
-                                <view key="view" id="11">
+                                <view key="view" ambiguous="YES" id="11">
                                     <rect key="frame" x="10" y="33" width="470" height="306"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <button verticalHuggingPriority="750" id="24">
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="24">
                                             <rect key="frame" x="91" y="-1" width="289" height="31"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                             <buttonCell key="cell" type="push" title="Elegir Fotografía Desde Archivo..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="25">
@@ -59,14 +61,14 @@
                                                 <action selector="browseFile:" target="-2" id="117"/>
                                             </connections>
                                         </button>
-                                        <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="75">
+                                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="75">
                                             <rect key="frame" x="-3" y="37" width="476" height="266"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <clipView key="contentView" id="bzB-l9-g0X">
+                                            <clipView key="contentView" ambiguous="YES" id="bzB-l9-g0X">
                                                 <rect key="frame" x="1" y="1" width="474" height="264"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
-                                                    <collectionView selectable="YES" id="78" customClass="MyCollectionView">
+                                                    <collectionView ambiguous="YES" selectable="YES" id="78" customClass="MyCollectionView">
                                                         <rect key="frame" x="0.0" y="0.0" width="474" height="264"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="primaryBackgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -79,11 +81,11 @@
                                                     </collectionView>
                                                 </subviews>
                                             </clipView>
-                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="77">
+                                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="77">
                                                 <rect key="frame" x="-100" y="-100" width="199" height="15"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="76">
+                                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="76">
                                                 <rect key="frame" x="200" y="1" width="15" height="200"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
@@ -96,11 +98,11 @@
                                     <rect key="frame" x="10" y="33" width="470" height="306"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <customView id="RSh-u7-reo" customClass="LocalVideoView">
+                                        <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RSh-u7-reo" customClass="LocalVideoView">
                                             <rect key="frame" x="-3" y="37.5" width="476" height="266"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         </customView>
-                                        <button hidden="YES" verticalHuggingPriority="750" tag="7" id="62">
+                                        <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" tag="7" translatesAutoresizingMaskIntoConstraints="NO" id="62">
                                             <rect key="frame" x="160" y="-1" width="150" height="32"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                             <buttonCell key="cell" type="push" title="Tomar Fotografía" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="63">
@@ -111,12 +113,12 @@
                                                 <action selector="captureButtonClicked:" target="-2" id="153"/>
                                             </connections>
                                         </button>
-                                        <imageView hidden="YES" id="70" customClass="EditImageView">
+                                        <imageView hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="70" customClass="EditImageView">
                                             <rect key="frame" x="-3" y="37.5" width="476" height="265"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                             <imageCell key="cell" selectable="YES" editable="YES" alignment="left" imageScaling="proportionallyDown" id="71"/>
                                         </imageView>
-                                        <button verticalHuggingPriority="750" tag="5" id="14">
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" tag="5" translatesAutoresizingMaskIntoConstraints="NO" id="14">
                                             <rect key="frame" x="160" y="0.0" width="150" height="31"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                             <buttonCell key="cell" type="push" title="Previsualizar" bezelStyle="rounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="15">
@@ -127,7 +129,7 @@
                                                 <action selector="previewButtonClicked:" target="-2" id="154"/>
                                             </connections>
                                         </button>
-                                        <button hidden="YES" id="gr8-i3-9SQ">
+                                        <button hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gr8-i3-9SQ">
                                             <rect key="frame" x="330" y="9" width="137" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                             <buttonCell key="cell" type="check" title="Usar Temporizador" bezelStyle="regularSquare" imagePosition="right" alignment="right" state="on" inset="2" id="Yx5-Zw-AfX">
@@ -135,11 +137,11 @@
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
                                         </button>
-                                        <progressIndicator hidden="YES" maxValue="5" indeterminate="YES" style="bar" id="NeG-y4-YZ2">
+                                        <progressIndicator hidden="YES" fixedFrame="YES" maxValue="5" indeterminate="YES" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="NeG-y4-YZ2">
                                             <rect key="frame" x="2" y="7" width="466" height="20"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                         </progressIndicator>
-                                        <button id="KDt-XG-DFE">
+                                        <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KDt-XG-DFE">
                                             <rect key="frame" x="2" y="6" width="20" height="21"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="ga8-CJ-Nhd">
@@ -158,7 +160,7 @@
                             <outlet property="delegate" destination="-2" id="128"/>
                         </connections>
                     </tabView>
-                    <button verticalHuggingPriority="750" tag="1" id="26">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="26">
                         <rect key="frame" x="258" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Usar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="27">
@@ -172,7 +174,7 @@ DQ
                             <action selector="UseButtonClicked:" target="-2" id="151"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="28">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="28">
                         <rect key="frame" x="162" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="29">
@@ -186,7 +188,7 @@ Gw
                             <action selector="CancelButtonClicked:" target="-2" id="152"/>
                         </connections>
                     </button>
-                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="hUZ-Wd-vg2">
+                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hUZ-Wd-vg2">
                         <rect key="frame" x="18" y="49" width="480" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Haga clic derecho sobre la imagen de vista previa para cambiar cámaras" id="5Lj-eS-8EY">
@@ -200,6 +202,7 @@ Gw
             <connections>
                 <outlet property="delegate" destination="-2" id="41"/>
             </connections>
+            <point key="canvasLocation" x="139" y="151"/>
         </window>
         <collectionViewItem id="79">
             <connections>
@@ -215,11 +218,11 @@ Gw
         <box autoresizesSubviews="NO" boxType="custom" borderType="bezel" titlePosition="noTitle" id="103" customClass="IconViewBox">
             <rect key="frame" x="0.0" y="0.0" width="74" height="74"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-            <view key="contentView">
+            <view key="contentView" id="fMM-to-Jn9">
                 <rect key="frame" x="1" y="1" width="72" height="72"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
-                    <imageView id="83">
+                    <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="83">
                         <rect key="frame" x="4" y="5" width="64" height="64"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSInfo" id="84"/>
@@ -239,16 +242,16 @@ Gw
                 </binding>
             </connections>
         </box>
-        <window title="Ajustar y Cortar Imagen" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" visibleAtLaunch="NO" animationBehavior="default" id="129">
+        <window title="Ajustar y Cortar Imagen" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" visibleAtLaunch="NO" animationBehavior="default" id="129">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="739" y="295" width="401" height="344"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1028"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" id="130">
                 <rect key="frame" x="0.0" y="0.0" width="401" height="344"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button verticalHuggingPriority="750" tag="2" id="131">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="131">
                         <rect key="frame" x="291" y="12" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Ajustar y Cortar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="132">
@@ -259,7 +262,7 @@ Gw
                             <action selector="cropWindowButtonClicked:" target="-2" id="139"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" tag="1" id="133">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="133">
                         <rect key="frame" x="195" y="12" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancelar" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="134">
@@ -270,30 +273,30 @@ Gw
                             <action selector="cropWindowButtonClicked:" target="-2" id="140"/>
                         </connections>
                     </button>
-                    <scrollView autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="141">
+                    <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="141">
                         <rect key="frame" x="-1" y="55" width="403" height="289"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <clipView key="contentView" id="Bzb-Hq-NV3">
+                        <clipView key="contentView" ambiguous="YES" id="Bzb-Hq-NV3">
                             <rect key="frame" x="1" y="1" width="401" height="287"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
-                                <imageView id="135" customClass="EditImageView">
+                                <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="135" customClass="EditImageView">
                                     <rect key="frame" x="0.0" y="0.0" width="401" height="287"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="136"/>
                                 </imageView>
                             </subviews>
                         </clipView>
-                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="143">
+                        <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="143">
                             <rect key="frame" x="1" y="238" width="382" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="142">
+                        <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="142">
                             <rect key="frame" x="383" y="1" width="15" height="237"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
-                    <slider verticalHuggingPriority="750" id="145">
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="145">
                         <rect key="frame" x="55" y="18" width="128" height="15"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <sliderCell key="cell" controlSize="small" state="on" alignment="left" minValue="1" maxValue="100" doubleValue="100" tickMarkPosition="below" sliderType="linear" id="146">
@@ -303,7 +306,7 @@ Gw
                             <action selector="changeCropScale:" target="-2" id="150"/>
                         </connections>
                     </slider>
-                    <textField verticalHuggingPriority="750" id="147">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="147">
                         <rect key="frame" x="10" y="20" width="40" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Escalar:" id="148">
