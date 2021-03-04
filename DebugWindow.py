@@ -505,7 +505,7 @@ class DebugWindow(NSObject):
         settings = SIPSimpleSettings()
         if settings.logs.trace_sip_in_gui == Disabled:
             return
-
+            
         event_data = notification.data
         self.sipBytes += len(event_data.data)
         if self._siptrace_start_time is None:
@@ -677,7 +677,10 @@ class DebugWindow(NSObject):
             ts = ts.replace(microsecond=0) if type(ts) == datetime else ""
 
             self.notificationsBytes += len(notification.name) + len(str(notification.sender)) + len(attribs) + len(str(ts))
-            self.notifications_unfiltered.append((NSString.stringWithString_(notification.name),
+            sub_event = notification.data.event if hasattr(notification.data, 'event') else None
+
+            name = '%s (%s)' % (notification.name, sub_event) if sub_event else notification.name
+            self.notifications_unfiltered.append((NSString.stringWithString_(name),
                                             NSString.stringWithString_(str(notification.sender)),
                                             NSString.stringWithString_(attribs),
                                             NSString.stringWithString_(str(ts))))
