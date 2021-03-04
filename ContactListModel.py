@@ -1349,7 +1349,7 @@ class BlinkPresenceContact(BlinkContact):
             response = urllib.request.urlopen(req)
             content = response.read()
             info = response.info()
-            content_type = info.getheader('content-type')
+            content_type = info.get('content-type')
             etag = info.getheader('etag')
         except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError):
             contact.updating_remote_icon = False
