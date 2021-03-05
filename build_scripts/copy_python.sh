@@ -33,6 +33,12 @@ sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/distutils
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/idlelib
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/ensurepip
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/pkgconfig 
+
+sudo rm Frameworks/Python.framework/Versions/3.9/lib/libssl.1.1.dylib
+sudo rm Frameworks/Python.framework/Versions/3.9/lib/libformw.5.dylib
+sudo rm Frameworks/Python.framework/Versions/3.9/lib/libpanelw.5.dylib
+sudo rm Frameworks/Python.framework/Versions/3.9/lib/libmenuw.5.dylib
+sudo rm Frameworks/Python.framework/Versions/3.9/lib/libcrypto.1.1.dylib
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/python.o
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libtclstub8.6.a
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/itcl4.1.1/libitclstub4.1.1.a
