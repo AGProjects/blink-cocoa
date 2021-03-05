@@ -640,7 +640,7 @@ class DebugWindow(NSObject):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
 
-        if notification.name in ('SIPEngineSIPTrace', 'SIPEngineLog', 'MSRPLibraryLog', 'MSRPTransportTrace'):
+        if notification.name in ('SIPEngineSIPTrace', 'SIPEngineLog', 'MSRPLibraryLog', 'MSRPTransportTrace', 'BlinkContactPresenceHasChanged', 'VirtualGroupWasActivated', 'BlinkContactsHaveChanged', 'BlinkGroupsHaveChanged', 'VirtualGroupsManagerDidAddGroup'):
             return
 
         # notifications text view
@@ -681,11 +681,13 @@ class DebugWindow(NSObject):
             method = notification.sender.method if hasattr(notification.sender, 'method') else None
             sub_event = sub_event.decode() if isinstance(sub_event, bytes) else sub_event
             method = method.decode() if isinstance(method, bytes) else method
-
+            
             if sub_event:
                 name = '%s (%s)' % (notification.name, sub_event.title()) if sub_event.lower() not in notification.name.lower() else notification.name
             elif method:
                 name = '%s (%s)' % (notification.name, method)
+            elif notification.name == 'DNSLookupTrace':
+                name = '%s %s %s' % (notification.name, notification.data.query_type, notification.data.query_name)
             else:
                 name = notification.name
 
@@ -936,8 +938,8 @@ class DebugWindow(NSObject):
     @objc.python_method
     def _NH_XCAPSubscriptionGotNotify(self, notification):
         settings = SIPSimpleSettings()
-        message = ("%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body))
         if notification.data.body is not None and settings.logs.trace_xcap_in_gui == Full:
+            message = ("%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body.decode()))
             self.renderXCAP(message)
 
     @objc.python_method
