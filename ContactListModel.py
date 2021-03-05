@@ -946,7 +946,7 @@ class BlinkPresenceContact(BlinkContact):
         for uri, resource in resources.items():
             if not resource.pidf_list:
                 pass
-                #BlinkLogger().log_debug('PIDF list for %s is empty' % uri)
+                #BlinkLogger().log_info('PIDF list for %s is empty' % uri)
             uri_text = sip_prefix_pattern.sub('', uri)
             try:
                 SIPURI.parse(str('sip:%s' % uri_text))
@@ -955,13 +955,24 @@ class BlinkPresenceContact(BlinkContact):
 
             resources_uris.add(uri_text)
             if self.log_presence_transitions and log:
+                model = NSApp.delegate().contactsWindowController.model
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][str(resource.uri)] = account
                     if self.old_resource_state != resource.state:
-                        BlinkLogger().log_debug("Availability subscription from %s to %s is pending" % (account, uri_text))
-                if resource.state == 'terminated':
+                        contacts_for_subscription = model.getBlinkContactsForURI(str(resource.uri))
+                        if not contacts_for_subscription:
+                            BlinkLogger().log_error("We have no contact for subscription of %s to %s" % (account, uri_text))
+                        else:
+                            BlinkLogger().log_info("Subscription from %s for account %s is pending" % (account, uri_text))
+
+                elif resource.state == 'terminated':
+                    contacts_for_subscription = model.getBlinkContactsForURI(str(resource.uri))
                     if self.old_resource_state != resource.state:
-                        BlinkLogger().log_debug("Availability subscription from %s to %s is terminated" % (account, uri_text))
+                        if not contacts_for_subscription:
+                            BlinkLogger().log_error("We have no contact for subscription of %s to %s" % (account, uri_text))
+                        else:
+                            BlinkLogger().log_debug("Availability subscription from %s to %s is terminated" % (account, uri_text))
+
 
             self.old_resource_state = resource.state
 
@@ -973,10 +984,12 @@ class BlinkPresenceContact(BlinkContact):
                 old_pidf_list_for_uri = self.pidfs_map[uri][account]
             except KeyError:
                 if resource.pidf_list:
+                    #BlinkLogger().log_info('Adding pidfs for %s: %s' % (uri, resource.pidf_list))
                     self.pidfs_map[uri][account] = resource.pidf_list
                     changes = True
             else:
                 if old_pidf_list_for_uri != resource.pidf_list:
+                    #BlinkLogger().log_info('Updating pidfs for %s: %s' % (uri, resource.pidf_list))
                     self.pidfs_map[uri][account] = resource.pidf_list
                     changes = True
 
@@ -1249,8 +1262,13 @@ class BlinkPresenceContact(BlinkContact):
                     pass
                 else:
                     if log:
-                        log_line = 'Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status)
-                        BlinkLogger().log_debug(log_line)
+                        if self.old_presence_status != status:
+                            log_line = 'Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status)
+                            BlinkLogger().log_info(log_line)
+
+                        if self.old_presence_note != self.presence_note:
+                            log_line = 'Presence note of %s changed from %s to %s' % (self.name, self.old_presence_note, self.presence_note)
+                            BlinkLogger().log_info(log_line)
 
                         message= '<h3>Availability Information</h3>'
                         message += '<p>%s' % log_line
@@ -1473,6 +1491,7 @@ class BlinkPresenceContact(BlinkContact):
         presence_notes = []
         if detail != self.detail:
             self.detail = detail
+            BlinkLogger().log_info('%s detail has changed to %s' % (self.uri, detail))
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
     @objc.python_method
@@ -1518,7 +1537,7 @@ class BlinkPresenceContact(BlinkContact):
                 if resources:
                     changed = self.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
                     if changed:
-                        BlinkLogger().log_debug('Availability for %s %s by account %s has changed' % (self.name, key, notification.sender.id))
+                        BlinkLogger().log_info('Availability for %s %s by account %s has changed' % (self.name, key, notification.sender.id))
                         self.reloadModelItem(self)
                         if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
                             online_group_changed = self.addToOrRemoveFromOnlineGroup()
@@ -3463,7 +3482,7 @@ class ContactListModel(CustomListModel):
         tmp_active_watchers  = dict((watcher.sipuri, 'active') for watcher in watcher_list.active)
 
         if notification.data.state == 'full':
-            BlinkLogger().log_debug('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
+            #BlinkLogger().log_info('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
             # TODO: don't remove all of them, just the ones that match?
             self.pending_watchers_group.contacts = []
             self.pending_watchers_map[notification.sender.id] = tmp_pending_watchers
@@ -3480,7 +3499,7 @@ class ContactListModel(CustomListModel):
                         continue
 
                     if not self.presencePolicyExistsForURI_(watcher.sipuri):
-                        BlinkLogger().log_debug("New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
+                        BlinkLogger().log_info("New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
@@ -3496,10 +3515,10 @@ class ContactListModel(CustomListModel):
 
             for watcher in tmp_active_watchers.keys():
                 uri = sip_prefix_pattern.sub('', watcher)
-                BlinkLogger().log_debug("%s is subscribed to my availability for %s" % (uri, notification.sender.id))
+                BlinkLogger().log_info("%s is subscribed to my availability for %s" % (uri, notification.sender.id))
 
         elif notification.data.state == 'partial':
-            BlinkLogger().log_debug('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
+            #BlinkLogger().log_info('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
             notification_sent = False
             for watcher in tmp_pending_watchers.values():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
@@ -3531,7 +3550,7 @@ class ContactListModel(CustomListModel):
             terminated_watchers = set([watcher.sipuri for watcher in watcher_list.terminated])
             for sipuri in terminated_watchers:
                 uri = sip_prefix_pattern.sub('', sipuri)
-                BlinkLogger().log_debug("Subscription to my availability for %s from %s is terminated" % (notification.sender.id, uri))
+                BlinkLogger().log_info("Subscription to my availability for %s from %s is terminated" % (notification.sender.id, uri))
                 try:
                     gui_watcher = next(contact for contact in self.pending_watchers_group.contacts if contact.uri == uri)
                 except StopIteration:
