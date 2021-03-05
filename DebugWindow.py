@@ -677,9 +677,18 @@ class DebugWindow(NSObject):
             ts = ts.replace(microsecond=0) if type(ts) == datetime else ""
 
             self.notificationsBytes += len(notification.name) + len(str(notification.sender)) + len(attribs) + len(str(ts))
-            sub_event = notification.data.event if hasattr(notification.data, 'event') else None
+            sub_event = notification.sender.event if hasattr(notification.sender, 'event') else None
+            method = notification.sender.method if hasattr(notification.sender, 'method') else None
+            sub_event = sub_event.decode() if isinstance(sub_event, bytes) else sub_event
+            method = method.decode() if isinstance(method, bytes) else method
 
-            name = '%s (%s)' % (notification.name, sub_event) if sub_event else notification.name
+            if sub_event:
+                name = '%s (%s)' % (notification.name, sub_event.title()) if sub_event.lower() not in notification.name.lower() else notification.name
+            elif method:
+                name = '%s (%s)' % (notification.name, method)
+            else:
+                name = notification.name
+
             self.notifications_unfiltered.append((NSString.stringWithString_(name),
                                             NSString.stringWithString_(str(notification.sender)),
                                             NSString.stringWithString_(attribs),
