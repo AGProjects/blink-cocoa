@@ -1407,14 +1407,16 @@ class BlinkPresenceContact(BlinkContact):
         try:
             online_contact = next(online_contact for online_contact in model.online_contacts_group.contacts if online_contact.contact == self.contact)
         except StopIteration:
-            if status not in (None, "offline"):
+            #if status not in (None, "offline"):
+            if status is not None:
                 online_contact = BlinkOnlineContact(self.contact)
                 online_contact._clone_presence_state(other=self)
                 model.online_contacts_group.contacts.append(online_contact)
                 model.online_contacts_group.sortContacts()
                 return model.online_contacts_group
         else:
-            if status in (None, "offline") or not self.contact.presence.subscribe:
+#            if status in (None, "offline") or not self.contact.presence.subscribe:
+            if status is None or not self.contact.presence.subscribe:
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
                 return model.online_contacts_group
