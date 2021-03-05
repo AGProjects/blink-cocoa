@@ -2,3 +2,7 @@
  * add otr smp for sms
  * fix audio and chat drawers in dark mode
  * fix video
+ * link Python _ssl libs to ../../
+ * copy mime types from Python framework
+
+
