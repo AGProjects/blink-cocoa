@@ -1893,12 +1893,13 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_DNSLookupDidFail(self, lookup, data):
-        self.log_debug('DNS Lookup Failed')
+        self.log_info('DNS Lookup Failed')
         self.notification_center.remove_observer(self, sender=lookup)
         if host is None or host.default_ip is None:
             message = NSLocalizedString("No Internet connection", "Label")
         else:
-            message = "SIP DNS lookup for %s failed: %s" % (self.target_uri.host.decode(), data.error)
+            self.log_info("SIP DNS lookup for %s failed: %s" % (self.target_uri.host.decode(), data.error))
+            message = 'DNS Lookup Failed'
         self.setRoutesFailed(message)
 
     @objc.python_method
