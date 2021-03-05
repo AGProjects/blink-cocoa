@@ -392,17 +392,17 @@ class SIPManager(object, metaclass=Singleton):
             return
 
         files = [dirname+"/"+f for f in os.listdir(dirname) if f.endswith(".pickle")]
-
-        for file in files:
-            try:
+        
+        try:
+            for file in files:
                 os.stat(file)
                 date = file.split("/")[-1].split('-')[0]
                 time = file.split("/")[-1].split('-')[1].split('.')[0]
                 timestamp = date[:4]+"/"+date[4:6]+"/"+date[6:8]+" "+time[:2]+":"+time[2:4]
                 result.append((timestamp, file))
-            except Exception:
-                pass
-        result.sort(lambda a,b: cmp(a[0],b[0]))
+            result.sort(key=lambda x: x[0])
+        except Exception as e:
+            pass
         return result
 
     def is_muted(self):
