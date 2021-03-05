@@ -700,54 +700,6 @@
 		1F789C9314ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9414ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
 		1F789C9514ADD9DD00437EA4 /* iCloudManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F789C9214ADD9DD00437EA4 /* iCloudManager.py */; };
-		1F78AA3E25EACDD500F43414 /* libpostproc.55.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0A25EACDCE00F43414 /* libpostproc.55.dylib */; };
-		1F78AA4225EACDD500F43414 /* libswscale.5.5.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0B25EACDCE00F43414 /* libswscale.5.5.100.dylib */; };
-		1F78AA4625EACDD500F43414 /* libavdevice.58.8.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0C25EACDCE00F43414 /* libavdevice.58.8.100.dylib */; };
-		1F78AA4A25EACDD500F43414 /* libavutil.56.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0D25EACDCF00F43414 /* libavutil.56.dylib */; };
-		1F78AA4E25EACDD500F43414 /* libssl.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0E25EACDCF00F43414 /* libssl.1.1.dylib */; };
-		1F78AA5225EACDD500F43414 /* libavdevice.58.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0F25EACDCF00F43414 /* libavdevice.58.dylib */; };
-		1F78AA5625EACDD500F43414 /* libpostproc.55.5.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1025EACDCF00F43414 /* libpostproc.55.5.100.dylib */; };
-		1F78AA5A25EACDD500F43414 /* libidn2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1125EACDCF00F43414 /* libidn2.0.dylib */; };
-		1F78AA5E25EACDD500F43414 /* libswresample.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1225EACDCF00F43414 /* libswresample.3.dylib */; };
-		1F78AA6225EACDD500F43414 /* libavfilter.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1325EACDCF00F43414 /* libavfilter.dylib */; };
-		1F78AA6625EACDD500F43414 /* libpostproc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1425EACDCF00F43414 /* libpostproc.dylib */; };
-		1F78AA6A25EACDD500F43414 /* libtasn1.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1525EACDD000F43414 /* libtasn1.6.dylib */; };
-		1F78AA6E25EACDD500F43414 /* libavfilter.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1625EACDD000F43414 /* libavfilter.7.dylib */; };
-		1F78AA7225EACDD500F43414 /* libavcodec.58.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1725EACDD000F43414 /* libavcodec.58.dylib */; };
-		1F78AA7625EACDD500F43414 /* libnettle.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1825EACDD000F43414 /* libnettle.8.dylib */; };
-		1F78AA7A25EACDD500F43414 /* libunistring.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1925EACDD000F43414 /* libunistring.2.dylib */; };
-		1F78AA7E25EACDD500F43414 /* libsqlite3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1A25EACDD000F43414 /* libsqlite3.0.dylib */; };
-		1F78AA8225EACDD500F43414 /* libavcodec.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1B25EACDD000F43414 /* libavcodec.dylib */; };
-		1F78AA8625EACDD500F43414 /* libavformat.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1C25EACDD000F43414 /* libavformat.dylib */; };
-		1F78AA8A25EACDD500F43414 /* libgnutls.30.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1D25EACDD100F43414 /* libgnutls.30.dylib */; };
-		1F78AA8E25EACDD500F43414 /* libicudata.67.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1E25EACDD100F43414 /* libicudata.67.dylib */; };
-		1F78AA9225EACDD600F43414 /* libintl.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1F25EACDD200F43414 /* libintl.8.dylib */; };
-		1F78AA9625EACDD600F43414 /* libicui18n.67.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2025EACDD200F43414 /* libicui18n.67.dylib */; };
-		1F78AA9A25EACDD600F43414 /* libavformat.58.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2125EACDD200F43414 /* libavformat.58.dylib */; };
-		1F78AA9E25EACDD600F43414 /* libavfilter.7.57.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2225EACDD200F43414 /* libavfilter.7.57.100.dylib */; };
-		1F78AAA225EACDD600F43414 /* libavdevice.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2325EACDD200F43414 /* libavdevice.dylib */; };
-		1F78AAAA25EACDD600F43414 /* libswscale.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2525EACDD200F43414 /* libswscale.dylib */; };
-		1F78AAAE25EACDD600F43414 /* libswscale.5.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2625EACDD300F43414 /* libswscale.5.dylib */; };
-		1F78AAB225EACDD600F43414 /* libswresample.3.5.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2725EACDD300F43414 /* libswresample.3.5.100.dylib */; };
-		1F78AAB625EACDD600F43414 /* libiconv.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2825EACDD300F43414 /* libiconv.2.dylib */; };
-		1F78AABA25EACDD600F43414 /* libnettle.8.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2925EACDD300F43414 /* libnettle.8.1.dylib */; };
-		1F78AABE25EACDD600F43414 /* libavutil.56.31.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2A25EACDD300F43414 /* libavutil.56.31.100.dylib */; };
-		1F78AAC225EACDD600F43414 /* libavformat.58.29.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2B25EACDD300F43414 /* libavformat.58.29.100.dylib */; };
-		1F78AAC625EACDD600F43414 /* libavutil.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2C25EACDD300F43414 /* libavutil.dylib */; };
-		1F78AACA25EACDD600F43414 /* libicuuc.67.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2D25EACDD300F43414 /* libicuuc.67.dylib */; };
-		1F78AACE25EACDD600F43414 /* libicui18n.67.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2E25EACDD400F43414 /* libicui18n.67.1.dylib */; };
-		1F78AAD225EACDD600F43414 /* libicudata.67.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA2F25EACDD400F43414 /* libicudata.67.1.dylib */; };
-		1F78AAD625EACDD600F43414 /* liblzma.5.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3025EACDD400F43414 /* liblzma.5.dylib */; };
-		1F78AADA25EACDD600F43414 /* libz.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3125EACDD400F43414 /* libz.1.dylib */; };
-		1F78AAE225EACDD600F43414 /* libhogweed.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3325EACDD400F43414 /* libhogweed.6.dylib */; };
-		1F78AAE625EACDD600F43414 /* libicuuc.67.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3425EACDD400F43414 /* libicuuc.67.1.dylib */; };
-		1F78AAEA25EACDD600F43414 /* libavcodec.58.54.100.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3525EACDD400F43414 /* libavcodec.58.54.100.dylib */; };
-		1F78AAEE25EACDD600F43414 /* libswresample.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3625EACDD500F43414 /* libswresample.dylib */; };
-		1F78AAF225EACDD600F43414 /* libcrypto.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3725EACDD500F43414 /* libcrypto.1.1.dylib */; };
-		1F78AAF625EACDD600F43414 /* libz.1.2.11.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3825EACDD500F43414 /* libz.1.2.11.dylib */; };
-		1F78AAFA25EACDD600F43414 /* libgmp.10.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3925EACDD500F43414 /* libgmp.10.dylib */; };
-		1F78AAFE25EACDD600F43414 /* libxml2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3A25EACDD500F43414 /* libxml2.2.dylib */; };
-		1F78AB0225EACDD600F43414 /* libhogweed.6.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3B25EACDD500F43414 /* libhogweed.6.1.dylib */; };
 		1F78AB0525EACDE800F43414 /* libavcodec.58.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1725EACDD000F43414 /* libavcodec.58.dylib */; };
 		1F78AB0825EACDE800F43414 /* libavdevice.58.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA0F25EACDCF00F43414 /* libavdevice.58.dylib */; };
 		1F78AB0B25EACDE800F43414 /* libavfilter.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA1625EACDD000F43414 /* libavfilter.7.dylib */; };
@@ -775,27 +727,15 @@
 		1F78AB3225EACDE900F43414 /* libxml2.2.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3A25EACDD500F43414 /* libxml2.2.dylib */; };
 		1F78AB3325EACDE900F43414 /* libz.1.2.11.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3825EACDD500F43414 /* libz.1.2.11.dylib */; };
 		1F78AB3425EACDE900F43414 /* libz.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AA3125EACDD400F43414 /* libz.1.dylib */; };
-		1F78AB3925EACF2400F43414 /* libx264.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB3525EACF2400F43414 /* libx264.dylib */; };
-		1F78AB3D25EACF2400F43414 /* libx264.157.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB3625EACF2400F43414 /* libx264.157.dylib */; };
 		1F78AB3F25EACF3600F43414 /* libx264.157.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB3625EACF2400F43414 /* libx264.157.dylib */; };
-		1F78AB4825EAD77300F43414 /* libxcb-xfixes.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4125EAD77200F43414 /* libxcb-xfixes.0.dylib */; };
-		1F78AB4C25EAD77300F43414 /* libbz2.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4225EAD77200F43414 /* libbz2.1.0.dylib */; };
-		1F78AB5025EAD77300F43414 /* libxcb-shm.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4325EAD77200F43414 /* libxcb-shm.0.dylib */; };
-		1F78AB5425EAD77300F43414 /* libxcb-shape.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4425EAD77300F43414 /* libxcb-shape.0.dylib */; };
-		1F78AB5825EAD77300F43414 /* libxcb.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4525EAD77300F43414 /* libxcb.1.dylib */; };
 		1F78AB5A25EAD77F00F43414 /* libbz2.1.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4225EAD77200F43414 /* libbz2.1.0.dylib */; };
 		1F78AB5B25EAD77F00F43414 /* libxcb-shape.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4425EAD77300F43414 /* libxcb-shape.0.dylib */; };
 		1F78AB5C25EAD77F00F43414 /* libxcb-shm.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4325EAD77200F43414 /* libxcb-shm.0.dylib */; };
 		1F78AB5D25EAD77F00F43414 /* libxcb-xfixes.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4125EAD77200F43414 /* libxcb-xfixes.0.dylib */; };
 		1F78AB5E25EAD77F00F43414 /* libxcb.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB4525EAD77300F43414 /* libxcb.1.dylib */; };
-		1F78AB6325EAD83100F43414 /* libXdmcp.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB5F25EAD83100F43414 /* libXdmcp.6.dylib */; };
-		1F78AB6725EAD83100F43414 /* libXau.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB6025EAD83100F43414 /* libXau.6.dylib */; };
 		1F78AB6925EAD83B00F43414 /* libXau.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB6025EAD83100F43414 /* libXau.6.dylib */; };
 		1F78AB6A25EAD83C00F43414 /* libXdmcp.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB5F25EAD83100F43414 /* libXdmcp.6.dylib */; };
-		1F78AB6E25EAD8BD00F43414 /* libffi.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB6B25EAD8BC00F43414 /* libffi.7.dylib */; };
 		1F78AB7025EAD8CC00F43414 /* libffi.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB6B25EAD8BC00F43414 /* libffi.7.dylib */; };
-		1F78AB7B25EAE1EC00F43414 /* libmpfr.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB7725EAE1EC00F43414 /* libmpfr.6.dylib */; };
-		1F78AB7F25EAE1EC00F43414 /* libmpc.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB7825EAE1EC00F43414 /* libmpc.3.dylib */; };
 		1F78AB8125EAE20100F43414 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB7825EAE1EC00F43414 /* libmpc.3.dylib */; };
 		1F78AB8225EAE20100F43414 /* libmpfr.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB7725EAE1EC00F43414 /* libmpfr.6.dylib */; };
 		1F7CC99614730F6F00F2C981 /* ldap.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F7CC99514730F6F00F2C981 /* ldap.png */; };
@@ -1164,9 +1104,7 @@
 		1FBF2B3F179151E3002E110B /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; };
 		1FBF2B4517915410002E110B /* Updater.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FBF2B4417915410002E110B /* Updater.py */; };
 		1FC02DF025EBCE470031AB93 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		1FC02DFA25EBF4550031AB93 /* libvpx.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC02DF725EBF4540031AB93 /* libvpx.6.dylib */; };
 		1FC02DFC25EBF4600031AB93 /* libvpx.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC02DF725EBF4540031AB93 /* libvpx.6.dylib */; };
-		1FC02E0025EBF4F70031AB93 /* libvpx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC02DFD25EBF4F70031AB93 /* libvpx.dylib */; };
 		1FC02E0325EBF8E80031AB93 /* libvpx.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC02DF725EBF4540031AB93 /* libvpx.6.dylib */; };
 		1FC02E0525EBF8E80031AB93 /* libmpc.3.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB7825EAE1EC00F43414 /* libmpc.3.dylib */; };
 		1FC02E0625EBF8E80031AB93 /* libmpfr.6.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F78AB7725EAE1EC00F43414 /* libmpfr.6.dylib */; };
@@ -2717,76 +2655,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F78AAF225EACDD600F43414 /* libcrypto.1.1.dylib in Frameworks */,
-				1F78AAAA25EACDD600F43414 /* libswscale.dylib in Frameworks */,
-				1F78AA7225EACDD500F43414 /* libavcodec.58.dylib in Frameworks */,
-				1F78AA6225EACDD500F43414 /* libavfilter.dylib in Frameworks */,
 				1F2436871912B27800E71253 /* AVFoundation.framework in Frameworks */,
-				1F78AAB225EACDD600F43414 /* libswresample.3.5.100.dylib in Frameworks */,
-				1F78AA9225EACDD600F43414 /* libintl.8.dylib in Frameworks */,
-				1F78AB0225EACDD600F43414 /* libhogweed.6.1.dylib in Frameworks */,
-				1F78AA9A25EACDD600F43414 /* libavformat.58.dylib in Frameworks */,
-				1F78AAB625EACDD600F43414 /* libiconv.2.dylib in Frameworks */,
-				1F78AB7F25EAE1EC00F43414 /* libmpc.3.dylib in Frameworks */,
-				1F78AAFA25EACDD600F43414 /* libgmp.10.dylib in Frameworks */,
-				1FC02E0025EBF4F70031AB93 /* libvpx.dylib in Frameworks */,
 				1F6EF80B18E64FD7008592D2 /* QuartzCore.framework in Frameworks */,
-				1F78AA5A25EACDD500F43414 /* libidn2.0.dylib in Frameworks */,
 				1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */,
-				1F78AA6E25EACDD500F43414 /* libavfilter.7.dylib in Frameworks */,
-				1F78AB6725EAD83100F43414 /* libXau.6.dylib in Frameworks */,
-				1F78AACA25EACDD600F43414 /* libicuuc.67.dylib in Frameworks */,
-				1F78AAC625EACDD600F43414 /* libavutil.dylib in Frameworks */,
-				1F78AAFE25EACDD600F43414 /* libxml2.2.dylib in Frameworks */,
-				1F78AAD625EACDD600F43414 /* liblzma.5.dylib in Frameworks */,
-				1F78AAEA25EACDD600F43414 /* libavcodec.58.54.100.dylib in Frameworks */,
 				1F1CEB4719C9BBEE00BD378A /* StoreKit.framework in Frameworks */,
-				1F78AAA225EACDD600F43414 /* libavdevice.dylib in Frameworks */,
-				1F78AA4E25EACDD500F43414 /* libssl.1.1.dylib in Frameworks */,
-				1F78AB7B25EAE1EC00F43414 /* libmpfr.6.dylib in Frameworks */,
-				1F78AA8625EACDD500F43414 /* libavformat.dylib in Frameworks */,
-				1F78AB4C25EAD77300F43414 /* libbz2.1.0.dylib in Frameworks */,
-				1F3F8FC425D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
-				1F78AB3925EACF2400F43414 /* libx264.dylib in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
-				1F78AA8A25EACDD500F43414 /* libgnutls.30.dylib in Frameworks */,
-				1F78AA4625EACDD500F43414 /* libavdevice.58.8.100.dylib in Frameworks */,
-				1F78AABE25EACDD600F43414 /* libavutil.56.31.100.dylib in Frameworks */,
-				1F78AAD225EACDD600F43414 /* libicudata.67.1.dylib in Frameworks */,
-				1F78AA5225EACDD500F43414 /* libavdevice.58.dylib in Frameworks */,
-				1F78AA5E25EACDD500F43414 /* libswresample.3.dylib in Frameworks */,
-				1F78AAAE25EACDD600F43414 /* libswscale.5.dylib in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
-				1F78AA4225EACDD500F43414 /* libswscale.5.5.100.dylib in Frameworks */,
-				1F78AAEE25EACDD600F43414 /* libswresample.dylib in Frameworks */,
-				1F78AAF625EACDD600F43414 /* libz.1.2.11.dylib in Frameworks */,
-				1F78AA9E25EACDD600F43414 /* libavfilter.7.57.100.dylib in Frameworks */,
-				1F78AA6625EACDD500F43414 /* libpostproc.dylib in Frameworks */,
-				1F78AB6E25EAD8BD00F43414 /* libffi.7.dylib in Frameworks */,
-				1F78AB4825EAD77300F43414 /* libxcb-xfixes.0.dylib in Frameworks */,
-				1FC02DFA25EBF4550031AB93 /* libvpx.6.dylib in Frameworks */,
-				1F78AABA25EACDD600F43414 /* libnettle.8.1.dylib in Frameworks */,
-				1F78AADA25EACDD600F43414 /* libz.1.dylib in Frameworks */,
-				1F78AA7A25EACDD500F43414 /* libunistring.2.dylib in Frameworks */,
-				1F78AAC225EACDD600F43414 /* libavformat.58.29.100.dylib in Frameworks */,
-				1F78AB5825EAD77300F43414 /* libxcb.1.dylib in Frameworks */,
-				1F78AB3D25EACF2400F43414 /* libx264.157.dylib in Frameworks */,
-				1F78AACE25EACDD600F43414 /* libicui18n.67.1.dylib in Frameworks */,
-				1F78AA6A25EACDD500F43414 /* libtasn1.6.dylib in Frameworks */,
-				1F78AA7625EACDD500F43414 /* libnettle.8.dylib in Frameworks */,
-				1F78AB5425EAD77300F43414 /* libxcb-shape.0.dylib in Frameworks */,
-				1F78AA8225EACDD500F43414 /* libavcodec.dylib in Frameworks */,
-				1F78AB5025EAD77300F43414 /* libxcb-shm.0.dylib in Frameworks */,
-				1F78AAE625EACDD600F43414 /* libicuuc.67.1.dylib in Frameworks */,
-				1F78AA7E25EACDD500F43414 /* libsqlite3.0.dylib in Frameworks */,
-				1F78AA8E25EACDD500F43414 /* libicudata.67.dylib in Frameworks */,
-				1F78AA9625EACDD600F43414 /* libicui18n.67.dylib in Frameworks */,
-				1F78AB6325EAD83100F43414 /* libXdmcp.6.dylib in Frameworks */,
-				1F78AAE225EACDD600F43414 /* libhogweed.6.dylib in Frameworks */,
-				1F78AA3E25EACDD500F43414 /* libpostproc.55.dylib in Frameworks */,
-				1F78AA4A25EACDD500F43414 /* libavutil.56.dylib in Frameworks */,
-				1F78AA5625EACDD500F43414 /* libpostproc.55.5.100.dylib in Frameworks */,
+				1F3F8FC425D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5547,7 +5423,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 27232;
+				CURRENT_PROJECT_VERSION = 27234;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5595,7 +5471,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27232;
+				CURRENT_PROJECT_VERSION = 27234;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
