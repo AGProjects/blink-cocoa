@@ -157,6 +157,7 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="SIPEngineSIPTrace")
         notification_center.add_observer(self, name="MSRPLibraryLog")
         notification_center.add_observer(self, name="MSRPTransportTrace")
+        
         notification_center.add_observer(self, name="SIPEngineLog")
 
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
@@ -259,7 +260,6 @@ class DebugWindow(NSObject):
         settings.logs.trace_xcap_in_gui = trace
         if trace == Disabled:
             notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-            notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
             notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
             notification_center.discard_observer(self, name="XCAPManagerDidStart")
             notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
@@ -278,6 +278,8 @@ class DebugWindow(NSObject):
             notification_center.discard_observer(self, name="XCAPManagerClientDidInitialize")
             notification_center.discard_observer(self, name="XCAPManagerClientDidNotInitialize")
             notification_center.discard_observer(self, name="XCAPManagerClientError")
+            notification_center.discard_observer(self, name="XCAPTrace")
+            notification_center.discard_observer(self, name="XCAPDocumentsDidChange")
 
             settings.logs.trace_xcap = settings.logs.trace_xcap_to_file
         elif trace == Simplified:
@@ -293,7 +295,6 @@ class DebugWindow(NSObject):
             notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.add_observer(self, name="XCAPManagerDidChangeState")
             notification_center.add_observer(self, name="XCAPManagerDidStart")
-            notification_center.add_observer(self, name="XCAPSubscriptionGotNotify")
             notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.add_observer(self, name="XCAPManagerDidReloadData")
             notification_center.add_observer(self, name="XCAPManagerDidInitialize")
@@ -310,7 +311,9 @@ class DebugWindow(NSObject):
             notification_center.add_observer(self, name="XCAPManagerClientDidInitialize")
             notification_center.add_observer(self, name="XCAPManagerClientDidNotInitialize")
             notification_center.add_observer(self, name="XCAPManagerClientError")
-
+            notification_center.add_observer(self, name="XCAPTrace")
+            notification_center.add_observer(self, name="XCAPDocumentsDidChange")
+            
             settings.logs.trace_xcap = True
 
         settings.save()
@@ -390,7 +393,6 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="MSRPLibraryLog")
         notification_center.discard_observer(self, name="MSRPTransportTrace")
         notification_center.discard_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
-        notification_center.discard_observer(self, name="XCAPSubscriptionGotNotify")
         notification_center.discard_observer(self, name="XCAPManagerDidChangeState")
         notification_center.discard_observer(self, name="SIPEngineLog")
         notification_center.discard_observer(self)
@@ -678,6 +680,7 @@ class DebugWindow(NSObject):
 
             self.notificationsBytes += len(notification.name) + len(str(notification.sender)) + len(attribs) + len(str(ts))
             sub_event = notification.sender.event if hasattr(notification.sender, 'event') else None
+            sub_event = notification.sender.application if hasattr(notification.sender, 'application') else None
             method = notification.sender.method if hasattr(notification.sender, 'method') else None
             sub_event = sub_event.decode() if isinstance(sub_event, bytes) else sub_event
             method = method.decode() if isinstance(method, bytes) else method
@@ -937,6 +940,7 @@ class DebugWindow(NSObject):
 
     @objc.python_method
     def _NH_XCAPSubscriptionGotNotify(self, notification):
+        return
         settings = SIPSimpleSettings()
         if notification.data.body is not None and settings.logs.trace_xcap_in_gui == Full:
             message = ("%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body.decode()))
@@ -1011,6 +1015,28 @@ class DebugWindow(NSObject):
     def _NH_XCAPManagerClientDidNotInitialize(self, notification):
         message = ("%s XCAP manager client did not initialize: %s" % (notification.datetime, notification.data.error))
         self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPTrace(self, notification):
+        data = notification.data
+        if data.result == 'failure':
+            message = ("%s %s %s failed: %s (%s)" % (notification.datetime, data.method, data.document, data.url, data.reason, data.code))
+        else:
+            if data.code == 304:
+                message = ("%s %s %s with etag=%s did not change (304)" % (notification.datetime, data.method, data.url, data.etag))
+            else:
+                message = ("%s %s %s changed to etag=%s (%d bytes)" % (notification.datetime, data.method, data.url, data.etag, data.size))
+        self.renderXCAP(message)
+
+    @objc.python_method
+    def _NH_XCAPDocumentsDidChange(self, notification):
+        data = notification.data
+        for k in list(data.notified_etags.keys()):
+            if k not in data.documents:
+                message = ("%s %s etag has changed on server to %s but is already stored locally" % (notification.datetime, data.notified_etags[k]['url'], data.notified_etags[k]['new_etag']))
+            else:
+                message = ("%s %s etag has changed: %s -> %s" % (notification.datetime, data.notified_etags[k]['url'], data.notified_etags[k]['new_etag'], data.notified_etags[k]['previous_etag']))
+            self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerClientError(self, notification):
