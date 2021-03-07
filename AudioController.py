@@ -431,7 +431,7 @@ class AudioController(MediaStream):
                 elif key == chr(27):
                     if not self.isConferencing:
                         self.end()
-                elif key in string.digits+string.uppercase+'#*':
+                elif key in string.digits+string.ascii_uppercase+'#*':
                     self.send_dtmf(key)
 
     @objc.python_method
