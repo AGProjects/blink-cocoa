@@ -5781,12 +5781,12 @@ class ContactWindowController(NSWindowController):
             if account is not BonjourAccount() and not account.chat.replication_password:
                 if NSApp.delegate().icloud_enabled:
                     # Blink Pro is using iCloud for password sync so is safe to create it on any Blink instance
-                    account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+                    account.chat.replication_password = ''.join(random.sample(string.ascii_letters+string.digits, 16))
                     account.save()
                 elif NSApp.delegate().applicationName == 'SIP2SIP':
                     if account.id in self.created_accounts:
                         # We have created the account so is safe to auto-generate chat replication password
-                        account.chat.replication_password = ''.join(random.sample(string.letters+string.digits, 16))
+                        account.chat.replication_password = ''.join(random.sample(string.ascii_letters+string.digits, 16))
                         account.save()
                     else:
                         NSApp.activateIgnoringOtherApps_(True)
