@@ -164,7 +164,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="0.0" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="639" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="639" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -260,53 +260,19 @@
             <rect key="frame" x="0.0" y="0.0" width="260" height="600"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
             <subviews>
-                <button toolTip="Acțiuni Participanți..." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="216">
-                    <rect key="frame" x="10" y="2" width="29" height="25"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Invită Participanți" bezelStyle="texturedRounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="217">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <accessibility description="Acțiuni Participanți"/>
-                    <connections>
-                        <action selector="userClickedActionsButton:" target="-2" id="312"/>
-                    </connections>
-                </button>
-                <button toolTip="Oprește Microfonul" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="220">
-                    <rect key="frame" x="220.5" y="2" width="29" height="25"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Oprește Microfonul" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <accessibility description="Oprește Microfonul"/>
-                    <connections>
-                        <action selector="muteClicked:" target="-2" id="223"/>
-                    </connections>
-                </button>
-                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="241">
-                    <rect key="frame" x="44" y="8" width="171" height="14"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Stare Audio" bezelStyle="round" id="242">
-                        <font key="font" metaFont="smallSystem"/>
-                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                    <accessibility description="Starea Apelului Audio"/>
-                </textField>
-                <splitView fixedFrame="YES" autosaveName="chat_drawer_view" dividerStyle="thin" translatesAutoresizingMaskIntoConstraints="NO" id="348">
-                    <rect key="frame" x="0.0" y="30" width="260" height="570"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
+                <splitView appearanceType="aqua" fixedFrame="YES" autosaveName="chat_drawer_view" dividerStyle="thin" translatesAutoresizingMaskIntoConstraints="NO" id="348">
+                    <rect key="frame" x="0.0" y="0.0" width="260" height="600"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="393"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="414"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="0.0" width="258" height="392"/>
+                                <rect key="frame" x="1" y="0.0" width="258" height="413"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="375"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="396"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -349,14 +315,14 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="394" width="260" height="103"/>
+                            <rect key="frame" x="0.0" y="415" width="260" height="184"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="0.0" width="258" height="102"/>
+                                <rect key="frame" x="1" y="0.0" width="258" height="183"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="85"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="166"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -399,11 +365,11 @@
                             </tableHeaderView>
                         </scrollView>
                         <customView fixedFrame="YES" id="U2L-3u-ZBI" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="498" width="260" height="72"/>
+                            <rect key="frame" x="0.0" y="600" width="260" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tr7-Qb-Y9k" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="260" height="85"/>
+                                    <rect key="frame" x="0.0" y="-7" width="260" height="13"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -418,6 +384,46 @@
                         <outlet property="delegate" destination="-2" id="439"/>
                     </connections>
                 </splitView>
+                <customView appearanceType="aqua" id="lTL-FB-wud">
+                    <rect key="frame" x="0.0" y="0.0" width="260" height="36"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
+                    <subviews>
+                        <button toolTip="Oprește Microfonul" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="220">
+                            <rect key="frame" x="221.5" y="6" width="29" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" alternateTitle="Oprește Microfonul" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <accessibility description="Oprește Microfonul"/>
+                            <connections>
+                                <action selector="muteClicked:" target="-2" id="223"/>
+                            </connections>
+                        </button>
+                        <button toolTip="Acțiuni Participanți..." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="216">
+                            <rect key="frame" x="9.5" y="6" width="29" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" alternateTitle="Invită Participanți" bezelStyle="texturedRounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="217">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <accessibility description="Acțiuni Participanți"/>
+                            <connections>
+                                <action selector="userClickedActionsButton:" target="-2" id="312"/>
+                            </connections>
+                        </button>
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="241">
+                            <rect key="frame" x="44" y="12" width="171" height="14"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Stare Audio" bezelStyle="round" id="242">
+                                <font key="font" metaFont="smallSystem"/>
+                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                            <accessibility description="Starea Apelului Audio"/>
+                        </textField>
+                    </subviews>
+                </customView>
             </subviews>
             <point key="canvasLocation" x="139" y="154"/>
         </customView>

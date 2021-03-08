@@ -266,53 +266,19 @@
             <rect key="frame" x="0.0" y="0.0" width="260" height="600"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
             <subviews>
-                <button toolTip="Ações do Participante..." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="216">
-                    <rect key="frame" x="10" y="2" width="29" height="25"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Convidar Participantes" bezelStyle="texturedRounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="217">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <accessibility description="Ações do Participante"/>
-                    <connections>
-                        <action selector="userClickedActionsButton:" target="-2" id="312"/>
-                    </connections>
-                </button>
-                <button toolTip="Emudecer Microfone" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="220">
-                    <rect key="frame" x="220.5" y="2" width="29" height="25"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Emudecer Microfone" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <accessibility description="Emudecer Microfone"/>
-                    <connections>
-                        <action selector="muteClicked:" target="-2" id="223"/>
-                    </connections>
-                </button>
-                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="241">
-                    <rect key="frame" x="44" y="8" width="171" height="14"/>
-                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Status do Áudio" bezelStyle="round" id="242">
-                        <font key="font" metaFont="smallSystem"/>
-                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                    <accessibility description="Status da Sessão de Áudio"/>
-                </textField>
                 <splitView fixedFrame="YES" autosaveName="chat_drawer_view" dividerStyle="thin" translatesAutoresizingMaskIntoConstraints="NO" id="348">
-                    <rect key="frame" x="0.0" y="30" width="260" height="570"/>
+                    <rect key="frame" x="0.0" y="0.0" width="260" height="600"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
-                            <rect key="frame" x="0.0" y="0.0" width="260" height="451"/>
+                            <rect key="frame" x="0.0" y="0.0" width="260" height="475"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="0.0" width="258" height="450"/>
+                                <rect key="frame" x="1" y="0.0" width="258" height="474"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="433"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="457"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -355,14 +321,14 @@
                             </tableHeaderView>
                         </scrollView>
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
-                            <rect key="frame" x="0.0" y="452" width="260" height="117"/>
+                            <rect key="frame" x="0.0" y="476" width="260" height="123"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="0.0" width="258" height="116"/>
+                                <rect key="frame" x="1" y="0.0" width="258" height="122"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="99"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="105"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -405,7 +371,7 @@
                             </tableHeaderView>
                         </scrollView>
                         <customView fixedFrame="YES" id="fT0-d6-7tf" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="570" width="260" height="0.0"/>
+                            <rect key="frame" x="0.0" y="600" width="260" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="n7O-cC-WH5" customClass="VideoWidget">
@@ -424,6 +390,46 @@
                         <outlet property="delegate" destination="-2" id="439"/>
                     </connections>
                 </splitView>
+                <customView appearanceType="aqua" id="4tG-1b-AQN">
+                    <rect key="frame" x="0.0" y="0.0" width="260" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                    <subviews>
+                        <button toolTip="Ações do Participante..." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="216">
+                            <rect key="frame" x="9.5" y="2" width="29" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" alternateTitle="Convidar Participantes" bezelStyle="texturedRounded" image="NSActionTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="217">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <accessibility description="Ações do Participante"/>
+                            <connections>
+                                <action selector="userClickedActionsButton:" target="-2" id="312"/>
+                            </connections>
+                        </button>
+                        <button toolTip="Emudecer Microfone" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="220">
+                            <rect key="frame" x="223.5" y="2" width="29" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" alternateTitle="Emudecer Microfone" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <accessibility description="Emudecer Microfone"/>
+                            <connections>
+                                <action selector="muteClicked:" target="-2" id="223"/>
+                            </connections>
+                        </button>
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="241">
+                            <rect key="frame" x="44" y="8" width="171" height="14"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Status do Áudio" bezelStyle="round" id="242">
+                                <font key="font" metaFont="smallSystem"/>
+                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                            <accessibility description="Status da Sessão de Áudio"/>
+                        </textField>
+                    </subviews>
+                </customView>
             </subviews>
             <point key="canvasLocation" x="139" y="754"/>
         </customView>

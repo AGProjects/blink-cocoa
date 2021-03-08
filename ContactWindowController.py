@@ -291,7 +291,6 @@ class ContactWindowController(NSWindowController):
     alwaysOnTopMenuItem = objc.IBOutlet()
     useSpeechRecognitionMenuItem = objc.IBOutlet()
     useSpeechSynthesisMenuItem = objc.IBOutlet()
-    micLevelIndicator = objc.IBOutlet()
     myvideoMenuItem = objc.IBOutlet()
     videoView = objc.IBOutlet()
 
@@ -2143,11 +2142,12 @@ class ContactWindowController(NSWindowController):
         if self.drawerSplitterPosition is not None:
             self.sessionsView.setFrame_(self.drawerSplitterPosition['topFrame'])
             self.participantsView.setFrame_(self.drawerSplitterPosition['middleFrame'])
-            self.videoView.superview().setFrame_(self.drawerSplitterPosition['bottomFrame'])
+            self.videoView.superview().setFrame_(self.drawerSplitterPosition['videoFrame'])
         else:
             frame = self.participantsView.frame()
             frame.size.height = 0
             self.participantsView.setFrame_(frame)
+
             frame = self.videoView.superview().frame()
             frame.size.height = 0
             self.videoView.superview().setFrame_(frame)
@@ -2164,14 +2164,14 @@ class ContactWindowController(NSWindowController):
             return
 
         parent_frame = self.drawerSplitView.frame()
-        top_frame = self.sessionsView.frame()
-        middle_frame = self.participantsView.frame()
-        bottom_frame = self.videoView.superview().frame()
- 
+        topFrame = self.sessionsView.frame()
+        middleFrame = self.participantsView.frame()
+        videoFrame = self.videoView.superview().frame()
+
         h0 = parent_frame.size.height
-        h1 = top_frame.size.height
-        h2 = middle_frame.size.height
-        h3 = bottom_frame.size.height
+        h1 = topFrame.size.height
+        h2 = middleFrame.size.height
+        h3 = videoFrame.size.height
 
         must_resize = False
         session = self.getSelectedAudioSession()
@@ -2179,7 +2179,7 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.hasStreamOfType("video") and session.video_consumer == "audio":
                 if self.videoView.aspect_ratio is not None:
-                    new_height = int(bottom_frame.size.width / self.videoView.aspect_ratio)
+                    new_height = int(videoFrame.size.width / self.videoView.aspect_ratio)
                     if new_height != h3:
                         h3 = new_height
                         must_resize = True
@@ -2214,16 +2214,19 @@ class ContactWindowController(NSWindowController):
 
         h1 = h0 - h2 - h3
         
-        top_frame.size.height = h1
-        middle_frame.size.height = h2
-        bottom_frame.size.height = h3
-        top_frame.origin.y = 0
-        middle_frame.origin.y = h1
-        bottom_frame.origin.y = h1 + h2
+        topFrame.size.height = int(h1)
+        middleFrame.size.height = int(h2)
+        videoFrame.size.height = int(h3)
 
-        position = {'topFrame': top_frame,
-                    'middleFrame': middle_frame,
-                    'bottomFrame': bottom_frame}
+        topFrame.origin.y = 0
+        middleFrame.origin.y = h1
+        videoFrame.origin.y = h1 + h2
+        
+        position = {'topFrame': topFrame,
+                    'middleFrame': middleFrame,
+                    'videoFrame': videoFrame
+        }
+
         self.drawerSplitterPosition = position
         if must_resize:
             self.resizeDrawerSplitter()
@@ -3847,6 +3850,8 @@ class ContactWindowController(NSWindowController):
             if self.searchOutlineTopOffset:
                 frame.size.height = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - self.searchOutlineTopOffset
                 self.searchOutline.enclosingScrollView().setFrame_(frame)
+
+        self.recalculateDrawerSplitter()
 
     def drawerDidOpen_(self, notification):
         self.windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()

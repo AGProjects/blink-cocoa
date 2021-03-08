@@ -1017,7 +1017,7 @@ ABC</string>
                         </connections>
                     </button>
                     <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LX5-iZ-PEK" userLabel="Start Session Buttons">
-                        <rect key="frame" x="89.5" y="6" width="95" height="25"/>
+                        <rect key="frame" x="89.5" y="6" width="98" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="nch-cL-UVU" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
@@ -1056,10 +1056,10 @@ ABC</string>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <subviews>
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="544" userLabel="Audio Sessions Section View">
-                            <rect key="frame" x="0.0" y="0.0" width="280" height="346"/>
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="393"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" copiesOnScroll="NO" id="pYz-Y5-ScY">
-                                <rect key="frame" x="1" y="1" width="278" height="344"/>
+                                <rect key="frame" x="1" y="1" width="278" height="391"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="547" userLabel="Audio Sessions List View" customClass="ListView">
@@ -1081,7 +1081,7 @@ ABC</string>
                             <accessibility description="Audio Sessions List"/>
                         </scrollView>
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1534" userLabel="Conference Participants Section View">
-                            <rect key="frame" x="0.0" y="347" width="280" height="0.0"/>
+                            <rect key="frame" x="0.0" y="394" width="280" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="Atq-KM-J9c">
                                 <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
@@ -1118,7 +1118,7 @@ ABC</string>
                                 </subviews>
                             </clipView>
                             <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="1536">
-                                <rect key="frame" x="-100" y="-100" width="223" height="15"/>
+                                <rect key="frame" x="0.0" y="0.0" width="223" height="15"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="1535">
@@ -1131,11 +1131,11 @@ ABC</string>
                             </tableHeaderView>
                         </scrollView>
                         <customView fixedFrame="YES" id="C73-Qs-jbr" customClass="BlackView">
-                            <rect key="frame" x="0.0" y="348" width="280" height="47"/>
+                            <rect key="frame" x="0.0" y="395" width="280" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <subviews>
                                 <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YUX-UC-DK5" customClass="VideoWidget">
-                                    <rect key="frame" x="0.0" y="-7" width="280" height="61"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="280" height="14"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </customView>
                             </subviews>
@@ -1151,12 +1151,26 @@ ABC</string>
                         <outlet property="delegate" destination="389" id="1541"/>
                     </connections>
                 </splitView>
-                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="642" userLabel="Buttons View">
-                    <rect key="frame" x="0.0" y="0.0" width="280" height="25"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                <customView appearanceType="aqua" id="FxS-ae-1a2">
+                    <rect key="frame" x="0.0" y="0.0" width="280" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
+                        <button toolTip="Mute Microphone" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="878" userLabel="Mute Button">
+                            <rect key="frame" x="244.5" y="2" width="29" height="25"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" alternateTitle="Mute Microphone" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <accessibility description="Mute Microphone"/>
+                            <connections>
+                                <accessibilityConnection property="link" destination="1118" id="1643"/>
+                                <accessibilityConnection property="title" destination="1118" id="1644"/>
+                                <action selector="muteClicked:" target="389" id="880"/>
+                            </connections>
+                        </button>
                         <button toolTip="Hang Up All Audio Sessions" verticalHuggingPriority="750" fixedFrame="YES" tag="10" translatesAutoresizingMaskIntoConstraints="NO" id="512">
-                            <rect key="frame" x="8.5" y="0.0" width="92" height="25"/>
+                            <rect key="frame" x="10.5" y="2" width="92" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" title="Hangup All" bezelStyle="texturedRounded" alignment="center" controlSize="small" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="513">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -1168,7 +1182,7 @@ ABC</string>
                             </connections>
                         </button>
                         <button verticalHuggingPriority="750" fixedFrame="YES" tag="11" translatesAutoresizingMaskIntoConstraints="NO" id="587">
-                            <rect key="frame" x="106.5" y="0.0" width="96" height="25"/>
+                            <rect key="frame" x="115.5" y="2" width="96" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <string key="toolTip">Start and stop a multi-party conference. Once started, you may use drag and drop to add or remove contacts to and from the conference.</string>
                             <buttonCell key="cell" type="roundTextured" title="Conference" bezelStyle="texturedRounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="588">
@@ -1180,30 +1194,8 @@ ABC</string>
                                 <action selector="conferenceClicked:" target="389" id="980"/>
                             </connections>
                         </button>
-                        <levelIndicator hidden="YES" toolTip="Microphone Input Signal" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1820">
-                            <rect key="frame" x="214" y="8" width="28" height="12"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                            <levelIndicatorCell key="cell" controlSize="mini" alignment="left" maxValue="10" levelIndicatorStyle="relevancy" id="1821">
-                                <font key="font" metaFont="miniSystem"/>
-                            </levelIndicatorCell>
-                            <accessibility description="Microphone Input Signal"/>
-                        </levelIndicator>
                     </subviews>
                 </customView>
-                <button toolTip="Mute Microphone" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="878" userLabel="Mute Button">
-                    <rect key="frame" x="245.5" y="0.0" width="29" height="25"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                    <buttonCell key="cell" type="roundTextured" alternateTitle="Mute Microphone" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <accessibility description="Mute Microphone"/>
-                    <connections>
-                        <accessibilityConnection property="link" destination="1118" id="1643"/>
-                        <accessibilityConnection property="title" destination="1118" id="1644"/>
-                        <action selector="muteClicked:" target="389" id="880"/>
-                    </connections>
-                </button>
             </subviews>
             <point key="canvasLocation" x="351" y="154.5"/>
         </customView>
@@ -1326,7 +1318,6 @@ ABC</string>
                 <outlet property="groupMenu" destination="1693" id="1697"/>
                 <outlet property="historyMenu" destination="798" id="801"/>
                 <outlet property="mainTabView" destination="498" id="613"/>
-                <outlet property="micLevelIndicator" destination="1820" id="1822"/>
                 <outlet property="model" destination="831" id="837"/>
                 <outlet property="muteButton" destination="878" id="881"/>
                 <outlet property="myvideoMenuItem" destination="Sf9-1D-yIl" id="SEf-wi-D5j"/>
