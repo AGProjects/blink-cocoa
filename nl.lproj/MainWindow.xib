@@ -1176,7 +1176,7 @@ ABC</string>
                             </connections>
                         </button>
                         <button toolTip="Demp microfoon" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="878" userLabel="Mute Button">
-                            <rect key="frame" x="242.5" y="0.0" width="29" height="25"/>
+                            <rect key="frame" x="232.5" y="0.0" width="29" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" alternateTitle="Demp microfoon" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>

@@ -1174,7 +1174,7 @@ ABC</string>
                             </connections>
                         </button>
                         <button toolTip="Dezactivează Microfonul" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="878" userLabel="Mute Button">
-                            <rect key="frame" x="241.5" y="2" width="29" height="25"/>
+                            <rect key="frame" x="223.5" y="2" width="29" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" alternateTitle="Dezactivează Microfonul" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
