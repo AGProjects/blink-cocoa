@@ -27,6 +27,7 @@ import uuid
 import zipfile
 import zlib
 import traceback
+import platform
 
 from itertools import chain
 from datetime import datetime
@@ -259,8 +260,8 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         if type == 'video':
             #BlinkLogger().log_debug("Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
-            return False
-            #pass
+            major, minor = platform.mac_ver()[0].split('.')[0:2]
+            return int(major) * int(minor) < 10 * 12
         
         return True
 
