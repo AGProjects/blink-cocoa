@@ -1020,7 +1020,7 @@ class DebugWindow(NSObject):
     def _NH_XCAPTrace(self, notification):
         data = notification.data
         if data.result == 'failure':
-            message = ("%s %s %s failed: %s (%s)" % (notification.datetime, data.method, data.document, data.url, data.reason, data.code))
+            message = ("%s %s %s failed: %s (%s)" % (notification.datetime, data.method, data.url, data.reason, data.code))
         else:
             if data.code == 304:
                 message = ("%s %s %s with etag=%s did not change (304)" % (notification.datetime, data.method, data.url, data.etag))
