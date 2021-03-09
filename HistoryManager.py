@@ -718,6 +718,8 @@ class ChatHistory(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_debug("Error updating record %s: %s" % (msgid, e))
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             BlinkLogger().log_debug("Error adding record %s to history table: %s" % (msgid, e))
         return False
 
@@ -1201,7 +1203,7 @@ class SessionHistoryReplicator(object):
             except KeyError:
                 pass
             else:
-                self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + str(data)
+                self.last_calls_connections[key]['data'] = self.last_calls_connections[key]['data'] + bytes(data).decode()
 
     def connectionDidFinishLoading_(self, connection):
         try:
@@ -1215,10 +1217,11 @@ class SessionHistoryReplicator(object):
             except KeyError:
                 pass
             else:
+                BlinkLogger().log_debug("Calls history for %s retrieved from %s" % (key, self.last_calls_connections[key]['url']))
                 try:
                     calls = json.loads(self.last_calls_connections[key]['data'])
-                except (TypeError, json.decoder.JSONDecodeError):
-                    BlinkLogger().log_debug("Failed to parse calls history for %s from %s" % (key, self.last_calls_connections[key]['url']))
+                except (TypeError, json.decoder.JSONDecodeError) as e:
+                    BlinkLogger().log_debug("Failed to parse calls history for %s from %s: %s" % (key, self.last_calls_connections[key]['url'], str(e)))
                 else:
                     self.syncServerHistoryWithLocalHistory(account, calls)
 
@@ -1322,8 +1325,6 @@ class SessionHistoryReplicator(object):
                                     nc_body = 'Missed call at %s' % start_time.strftime("%Y-%m-%d %H:%M")
                                     NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-        except (KeyError, ValueError):
-            pass
         except Exception as e:
             BlinkLogger().log_error("Error: %s" % e)
             import traceback
@@ -1400,8 +1401,6 @@ class SessionHistoryReplicator(object):
                                 message += '<p>Call duration: %s' % duration
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
                             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=False))
-        except (KeyError, ValueError):
-            pass
         except Exception as e:
             BlinkLogger().log_error("Error: %s" % e)
             import traceback
