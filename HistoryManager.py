@@ -716,11 +716,11 @@ class ChatHistory(object, metaclass=Singleton):
 
                 return True
             except Exception as e:
-                BlinkLogger().log_debug("Error updating record %s: %s" % (msgid, e))
+                BlinkLogger().log_error("Error updating record %s: %s" % (msgid, e))
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            BlinkLogger().log_debug("Error adding record %s to history table: %s" % (msgid, e))
+            #import traceback
+            #traceback.print_exc()
+            BlinkLogger().log_error("Error adding record %s to history table: %s" % (msgid, e))
         return False
 
     @run_in_db_thread

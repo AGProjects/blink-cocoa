@@ -963,7 +963,7 @@ class BlinkPresenceContact(BlinkContact):
                         if not contacts_for_subscription:
                             BlinkLogger().log_error("We have no contact for subscription of %s to %s" % (account, uri_text))
                         else:
-                            BlinkLogger().log_info("Subscription from %s for account %s is pending" % (account, uri_text))
+                            BlinkLogger().log_debug("Subscription from %s for account %s is pending" % (account, uri_text))
 
                 elif resource.state == 'terminated':
                     contacts_for_subscription = model.getBlinkContactsForURI(str(resource.uri))
@@ -1493,7 +1493,7 @@ class BlinkPresenceContact(BlinkContact):
         presence_notes = []
         if detail != self.detail:
             self.detail = detail
-            BlinkLogger().log_info('%s detail has changed to %s' % (self.uri, detail))
+            BlinkLogger().log_debug('%s detail has changed to %s' % (self.uri, detail))
             NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
     @objc.python_method
@@ -3501,7 +3501,7 @@ class ContactListModel(CustomListModel):
                         continue
 
                     if not self.presencePolicyExistsForURI_(watcher.sipuri):
-                        BlinkLogger().log_info("New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
+                        BlinkLogger().log_debug("New subscription to my availability for %s requested by %s" % (notification.sender.id, uri))
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
@@ -3517,7 +3517,7 @@ class ContactListModel(CustomListModel):
 
             for watcher in tmp_active_watchers.keys():
                 uri = sip_prefix_pattern.sub('', watcher)
-                BlinkLogger().log_info("%s is subscribed to my availability for %s" % (uri, notification.sender.id))
+                BlinkLogger().log_debug("%s is subscribed to my availability for %s" % (uri, notification.sender.id))
 
         elif notification.data.state == 'partial':
             #BlinkLogger().log_info('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))

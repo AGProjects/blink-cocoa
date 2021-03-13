@@ -495,10 +495,6 @@ class SIPManager(object, metaclass=Singleton):
             codecs_print.append(beautify_audio_codec(codec))
         BlinkLogger().log_info("Enabled audio codecs: %s" % ", ".join(codecs_print))
 
-        for codec in settings.rtp.video_codec_list:
-            codecs_print.append(beautify_video_codec(codec))
-        BlinkLogger().log_info("Enabled video codecs: %s" % ", ".join(codecs_print))
-
         if settings.audio.input_device is None:
             BlinkLogger().log_info("Switching audio input device to system default")
             settings.audio.input_device = 'system_default'
