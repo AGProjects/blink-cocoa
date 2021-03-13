@@ -704,7 +704,7 @@ class ChatHistory(object, metaclass=Singleton):
                           encryption          = encryption
                           )
             return True
-        except dberrors.DuplicateEntryError:
+        except (dberrors.DuplicateEntryError, ValueError) as e:
             try:
                 results = ChatMessage.selectBy(msgid=msgid, local_uri=local_uri, remote_uri=remote_uri)
                 message = results.getOne()
