@@ -2673,9 +2673,6 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def contactSupportsMedia(self, media, contact, uri=None):
-        if isinstance(contact, BonjourBlinkContact):
-            return media != 'sms'
-
         if not isinstance(contact, BlinkPresenceContact):
             return True
 
