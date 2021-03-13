@@ -1107,7 +1107,7 @@ class VideoDeviceOption(PopUpMenuOption):
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
         self.popup.lastItem().setRepresentedObject_(None)
-        for item in Engine().video_devices:
+        for item in NSApp.delegate().video_devices:
             self.popup.addItemWithTitle_(item)
             self.popup.lastItem().setRepresentedObject_(item)
 

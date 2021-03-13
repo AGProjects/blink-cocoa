@@ -39,11 +39,13 @@ from application.notification import NotificationCenter, IObserver, Notification
 from application.python import Null
 from application.system import host
 from sipsimple.account import AccountManager, BonjourAccount
+from sipsimple.core import Engine
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 from zope.interface import implementer
+
 
 from SIPManager import SIPManager
 from DebugWindow import DebugWindow
@@ -148,6 +150,18 @@ class BlinkAppDelegate(NSObject):
     active_transports = set()
     terminating = False
 
+    @objc.python_method
+    @property
+    def video_devices(self):
+        devices = []
+        for item in Engine().video_devices:
+            if 'colorbar' in item.lower():
+                continue
+            if 'null' in item.lower():
+                continue
+            devices.append(item)
+        return devices
+    
     def init(self):
         self = objc.super(BlinkAppDelegate, self).init()
         if self:

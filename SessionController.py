@@ -259,9 +259,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             return settings.chat.enable_sms
 
         if type == 'video':
-            #BlinkLogger().log_debug("Info: video sessions cause a crash in OSX 10.12. Skipping video untill the problem is solved by the developers")
-            major, minor = platform.mac_ver()[0].split('.')[0:2]
-            return int(major) * int(minor) < 10 * 12
+            return True
         
         return True
 

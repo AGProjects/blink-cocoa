@@ -43,7 +43,6 @@ from Foundation import (NSBundle,
                         NSZeroRect
                         )
 
-# TODO: Video broken since 10.13
 from AVFoundation import (AVCaptureDeviceInput,
                           AVCaptureVideoDataOutput,
                           AVCaptureDevice,
@@ -301,7 +300,7 @@ class LocalVideoView(NSView):
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
         i = 0
-        for item in Engine().video_devices:
+        for item in NSApp.delegate().video_devices:
             if item not in (None, 'system_default'):
                 i += 1
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
@@ -507,10 +506,10 @@ class LocalVideoView(NSView):
             self.captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
             if self.captureDeviceInput:
                 try: 
-                    self.captureSession.addInput_(self.captureDeviceInput)
-                except ValueError:
-                    BlinkLogger().log_info('Failed to add camera input to capture session')
-                return   
+                    self.captureSession.addInput_(self.captureDeviceInput[0])
+                except ValueError as e:
+                    BlinkLogger().log_info('Failed to add camera input to capture session: %s' % str(e))
+                    return
             else:
                 BlinkLogger().log_info('Failed to aquire input %s' % self)
                 return
@@ -520,7 +519,7 @@ class LocalVideoView(NSView):
             self.layer().addSublayer_(self.videoPreviewLayer)
             self.videoPreviewLayer.setFrame_(self.layer().bounds())
             self.videoPreviewLayer.setAutoresizingMask_(kCALayerWidthSizable|kCALayerHeightSizable)
-            #self.videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
+            self.videoPreviewLayer.setBackgroundColor_(CGColorGetConstantColor(kCGColorBlack))
             self.videoPreviewLayer.setVideoGravity_(AVLayerVideoGravityResizeAspectFill)
 
             self.videoPreviewLayer.setCornerRadius_(5.0)
@@ -554,10 +553,11 @@ class LocalVideoView(NSView):
             self.videoPreviewLayer.connection().setVideoMirrored_(True)
         else:
             self.videoPreviewLayer.connection().setVideoMirrored_(False)
+    
 
     @objc.python_method
     def getSnapshot(self):
-        def capture_handler(sampleBuffer):
+        def captureHandler(sampleBuffer, requiredNoneArg):
             if not sampleBuffer:
                 NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
                 return
@@ -577,7 +577,7 @@ class LocalVideoView(NSView):
 
         if self.stillImageOutput:
             connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
-            self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, capture_handler)
+            self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, captureHandler)
 
     @objc.python_method
     def visible(self):

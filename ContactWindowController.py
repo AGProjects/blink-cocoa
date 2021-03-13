@@ -1387,6 +1387,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def updateContactContextMenu(self):
+        settings = SIPSimpleSettings()
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             sel = self.contactOutline.selectedRow()
             if sel < 0:
@@ -1533,7 +1534,7 @@ class ContactWindowController(NSWindowController):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
-                if self.sessionControllersManager.isMediaTypeSupported('video'):
+                if self.sessionControllersManager.isMediaTypeSupported('video') and settings.video.device:
                     video_submenu = NSMenu.alloc().init()
                     video_submenu.setAutoenablesItems_(False)
 
@@ -1544,7 +1545,7 @@ class ContactWindowController(NSWindowController):
                         video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         video_item.setRepresentedObject_(target_uri)
-                        video_item.setEnabled_(self.contactSupportsMedia("video", item, uri.uri))
+                        video_item.setEnabled_(self.contactSupportsMedia("video", item, uri.uri) and settings.video.device)
 
                         if isinstance(item, BlinkPresenceContact):
                             status = presence_status_for_contact(item, uri.uri) or 'offline'
@@ -1580,7 +1581,7 @@ class ContactWindowController(NSWindowController):
                     if video_submenu.itemArray():
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "", "")
                         self.contactContextMenu.setSubmenu_forItem_(video_submenu, mitem)
-                        mitem.setEnabled_(self.contactSupportsMedia("video", item))
+                        mitem.setEnabled_(self.contactSupportsMedia("video", item) and settings.video.device)
 
                 if self.sessionControllersManager.isMediaTypeSupported('sms'):
                     sms_submenu = NSMenu.alloc().init()
@@ -1821,7 +1822,7 @@ class ContactWindowController(NSWindowController):
 
                     if self.sessionControllersManager.isMediaTypeSupported('video'):
                         video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
-                        video_item.setEnabled_(self.contactSupportsMedia("video", item, item.uri))
+                        video_item.setEnabled_(self.contactSupportsMedia("video", item, item.uri) and settings.video.device)
 
                     if self.sessionControllersManager.isMediaTypeSupported('sms'):
                         if item not in self.model.bonjour_group.contacts:
@@ -1901,7 +1902,6 @@ class ContactWindowController(NSWindowController):
                             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Show in History Viewer...", "Menu item"), "viewHistoryForContact:", "")
                         group = self.contactOutline.parentForItem_(history_contact)
-                        settings = SIPSimpleSettings()
                         if isinstance(group, MissedCallsBlinkGroup):
                             days = settings.contacts.missed_calls_period
                         elif isinstance(group, IncomingCallsBlinkGroup):
@@ -2925,6 +2925,9 @@ class ContactWindowController(NSWindowController):
                 chatOk = False
                 videoOk = False
 
+        settings = SIPSimpleSettings()
+        videoOk = videoOk and bool(settings.video.device)
+
         if self.sessionControllersManager.isMediaTypeSupported('video'):
             self.actionButtons.setEnabled_forSegment_(audioOk, 0)
             self.actionButtons.setEnabled_forSegment_(videoOk, 1)
@@ -3630,7 +3633,7 @@ class ContactWindowController(NSWindowController):
 
         settings = SIPSimpleSettings()
         if settings.video.auto_rotate_cameras and len(self.sessionControllersManager.connectedVideoSessions):
-            devices = list(device for device in self.backend._app.engine.video_devices if device not in ('system_default', None))
+            devices = list(device for device in NSApp.delegate().video_devices if device not in ('system_default', None))
             try:
                 idx = devices.index(self.backend._app.video_device.real_name)
             except ValueError:
@@ -4737,6 +4740,8 @@ class ContactWindowController(NSWindowController):
 
             i = 1
             for dev in devices:
+                if 'null' in dev.lower():
+                    continue
                 item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev, selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)
@@ -4796,7 +4801,7 @@ class ContactWindowController(NSWindowController):
                     menu.removeItem_(old)
             else:
                 if hasattr(self.backend._app.engine, "video_devices"):
-                    setupVideoDeviceMenu(menu, 500, self.backend._app.engine.video_devices, "device",  "selectVideoDevice:")
+                    setupVideoDeviceMenu(menu, 500, NSApp.delegate().video_devices, "device",  "selectVideoDevice:")
 
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()
@@ -4949,9 +4954,15 @@ class ContactWindowController(NSWindowController):
 
     def selectVideoDevice_(self, sender):
         settings = SIPSimpleSettings()
-        BlinkLogger().log_info('Switching to %s video camera' % sender.representedObject())
+        device = sender.representedObject()
+        if device:
+            BlinkLogger().log_info('Switching to %s video camera' % device)
+        else:
+           BlinkLogger().log_info('Video sessions are disabled')
+
         settings.video.device = sender.representedObject()
         settings.save()
+        self.updateStartSessionButtons()
 
     def participantSelectionChanged_(self, notification):
         contact = self.getSelectedParticipant()

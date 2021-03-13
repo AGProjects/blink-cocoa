@@ -100,7 +100,7 @@ from sipsimple.core import VideoCamera, Engine, FrameBufferVideoRenderer
 from sipsimple.threading import run_in_thread
 from util import allocate_autorelease_pool, format_identity_to_string, call_in_gui_thread
 
-from Quartz import CIImage, CIContext, kCIFormatARGB8, kCGColorSpaceGenericRGB, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState, CGColorCreateGenericRGB
+from Quartz import CIImage, CIContext, kCIFormatARGB8, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState, CGColorCreateGenericRGB
 
 from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
 from VideoLocalWindowController import VideoLocalWindowController
@@ -146,7 +146,7 @@ class VideoWidget(NSView):
     
     @objc.python_method
     def setProducer(self, producer):
-        BlinkLogger().log_debug("%s setProducer %s" % (self, producer))
+        #BlinkLogger().log_debug("%s setProducer %s" % (self, producer))
         if producer is None:
             if self.renderer is not None:
                 self.renderer.close()
@@ -232,7 +232,7 @@ class VideoWidget(NSView):
                                                                                 frame.width * 4,
                                                                                 frame.size,
                                                                                 kCIFormatARGB8,
-                                                                                kCGColorSpaceGenericRGB)
+                                                                                None)
         context = NSGraphicsContext.currentContext().CIContext()
         context.drawImage_inRect_fromRect_(image, rect, image.extent())
 
@@ -317,7 +317,7 @@ class myVideoWidget(VideoWidget):
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
         i = 0
-        for item in Engine().video_devices:
+        for item in NSApp.delegate().video_devices:
             if item not in (None, 'system_default'):
                 i += 1
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")

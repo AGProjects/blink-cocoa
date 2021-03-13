@@ -1,7 +1,8 @@
 # Copyright (C) 2014 AG Projects. See LICENSE for details.
 #
 
-from AppKit import (NSWindowController,
+from AppKit import (NSApp,
+                    NSWindowController,
                     NSApplication,
                     NSFloatingWindowLevel,
                     NSWindow,
@@ -280,7 +281,7 @@ class VideoLocalWindowController(NSWindowController):
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
         i = 0
-        for item in Engine().video_devices:
+        for item in NSApp.delegate().video_devices:
             if item not in (None, 'system_default'):
                 i += 1
 
