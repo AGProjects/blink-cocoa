@@ -549,7 +549,7 @@ class DebugWindow(NSObject):
         applications = None
         method = None
         msg_type = None
-        event = None
+        event = ''
         code = None
 
         if data.startswith("SIP/2.0"):
@@ -558,12 +558,13 @@ class DebugWindow(NSObject):
                 attribs = self.boldRedTextAttribs if code[0] in ["4", "5", "6"] else self.boldTextAttribs
                 for line in data.split("\n"):
                     line = line.strip()
+
                     if line.startswith("Event:"):
                         try:
                             event = line.split(" ", 1)[1]
-                        except IndexError:
+                        except IndexError as e:
                             pass
-                        continue
+
                     if line.startswith("CSeq"):
                         cseq, _number, _method = line.split(" ", 2)
                         try:
@@ -572,13 +573,13 @@ class DebugWindow(NSObject):
                             msg_type = 'response'
                         except KeyError:
                             pass
-                        continue
 
                 if settings.logs.trace_sip_in_gui == Full:
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
                 else:
-                    text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
+                    line = '%s for %s %s' % (first.strip(), method, event)
+                    text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", attribs))
 
             except:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(data+"\n"))
@@ -596,18 +597,20 @@ class DebugWindow(NSObject):
                 if line.startswith("Event:"):
                     try:
                         event = line.split(" ", 1)[1]
-                    except IndexError:
+                    except IndexError as e:
                         pass
-                    continue
+                    else:
+                        break
 
             if settings.logs.trace_sip_in_gui == Full:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
             else:
-                text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
+                line = '%s %s' % (first.strip(), event)
+                text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line+"\n"))
+
 
         self.sipInfoLabel.setStringValue_("%d SIP messages sent, %d SIP messages received, %sytes" % (self.sipOutCount, self.sipInCount, format_size(self.sipBytes)))
-
 
         if self.filter_sip_application is not None and applications is not None:
             if self.filter_sip_application not in applications:
@@ -658,6 +661,13 @@ class DebugWindow(NSObject):
         # notifications text view
         if self.notificationsCheckBox.state() == NSOnState:
             attribs = notification.data.__dict__.copy()
+            
+            if notification.name in ("RTPTransportZRTPLog", "RTPStreamZRTPLog"):
+                if 'dropping' in notification.data.message.lower():
+                    return
+                    
+            if notification.name in ('RTPVideoTransportMissedKeyFrame', 'VideoStreamMissedKeyFrame'):
+                return
 
             # remove some data that would be too big to log
             if notification.name == "MSRPTransportTrace":
@@ -926,7 +936,8 @@ class DebugWindow(NSObject):
             elif data.query_type == 'SRV':
                 message += ", ".join('%d %d %d %s' % (record.priority, record.weight, record.port, record.target) for record in data.answer)
             elif data.query_type == 'NAPTR':
-                message += ", ".join('%d %d "%s" "%s" "%s" %s' % (record.order, record.preference, record.flags, record.service, record.regexp, record.replacement) for record in data.answer)
+                message += "\n";
+                message += "\n".join('%d %d "%s" "%s" "%s" %s' % (record.order, record.preference, record.flags.decode(), record.service.decode(), record.regexp.decode(), record.replacement) for record in data.answer)
         else:
             import dns.resolver
             message_map = {dns.resolver.NXDOMAIN: 'DNS record does not exist',
