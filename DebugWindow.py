@@ -278,9 +278,8 @@ class DebugWindow(NSObject):
             notification_center.discard_observer(self, name="XCAPManagerClientDidInitialize")
             notification_center.discard_observer(self, name="XCAPManagerClientDidNotInitialize")
             notification_center.discard_observer(self, name="XCAPManagerClientError")
-            notification_center.discard_observer(self, name="XCAPTrace")
             notification_center.discard_observer(self, name="XCAPDocumentsDidChange")
-
+            notification_center.discard_observer(self, name="XCAPTrace")
             settings.logs.trace_xcap = settings.logs.trace_xcap_to_file
         elif trace == Simplified:
             notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
@@ -290,14 +289,30 @@ class DebugWindow(NSObject):
             notification_center.add_observer(self, name="XCAPManagerClientDidNotInitialize")
             notification_center.add_observer(self, name="XCAPManagerDidStart")
             notification_center.add_observer(self, name="XCAPManagerClientError")
+            notification_center.add_observer(self, name="XCAPDocumentsDidChange")
+
+            notification_center.discard_observer(self, name="XCAPManagerDidAddContact")
+            notification_center.discard_observer(self, name="XCAPManagerDidUpdateContact")
+            notification_center.discard_observer(self, name="XCAPManagerDidDeleteContact")
+            notification_center.discard_observer(self, name="XCAPManagerDidAddGroup")
+            notification_center.discard_observer(self, name="XCAPManagerDidUpdateGroup")
+            notification_center.discard_observer(self, name="XCAPManagerDidRemoveGroup")
+            notification_center.discard_observer(self, name="XCAPManagerDidAddGroup")
+            notification_center.discard_observer(self, name="XCAPManageDidAddGroupMember")
+            notification_center.discard_observer(self, name="XCAPManageDidRemoveGroupMember")
+            notification_center.discard_observer(self, name="XCAPTrace")
             settings.logs.trace_xcap = True
         elif trace == Full:
             notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.add_observer(self, name="XCAPManagerDidChangeState")
             notification_center.add_observer(self, name="XCAPManagerDidStart")
-            notification_center.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
             notification_center.add_observer(self, name="XCAPManagerDidReloadData")
             notification_center.add_observer(self, name="XCAPManagerDidInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientWillInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientDidInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientDidNotInitialize")
+            notification_center.add_observer(self, name="XCAPManagerClientError")
+            notification_center.add_observer(self, name="XCAPDocumentsDidChange")
             notification_center.add_observer(self, name="XCAPManagerDidAddContact")
             notification_center.add_observer(self, name="XCAPManagerDidUpdateContact")
             notification_center.add_observer(self, name="XCAPManagerDidDeleteContact")
@@ -307,12 +322,7 @@ class DebugWindow(NSObject):
             notification_center.add_observer(self, name="XCAPManagerDidAddGroup")
             notification_center.add_observer(self, name="XCAPManageDidAddGroupMember")
             notification_center.add_observer(self, name="XCAPManageDidRemoveGroupMember")
-            notification_center.add_observer(self, name="XCAPManagerClientWillInitialize")
-            notification_center.add_observer(self, name="XCAPManagerClientDidInitialize")
-            notification_center.add_observer(self, name="XCAPManagerClientDidNotInitialize")
-            notification_center.add_observer(self, name="XCAPManagerClientError")
             notification_center.add_observer(self, name="XCAPTrace")
-            notification_center.add_observer(self, name="XCAPDocumentsDidChange")
             
             settings.logs.trace_xcap = True
 
@@ -1018,11 +1028,16 @@ class DebugWindow(NSObject):
 
     @objc.python_method
     def _NH_XCAPTrace(self, notification):
+        settings = SIPSimpleSettings()
+
+        if settings.logs.trace_xcap_in_gui != Full:
+           return
+
         data = notification.data
         if data.result == 'failure':
             message = ("%s %s %s failed: %s (%s)" % (notification.datetime, data.method, data.url, data.reason, data.code))
         else:
-            if data.code == 304:
+            if data.code == 304 and settings.logs.trace_xcap_in_gui == Full:
                 message = ("%s %s %s with etag=%s did not change (304)" % (notification.datetime, data.method, data.url, data.etag))
             else:
                 message = ("%s %s %s changed to etag=%s (%d bytes)" % (notification.datetime, data.method, data.url, data.etag, data.size))
@@ -1031,8 +1046,10 @@ class DebugWindow(NSObject):
     @objc.python_method
     def _NH_XCAPDocumentsDidChange(self, notification):
         data = notification.data
+        settings = SIPSimpleSettings()
+
         for k in list(data.notified_etags.keys()):
-            if k not in data.documents:
+            if k not in data.documents and settings.logs.trace_xcap_in_gui == Full:
                 message = ("%s %s etag has changed on server to %s but is already stored locally" % (notification.datetime, data.notified_etags[k]['url'], data.notified_etags[k]['new_etag']))
             else:
                 message = ("%s %s etag has changed: %s -> %s" % (notification.datetime, data.notified_etags[k]['url'], data.notified_etags[k]['new_etag'], data.notified_etags[k]['previous_etag']))
