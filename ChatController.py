@@ -1384,7 +1384,7 @@ class ChatController(MediaStream):
 
     @objc.python_method
     def _NH_ChatStreamSMPVerificationDidNotStart(self, stream, data):
-        self.sessionController.log_info("OTR SMP verification did not start: %s", data.reason)
+        self.sessionController.log_info("OTR SMP verification did not start: %s" % data.reason)
         self.chatOtrSmpWindow.handle_remote_response()
 
     @objc.python_method
