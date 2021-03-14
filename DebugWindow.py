@@ -466,7 +466,7 @@ class DebugWindow(NSObject):
                                                                       audio_stream.remote_rtp_address,
                                                                       audio_stream.remote_rtp_port)
         if audio_stream.codec and audio_stream.sample_rate:
-            text += '%s Audio call established using "%s" codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
+            text += '%s Audio call established using %s codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.encryption.active:
             text += '%s RTP audio stream is encrypted with %s (%s)\n' % (session.start_time, audio_stream.encryption.type, audio_stream.encryption.cipher)
         if session.remote_user_agent is not None:
@@ -501,7 +501,7 @@ class DebugWindow(NSObject):
                                                                       video_stream.remote_rtp_address,
                                                                       video_stream.remote_rtp_port)
         if video_stream.codec and video_stream.sample_rate:
-            text += '%s Video call established using "%s" codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.sample_rate)
+            text += '%s Video call established using %s codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.sample_rate)
         if video_stream.encryption.active:
             text += '%s RTP video stream is encrypted with %s (%s)\n' % (session.start_time, video_stream.encryption.type, video_stream.encryption.cipher)
         if session.remote_user_agent is not None:
@@ -826,7 +826,7 @@ class DebugWindow(NSObject):
                                                                   stream.remote_rtp_address,
                                                                   stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
-            text += '%s Audio call established using "%s" codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
+            text += '%s Audio call established using %s codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
         if stream.srtp_active:
             text += '%s RTP audio stream is encrypted\n' % notification.datetime
         astring = NSAttributedString.alloc().initWithString_(text)

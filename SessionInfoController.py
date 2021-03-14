@@ -375,7 +375,7 @@ class SessionInfoController(NSObject):
                 self.audio_codec.setStringValue_('')
                 self.audio_srtp_lock.setHidden_(True)
 
-            self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address.decode(), self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
+            self.audio_remote_endpoint.setStringValue_('%s:%s' % (self.audio_stream.stream.remote_rtp_address, self.audio_stream.stream.remote_rtp_port) if self.audio_stream.stream.remote_rtp_address else '')
 
             if self.audio_stream.stream.ice_active:
                 ice_status = self.audio_stream.ice_negotiation_status if self.audio_stream.ice_negotiation_status is not None else ''
@@ -443,7 +443,7 @@ class SessionInfoController(NSObject):
                 self.video_codec.setStringValue_('')
                 self.video_srtp_lock.setHidden_(True)
 
-            self.video_remote_endpoint.setStringValue_('%s:%s' % (self.video_stream.stream.remote_rtp_address.decode(), self.video_stream.stream.remote_rtp_port) if self.video_stream.stream.remote_rtp_address else '')
+            self.video_remote_endpoint.setStringValue_('%s:%s' % (self.video_stream.stream.remote_rtp_address, self.video_stream.stream.remote_rtp_port) if self.video_stream.stream.remote_rtp_address else '')
 
             if self.video_stream.stream.ice_active:
                 ice_status = self.video_stream.ice_negotiation_status if self.video_stream.ice_negotiation_status is not None else ''

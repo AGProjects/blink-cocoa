@@ -5545,7 +5545,8 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].registrar = registrar
             self.accounts[position].register_expires = notification.data.expires
             self.accounts[position].register_timestamp = time.time()
-            BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
+        
+        BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
 
         self.refreshAccountList()
 
@@ -5553,6 +5554,7 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
         if notification.data.code > 200:
             reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
+            reason = reason.decode() if isinstance(reason, bytes) else reason
             BlinkLogger().log_debug("Account %s failed to register at %s: %s (%s)" % (notification.sender.id, notification.data.registrar, reason, notification.data.code))
 
         try:

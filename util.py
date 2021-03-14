@@ -413,7 +413,6 @@ audio_codecs = {'PCMA': 'G.711a', 'PCMU': 'G.711u', 'opus': 'OPUS', 'speex': 'Sp
 video_codecs = {'H263': 'H.263', 'H263-1998': 'H.263 1998', 'H264': 'H.264'}
 
 def beautify_audio_codec(codec):
-    codec = codec.decode() if isinstance(codec, bytes) else codec
     try:
         codec = audio_codecs[codec]
     except KeyError:
