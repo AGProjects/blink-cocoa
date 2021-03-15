@@ -1964,7 +1964,11 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         skip_target = set()
         session_ids = {}
         last_missed_call_start_time = {}
+        
         for result in results:
+            if result is None or result.remote_uri is None:
+                continue
+
             target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
             contact = getFirstContactMatchingURI(target_uri)
