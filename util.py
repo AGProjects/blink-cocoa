@@ -113,8 +113,8 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     port = 5060
     transport = 'udp'
 
+    display_name = identity.display_name if hasattr(identity, 'display_name') else None
     identity = identity if isinstance(identity, (SIPURI, FrozenSIPURI)) else identity.uri;
-
     user = identity.user.decode() if isinstance(identity.user, bytes) else identity.user
     host = identity.host.decode() if isinstance(identity.host, bytes) else identity.host
     transport = identity.transport.decode() if isinstance(identity.transport, bytes) else identity.transport
@@ -126,7 +126,6 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     if identity.port is not None and identity.port != 5060:
         port = identity.port
 
-    display_name = identity.display_name if hasattr(identity, 'display_name') else None
     uri = sip_prefix_pattern.sub("", uri)
 
     pool = NSAutoreleasePool.alloc().init()

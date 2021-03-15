@@ -410,7 +410,9 @@ class AlertPanel(NSObject, object):
                     BlinkLogger().log_info("Auto answer enabled for this contact")
                     self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
-        fromLabel.setStringValue_("%s" % format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
+        label = format_identity_to_string(session.remote_identity, check_contact=True, format='full')
+
+        fromLabel.setStringValue_("%s" % label)
         fromLabel.sizeToFit()
 
         if has_audio_streams:
