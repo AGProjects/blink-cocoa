@@ -44,7 +44,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.social-networking</string>
+	<string>public.app-category.business</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.11.0</string>
 	<key>NSCameraUsageDescription</key>
