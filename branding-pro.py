@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2014 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2021 AG Projects. See LICENSE for details.
 #
 
 from Foundation import (NSBundle,
