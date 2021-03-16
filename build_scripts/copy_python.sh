@@ -25,7 +25,7 @@ sudo rm -r Frameworks/Python.framework/Versions/3.9/Resources/Python.app
 sudo rm -r Frameworks/Python.framework/Versions/3.9/share
 sudo rm -r Frameworks/Python.framework/Versions/3.9/bin
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/*tcl*
-sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/tk*
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/*tk*
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/Tk*
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/td*
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/lib2to3
