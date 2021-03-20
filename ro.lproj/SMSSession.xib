@@ -8,6 +8,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="SMSWindowController">
             <connections>
+                <outlet property="encryptionIconMenuItem" destination="oAR-ae-sAh" id="5iT-sF-gpT"/>
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
                 <outlet property="toolbar" destination="119" id="e2W-yg-gLN"/>
