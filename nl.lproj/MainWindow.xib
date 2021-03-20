@@ -24,7 +24,7 @@
                                     <action selector="orderFrontAboutPanel:" target="373" id="877"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Check voor updates..." tag="2" id="945">
+                            <menuItem title="Controleer op updates ..." tag="2" id="945">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="checkForUpdates:" target="389" id="1868"/>
