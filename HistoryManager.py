@@ -641,6 +641,9 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
+
+        body = body.decode() if isinstance(body, bytes) else body
+
         try:
             if not journal_id and not skip_replication:
                 settings = SIPSimpleSettings()
