@@ -74,6 +74,7 @@ class SIPManager(object, metaclass=Singleton):
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         self.notification_center.add_observer(self, name='SIPEngineGotException')
+        self.notification_center.add_observer(self, name='XCAPManagerDidChangeState')        
 
         self.registrar_addresses = {}
         self.contact_addresses = {}
@@ -705,6 +706,12 @@ class SIPManager(object, metaclass=Singleton):
             bonjour_account.enabled=True
             self.bonjour_disabled_on_sleep=False
 
+    @objc.python_method
+    def _NH_XCAPManagerDidChangeState(self, sender, data):
+        if data.state.lower() == 'insync':
+            BlinkLogger().log_info("XCAP documents of account %s are now in sync" % sender.account.id)
+
+    @objc.python_method
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):
         account = sender.account
         xcap_root = sender.xcap_root
