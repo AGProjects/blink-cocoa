@@ -949,109 +949,121 @@ class DebugWindow(NSObject):
 
     @objc.python_method
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, notification):
+        settings = SIPSimpleSettings()
         account = notification.sender.account
         xcap_root = notification.sender.xcap_root
         if xcap_root is None:
             # The XCAP manager might be stopped because this notification is processed in a different
             # thread from which it was posted
             return
-        self.renderXCAP("%s Using XCAP root %s for account %s" % (notification.datetime, xcap_root, account.id))
-        message = ("%s XCAP server capabilities: %s" % (notification.datetime, ", ".join(notification.data.auids)))
+
+        self.renderXCAP("%s Using XCAP root %s for account %s" % (notification.datetime.replace(microsecond=0), xcap_root, account.id))
+        if settings.logs.trace_xcap_in_gui != Full:
+           return
+
+        message = ("%s XCAP server capabilities: %s" % (notification.datetime.replace(microsecond=0), ", ".join(notification.data.auids)))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPSubscriptionGotNotify(self, notification):
-        return
         settings = SIPSimpleSettings()
+        if settings.logs.trace_xcap_in_gui != Full:
+           return
         if notification.data.body is not None and settings.logs.trace_xcap_in_gui == Full:
-            message = ("%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime, notification.sender.account.id, notification.data.body.decode()))
+            message = ("%s XCAP server documents have changed for account %s: \n\n%s" % (notification.datetime.replace(microsecond=0), notification.sender.account.id, notification.data.body.decode()))
             self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidStart(self, notification):
-        message = ("%s XCAP manager of account %s started" % (notification.datetime, notification.sender.account.id))
+        message = ("%s XCAP manager of account %s started" % (notification.datetime.replace(microsecond=0), notification.sender.account.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, notification):
-        message = ("%s XCAP manager of account %s changed state from %s to %s" % (notification.datetime, notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
+        message = ("%s XCAP manager of account %s changed state: %s -> %s" % (notification.datetime.replace(microsecond=0), notification.sender.account.id, notification.data.prev_state.capitalize(), notification.data.state.capitalize()))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidAddContact(self, notification):
-        message = ("%s XCAP manager added contact %s" % (notification.datetime, notification.data.contact.id))
+        message = ("%s XCAP manager added contact %s" % (notification.datetime.replace(microsecond=0), notification.data.contact.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidUpdateContact(self, notification):
-        message = ("%s XCAP manager updated contact %s" % (notification.datetime, notification.data.contact.id))
+        message = ("%s XCAP manager updated contact %s" % (notification.datetime.replace(microsecond=0), notification.data.contact.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidRemoveContact(self, notification):
-        message = ("%s XCAP manager removed contact %s" % (notification.datetime, notification.data.contact.id))
+        message = ("%s XCAP manager removed contact %s" % (notification.datetime.replace(microsecond=0), notification.data.contact.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidAddGroup(self, notification):
-        message = ("%s XCAP manager added group %s" % (notification.datetime, notification.data.group.id))
+        message = ("%s XCAP manager added group %s" % (notification.datetime.replace(microsecond=0), notification.data.group.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidUpdateGroup(self, notification):
-        message = ("%s XCAP manager updated group %s" % (notification.datetime, notification.data.group.id))
+        message = ("%s XCAP manager updated group %s" % (notification.datetime.replace(microsecond=0), notification.data.group.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidRemoveGroup(self, notification):
-        message = ("%s XCAP manager removed group %s" % (notification.datetime, notification.data.group.id))
+        message = ("%s XCAP manager removed group %s" % (notification.datetime.replace(microsecond=0), notification.data.group.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManageDidAddGroupMember(self, notification):
-        message = ("%s XCAP manager added member %s to group %s" % (notification.datetime,  notification.data.contact.id, notification.data.group.id))
+        message = ("%s XCAP manager added member %s to group %s" % (notification.datetime.replace(microsecond=0),  notification.data.contact.id, notification.data.group.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManageDidRemoveGroupMember(self, notification):
-        message = ("%s XCAP manager removed member %s from group %s" % (notification.datetime, notification.data.contact.id, notification.data.group.id))
+        message = ("%s XCAP manager removed member %s from group %s" % (notification.datetime.replace(microsecond=0), notification.data.contact.id, notification.data.group.id))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerClientWillInitialize(self, notification):
-        message = ("%s XCAP manager client will initialized for XCAP root %s" % (notification.datetime, notification.data.root))
+        settings = SIPSimpleSettings()
+        if settings.logs.trace_xcap_in_gui != Full:
+           return
+
+        message = ("%s XCAP manager client will initialized for XCAP root %s" % (notification.datetime.replace(microsecond=0), notification.data.root))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerDidInitialize(self, notification):
-        message = ("%s XCAP manager initialized with XCAP client %s" % (notification.datetime, notification.data.client))
+        message = ("%s XCAP manager initialized with XCAP client %s" % (notification.datetime.replace(microsecond=0), notification.data.client))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerClientDidInitialize(self, notification):
-        message = ("%s XCAP manager client %s initialized for XCAP root %s" % (notification.datetime, notification.data.client, notification.data.root))
+        message = ("%s XCAP manager client initialized for XCAP root %s" % (notification.datetime.replace(microsecond=0), notification.data.root))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerClientDidNotInitialize(self, notification):
-        message = ("%s XCAP manager client did not initialize: %s" % (notification.datetime, notification.data.error))
+        message = ("%s XCAP manager client did not initialize: %s" % (notification.datetime.replace(microsecond=0), notification.data.error))
         self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPTrace(self, notification):
         settings = SIPSimpleSettings()
-
         if settings.logs.trace_xcap_in_gui != Full:
            return
 
         data = notification.data
         if data.result == 'failure':
-            message = ("%s %s %s failed: %s (%s)" % (notification.datetime, data.method, data.url, data.reason, data.code))
-        else:
+            message = ("%s %s %s failed: %s (%s)" % (notification.datetime.replace(microsecond=0), data.method, data.url, data.reason, data.code))
+        elif data.result == 'success':
             if data.code == 304 and settings.logs.trace_xcap_in_gui == Full:
-                message = ("%s %s %s with etag=%s did not change (304)" % (notification.datetime, data.method, data.url, data.etag))
+                message = ("%s %s %s with etag=%s did not change (304)" % (notification.datetime.replace(microsecond=0), data.method, data.url, data.etag))
             else:
-                message = ("%s %s %s changed to etag=%s (%d bytes)" % (notification.datetime, data.method, data.url, data.etag, data.size))
+                message = ("%s %s %s changed to etag=%s (%d bytes)" % (notification.datetime.replace(microsecond=0), data.method, data.url, data.etag, data.size))
+        elif data.result == 'fetch':
+            message = ("%s %s %s with etag=%s" % (notification.datetime.replace(microsecond=0), data.method, data.url, data.etag))
+
         self.renderXCAP(message)
 
     @objc.python_method
@@ -1059,16 +1071,19 @@ class DebugWindow(NSObject):
         data = notification.data
         settings = SIPSimpleSettings()
 
+        if settings.logs.trace_xcap_in_gui != Full:
+           return
+
         for k in list(data.notified_etags.keys()):
             if k not in data.documents and settings.logs.trace_xcap_in_gui == Full:
-                message = ("%s %s etag has changed on server to %s but is already stored locally" % (notification.datetime, data.notified_etags[k]['url'], data.notified_etags[k]['new_etag']))
+                message = ("%s %s etag has changed on server to %s but is already stored locally" % (notification.datetime.replace(microsecond=0), data.notified_etags[k]['url'], data.notified_etags[k]['new_etag']))
             else:
-                message = ("%s %s etag has changed: %s -> %s" % (notification.datetime, data.notified_etags[k]['url'], data.notified_etags[k]['new_etag'], data.notified_etags[k]['previous_etag']))
+                message = ("%s %s etag has changed: %s -> %s" % (notification.datetime.replace(microsecond=0), data.notified_etags[k]['url'], data.notified_etags[k]['new_etag'], data.notified_etags[k]['previous_etag']))
             self.renderXCAP(message)
 
     @objc.python_method
     def _NH_XCAPManagerClientError(self, notification):
-        message = ("%s XCAP manager client error for %s: %s" % (notification.datetime, notification.data.context, notification.data.error))
+        message = ("%s XCAP manager client error for %s: %s" % (notification.datetime.replace(microsecond=0), notification.data.context, notification.data.error))
         self.renderXCAP(message)
 
 
