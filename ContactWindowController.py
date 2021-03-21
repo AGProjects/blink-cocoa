@@ -5552,9 +5552,15 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
+        if hasattr(notification.data, 'error'):
+            reason = notification.data.error.decode() if isinstance(notification.data.error, bytes) else notification.data.error
+        elif hasattr(notification.data, 'reason'):
+            reason = notification.data.reason.decode() if isinstance(notification.data.reason, bytes) else notification.data.reason
+        else:
+            reason = 'Unknown reason'
+
         if notification.data.code > 200:
-            reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason
-            reason = reason.decode() if isinstance(reason, bytes) else reason
+            reason = NSLocalizedString("Connection failed", "Label") if reason == 'Unknown error 61' else reason
             BlinkLogger().log_debug("Account %s failed to register at %s: %s (%s)" % (notification.sender.id, notification.data.registrar, reason, notification.data.code))
 
         try:
@@ -5564,7 +5570,7 @@ class ContactWindowController(NSWindowController):
 
         if notification.data.code > 200:
             self.accounts[position].register_failure_code = notification.data.code
-            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if notification.data.reason == 'Unknown error 61' else notification.data.reason.decode()
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if reason == 'Unknown error 61' else reason
         else:
             self.accounts[position].register_failure_code = None
             self.accounts[position].register_failure_reason = None
@@ -5596,10 +5602,10 @@ class ContactWindowController(NSWindowController):
             elif hasattr(notification.data, 'error'):
                 if notification.data.error.startswith('DNS'):
                     self.accounts[position].register_failure_reason = NSLocalizedString("DNS Lookup failed", "Label")
-                elif notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in notification.data.error.decode():
+                elif notification.data.error == 'Unknown error 61' or 'PJ_EEOF' in reason:
                     self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label")
                 else:
-                    self.accounts[position].register_failure_reason = notification.data.error.decode() if isinstance(notification.data.error, bytes) else notification.data.error
+                    self.accounts[position].register_failure_reason = reason
 
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
