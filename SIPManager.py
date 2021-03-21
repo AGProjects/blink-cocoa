@@ -7,6 +7,7 @@ import AppKit
 
 import json
 import os
+import objc
 import re
 
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -424,9 +425,11 @@ class SIPManager(object, metaclass=Singleton):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    @objc.python_method
     def _NH_SIPApplicationFailedToStartTLS(self, sender, data):
         BlinkLogger().log_info('Failed to start TLS transport: %s' % data.error)
 
+    @objc.python_method
     def _NH_SIPApplicationWillStart(self, sender, data):
         settings = SIPSimpleSettings()
         _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
@@ -482,6 +485,7 @@ class SIPManager(object, metaclass=Singleton):
         logger.start()
         self.ip_address_monitor.start()
 
+    @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
         settings.audio.enable_aec = settings.audio.echo_canceller.enabled
@@ -539,9 +543,11 @@ class SIPManager(object, metaclass=Singleton):
 
         self.init_configurations()
 
+    @objc.python_method
     def _NH_SIPApplicationWillEnd(self, sender, data):
         self.ip_address_monitor.stop()
 
+    @objc.python_method
     def _NH_SIPEngineGotException(self, sender, data):
         BlinkLogger().log_info("SIP Engine Exception", data)
         NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was a critical error of core functionality:\n%s", "Label") % data.traceback,
@@ -549,6 +555,7 @@ class SIPManager(object, metaclass=Singleton):
         NSApp.terminate_(None)
         return
 
+    @objc.python_method
     def _NH_SIPEngineDidFail(self, sender, data):
         NSRunAlertPanel(NSLocalizedString("Fatal Error Encountered", "Window title"), NSLocalizedString("There was a fatal error affecting Blink core functionality. The program cannot continue and will be shut down. Information about the cause of the error can be found by opening the Console application and searching for 'Blink'.", "Label"),
                         NSLocalizedString("Shut Down", "Button title"), None, None)
@@ -556,6 +563,7 @@ class SIPManager(object, metaclass=Singleton):
         BlinkLogger().log_info("A fatal error occurred, forcing termination of Blink")
         os.kill(os.getpid(), signal.SIGTERM)
     
+    @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info("Account %s activated" % account.id)
         # Activate BonjourConferenceServer discovery
@@ -564,6 +572,7 @@ class SIPManager(object, metaclass=Singleton):
         else:
             BlinkLogger().log_info("Account %s loaded %d CAs from %s" % (account.id, len(account.tls_credentials._trusted), account.ca_list))
 
+    @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, account, data):
         BlinkLogger().log_info("Account %s deactivated" % account.id)
         MWIData.remove(account)
@@ -571,6 +580,7 @@ class SIPManager(object, metaclass=Singleton):
         if account is BonjourAccount():
             call_in_green_thread(self.bonjour_conference_services.stop)
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
@@ -615,6 +625,7 @@ class SIPManager(object, metaclass=Singleton):
             message = 'Account %s has temporary SIP GRUU %s' % (account.id, account.contact.temporary_gruu)
             BlinkLogger().log_debug(message)
 
+    @objc.python_method
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):
         BlinkLogger().log_info("Account %s was unregistered" % account.id)
         try:
@@ -627,6 +638,7 @@ class SIPManager(object, metaclass=Singleton):
         except KeyError:
             pass
 
+    @objc.python_method
     def _NH_SIPAccountGotMessageSummary(self, account, data):
         BlinkLogger().log_debug("Received voicemail notification for account %s" % account.id)
         summary = data.message_summary
@@ -647,6 +659,7 @@ class SIPManager(object, metaclass=Singleton):
 
         self.notification_center.post_notification('BlinkAccountGotMessageSummary', sender=account, data=data)
 
+    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'message_summary.enabled' in data.modified:
@@ -674,6 +687,7 @@ class SIPManager(object, metaclass=Singleton):
                 settings.audio.enable_aec = True
                 settings.save()
 
+    @objc.python_method
     def _NH_SystemWillSleep(self, sender, data):
         bonjour_account = BonjourAccount()
         if bonjour_account.enabled:
@@ -682,6 +696,7 @@ class SIPManager(object, metaclass=Singleton):
             bonjour_account.enabled=False
             self.bonjour_disabled_on_sleep=True
 
+    @objc.python_method
     def _NH_SystemDidWakeUpFromSleep(self, sender, data):
         BlinkLogger().log_info("Computer wake up from sleep")
         bonjour_account = BonjourAccount()
@@ -700,10 +715,12 @@ class SIPManager(object, metaclass=Singleton):
         BlinkLogger().log_debug("Using XCAP root %s for account %s" % (xcap_root, account.id))
         BlinkLogger().log_debug("XCAP server capabilities: %s" % ", ".join(data.auids))
 
+    @objc.python_method
     def _NH_XCAPManagerClientError(self, sender, data):
         account = sender.account
         BlinkLogger().log_info("XCAP error for account %s (%s): %s" % (account.id, sender.xcap_root, data.error))
 
+    @objc.python_method
     def _NH_SIPEngineGotException(self, sender, data):
         BlinkLogger().log_info("SIP Engine got fatal error: %s" % data.traceback)
         NSRunAlertPanel(NSLocalizedString("Error", "Window title"), NSLocalizedString("There was a critical error of core functionality:\n%s", "Label") % data.traceback,
