@@ -198,6 +198,7 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidConnect")
             NotificationCenter().add_observer(self, name="DNSNameserversDidChange")
+            NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
 
             # remove obsolete settings
             userdef = NSUserDefaults.standardUserDefaults()
@@ -443,7 +444,7 @@ class BlinkAppDelegate(NSObject):
                 account_info.register_failure_reason = NSLocalizedString("Connection failed", "Label")
 
             self.contactsWindowController.refreshAccountList()
-            BlinkLogger().log_info('Reconnecting account %s' % account.id)
+            BlinkLogger().log_info('Re-register account %s' % account.id)
 
             account.reregister()
             account.resubscribe()

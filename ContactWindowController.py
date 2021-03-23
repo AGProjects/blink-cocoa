@@ -421,7 +421,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="SIPAccountWillRegister")
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="SystemDidWakeUpFromSleep")
-        nc.add_observer(self, name="NetworkConditionsDidChange")
+        nc.add_observer(self, name="SystemIPAddressDidChange")
         nc.add_observer(self, name="SIPAccountRegistrationDidSucceed")
         nc.add_observer(self, name="SIPAccountRegistrationDidFail")
         nc.add_observer(self, name="SIPAccountRegistrationGotAnswer")
@@ -5584,12 +5584,11 @@ class ContactWindowController(NSWindowController):
         else:
             reason = 'Unknown reason'
             
-        if self.last_failure_reason == reason:
-            return
-
         self.last_failure_reason = reason
 
-        BlinkLogger().log_info('Account %s registration failed: %s' % (notification.sender.id, reason))
+        if notification.sender is not BonjourAccount():
+            BlinkLogger().log_info('Account %s registration failed: %s' % (notification.sender.id, reason))
+
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
@@ -5646,16 +5645,42 @@ class ContactWindowController(NSWindowController):
             settings.audio.alert_device = last_audio_alert_device or 'system_default'
             settings.save()
 
+            for account_info in self.accounts:
+                account = account_info.account
+
+                if account is BonjourAccount():
+                    continue
+
+                if not account.enabled:
+                    continue
+
+                account_info.register_state = 'failed'
+
+                if host is None or host.default_ip is None:
+                    account_info.register_failure_reason = NSLocalizedString("No Internet connection", "Label")
+                else:
+                    account_info.register_failure_reason = NSLocalizedString("Connection failed", "Label")
+                    account_info.register_state = 'failed'
+
+                self.refreshAccountList()
+                BlinkLogger().log_info('Re-register account %s' % account.id)
+
+                account.reregister()
+                account.resubscribe()
+
         # wait for system to stabilize
         reactor.callLater(5, wakeup)
 
     @objc.python_method
-    def _NH_NetworkConditionsDidChange(self, notification):
-        if host.default_ip is not None:
-            for account in self.accounts:
+    def _NH_SystemIPAddressDidChange(self, notification):
+        for account in self.accounts:
+            if notification.data.new_ip_address is not None:
                 if account.register_failure_reason == NSLocalizedString("No Internet connection", "Label"):
                     account.register_failure_reason = None
-            self.refreshAccountList()
+            else:
+                account.register_failure_reason = NSLocalizedString("No Internet connection", "Label")
+
+        self.refreshAccountList()
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidEnd(self, notification):
