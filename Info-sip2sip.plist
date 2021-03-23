@@ -59,5 +59,9 @@
 	<string>https://blink.sipthor.net/SIP2SIPAppcast.xml</string>
         <key>NSCameraUsageDescription</key>
         <string>Required for VoIP calls</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>Required for VoIP calls</string>
+        <key>NSContactsUsageDescription</key>
+        <string>Required for calling your contacts</string>
         </dict>
 </plist>
