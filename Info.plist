@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>March 23rd, 2021</string>
+	<string>March 25th, 2021</string>
 	<key>BrandingFile</key>
 	<string>branding</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -51,12 +51,12 @@
 	<string>10.11.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Required for VoIP calls</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Required for calling your contacts</string>
 	<key>NSMainNibFile</key>
 	<string>MainWindow</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Required for VoIP calls</string>
-        <key>NSContactsUsageDescription</key>
-        <string>Required for calling your contacts</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
