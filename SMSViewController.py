@@ -46,7 +46,7 @@ from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, S
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
-from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, ChatIdentity, OTREncryption
+from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, CPIMHeader, ChatIdentity, OTREncryption, CPIMNamespace
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
@@ -65,8 +65,10 @@ MAX_MESSAGE_LENGTH = 1300
 
 
 class MessageInfo(object):
-    def __init__(self, id, content=None, content_type=None, call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None):
+    def __init__(self, id, content=None, content_type=None, call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None, imdn_id=None):
         self.id = id
+        self.call_id = call_id
+        self.imdn_id = imdn_id
         self.direction = direction
         self.sender = sender
         self.recipient = recipient
@@ -74,7 +76,6 @@ class MessageInfo(object):
         self.content = content if isinstance(content, bytes) else content.encode()
         self.content_type = content_type
         self.status = status
-        self.call_id = call_id
         self.encryption = encryption
 
 
@@ -610,14 +611,37 @@ class SMSViewController(NSObject):
             self.enableIsComposing = True
             timeout = 15
 
-        message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
-                                  RouteHeader(self.last_route.uri), message.content_type, content, credentials=self.account.credentials)
+        imdn_id = str(uuid.uuid4())
+        ns = CPIMNamespace('urn:ietf:params:imdn', 'imdn')
+        additional_headers = [CPIMHeader('Message-ID', ns, imdn_id)]
+        additional_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
+
+        payload = CPIMPayload(content,
+                              message.content_type,
+                              charset='utf-8',
+                              sender=ChatIdentity(self.account.uri, self.account.display_name),
+                              recipients=[ChatIdentity(self.target_uri, None)],
+                              timestamp=message.timestamp,
+                              additional_headers=additional_headers)
+
+        payload, content_type = payload.encode()
+
+        message_request = Message(FromHeader(self.account.uri, self.account.display_name),
+                                  ToHeader(self.target_uri),
+                                  RouteHeader(self.last_route.uri),
+                                  content_type,
+                                  payload,
+                                  credentials=self.account.credentials)
 
         self.notification_center.add_observer(self, sender=message_request)
         
         message_request.send(timeout)
         message.status = 'sent'
         message.call_id = message_request._request.call_id.decode()
+        message.imdn_id = imdn_id
+
+        id=str(message_request)
+        self.messages[id] = message
 
         if not isinstance(message, OTRInternalMessage):
             if message.content_type != "application/im-iscomposing+xml":
@@ -627,9 +651,6 @@ class SMSViewController(NSObject):
                     self.log_info('Message %s sent to %s' % (message.call_id, self.last_route.uri))
         else:
             self.log_info('OTR message %s sent' % message.call_id)
-
-        id=str(message_request)
-        self.messages[id] = message
 
     @objc.python_method
     def lookup_destination(self, target_uri):
