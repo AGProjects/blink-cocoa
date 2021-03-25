@@ -616,15 +616,19 @@ class SMSViewController(NSObject):
         additional_headers = [CPIMHeader('Message-ID', ns, imdn_id)]
         additional_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
-        payload = CPIMPayload(content,
-                              message.content_type,
-                              charset='utf-8',
-                              sender=ChatIdentity(self.account.uri, self.account.display_name),
-                              recipients=[ChatIdentity(self.target_uri, None)],
-                              timestamp=message.timestamp,
-                              additional_headers=additional_headers)
+        if self.account.sms.use_cpim:
+            payload = CPIMPayload(content,
+                                  message.content_type,
+                                  charset='utf-8',
+                                  sender=ChatIdentity(self.account.uri, self.account.display_name),
+                                  recipients=[ChatIdentity(self.target_uri, None)],
+                                  timestamp=message.timestamp,
+                                  additional_headers=additional_headers)
 
-        payload, content_type = payload.encode()
+            payload, content_type = payload.encode()
+        else:
+            payload = content
+            content_type = message.content_type
 
         message_request = Message(FromHeader(self.account.uri, self.account.display_name),
                                   ToHeader(self.target_uri),

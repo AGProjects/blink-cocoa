@@ -44,6 +44,7 @@ class ChatSettingsExtension(SettingsGroup):
 
 class SMSSettingsExtension(SettingsGroup):
     disable_replication = Setting(type=bool, default=False)
+    use_cpim = Setting(type=bool, default=True)
 
 
 class MessageSummarySettingsExtension(MessageSummarySettings):

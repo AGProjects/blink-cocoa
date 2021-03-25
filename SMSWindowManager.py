@@ -413,7 +413,7 @@ class SMSWindowManagerClass(NSObject):
         is_cpim = False
         cpim_message = None
         is_replication_message = False
-
+        
         if data.content_type == 'message/cpim':
             try:
                 cpim_message = CPIMPayload.decode(data.body)
