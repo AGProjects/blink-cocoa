@@ -599,6 +599,10 @@
 		1F4D4FC01389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC11389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
+		1F4D7463261B502A00DF09D7 /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; };
+		1F4D7464261B502A00DF09D7 /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; };
+		1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D7466261B505500DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F52D5B419FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
@@ -1571,6 +1575,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F4D7466261B505500DF09D7 /* libopus.0.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F455F44260A5A8300DB289F /* libev.4.dylib in Copy Frameworks */,
 				1F455F45260A5A8300DB289F /* libuv.1.dylib in Copy Frameworks */,
@@ -1925,6 +1930,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1FC02DF025EBCE470031AB93 /* Sparkle.framework in Copy Frameworks */,
 				1F455F42260A5A7400DB289F /* libev.4.dylib in Copy Frameworks */,
@@ -2076,6 +2082,7 @@
 		1F4B789719AEAEC200F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
+		1F4D7460261B502A00DF09D7 /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = Distribution/Frameworks/libopus.0.dylib; sourceTree = "<group>"; };
 		1F52D5B119FAF1AF00F44E56 /* locked-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-gray.png"; path = "icons/locked-gray.png"; sourceTree = SOURCE_ROOT; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
 		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
@@ -2662,6 +2669,7 @@
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F455F41260A5A6300DB289F /* libev.4.dylib in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
+				1F4D7464261B502A00DF09D7 /* libopus.0.dylib in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
 				1F3F8FC525D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
 			);
@@ -2678,6 +2686,7 @@
 				1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */,
 				1F1CEB4719C9BBEE00BD378A /* StoreKit.framework in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
+				1F4D7463261B502A00DF09D7 /* libopus.0.dylib in Frameworks */,
 				1F27974215D2996E00FB33D9 /* Security.framework in Frameworks */,
 				1F27974115D2996C00FB33D9 /* Carbon.framework in Frameworks */,
 				1F3F8FC425D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
@@ -2995,6 +3004,7 @@
 				1F78AB6B25EAD8BC00F43414 /* libffi.7.dylib */,
 				1F78AA1A25EACDD000F43414 /* libsqlite3.0.dylib */,
 				1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */,
+				1F4D7460261B502A00DF09D7 /* libopus.0.dylib */,
 				1F455F37260A5A4600DB289F /* gevent */,
 				1FA06CF825EF7DB900268FF3 /* tls */,
 				1FA06CF725EF7D7A00268FF3 /* xml2 */,
