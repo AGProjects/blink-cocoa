@@ -603,6 +603,14 @@
 		1F4D7464261B502A00DF09D7 /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; };
 		1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F4D7466261B505500DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D746B261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; };
+		1F4D746C261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; };
+		1F4D746F261B517E00DF09D7 /* libopencore-amrwb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; };
+		1F4D7470261B517E00DF09D7 /* libopencore-amrwb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; };
+		1F4D7472261B51E800DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D7473261B51E800DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D7474261B51F400DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D7475261B51F400DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
 		1F52D5B419FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
@@ -1575,6 +1583,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F4D7474261B51F400DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */,
+				1F4D7475261B51F400DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */,
 				1F4D7466261B505500DF09D7 /* libopus.0.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 				1F455F44260A5A8300DB289F /* libev.4.dylib in Copy Frameworks */,
@@ -1930,6 +1940,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F4D7472261B51E800DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */,
+				1F4D7473261B51E800DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */,
 				1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1FC02DF025EBCE470031AB93 /* Sparkle.framework in Copy Frameworks */,
@@ -2083,6 +2095,8 @@
 		1F4B78A219AEAED300F854CB /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1F4D4FBF1389AF7500A2CE0B /* mirror.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = mirror.png; path = icons/mirror.png; sourceTree = "<group>"; };
 		1F4D7460261B502A00DF09D7 /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = Distribution/Frameworks/libopus.0.dylib; sourceTree = "<group>"; };
+		1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libopencore-amrnb.0.dylib"; path = "Distribution/Frameworks/libopencore-amrnb.0.dylib"; sourceTree = "<group>"; };
+		1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libopencore-amrwb.0.dylib"; path = "Distribution/Frameworks/libopencore-amrwb.0.dylib"; sourceTree = "<group>"; };
 		1F52D5B119FAF1AF00F44E56 /* locked-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-gray.png"; path = "icons/locked-gray.png"; sourceTree = SOURCE_ROOT; };
 		1F536AA41591BBDC00A0FE51 /* SubjectController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SubjectController.py; sourceTree = "<group>"; };
 		1F536AAF1591BCE500A0FE51 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Subject.xib; sourceTree = "<group>"; };
@@ -2661,6 +2675,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F2436881912B29000E71253 /* AVFoundation.framework in Frameworks */,
+				1F4D7470261B517E00DF09D7 /* libopencore-amrwb.0.dylib in Frameworks */,
 				1FC6343218F9D37F0098945F /* ScriptingBridge.framework in Frameworks */,
 				1F6EF80D18E64FE4008592D2 /* QuartzCore.framework in Frameworks */,
 				1F6EF80C18E64FDF008592D2 /* OpenGL.framework in Frameworks */,
@@ -2669,6 +2684,7 @@
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F455F41260A5A6300DB289F /* libev.4.dylib in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
+				1F4D746C261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */,
 				1F4D7464261B502A00DF09D7 /* libopus.0.dylib in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
 				1F3F8FC525D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
@@ -2679,11 +2695,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F4D746B261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */,
 				1F455F3C260A5A6300DB289F /* libuv.1.dylib in Frameworks */,
 				1F455F40260A5A6300DB289F /* libev.4.dylib in Frameworks */,
 				1F2436871912B27800E71253 /* AVFoundation.framework in Frameworks */,
 				1F6EF80B18E64FD7008592D2 /* QuartzCore.framework in Frameworks */,
 				1F6EF80A18E64FCA008592D2 /* OpenGL.framework in Frameworks */,
+				1F4D746F261B517E00DF09D7 /* libopencore-amrwb.0.dylib in Frameworks */,
 				1F1CEB4719C9BBEE00BD378A /* StoreKit.framework in Frameworks */,
 				1F8DC3CA135084FA0034815C /* Cocoa.framework in Frameworks */,
 				1F4D7463261B502A00DF09D7 /* libopus.0.dylib in Frameworks */,
@@ -2829,6 +2847,16 @@
 			name = Branding;
 			sourceTree = "<group>";
 		};
+		1F4D7471261B519400DF09D7 /* audio-codecs */ = {
+			isa = PBXGroup;
+			children = (
+				1F4D7460261B502A00DF09D7 /* libopus.0.dylib */,
+				1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */,
+				1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */,
+			);
+			name = "audio-codecs";
+			sourceTree = "<group>";
+		};
 		1F5308391486EE1200D01CA8 /* Keychain */ = {
 			isa = PBXGroup;
 			children = (
@@ -2876,7 +2904,7 @@
 			name = gnutls;
 			sourceTree = "<group>";
 		};
-		1FA06CF625EF7C3700268FF3 /* ffmpeg */ = {
+		1FA06CF625EF7C3700268FF3 /* video-codecs */ = {
 			isa = PBXGroup;
 			children = (
 				1F78AA3025EACDD400F43414 /* liblzma.5.dylib */,
@@ -2916,7 +2944,7 @@
 				1FC02DF725EBF4540031AB93 /* libvpx.6.dylib */,
 				1FC02DFD25EBF4F70031AB93 /* libvpx.dylib */,
 			);
-			name = ffmpeg;
+			name = "video-codecs";
 			sourceTree = "<group>";
 		};
 		1FA06CF725EF7D7A00268FF3 /* xml2 */ = {
@@ -3004,11 +3032,11 @@
 				1F78AB6B25EAD8BC00F43414 /* libffi.7.dylib */,
 				1F78AA1A25EACDD000F43414 /* libsqlite3.0.dylib */,
 				1F3F8FC125D16E85001DA381 /* libpython3.9.dylib */,
-				1F4D7460261B502A00DF09D7 /* libopus.0.dylib */,
+				1F4D7471261B519400DF09D7 /* audio-codecs */,
 				1F455F37260A5A4600DB289F /* gevent */,
 				1FA06CF825EF7DB900268FF3 /* tls */,
 				1FA06CF725EF7D7A00268FF3 /* xml2 */,
-				1FA06CF625EF7C3700268FF3 /* ffmpeg */,
+				1FA06CF625EF7C3700268FF3 /* video-codecs */,
 				1FA06CF525EF7C2E00268FF3 /* gnutls */,
 			);
 			name = "C libraries";
