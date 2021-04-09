@@ -494,9 +494,9 @@ class SIPManager(object, metaclass=Singleton):
 
         BlinkLogger().log_debug("SDK loaded")
         BlinkLogger().log_debug("SIP device ID: %s" % settings.instance_id)
-        codecs_print = []
-        for codec in settings.rtp.audio_codec_list:
-            codecs_print.append(beautify_audio_codec(codec))
+        available_codecs_print = list(beautify_audio_codec(codec.decode()) for codec in self._app.engine._ua.available_codecs)
+        codecs_print = list(beautify_audio_codec(codec) for codec in settings.rtp.audio_codec_list)
+        BlinkLogger().log_info("Available audio codecs: %s" % ", ".join(available_codecs_print))
         BlinkLogger().log_info("Enabled audio codecs: %s" % ", ".join(codecs_print))
 
         if settings.audio.input_device is None:
@@ -516,10 +516,11 @@ class SIPManager(object, metaclass=Singleton):
         else:
             if settings.video.max_bitrate is not None and settings.video.max_bitrate > 10000:
                 settings.video.max_bitrate = 4.0
-            codecs_print = []
-            for codec in settings.rtp.video_codec_list:
-                codecs_print.append(beautify_video_codec(codec))
-            BlinkLogger().log_info(u"Enabled video codecs: %s" % ", ".join(codecs_print))
+
+            available_video_codecs_print = list(beautify_video_codec(codec.decode()) for codec in self._app.engine._ua.available_video_codecs)
+            video_codecs_print = list(beautify_video_codec(codec) for codec in settings.rtp.video_codec_list)
+            BlinkLogger().log_info("Available video codecs: %s" % ", ".join(available_video_codecs_print))
+            BlinkLogger().log_info("Enabled video codecs: %s" % ", ".join(video_codecs_print))
             BlinkLogger().log_info(u"Available video cameras: %s" % ", ".join(NSApp.delegate().video_devices))
             if settings.video.device != "system_default" and settings.video.device != self._app.video_device.real_name and self._app.video_device.real_name != None:
                 settings.video.device = self._app.video_device.real_name
