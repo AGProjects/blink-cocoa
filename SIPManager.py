@@ -24,8 +24,7 @@ from gnutls.errors import GNUTLSError
 from twisted.internet import reactor
 from zope.interface import implementer
 
-from sipsimple.core import CORE_REVISION as core_version
-from sipsimple import __version__ as sdk_version
+from sipsimple import __version__ as version
 from sipsimple.application import SIPApplication
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.account.bonjour import _bonjour, BonjourDiscoveryFile, BonjourResolutionFile, BonjourServiceDescription
@@ -33,7 +32,7 @@ from sipsimple.addressbook import Contact, Group, ContactURI
 from sipsimple.configuration import DefaultValue
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError
+from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError, CORE_REVISION, PJ_VERSION, PJ_SVN_REVISION
 from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
@@ -52,7 +51,7 @@ from util import beautify_audio_codec, beautify_video_codec, format_identity_to_
 class SIPManager(object, metaclass=Singleton):
 
     def __init__(self):
-        BlinkLogger().log_info("Using SIP SIMPLE client SDK version %s" % sdk_version)
+        BlinkLogger().log_info("Using SIP SIMPLE SDK version %s, core version %s, PJSIP version %s (rev %s)\n" % (version, CORE_REVISION, PJ_VERSION.decode(), PJ_SVN_REVISION))
 
         self._app = SIPApplication()
         self._delegate = None
