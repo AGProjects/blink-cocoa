@@ -243,7 +243,6 @@
                     <toolbarItem reference="GX1-4M-M8b"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="441"/>
-                    <toolbarItem reference="573"/>
                     <toolbarItem reference="549"/>
                     <toolbarItem reference="666"/>
                     <toolbarItem reference="99"/>
@@ -275,7 +274,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="yUA-3Y-z1g">
                                 <rect key="frame" x="1" y="0.0" width="258" height="474"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="258" height="457"/>
@@ -325,7 +324,7 @@
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="5Kd-5Q-uhu">
                                 <rect key="frame" x="1" y="0.0" width="258" height="122"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="258" height="105"/>
