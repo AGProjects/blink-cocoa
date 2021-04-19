@@ -153,14 +153,15 @@ class BlinkAppDelegate(NSObject):
     @objc.python_method
     @property
     def video_devices(self):
-        devices = []
+        devices = set()
         for item in Engine().video_devices:
             if 'colorbar' in item.lower():
                 continue
             if 'null' in item.lower():
                 continue
-            devices.append(item)
-        return devices
+
+            devices.add(item)
+        return list(devices)
     
     def init(self):
         self = objc.super(BlinkAppDelegate, self).init()
