@@ -804,7 +804,10 @@ class PreferencesController(NSWindowController, object):
         if sender is settings:
             if 'tls.verify_server' in notification.data.modified:
                 for account in AccountManager().iter_accounts():
-                    account.tls.verify_server = settings.tls.verify_server
+                    if account is not BonjourAccount():
+                        account.tls.verify_server = settings.tls.verify_server
+                    else:
+                        account.tls.verify_server = False
                     account.save()
 
             if 'video.resolution' in notification.data.modified:

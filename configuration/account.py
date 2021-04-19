@@ -130,6 +130,10 @@ class SoundsSettings(SettingsGroup):
 
 class TLSSettingsExtension(TLSSettings):
     certificate = Setting(type=AccountTLSCertificate, default=AccountTLSCertificate(AccountTLSCertificate.DefaultTLSCertificate('default.crt')))
+    verify_server = Setting(type=bool, default=True)
+
+class BonjourTLSSettingsExtension(TLSSettings):
+    certificate = Setting(type=AccountTLSCertificate, default=AccountTLSCertificate(AccountTLSCertificate.DefaultTLSCertificate('default.crt')))
     verify_server = Setting(type=bool, default=False)
 
 
@@ -183,6 +187,6 @@ class BonjourAccountExtension(SettingsObjectExtension):
     presence = BonjourPresenceSettingsExtension
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
-    tls = TLSSettingsExtension
+    tls = BonjourTLSSettingsExtension
     gui = GUISettings
 
