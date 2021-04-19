@@ -513,7 +513,10 @@ class SMSViewController(NSObject):
             lookup = DNSLookup()
             settings = SIPSimpleSettings()
             try:
-                routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list).wait()
+                tls_name = None
+                if isinstance(self.account, Account):
+                    tls_name = self.account.sip.tls_name or self.account.id.domain
+                routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
             except DNSLookupError:
                 pass
             else:
@@ -679,7 +682,10 @@ class SMSViewController(NSObject):
             uri = target_uri
             self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+        tls_name = None
+        if isinstance(self.account, Account):
+            tls_name = self.account.sip.tls_name or self.account.id.domain
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
     @objc.python_method
     def stopEncryption():

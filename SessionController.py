@@ -1518,7 +1518,10 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, sender=lookup)
         settings = SIPSimpleSettings()
 
+        tls_name = None
+
         if isinstance(self.account, Account):
+            tls_name = self.account.sip.tls_name or self.account.id.domain
             if self.account.sip.outbound_proxy is not None:
                 proxy = self.account.sip.outbound_proxy
                 uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
@@ -1533,7 +1536,7 @@ class SessionController(NSObject):
             uri = target_uri
             self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
     @objc.python_method
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):

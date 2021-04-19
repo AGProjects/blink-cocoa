@@ -346,7 +346,12 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             self.log_info("Initiating DNS Lookup for %s" % self.target_uri)
 
         settings = SIPSimpleSettings()
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+
+        tls_name = None
+        if isinstance(self.account, Account):
+            tls_name = self.account.sip.tls_name or self.account.id.domain
+
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
         if restart:
             notification_center.post_notification("BlinkFileTransferWillRestart", self)
@@ -446,7 +451,10 @@ class OutgoingPullFileTransferHandler(FileTransfer):
             self.log_info("Initiating DNS Lookup for %s" % self.target_uri)
 
         settings = SIPSimpleSettings()
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list)
+        tls_name = None
+        if isinstance(self.account, Account):
+            tls_name = self.account.sip.tls_name or self.account.id.domain
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
         notification_center.post_notification("BlinkFileTransferNewOutgoing", self)
 
