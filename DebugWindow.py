@@ -165,8 +165,7 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="AudioSessionQualityRestored")
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidSucceed")
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
-        notification_center.add_observer(self, name="RTPStreamICENegotiationDidSucceed")
-        notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
+        notification_center.add_observer(self, name="RTPStreamICENegotiationStateDidChange")
 
         if settings.logs.trace_notifications_in_gui:
             notification_center.add_observer(self)
@@ -394,8 +393,7 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="AudioSessionQualityRestored")
         notification_center.discard_observer(self, name="RTPStreamICENegotiationDidSucceed")
         notification_center.discard_observer(self, name="RTPStreamICENegotiationDidFail")
-        notification_center.discard_observer(self, name="RTPStreamICENegotiationDidSucceed")
-        notification_center.discard_observer(self, name="RTPStreamICENegotiationDidFail")
+        notification_center.discard_observer(self, name="RTPStreamICENegotiationStateDidChange")
 
         # Observers added when settings change
         notification_center.discard_observer(self, name="SIPEngineSIPTrace")
@@ -817,18 +815,20 @@ class DebugWindow(NSObject):
     @objc.python_method
     def _NH_RTPStreamDidChangeRTPParameters(self, notification):
         stream = notification.sender
+        mType = stream.type.upper()
 
-        text = '%s Audio call to %s: RTP parameters changed\n' % (notification.datetime, stream.session.remote_identity)
+        text = '%s %s call to %s: RTP parameters changed\n' % (notification.datetime, mType, stream.session.remote_identity)
         if stream.local_rtp_address and stream.local_rtp_port and stream.remote_rtp_address and stream.remote_rtp_port:
-            text += '%s Audio RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime,
+            text += '%s %s RTP endpoints %s:%d <-> %s:%d\n' % (notification.datetime,
+                                                                  mType,
                                                                   stream.local_rtp_address,
                                                                   stream.local_rtp_port,
                                                                   stream.remote_rtp_address,
                                                                   stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
-            text += '%s Audio call established using %s codec at %sHz\n' % (notification.datetime, stream.codec, stream.sample_rate)
+            text += '%s %s call established using %s codec at %sHz\n' % (notification.datetime, mType, stream.codec, stream.sample_rate)
         if stream.srtp_active:
-            text += '%s RTP audio stream is encrypted\n' % notification.datetime
+            text += '%s %s RTP stream is encrypted\n' % (notification.datetime, mType)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
@@ -838,10 +838,12 @@ class DebugWindow(NSObject):
     def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
         data = notification.data
         stream = notification.sender
+        mType = stream.type.upper()
 
-        text = '%s Audio call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
+        text = '%s %s call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, mType, stream.session.remote_identity, data.duration)
         if stream.local_rtp_candidate and stream.remote_rtp_candidate:
-            text += '%s Audio RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
+            text += '%s %s RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
+                                                                                             mType,
                                                                                              stream.local_rtp_address,
                                                                                              stream.local_rtp_port,
                                                                                              stream.local_rtp_candidate.type.lower(),
@@ -849,13 +851,13 @@ class DebugWindow(NSObject):
                                                                                              stream.remote_rtp_port,
                                                                                              stream.remote_rtp_candidate.type.lower())
 
-        text += '\nAudio Local ICE candidates:\n'
+        text += '\%s Local ICE candidates:\n' % mType
         for candidate in data.local_candidates:
             text += '\t%s\n' % candidate
-        text += '\nAudio Remote ICE candidates:\n'
+        text += '\%s Remote ICE candidates:\n' % mType
         for candidate in data.remote_candidates:
             text += '\t%s\n' % candidate
-        text += '\nAudio ICE connectivity checks results:\n'
+        text += '\%s ICE connectivity checks results:\n' % mType
         for check in data.valid_list:
             text += '\t%s\n' % check
         astring = NSAttributedString.alloc().initWithString_(text)
@@ -864,49 +866,36 @@ class DebugWindow(NSObject):
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     @objc.python_method
-    def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
+    def _NH_RTPStreamICENegotiationStateDidChange(self, notification):
         data = notification.data
-        stream = notification.sender
-
-        text = '%s Video call %s, ICE negotiation succeeded in %s\n' % (notification.datetime, stream.session.remote_identity, data.duration)
-        if stream.local_rtp_candidate and stream.remote_rtp_candidate:
-            text += '%s Video RTP endpoints: %s:%d (ICE type %s) <-> %s:%d (ICE type %s)' % (notification.datetime,
-                                                                                             stream.local_rtp_address,
-                                                                                             stream.local_rtp_port,
-                                                                                             stream.local_rtp_candidate.type.lower(),
-                                                                                             stream.remote_rtp_address,
-                                                                                             stream.remote_rtp_port,
-                                                                                             stream.remote_rtp_candidate.type.lower())
-
-        text += '\nVideo Local ICE candidates:\n'
-        for candidate in data.local_candidates:
-            text += '\t%s\n' % candidate
-        text += '\nVideo Remote ICE candidates:\n'
-        for candidate in data.remote_candidates:
-            text += '\t%s\n' % candidate
-        text += '\nVideo ICE connectivity checks results:\n'
-        for check in data.valid_list:
-            text += '\t%s\n' % check
-        astring = NSAttributedString.alloc().initWithString_(text)
-        self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        mtype = notification.sender.type.upper()
+        text =  ''
+        if data.state == 'GATHERING':
+            text = 'ICE %s gathering candidates ...\n' % mtype
+        elif data.state == 'NEGOTIATION_START':
+            mtype = 'Connecting ICE %s ...\n' % mtype
+        elif data.state == 'NEGOTIATING':
+            mtype = 'Negotiating ICE %s ...\n' % mtype
+        elif data.state == 'GATHERING_COMPLETE':
+            mtype = 'ICE %s gathering candidates complete\n' % mtype
+        elif data.state == 'RUNNING':
+            mtype = 'ICE %s negotiation succeeded\n' % mtype
+        elif data.state == 'FAILED':
+            mtype = 'ICE %s negotiation failed\n' % mtype
+            
+        if text:
+            astring = NSAttributedString.alloc().initWithString_(text)
+            self.rtpTextView.textStorage().appendAttributedString_(astring)
+            if self.autoScrollCheckbox.state() == NSOnState:
+                self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
         data = notification.data
+        reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
+        mtype = notification.sender.type.upper()
 
-        text = '%s Audio ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
-        astring = NSAttributedString.alloc().initWithString_(text)
-        self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
-
-    @objc.python_method
-    def _NH_RTPStreamICENegotiationDidFail(self, notification):
-        data = notification.data
-
-        text = '%s Video ICE negotiation failed: %s\n' % (notification.datetime, data.reason)
+        text = '%s %s ICE negotiation failed: %s\n' % (notification.datetime, mtype, reason)
         astring = NSAttributedString.alloc().initWithString_(text)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
