@@ -296,7 +296,7 @@ class EnrollmentController(NSObject):
 
         try:
             raw_response = urllib.request.urlopen(req)
-        except urllib.error.URLError as e:
+        except (urllib.error.URLError, TimeoutError) as e:
             error_message = NSLocalizedString("Cannot connect to enrollment server: %s", "Enrollment panel label") % e
         except urllib.error.HTTPError as e:
             error_message = NSLocalizedString("Error from enrollment server: %s", "Enrollment panel label") % e
