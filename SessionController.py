@@ -1840,7 +1840,7 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, sender=self.session)
         self.session.connect(ToHeader(target_uri), self.routes, streams)
         self.changeSessionState(STATE_CONNECTING)
-        self.log_info("Connecting session to %s" % self.routes[0])
+        self.log_info("Initiating session via %s" % self.routes[0])
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
     @objc.python_method

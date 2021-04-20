@@ -383,8 +383,8 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.handler = self.stream.handler
         notification.center.add_observer(self, sender=self.stream)
         notification.center.add_observer(self, sender=self.handler)
+        self.log_info("Sending push file transfer request via %s..." % routes[0])
         self.session.connect(ToHeader(self.target_uri), routes, [self.stream])
-        self.log_info("File transfer request sent...")
 
     def _NH_DNSLookupDidFail(self, notification):
         self.log_info("DNS Lookup failed: '%s'" % notification.data.error)
@@ -482,6 +482,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.handler = self.stream.handler
         notification.center.add_observer(self, sender=self.stream)
         notification.center.add_observer(self, sender=self.handler)
+        self.log_info("Sending pull file transfer request via %s..." % routes[0])
         self.session.connect(ToHeader(self.target_uri), routes, [self.stream])
 
     def _NH_DNSLookupDidFail(self, notification):

@@ -535,7 +535,7 @@ class SMSViewController(NSObject):
     def setRoutesResolved(self, routes):
         self.routes = routes
         self.last_route = self.routes[0]
-        #self.log_info('Proceed using route: %s' % self.last_route)
+        self.log_info('Sending message via %s' % self.last_route)
 
         if not self.started:
             self.started = True
