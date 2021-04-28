@@ -103,6 +103,8 @@ class SMSWindowController(NSWindowController):
         if item:
             if self.tabView.selectedTabViewItem() == tabItem:
                 item.setBadgeLabel_("")
+                session = self.selectedSessionController()
+                session.notifyReadMessages()
             else:
                 count = self.unreadMessageCounts[session] = self.unreadMessageCounts.get(session, 0) + 1
                 item.setBadgeLabel_(str(count))
@@ -157,6 +159,7 @@ class SMSWindowController(NSWindowController):
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
         selectedSession = self.selectedSessionController()
+        selectedSession.notifyReadMessages()
         self.updateEncryptionWidgets(selectedSession)
     
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
@@ -413,6 +416,8 @@ class SMSWindowManagerClass(NSObject):
         is_cpim = False
         cpim_message = None
         is_replication_message = False
+        imdn_id = None
+        imdn_timestamp = None
         
         if data.content_type == 'message/cpim':
             try:
@@ -425,6 +430,20 @@ class SMSWindowManagerClass(NSObject):
                 content = cpim_message.content
                 content_type = cpim_message.content_type
                 sender_identity = cpim_message.sender or data.from_header
+                cpim_imdn_events = None
+                imdn_timestamp = cpim_message.timestamp
+                for h in cpim_message.additional_headers:
+                    if h.name == "Message-ID":
+                        imdn_id = h.value
+                    if h.name == "Disposition-Notification":
+                        cpim_imdn_events = h.value
+
+                if imdn_id:
+                    if cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and imdn_timestamp:
+                        BlinkLogger().log_info("Will send IMDN delivery notification for %s" % imdn_id)
+                    else:
+                        imdn_id = None
+
                 if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
                     is_replication_message = True
                     window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
@@ -437,8 +456,7 @@ class SMSWindowManagerClass(NSObject):
             window_tab_identity = sender_identity
 
         if content_type in ('text/plain', 'text/html'):
-            pass
-            #BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
+            BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type == 'application/im-iscomposing+xml':
             content = cpim_message.content if is_cpim else data.body
             msg = IsComposingMessage.parse(content)
@@ -477,5 +495,6 @@ class SMSWindowManagerClass(NSObject):
                 replication_timestamp = ISOTimestamp.now()
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, call_id, content, content_type, is_replication_message, replication_timestamp, window=window)
+        viewer.gotMessage(sender_identity, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, imdn_id=imdn_id, imdn_timestamp=imdn_timestamp)
+        
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)

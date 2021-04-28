@@ -46,6 +46,7 @@ from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, S
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
+from sipsimple.payloads.imdn import IMDNDocument, DisplayNotification, DeliveryNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, CPIMHeader, ChatIdentity, OTREncryption, CPIMNamespace
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
@@ -248,7 +249,7 @@ class SMSViewController(NSObject):
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
     @objc.python_method
-    def gotMessage(self, sender, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None):
+    def gotMessage(self, sender, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None, imdn_id=None, imdn_timestamp=None):
         is_html = content_type == 'text/html'
         encrypted = False
 
@@ -307,6 +308,9 @@ class SMSViewController(NSObject):
         self.log_info("Incoming message %s received" % call_id)
 
         self.chatViewController.showMessage(call_id, id, 'incoming', format_identity_to_string(sender), icon, content, timestamp, is_html=is_html, state="delivered", media_type='sms', encryption=encryption)
+        
+        if imdn_timestamp and imdn_id:
+            self.sendIMDNNotification(imdn_id, imdn_timestamp, event='delivered')
 
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
@@ -529,6 +533,62 @@ class SMSViewController(NSObject):
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=extra_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
+
+
+    @objc.python_method
+    def notifyReadMessages(self):
+        self.log_info('Notify read messages for %s' % self.target_uri)
+
+    @objc.python_method
+    @run_in_green_thread
+    def sendIMDNNotification(self, message_id, timestamp, event='delivered'):
+        self.log_info('Send %s notification for %s' % (event, message_id))
+        notification = DisplayNotification('displayed') if event == 'displayed' else DeliveryNotification('delivered')
+
+        content = IMDNDocument.create(message_id=message_id, datetime=timestamp, recipient_uri=self.target_uri, notification=notification)
+
+        imdn_id = str(uuid.uuid4())
+        ns = CPIMNamespace('urn:ietf:params:imdn', 'imdn')
+        additional_headers = [CPIMHeader('Message-ID', ns, imdn_id)]
+        
+        payload = CPIMPayload(content,
+                              IMDNDocument.content_type,
+                              charset='utf-8',
+                              sender=ChatIdentity(self.account.uri, self.account.display_name),
+                              recipients=[ChatIdentity(self.target_uri, None)],
+                              timestamp=ISOTimestamp.now(),
+                              additional_headers=additional_headers)
+
+        payload, content_type = payload.encode()
+
+        # Lookup routes
+        if self.account.sip.outbound_proxy is not None:
+            uri = SIPURI(host=self.account.sip.outbound_proxy.host,
+                         port=self.account.sip.outbound_proxy.port,
+                         parameters={'transport': self.account.sip.outbound_proxy.transport})
+        else:
+            uri = SIPURI(host=self.account.id.domain)
+
+        route = None
+        if self.last_route is None:
+            lookup = DNSLookup()
+            settings = SIPSimpleSettings()
+            try:
+                tls_name = None
+                if isinstance(self.account, Account):
+                    tls_name = self.account.sip.tls_name or self.account.id.domain
+                routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
+            except DNSLookupError:
+                pass
+            else:
+                route = routes[0]
+        else:
+            route = self.last_route
+
+        if route:
+            message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
+                                      RouteHeader(route.uri), "message/cpim", payload, credentials=self.account.credentials)
+            message_request.send(15)
 
     @objc.python_method
     @run_in_gui_thread
