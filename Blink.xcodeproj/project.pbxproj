@@ -601,14 +601,14 @@
 		1F4D4FC21389AF7500A2CE0B /* mirror.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F4D4FBF1389AF7500A2CE0B /* mirror.png */; };
 		1F4D7463261B502A00DF09D7 /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; };
 		1F4D7464261B502A00DF09D7 /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; };
-		1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; };
 		1F4D7466261B505500DF09D7 /* libopus.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7460261B502A00DF09D7 /* libopus.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F4D746B261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; };
 		1F4D746C261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; };
 		1F4D746F261B517E00DF09D7 /* libopencore-amrwb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; };
 		1F4D7470261B517E00DF09D7 /* libopencore-amrwb.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; };
-		1F4D7472261B51E800DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		1F4D7473261B51E800DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F4D7472261B51E800DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; };
+		1F4D7473261B51E800DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; };
 		1F4D7474261B51F400DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F4D7475261B51F400DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F52D5B119FAF1AF00F44E56 /* locked-gray.png */; };
