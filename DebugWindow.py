@@ -428,7 +428,10 @@ class DebugWindow(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def renderActivity(self, text):
-        iserror = text.lower().startswith("error")
+        try:
+            iserror = text.lower().startswith("error")
+        except TypeError as e:
+            return
         text = "%s   %s"%(datetime.now().replace(microsecond=0), text)
         if iserror:
             self.append_error_line(self.activityTextView, text)

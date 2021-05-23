@@ -1,17 +1,28 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState
+from AppKit import NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState, NSControlTextDidChangeNotification, NSEventTrackingRunLoopMode
 
 from Foundation import (NSBundle,
                         NSImage,
                         NSLocalizedString,
                         NSNotFound,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer,
                         NSObject,
+                        NSColor,
                         NSPrintInfo,
                         NSTabViewItem,
+                        NSNotificationCenter,
                         NSWindowController)
+
 import objc
+import re
+import hashlib
+from Crypto.Cipher import AES
+from Crypto.Protocol.KDF import PBKDF2
+from binascii import unhexlify, hexlify
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -28,6 +39,8 @@ from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
 from util import format_identity_to_string, html2txt, run_in_gui_thread
 
+unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+
 
 @implementer(IObserver)
 class SMSWindowController(NSWindowController):
@@ -37,6 +50,7 @@ class SMSWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     encryptionMenu = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
+    import_key_window = None
 
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
@@ -457,6 +471,17 @@ class SMSWindowManagerClass(NSObject):
 
         if content_type in ('text/plain', 'text/html'):
             BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
+        elif content_type in ('text/rsa-public-key'):
+            BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
+            BlinkLogger().log_info(content);
+            return
+        elif content_type in ('text/rsa-private-key'):
+            BlinkLogger().log_info(u"Private key from %s to %s received" % (data.from_header.uri, account.id))
+
+            if account.id == str(data.from_header.uri).split(":")[1]:
+                self.import_key_window = ImportPrivateKeyController(account, content);
+                self.import_key_window.show()
+            return
         elif content_type == 'application/im-iscomposing+xml':
             content = cpim_message.content if is_cpim else data.body
             msg = IsComposingMessage.parse(content)
@@ -498,3 +523,141 @@ class SMSWindowManagerClass(NSObject):
         viewer.gotMessage(sender_identity, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, imdn_id=imdn_id, imdn_timestamp=imdn_timestamp)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+
+
+class ImportPrivateKeyController(NSObject):
+    window = objc.IBOutlet()
+    checksum = objc.IBOutlet()
+    pincode = objc.IBOutlet()
+    status = objc.IBOutlet()
+    importButton = objc.IBOutlet()
+    publicKey = None
+    privateKey = None
+    dealloc_timer = None
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self, account, encryptedKeyPair):
+        NSBundle.loadNibNamed_owner_("ImportPrivateKeyWindow", self)
+        self.account = account;
+        self.encryptedKeyPair = encryptedKeyPair;
+
+        hash = hashlib.sha1()
+        hash.update(self.encryptedKeyPair)
+        self.checksum.setStringValue_(hash.hexdigest());
+        self.importButton.setEnabled_(False)
+        self.window.makeFirstResponder_(self.pincode)
+        self.status.setTextColor_(NSColor.blackColor())
+
+        self.status.setStringValue_(NSLocalizedString("Enter pincode to decrypt the key", "status label"));
+
+    @objc.python_method
+    def get_private_key(self, pincode):
+        salt = b'sylksalt';
+        return PBKDF2(pincode, salt, 32, 4096)
+        
+    @objc.python_method
+    def decrypt(self, data, pincode):
+        password = self.get_private_key(pincode)
+        data = unhexlify(data)
+        iv = data[:16]
+        cipher = AES.new(password, AES.MODE_CBC, iv)
+        return unpad(cipher.decrypt(data[16:]))
+    
+    @objc.IBAction
+    def importButtonClicked_(self, sender):
+        BlinkLogger().log_info("Import private key")
+        pincode = str(self.pincode.stringValue()).strip()
+        data = self.encryptedKeyPair.decode()
+        keyPair = self.decrypt(data, pincode)
+
+        try:
+            keyPair = keyPair.decode()
+        except UnicodeDecodeError as e:
+            self.status.setTextColor_(NSColor.redColor())
+            BlinkLogger().log_error("Import private key failed: %s" % str(e))
+            self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
+        else:
+            public_key_checksum_match = re.findall(r"--PUBLIC KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
+            private_key_checksum_match = re.findall(r"--PRIVATE KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
+            
+            if (public_key_checksum_match):
+                public_key_checksum = public_key_checksum_match[0]
+            else:
+                public_key_checksum = None
+
+            if (private_key_checksum_match):
+                private_key_checksum = private_key_checksum_match[0]
+            else:
+                private_key_checksum = None
+
+            public_key = ''
+            private_key = ''
+
+            start_public = False
+            start_private = False
+
+            for l in keyPair.split("\n"):
+                if l == "-----BEGIN RSA PUBLIC KEY-----":
+                    start_public = True
+                    start_private = False
+
+                if l == "-----END RSA PUBLIC KEY-----":
+                    public_key = public_key + l
+                    start_public = False
+                    start_private = False
+
+                if l == "-----BEGIN RSA PRIVATE KEY-----":
+                    start_public = False
+                    start_private = True
+
+                if l == "-----END RSA PRIVATE KEY-----":
+                    private_key = private_key + l
+                    start_public = False
+                    start_private = False
+
+                if start_public:
+                    public_key = public_key + l + '\n'
+
+                if start_private:
+                    private_key = private_key + l + '\n'
+                    
+            if (public_key and private_key and public_key_checksum):
+                self.importButton.setEnabled_(False)
+                BlinkLogger().log_info("Key imported sucessfully")
+                self.status.setTextColor_(NSColor.greenColor())
+                self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
+                self.account.sms.private_key = private_key
+                self.account.sms.public_key = public_key
+                self.account.sms.public_key_checksum = public_key_checksum
+                self.account.save()
+
+                if self.dealloc_timer is None:
+                    self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)
+                    NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+                    NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+                
+            else:
+                BlinkLogger().log_error("Key import failed")
+                self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
+                self.status.setTextColor_(NSColor.redColor())
+
+    def deallocTimer_(self, timer):
+        self.dealloc_timer.invalidate()
+        self.dealloc_timer = None
+        self.close()
+
+    def controlTextDidChange_(self, notification):
+        pincode = str(self.pincode.stringValue()).strip()
+        self.importButton.setEnabled_(len(pincode)==6)
+
+    @objc.IBAction
+    def cancelButtonClicked_(self, sender):
+        self.close()
+
+    def show(self):
+        self.window.makeKeyAndOrderFront_(None)
+
+    def close(self):
+        self.window.close()
