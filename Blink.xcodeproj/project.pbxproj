@@ -990,6 +990,10 @@
 		1F946C9A17CB60D50056ADB4 /* OTRSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F946C9C17CB60D50056ADB4 /* OTRSettings.xib */; };
 		1F960C4718E0F83D00060690 /* pause-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F960C4618E0F83D00060690 /* pause-white.png */; };
 		1F960C4918E0F83D00060690 /* pause-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F960C4618E0F83D00060690 /* pause-white.png */; };
+		1F99F56A265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */; };
+		1F99F56B265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */; };
+		1F99F56C265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */; };
+		1F99F56D265A88430095E3FA /* ImportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */; };
 		1F9A27D4179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
 		1F9A27D5179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
 		1F9A27D6179512BB00672B73 /* echo@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */; };
@@ -2347,6 +2351,7 @@
 		1F946C8D17CB3D9B0056ADB4 /* unlocked-darkgray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-darkgray.png"; path = "icons/unlocked-darkgray.png"; sourceTree = "<group>"; };
 		1F946C9B17CB60D50056ADB4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/OTRSettings.xib; sourceTree = "<group>"; };
 		1F960C4618E0F83D00060690 /* pause-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "pause-white.png"; path = "icons/pause-white.png"; sourceTree = SOURCE_ROOT; };
+		1F99F569265A88390095E3FA /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ImportPrivateKeyWindow.xib; sourceTree = "<group>"; };
 		1F9A27D3179512BB00672B73 /* echo@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "echo@conference.sip2sip.info.tiff"; path = "icons/echo@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
 		1F9A27E11795452100672B73 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F9BE2E1167B7AC8006DFF3F /* lupa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = lupa.png; path = icons/lupa.png; sourceTree = "<group>"; };
@@ -3100,6 +3105,7 @@
 		2B0CE72710CD822100325F30 /* SMS */ = {
 			isa = PBXGroup;
 			children = (
+				1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */,
 				1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */,
 				2B06A429111CFE74001D41E5 /* SMSViewController.py */,
 				2B0CE72910CD824400325F30 /* SMSSession.xib */,
@@ -3862,6 +3868,7 @@
 				1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */,
 				1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */,
 				1F06174212D09C18007A68F4 /* audio_16.png in Resources */,
+				1F99F56B265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */,
 				1F1FC04812D0FC77007A31A3 /* video.png in Resources */,
 				1FAF8C5E12DA18960029857C /* VideoController.py in Resources */,
 				1FAF8D5412DA31100029857C /* video-hangup.png in Resources */,
@@ -4238,6 +4245,7 @@
 				1F35D05217894FFF00C6FE38 /* PresenceInfoController.py in Resources */,
 				1F35D05317894FFF00C6FE38 /* WorldMapView.py in Resources */,
 				1F194A8519B1F06200CE5A0F /* VideoLocalTitleBarView.xib in Resources */,
+				1F99F56D265A88430095E3FA /* ImportPrivateKeyWindow.xib in Resources */,
 				1F35D05417894FFF00C6FE38 /* location.png in Resources */,
 				1F2436821912B23700E71253 /* MyVideoLocalWindow.xib in Resources */,
 				1F35D05E17894FFF00C6FE38 /* BlockedContact.py in Resources */,
@@ -4495,6 +4503,7 @@
 				1F8BA97C14B083D20037F11F /* BlinkLite.entitlements in Resources */,
 				1FEC3E9314D41678003745B9 /* ca.crt in Resources */,
 				1FA490831549631A0011EE27 /* AddressBookEmail-plugin-setup.py in Resources */,
+				1F99F56C265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */,
 				1FA490861549631A0011EE27 /* AddressBookEmail-plugin.py in Resources */,
 				1FA490891549631A0011EE27 /* AddressBookTel-plugin-setup.py in Resources */,
 				1FA4908C1549631A0011EE27 /* AddressBookTel-plugin.py in Resources */,
@@ -4700,6 +4709,7 @@
 				1F71724912BE201200CBA476 /* ChatWindowController.py in Resources */,
 				1F6EE94F12BF7E9A000C47DA /* AddParticipantsWindow.xib in Resources */,
 				1F8760B612C026840090846C /* FileTransferController.py in Resources */,
+				1F99F56A265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */,
 				1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */,
 				1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */,
 				1F06174312D09C18007A68F4 /* audio_16.png in Resources */,
@@ -5124,6 +5134,14 @@
 				1FCEFA3819EBF9DE00E9647D /* nl */,
 			);
 			name = OTRSettings.xib;
+			sourceTree = "<group>";
+		};
+		1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F99F569265A88390095E3FA /* en */,
+			);
+			name = ImportPrivateKeyWindow.xib;
 			sourceTree = "<group>";
 		};
 		1F9A27E21795452100672B73 /* AecSlider.xib */ = {
