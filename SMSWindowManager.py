@@ -472,8 +472,48 @@ class SMSWindowManagerClass(NSObject):
         if content_type in ('text/plain', 'text/html'):
             BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type in ('text/rsa-public-key'):
+            uri = format_identity_to_string(sender_identity)
             BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
-            BlinkLogger().log_info(content);
+
+            if uri == account.id:
+                BlinkLogger().log_info(u"Public key save skipped for own account")
+                return
+
+            public_key = ''
+            start_public = False
+
+            for l in content.decode().split("\n"):
+                if l == "-----BEGIN RSA PUBLIC KEY-----":
+                    start_public = True
+
+                if l == "-----END RSA PUBLIC KEY-----":
+                    public_key = public_key + l
+                    start_public = False
+                    break
+
+                if start_public:
+                    public_key = public_key + l + '\n'
+            
+            if public_key:
+                blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+
+                if blink_contact is not None:
+                    contact = blink_contact.contact
+                    if contact.public_key != public_key:
+                        contact.public_key = public_key
+                        contact.public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
+                        contact.save()
+                        BlinkLogger().log_info(u"Public key %s from %s saved " % (contact.public_key_checksum, data.from_header.uri))
+                        nc_title = NSLocalizedString("Public key", "System notification title")
+                        nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
+                        nc_body = NSLocalizedString("Public key has changed", "System notification title")
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
+                    else:
+                        BlinkLogger().log_info(u"Public key from %s has not changed" % data.from_header.uri)
+                else:
+                    BlinkLogger().log_info(u"No contact found to save the key")
+
             return
         elif content_type in ('text/rsa-private-key'):
             BlinkLogger().log_info(u"Private key from %s to %s received" % (data.from_header.uri, account.id))

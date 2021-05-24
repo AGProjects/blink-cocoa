@@ -29,6 +29,7 @@ class BlinkContactExtension(ContactExtension):
     disable_chat_history = Setting(type=Boolean, nillable=True)
     silence_notifications = Setting(type=Boolean, default=False)
     public_key = Setting(type=str, default=None, nillable=True)
+    public_key_checksum = Setting(type=str, default=None, nillable=True)
     icon_info = IconSettings
 
 

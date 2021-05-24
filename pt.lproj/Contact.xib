@@ -19,6 +19,7 @@
                 <outlet property="organizationText" destination="DDa-EM-8ae" id="xJ4-8B-CND"/>
                 <outlet property="photoImage" destination="61" id="65"/>
                 <outlet property="preferredMediaPopUpButton" destination="199" id="213"/>
+                <outlet property="publicKey" destination="C9K-Mt-C2o" id="kXb-Ub-H7p"/>
                 <outlet property="subscribePopUp" destination="163" id="187"/>
                 <outlet property="window" destination="3" id="23"/>
             </connections>
@@ -355,6 +356,16 @@ Gw
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                     </button>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="C9K-Mt-C2o">
+                        <rect key="frame" x="6" y="0.0" width="306" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Key Id" id="ltR-ug-Kmk">
+                            <font key="font" metaFont="miniSystem"/>
+                            <color key="textColor" name="systemBlueColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Display Name"/>
+                    </textField>
                 </subviews>
             </view>
             <connections>

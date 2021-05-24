@@ -57,6 +57,7 @@ class AddContactController(NSObject):
     organizationText = objc.IBOutlet()
     nameText = objc.IBOutlet()
     groupPopUp = objc.IBOutlet()
+    publicKey = objc.IBOutlet()
     defaultButton = objc.IBOutlet()
     subscribePopUp = objc.IBOutlet()
     photoImage = objc.IBOutlet()
@@ -476,8 +477,9 @@ class EditContactController(AddContactController):
         self.blink_contact = blink_contact
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
         self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
-
         self.nameText.setStringValue_(blink_contact.name or "")
+        key = NSLocalizedString("Public key: %s", "Label") % blink_contact.contact.public_key_checksum if blink_contact.contact.public_key_checksum else ''
+        self.publicKey.setStringValue_(key)
         self.organizationText.setStringValue_(blink_contact.organization or "")
         self.photoImage.setImage_(blink_contact.icon)
         self.preferred_media = blink_contact.preferred_media
