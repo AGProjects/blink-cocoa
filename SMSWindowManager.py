@@ -543,9 +543,7 @@ class ImportPrivateKeyController(NSObject):
         self.account = account;
         self.encryptedKeyPair = encryptedKeyPair;
 
-        hash = hashlib.sha1()
-        hash.update(self.encryptedKeyPair)
-        self.checksum.setStringValue_(hash.hexdigest());
+        self.checksum.setStringValue_('');
         self.importButton.setEnabled_(False)
         self.window.makeFirstResponder_(self.pincode)
         self.status.setTextColor_(NSColor.blackColor())
@@ -628,6 +626,8 @@ class ImportPrivateKeyController(NSObject):
                 BlinkLogger().log_info("Key imported sucessfully")
                 self.status.setTextColor_(NSColor.greenColor())
                 self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
+                self.checksum.setStringValue_(public_key_checksum);
+
                 self.account.sms.private_key = private_key
                 self.account.sms.public_key = public_key
                 self.account.sms.public_key_checksum = public_key_checksum
