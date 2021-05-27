@@ -1865,7 +1865,7 @@ class ChatWindowController(NSWindowController):
                     uri = sip_prefix_pattern.sub("", user.entity)
                     if uri == own_uri:
                         # Add ourselves
-                        contact = BlinkMyselfConferenceContact(session.account)
+                        contact = BlinkMyselfConferenceContact(session.account, name=user.display_text.value)
                     else:
                          # Add remote party
                         presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)

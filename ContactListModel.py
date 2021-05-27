@@ -633,7 +633,7 @@ class BlinkHistoryViewerContact(BlinkConferenceContact):
 class BlinkMyselfConferenceContact(BlinkContact):
     """Contact representation for conference drawer UI for myself"""
 
-    def __init__(self, account):
+    def __init__(self, account, name=None):
         if account is BonjourAccount():
             uri = '%s@%s' % (account.uri.user.decode(), account.uri.host.decode())
         else:
@@ -645,7 +645,7 @@ class BlinkMyselfConferenceContact(BlinkContact):
         if path:
             own_icon = NSImage.alloc().initWithContentsOfFile_(path)
 
-        name = account.display_name or uri
+        name = name or account.display_name or uri
 
         objc.super(BlinkMyselfConferenceContact, self).__init__(uri, name=name, icon=own_icon)
         self.active_media = []
