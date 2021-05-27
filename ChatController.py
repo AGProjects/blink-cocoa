@@ -341,35 +341,40 @@ class ChatController(MediaStream):
     @property
     def screensharing_allowed(self):
         try:
-            return 'com.ag-projects.screen-sharing' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+            return 'com.ag-projects.screen-sharing' in self.stream.chatroom_capabilities
         except AttributeError:
             return False
 
     @property
     def zrtp_sas_allowed(self):
         try:
-            return 'com.ag-projects.zrtp-sas' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+            return 'com.ag-projects.zrtp-sas' in self.stream.chatroom_capabilities
         except AttributeError:
             return False
 
     @property
     def send_icon_allowed(self):
-        try:
-            return 'icon' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('blink-features')))
-        except AttributeError:
-            return False
+        if not self.stream:
+            return false
+        blink_features = self.stream.remote_media.attributes.getfirst(b'blink-features')
+        blink_caps = blink_features.decode().split() if blink_features else []
+        return 'icon' in blink_caps
 
     @property
     def history_control_allowed(self):
-        try:
-            return 'history-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('blink-features')))
-        except AttributeError:
-            return False
+        if not self.stream:
+            return false
+        blink_features = self.stream.remote_media.attributes.getfirst(b'blink-features')
+        blink_caps = blink_features.decode().split() if blink_features else []
+        return 'history-control' in blink_caps
 
     @property
     def control_allowed(self):
+        if not self.stream:
+            return false
+
         try:
-            return 'com.ag-projects.sylkserver-control' in chain(*(attr.split() for attr in self.stream.remote_media.attributes.getall('chatroom')))
+            return 'com.ag-projects.sylkserver-control' in self.stream.chatroom_capabilities
         except AttributeError:
             return False
 
