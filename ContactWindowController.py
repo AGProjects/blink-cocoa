@@ -3240,6 +3240,10 @@ class ContactWindowController(NSWindowController):
         if not account:
             NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
+            
+        if account.conference.nickname != nickname:
+            account.conference.nickname = nickname
+            account.save()
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
