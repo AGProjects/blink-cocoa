@@ -1721,6 +1721,7 @@ class ChatController(MediaStream):
             return
         self.changeStatus(STREAM_CONNECTED)
         self.databaseLoggingButton.setHidden_(not self.history_control_allowed)
+        self.sessionController.log_info('Chat stream capabilities: %s' % ", ".join(self.stream.chatroom_capabilities))
 
         if self.sessionController.remote_focus:
             self.chatWindowController.drawer.open()
