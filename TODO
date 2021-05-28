@@ -5,12 +5,5 @@
  * link Python _ssl libs to ../../
  * copy mime types from Python framework
 
-On 10.11 after Sparkle update:
-
-28.180:5061;transport=tls for 600 seconds
-2021-03-07 12:24:57.180 Blink[928:27220] Application will be terminated
-dyld: Symbol not found: _iconv
-  Referenced from: /usr/lib/libcups.2.dylib
-  Expected in: /Applications/Blink.app/Contents/Frameworks/libiconv.2.dylib
- in /usr/lib/libcups.2.dylib
-2021-03-07 12:24:57.187 Blink[928:27220] Core engine will be stopped
+Crypto unmerged patch
+https://github.com/pycrypto/pycrypto/pull/296/commits/6d41ad025331afce9e495d7be3205730ddfa8f07

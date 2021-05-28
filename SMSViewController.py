@@ -324,6 +324,14 @@ class SMSViewController(NSObject):
         
         if imdn_timestamp and imdn_id:
             self.sendIMDNNotification(imdn_id, imdn_timestamp, event='delivered')
+            
+        if content.endswith('==') and self.private_key:
+            pass
+            #print('Decrypt message with RSA', content)
+            #unhexed = unhexlify(content.encode())
+            #print(unhexed)
+            #d = self.private_key.decrypt(content)
+            #print(d)
 
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
