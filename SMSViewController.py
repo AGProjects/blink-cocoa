@@ -34,6 +34,8 @@ from WebKit import WebActionOriginalURLKey
 
 import datetime
 import hashlib
+from binascii import unhexlify, hexlify
+import ast
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -50,12 +52,13 @@ from sipsimple.payloads.imdn import IMDNDocument, DisplayNotification, DeliveryN
 from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, CPIMHeader, ChatIdentity, OTREncryption, CPIMNamespace
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
+from Crypto.PublicKey import RSA
 
 from otr import OTRTransport, OTRState, SMPStatus
 from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
 
 from BlinkLogger import BlinkLogger
-from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED
+from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
 from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
@@ -159,6 +162,16 @@ class SMSViewController(NSObject):
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
             self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
+
+            if self.contact and self.contact.contact.public_key:
+                self.public_key = RSA.importKey(self.contact.contact.public_key)
+            else:
+                self.public_key = None
+
+            if self.account.sms.private_key:
+                self.private_key = RSA.importKey(self.contact.contact.public_key)
+            else:
+                self.private_key = None
 
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
@@ -679,7 +692,14 @@ class SMSViewController(NSObject):
         additional_headers = [CPIMHeader('Message-ID', ns, imdn_id)]
         additional_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
+        extra_headers = []
+
         if self.account.sms.use_cpim:
+            if self.public_key:
+                encrypted_content = self.public_key.encrypt(content, 32)
+                content = hexlify(encrypted_content[0])
+                extra_headers = [Header("Public Key", self.contact.contact.public_key_checksum)]
+
             payload = CPIMPayload(content,
                                   message.content_type,
                                   charset='utf-8',
@@ -698,7 +718,8 @@ class SMSViewController(NSObject):
                                   RouteHeader(self.last_route.uri),
                                   content_type,
                                   payload,
-                                  credentials=self.account.credentials)
+                                  credentials=self.account.credentials,
+                                  extra_headers=extra_headers)
 
         self.notification_center.add_observer(self, sender=message_request)
         

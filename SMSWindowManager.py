@@ -32,8 +32,11 @@ from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads.iscomposing import IsComposingMessage
+from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError
 from sipsimple.util import ISOTimestamp
+from ChatViewController import MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED
+
 
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
@@ -522,6 +525,15 @@ class SMSWindowManagerClass(NSObject):
                 self.import_key_window = ImportPrivateKeyController(account, content);
                 self.import_key_window.show()
             return
+        elif content_type in ('message/imdn+xml'):
+            document = IMDNDocument.parse(content)
+            imdn_message_id = document.message_id.value
+            imdn_status = document.notification.status.__str__()
+            BlinkLogger().log_info(u"Received IMDN message %s" % imdn_status)
+            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account)
+            if viewer and imdn_status == 'displayed':
+                viewer.chatViewController.markMessage(imdn_message_id, MSG_STATE_DISPLAYED)
+            return
         elif content_type == 'application/im-iscomposing+xml':
             content = cpim_message.content if is_cpim else data.body
             msg = IsComposingMessage.parse(content)
@@ -535,7 +547,7 @@ class SMSWindowManagerClass(NSObject):
                 viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         else:
-            BlinkLogger().log_warning("Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, data.content_type))
+            BlinkLogger().log_warning("Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, content_type))
             return
 
         # display the message

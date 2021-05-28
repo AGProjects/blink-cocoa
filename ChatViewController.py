@@ -30,6 +30,7 @@ MSG_STATE_SENDING = "sending" # middleware told us the message is being sent
 MSG_STATE_FAILED = "failed" # msg delivery failed
 MSG_STATE_DELIVERED = "delivered" # msg successfully delivered
 MSG_STATE_DEFERRED = "deferred" # msg delivered to a server but deferred for later delivery
+MSG_STATE_DISPLAYED = "displayed" # msg read
 
 # if user doesnt type for this time, we consider it idling
 TYPING_IDLE_TIMEOUT = 5
@@ -434,13 +435,17 @@ class ChatViewController(NSObject):
         self.executeJavaScript(script)
 
     @objc.python_method
-    def markMessage(self, msgid, state, private=False): # delegate
+    def markMessage(self, msgid, state, private=False): # delegate    
+        print('markMessage %s %s' % (msgid, state))
         if state == MSG_STATE_DELIVERED:
             is_private = 1 if private else "null"
             script = "markDelivered('%s',%s)"%(msgid, is_private)
             self.executeJavaScript(script)
         elif state == MSG_STATE_DEFERRED:
             script = "markDeferred('%s')"%msgid
+            self.executeJavaScript(script)
+        elif state == MSG_STATE_DISPLAYED:
+            script = "markRead('%s')"%msgid
             self.executeJavaScript(script)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
