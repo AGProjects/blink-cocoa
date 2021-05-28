@@ -1611,10 +1611,11 @@ class AudioController(MediaStream):
         handler = self.sessionController.streamHandlerOfType('chat')
         if handler is not None and handler.zrtp_sas_allowed:
             chat_stream = handler.stream
-            full_local_path = chat_stream.msrp.full_local_path
-            full_remote_path = chat_stream.msrp.full_remote_path
-            if all(len(path)==1 for path in (full_local_path, full_remote_path)):
-                chat_stream.send_message(data.sas, 'application/blink-zrtp-sas')
+            if chat_stream.msrp:
+                full_local_path = chat_stream.msrp.full_local_path
+                full_remote_path = chat_stream.msrp.full_remote_path
+                if all(len(path)==1 for path in (full_local_path, full_remote_path)):
+                    chat_stream.send_message(data.sas, 'application/blink-zrtp-sas')
 
         self._do_smp_verification()
 
