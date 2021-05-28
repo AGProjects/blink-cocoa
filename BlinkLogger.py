@@ -156,8 +156,12 @@ class FileLogger(object, metaclass=Singleton):
                 pass
             else:
                 message = 'Notification name=%s sender=%s data=%s' % (notification.name, notification.sender, pformat(notification.data))
-                self._notifications_file.write('%s: %s\n' % (datetime.datetime.now(), message))
-                self._notifications_file.flush()
+                try:
+                    self._notifications_file.write('%s: %s\n' % (datetime.datetime.now(), message))
+                    self._notifications_file.flush()
+                except Exception as e:
+                    print('Write message failed: %s' % message)
+
 
     # notification handlers
     #

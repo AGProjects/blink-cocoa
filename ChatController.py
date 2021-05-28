@@ -617,7 +617,7 @@ class ChatController(MediaStream):
                 recipient = '%s <sip:%s>' % (self.sessionController.display_name, self.sessionController.remoteAOR)
                 try:
                     identity = ChatIdentity.parse(recipient)
-                except ValueError:
+                except ValueError as e:
                     identity = None
 
                 if self.outgoing_message_handler.send(content, recipient=identity, content_type=content_type):
