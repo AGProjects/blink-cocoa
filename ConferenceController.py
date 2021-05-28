@@ -92,6 +92,10 @@ class JoinConferenceWindowController(NSObject):
     ok_button = objc.IBOutlet()
     startWhenParticipantsAvailable = objc.IBOutlet()
 
+    saveButtonTitle = NSLocalizedString("Save configuration", "Menu item")
+    renameButtonTitle = NSLocalizedString("Rename configuration...", "Menu item")
+    deleteButtonTitle = NSLocalizedString("Delete configuration", "Menu item")
+
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
@@ -105,6 +109,8 @@ class JoinConferenceWindowController(NSObject):
         self.notification_center.add_observer(self, name='BonjourConferenceServicesDidAddServer')
         self.notification_center.add_observer(self, name='SIPAccountManagerDidChangeDefaultAccount')
         self.startWhenParticipantsAvailable.setEnabled_(False)
+        
+        self.storage_path = ApplicationData.get('conference/rooms.pickle')
 
         self.selected_configuration = None
 
@@ -120,10 +126,7 @@ class JoinConferenceWindowController(NSObject):
 
         account = AccountManager().default_account
         if account is not None:
-            if account.conference.nickname:
-                self.nickname_textfield.setStringValue_(account.conference.nickname)
-            else:
-                self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
+            self.nickname_textfield.setStringValue_(account.conference.nickname or account.display_name)
 
         if participants:
             self._participants = participants
@@ -170,10 +173,7 @@ class JoinConferenceWindowController(NSObject):
         self.nickname_textfield.setStringValue_('')
         account = AccountManager().default_account
         if account is not None:
-            if account.conference.nickname:
-                self.nickname_textfield.setStringValue_(account.conference.nickname)
-            else:
-                self.nickname_textfield.cell().setPlaceholderString_(account.display_name)
+            self.nickname_textfield.setStringValue_(account.conference.nickname or account.display_name)
         self.updatePopupButtons()
 
     @objc.python_method
@@ -182,21 +182,9 @@ class JoinConferenceWindowController(NSObject):
         makedirs(path)
 
         try:
-            with open(ApplicationData.get('conference_configurations.pickle'), 'rb'): pass
-        except IOError:
-            pass
-        else:
-            src = ApplicationData.get('conference_configurations.pickle')
-            dst = ApplicationData.get('conference/conference_configurations.pickle')
-            try:
-                shutil.move(src, dst)
-            except shutil.Error:
-                pass
-
-        try:
-            with open(ApplicationData.get('conference/conference_configurations.pickle'), 'rb') as f:
+            with open(self.storage_path, 'rb') as f:
                 self.conference_configurations = pickle.load(f)
-        except:
+        except Exception as e:
             self.conference_configurations = {}
 
     @objc.python_method
@@ -215,7 +203,7 @@ class JoinConferenceWindowController(NSObject):
 
     @objc.IBAction
     def configurationsButtonClicked_(self, sender):
-        if sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Save configuration...", "Menu item")):
+        if sender.title() == self.saveButtonTitle:
             if self.validateConference(allow_random_room=False):
                 if self.selected_configuration:
                     configuration_name = self.selected_configuration
@@ -242,11 +230,11 @@ class JoinConferenceWindowController(NSObject):
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
-                    pickle.dump(self.conference_configurations, open(self.storage_path, "wb"))
+                    pickle.dump(self.conference_configurations, open(self.storage_path, "wb+"))
             else:
                 self.selected_configuration = None
 
-        elif sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Rename configuration...", "Menu item")):
+        elif sender.title() == self.renameButtonTitle:
             configurationPanel = ConferenceConfigurationPanel.alloc().init()
             configuration_name = configurationPanel.runModalForRename_(self.selected_configuration)
             if configuration_name and configuration_name != self.selected_configuration:
@@ -255,11 +243,11 @@ class JoinConferenceWindowController(NSObject):
                 self.conference_configurations[configuration_name] = old_configuration
                 del self.conference_configurations[self.selected_configuration]
                 self.selected_configuration = configuration_name
-                pickle.dump(self.conference_configurations, open(self.storage_path, "wb"))
+                pickle.dump(self.conference_configurations, open(self.storage_path, "wb+"))
 
-        elif sender.selectedItem() == sender.itemWithTitle_(NSLocalizedString("Delete configuration", "Menu item")) and self.selected_configuration:
+        elif sender.title() == self.deleteButtonTitle:
            del self.conference_configurations[self.selected_configuration]
-           pickle.dump(self.conference_configurations, open(self.storage_path, "w"))
+           pickle.dump(self.conference_configurations, open(self.storage_path, "wb+"))
            self.setDefaults()
         else:
             configuration = sender.selectedItem().representedObject()
@@ -298,8 +286,9 @@ class JoinConferenceWindowController(NSObject):
             self.configurationsButton.lastItem().setEnabled_(True)
             for key in list(self.conference_configurations.keys()):
                 self.configurationsButton.addItemWithTitle_(key)
+                object = self.conference_configurations[key]
                 item = self.configurationsButton.lastItem()
-                item.setRepresentedObject_(self.conference_configurations[key])
+                item.setRepresentedObject_(object)
                 if self.selected_configuration and self.selected_configuration == key:
                     self.configurationsButton.selectItem_(item)
         else:
@@ -307,11 +296,11 @@ class JoinConferenceWindowController(NSObject):
             self.configurationsButton.lastItem().setEnabled_(False)
 
         self.configurationsButton.menu().addItem_(NSMenuItem.separatorItem())
-        self.configurationsButton.addItemWithTitle_(NSLocalizedString("Save configuration...", "Menu item"))
+        self.configurationsButton.addItemWithTitle_(self.saveButtonTitle)
         self.configurationsButton.lastItem().setEnabled_(True)
-        self.configurationsButton.addItemWithTitle_(NSLocalizedString("Rename configuration...", "Menu item"))
+        self.configurationsButton.addItemWithTitle_(self.renameButtonTitle)
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
-        self.configurationsButton.addItemWithTitle_(NSLocalizedString("Delete configuration", "Menu item"))
+        self.configurationsButton.addItemWithTitle_(self.deleteButtonTitle)
         self.configurationsButton.lastItem().setEnabled_(True if self.selected_configuration else False)
 
     @objc.python_method
@@ -348,9 +337,10 @@ class JoinConferenceWindowController(NSObject):
 
     @objc.python_method
     def setDefaults(self):
+        account = AccountManager().default_account
         self.selected_configuration = None
         self.room.setStringValue_('')
-        self.nickname_textfield.setStringValue_('')
+        self.nickname_textfield.setStringValue_(account.display_name)
         self._participants = []
         self.removeAllParticipants.setHidden_(True)
         self.participantsTable.reloadData()
