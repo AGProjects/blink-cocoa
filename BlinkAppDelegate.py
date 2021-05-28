@@ -506,7 +506,7 @@ class BlinkAppDelegate(NSObject):
 
     def applicationWillTerminate_(self, notification):
         NotificationCenter().post_notification("BlinkWillTerminate", None)
-        BlinkLogger().log_info("Application terminated")
+        BlinkLogger().log_info("Application ended")
 
     def computerDidWake_(self, notification):
         self.wake_up_timestamp = int(time.time())
