@@ -168,10 +168,12 @@ class SMSViewController(NSObject):
             else:
                 self.public_key = None
 
+            self.private_key = None
             if self.account.sms.private_key:
-                self.private_key = RSA.importKey(self.contact.contact.public_key)
-            else:
-                self.private_key = None
+                try:
+                    self.private_key = RSA.importKey(self.account.sms.private_key)
+                except Exception as e:
+                    self.log_info('Cannot import private key: %s' % str(e))
 
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
@@ -639,7 +641,7 @@ class SMSViewController(NSObject):
         self.message_queue.stop()
         self.started = False
 
-        for msgObject in self.message_queue:
+        for msgObject in self.message_queue.queue.queue:
             id = msgObject.id
 
             try:
