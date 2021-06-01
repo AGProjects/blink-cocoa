@@ -409,7 +409,7 @@ def translate_alpha2digit(key):
     return letter_map.get(key.upper(), key)
 
 audio_codecs = {'PCMA': 'G.711a', 'PCMU': 'G.711u', 'opus': 'OPUS', 'speex': 'Speex', 'G722': 'G.722'}
-video_codecs = {'H263': 'H.263', 'H263-1998': 'H.263 1998', 'H264': 'H.264'}
+video_codecs = {'H263': 'H.263', 'H263-1998': 'H.263', 'H264': 'H.264'}
 
 def beautify_audio_codec(codec):
     try:

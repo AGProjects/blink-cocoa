@@ -119,8 +119,8 @@ class GUISettings(SettingsGroup):
     close_delay = Setting(type=NonNegativeInteger, default=4)
 
 class RTPSettingsExtension(RTPSettings):
-    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA')))
-    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264', 'VP8')))
+    audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(('opus', 'G722', 'PCMU', 'PCMA', 'AMR')))
+    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264', 'VP8', 'VP9')))
 
 class ServiceProviderSettings(SettingsGroup):
     name = Setting(type=str, default=None, nillable=True)
