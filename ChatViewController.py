@@ -436,7 +436,6 @@ class ChatViewController(NSObject):
 
     @objc.python_method
     def markMessage(self, msgid, state, private=False): # delegate    
-        print('markMessage %s %s' % (msgid, state))
         if state == MSG_STATE_DELIVERED:
             is_private = 1 if private else "null"
             script = "markDelivered('%s',%s)"%(msgid, is_private)
