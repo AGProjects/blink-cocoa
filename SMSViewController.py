@@ -518,7 +518,7 @@ class SMSViewController(NSObject):
             return
 
         if isinstance(self.account, Account):
-            if not self.account.sms.disable_replication:
+            if self.account.sms.enable_replication:
                 contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
                 msg = CPIMPayload(sent_message.content, sent_message.content_type, charset='utf-8', sender=ChatIdentity(self.account.uri, self.account.display_name), recipients=[ChatIdentity(self.target_uri, contact.name if contact else None)])
                 self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
@@ -624,7 +624,7 @@ class SMSViewController(NSObject):
             self.started = True
             self.message_queue.start()
 
-            if not self.encryption.active:
+            if not self.encryption.active and self.account.sms.enable_otr:
                 self.startEncryption()
 
             try:
