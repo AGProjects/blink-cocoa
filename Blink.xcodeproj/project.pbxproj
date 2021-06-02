@@ -1320,6 +1320,10 @@
 		1FF6C4091498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
 		1FF6C40A1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
 		1FF6C40B1498C5560019F668 /* ScreensharingPreviewPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */; };
+		1FF9AD1F2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF9AD1C2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib */; };
+		1FF9AD202667AD3F0008EA46 /* libvo-amrwbenc.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF9AD1C2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib */; };
+		1FF9AD212667AD680008EA46 /* libvo-amrwbenc.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF9AD1C2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1FF9AD222667AEC50008EA46 /* libvo-amrwbenc.0.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF9AD1C2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FFB110A12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB110B12E5E3BB006F40E2 /* ChatPrivateMessageController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */; };
 		1FFB386A1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
@@ -1587,6 +1591,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FF9AD222667AEC50008EA46 /* libvo-amrwbenc.0.dylib in Copy Frameworks */,
 				1F4D7474261B51F400DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */,
 				1F4D7475261B51F400DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */,
 				1F4D7466261B505500DF09D7 /* libopus.0.dylib in Copy Frameworks */,
@@ -1944,6 +1949,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FF9AD212667AD680008EA46 /* libvo-amrwbenc.0.dylib in Copy Frameworks */,
 				1F4D7472261B51E800DF09D7 /* libopencore-amrnb.0.dylib in Copy Frameworks */,
 				1F4D7473261B51E800DF09D7 /* libopencore-amrwb.0.dylib in Copy Frameworks */,
 				1F4D7465261B504900DF09D7 /* libopus.0.dylib in Copy Frameworks */,
@@ -2503,6 +2509,7 @@
 		1FF63CD519128C4800A502FB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1FF6C4021498C06A0019F668 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
 		1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = ScreensharingPreviewPanel.py; sourceTree = "<group>"; };
+		1FF9AD1C2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libvo-amrwbenc.0.dylib"; path = "Distribution/Frameworks/libvo-amrwbenc.0.dylib"; sourceTree = "<group>"; };
 		1FFB110912E5E3BB006F40E2 /* ChatPrivateMessageController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatPrivateMessageController.py; sourceTree = "<group>"; };
 		1FFB38691432026D003B29ED /* display_red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red.png; path = icons/display_red.png; sourceTree = "<group>"; };
 		1FFB38D6143209E0003B29ED /* display_red_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_red_16.png; path = icons/display_red_16.png; sourceTree = "<group>"; };
@@ -2686,6 +2693,7 @@
 				1F6EF80C18E64FDF008592D2 /* OpenGL.framework in Frameworks */,
 				1F455F3D260A5A6300DB289F /* libuv.1.dylib in Frameworks */,
 				1FBF2B3E179151D9002E110B /* Sparkle.framework in Frameworks */,
+				1FF9AD202667AD3F0008EA46 /* libvo-amrwbenc.0.dylib in Frameworks */,
 				1F35D06A17894FFF00C6FE38 /* Cocoa.framework in Frameworks */,
 				1F455F41260A5A6300DB289F /* libev.4.dylib in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
@@ -2700,6 +2708,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FF9AD1F2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib in Frameworks */,
 				1F4D746B261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */,
 				1F455F3C260A5A6300DB289F /* libuv.1.dylib in Frameworks */,
 				1F455F40260A5A6300DB289F /* libev.4.dylib in Frameworks */,
@@ -2855,6 +2864,7 @@
 		1F4D7471261B519400DF09D7 /* audio-codecs */ = {
 			isa = PBXGroup;
 			children = (
+				1FF9AD1C2667AD3F0008EA46 /* libvo-amrwbenc.0.dylib */,
 				1F4D7460261B502A00DF09D7 /* libopus.0.dylib */,
 				1F4D7467261B517D00DF09D7 /* libopencore-amrnb.0.dylib */,
 				1F4D7468261B517E00DF09D7 /* libopencore-amrwb.0.dylib */,
