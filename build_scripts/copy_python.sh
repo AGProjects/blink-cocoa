@@ -33,6 +33,7 @@ sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/distutils
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/idlelib
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/ensurepip
 sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/pkgconfig 
+sudo rm -r Frameworks/Python.framework/Versions/3.9/lib/python3.9/lib-dynload/_tkinter.cpython-39-darwin.so
 
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libssl.1.1.dylib
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/libformw.5.dylib
