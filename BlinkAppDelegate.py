@@ -199,6 +199,7 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidConnect")
             NotificationCenter().add_observer(self, name="DNSNameserversDidChange")
+            NotificationCenter().add_observer(self, name="DNSResolverDidInitialize")
             NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
 
             # remove obsolete settings
@@ -472,6 +473,10 @@ class BlinkAppDelegate(NSObject):
     @objc.python_method
     def _NH_DNSNameserversDidChange(self, notification):
         BlinkLogger().log_info("DNS servers changed to %s" % ", ".join(notification.data.nameservers))
+
+    @objc.python_method
+    def _NH_DNSResolverDidInitialize(self, notification):
+        BlinkLogger().log_info("DNS servers did initialize with %s" % ", ".join(notification.data.nameservers))
 
     @objc.python_method
     def _NH_NetworkConditionsDidChange(self, notification):
