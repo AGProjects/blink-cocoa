@@ -10,7 +10,7 @@ __all__ = ['AccountExtension', 'BonjourAccountExtension', 'RTPSettingsExtension'
 
 from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
-from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SIPProxyAddress
+from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SIPProxyAddress, SIPTransport
 
 from configuration import KeychainPasswordSetting
 from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername, UserIcon
@@ -23,6 +23,9 @@ class AuthSettingsExtension(AuthSettings):
 
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
+    transport = Setting(type=MSRPTransport, default='tcp')
+
+class BonjourSIPSettingsExtension(BonjourMSRPSettings):
     transport = Setting(type=MSRPTransport, default='tls')
 
 
@@ -188,6 +191,7 @@ class BonjourAccountExtension(SettingsObjectExtension):
     ldap = LDAPSettingsExtension
     conference = ConferenceSettings
     msrp = BonjourMSRPSettingsExtension
+    sip = BonjourSIPSettingsExtension
     presence = BonjourPresenceSettingsExtension
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
