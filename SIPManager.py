@@ -866,30 +866,35 @@ class BonjourConferenceServices(object):
             txt = _bonjour.TXTRecord.parse(txtrecord)
             name = txt['name'].decode('utf-8') if 'name' in txt else None
             host = re.match(r'^(.*?)(\.local)?\.?$', host_target).group(1)
-            contact = txt.get('contact', file.service_description.name).split(None, 1)[0].strip('<>')
             try:
-                uri = FrozenSIPURI.parse(contact)
-            except SIPCoreError:
-                pass
+                c = txt.get('contact', file.service_description.name)
+                contact = c.split(None, 1)[0].strip(b'<>')
+            except TypeError as e:
+                BlinkLogger().log_error('Error parsing Bonjour contact %s: %s' % (c, str(e)))
             else:
-                account = BonjourAccount()
-                service_description = file.service_description
-                transport = uri.transport
-                supported_transport = transport in settings.sip.transport_list and (transport!='tls' or account.tls.certificate is not None)
-                if not supported_transport and service_description in self._servers:
-                    del self._servers[service_description]
-                    notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
-                elif supported_transport:
-                    try:
-                        contact_uri = account.contact[transport]
-                    except KeyError:
-                        return
-                    if uri != contact_uri:
-                        notification_name = 'BonjourConferenceServicesDidUpdateServer' if service_description in self._servers else 'BonjourConferenceServicesDidAddServer'
-                        notification_data = NotificationData(server=service_description, name=name, host=host, uri=uri)
-                        server_description = BonjourConferenceServerDescription(uri, host, name)
-                        self._servers[service_description] = server_description
-                        notification_center.post_notification(notification_name, sender=self, data=notification_data)
+                try:
+                    uri = FrozenSIPURI.parse(contact.decode())
+                except SIPCoreError as e:
+                    BlinkLogger().log_error('Error parsing Bonjour URI %s: %s' % (contact, str(e)))
+                else:
+                    account = BonjourAccount()
+                    service_description = file.service_description
+                    transport = uri.transport
+                    supported_transport = transport in settings.sip.transport_list and (transport != 'tls' or account.tls.certificate is not None) and transport == account.sip.transport
+                    if not supported_transport and service_description in self._servers:
+                        del self._servers[service_description]
+                        notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
+                    elif supported_transport:
+                        try:
+                            contact_uri = account.contact[transport]
+                        except KeyError:
+                            return
+                        if uri != contact_uri:
+                            notification_name = 'BonjourConferenceServicesDidUpdateServer' if service_description in self._servers else 'BonjourConferenceServicesDidAddServer'
+                            notification_data = NotificationData(server=service_description, name=name, host=host, uri=uri)
+                            server_description = BonjourConferenceServerDescription(uri, host, name)
+                            self._servers[service_description] = server_description
+                            notification_center.post_notification(notification_name, sender=self, data=notification_data)
         else:
             self._files.remove(file)
             self._select_proc.kill(RestartSelect)

@@ -363,6 +363,9 @@ class BlinkContact(NSObject):
         return detail
 
     def _set_detail(self, value):
+        if value.startswith("b'"):
+            # Workaround bug in bonjour note setting that sets the note wrong
+            value = value[2:-1]
         self.__dict__['detail'] = NSString.stringWithString_(value)
 
     detail = property(_get_detail, _set_detail)
