@@ -3115,7 +3115,7 @@ class ContactWindowController(NSWindowController):
         media_type_print = ", ".join(media_type) if type(media_type) in (tuple, list) else media_type
         try:
             contact = self.getSelectedContacts()[0]
-            BlinkLogger().log_info("Starting %s session to selected contact %s" % (media_type_print, contact.name))
+            BlinkLogger().log_info("Starting %s session to selected contact %s %s" % (media_type_print, contact.name, contact.uri))
         except IndexError:
             target = str(self.searchBox.stringValue()).strip()
             if not target:
