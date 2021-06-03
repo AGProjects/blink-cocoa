@@ -314,7 +314,7 @@ class JoinConferenceWindowController(NSObject):
                 servers_dict = {}
                 for server in (server for server in SIPManager().bonjour_conference_services.servers if server.uri.transport in settings.sip.transport_list):
                     servers_dict.setdefault("%s@%s" % (server.uri.user, server.uri.host), []).append(server)
-                for transport in (transport for transport in ('tls', 'tcp', 'udp') if transport in settings.sip.transport_list):
+                for transport in (transport for transport in ('tls', 'tcp', 'udp') if transport in settings.sip.transport_list and transport.lower() == account.sip.transport.lower()):
                     for k, v in servers_dict.items():
                         try:
                             server = next((server for server in v if server.uri.transport == transport))
@@ -324,7 +324,7 @@ class JoinConferenceWindowController(NSObject):
                             servers.add(server)
                             break
                 for server in servers:
-                    self.bonjour_server_combolist.addItemWithTitle_('%s (%s)' % (server.host, server.uri.host))
+                    self.bonjour_server_combolist.addItemWithTitle_('%s %s:%s' % (server.host, transport, server.uri.host))
                     item = self.bonjour_server_combolist.lastItem()
                     item.setRepresentedObject_(server)
                     self.ok_button.setEnabled_(True)

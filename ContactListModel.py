@@ -3777,6 +3777,10 @@ class ContactListModel(CustomListModel):
         host = record.host
         uri = record.uri
         id = record.id
+        settings = SIPSimpleSettings()
+
+        if uri.transport not in settings.sip.transport_list or uri.transport != BonjourAccount().sip.transport:
+            return
 
         note = record.presence.note if record.presence is not None else None
         if not note and record.presence is not None and record.presence.state is not None:
@@ -3842,6 +3846,9 @@ class ContactListModel(CustomListModel):
         host = record.host
         uri = record.uri
         id = record.id
+
+        if uri.transport not in settings.sip.transport_list or uri.transport != BonjourAccount().sip.transport:
+            return
 
         name = '%s (%s)' % (display_name or 'Unknown', host)
         note = record.presence.note if record.presence is not None else None
