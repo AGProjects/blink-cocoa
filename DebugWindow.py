@@ -544,7 +544,12 @@ class DebugWindow(NSObject):
         line = "%s: %s:%d -(SIP over %s)-> %s:%d\n" % (notification.datetime, event_data.source_ip, event_data.source_port, event_data.transport, event_data.destination_ip, event_data.destination_port)
         text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
 
-        data = event_data.data.strip()
+        try:
+            data = event_data.data.decode().strip()
+        except UnicodeDecodeError as e:
+            print('Cannot decode SIP trace %s: %s' %  (event_data.data, str(e)))
+            return
+
         first, rest = data.split("\n", 1)
 
         applications = None
