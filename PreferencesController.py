@@ -1072,7 +1072,7 @@ class PreferencesController(NSWindowController, object):
 
         if item.identifier() == 'logs':
             if self.logsize_timer is None:
-                self.logsize_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "updateLogSize:", None, True)
+                self.logsize_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "updateLogSize:", None, True)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.logsize_timer, NSRunLoopCommonModes)
                 NSRunLoop.currentRunLoop().addTimer_forMode_(self.logsize_timer, NSEventTrackingRunLoopMode)
         else:
@@ -1100,7 +1100,6 @@ class PreferencesController(NSWindowController, object):
     def goToLogsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(ApplicationData.get('logs'))
 
-    @objc.python_method
     def updateLogSize_(self, timer):
         self._update_logs_size_label()
 
