@@ -5550,7 +5550,9 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].register_expires = notification.data.expires
             self.accounts[position].register_timestamp = time.time()
         
-        BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
+            BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
+        else:
+            BlinkLogger().log_info('Published Bonjour uri %s <%s>' % (notification.sender.display_name, notification.sender.uri))
 
         self.refreshAccountList()
 
