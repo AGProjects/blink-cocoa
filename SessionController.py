@@ -493,9 +493,16 @@ class SessionControllersManager(object, metaclass=Singleton):
             # Session could have ended before it was completely started
             session.start_time = session.end_time
 
-        duration = session.end_time - session.start_time
+        try:
+            duration = session.end_time - session.start_time
+        except TypeError:
+            seconds = 0
+            session.end_time = ISOTimestamp.now()
+            session.start_time = ISOTimestamp.now()
+        else:
+            seconds = duration.seconds
 
-        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
@@ -964,6 +971,7 @@ class SessionController(NSObject):
     display_name = None
     encryption = {}
     device_id = None
+    finished = False
     
     @property
     def sessionControllersManager(self):
@@ -993,7 +1001,7 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
-        self.try_next_hop = False
+        self.try_next_hop = True
 
         # used for accounting
         if self.contact and type(self.contact) == BonjourBlinkContact:
@@ -1040,7 +1048,7 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
-        self.try_next_hop = False
+        self.try_next_hop = True
         self.call_id = session._invitation.call_id
         self.display_name = session.remote_identity.display_name
             
@@ -1104,7 +1112,7 @@ class SessionController(NSObject):
         self.failed_to_join_participants = {}
         self.mustCloseAudioDrawer = True
         self.open_chat_window_only = False
-        self.try_next_hop = False
+        self.try_next_hop = True
 
         self.initInfoPanel()
 
@@ -1345,11 +1353,20 @@ class SessionController(NSObject):
 
     @objc.python_method
     def end(self):
-        if self.state == STATE_DNS_FAILED:
+        if self.finished:
             return
-        elif self.state == STATE_DNS_LOOKUP:
+
+        self.finished = True
+        self.log_info("End %s in state %s" % (self, self.state))
+
+        if self.state in (STATE_DNS_LOOKUP, STATE_IDLE):
             self.cancelled_during_dns_lookup = True
-        
+            log_data = NotificationData(timestamp=datetime.now(), target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
+            self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
+
+        for streamHandler in self.streamHandlers:
+            self.endStream(streamHandler)
+
         if self.session is not None:
             self.session.end()
 
@@ -1357,20 +1374,23 @@ class SessionController(NSObject):
     def endStream(self, streamHandler):
         if self.session is not None:
             if streamHandler.stream.type == "audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers) == 2:
+                self.log_debug("ending session with audio and screensharing streams")
                 # if session is screen-sharing end it
                 self.end()
                 return True
             elif streamHandler.stream.type == "audio" and self.hasStreamOfType("video") and len(self.streamHandlers) == 2:
+                self.log_debug("ending session with audio and video streams")
                 # if session is video end it
                 self.end()
                 return True
-            elif self.session.streams is not None and self.streamHandlers == [streamHandler]:
+            elif self.streamHandlers == [streamHandler]:
                 # session established, streamHandler is the only stream
-                self.log_info("Ending session with %s stream"% streamHandler.stream.type)
+                self.log_debug("Ending session with %s stream" % streamHandler.stream.type)
                 # end the whole session
                 self.end()
                 return True
             elif len(self.streamHandlers) > 1 and self.session.streams:
+                self.log_debug("we have several streams ongoing")
                 # session established, streamHandler is one of many streams
                 if self.canProposeMediaStreamChanges():
                     streams_to_remove = [streamHandler.stream]
@@ -1400,10 +1420,11 @@ class SessionController(NSObject):
 
             elif not self.streamHandlers and streamHandler.stream is None: # 3
                 # session established, streamHandler is being proposed but not yet established
-                self.log_info("Ending session with not-established %s stream"% streamHandler.stream.type)
+                self.log_info("Ending session with not-established %s stream" % streamHandler.stream.type)
                 self.end()
                 return True
             else:
+                self.log_info("we have unclear streams")
                 # session not yet established
                 if self.session.streams is None:
                     self.end()
@@ -1550,6 +1571,7 @@ class SessionController(NSObject):
         add_streams = []
         if self.session is None:
             self.session = Session(self.account)
+            self.log_info('Created %s' % self.session)
             if not self.try_next_hop:
                 self.routes = None
             self.failureReason = None
@@ -1579,7 +1601,7 @@ class SessionController(NSObject):
                         return False
 
                     stream = handlerClass.createStream()
-                    self.log_debug('Created stream %s' % stream)
+                    self.log_info('Created stream %s' % stream)
 
                 if not stream:
                     self.log_info("Cancelled session")
@@ -1672,6 +1694,7 @@ class SessionController(NSObject):
                         if any(streamHandler.stream.type=='video' for streamHandler in self.streamHandlers):
                             self.waitingForLocalVideo = True
                         else:
+                            print('Will lookup destination for %s...' % self.target_uri)
                             self.lookup_destination(self.target_uri)
 
         else:
@@ -1950,6 +1973,7 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionWillStart(self, sender, data):
+        self.try_next_hop = False
         self.call_id = sender._invitation.call_id
         self.log_info("Session with call id %s will start" % self.call_id)
         if self.session.remote_focus:
@@ -1964,6 +1988,7 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionDidStart(self, sender, data):
+        self.try_next_hop = False
         self.transport = '%s:%s' % (self.session.transport, self.session.peer_address)
         self.log_info("Next SIP hop is %s" % self.transport)
         self.notification_center.add_observer(self, sender=self.session._invitation)
@@ -2005,6 +2030,7 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionWillEnd(self, sender, data):
+        self.try_next_hop = False
         self.log_info("Session will end %sly" % data.originator)
         self.endingBy = data.originator
         if self.transfer_window is not None:
@@ -2057,6 +2083,8 @@ class SessionController(NSObject):
             self.retries += 1
 
         if not must_retry:
+            self.try_next_hop = False
+
             log_data = NotificationData(originator=data.originator, direction=sender.direction, target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=data.code, reason=data.reason, failure_reason=self.failureReason, streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag=self.from_tag, to_tag=self.to_tag)
             self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
 
@@ -2092,9 +2120,8 @@ class SessionController(NSObject):
 
         # local timeout while we have an alternative route
         elif must_retry:
-            self.log_info('Trying alternative route')
+            self.log_info('Trying an alternative route...')
             self.routes.pop(0)
-            self.try_next_hop = True
             if len(oldSession.proposed_streams) == 1:
                 self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
             else:

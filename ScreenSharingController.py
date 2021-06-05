@@ -450,8 +450,8 @@ class ScreenSharingController(MediaStream):
             self.removeFromSession()
             self.start_auto_close_timer()
 
+        MediaStream.changeStatus(self, self.status, newstate, fail_reason)
         self.status = newstate
-        MediaStream.changeStatus(self, newstate, fail_reason)
 
     @objc.python_method
     def start_auto_close_timer(self):

@@ -369,6 +369,19 @@ class Ringer(object):
         self.stop_ringing(session)
 
     def _NH_SIPSessionWillEnd(self, notification):
+        session = notification.sender
+        streams = session.streams or session.proposed_streams
+        if not streams:
+            # not connected
+            has_audio = session in self.incoming_audio_sessions
+        else:
+            stream_types = [s.type for s in streams]
+            has_audio = 'audio' in stream_types
+        # play hangup tone
+
+        if has_audio:
+            self.play_hangup()
+            
         self.handle_session_end(notification.sender)
 
     def _NH_SIPSessionDidEnd(self, notification):
@@ -378,17 +391,6 @@ class Ringer(object):
         self.handle_session_end(notification.sender)
 
     def handle_session_end(self, session):
-        streams = session.streams or session.proposed_streams
-        if not streams:
-            # not connected
-            has_audio = session in self.incoming_audio_sessions
-        else:
-            stream_types = [s.type for s in streams]
-            has_audio = 'audio' in stream_types
-        # play hangup tone
-        if has_audio:
-            self.play_hangup()
-            
         try:
             NotificationCenter().remove_observer(self, sender=session)
         except KeyError:

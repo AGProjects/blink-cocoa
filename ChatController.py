@@ -436,8 +436,8 @@ class ChatController(MediaStream):
     @objc.python_method
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
+        MediaStream.changeStatus(self, self.status, newstate, fail_reason)
         self.status = newstate
-        MediaStream.changeStatus(self, newstate, fail_reason)
 
     @objc.python_method
     def openChatWindow(self):
@@ -1105,7 +1105,7 @@ class ChatController(MediaStream):
 
             if identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
-                    self.endStream()
+                    self.end()
                 else:
                     if self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession():
                         if self.status in (STREAM_IDLE, STREAM_FAILED):
@@ -1822,7 +1822,8 @@ class ChatController(MediaStream):
             self.remoteTypingTimer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(refresh, self, "remoteBecameIdle:", None, False)
 
     @objc.python_method
-    def endStream(self, closeTab=False):
+    def end(self, closeTab=False):
+        self.sessionController.log_info("End %s in state %s" % (self, self.status))
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
@@ -1832,20 +1833,22 @@ class ChatController(MediaStream):
             else:
                 # it we have more than chat, we could just stop the chat stream only but is counter intuitive in the GUI so we end the whole session
                 self.sessionController.end()
-            self.changeStatus(STREAM_DISCONNECTING)
+                
+            new_state = STATE_IDLE if self.sessionController.state == STATE_IDLE else STREAM_DISCONNECTING
+            self.changeStatus(new_state)
 
     # lifetime of a chat controler: possible deallocation paths
-    # 1. User click on close tab: closeTab -> endStream -> CloseWindow -> deallocTimer -> dealloc
-    # 2. User clicks on close window: closeWindow -> for each tab -> closeTab -> endStream -> CloseWindow -> deallocTimer -> dealloc
+    # 1. User click on close tab: closeTab -> end -> CloseWindow -> deallocTimer -> dealloc
+    # 2. User clicks on close window: closeWindow -> for each tab -> closeTab -> end -> CloseWindow -> deallocTimer -> dealloc
     # 3. Session ends by remote: mediaDidEnd -> endStream -> reset -> CloseWindow -> deallocTimer -> dealloc
-    # 4. User clicks on disconnect button: endStream -> reset
+    # 4. User clicks on disconnect button: end -> reset
 
     @objc.python_method
     def closeTab(self):
         self.closed = True
         self.sessionController.setVideoConsumer("standalone")
 
-        self.endStream(True)
+        self.end(True)
         if self.outgoing_message_handler:
             self.outgoing_message_handler.setDisconnected()
         if self.screensharing_handler:

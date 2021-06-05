@@ -114,7 +114,7 @@ class AudioController(MediaStream):
     timer = None
     last_stats = None
     transfer_timer = None
-    hangedUp = False
+    user_hanged_up = False
     transferred = False
     transfer_in_progress = False
     answeringMachine = None
@@ -319,7 +319,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
-        self.sessionController.log_debug("Start outgoing %s" % self)
+        self.sessionController.log_info("Start outgoing %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.label.setStringValue_(self.sessionController.titleShort)
@@ -344,14 +344,21 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def end(self):
+        self.sessionController.log_info("End %s in state %s" % (self, self.status))
         status = self.status
-        if status in [STREAM_IDLE, STREAM_FAILED]:
-            self.hangedUp = True
+        if status in [STREAM_FAILED]:
+            self.audioEndTime = time.time()
+            self.changeStatus(STREAM_DISCONNECTING)
+        elif status in [STREAM_IDLE]:
             self.audioEndTime = time.time()
             self.changeStatus(STREAM_DISCONNECTING)
         elif status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
+        elif status == STREAM_WAITING_DNS_LOOKUP:
+            self.sessionController.endStream(self)
+            self.audioEndTime = time.time()
+            self.changeStatus(STREAM_IDLE)
         else:
             self.sessionController.endStream(self)
             self.audioEndTime = time.time()
@@ -568,13 +575,15 @@ class AudioController(MediaStream):
                 self.end()
                 return
 
-        if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_RINGING] or self.hangedUp:
-            if self.audioEndTime and (time.time() - self.audioEndTime > settings.gui.close_delay):
-                self.removeFromSession()
-                NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
-                if timer.isValid():
-                    timer.invalidate()
-                self.audioEndTime = None
+        if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING] or self.user_hanged_up:
+            if not self.sessionController.try_next_hop or self.user_hanged_up:
+                if self.audioEndTime and (time.time() - self.audioEndTime > settings.gui.close_delay):
+                    self.removeFromSession()
+                    NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
+                    if timer.isValid():
+                        timer.invalidate()
+                    
+                    self.audioEndTime = None
 
         if self.stream and self.stream.recorder is not None and self.stream.recorder.is_active:
             if self.isConferencing:
@@ -681,15 +690,17 @@ class AudioController(MediaStream):
             self.tlsIcon.setHidden_(True)
 
     @objc.python_method
-    def changeStatus(self, newstate, fail_reason=None):
+    def changeStatus(self, new_status, fail_reason=None):
+        self.sessionController.log_info('changeStatus %s from %s to %s' % (self, self.status, new_status))
         if not NSThread.isMainThread():
             raise Exception("called from non-main thread")
 
         oldstatus = self.status
 
-        if self.status != newstate:
-            self.status = newstate
+        if self.status == new_status:
+            return
 
+        self.status = new_status
         status = self.status
 
         if status == STREAM_WAITING_DNS_LOOKUP:
@@ -741,7 +752,9 @@ class AudioController(MediaStream):
             self.updateTLSIcon()
             self.updateAudioStatusWithSessionState(NSLocalizedString("Accepting Session...", "Audio status label"))
         elif status == STREAM_IDLE:
-            if self.hangedUp and oldstatus in (STREAM_INCOMING, STREAM_CONNECTING, STREAM_PROPOSING):
+            if self.user_hanged_up:
+                self.updateAudioStatusWithSessionState(NSLocalizedString("Session Ended", "Audio status label"))
+            elif oldstatus in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_IDLE):
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             elif not self.transferred:
                 if fail_reason == "remote":
@@ -750,11 +763,12 @@ class AudioController(MediaStream):
                     status = self.hangup_reason if self.hangup_reason else NSLocalizedString("Session Ended", "Audio status label")
                     self.updateAudioStatusWithSessionState(status)
                 else:
-                    self.updateAudioStatusWithSessionState(fail_reason)
+                    self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             self.audioStatus.sizeToFit()
+
         elif status == STREAM_FAILED:
             self.audioEndTime = time.time()
-            if self.hangedUp and oldstatus in (STREAM_CONNECTING, STREAM_PROPOSING):
+            if self.user_hanged_up and oldstatus in (STREAM_CONNECTING, STREAM_PROPOSING):
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
             elif oldstatus == STREAM_CANCELLING:
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Request Cancelled", "Audio status label"), True)
@@ -774,7 +788,6 @@ class AudioController(MediaStream):
             self.segmentedConferenceButtons.setEnabled_forSegment_(True, self.conference_hangup_segment)
 
         elif status in (STREAM_CONNECTING, STREAM_PROPOSING, STREAM_INCOMING, STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING):
-
             for i in range(len(self.normal_segments)):
                 self.segmentedButtons.setEnabled_forSegment_(False, i)
             self.segmentedButtons.setEnabled_forSegment_(True, self.hangup_segment)
@@ -798,7 +811,7 @@ class AudioController(MediaStream):
         if status in (STREAM_IDLE, STREAM_FAILED):
             self.view.setDelegate_(None)
 
-        MediaStream.changeStatus(self, newstate, fail_reason)
+        MediaStream.changeStatus(self, oldstatus, new_status, fail_reason)
 
     @objc.python_method
     def updateStatistics(self):
@@ -1206,6 +1219,7 @@ class AudioController(MediaStream):
                 self.startAudioRecording()
         elif action == 'hangup':
             self.end()
+            self.user_hanged_up = True
             sender.setSelected_forSegment_(False, self.hangup_segment)
         elif action == 'mute_conference':
             # mute (in conference)

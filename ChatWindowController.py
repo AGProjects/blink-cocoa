@@ -81,7 +81,7 @@ import ParticipantsTableView
 from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
 from MediaStream import STREAM_PROPOSING, STREAM_RINGING, STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
-from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_DNS_LOOKUP
+from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_DNS_LOOKUP, STATE_IDLE
 from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact, BlinkMyselfConferenceContact
@@ -552,26 +552,24 @@ class ChatWindowController(NSWindowController):
                     else:
                         video_stream = session.streamHandlerOfType("video")
                         audio_stream = session.streamHandlerOfType("audio")
-                        if video_stream:
-                            if video_stream.isConnecting:
-                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
-                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                            elif video_stream.isCancelling:
+
+                        if data.state == STATE_IDLE:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+                            chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                        elif video_stream:
+                            if video_stream.isCancelling:
                                 chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Cancelling Video...", "Label"))
                                 chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                            else:
-                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
-                                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-                        elif audio_stream:
-                            if audio_stream.isConnecting:
-                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
+                            elif video_stream.isConnecting:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
                                 chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                            elif audio_stream.isCancelling:
+                        elif audio_stream:
+                            if audio_stream.isCancelling:
                                 chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Cancelling Audio...", "Label"))
                                 chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                            else:
-                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
-                                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                            elif audio_stream.isConnecting:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
+                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
                         else:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)

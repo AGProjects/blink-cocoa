@@ -50,9 +50,10 @@ class MediaStream(NSObject):
         return self
 
     @objc.python_method
-    def changeStatus(self, newstate, fail_reason=None):
+    def changeStatus(self, oldstate, newstate, fail_reason=None):
+        self.status = newstate
         self.sessionController.log_debug("%s changed state to %s" % (self, newstate))
-        self.sessionController.log_debug("Session state=%s, substate=%s, proposal=%s" % (self.sessionController.state, self.sessionController.sub_state, self.sessionController.inProposal))
+        self.sessionController.log_info("%s media stream changed %s -> %s when session is %s/%s, proposal=%s" % (self.stream.type, oldstate, newstate, self.sessionController.state, self.sessionController.sub_state, self.sessionController.inProposal))
         NotificationCenter().post_notification("BlinkStreamHandlerChangedState", sender=self, data=NotificationData(state=newstate, detail=fail_reason))
 
     @property
@@ -61,7 +62,7 @@ class MediaStream(NSObject):
 
     @property
     def isCancelling(self):
-        return self.status in (STREAM_CANCELLING)
+        return self.status in (STREAM_CANCELLING, STREAM_DISCONNECTING)
 
     @property
     def session(self):

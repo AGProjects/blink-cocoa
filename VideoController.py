@@ -357,8 +357,8 @@ class VideoController(MediaStream):
         if self.status == newstate:
             return
 
+        MediaStream.changeStatus(self, self.status, newstate, fail_reason)
         self.status = newstate
-        MediaStream.changeStatus(self, newstate, fail_reason)
 
         if newstate in (STREAM_IDLE, STREAM_FAILED):
             self.end()
