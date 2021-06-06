@@ -1596,8 +1596,8 @@ class AudioController(MediaStream):
         self.sessionController.log_info("ZRTP audio peer is %s" % ('verified' if self.stream.encryption.zrtp.verified else 'not verified'))
         self.sessionController.encryption['audio']['verified'] = 'yes' if self.stream.encryption.zrtp.verified else 'no'
 
-        if peer_name:
-            self.sessionController.updateDisplayName(peer_name)
+        #if peer_name:
+        #    self.sessionController.updateDisplayName(peer_name)
 
     @objc.python_method
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
