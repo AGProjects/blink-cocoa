@@ -1367,8 +1367,11 @@ class SessionController(NSObject):
         for streamHandler in self.streamHandlers:
             self.endStream(streamHandler)
 
-        if self.session is not None:
+        if self.session is not None and self.session.state is not None:
             self.session.end()
+        else:
+            for streamHandler in self.streamHandlers:
+                self.endStream(streamHandler)
 
     @objc.python_method
     def endStream(self, streamHandler):
@@ -1381,6 +1384,10 @@ class SessionController(NSObject):
             elif streamHandler.stream.type == "audio" and self.hasStreamOfType("video") and len(self.streamHandlers) == 2:
                 self.log_debug("ending session with audio and video streams")
                 # if session is video end it
+                self.end()
+                return True
+            elif streamHandler.stream.type == "chat" and self.hasStreamOfType("audio"):
+                self.log_debug("ending session with audio and chat streams")
                 self.end()
                 return True
             elif self.streamHandlers == [streamHandler]:
@@ -1694,12 +1701,13 @@ class SessionController(NSObject):
                         if any(streamHandler.stream.type=='video' for streamHandler in self.streamHandlers):
                             self.waitingForLocalVideo = True
                         else:
-                            print('Will lookup destination for %s...' % self.target_uri)
+                            self.cancelled_during_dns_lookup = False
                             self.lookup_destination(self.target_uri)
 
         else:
             if self.canProposeMediaStreamChanges():
                 self.inProposal = True
+                self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
                 self.log_info("Proposing %s stream%s" % (", ".join(stream.type for stream in add_streams), 's' if len(add_streams) > 1 else ''))
                 try:
                    self.session.add_streams(add_streams)
@@ -1709,6 +1717,7 @@ class SessionController(NSObject):
                     self.log_info("IllegalStateError: %s" % e)
                     log_data = NotificationData(timestamp=datetime.now(), failure_reason=e, proposed_streams=add_streams)
                     self.notification_center.post_notification("BlinkProposalDidFail", sender=self, data=log_data)
+                    self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
                     return False
             else:
                 self.log_info("A stream proposal is already in progress")
@@ -2362,6 +2371,7 @@ class SessionController(NSObject):
                 self.notification_center.post_notification("VideoRemovedByRemoteParty", sender=self, data=data)
 
         self.notification_center.post_notification("BlinkDidRenegotiateStreams", sender=self, data=data)
+        self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     @objc.python_method
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):

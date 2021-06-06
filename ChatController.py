@@ -1104,6 +1104,7 @@ class ChatController(MediaStream):
                 video_stream = self.sessionController.streamHandlerOfType("video")
 
             if identifier == 'connect_button':
+                #print('Clicked connect button in stream status %s' % self.status)
                 if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                     self.end()
                 else:

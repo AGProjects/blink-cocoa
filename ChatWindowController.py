@@ -556,20 +556,23 @@ class ChatWindowController(NSWindowController):
                         if data.state == STATE_IDLE:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+                        elif data.state == STREAM_WAITING_DNS_LOOKUP:
+                            chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Finding Destination...", "Audio status label"))
+                            chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                         elif video_stream:
-                            if video_stream.isCancelling:
-                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Cancelling Video...", "Label"))
-                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                            elif video_stream.isConnecting:
+                            if video_stream.isConnecting:
                                 chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Video...", "Label"))
                                 chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                            else:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+                                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                         elif audio_stream:
-                            if audio_stream.isCancelling:
-                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Cancelling Audio...", "Label"))
-                                chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
-                            elif audio_stream.isConnecting:
+                            if audio_stream.isConnecting:
                                 chat_stream.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Adding Audio...", "Label"))
                                 chat_stream.chatViewController.loadingProgressIndicator.startAnimation_(None)
+                            else:
+                                chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
+                                chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
                         else:
                             chat_stream.chatViewController.loadingTextIndicator.setStringValue_("")
                             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
