@@ -48,19 +48,22 @@ import objc
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.system import unlink
+from gnutls.errors import GNUTLSError
+from gnutls.crypto import X509Certificate, X509PrivateKey
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
 from zope.interface import implementer
 
-from BlinkLogger import FileLogger
+from BlinkLogger import BlinkLogger, FileLogger
+
 from EnrollmentController import EnrollmentController
 from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSliderOption, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SampleRateOption, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
-from util import run_in_gui_thread, AccountInfo, osx_version
+from util import run_in_gui_thread, AccountInfo, osx_version, trusted_cas
 
 
 @implementer(IObserver)
@@ -608,9 +611,6 @@ class PreferencesController(NSWindowController, object):
             if NSRunAlertPanel(NSLocalizedString("Remove Account", "Button title"), text, NSLocalizedString("Remove", "Button title"), NSLocalizedString("Cancel", "Button title"), None) != NSAlertDefaultReturn:
                 return
 
-            if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
-                unlink(account.tls.certificate.normalized)
-
             account_manager = AccountManager()
             if account_manager.default_account is account:
                 try:
@@ -802,14 +802,6 @@ class PreferencesController(NSWindowController, object):
 
         settings = SIPSimpleSettings()
         if sender is settings:
-            if 'tls.verify_server' in notification.data.modified:
-                for account in AccountManager().iter_accounts():
-                    if account is not BonjourAccount():
-                        account.tls.verify_server = settings.tls.verify_server
-                    else:
-                        account.tls.verify_server = False
-                    account.save()
-
             if 'video.resolution' in notification.data.modified:
                 if settings.video.resolution == (640, 480):
                     settings.video.h264.level = "3.0"
@@ -1090,7 +1082,37 @@ class PreferencesController(NSWindowController, object):
         elif item.identifier() == 'sip':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Set port to 0 for automatic allocation", "Label"))
         elif item.identifier() == 'tls':
-            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("These settings apply only for SIP signalling", "Label"))
+            label = ''
+            settings = SIPSimpleSettings()
+            cert_path = settings.tls.ca_list
+            
+            if cert_path:
+                contents = None
+                if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                    contents = open(os.path.expanduser(cert_path), 'rb').read()
+                else:
+                    contents = open(ApplicationData.get(cert_path), 'rb').read()
+
+                cas = trusted_cas(contents)
+                BlinkLogger().log_info("Loaded %d TLS certificate authorities from %s" % (len(cas), cert_path))
+                label += NSLocalizedString("Loaded %d certificate authorities\n", "Label") % len(cas)
+
+            cert_path = settings.tls.certificate
+            if cert_path is not None:
+                if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                    contents = open(os.path.expanduser(cert_path), 'rb').read()
+                else:
+                    contents = open(ApplicationData.get(cert_path), 'rb').read()
+
+                try:
+                    certificate = X509Certificate(contents) # validate the certificate
+                except GNUTLSError as e:
+                    pass
+                else:
+                    label += NSLocalizedString("My certificate: %s", "Label") % certificate.subject
+                    BlinkLogger().log_info("My certificate subject: %s" % certificate.subject)
+
+            self.sectionHelpPlaceholder.setStringValue_(label)
         elif item.identifier() == 'h264':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Any profile will be accepted but this will be proposed", "Label"))
         else:

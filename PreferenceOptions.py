@@ -51,8 +51,10 @@ import os
 import re
 import unicodedata
 
+from BlinkLogger import BlinkLogger
 from application.notification import NotificationCenter, IObserver
 from gnutls.crypto import X509Certificate, X509PrivateKey
+from gnutls.errors import GNUTLSError
 from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
@@ -69,7 +71,7 @@ from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
-from util import audio_codecs, video_codecs, osx_version
+from util import audio_codecs, video_codecs, osx_version, trusted_cas
 
 
 def makeLabel(label):
@@ -1150,32 +1152,80 @@ class PathOption(NullableUnicodeOption):
             self.store()
 
 
-class TLSCAListPathOption(PathOption):
+class TLSCertificatePathOption(PathOption):
     @objc.python_method
     def _store(self):
+        settings = SIPSimpleSettings()
         cert_path = str(self.text.stringValue()) or None
-        if cert_path is not None:
-            if os.path.isabs(cert_path) or cert_path.startswith('~/'):
-                contents = open(os.path.expanduser(cert_path)).read()
+        try:
+            if cert_path is not None and cert_path.lower() != 'default':
+                if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                    contents = open(os.path.expanduser(cert_path), 'rb').read()
+                else:
+                    contents = open(ApplicationData.get(cert_path), 'rb').read()
+
+                try:
+                    certificate = X509Certificate(contents) # validate the certificate
+                except GNUTLSError as e:
+                    BlinkLogger().log_error("Invalid TLS certificate %s: %s" % (cert_path, str(e)))
+                    nc_title = NSLocalizedString("TLS settings", "Label")
+                    nc_body = NSLocalizedString("Invalid certificate", "Label")
+                    NSApp.delegate().gui_notify(nc_title, nc_body)
+                    self.set(settings.tls.certificate)
+                    return
+                else:
+                    try:
+                        X509PrivateKey(contents)  # validate the private key
+                    except GNUTLSError as e:
+                        BlinkLogger().log_error("Invalid TLS private key %s: %s" % (cert_path, str(e)))
+                        nc_title = NSLocalizedString("TLS settings", "Label")
+                        nc_body = NSLocalizedString("Invalid private key", "Label")
+                        NSApp.delegate().gui_notify(nc_title, nc_body)
+                        self.set(settings.tls.certificate)
+                        return
+                    else:
+                        if cert_path != settings.tls.certificate:
+                            BlinkLogger().log_info("Saved TLS certificate from %s" % cert_path)
+                            BlinkLogger().log_info("TLS certificate: %s" % certificate.subject)
+                            nc_title = NSLocalizedString("TLS settings", "Label")
+                            nc_subtitle = NSLocalizedString("Certificate saved", "Label")
+                            nc_body = certificate.subject
+                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                            self.set(cert_path)
             else:
-                contents = open(ApplicationData.get(cert_path)).read()
-            X509Certificate(contents)  # validate the certificate
-        PathOption._store(self)
+                self.set(DefaultValue)
+
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 
-class TLSCertificatePathOption(PathOption):
+class TLSCAPathOption(PathOption):
     def _store(self):
-        cert_path = str(self.text.stringValue()) or None
-        if cert_path is not None and cert_path.lower() != 'default':
-            if os.path.isabs(cert_path) or cert_path.startswith('~/'):
-                contents = open(os.path.expanduser(cert_path)).read()
+        try:
+            cert_path = str(self.text.stringValue()) or None
+            if cert_path is not None and cert_path.lower() != 'default':
+                if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                    contents = open(os.path.expanduser(cert_path), 'rb').read()
+                else:
+                    contents = open(ApplicationData.get(cert_path), 'rb').read()
+     
+                cas = trusted_cas(contents)
+                if len(cas) > 0:
+                    settings = SIPSimpleSettings()
+                    if cert_path != settings.tls.ca_list:
+                        BlinkLogger().log_info("Saved %s with %d certificate authorities" % (cert_path, len(cas)))
+                        nc_title = NSLocalizedString("TLS settings", "Label")
+                        nc_body = NSLocalizedString("Saved %d certificate authorities", "Label") % len(cas)
+                        NSApp.delegate().gui_notify(nc_title, nc_body)
+                        PathOption._store(self)
+                        self.set(cert_path)
             else:
-                contents = open(ApplicationData.get(cert_path)).read()
-            X509Certificate(contents) # validate the certificate
-            X509PrivateKey(contents)  # validate the private key
-            self.set(cert_path)
-        else:
-            self.set(DefaultValue)
+                PathOption._store(self)
+
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 
 class MessageRecorder(NSObject):
@@ -1914,7 +1964,7 @@ PreferenceOptionTypes = {
 "SoundFile" : SoundFileOption,
 "NightVolume" : NightVolumeOption,
 "AccountSoundFile" : AccountSoundFileOption,
-#"SIPTransportList" : SIPTransportListOption,
+"SIPTransport" : MSRPTransportOption,
 "SIPTransportList" : HiddenOption,
 "VideoCodecList" : VideoCodecListOption,
 "AudioCodecList" : AudioCodecListOption,
@@ -1968,8 +2018,7 @@ PreferenceOptionTypes = {
 "sip.tcp_port": TCPPortOption,
 "sip.tls_port": TLSPortOption,
 "sip.do_not_disturb_code": NegativeSIPCodeOption,
-#"tls.ca_list": TLSCAListPathOption,
-"tls.ca_list": HiddenOption,
+"tls.ca_list": TLSCAPathOption,
 "tls.certificate": TLSCertificatePathOption,
 "tls.timeout" : HiddenOption,
 "video.device" : VideoDeviceOption,
@@ -2116,8 +2165,8 @@ SettingDescription = {
                       'web_alert.show_alert_page_after_connect': NSLocalizedString("Open Alert URL After Connect", "Label"),
                       'server.settings_url': NSLocalizedString("Account Web Page", "Label"),
                       'server.web_password': NSLocalizedString("Password", "Label"),
-                      'tls.certificate': NSLocalizedString("X.509 Certificate File", "Label"),
-                      'tls.ca_list': NSLocalizedString("Certificate Authority File", "Label"),
+                      'tls.certificate': NSLocalizedString("Certificate", "Label"),
+                      'tls.ca_list': NSLocalizedString("CA List", "Label"),
                       'tls.verify_server': NSLocalizedString("Verify Server", "Label"),
                       'video.enable_when_auto_answer': NSLocalizedString("Enabled When Automatic Answering Calls", "Label"),
                       'video.keep_window_on_top': NSLocalizedString("Keep Window on Top", "Label"),

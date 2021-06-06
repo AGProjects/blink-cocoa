@@ -141,11 +141,6 @@ class SoundsSettings(SettingsGroup):
     use_speech_recognition = Setting(type=bool, default=False)
 
 
-class TLSSettingsExtension(TLSSettings):
-    ca_list = Setting(type=UserDataPath, default=None, nillable=True)
-    verify_server = Setting(type=bool, default=True)
-
-
 class ContactsSettings(SettingsGroup):
     enable_address_book = Setting(type=bool, default=True)
     enable_incoming_calls_group = Setting(type=bool, default=False)
@@ -168,6 +163,12 @@ class PresenceStateSettings(SettingsGroup):
     timestamp = Setting(type=ISOTimestamp, default=None, nillable=True)
 
 
+class TLSSettingsExtension(TLSSettings):
+    ca_list = Setting(type=UserDataPath, default=None, nillable=True)
+    certificate = Setting(type=UserDataPath, default=UserDataPath('tls/default.crt'), nillable=True)
+    verify_server = Setting(type=bool, default=False)
+
+
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
     answering_machine = AnsweringMachineSettings
     audio = AudioSettingsExtension
@@ -179,8 +180,8 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     server = ServerSettings
     service_provider = ServiceProviderSettings
     sounds = SoundsSettings
-    tls = TLSSettingsExtension
     rtp = RTPSettingsExtension
+    tls = TLSSettingsExtension
     contacts = ContactsSettings
     gui = GUISettings
     presence_state = PresenceStateSettings

@@ -44,7 +44,7 @@ from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
-from util import beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread
+from util import beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread, trusted_cas
 
 
 @implementer(IObserver)
@@ -73,8 +73,9 @@ class SIPManager(object, metaclass=Singleton):
         self.notification_center.add_observer(self, name='SystemWillSleep')
         self.notification_center.add_observer(self, name='SystemDidWakeUpFromSleep')
         self.notification_center.add_observer(self, name='SIPEngineGotException')
-        self.notification_center.add_observer(self, name='XCAPManagerDidChangeState')        
-
+        self.notification_center.add_observer(self, name='XCAPManagerDidChangeState')
+        self.notification_center.add_observer(self, name='TLSTransportHasChanged')
+        
         self.registrar_addresses = {}
         self.contact_addresses = {}
 
@@ -151,110 +152,74 @@ class SIPManager(object, metaclass=Singleton):
         if self._selected_account is None:
             self._selected_account = account_manager.get_accounts()[0]
 
-        # save default ca if needed
-        ca = open(Resources.get('ca.crt'), "r").read().strip()
-        try:
-            X509Certificate(ca)
-        except GNUTLSError as e:
-            BlinkLogger().log_error("Invalid Certificate Authority: %s" % e)
-            return
-
         tls_folder = ApplicationData.get('tls')
         if not os.path.exists(tls_folder):
             os.mkdir(tls_folder, 0o700)
+
         ca_path = os.path.join(tls_folder, 'ca.crt')
+        certificate_path = os.path.join(tls_folder, 'default.crt')
 
         try:
-            existing_cas = open(ca_path, "r").read().strip()
-        except Exception:
+            existing_default_certificate = open(certificate_path, "rb").read().strip()
+        except Exception as e:
+            cert = open(Resources.get('default.crt'), "rb").read().strip()
+            with open(certificate_path, "wb") as f:
+                os.chmod(certificate_path, 0o600)
+                f.write(cert)
+                BlinkLogger().log_info("Added default TLS certificate to %s" % certificate_path)
+
+        try:
+            existing_cas = open(ca_path, "rb").read().strip()
+        except Exception as e:
             existing_cas = None
 
-        if ca == existing_cas:
-            return
+        if not existing_cas or len(existing_cas) < 1000:
+            # copy default certificate authority file
+            ca = open(Resources.get('ca.crt'), "rb").read().strip()
+            with open(ca_path, "wb") as f:
+                os.chmod(ca_path, 0o600)
+                f.write(ca)
+                BlinkLogger().log_info("Added default TLS certificate authorities to %s" % ca_path)
 
-        with open(ca_path, "wb") as f:
-            os.chmod(ca_path, 0o600)
-            f.write(ca.encode())
-
-        BlinkLogger().log_debug("Added default Certificate Authority to %s" % ca_path)
-        settings.tls.ca_list = ca_path
-        settings.save()
-
-    def add_certificate_authority(self, ca):
-        # not used anymore, let users add CAs in keychain instead
-        try:
-            X509Certificate(ca)
-        except GNUTLSError as e:
-            BlinkLogger().log_error("Invalid Certificate Authority: %s" % e)
-            return False
-
-        settings = SIPSimpleSettings()
-        must_save_ca = False
-        if settings.tls.ca_list is not None:
-            ca_path = settings.tls.ca_list.normalized
-        else:
-            tls_folder = ApplicationData.get('tls')
-            if not os.path.exists(tls_folder):
-                os.mkdir(tls_folder, 0o700)
-            ca_path = os.path.join(tls_folder, 'ca.crt')
-            must_save_ca = True
-
-        try:
-            existing_cas = open(ca_path, "r").read().strip() + os.linesep
-        except:
-            existing_cas = None
-            ca_list = ca
-        else:
-            ca_list = existing_cas if ca in existing_cas else existing_cas + ca
-
-        if ca_list != existing_cas:
-            f = open(ca_path, "w")
-            os.chmod(ca_path, 0o600)
-            f.write(ca_list)
-            f.close()
-            BlinkLogger().log_debug("Added new Certificate Authority to %s" % ca_path)
-            must_save_ca = True
-
-        if must_save_ca:
             settings.tls.ca_list = ca_path
             settings.save()
 
-        return True
+        cert_path = settings.tls.certificate
+        if cert_path:
+            BlinkLogger().log_info("Loading my TLS certificate from %s" % cert_path)
+            if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                contents = open(os.path.expanduser(cert_path), 'rb').read()
+            else:
+                contents = open(ApplicationData.get(cert_path), 'rb').read()
 
-    def save_certificates(self, response):
-        passport = response["passport"]
-        address = response["sip_address"]
+            if (contents):
+                try:
+                    certificate = X509Certificate(contents) # validate the certificate
+                except GNUTLSError as e:
+                    BlinkLogger().log_error("Invalid TLS certificate %s: %s" % (cert_path, str(e)))
+                else:
+                    try:
+                        X509PrivateKey(contents)  # validate the private key
+                    except GNUTLSError as e:
+                        BlinkLogger().log_error("Invalid TLS private key %s: %s" % (cert_path, str(e)))
+                    else:
+                        BlinkLogger().log_info("My TLS identity: %s" % certificate.subject)
+        else:
+            BlinkLogger().log_info("No TLS certificate file set, go to Preferences -> Advanced -> TLS settings to add it")
 
-        tls_folder = ApplicationData.get('tls')
-        if not os.path.exists(tls_folder):
-            os.mkdir(tls_folder, 0o700)
-
-        ca = passport["ca"].strip() + os.linesep
-        self.add_certificate_authority(ca)
-
-        crt = passport["crt"].strip() + os.linesep
-        try:
-            X509Certificate(crt)
-        except GNUTLSError as e:
-            BlinkLogger().log_error("Invalid TLS certificate: %s" % e)
-            return None
-
-        key = passport["key"].strip() + os.linesep
-        try:
-            X509PrivateKey(key)
-        except GNUTLSError as e:
-            BlinkLogger().log_error("Invalid Private Key: %s" % e)
-            return None
-
-        crt_path = os.path.join(tls_folder, address + ".crt")
-        f = open(crt_path, "w")
-        os.chmod(crt_path, 0o600)
-        f.write(crt)
-        f.write(key)
-        f.close()
-        BlinkLogger().log_info("Saved new TLS Certificate and Private Key to %s" % crt_path)
-
-        return crt_path
+        cert_path = settings.tls.ca_list
+        if cert_path:
+            BlinkLogger().log_info("Loading TLS certificate authorities from %s" % cert_path)
+            if os.path.isabs(cert_path) or cert_path.startswith('~/'):
+                contents = open(os.path.expanduser(cert_path), 'rb').read()
+            else:
+                contents = open(ApplicationData.get(cert_path), 'rb').read()
+            
+            if contents:
+                cas = trusted_cas(contents)
+                BlinkLogger().log_info("Loaded %d TLS certificate authorities" % len(cas))
+        else:
+            BlinkLogger().log_info("No TLS certificate authorities file set, go to Preferences -> Advanced -> TLS settings to add it")
 
     def fetch_account(self):
         """Fetch the SIP account from ~/.blink_account and create/update it as needed"""
@@ -313,11 +278,6 @@ class SIPManager(object, metaclass=Singleton):
 
             if data['ldap_port']:
                 account.ldap.port = data['ldap_port']
-
-        if data['passport'] is not None:
-            cert_path = self.save_certificates(data)
-            if cert_path:
-                account.tls.certificate = cert_path
 
         account.enabled = True
         account.save()
@@ -459,12 +419,6 @@ class SIPManager(object, metaclass=Singleton):
             if account is not BonjourAccount() and account.sip.primary_proxy is None and account.sip.outbound_proxy and not account.sip.selected_proxy:
                 account.sip.primary_proxy = account.sip.outbound_proxy
 
-            if account is not BonjourAccount() and settings.tls.verify_server != account.tls.verify_server:
-                account.tls.verify_server = settings.tls.verify_server
-
-            if account.tls.certificate and os.path.basename(account.tls.certificate.normalized) != 'default.crt':
-                account.tls.certificate = DefaultValue
-
             if account.rtp.encryption_type == '':
                 account.rtp.encryption.enabled = False
             elif account.rtp.encryption_type == 'opportunistic':
@@ -563,15 +517,19 @@ class SIPManager(object, metaclass=Singleton):
         import signal
         BlinkLogger().log_info("A fatal error occurred, forcing termination of Blink")
         os.kill(os.getpid(), signal.SIGTERM)
-    
+
+    @objc.python_method
+    def _NH_TLSTransportHasChanged(self, sender, data):
+        BlinkLogger().log_info("TLS transport verify server: %s" % data.verify_server)
+        BlinkLogger().log_info("TLS transport certificate: %s" % data.certificate)
+        BlinkLogger().log_info("TLS transport authorities: %s" % data.ca_file)
+
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
         BlinkLogger().log_info("Account %s activated" % account.id)
         # Activate BonjourConferenceServer discovery
         if account is BonjourAccount():
             call_in_green_thread(self.bonjour_conference_services.start)
-        else:
-            BlinkLogger().log_info("Account %s loaded %d CAs from %s" % (account.id, len(account.tls_credentials._trusted), account.ca_list))
 
     @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, account, data):
@@ -880,7 +838,7 @@ class BonjourConferenceServices(object):
                     account = BonjourAccount()
                     service_description = file.service_description
                     transport = uri.transport
-                    supported_transport = transport in settings.sip.transport_list and (transport != 'tls' or account.tls.certificate is not None) and transport == account.sip.transport
+                    supported_transport = transport in settings.sip.transport_list and (transport != 'tls' or settings.tls.certificate is not None) and transport == account.sip.transport
                     if not supported_transport and service_description in self._servers:
                         del self._servers[service_description]
                         notification_center.post_notification('BonjourConferenceServicesDidRemoveServer', sender=self, data=NotificationData(server=service_description))
@@ -928,7 +886,7 @@ class BonjourConferenceServices(object):
             self._discover_timer.cancel()
         self._discover_timer = None
         account = BonjourAccount()
-        supported_transports = set(transport for transport in settings.sip.transport_list if transport!='tls' or account.tls.certificate is not None)
+        supported_transports = set(transport for transport in settings.sip.transport_list if transport!='tls' or settings.tls.certificate is not None)
         discoverable_transports = set('tcp' if transport=='tls' else transport for transport in supported_transports)
         old_files = []
         for file in (f for f in self._files[:] if isinstance(f, (BonjourDiscoveryFile, BonjourResolutionFile)) and f.transport not in discoverable_transports):
@@ -958,6 +916,7 @@ class BonjourConferenceServices(object):
             self._discover_timer = reactor.callLater(1, self._command_channel.send, Command('discover', command.event))
         else:
             command.signal()
+            
 
     def _CH_process_results(self, command):
         for file in (f for f in command.files if not f.closed):

@@ -8,12 +8,12 @@ Blink account settings extensions.
 __all__ = ['AccountExtension', 'BonjourAccountExtension', 'RTPSettingsExtension']
 
 
-from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, TLSSettings, XCAPSettings
+from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SIPProxyAddress, SIPTransport
 
 from configuration import KeychainPasswordSetting
-from configuration.datatypes import AccountSoundFile, AccountTLSCertificate, Digits, HTTPURL, LDAPdn, LDAPusername, UserIcon
+from configuration.datatypes import AccountSoundFile, Digits, HTTPURL, LDAPdn, LDAPusername, UserIcon
 from util import memory_stick_mode
 
 
@@ -26,7 +26,7 @@ class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
     transport = Setting(type=MSRPTransport, default='tcp')
 
 class BonjourSIPSettingsExtension(BonjourMSRPSettings):
-    transport = Setting(type=MSRPTransport, default='tls')
+    transport = Setting(type=SIPTransport, default='tcp')
 
 
 class AudioSettingsExtension(SettingsGroup):
@@ -135,15 +135,6 @@ class SoundsSettings(SettingsGroup):
     audio_inbound = Setting(type=AccountSoundFile, default=AccountSoundFile(AccountSoundFile.DefaultSoundFile('sounds.audio_inbound')), nillable=True)
 
 
-class TLSSettingsExtension(TLSSettings):
-    certificate = Setting(type=AccountTLSCertificate, default=AccountTLSCertificate(AccountTLSCertificate.DefaultTLSCertificate('default.crt')))
-    verify_server = Setting(type=bool, default=True)
-
-class BonjourTLSSettingsExtension(TLSSettings):
-    certificate = Setting(type=AccountTLSCertificate, default=AccountTLSCertificate(AccountTLSCertificate.DefaultTLSCertificate('default.crt')))
-    verify_server = Setting(type=bool, default=False)
-
-
 class XCAPSettingsExtension(XCAPSettings):
     enabled = Setting(type=bool, default=True)
     icon = RuntimeSetting(type=UserIcon, nillable=True, default=None)
@@ -178,7 +169,6 @@ class AccountExtension(SettingsObjectExtension):
     conference = ConferenceSettings
     sip = SIPSettingsExtension
     sounds = SoundsSettings
-    tls = TLSSettingsExtension
     xcap = XCAPSettingsExtension
     web_alert = WebAlertSettings
     gui = GUISettings
@@ -195,6 +185,5 @@ class BonjourAccountExtension(SettingsObjectExtension):
     presence = BonjourPresenceSettingsExtension
     rtp = BonjourRTPSettingsExtension
     sounds = SoundsSettings
-    tls = BonjourTLSSettingsExtension
     gui = GUISettings
 

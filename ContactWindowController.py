@@ -5552,7 +5552,7 @@ class ContactWindowController(NSWindowController):
         
             BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
         else:
-            BlinkLogger().log_info('Published Bonjour uri %s <%s>' % (notification.sender.display_name, notification.sender.uri))
+            BlinkLogger().log_info('Published Bonjour %s neighbour %s <%s>' % (notification.data.transport.upper(), notification.sender.display_name, notification.data.name))
 
         self.refreshAccountList()
 

@@ -324,7 +324,6 @@ class EnrollmentController(NSObject):
                     BlinkLogger().log_info("Enrollment Server successfully created SIP account")
 
                     data = defaultdict(lambda: None, json_data)
-                    tls_path = None if data['passport'] is None else SIPManager().save_certificates(data)
 
                     sip_address = data['sip_address']
                     try:
@@ -416,10 +415,6 @@ class EnrollmentController(NSObject):
         account.auth.password = password
         account.nat_traversal.use_ice = True
         account.rtp.srtp_encryption = 'optional'
-
-        if tls_path:
-            account.tls.certificate = tls_path
-
         account.sip.outbound_proxy = outbound_proxy
         account.xcap.xcap_root = xcap_root
         account.nat_traversal.msrp_relay = msrp_relay

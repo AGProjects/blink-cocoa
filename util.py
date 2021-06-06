@@ -4,7 +4,7 @@
 __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
-           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once']
+           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once', 'trusted_cas']
 
 from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSBundle, NSTimer, NSThread, NSLocalizedString
@@ -21,8 +21,9 @@ import threading
 from datetime import datetime
 from html.entities import name2codepoint
 from html.parser import HTMLParser
-
 from application.python.decorator import decorator, preserve_signature
+from gnutls.crypto import X509Certificate
+from gnutls.errors import GNUTLSError
 
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import SIPURI, FrozenSIPURI, SIPCoreError
@@ -615,7 +616,33 @@ def utc_to_local(t):
     secs = calendar.timegm(t.timetuple())
     return datetime.fromtimestamp(time.mktime(time.localtime(secs)))
 
+def trusted_cas(content):
+    trusted_cas = []
+    crt = ''
+    start = False
+    end = False
 
+    content = content or ''
+    content = content.decode() if isinstance(content, bytes) else content
+
+    for line in content.split("\n"):
+        if "BEGIN CERT" in line:
+            start = True
+            crt = line + "\n"
+        elif "END CERT" in line:
+            crt = crt + line + "\n"
+            end = True
+            start = False
+
+            try:
+                trusted_cas.append(X509Certificate(crt))
+            except (GNUTLSError, ValueError) as e:
+                continue
+        elif start:
+            crt = crt + line + "\n"
+
+    return trusted_cas
+                
 def execute_once(func):
     def wrapper(*args, **kwargs):
         if not wrapper.has_run:
