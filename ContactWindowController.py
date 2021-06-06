@@ -6078,7 +6078,7 @@ class LdapDirectory(object):
         self.l = ldap.initialize(self.server)
         tls_folder = ApplicationData.get('tls')
         ca_path = os.path.join(tls_folder, 'ca.crt')
-        #self.l.set_option(ldap.OPT_X_TLS_CACERTFILE, ca_path)
+        self.l.set_option(ldap.OPT_X_TLS_CACERTFILE, ca_path)
         self.l.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
         self.l.set_option(ldap.OPT_TIMEOUT, 5)
         self.l.set_option(ldap.OPT_TIMELIMIT, 10)
