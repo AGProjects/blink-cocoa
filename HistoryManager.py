@@ -312,7 +312,7 @@ class SessionHistory(object, metaclass=Singleton):
         except dberrors.DuplicateEntryError:
             return True
         except Exception as e:
-            BlinkLogger().log_debug("Error adding record %s to sessions table: %s" % (session_id, e))
+            BlinkLogger().log_error("Error adding record %s to sessions table: %s" % (session_id, e))
             return False
 
     def get_display_names(self, uris):
@@ -641,8 +641,8 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
-
-        body = body.decode() if isinstance(body, bytes) else body
+    
+        body = body.encode().decode()
 
         try:
             if not journal_id and not skip_replication:
@@ -707,7 +707,10 @@ class ChatHistory(object, metaclass=Singleton):
                           encryption          = encryption
                           )
             return True
-        except (dberrors.DuplicateEntryError, ValueError) as e:
+        except ValueError as e:
+            BlinkLogger().log_error('Error inserting Chat SQL record: %s' % str(e))
+            return False
+        except dberrors.DuplicateEntryError as e:
             try:
                 results = ChatMessage.selectBy(msgid=msgid, local_uri=local_uri, remote_uri=remote_uri)
                 message = results.getOne()
