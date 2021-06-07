@@ -20,6 +20,8 @@ from Foundation import (NSBundle,
 import objc
 import re
 import hashlib
+import uuid
+
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
@@ -54,6 +56,7 @@ class SMSWindowController(NSWindowController):
     encryptionMenu = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
     import_key_window = None
+
 
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
@@ -337,6 +340,7 @@ class SMSWindowManagerClass(NSObject):
 
     windows = []
     received_call_ids = set()
+    outgoing_imdn_notifications = {}
 
     def init(self):
         self = objc.super(SMSWindowManagerClass, self).init()
@@ -433,7 +437,7 @@ class SMSWindowManagerClass(NSObject):
         is_cpim = False
         cpim_message = None
         is_replication_message = False
-        imdn_id = None
+        imdn_id = str(uuid.uuid4())
         imdn_timestamp = None
         
         if data.content_type == 'message/cpim':
@@ -455,11 +459,8 @@ class SMSWindowManagerClass(NSObject):
                     if h.name == "Disposition-Notification":
                         cpim_imdn_events = h.value
 
-                if imdn_id:
-                    if cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and imdn_timestamp:
-                        BlinkLogger().log_info("Will send IMDN delivery notification for %s" % imdn_id)
-                    else:
-                        imdn_id = None
+                if cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and imdn_timestamp and account.sms.enable_imdn:
+                    BlinkLogger().log_info("Will send IMDN delivery notification for %s" % imdn_id)
 
                 if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
                     is_replication_message = True
@@ -529,10 +530,13 @@ class SMSWindowManagerClass(NSObject):
             document = IMDNDocument.parse(content)
             imdn_message_id = document.message_id.value
             imdn_status = document.notification.status.__str__()
-            BlinkLogger().log_info(u"Received IMDN message %s" % imdn_status)
+            BlinkLogger().log_info(u"Received IMDN status %s for message %s" % (imdn_status, imdn_message_id))
             viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account)
-            if viewer and imdn_status == 'displayed':
-                viewer.chatViewController.markMessage(imdn_message_id, MSG_STATE_DISPLAYED)
+            if viewer:
+                if imdn_status == 'delivered':
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
+                elif imdn_status == 'displayed':
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
             return
         elif content_type == 'application/im-iscomposing+xml':
             content = cpim_message.content if is_cpim else data.body
@@ -572,7 +576,7 @@ class SMSWindowManagerClass(NSObject):
                 replication_timestamp = ISOTimestamp.now()
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, imdn_id=imdn_id, imdn_timestamp=imdn_timestamp)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, imdn_timestamp=imdn_timestamp, account=account)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 

@@ -58,21 +58,21 @@ from otr import OTRTransport, OTRState, SMPStatus
 from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
 
 from BlinkLogger import BlinkLogger
-from ChatViewController import MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED
+from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
 from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
 from ChatOTR import ChatOtrSmp
+import SMSWindowManager
 
 
-MAX_MESSAGE_LENGTH = 1300
+MAX_MESSAGE_LENGTH = 16000
 
 
 class MessageInfo(object):
-    def __init__(self, id, content=None, content_type=None, call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None, imdn_id=None):
+    def __init__(self, id, content=None, content_type=None, call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None):
         self.id = id
         self.call_id = call_id
-        self.imdn_id = imdn_id
         self.direction = direction
         self.sender = sender
         self.recipient = recipient
@@ -264,7 +264,7 @@ class SMSViewController(NSObject):
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
     @objc.python_method
-    def gotMessage(self, sender, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None, imdn_id=None, imdn_timestamp=None):
+    def gotMessage(self, sender, id, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None,  imdn_timestamp=None, account=None):
         is_html = content_type == 'text/html'
         encrypted = False
 
@@ -306,10 +306,7 @@ class SMSViewController(NSObject):
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or ISOTimestamp.now()
 
-        hash = hashlib.sha1()
-        hash.update((content+str(timestamp)+str(sender)).encode('utf-8'))
-        id = hash.hexdigest()
-
+        self.log_info("Incoming message %s received (SIP Call-Id %s)" % (id, call_id))
         encryption = ''
         if encrypted:
             encryption = 'verified' if self.encryption.verified else 'unverified'
@@ -320,13 +317,8 @@ class SMSViewController(NSObject):
             nc_subtitle = format_identity_to_string(sender, format='full')
             NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-        self.log_info("Incoming message %s received" % call_id)
-
-        self.chatViewController.showMessage(call_id, id, 'incoming', format_identity_to_string(sender), icon, content, timestamp, is_html=is_html, state="delivered", media_type='sms', encryption=encryption)
+        self.chatViewController.showMessage(call_id, id, 'incoming', format_identity_to_string(sender), icon, content, timestamp, is_html=is_html, state="sent", media_type='sms', encryption=encryption)
         
-        if imdn_timestamp and imdn_id:
-            self.sendIMDNNotification(imdn_id, imdn_timestamp, event='delivered')
-            
         if content.endswith('==') and self.private_key:
             pass
             #print('Decrypt message with RSA', content)
@@ -335,12 +327,15 @@ class SMSViewController(NSObject):
             #d = self.private_key.decrypt(content)
             #print(d)
 
-        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=id, direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
         # save to history
         if not is_replication_message or (is_replication_message and self.local_uri == self.account.id):
-            message = MessageInfo(id, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status="delivered", encryption=encryption)
+            message = MessageInfo(id, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status=MSG_STATE_DELIVERED, encryption=encryption)
             self.add_to_history(message)
+
+        if imdn_timestamp and account.sms.enable_imdn:
+            self.sendIMDNNotification(id, imdn_timestamp, event='delivered')
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -431,23 +426,34 @@ class SMSViewController(NSObject):
     def _NH_SIPMessageDidSucceed(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
         self.last_failure_reason = None
+        call_id = data.headers['Call-ID'].body
+        user_agent = data.headers.get('User-Agent', Null).body
+        content_type = data.headers.get('Content-Type', Null).body
+        client = data.headers.get('Client', Null).body
+        server = data.headers.get('Server', Null).body
+        entity = user_agent or server or client
 
         try:
-            message = self.messages.pop(str(sender))
-        except KeyError:
-            self.log_info('Cannot find message %s' % str(sender))
+            message = next(message for message in self.messages.values() if message.call_id == call_id)
+        except StopIteration:
+            try:
+                imdn_id = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+            except KeyError:
+                pass
+                #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
+            else:
+                self.log_info('IMDN confirmation for message %s was sent' % imdn_id)
+                self.history.update_message_status(imdn_id, MSG_STATE_DELIVERED)
+                return
+
+            #self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
             return
+        else:
+            message = self.messages.pop(message.id)
 
         if message.content_type == "application/im-iscomposing+xml":
             return
 
-        call_id = data.headers['Call-ID'].body
-        user_agent = data.headers.get('User-Agent', Null).body
-        server = data.headers.get('Server', Null).body
-        client = data.headers.get('Client', Null).body
-        entity = user_agent or server or client
-        
-        message.call_id = call_id
         self.composeReplicationMessage(message, data.code)
 
         if message.id == 'OTR':
@@ -455,24 +461,36 @@ class SMSViewController(NSObject):
         else:
             if data.code == 202:
                 self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
-                message.status='deferred'
-                self.log_info("Outgoing message %s deferred for later delivery to %s" % (call_id, entity))
+                message.status = MSG_STATE_DEFERRED
+                self.log_info("Message %s deferred for later delivery to %s (SIP Call-Id %s)" % (message.id, message.recipient, call_id))
             else:
-                self.chatViewController.markMessage(message.id, MSG_STATE_DELIVERED)
-                message.status='delivered'
-                self.log_info("Outgoing message %s delivered to %s" % (call_id, entity))
+                self.chatViewController.markMessage(message.id, MSG_STATE_SENT)
+                message.status = MSG_STATE_SENT
+                self.log_info("Message %s sent to %s (SIP Call-Id %s)" % (message.id, message.recipient, call_id))
 
             self.add_to_history(message)
-
 
     @objc.python_method
     def _NH_SIPMessageDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
+        call_id = data.headers['Call-ID'].body
+
         try:
-            message = self.messages.pop(str(sender))
-        except KeyError:
-            self.log_info('Cannot find message %s' % str(sender))
+            message = next(message for message in self.messages.values() if message.call_id == call_id)
+        except StopIteration:
+            try:
+                imdn_id = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+            except KeyError:
+                pass
+                #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
+            else:
+                self.log_info('IMDN confirmation for message %s failed to be sent' % imdn_id)
+                return
+
+            #self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
             return
+        else:
+            message = self.messages.pop(message.id)
 
         if message.content_type == "application/im-iscomposing+xml":
             return
@@ -503,6 +521,11 @@ class SMSViewController(NSObject):
         self.last_failure_reason = reason
 
     @objc.python_method
+    def update_message_status(self, msgid, status):
+        self.chatViewController.markMessage(msgid, status)
+        self.history.update_message_status(msgid, status)
+
+    @objc.python_method
     def add_to_history(self, message):
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient) if message.recipient else ''
@@ -510,7 +533,7 @@ class SMSViewController(NSObject):
         cpim_timestamp = str(message.timestamp)
         content_type="html" if "html" in message.content_type else "text"
 
-        self.history.add_message(message.id, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content, content_type, "0", message.status, call_id=message.call_id)
+        self.history.add_message(message.id, 'sms', self.local_uri, self.remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), content_type, "0", message.status, call_id=message.call_id)
 
     @objc.python_method
     def composeReplicationMessage(self, sent_message, response_code):
@@ -552,15 +575,16 @@ class SMSViewController(NSObject):
             route = self.last_route
 
         if route:
-            extra_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
+            additional_sip_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
-                                      RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=extra_headers)
+                                      RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=additional_sip_headers)
             message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
 
 
     @objc.python_method
     def notifyReadMessages(self):
-        self.log_info('Notify read messages for %s' % self.target_uri)
+        pass
+        #self.log_info('Notify read messages for %s' % self.target_uri)
 
     @objc.python_method
     @run_in_green_thread
@@ -611,6 +635,9 @@ class SMSViewController(NSObject):
         if route:
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                       RouteHeader(route.uri), "message/cpim", payload, credentials=self.account.credentials)
+            self.notification_center.add_observer(self, sender=message_request)
+            SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(message_request)] = message_id
+
             message_request.send(15)
 
     @objc.python_method
@@ -690,25 +717,26 @@ class SMSViewController(NSObject):
         else:
             content = message.content
 
-        self.log_info('Currently encrypted = %s' % self.encryption.active)
+        #self.log_info('Currently encrypted = %s' % self.encryption.active)
 
         timeout = 5
         if message.content_type != "application/im-iscomposing+xml":
             self.enableIsComposing = True
             timeout = 15
 
-        imdn_id = str(uuid.uuid4())
-        ns = CPIMNamespace('urn:ietf:params:imdn', 'imdn')
-        additional_headers = [CPIMHeader('Message-ID', ns, imdn_id)]
-        additional_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
+        additional_cpim_headers = []
+        if self.account.sms.enable_imdn:
+            ns = CPIMNamespace('urn:ietf:params:imdn', 'imdn')
+            additional_cpim_headers = [CPIMHeader('Message-ID', ns, message.id)]
+            additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
-        extra_headers = []
+        additional_sip_headers = []
 
         if self.account.sms.use_cpim:
             if self.public_key:
                 encrypted_content = self.public_key.encrypt(content, 32)
                 content = hexlify(encrypted_content[0])
-                extra_headers = [Header("Public Key", self.contact.contact.public_key_checksum)]
+                additional_sip_headers = [Header("Public Key", self.contact.contact.public_key_checksum)]
 
             payload = CPIMPayload(content,
                                   message.content_type,
@@ -716,7 +744,7 @@ class SMSViewController(NSObject):
                                   sender=ChatIdentity(self.account.uri, self.account.display_name),
                                   recipients=[ChatIdentity(self.target_uri, None)],
                                   timestamp=message.timestamp,
-                                  additional_headers=additional_headers)
+                                  additional_headers=additional_cpim_headers)
 
             payload, content_type = payload.encode()
         else:
@@ -729,24 +757,22 @@ class SMSViewController(NSObject):
                                   content_type,
                                   payload,
                                   credentials=self.account.credentials,
-                                  extra_headers=extra_headers)
+                                  extra_headers=additional_sip_headers)
 
         self.notification_center.add_observer(self, sender=message_request)
         
         message_request.send(timeout)
-        message.status = 'sent'
+        message.status = MSG_STATE_SENDING
         message.call_id = message_request._request.call_id.decode()
-        message.imdn_id = imdn_id
 
-        id=str(message_request)
-        self.messages[id] = message
+        self.messages[message.id] = message
 
         if not isinstance(message, OTRInternalMessage):
             if message.content_type != "application/im-iscomposing+xml":
                 if self.encryption.active:
-                    self.log_info('Encrypted message %s sent to %s' % (message.call_id, self.last_route.uri))
+                    self.log_info('Encrypted message %s pending to %s (SIP Call-ID %s)' % (message.id, self.last_route.uri, message.call_id))
                 else:
-                    self.log_info('Message %s sent to %s' % (message.call_id, self.last_route.uri))
+                    self.log_info('Message %s pending to %s (SIP Call-ID %s)' % (message.id, self.last_route.uri, message.call_id))
         else:
             self.log_info('OTR message %s sent' % message.call_id)
 
@@ -792,20 +818,18 @@ class SMSViewController(NSObject):
 
             if not isinstance(content, OTRInternalMessage):
                 timestamp = ISOTimestamp.now()
-                hash = hashlib.sha1()
                 content = content.decode() if isinstance(content, bytes) else content
-                hash.update((content + str(timestamp)).encode("utf-8"))
-                id = hash.hexdigest()
-                call_id = ''
+                #hash = hashlib.sha1()
+                #hash.update((content + str(timestamp)).encode("utf-8"))
+                id = str(uuid.uuid4()) # use IMDN compatible id
 
-                encryption = ''
                 if self.encryption.active:
                     encryption = 'verified' if self.encryption.verified else 'unverified'
 
-                self.chatViewController.showMessage(call_id, id, 'outgoing', None, icon, content, timestamp, state="sent", media_type='sms', encryption=encryption)
+                self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption='')
 
                 recipient = ChatIdentity(self.target_uri, self.display_name)
-                mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption=encryption)
+                mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption='')
             
                 self.messages[id] = mInfo
                 self.message_queue.put(mInfo)

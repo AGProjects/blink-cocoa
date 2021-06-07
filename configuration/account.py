@@ -49,6 +49,7 @@ class SMSSettingsExtension(SettingsGroup):
     enable_replication = Setting(type=bool, default=False)
     use_cpim = Setting(type=bool, default=True)
     enable_otr = Setting(type=bool, default=True)
+    enable_imdn = Setting(type=bool, default=True)
     public_key = Setting(type=str, default=None, nillable=True)
     private_key = Setting(type=str, default=None, nillable=True)
     public_key_checksum = Setting(type=str, default=None, nillable=True)

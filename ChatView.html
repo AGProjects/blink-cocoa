@@ -5,13 +5,19 @@
 
 body
 {
-  margin: 18px;
+  margin: 12px;
+}
+
+.remote_container {
+}
+
+.local_container {
 }
 
 .sys {
   background-color: #47D29E;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #ACA892;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -24,7 +30,7 @@ body
   background-color: #AD2044;
   color: white;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #ACA892;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -43,7 +49,35 @@ body
   background-color: white;
   color: #404040;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-top: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_sent {
+  background-color: white;
+  color: #404040;
+  border-style: solid;
+  border-width: 0.5px;
+  border-color: #A9A9A9;
+  padding: 2px 2px 2px 2px;
+  margin-top: 10px;
+  font-family: Lucida Grande, Helvetica, Arial;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+}
+
+.msgbox_delivered {
+  background-color: white;
+  color: #404040;
+  border-style: solid;
+  border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -57,7 +91,7 @@ body
   background-color: #CCFFCC;
   color: #404040;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -71,7 +105,7 @@ body
   background-color: #eeeeee;
   color: #404040;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -85,7 +119,7 @@ body
   background-color: #AD2044;
   color: white;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -99,7 +133,7 @@ body
   background-color: #EDF2FF;
   color: #404040;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -109,10 +143,10 @@ body
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
 }
 
-.msgbox_read {
-  color: green;
+.msgbox_displayed {
+  background-color: white;
   border-style: solid;
-  border-width: 1px;
+  border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
   margin-top: 10px;
@@ -191,6 +225,32 @@ body
   margin-left: 10px;
 }
 
+.delivered_hidden {
+  display: none;
+  margin-bottom: 10px;
+  margin-left: 4px;
+  float: right;
+}
+
+.delivered {
+  margin-bottom: 10px;
+  margin-left: 4px;
+  float: right;
+}
+
+.displayed_hidden {
+  display: none;
+  margin-bottom: 10px;
+  margin-left: 4px;
+  float: right;
+}
+
+.displayed {
+  margin-bottom: 10px;
+  margin-left: 3px;
+  float: right;
+}
+
 .hidden {
   display: none;
 }
@@ -226,7 +286,7 @@ body
 
 .table_session_info {
     border-style: solid;
-    border-width: 1px;
+    border-width: 0.5px;
     border-color: #A9A9A9;
     -webkit-border-radius: 3px;
 }
@@ -264,9 +324,11 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
 {
   var chat_session;
   var content;
-  var idstr;
   var message_class;
-
+  var delivered_class = "delivered_hidden";
+  var displayed_class = "displayed_hidden";
+  var container_class = direction == "outgoing" ? "local_container" : "remote_container";
+  
   timestamp = formatTimestamp(timestamp);
 
   chat_session = document.getElementById("chat_session");
@@ -286,22 +348,31 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       lock_class = "lock"
   }
 
-  if (state == "deferred") {
+  if (state == "sending") {
+      box_class = "msgbox_sending";
+      show_sending_state = 'yes'
+  } else if (state == "deferred") {
       box_class = "msgbox_deferred";
       status = "Deferred for later ";
   } else if (state == "failed") {
       box_class = "msgbox_failed"
       status = timestamp;
-  } else if (state == "delivered") {
-      box_class = default_box_class;
+  } else if (state == "displayed") {
+      box_class = "msgbox_displayed"
       status = timestamp;
-  } else if (direction == "outgoing") {
-      box_class = "msgbox_sending";
-      show_sending_state = 'yes'
+      if (direction == 'outgoing')
+        delivered_class = "delivered";
+        displayed_class = "displayed";
+  } else if (state == "delivered") {
+      box_class = "msgbox_delivered"
+      status = timestamp;
+      if (direction == 'outgoing')
+        delivered_class = "delivered";
   } else {
       box_class = default_box_class;
       status = timestamp;
   }
+  
 
     if (iconpath == null) {
         icon_class = "hidden";
@@ -321,33 +392,39 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
 
   if (show_sending_state == 'yes') {
     chat_session.innerHTML +=
-    "<div id='c"+msgid+"'>"+
-    "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
-    "<div class='"+box_class+"' id='"+msgid+"'>"+
-         "<div class='header'>"+
-             "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
-             "<div class='timestamp_hidden' id='t"+msgid+"'><img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+"</div>"+
-             "<div class='state' id='s"+msgid+"'>Sending...</div>"+
-         "</div>"+
-         "<div class='message' id='b"+msgid+"'>"+
-            "<span class='body'>"+text+"</span>"+
+    "<div class='"+container_class+"' id='container_"+msgid+"'>"+
+        "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
+        "<div class='"+box_class+"' id='"+msgid+"'>"+
+             "<div class='header'>"+
+                 "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
+                     "<div class='timestamp_hidden' id='t"+msgid+"'>"+
+                         "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
+                         "<div class='delivered_hidden' id='delivered"+msgid+"'>&#10004;</div>"+
+                         "<div class='displayed_hidden' id='displayed"+msgid+"'>&#10004;</div>"+
+                     "</div>"+
+                 "<div class='state' id='s"+msgid+"'>Sending...</div>"+
+             "</div>"+
+             "<div class='message' id='b"+msgid+"'>"+
+                "<span class='body'>"+text+"</span>"+
+            "</div>"+
         "</div>"+
-    "</div>"+
     "</div>";
   } else {
     chat_session.innerHTML +=
-    "<div id='c"+msgid+"'>"+
-    "<div>"+
-    "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
-    "<div class='"+box_class+"' id='"+msgid+"'>"+
-         "<div class='header'>"+
-             "<div class='"+recipient_class+"'>"+sender+"</div>"+
-             "<div class='timestamp'><img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+"</div>"+
-         "</div>"+
-         "<div class='message' id='b"+msgid+"'>"+
-            "<span class='body'>"+text+"</span>"+
+    "<div class='"+container_class+"' id='container_"+msgid+"'>"+
+        "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
+        "<div class='"+box_class+"' id='"+msgid+"'>"+
+             "<div class='header'>"+
+                 "<div class='"+recipient_class+"'>"+sender+"</div>"+
+                     "<div class='timestamp'><img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
+                     "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
+                     "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
+                 "</div>"+
+             "</div>"+
+             "<div class='message' id='b"+msgid+"'>"+
+                "<span class='body'>"+text+"</span>"+
+            "</div>"+
         "</div>"+
-    "</div>"+
     "</div>";
   }
 
@@ -396,7 +473,7 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
       content.id = "";
 
   chat_session.innerHTML +=
-    "<div id='c"+msgid+"'>"+
+    "<div id='container_"+msgid+"'>"+
     "<div class="+sys_class+">"+
             "<div class='systimestamp'>"+timestamp+"</div>"+
             "<div class='sysmsg'>"+
@@ -492,11 +569,41 @@ function markDeferred(msgid)
     msg.innerHTML = "Deferred for later ";
 }
 
-function markRead(msgid)
+function markSent(msgid)
 {
   var msg = document.getElementById(msgid);
   if (msg != null)
-    msg.className = "msgbox_read";
+    msg.className = "msgbox_sent";
+
+    msg = document.getElementById('t'+msgid)
+    if (msg != null)
+      msg.style.display = "block";
+    msg = document.getElementById('s'+msgid)
+    if (msg != null)
+      msg.style.display = "none";
+}
+
+function markDisplayed(msgid)
+{
+  var msg = document.getElementById(msgid);
+  if (msg != null)
+    msg.className = "msgbox_displayed";
+
+    msg = document.getElementById('t'+msgid)
+    if (msg != null)
+      msg.style.display = "block";
+
+    msg = document.getElementById('delivered'+msgid)
+    if (msg != null)
+      msg.style.display = "block";
+    
+    msg = document.getElementById('displayed'+msgid)
+    if (msg != null)
+      msg.style.display = "block";
+
+    msg = document.getElementById('s'+msgid)
+    if (msg != null)
+      msg.style.display = "none";
 }
 
 function markFailed(msgid)

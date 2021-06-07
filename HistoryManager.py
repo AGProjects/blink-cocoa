@@ -640,6 +640,23 @@ class ChatHistory(object, metaclass=Singleton):
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
+    def update_message_status(self, msgid, status):
+        try:
+            results = ChatMessage.selectBy(msgid=msgid)
+            message = results.getOne()
+            if message:
+                if message.status != status:
+                    message.status = status
+                    BlinkLogger().log_debug("Updated message %s to %s" % (msgid, status))
+            else:
+                BlinkLogger().log_error("Error updating message %s: not found" % msgid)
+
+            return True
+        except Exception as e:
+            BlinkLogger().log_error("Error updating message %s: %s" % (msgid, e))
+
+
+    @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
     
         body = body.encode().decode()

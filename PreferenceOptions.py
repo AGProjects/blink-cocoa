@@ -112,7 +112,8 @@ def formatName(name):
     "pstn": "PSTN",
     "plus": "+",
     "url": "URL",
-    "ice": "ICE"
+    "ice": "ICE",
+    "imdn": "IMDN"
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 

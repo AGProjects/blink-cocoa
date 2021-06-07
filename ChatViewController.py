@@ -2,7 +2,7 @@
 #
 
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
-           'MSG_STATE_SENDING', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED']
+           'MSG_STATE_SENDING', 'MSG_STATE_SENT', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED', 'MSG_STATE_DISPLAYED']
 
 import calendar
 import html
@@ -26,11 +26,12 @@ from SmileyManager import SmileyManager
 from util import escape_html
 
 
-MSG_STATE_SENDING = "sending" # middleware told us the message is being sent
-MSG_STATE_FAILED = "failed" # msg delivery failed
-MSG_STATE_DELIVERED = "delivered" # msg successfully delivered
-MSG_STATE_DEFERRED = "deferred" # msg delivered to a server but deferred for later delivery
-MSG_STATE_DISPLAYED = "displayed" # msg read
+MSG_STATE_SENDING   = "sending"   # middleware told us the message is being sent
+MSG_STATE_SENT      = "sent"      # middleware told us the message was sent the next SIP hop
+MSG_STATE_FAILED    = "failed"    # msg delivery failed (either SIP next hop or end-user using IMDN)
+MSG_STATE_DEFERRED  = "deferred"  # msg delivered to a server but deferred for later delivery
+MSG_STATE_DELIVERED = "delivered" # msg successfully delivered to end-user (IMDN support required)
+MSG_STATE_DISPLAYED = "displayed" # msg was read on end-user device (IMDN support required)
 
 # if user doesnt type for this time, we consider it idling
 TYPING_IDLE_TIMEOUT = 5
@@ -428,23 +429,28 @@ class ChatViewController(NSObject):
             return
 
         if encryption == '':
-            lock_icon_path = Resources.get('unlocked-darkgray.png')
+            #lock_icon_path = Resources.get('unlocked-darkgray.png')
+            lock_icon_path = ''
         else:
             lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
         script = "updateEncryptionLock('%s','%s')" % (msgid, lock_icon_path)
         self.executeJavaScript(script)
 
     @objc.python_method
-    def markMessage(self, msgid, state, private=False): # delegate    
-        if state == MSG_STATE_DELIVERED:
+    def markMessage(self, msgid, state, private=False): # delegate
+        if state == MSG_STATE_SENT:
             is_private = 1 if private else "null"
-            script = "markDelivered('%s',%s)"%(msgid, is_private)
+            script = "markSent('%s',%s)"%(msgid, is_private)
             self.executeJavaScript(script)
         elif state == MSG_STATE_DEFERRED:
             script = "markDeferred('%s')"%msgid
             self.executeJavaScript(script)
+        elif state == MSG_STATE_DELIVERED:
+            is_private = 1 if private else "null"
+            script = "markDelivered('%s',%s)"%(msgid, is_private)
+            self.executeJavaScript(script)
         elif state == MSG_STATE_DISPLAYED:
-            script = "markRead('%s')"%msgid
+            script = "markDisplayed('%s')"%msgid
             self.executeJavaScript(script)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
@@ -484,7 +490,8 @@ class ChatViewController(NSObject):
         lock_icon_path = Resources.get('unlocked-darkgray.png')
         if encryption is not None:
             if encryption == '':
-                lock_icon_path = Resources.get('unlocked-darkgray.png')
+                #lock_icon_path = Resources.get('unlocked-darkgray.png')
+                lock_icon_path = ''
             else:
                 lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
 
