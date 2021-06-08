@@ -481,7 +481,11 @@ class SMSViewController(NSObject):
     @objc.python_method
     def _NH_SIPMessageDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
-        call_id = data.headers['Call-ID'].body
+        try:
+            call_id = data.headers['Call-ID'].body
+        except (AttributeError, KeyError):
+            call_id = None
+            self.log_info('Message failed: %s' % data)
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
