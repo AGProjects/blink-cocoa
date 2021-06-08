@@ -3847,6 +3847,7 @@ class ContactListModel(CustomListModel):
         host = record.host
         uri = record.uri
         id = record.id
+        settings = SIPSimpleSettings()
 
         if uri.transport not in settings.sip.transport_list or uri.transport != BonjourAccount().sip.transport:
             return
