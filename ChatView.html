@@ -116,8 +116,7 @@ body
 }
 
 .msgbox_failed {
-  background-color: #AD2044;
-  color: white;
+  background-color: #EFD4DA;
   border-style: solid;
   border-width: 0.5px;
   border-color: #A9A9A9;
@@ -368,6 +367,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       status = timestamp;
       if (direction == 'outgoing')
         delivered_class = "delivered";
+        displayed_class = "displayed";
   } else {
       box_class = default_box_class;
       status = timestamp;

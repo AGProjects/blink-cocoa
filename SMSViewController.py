@@ -335,7 +335,7 @@ class SMSViewController(NSObject):
             self.add_to_history(message)
 
         if imdn_timestamp and account.sms.enable_imdn:
-            self.sendIMDNNotification(id, imdn_timestamp, event='delivered')
+            self.sendIMDNNotification(id, ISOTimestamp.now(), event='delivered')
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -437,13 +437,13 @@ class SMSViewController(NSObject):
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                imdn_id = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+                (imdn_id, event) = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
             except KeyError:
                 pass
                 #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
             else:
-                self.log_info('IMDN confirmation for message %s was sent' % imdn_id)
-                self.history.update_message_status(imdn_id, MSG_STATE_DELIVERED)
+                self.log_info('IMDN %s confirmation for message %s was sent' % (event, imdn_id))
+                self.history.update_message_status(imdn_id, event)
                 return
 
             #self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
@@ -479,7 +479,7 @@ class SMSViewController(NSObject):
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                imdn_id = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+                SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
             except KeyError:
                 pass
                 #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
@@ -583,8 +583,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def notifyReadMessages(self):
-        pass
-        #self.log_info('Notify read messages for %s' % self.target_uri)
+        self.log_info('Notify read messages for %s' % self.target_uri)
 
     @objc.python_method
     @run_in_green_thread
@@ -636,7 +635,7 @@ class SMSViewController(NSObject):
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                       RouteHeader(route.uri), "message/cpim", payload, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
-            SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(message_request)] = message_id
+            SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(message_request)] = (message_id, event)
 
             message_request.send(15)
 
@@ -985,8 +984,8 @@ class SMSViewController(NSObject):
         last_media_type = 'sms'
         last_chat_timestamp = None
         for message in messages:
-            if message.status == 'failed':
-                continue
+            if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED:
+                self.sendIMDNNotification(message.msgid, ISOTimestamp.now(), event='displayed')
 
             if message.sip_callid != '' and message.media_type == 'sms':
                 try:
@@ -1004,13 +1003,7 @@ class SMSViewController(NSObject):
 
             timestamp=ISOTimestamp(message.cpim_timestamp)
             is_html = False if message.content_type == 'text' else True
-
-            #if call_id is not None and call_id != message.sip_callid and message.media_type == 'chat':
-            #   self.chatViewController.showSystemMessage(message.sip_callid, 'Chat session established', timestamp, False)
-
-            #if message.media_type == 'sms' and last_media_type == 'chat':
-            #   self.chatViewController.showSystemMessage(message.sip_callid, 'Short messages', timestamp, False)
-
+            
             self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, message.cpim_from, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
             call_id = message.sip_callid

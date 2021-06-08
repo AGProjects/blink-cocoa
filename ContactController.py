@@ -66,7 +66,7 @@ class AddContactController(NSObject):
     addressTypesPopUpButton = objc.IBOutlet()
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = None
-    media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3, 'video': 4}
+    media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3, 'video': 4, 'messages': 5}
     autoanswerCheckbox = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
@@ -271,6 +271,8 @@ class AddContactController(NSObject):
                 menu_item.setState_(NSOnState if self.preferred_media in ('audio+chat', 'chat+audio') else NSOffState)
             elif menu_item.tag() == 4:
                 menu_item.setState_(NSOnState if self.preferred_media == 'video' else NSOffState)
+            elif menu_item.tag() == 5:
+                menu_item.setState_(NSOnState if self.preferred_media == 'messages' else NSOffState)
 
         try:
             tag = self.media_tags[self.preferred_media]

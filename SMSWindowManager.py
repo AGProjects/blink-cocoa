@@ -122,6 +122,7 @@ class SMSWindowController(NSWindowController):
         item = self.tabSwitcher.itemForTabViewItem_(tabItem)
         if item:
             if self.tabView.selectedTabViewItem() == tabItem:
+                # TODO and window is focused
                 item.setBadgeLabel_("")
                 session = self.selectedSessionController()
                 session.notifyReadMessages()

@@ -1071,6 +1071,10 @@ class ContactWindowController(NSWindowController):
         else:
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
+            # SMS option disabled when using Bonjour Account
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
+            item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
+
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
             if isinstance(contact, BonjourBlinkContact):
                 item.setEnabled_(True)
@@ -1078,9 +1082,6 @@ class ContactWindowController(NSWindowController):
                 item.setEnabled_(self.contactSupportsMedia("chat", item, contact.uri))  # don't require presence to initiate chat
             else:
                 item.setEnabled_((is_sip_aor_format(contact.uri) or no_contact_selected) and self.sessionControllersManager.isMediaTypeSupported('chat'))
-            # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
-            item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
 
     @objc.python_method
     def updateGroupMenu(self):
@@ -3109,6 +3110,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def startSessionToSelectedContact(self, media_type, uri=None):
+        # double click
         selected_contact = None
         account = None
         uri_type = 'SIP'
@@ -3206,6 +3208,10 @@ class ContactWindowController(NSWindowController):
         if not target_uri:
             BlinkLogger().log_error("Error parsing URI %s" % target)
             return None
+
+        if media_type == "sms":
+            self.sendSMSToURI()
+            return
 
         if media_type == "video":
             media_type = ("audio", "video")
@@ -4391,15 +4397,18 @@ class ContactWindowController(NSWindowController):
                 contact = self.getSelectedContacts()[0]
             except IndexError:
                 return
+
             if sender == self.contactOutline or sender == self.searchOutline:
                 if isinstance(contact, BonjourBlinkContact) and 'isfocus' in contact.uri:
-                    media_type = ('chat', 'audio')
+                    media_type = ("chat", "audio")
                 elif contact.preferred_media == "chat":
                     media_type = "chat"
                 elif contact.preferred_media in ("chat+audio", "audio+chat"):
                     media_type = ("chat", "audio")
                 elif contact.preferred_media == "video":
                     media_type = ("audio", "video")
+                elif contact.preferred_media == "messages":
+                    media_type = "sms"
                 else:
                     media_type = "audio"
             elif sender.selectedSegment() == video_segment:
@@ -4418,7 +4427,7 @@ class ContactWindowController(NSWindowController):
                 elif self.sessionControllersManager.isMediaTypeSupported('sms'):
                     no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
                     if not no_contact_selected:
-                        self.sendSMSToURI(None)
+                        self.sendSMSToURI()
                 return
 
             elif sender.selectedSegment() == screen_segment:
