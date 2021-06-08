@@ -458,7 +458,7 @@ CA
                                     <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Instant Messages" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
+                            <menuItem title="Messages" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
                                 <connections>
                                     <action selector="showSMSWindow:" target="389" id="zvH-Hr-KwH"/>
                                 </connections>
@@ -615,7 +615,7 @@ CA
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <clipView key="contentView" ambiguous="YES" id="7tk-Pf-Fob">
                                                 <rect key="frame" x="1" y="1" width="272" height="346"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" autosaveName="contactList" indentationPerLevel="14" indentationMarkerFollowsCell="NO" autoresizesOutlineColumn="YES" outlineTableColumn="507" id="504" customClass="ContactOutlineView">
                                                         <rect key="frame" x="0.0" y="0.0" width="272" height="346"/>
@@ -1060,7 +1060,7 @@ ABC</string>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="391"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="547" userLabel="Audio Sessions List View" customClass="ListView">
                                         <rect key="frame" x="0.0" y="0.0" width="259" height="16"/>
@@ -1084,17 +1084,17 @@ ABC</string>
                             <rect key="frame" x="0.0" y="394" width="280" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="Atq-KM-J9c">
-                                <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <rect key="frame" x="1" y="0.0" width="263" height="0.0"/>
+                                <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="263" height="36"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
-                                            <tableColumn identifier="participant" width="275" minWidth="40" maxWidth="1000" id="1539">
+                                            <tableColumn identifier="participant" width="260" minWidth="40" maxWidth="1000" id="1539">
                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Remote Conference Participants">
                                                     <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -1122,11 +1122,11 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="1535">
-                                <rect key="frame" x="263" y="0.0" width="16" height="0.0"/>
+                                <rect key="frame" x="264" y="0.0" width="15" height="0.0"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <tableHeaderView key="headerView" id="1538">
-                                <rect key="frame" x="0.0" y="0.0" width="278" height="17"/>
+                                <rect key="frame" x="0.0" y="0.0" width="263" height="17"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
