@@ -383,7 +383,7 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True):
-        if target_name.startswith("sip:"):
+        if target_name and target_name.startswith("sip:"):
             target_name = target_name[4:]
         for window in self.windows:
             for viewer in window.viewers:
