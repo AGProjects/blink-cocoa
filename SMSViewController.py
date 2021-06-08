@@ -479,7 +479,7 @@ class SMSViewController(NSObject):
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+                imdn_id = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
             except KeyError:
                 pass
                 #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)

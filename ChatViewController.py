@@ -446,8 +446,7 @@ class ChatViewController(NSObject):
             script = "markDeferred('%s')"%msgid
             self.executeJavaScript(script)
         elif state == MSG_STATE_DELIVERED:
-            is_private = 1 if private else "null"
-            script = "markDelivered('%s',%s)"%(msgid, is_private)
+            script = "markDelivered('%s')"%(msgid)
             self.executeJavaScript(script)
         elif state == MSG_STATE_DISPLAYED:
             script = "markDisplayed('%s')"%msgid

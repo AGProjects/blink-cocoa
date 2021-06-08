@@ -489,18 +489,9 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
   return 0;
 }
 
-function markDelivered(msgid, private)
+function markDelivered(msgid)
 {
   var msg = document.getElementById(msgid);
-
-  if (private == null) {
-    default_box_class = "msgbox"
-  } else {
-    default_box_class = "msgbox_private"
-  }
-
-  if (msg != null)
-     msg.className = default_box_class;
 
   msg = document.getElementById('t'+msgid)
   if (msg != null)
@@ -508,6 +499,9 @@ function markDelivered(msgid, private)
   msg = document.getElementById('s'+msgid)
   if (msg != null)
     msg.style.display = "none";
+  msg = document.getElementById('delivered'+msgid)
+  if (msg != null)
+    msg.style.display = "block";
 }
 
 function htmlBoxHidden(id)
