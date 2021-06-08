@@ -324,7 +324,7 @@ Gw
                     <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="199">
                         <rect key="frame" x="166" y="79" width="342" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="border" inset="2" autoenablesItems="NO" id="200">
+                        <popUpButtonCell key="cell" type="push" title="Áudio" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="border" tag="1" inset="2" autoenablesItems="NO" selectedItem="208" id="200">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" title="Outras Visões" autoenablesItems="NO" id="201">
@@ -339,6 +339,9 @@ Gw
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                     <menuItem title="Áudio e Vídeo" tag="4" id="cuH-m4-if2">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="Mensagens" tag="5" id="2ZJ-Nm-XO5">
                                         <modifierMask key="keyEquivalentModifierMask"/>
                                     </menuItem>
                                 </items>
