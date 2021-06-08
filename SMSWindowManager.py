@@ -57,7 +57,6 @@ class SMSWindowController(NSWindowController):
     encryptionIconMenuItem = objc.IBOutlet()
     import_key_window = None
 
-
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
         if self:
@@ -125,10 +124,12 @@ class SMSWindowController(NSWindowController):
                 # TODO and window is focused
                 item.setBadgeLabel_("")
                 session = self.selectedSessionController()
-                session.notifyReadMessages()
+                if self.window().isKeyWindow():
+                    session.read_queue_start()
             else:
                 count = self.unreadMessageCounts[session] = self.unreadMessageCounts.get(session, 0) + 1
                 item.setBadgeLabel_(str(count))
+                session.read_queue_stop()
 
     def noteView_isComposing_(self, smsview, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(smsview)
@@ -148,8 +149,9 @@ class SMSWindowController(NSWindowController):
         else:
             tabItem.setLabel_(format_identity_to_string(viewer.target_uri))
         self.tabSwitcher.addTabViewItem_(tabItem)
-        self.tabSwitcher.selectLastTabViewItem_(None)
-        self.window().makeFirstResponder_(viewer.chatViewController.inputText)
+        if len(list(self.viewers)) == 1:
+            self.tabSwitcher.selectLastTabViewItem_(None)
+            self.window().makeFirstResponder_(viewer.chatViewController.inputText)
 
     def removeViewer_(self, viewer):
         i = self.tabView.indexOfTabViewItemWithIdentifier_(viewer)
@@ -176,12 +178,17 @@ class SMSWindowController(NSWindowController):
 
     def tabView_didSelectTabViewItem_(self, sender, item):
         self.window().setTitle_(self.titleLong)
+        session = self.selectedSessionController()
+        self.updateEncryptionWidgets(session)
+        for viewer in self.viewers:
+            if viewer != session:
+                viewer.read_queue_stop()
+            else:
+                viewer.read_queue_start()
+
         if item.identifier() in self.unreadMessageCounts:
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
-        selectedSession = self.selectedSessionController()
-        selectedSession.notifyReadMessages()
-        self.updateEncryptionWidgets(selectedSession)
     
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0:
@@ -202,6 +209,17 @@ class SMSWindowController(NSWindowController):
             self.notification_center.remove_observer(self, name="BlinkShouldTerminate")
         return True
 
+    def windowDidResignKey_(self, notification):
+        session = self.selectedSessionController()
+        if session:
+            session.read_queue_stop()
+        #BlinkLogger().log_info("SMS window un-focused with tab %s" % format_identity_to_string(session.target_uri))
+
+    def windowDidBecomeKey_(self, notification):
+        session = self.selectedSessionController()
+        session.read_queue_start()
+        #BlinkLogger().log_info("SMS window focused with tab %s" % format_identity_to_string(session.target_uri))
+    
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):
         session = self.selectedSessionController()
@@ -365,6 +383,8 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True):
+        if target_name.startswith("sip:"):
+            target_name = target_name[4:]
         for window in self.windows:
             for viewer in window.viewers:
                 if viewer.matchesTargetAccount(target, account):

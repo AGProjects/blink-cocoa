@@ -645,7 +645,7 @@ class ChatHistory(object, metaclass=Singleton):
             results = ChatMessage.selectBy(msgid=msgid)
             message = results.getOne()
             if message:
-                if message.status != status:
+                if message.status != 'displayed' and message.status != status:
                     message.status = status
                     BlinkLogger().log_debug("Updated message %s to %s" % (msgid, status))
             else:

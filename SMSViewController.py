@@ -156,6 +156,7 @@ class SMSViewController(NSObject):
             self.encryption = OTREncryption(self)
 
             self.message_queue = EventQueue(self._send_message)
+            self.read_queue = EventQueue(self._send_read_notification)
 
             self.history=ChatHistory()
 
@@ -191,6 +192,7 @@ class SMSViewController(NSObject):
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.started = False
+            self.read_queue_started = False
 
         return self
 
@@ -336,6 +338,12 @@ class SMSViewController(NSObject):
 
         if imdn_timestamp and account.sms.enable_imdn:
             self.sendIMDNNotification(id, ISOTimestamp.now(), event='delivered')
+            
+        self.read_queue.put(id)
+
+    @objc.python_method
+    def _send_read_notification(self, id):
+        self.sendIMDNNotification(id, ISOTimestamp.now(), event='displayed')
 
     def remoteBecameIdle_(self, timer):
         window = timer.userInfo()
@@ -582,10 +590,6 @@ class SMSViewController(NSObject):
 
 
     @objc.python_method
-    def notifyReadMessages(self):
-        self.log_info('Notify read messages for %s' % self.target_uri)
-
-    @objc.python_method
     @run_in_green_thread
     def sendIMDNNotification(self, message_id, timestamp, event='delivered'):
         self.log_info('Send %s notification for %s' % (event, message_id))
@@ -808,6 +812,24 @@ class SMSViewController(NSObject):
         self.log_info('Stopping OTR...')
         self.stopEncryption()
         self.notification_center.post_notification('OTREncryptionDidStop', sender=self)
+    
+    @objc.python_method
+    def read_queue_start(self):
+        if self.read_queue_started:
+            self.log_info('Read queue resume')
+            self.read_queue.unpause()
+            return
+            
+        self.log_info('Started read queue')
+        self.read_queue.start()
+        self.read_queue_started = True
+
+    @objc.python_method
+    def read_queue_stop(self):
+        #if self.read_queue_started:
+        self.log_info('Read queue paused')
+        self.read_queue.pause()
+
 
     @objc.python_method
     def sendMessage(self, content, content_type="text/plain"):

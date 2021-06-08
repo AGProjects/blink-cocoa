@@ -1827,7 +1827,7 @@ class ContactWindowController(NSWindowController):
 
                     if self.sessionControllersManager.isMediaTypeSupported('sms'):
                         if item not in self.model.bonjour_group.contacts:
-                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Instant Message...", "Menu item"), "sendSMSToSelected:", "")
+                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
                             sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
 
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
@@ -3386,7 +3386,7 @@ class ContactWindowController(NSWindowController):
             if contact:
                 display_name = contact.name
             else:
-                display_name = target
+                display_name = str(target)
 
             SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
 
