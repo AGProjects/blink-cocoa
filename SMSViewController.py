@@ -450,7 +450,7 @@ class SMSViewController(NSObject):
                 pass
                 #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
             else:
-                self.log_info('IMDN %s confirmation for message %s was sent' % (event, imdn_id))
+                self.log_info('%s notification for %s was sent' % (event, imdn_id))
                 self.history.update_message_status(imdn_id, event)
                 return
 
@@ -487,12 +487,12 @@ class SMSViewController(NSObject):
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                imdn_id = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+                (imdn_id, event) = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
             except KeyError:
                 pass
                 #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
             else:
-                self.log_info('IMDN confirmation for message %s failed to be sent' % imdn_id)
+                self.log_info('%s notification for message %s failed' % (event, imdn_id))
                 return
 
             #self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
@@ -592,7 +592,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_green_thread
     def sendIMDNNotification(self, message_id, timestamp, event='delivered'):
-        self.log_info('Send %s notification for %s' % (event, message_id))
+        #self.log_info('Send %s notification for %s' % (event, message_id))
         notification = DisplayNotification('displayed') if event == 'displayed' else DeliveryNotification('delivered')
 
         content = IMDNDocument.create(message_id=message_id, datetime=timestamp, recipient_uri=self.target_uri, notification=notification)
