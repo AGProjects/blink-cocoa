@@ -2748,7 +2748,6 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				2BAF380C0FE088C70040117A /* MainWindow.xib */,
 				1F0F2A8E15456C1300ECB98E /* Plugins */,
 				2BEFC1BD0FD1C93F00447EFB /* Common */,
 				2B11B0B10FF55C3A007FC176 /* Logging */,
@@ -2899,6 +2898,15 @@
 				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
 			);
 			name = Sandbox;
+			sourceTree = "<group>";
+		};
+		1F9C65E4266FAE2700E18D34 /* InfoPanel */ = {
+			isa = PBXGroup;
+			children = (
+				1F5C0760140436E4001DA3EF /* SessionInfoController.py */,
+				1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */,
+			);
+			name = InfoPanel;
 			sourceTree = "<group>";
 		};
 		1FA06CF525EF7C2E00268FF3 /* gnutls */ = {
@@ -3447,10 +3455,8 @@
 			isa = PBXGroup;
 			children = (
 				2BEFC12D0FD0BE4700447EFB /* SessionController.py */,
-				2B240839102117F200079580 /* SessionRinger.py */,
 				2BF432B51084187100F04A6C /* MediaStream.py */,
-				1F5C0760140436E4001DA3EF /* SessionInfoController.py */,
-				1F5C06D714041B9E001DA3EF /* SessionInfoPanel.xib */,
+				1F9C65E4266FAE2700E18D34 /* InfoPanel */,
 				2BFB34B110178A43002D79FB /* AlertPanel */,
 				1F2615A712BD8FFA00B402E1 /* Conference */,
 				2BF42C7A107E6E7600F04A6C /* Audio */,
@@ -3482,6 +3488,7 @@
 		2BEFC1BD0FD1C93F00447EFB /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				2BAF380C0FE088C70040117A /* MainWindow.xib */,
 				1F2C06EC25DC31C1004701ED /* mime.types */,
 				DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */,
 				1F5BC30217E66DAC00D1D8BE /* Localizable.strings */,
@@ -3516,6 +3523,7 @@
 		2BFB34B110178A43002D79FB /* AlertPanel */ = {
 			isa = PBXGroup;
 			children = (
+				2B240839102117F200079580 /* SessionRinger.py */,
 				1F5BC26217E6114200D1D8BE /* AlertPanel.xib */,
 				1F5BC26817E6114700D1D8BE /* AlertPanelView.xib */,
 				2BFB34B210178A99002D79FB /* AlertPanel.py */,
