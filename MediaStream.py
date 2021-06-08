@@ -52,8 +52,7 @@ class MediaStream(NSObject):
     @objc.python_method
     def changeStatus(self, oldstate, newstate, fail_reason=None):
         self.status = newstate
-        self.sessionController.log_debug("%s changed state to %s" % (self, newstate))
-        self.sessionController.log_info("%s media stream changed %s -> %s when session is %s/%s, proposal=%s" % (self.stream.type, oldstate, newstate, self.sessionController.state, self.sessionController.sub_state, self.sessionController.inProposal))
+        self.sessionController.log_debug("%s media stream changed %s -> %s when session is %s/%s, proposal=%s" % (self.stream.type, oldstate, newstate, self.sessionController.state, self.sessionController.sub_state, self.sessionController.inProposal))
         NotificationCenter().post_notification("BlinkStreamHandlerChangedState", sender=self, data=NotificationData(state=newstate, detail=fail_reason))
 
     @property
