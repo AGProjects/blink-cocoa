@@ -555,6 +555,7 @@ class DebugWindow(NSObject):
         applications = None
         method = None
         msg_type = None
+        content_type = ''
         event = ''
         code = None
 
@@ -565,7 +566,7 @@ class DebugWindow(NSObject):
                 for line in data.split("\n"):
                     line = line.strip()
 
-                    if line.startswith("Event:"):
+                    if line.lower().startswith("Event:"):
                         try:
                             event = line.split(" ", 1)[1]
                         except IndexError as e:
@@ -595,26 +596,32 @@ class DebugWindow(NSObject):
                 applications = self.filter_sip_methods[_method]
                 method = _method
                 msg_type = 'offer'
-            except KeyError:
+            except KeyError as e:
                 pass
+                
+            rest_lines = rest.split("\n")
 
-            for line in data.split("\n"):
-                line = line.strip()
-                if line.startswith("Event:"):
+            for line in rest_lines:
+                line = line.strip().lower()
+
+                if line.startswith("content-type:"):
+                    try:
+                        content_type = line.split(" ", 1)[1]
+                    except IndexError:
+                        pass
+
+                if line.startswith("event:"):
                     try:
                         event = line.split(" ", 1)[1]
-                    except IndexError as e:
+                    except IndexError:
                         pass
-                    else:
-                        break
 
             if settings.logs.trace_sip_in_gui == Full:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
             else:
-                line = '%s %s' % (first.strip(), event)
-                text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line+"\n"))
-
+                line = '%s %s' % (first.strip(), event or content_type)
+                text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", self.boldTextAttribs))
 
         self.sipInfoLabel.setStringValue_("%d SIP messages sent, %d SIP messages received, %sytes" % (self.sipOutCount, self.sipInCount, format_size(self.sipBytes)))
 
