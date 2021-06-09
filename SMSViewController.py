@@ -817,24 +817,22 @@ class SMSViewController(NSObject):
     @objc.python_method
     def read_queue_start(self):
         if self.read_queue_started:
-            self.log_info('Read queue resume')
+            #self.log_info('Read queue resume')
             self.read_queue.unpause()
             return
             
-        self.log_info('Started read queue')
+        #self.log_info('Started read queue')
         self.read_queue.start()
         self.read_queue_started = True
 
     @objc.python_method
     def read_queue_stop(self):
-        #if self.read_queue_started:
-        self.log_info('Read queue paused')
+        #self.log_info('Read queue paused')
         self.read_queue.pause()
 
     @objc.python_method
     def sendMessage(self, content, content_type="text/plain"):
         # entry point for sending messages, they will be added to self.message_queue
-        print('sendMessage %s' % content_type)
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
 
         if isinstance(content, OTRInternalMessage):
