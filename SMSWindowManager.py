@@ -409,7 +409,7 @@ class SMSWindowManagerClass(NSObject):
 
         if window:
             if note_new_message:
-                window.window().makeKeyAndOrderFront_(None)
+                window.window().orderFront_(None)
                 NSApp.delegate().noteNewMessage(window)
 
         return viewer
@@ -495,7 +495,7 @@ class SMSWindowManagerClass(NSObject):
             window_tab_identity = sender_identity
 
         if content_type in ('text/plain', 'text/html'):
-            BlinkLogger().log_info(u"Incoming SMS %s from %s to %s received" % (call_id, format_identity_to_string(sender_identity), account.id))
+            BlinkLogger().log_info(u"Incoming %s message %s from %s to %s received" % (content_type, call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type in ('text/rsa-public-key'):
             uri = format_identity_to_string(sender_identity)
             BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))

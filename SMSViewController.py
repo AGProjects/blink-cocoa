@@ -121,7 +121,6 @@ class SMSViewController(NSObject):
 
     showHistoryEntries = 50
     remoteTypingTimer = None
-    enableIsComposing = False
     handle_scrolling = True
     scrollingTimer = None
     scrolling_back = False
@@ -186,8 +185,6 @@ class SMSViewController(NSObject):
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
 
-            self.enableIsComposing = True
-
             self.log_info('Using local account %s' % self.local_uri)
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
@@ -196,6 +193,10 @@ class SMSViewController(NSObject):
 
         return self
 
+    @property
+    def enableIsComposing(self):
+        return self.account.sms.enable_composing
+        
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
@@ -303,8 +304,6 @@ class SMSViewController(NSObject):
   
             return None
 
-        self.enableIsComposing = True
-
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or ISOTimestamp.now()
 
@@ -356,8 +355,6 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def gotIsComposing(self, window, state, refresh, last_active):
-        self.enableIsComposing = True
-
         flag = state == "active"
         if flag:
             if refresh is None:
@@ -459,7 +456,7 @@ class SMSViewController(NSObject):
         else:
             message = self.messages.pop(message.id)
 
-        if message.content_type == "application/im-iscomposing+xml":
+        if message.content_type == IsComposingDocument.content_type:
             return
 
         self.composeReplicationMessage(message, data.code)
@@ -486,6 +483,8 @@ class SMSViewController(NSObject):
         except (AttributeError, KeyError):
             call_id = None
             self.log_info('Message failed: %s' % data)
+            # NotificationData(code=408, reason=b'Request Timeout')
+            # TODO: If this fails locally we cannot find the original Call-id!!!
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
@@ -499,12 +498,12 @@ class SMSViewController(NSObject):
                 self.log_info('%s notification for message %s failed' % (event, imdn_id))
                 return
 
-            #self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
+            self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
             return
         else:
             message = self.messages.pop(message.id)
 
-        if message.content_type == "application/im-iscomposing+xml":
+        if message.content_type == IsComposingDocument.content_type:
             return
 
         if data.code == 408:
@@ -519,7 +518,7 @@ class SMSViewController(NSObject):
         if message.id == 'OTR':
             self.log_info("OTR message %s failed: %s" % (call_id, reason))
         else:
-            message.status='failed'
+            message.status = 'failed'
             self.log_info("Outgoing message %s delivery failed: %s" % (call_id, reason))
             self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
             self.add_to_history(message)
@@ -549,7 +548,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def composeReplicationMessage(self, sent_message, response_code):
-        if sent_message.content_type == "application/im-iscomposing+xml":
+        if sent_message.content_type == IsComposingDocument.content_type:
             return
 
         if isinstance(self.account, Account):
@@ -590,7 +589,7 @@ class SMSViewController(NSObject):
             additional_sip_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
                                       RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=additional_sip_headers)
-            message_request.send(15 if content_type != "application/im-iscomposing+xml" else 5)
+            message_request.send(15 if content_type != IsComposingDocument.content_type else 5)
 
 
     @objc.python_method
@@ -683,7 +682,7 @@ class SMSViewController(NSObject):
             except KeyError:
                 pass
             else:
-                if content_type not in ('application/im-iscomposing+xml', 'message/cpim'):
+                if message.content_type not in ('application/im-iscomposing+xml'):
                     self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
                     message.status='failed'
                     self.add_to_history(message)
@@ -727,12 +726,10 @@ class SMSViewController(NSObject):
         #self.log_info('Currently encrypted = %s' % self.encryption.active)
 
         timeout = 5
-        if message.content_type != "application/im-iscomposing+xml":
-            self.enableIsComposing = True
-            timeout = 15
+        timeout = 5 if message.content_type != IsComposingDocument.content_type else 15
 
         additional_cpim_headers = []
-        if self.account.sms.enable_imdn:
+        if self.account.sms.enable_imdn and message.content_type != IsComposingDocument.content_type:
             ns = CPIMNamespace('urn:ietf:params:imdn', 'imdn')
             additional_cpim_headers = [CPIMHeader('Message-ID', ns, message.id)]
             additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
@@ -740,7 +737,7 @@ class SMSViewController(NSObject):
         additional_sip_headers = []
 
         if self.account.sms.use_cpim:
-            if self.public_key:
+            if self.public_key and message.content_type != IsComposingDocument.content_type:
                 encrypted_content = self.public_key.encrypt(content, 32)
                 content = hexlify(encrypted_content[0])
                 additional_sip_headers = [Header("Public Key", self.contact.contact.public_key_checksum)]
@@ -775,7 +772,7 @@ class SMSViewController(NSObject):
         self.messages[message.id] = message
 
         if not isinstance(message, OTRInternalMessage):
-            if message.content_type != "application/im-iscomposing+xml":
+            if message.content_type != IsComposingDocument.content_type:
                 if self.encryption.active:
                     self.log_info('Encrypted message %s pending to %s (SIP Call-ID %s)' % (message.id, self.last_route.uri, message.call_id))
                 else:
@@ -834,32 +831,31 @@ class SMSViewController(NSObject):
         self.log_info('Read queue paused')
         self.read_queue.pause()
 
-
     @objc.python_method
     def sendMessage(self, content, content_type="text/plain"):
         # entry point for sending messages, they will be added to self.message_queue
-        if content_type != "application/im-iscomposing+xml":
-            icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
+        print('sendMessage %s' % content_type)
+        icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
 
-            if not isinstance(content, OTRInternalMessage):
-                timestamp = ISOTimestamp.now()
-                content = content.decode() if isinstance(content, bytes) else content
-                #hash = hashlib.sha1()
-                #hash.update((content + str(timestamp)).encode("utf-8"))
-                id = str(uuid.uuid4()) # use IMDN compatible id
+        if isinstance(content, OTRInternalMessage):
+            self.message_queue.put(content)
+            return
 
-                if self.encryption.active:
-                    encryption = 'verified' if self.encryption.verified else 'unverified'
+        timestamp = ISOTimestamp.now()
+        content = content.decode() if isinstance(content, bytes) else content
+        id = str(uuid.uuid4()) # use IMDN compatible id
 
-                self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption='')
+        if self.encryption.active:
+            encryption = 'verified' if self.encryption.verified else 'unverified'
 
-                recipient = ChatIdentity(self.target_uri, self.display_name)
-                mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption='')
-            
-                self.messages[id] = mInfo
-                self.message_queue.put(mInfo)
-            else:
-                self.message_queue.put(content)
+        if content_type != IsComposingDocument.content_type:
+            self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption='')
+
+        recipient = ChatIdentity(self.target_uri, self.display_name)
+        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption='')
+    
+        self.messages[id] = mInfo
+        self.message_queue.put(mInfo)
 
         # Async DNS lookup
         if host is None or host.default_ip is None:

@@ -23,7 +23,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.util import ISOTimestamp
 from resources import Resources
 from SmileyManager import SmileyManager
-from util import escape_html
+from util import escape_html, run_in_gui_thread
 
 
 MSG_STATE_SENDING   = "sending"   # middleware told us the message is being sent
@@ -463,6 +463,7 @@ class ChatViewController(NSObject):
             self.messageQueue = []
 
     @objc.python_method
+    @run_in_gui_thread
     def showSystemMessage(self, call_id, content, timestamp=None, is_error=False):
         msgid = str(uuid.uuid1())
         rendered_message = ChatMessageObject(call_id, msgid, content, False, timestamp)
@@ -485,6 +486,7 @@ class ChatViewController(NSObject):
             self.messageQueue.append(script)
 
     @objc.python_method
+    @run_in_gui_thread
     def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
         lock_icon_path = Resources.get('unlocked-darkgray.png')
         if encryption is not None:
