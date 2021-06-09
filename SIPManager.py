@@ -75,6 +75,7 @@ class SIPManager(object, metaclass=Singleton):
         self.notification_center.add_observer(self, name='SIPEngineGotException')
         self.notification_center.add_observer(self, name='XCAPManagerDidChangeState')
         self.notification_center.add_observer(self, name='TLSTransportHasChanged')
+        self.notification_center.add_observer(self, name='SIPAccountManagerWillStart')
         
         self.registrar_addresses = {}
         self.contact_addresses = {}
@@ -438,6 +439,12 @@ class SIPManager(object, metaclass=Singleton):
         logger = FileLogger()
         logger.start()
         self.ip_address_monitor.start()
+
+    def _NH_SIPAccountManagerWillStart(self, sender, data):
+        if data.bonjour_available:
+            BlinkLogger().log_info("Bonjour discovery is available")
+        else:
+            BlinkLogger().log_info("Bonjour discovery is not available")
 
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
