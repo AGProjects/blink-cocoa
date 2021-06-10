@@ -14,7 +14,7 @@ from application.notification import NotificationCenter, IObserver, Notification
 from application.python import Null
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import ToHeader, SIPURI
+from sipsimple.core import ToHeader, SIPURI, Route
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session
 from sipsimple.streams.msrp.filetransfer import FileTransferStream, FileSelector
@@ -77,6 +77,10 @@ class FileTransfer(object):
     @property
     def file_selector(self):
         return self.stream.file_selector if self.stream is not None else None
+
+    @property
+    def progress_text(self):
+        return self.status
 
     @property
     def file_size(self):
@@ -238,6 +242,75 @@ class FileTransfer(object):
     def log_info(self, text):
         BlinkLogger().log_info("[%s file transfer with %s] %s" % (self.direction.title(), self.remote_identity, text))
 
+    def lookup_destination(self, target_uri):
+        self.log_info("Lookup destination for %s" % target_uri)
+
+        if self.account is BonjourAccount():
+            uri = target_uri
+            tls_name = self.account.sip.tls_name
+            transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
+            transport = 'tls' if uri.secure else transport.lower()
+            port = uri.port or (5061 if transport=='tls' else 5060)
+            routes = [Route(address=uri.host, port=port, transport=transport, tls_name=tls_name or uri.host)]
+            self.connect(routes)
+            return
+
+        self.lookup_dns(target_uri)
+
+    @run_in_green_thread
+    def lookup_dns(self, target_uri):
+        settings = SIPSimpleSettings()
+        lookup = DNSLookup()
+        notification_center = NotificationCenter()
+        notification_center.add_observer(self, sender=lookup)
+        tls_name = self.account.sip.tls_name or self.account.id.domain
+
+        if self.account.sip.outbound_proxy is not None:
+            proxy = self.account.sip.outbound_proxy
+            uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+            self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
+        elif self.account.sip.always_use_my_proxy:
+            uri = SIPURI(host=self.account.id.domain)
+            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
+        else:
+            uri = target_uri
+            self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
+
+        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
+
+    def _NH_DNSLookupDidSucceed(self, notification):
+        notification.center.remove_observer(self, sender=notification.sender)
+        routes = notification.data.result
+        if not routes:
+            self._terminate(failure_reason="Destination not found")
+            return
+
+        self.connect(routes)
+
+    def _NH_DNSLookupDidFail(self, notification):
+        notification.center.remove_observer(self, sender=notification.sender)
+        if self._ended:
+            return
+        self.log_info("DNS Lookup for SIP routes failed: '%s'" % notification.data.error)
+        status = NSLocalizedString("DNS Lookup failed", "Label")
+        self._terminate(failure_reason=notification.data.error, failure_status=status)
+
+    def connect(self, routes):
+        notification_center = NotificationCenter()
+
+        if self._ended:
+            self.log_info("File transfer has already ended")
+            return
+            
+        self.session = Session(self.account)
+        self.stream = FileTransferStream(self._file_selector, 'sendonly' if self.transfer_type=='push' else 'recvonly', transfer_id=self.ft_info.transfer_id)
+        self.handler = self.stream.handler
+        notification_center.add_observer(self, sender=self.stream)
+        notification_center.add_observer(self, sender=self.handler)
+
+        self.log_info("Sending %s file transfer request via %s..." % (self.transfer_type, routes[0]))
+        self.session.connect(ToHeader(self.target_uri), routes, [self.stream])
+
 
 class IncomingFileTransferHandler(FileTransfer):
     direction = 'incoming'
@@ -252,10 +325,6 @@ class IncomingFileTransferHandler(FileTransfer):
     @property
     def target_text(self):
         return "From " + self.remote_identity
-
-    @property
-    def progress_text(self):
-        return self.status
 
     def start(self):
         notification_center = NotificationCenter()
@@ -284,6 +353,7 @@ class IncomingFileTransferHandler(FileTransfer):
 
 class OutgoingPushFileTransferHandler(FileTransfer):
     direction = 'outgoing'
+    transfer_type = 'push'
 
     def __init__(self, account, target_uri, file_path):
         self.account = account
@@ -297,10 +367,6 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         t = NSLocalizedString("To %s", "Label") % self.remote_identity
         f = NSLocalizedString("from account %s", "Label") % self.account.id
         return t + " " + f
-
-    @property
-    def progress_text(self):
-        return self.status
 
     def retry(self):
         self._ended = False
@@ -331,27 +397,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.status = NSLocalizedString("Offering File...", "Label")
         self.ft_info.status = "proposing"
 
-        self.log_info("Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
-        lookup = DNSLookup()
-        notification_center.add_observer(self, sender=lookup)
-
-        if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info("Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
-        elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
-            uri = SIPURI(host=self.account.id.domain)
-            self.log_info("Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
-        else:
-            uri = self.target_uri
-            self.log_info("Initiating DNS Lookup for %s" % self.target_uri)
-
-        settings = SIPSimpleSettings()
-
-        tls_name = None
-        if isinstance(self.account, Account):
-            tls_name = self.account.sip.tls_name or self.account.id.domain
-
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
+        self.lookup_destination(self.target_uri)
 
         if restart:
             notification_center.post_notification("BlinkFileTransferWillRestart", self)
@@ -369,31 +415,6 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             self._terminate(failure_reason="Cancelled", failure_status=status)
             self.log_info("File Transfer has been cancelled")
 
-    def _NH_DNSLookupDidSucceed(self, notification):
-        notification.center.remove_observer(self, sender=notification.sender)
-        if self._ended:
-            self.log_info("File transfer was already cancelled")
-            return
-        routes = notification.data.result
-        if not routes:
-            self._terminate(failure_reason="Destination not found")
-            return
-        self.session = Session(self.account)
-        self.stream = FileTransferStream(self._file_selector, 'sendonly', transfer_id=self.ft_info.transfer_id)
-        self.handler = self.stream.handler
-        notification.center.add_observer(self, sender=self.stream)
-        notification.center.add_observer(self, sender=self.handler)
-        self.log_info("Sending push file transfer request via %s..." % routes[0])
-        self.session.connect(ToHeader(self.target_uri), routes, [self.stream])
-
-    def _NH_DNSLookupDidFail(self, notification):
-        self.log_info("DNS Lookup failed: '%s'" % notification.data.error)
-        notification.center.remove_observer(self, sender=notification.sender)
-        if self._ended:
-            return
-        status = NSLocalizedString("DNS Lookup failed", "Label")
-        self._terminate(failure_reason=notification.data.error, failure_status=status)
-
     def _NH_FileTransferHandlerHashProgress(self, notification):
         progress = int(notification.data.processed * 100 / notification.data.total)
         if self.progress is None or progress > self.progress:
@@ -403,6 +424,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
 
 class OutgoingPullFileTransferHandler(FileTransfer):
     direction = 'outgoing'
+    transfer_type = 'pull'
 
     def __init__(self, account, target_uri, filename, hash):
         self.account = account
@@ -417,10 +439,6 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         t = NSLocalizedString("to account %s", "Label") % self.account.id
         return f + " " + t
 
-    @property
-    def progress_text(self):
-        return self.status
-
     def start(self):
         notification_center = NotificationCenter()
         file_path = self._file_selector.name.decode() if isinstance(self._file_selector.name, bytes) else self._file_selector.name
@@ -432,64 +450,21 @@ class OutgoingPullFileTransferHandler(FileTransfer):
                                         file_path=file_path)
 
         self.log_info("Pull File Transfer Request started %s" % file_path)
+        notification_center.post_notification("BlinkFileTransferNewOutgoing", self)
 
         self.status = NSLocalizedString("Requesting File...", "Label")
         self.ft_info.status = "requesting"
 
-        self.log_info("Initiating DNS Lookup of %s to %s" % (self.account, self.target_uri))
-        lookup = DNSLookup()
-        notification_center.add_observer(self, sender=lookup)
-
-        if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port, parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info("Initiating DNS Lookup for %s (through proxy %s)" % (self.target_uri, uri))
-        elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
-            uri = SIPURI(host=self.account.id.domain)
-            self.log_info("Initiating DNS Lookup for %s (through account %s proxy)" % (self.target_uri, self.account.id))
-        else:
-            uri = self.target_uri
-            self.log_info("Initiating DNS Lookup for %s" % self.target_uri)
-
-        settings = SIPSimpleSettings()
-        tls_name = None
-        if isinstance(self.account, Account):
-            tls_name = self.account.sip.tls_name or self.account.id.domain
-        lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
-
-        notification_center.post_notification("BlinkFileTransferNewOutgoing", self)
+        self.lookup_destination(self.target_uri)
 
     def end(self):
         if self._ended:
             return
         self._ended = True
+
         if self.session is not None:
             self.session.end()
         else:
             status = NSLocalizedString("Cancelled", "Label")
             self._terminate(failure_reason="Cancelled", failure_status=status)
             self.log_info("File Transfer has been cancelled")
-
-    def _NH_DNSLookupDidSucceed(self, notification):
-        notification.center.remove_observer(self, sender=notification.sender)
-        if self._ended:
-            return
-        routes = notification.data.result
-        if not routes:
-            self._terminate(failure_reason="Destination not found")
-            return
-        self.session = Session(self.account)
-        self.stream = FileTransferStream(self._file_selector, 'recvonly', transfer_id=self.ft_info.transfer_id)
-        self.handler = self.stream.handler
-        notification.center.add_observer(self, sender=self.stream)
-        notification.center.add_observer(self, sender=self.handler)
-        self.log_info("Sending pull file transfer request via %s..." % routes[0])
-        self.session.connect(ToHeader(self.target_uri), routes, [self.stream])
-
-    def _NH_DNSLookupDidFail(self, notification):
-        notification.center.remove_observer(self, sender=notification.sender)
-        if self._ended:
-            return
-        self.log_info("DNS Lookup for SIP routes failed: '%s'" % notification.data.error)
-        status = NSLocalizedString("DNS Lookup failed", "Label")
-        self._terminate(failure_reason=notification.data.error, failure_status=status)
-
