@@ -72,8 +72,24 @@ class FileTransferWindowController(NSObject):
             NSBundle.loadNibNamed_owner_("FileTransferWindow", self)
 
             self.transferSpeed.setStringValue_('')
-            self.load_transfers_from_history()
 
+    @objc.python_method
+    @run_in_green_thread
+    def load_transfers_from_history(self):
+        active_items = []
+        for item in self.listView.subviews().copy():
+            if item.done:
+                item.removeFromSuperview()
+            else:
+                if item.transfer:
+                    active_items.append(item.transfer.transfer_id)
+
+        self.listView.relayout()
+        self.listView.display()
+        self.listView.setNeedsDisplay_(True)
+
+        self.get_previous_transfers(active_items)
+        
     @objc.python_method
     @run_in_green_thread
     def get_previous_transfers(self, active_items=()):
@@ -81,13 +97,15 @@ class FileTransferWindowController(NSObject):
         already_added_file = set()
         transfers = []
         for transfer in results:
-            file_idx = '%s%s' % (transfer.file_path, transfer.remote_uri)
             if transfer.transfer_id in active_items:
                 continue
+
             if file_idx in already_added_file:
                 continue
+
             already_added_file.add(file_idx)
             transfers.append(transfer)
+
         self.render_previous_transfers(reversed(transfers))
 
     @objc.python_method
@@ -114,22 +132,6 @@ class FileTransferWindowController(NSObject):
             self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count if count else "")
 
         self.loaded = True
-
-    @objc.python_method
-    def load_transfers_from_history(self):
-        active_items = []
-        for item in self.listView.subviews().copy():
-            if item.done:
-                item.removeFromSuperview()
-            else:
-                if item.transfer:
-                    active_items.append(item.transfer.transfer_id)
-
-        self.listView.relayout()
-        self.listView.display()
-        self.listView.setNeedsDisplay_(True)
-
-        self.get_previous_transfers(active_items)
 
     @objc.python_method
     def refresh_transfer_rate(self):
@@ -177,6 +179,7 @@ class FileTransferWindowController(NSObject):
     @objc.IBAction
     def showWindow_(self, sender):
         if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+            self.load_transfers_from_history()
             self.window.makeKeyAndOrderFront_(None)
 
     @objc.python_method

@@ -125,7 +125,7 @@ class FileTransferItemView(NSView):
                 self.fromText.setStringValue_("To:  %s" % self.transfer.account.id)
             else:
                 self.fromText.setStringValue_("From:  %s" % self.transfer.account.id)
-            self.revealButton.setHidden_(True)
+            self.revealButton.setHidden_(False)
 
             # XXX: there should be a better way to do this!
             tmp_folder = ApplicationData.get('.tmp_file_transfers')

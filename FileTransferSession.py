@@ -155,7 +155,18 @@ class FileTransfer(object):
         ChatHistory().add_message(self.ft_info.transfer_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     def end(self):
-        raise NotImplementedError
+        if self._ended:
+            return
+
+        self._ended = True
+
+        if self.session is not None:
+            print('Session will end %s in state %s' % (self.session, self.session.state))
+            self.session.end()
+
+        status = NSLocalizedString("Cancelled", "Label")
+        self._terminate(failure_reason="Cancelled", failure_status=status)
+        self.log_info("File Transfer has been cancelled")
 
     def _terminate(self, failure_reason=None, failure_status=None):
         notification_center = NotificationCenter()
@@ -395,7 +406,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
     def start(self, restart=False):
         notification_center = NotificationCenter()
         file_path = self._file_selector.name.decode() if isinstance(self._file_selector.name, bytes) else self._file_selector.name
-        
+
         self.ft_info = FileTransferInfo(transfer_id=str(uuid.uuid4()),
                                         direction='outgoing',
                                         file_size=self._file_selector.size,
@@ -412,17 +423,6 @@ class OutgoingPushFileTransferHandler(FileTransfer):
             notification_center.post_notification("BlinkFileTransferWillRestart", self)
         else:
             notification_center.post_notification("BlinkFileTransferNewOutgoing", sender=self)
-
-    def end(self):
-        if self._ended:
-            return
-        self._ended = True
-        if self.session is not None:
-            self.session.end()
-        else:
-            status = NSLocalizedString("Cancelled", "Label")
-            self._terminate(failure_reason="Cancelled", failure_status=status)
-            self.log_info("File Transfer has been cancelled")
 
     def _NH_FileTransferHandlerHashProgress(self, notification):
         progress = int(notification.data.processed * 100 / notification.data.total)
@@ -466,14 +466,3 @@ class OutgoingPullFileTransferHandler(FileTransfer):
 
         self.lookup_destination(self.target_uri)
 
-    def end(self):
-        if self._ended:
-            return
-        self._ended = True
-
-        if self.session is not None:
-            self.session.end()
-        else:
-            status = NSLocalizedString("Cancelled", "Label")
-            self._terminate(failure_reason="Cancelled", failure_status=status)
-            self.log_info("File Transfer has been cancelled")
