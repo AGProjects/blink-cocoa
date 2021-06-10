@@ -448,20 +448,20 @@ class SMSViewController(NSObject):
         except StopIteration:
             try:
                 (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
-            except KeyError:
+            except (KeyError, IndexError):
                 pass
             else:
                 if event in ('delivered', 'displayed'):
                     self.log_info('%s notification for %s was sent' % (event, message_id))
                     self.history.update_message_status(message_id, event)
             return
-        else:
-            try:
-                del self.pending_outgoing_messages[str(sender)]
-            except KeyError:
-                pass
+
+        try:
+            del self.pending_outgoing_messages[str(sender)]
+        except KeyError:
+            pass
         
-            message = self.messages.pop(message.id)
+        message = self.messages.pop(message.id)
 
         if message.content_type == IsComposingDocument.content_type:
             return
@@ -471,14 +471,15 @@ class SMSViewController(NSObject):
         if message.id == 'OTR':
             self.log_info("OTR message %s delivered to %s" % (call_id, entity))
         else:
-            if data.code == 202:
-                self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
-                message.status = MSG_STATE_DEFERRED
-                self.log_info("Message %s deferred for later delivery to %s (SIP Call-Id %s)" % (message.id, message.recipient, call_id))
-            else:
-                self.chatViewController.markMessage(message.id, MSG_STATE_SENT)
-                message.status = MSG_STATE_SENT
-                self.log_info("Message %s sent to %s (SIP Call-Id %s)" % (message.id, message.recipient, call_id))
+            if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                if data.code == 202:
+                    self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
+                    message.status = MSG_STATE_DEFERRED
+                    self.log_info("%s message %s for %s accepted by %s for later delivery (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
+                else:
+                    self.chatViewController.markMessage(message.id, MSG_STATE_SENT)
+                    message.status = MSG_STATE_SENT
+                    self.log_info("%s message %s for %s accepted by %s (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
 
             self.add_to_history(message)
 
@@ -489,9 +490,6 @@ class SMSViewController(NSObject):
             call_id = data.headers['Call-ID'].body
         except (AttributeError, KeyError):
             call_id = None
-            self.log_info('Message failed: %s' % data)
-            # NotificationData(code=408, reason=b'Request Timeout')
-            # TODO: If this fails locally we cannot find the original Call-id!!!
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
@@ -499,6 +497,7 @@ class SMSViewController(NSObject):
             try:
                 (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
             except KeyError:
+                self.log_info('Cannot find IMDN outgoing message data in pending_outgoing_messages')
                 pass
             else:
                 if event in ('sent'):
@@ -513,7 +512,7 @@ class SMSViewController(NSObject):
         else:
             message = self.messages.pop(message.id)
 
-        if message.content_type == IsComposingDocument.content_type:
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
             return
 
         if data.code == 408:
@@ -529,15 +528,19 @@ class SMSViewController(NSObject):
             self.log_info("OTR message %s failed: %s" % (call_id, reason))
         else:
             message.status = 'failed'
-            self.log_info("Outgoing message %s delivery failed: %s" % (call_id, reason))
-            self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-            self.add_to_history(message)
+            if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                self.log_info("Outgoing setmroutesessage %s delivery failed: %s" % (call_id, reason))
+                self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+                self.add_to_history(message)
 
         if (data.code == 480 or 'not online' in reason) and reason != self.last_failure_reason:
             self.chatViewController.showSystemMessage('0', 'User not online', ISOTimestamp.now(), True)
-            if self.otr_negotiation_timer:
-                self.otr_negotiation_timer.invalidate()
-            self.otr_negotiation_timer = None
+        else:
+            self.chatViewController.showSystemMessage('0', reason, ISOTimestamp.now(), True)
+
+        if self.otr_negotiation_timer:
+            self.otr_negotiation_timer.invalidate()
+        self.otr_negotiation_timer = None
 
         self.last_failure_reason = reason
 
@@ -654,12 +657,11 @@ class SMSViewController(NSObject):
         self.connect()
     
     def connect(self):
-        self.log_info('Sending message via %s' % self.last_route)
-
         if self.started:
             return
 
         self.started = True
+        self.log_info('Using route %s' % self.last_route)
         self.message_queue.start()
 
         if not self.encryption.active and self.account.sms.enable_otr:
@@ -668,8 +670,8 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def setRoutesFailed(self, reason):
-        self.message_queue.stop()
         self.started = False
+        self.message_queue.stop()
 
         for msgObject in self.message_queue.queue.queue:
             id = msgObject.id
@@ -679,13 +681,14 @@ class SMSViewController(NSObject):
             except KeyError:
                 pass
             else:
-                if message.content_type not in ('application/im-iscomposing+xml'):
+                if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
                     self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
                     message.status='failed'
                     self.add_to_history(message)
-                    log_text =  NSLocalizedString("Routing failure: %s", "Label") % msg
-                    self.chatViewController.showSystemMessage('0', reason, ISOTimestamp.now(), True)
-                    self.log_info(log_text)
+
+        log_text =  NSLocalizedString("Routing failure: %s", "Label") % reason
+        self.chatViewController.showSystemMessage('0', log_text, ISOTimestamp.now(), True)
+        self.log_info(log_text)
 
     @objc.python_method
     def _send_message(self, message):
@@ -715,7 +718,8 @@ class SMSViewController(NSObject):
             if self.encryption.active and not content.startswith(b'?OTR:'):
                 self.chatViewController.showSystemMessage("0", "The other party stopped encryption", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
-                self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+                if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                    self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
                 return None
         else:
             content = message.content
@@ -762,7 +766,7 @@ class SMSViewController(NSObject):
 
       
         if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-           self.pending_outgoing_messages[str(message_request)] = (message_id, 'sent', datetime.datetime.now())
+           self.pending_outgoing_messages[str(message_request)] = (message.id, 'sent', datetime.datetime.now())
 
         self.notification_center.add_observer(self, sender=message_request)
         
@@ -775,9 +779,9 @@ class SMSViewController(NSObject):
         if not isinstance(message, OTRInternalMessage):
             if message.content_type != IsComposingDocument.content_type:
                 if self.encryption.active:
-                    self.log_info('Encrypted message %s pending to %s (SIP Call-ID %s)' % (message.id, self.last_route.uri, message.call_id))
+                    self.log_info('%s encrypted message %s pending to %s (SIP Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
                 else:
-                    self.log_info('Message %s pending to %s (SIP Call-ID %s)' % (message.id, self.last_route.uri, message.call_id))
+                    self.log_info('%s message %s pending to %s (SIP Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
         else:
             self.log_info('OTR message %s sent' % message.call_id)
 
