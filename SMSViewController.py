@@ -797,10 +797,10 @@ class SMSViewController(NSObject):
         self.notification_center.add_observer(self, sender=lookup)
 
         if self.account is BonjourAccount():
-            tls_name = uri.host
+            tls_name = target_uri.host
         else:
             if self.account.id.domain == target_uri.host.decode():
-                tls_name = self.account.sip.tls_name
+                tls_name = self.account.sip.tls_name or self.account.id.domain
             else:
                 tls_name = target_uri.host.decode()
 

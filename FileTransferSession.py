@@ -243,13 +243,12 @@ class FileTransfer(object):
     def log_info(self, text):
         BlinkLogger().log_info("[%s file transfer with %s] %s" % (self.direction.title(), self.remote_identity, text))
 
-    def lookup_destination(self, target_uri):
-        self.log_info("Lookup destination for %s" % target_uri)
+    def lookup_destination(self, uri):
+        self.log_info("Lookup destination for %s" % uri)
 
         is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
 
         if self.account is BonjourAccount() and is_ip_address:
-            uri = target_uri
             tls_name = self.account.sip.tls_name
             transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
             transport = 'tls' if uri.secure else transport.lower()
@@ -258,7 +257,7 @@ class FileTransfer(object):
             self.connect(routes)
             return
 
-        self.lookup_dns(target_uri)
+        self.lookup_dns(uri)
 
     @run_in_green_thread
     def lookup_dns(self, target_uri):
@@ -266,7 +265,14 @@ class FileTransfer(object):
         lookup = DNSLookup()
         notification_center = NotificationCenter()
         notification_center.add_observer(self, sender=lookup)
-        tls_name = self.account.sip.tls_name or self.account.id.domain
+
+        if self.account is BonjourAccount():
+            tls_name = target_uri.host
+        else:
+            if self.account.id.domain == target_uri.host.decode():
+                tls_name = self.account.sip.tls_name or self.account.id.domain
+            else:
+                tls_name = target_uri.host.decode()
 
         if self.account.sip.outbound_proxy is not None:
             proxy = self.account.sip.outbound_proxy
