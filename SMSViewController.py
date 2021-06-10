@@ -36,6 +36,7 @@ import datetime
 import hashlib
 from binascii import unhexlify, hexlify
 import ast
+import re
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -196,6 +197,10 @@ class SMSViewController(NSObject):
     @property
     def enableIsComposing(self):
         return self.account.sms.enable_composing
+        
+    @property
+    def pending_outgoing_messages(self):
+        return SMSWindowManager.SMSWindowManager().pending_outgoing_messages
         
     def dealloc(self):
         if self.remoteTypingTimer:
@@ -442,18 +447,20 @@ class SMSViewController(NSObject):
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                (imdn_id, event) = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+                (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
             except KeyError:
                 pass
-                #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
             else:
-                self.log_info('%s notification for %s was sent' % (event, imdn_id))
-                self.history.update_message_status(imdn_id, event)
-                return
-
-            #self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
+                if event in ('delivered', 'displayed'):
+                    self.log_info('%s notification for %s was sent' % (event, message_id))
+                    self.history.update_message_status(message_id, event)
             return
         else:
+            try:
+                del self.pending_outgoing_messages[str(sender)]
+            except KeyError:
+                pass
+        
             message = self.messages.pop(message.id)
 
         if message.content_type == IsComposingDocument.content_type:
@@ -490,15 +497,18 @@ class SMSViewController(NSObject):
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                (imdn_id, event) = SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(sender)]
+                (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
             except KeyError:
                 pass
-                #self.log_info('Cannot find original IMDN message for SIP CALL-Id %s' % call_id)
             else:
-                self.log_info('%s notification for message %s failed' % (event, imdn_id))
-                return
-
-            self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
+                if event in ('sent'):
+                    message = self.messages.pop(message_id)
+                elif event in ('delivered', 'displayed'):
+                    self.log_info('%s notification for message %s failed' % (event, message_id))
+                    return
+                else:
+                    self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
+                    return
             return
         else:
             message = self.messages.pop(message.id)
@@ -632,7 +642,7 @@ class SMSViewController(NSObject):
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                       RouteHeader(route.uri), "message/cpim", payload, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
-            SMSWindowManager.SMSWindowManager().outgoing_imdn_notifications[str(message_request)] = (message_id, event)
+            self.pending_outgoing_messages[str(message_request)] = (message_id, event, datetime.datetime.now())
 
             message_request.send(15)
 
@@ -749,6 +759,10 @@ class SMSViewController(NSObject):
                                   payload,
                                   credentials=self.account.credentials,
                                   extra_headers=additional_sip_headers)
+
+      
+        if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+           self.pending_outgoing_messages[str(message_request)] = (message_id, 'sent', datetime.datetime.now())
 
         self.notification_center.add_observer(self, sender=message_request)
         

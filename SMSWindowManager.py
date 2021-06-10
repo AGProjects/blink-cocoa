@@ -359,7 +359,7 @@ class SMSWindowManagerClass(NSObject):
 
     windows = []
     received_call_ids = set()
-    outgoing_imdn_notifications = {}
+    pending_outgoing_messages = {}
 
     def init(self):
         self = objc.super(SMSWindowManagerClass, self).init()
