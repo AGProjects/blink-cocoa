@@ -774,12 +774,12 @@ class DebugWindow(NSObject):
         try:
             local_address = notification.sender.transport.getHost()
             local_address = '%s:%d' % (local_address.host, local_address.port)
-        except AttributeError:
+            remote_address = notification.sender.getPeer()
+            remote_address = '%s:%d' % (remote_address.host, remote_address.port)
+        except (AttributeError, OSError):
             # this may happen because we process this notification after transport has been disconnected
             local_address = 'local'
-
-        remote_address = notification.sender.getPeer()
-        remote_address = '%s:%d' % (remote_address.host, remote_address.port)
+            remote_address = 'remote'
 
         message = '\n%s: %s %s %s' % (notification.datetime, local_address, arrow, remote_address)
         header = []
