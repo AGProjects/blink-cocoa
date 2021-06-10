@@ -2142,7 +2142,7 @@ SettingDescription = {
                       'sip.primary_proxy': NSLocalizedString("Primary Proxy", "Label"),
                       'sip.alternative_proxy': NSLocalizedString("Alternate Proxy", "Label"),
                       'sip.register': NSLocalizedString("Receive Incoming Calls", "Label"),
-                      'sip.tls_name': NSLocalizedString("TLS server name", "Label"),
+                      'sip.tls_name': NSLocalizedString("TLS peer name", "Label"),
                       'sip.do_not_disturb_code': NSLocalizedString("Do Not Disturb Code", "Label"),
                       'sip.register_interval': NSLocalizedString("register Interval", "Label"),
                       'sip.subscribe_interval': NSLocalizedString("Subscribe Interval", "Label"),

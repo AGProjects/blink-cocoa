@@ -8,7 +8,7 @@ Blink account settings extensions.
 __all__ = ['AccountExtension', 'BonjourAccountExtension', 'RTPSettingsExtension']
 
 
-from sipsimple.account import AuthSettings, BonjourMSRPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, XCAPSettings
+from sipsimple.account import AuthSettings, BonjourMSRPSettings, BonjourSIPSettings, MessageSummarySettings, MSRPSettings, NATTraversalSettings, PresenceSettings, RTPSettings, SIPSettings, XCAPSettings
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import Hostname, MSRPConnectionModel, MSRPTransport, NonNegativeInteger, SIPProxyAddress, SIPTransport
 
@@ -23,10 +23,12 @@ class AuthSettingsExtension(AuthSettings):
 
 
 class BonjourMSRPSettingsExtension(BonjourMSRPSettings):
-    transport = Setting(type=MSRPTransport, default='tcp')
+    transport = Setting(type=MSRPTransport, default='tls')
 
-class BonjourSIPSettingsExtension(BonjourMSRPSettings):
-    transport = Setting(type=SIPTransport, default='tcp')
+
+class BonjourSIPSettingsExtension(BonjourSIPSettings):
+    transport = Setting(type=SIPTransport, default='tls')
+    tls_name = Setting(type=str, default='Blink', nillable=True)
 
 
 class AudioSettingsExtension(SettingsGroup):
