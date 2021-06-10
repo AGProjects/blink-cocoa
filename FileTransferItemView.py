@@ -66,8 +66,6 @@ class FileTransferItemView(NSView):
             self.local_uri = transferInfo.local_uri
 
             NSBundle.loadNibNamed_owner_("FileTransferItemView", self)
-
-
             self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(self.file_path))
 
             self.nameText.setStringValue_(os.path.basename(self.file_path))
@@ -132,7 +130,7 @@ class FileTransferItemView(NSView):
             # XXX: there should be a better way to do this!
             tmp_folder = ApplicationData.get('.tmp_file_transfers')
             makedirs(tmp_folder, 0o700)
-            tmpf = tmp_folder + "/tmpf-" + self.file_path.decode() if isinstance(self.file_path, bytes) else self.file_path
+            tmpf = tmp_folder + "/tmpf-" + (self.file_path.decode() if isinstance(self.file_path, bytes) else self.file_path)
             with open(tmpf, "wb+"):
                 self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(tmpf))
             unlink(tmpf)
