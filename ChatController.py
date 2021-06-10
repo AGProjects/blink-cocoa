@@ -1766,7 +1766,7 @@ class ChatController(MediaStream):
     def _NH_MediaStreamDidEnd(self, sender, data):
         self.mediastream_ended = True
         self.databaseLoggingButton.setHidden_(True)
-        if data.error is not None:
+        if data.error is not None and 'was closed cleanly' not in data.error:
             self.sessionController.log_info("Chat session failed: %s" % data.error)
             reason = NSLocalizedString("Connection failed", "Label")+ " (%s)" % data.error
             self.showSystemMessage(reason, ISOTimestamp.now(), True)
