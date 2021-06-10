@@ -1301,9 +1301,10 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, sender, data):
-        self.sessionController.log_info('Audio ICE negotiation failed: %s' % data.reason)
+        reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
+        self.sessionController.log_info('Audio ICE negotiation failed: %s' % reason)
         self.updateAudioStatusWithSessionState(NSLocalizedString("ICE Negotiation Failed", "Audio status label"), True)
-        self.ice_negotiation_status = data.reason
+        self.ice_negotiation_status = reason
         # TODO: remove stream if the reason is that all candidates failed probing? We got working audio even after this failure using the media relay, so perhaps we can remove the stream a bit later, after we wait to see if media did start or not...
         #self.end()
 
