@@ -26,7 +26,6 @@ from application.system import makedirs
 from sipsimple.configuration.settings import SIPSimpleSettings
 from util import run_in_gui_thread, format_identity_to_string
 from sipsimple.util import ISOTimestamp
-from sipsimple.threading.green import run_in_green_thread
 from HistoryManager import ChatHistory
 
 from BlinkLogger import BlinkLogger

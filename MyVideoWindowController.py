@@ -78,7 +78,6 @@ from util import run_in_gui_thread
 from sipsimple.core import Engine
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.threading.green import run_in_green_thread
 
 from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null

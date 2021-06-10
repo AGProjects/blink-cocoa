@@ -53,7 +53,6 @@ from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import MediaStreamRegistry
 from sipsimple.threading import call_in_thread
-from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
 import AudioSession

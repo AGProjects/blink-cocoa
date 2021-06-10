@@ -15,7 +15,6 @@ from zope.interface import implementer
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
 from BlinkLogger import BlinkLogger
