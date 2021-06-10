@@ -1824,7 +1824,7 @@ class ChatController(MediaStream):
 
     @objc.python_method
     def end(self, closeTab=False):
-        self.sessionController.log_info("End %s in state %s" % (self, self.status))
+        #self.sessionController.log_info("End %s in state %s" % (self, self.status))
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)

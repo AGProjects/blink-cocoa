@@ -558,38 +558,14 @@ class SMSViewController(NSObject):
                 self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
 
     @objc.python_method
-    @run_in_green_thread
     def sendReplicationMessage(self, response_code, content, content_type="message/cpim", timestamp=None):
+        return
+        # TODO must be refactored
         timestamp = timestamp or ISOTimestamp.now()
-        # Lookup routes
-        if self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host,
-                         port=self.account.sip.outbound_proxy.port,
-                         parameters={'transport': self.account.sip.outbound_proxy.transport})
-        else:
-            uri = SIPURI(host=self.account.id.domain)
-
-        route = None
-        if self.last_route is None:
-            lookup = DNSLookup()
-            settings = SIPSimpleSettings()
-            try:
-                tls_name = None
-                if isinstance(self.account, Account):
-                    tls_name = self.account.sip.tls_name or self.account.id.domain
-                routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
-            except DNSLookupError:
-                pass
-            else:
-                route = routes[0]
-        else:
-            route = self.last_route
-
-        if route:
-            additional_sip_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
-            message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
-                                      RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=additional_sip_headers)
-            message_request.send(15 if content_type != IsComposingDocument.content_type else 5)
+        additional_sip_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
+        message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.account.uri),
+                                  RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=additional_sip_headers)
+        message_request.send(15 if content_type != IsComposingDocument.content_type else 5)
 
 
     @objc.python_method
@@ -626,15 +602,29 @@ class SMSViewController(NSObject):
         if self.last_route is None:
             lookup = DNSLookup()
             settings = SIPSimpleSettings()
-            try:
-                tls_name = None
-                if isinstance(self.account, Account):
-                    tls_name = self.account.sip.tls_name or self.account.id.domain
-                routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
-            except DNSLookupError:
-                pass
+
+            if self.account is BonjourAccount():
+                tls_name = uri.host
             else:
-                route = routes[0]
+                if self.account.id.domain == uri.host.decode():
+                    tls_name = self.account.sip.tls_name
+                else:
+                    tls_name = uri.host.decode()
+
+            is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
+            if self.account is BonjourAccount() and is_ip_address:
+                tls_name = self.account.sip.tls_name
+                transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
+                transport = 'tls' if uri.secure else transport.lower()
+                port = uri.port or (5061 if transport=='tls' else 5060)
+                route = Route(address=uri.host, port=port, transport=transport, tls_name=tls_name or uri.host)
+            else:
+                try:
+                    routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
+                except DNSLookupError as e:
+                    self.log_info('Failed to send IMDN %s' % str(e))
+                else:
+                    route = routes[0]
         else:
             route = self.last_route
 
@@ -651,22 +641,19 @@ class SMSViewController(NSObject):
     def setRoutesResolved(self, routes):
         self.routes = routes
         self.last_route = self.routes[0]
+        self.connect()
+    
+    def connect(self):
         self.log_info('Sending message via %s' % self.last_route)
 
-        if not self.started:
-            self.started = True
-            self.message_queue.start()
+        if self.started:
+            return
 
-            if not self.encryption.active and self.account.sms.enable_otr:
-                self.startEncryption()
+        self.started = True
+        self.message_queue.start()
 
-            try:
-                pass
-                # do this after encryption is active
-                #self.chatOtrSmpWindow = ChatOtrSmp(self)
-            except Exception:
-                import traceback
-                traceback.print_exc()
+        if not self.encryption.active and self.account.sms.enable_otr:
+            self.startEncryption()
 
     @objc.python_method
     @run_in_gui_thread
@@ -781,31 +768,53 @@ class SMSViewController(NSObject):
             self.log_info('OTR message %s sent' % message.call_id)
 
     @objc.python_method
-    def lookup_destination(self, target_uri):
-        assert isinstance(target_uri, SIPURI)
+    def lookup_destination(self, uri):
         if self.dns_lookup_in_progress:
             return
 
         self.dns_lookup_in_progress = True
 
+        self.log_info("Lookup destination for %s" % uri)
+
+        is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
+
+        if self.account is BonjourAccount() and is_ip_address:
+            tls_name = self.account.sip.tls_name
+            transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
+            transport = 'tls' if uri.secure else transport.lower()
+            port = uri.port or (5061 if transport=='tls' else 5060)
+            self.last_route = Route(address=uri.host, port=port, transport=transport, tls_name=tls_name or uri.host)
+            self.connect()
+            return
+
+        self.lookup_dns(uri)
+
+    @objc.python_method
+    @run_in_green_thread
+    def lookup_dns(self, target_uri):
+        settings = SIPSimpleSettings()
         lookup = DNSLookup()
         self.notification_center.add_observer(self, sender=lookup)
-        settings = SIPSimpleSettings()
 
-        if isinstance(self.account, Account) and self.account.sip.outbound_proxy is not None:
-            uri = SIPURI(host=self.account.sip.outbound_proxy.host, port=self.account.sip.outbound_proxy.port,
-                         parameters={'transport': self.account.sip.outbound_proxy.transport})
-            self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host.decode(), uri))
-        elif isinstance(self.account, Account) and self.account.sip.always_use_my_proxy:
+        if self.account is BonjourAccount():
+            tls_name = uri.host
+        else:
+            if self.account.id.domain == uri.host.decode():
+                tls_name = self.account.sip.tls_name
+            else:
+                tls_name = uri.host.decode()
+
+        if self.account.sip.outbound_proxy is not None:
+            proxy = self.account.sip.outbound_proxy
+            uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+            self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
+        elif self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
             self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
         else:
             uri = target_uri
             self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
-        tls_name = None
-        if isinstance(self.account, Account):
-            tls_name = self.account.sip.tls_name or self.account.id.domain
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
     @objc.python_method

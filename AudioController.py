@@ -344,7 +344,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def end(self):
-        self.sessionController.log_info("End %s in state %s" % (self, self.status))
+        #self.sessionController.log_info("End %s in state %s" % (self, self.status))
         status = self.status
         if status in [STREAM_FAILED]:
             self.audioEndTime = time.time()
@@ -691,7 +691,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def changeStatus(self, new_status, fail_reason=None):
-        self.sessionController.log_info('changeStatus %s from %s to %s' % (self, self.status, new_status))
+        self.sessionController.log_debug('changeStatus %s from %s to %s' % (self, self.status, new_status))
         if not NSThread.isMainThread():
             raise Exception("called from non-main thread")
 

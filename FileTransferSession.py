@@ -5,6 +5,7 @@ from Foundation import NSLocalizedString
 
 import datetime
 import os
+import re
 import time
 import uuid
 
@@ -245,7 +246,9 @@ class FileTransfer(object):
     def lookup_destination(self, target_uri):
         self.log_info("Lookup destination for %s" % target_uri)
 
-        if self.account is BonjourAccount():
+        is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
+
+        if self.account is BonjourAccount() and is_ip_address:
             uri = target_uri
             tls_name = self.account.sip.tls_name
             transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport

@@ -45,7 +45,7 @@ from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import SIPURI, ToHeader, SIPCoreError
+from sipsimple.core import SIPURI, ToHeader, SIPCoreError, Route
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
 from sipsimple.streams.rtp.audio import AudioStream
@@ -1357,7 +1357,7 @@ class SessionController(NSObject):
             return
 
         self.finished = True
-        self.log_info("End %s in state %s" % (self, self.state))
+        self.log_info("End in state %s" % self.state)
 
         if self.state in (STATE_DNS_LOOKUP, STATE_IDLE):
             self.cancelled_during_dns_lookup = True
@@ -1538,28 +1538,45 @@ class SessionController(NSObject):
             self.info_panel = None
 
     @objc.python_method
-    @run_in_green_thread
-    def lookup_destination(self, target_uri):
+    def lookup_destination(self, uri):
         self.changeSessionState(STATE_DNS_LOOKUP)
+        self.log_info("Lookup destination for %s" % uri)
 
+        is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
+
+        if self.account is BonjourAccount() and is_ip_address:
+            tls_name = self.account.sip.tls_name
+            transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
+            transport = 'tls' if uri.secure else transport.lower()
+            port = uri.port or (5061 if transport=='tls' else 5060)
+            routes = [Route(address=uri.host, port=port, transport=transport, tls_name=tls_name or uri.host)]
+            self.setRoutesResolved(routes)
+            return
+
+        self.lookup_dns(uri)
+
+    @objc.python_method
+    @run_in_green_thread
+    def lookup_dns(self, target_uri):
+        settings = SIPSimpleSettings()
         lookup = DNSLookup()
         self.notification_center.add_observer(self, sender=lookup)
-        settings = SIPSimpleSettings()
 
-        tls_name = None
-
-        if isinstance(self.account, Account):
-            tls_name = self.account.sip.tls_name or self.account.id.domain
-            if self.account.sip.outbound_proxy is not None:
-                proxy = self.account.sip.outbound_proxy
-                uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
-                self.log_info("Starting DNS lookup for %s through proxy %s" % (target_uri.host.decode(), uri))
-            elif self.account.sip.always_use_my_proxy:
-                uri = SIPURI(host=self.account.id.domain)
-                self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
+        if self.account is BonjourAccount():
+            tls_name = uri.host
+        else:
+            if self.account.id.domain == uri.host.decode():
+                tls_name = self.account.sip.tls_name
             else:
-                uri = target_uri
-                self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
+                tls_name = uri.host.decode()
+
+        if self.account.sip.outbound_proxy is not None:
+            proxy = self.account.sip.outbound_proxy
+            uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+            self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
+        elif self.account.sip.always_use_my_proxy:
+            uri = SIPURI(host=self.account.id.domain)
+            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
         else:
             uri = target_uri
             self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
@@ -1578,7 +1595,7 @@ class SessionController(NSObject):
         add_streams = []
         if self.session is None:
             self.session = Session(self.account)
-            self.log_info('Created %s' % self.session)
+            #self.log_info('Created %s' % self.session)
             if not self.try_next_hop:
                 self.routes = None
             self.failureReason = None
@@ -1608,7 +1625,7 @@ class SessionController(NSObject):
                         return False
 
                     stream = handlerClass.createStream()
-                    self.log_info('Created stream %s' % stream)
+                    #self.log_info('Created stream %s' % stream)
 
                 if not stream:
                     self.log_info("Cancelled session")
@@ -1868,11 +1885,10 @@ class SessionController(NSObject):
                     target_uri.user = user[0:idx].encode()
                     self.log_info("Post dial string  set to %s" % self.postdial_string)
 
-        self.log_info('Starting outgoing session to %s' % format_identity_to_string(target_uri, format='compact'))
+        self.log_info('Starting session to %s via %s' % (format_identity_to_string(target_uri, format='compact'), self.routes[0]))
         self.notification_center.add_observer(self, sender=self.session)
         self.session.connect(ToHeader(target_uri), self.routes, streams)
         self.changeSessionState(STATE_CONNECTING)
-        self.log_info("Initiating session via %s" % self.routes[0])
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
     @objc.python_method
@@ -1940,7 +1956,7 @@ class SessionController(NSObject):
     def _NH_DNSLookupDidSucceed(self, lookup, data):
         self.log_debug('DNS Lookup Succeeded')
         self.notification_center.remove_observer(self, sender=lookup)
-        result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
+        result_text = ', '.join(('%s:%s ( %s %s)' % (result.address, result.port, result.transport.upper(), result.tls_name) for result in data.result))
         self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host.decode(), result_text))
         routes = data.result
         if not routes:
