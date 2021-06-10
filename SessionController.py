@@ -1565,10 +1565,10 @@ class SessionController(NSObject):
         if self.account is BonjourAccount():
             tls_name = uri.host
         else:
-            if self.account.id.domain == uri.host.decode():
+            if self.account.id.domain == target_uri.host.decode():
                 tls_name = self.account.sip.tls_name
             else:
-                tls_name = uri.host.decode()
+                tls_name = target_uri.host.decode()
 
         if self.account.sip.outbound_proxy is not None:
             proxy = self.account.sip.outbound_proxy
