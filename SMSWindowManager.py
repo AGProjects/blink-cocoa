@@ -140,7 +140,8 @@ class SMSWindowController(NSWindowController):
         if item:
             item.setComposing_(flag)
 
-    def addViewer_(self, viewer):
+    @objc.python_method
+    def addViewer(self, viewer, focusTab=False):
         tabItem = NSTabViewItem.alloc().initWithIdentifier_(viewer)
         tabItem.setView_(viewer.getContentView())
         sip_address = '%s@%s' % (viewer.target_uri.user.decode(), viewer.target_uri.host.decode())
@@ -149,7 +150,7 @@ class SMSWindowController(NSWindowController):
         else:
             tabItem.setLabel_(format_identity_to_string(viewer.target_uri))
         self.tabSwitcher.addTabViewItem_(tabItem)
-        if len(list(self.viewers)) == 1:
+        if len(list(self.viewers)) == 1 or focusTab:
             self.tabSwitcher.selectLastTabViewItem_(None)
             self.window().makeFirstResponder_(viewer.chatViewController.inputText)
 
@@ -189,7 +190,7 @@ class SMSWindowController(NSWindowController):
         if item.identifier() in self.unreadMessageCounts:
             del self.unreadMessageCounts[item.identifier()]
             self.noteNewMessageForSession_(item.identifier())
-    
+
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0:
             self.window().performClose_(None)
@@ -382,7 +383,7 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True):
+    def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True, focusTab=False):
         if target_name and target_name.startswith("sip:"):
             target_name = target_name[4:]
         for window in self.windows:
@@ -403,7 +404,7 @@ class SMSWindowManagerClass(NSObject):
             else:
                 window = self.windows[0]
             viewer.windowController = window
-            window.addViewer_(viewer)
+            window.addViewer(viewer, focusTab=focusTab)
         elif viewer:
             window = self.windowForViewer(viewer)
 
@@ -420,7 +421,7 @@ class SMSWindowManagerClass(NSObject):
         oldWindow.removeViewer_(viewer)
         window = SMSWindowController.alloc().initWithOwner_(self)
         self.windows.append(window)
-        window.addViewer_(viewer)
+        window.addViewer(viewer)
         window.window().makeKeyAndOrderFront_(None)
         return window
 

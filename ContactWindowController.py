@@ -4319,7 +4319,7 @@ class ContactWindowController(NSWindowController):
 
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
+            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account, focusTab=True)
         except Exception:
             pass
 
