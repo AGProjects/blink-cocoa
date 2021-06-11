@@ -3120,7 +3120,7 @@
 			name = ServerTools;
 			sourceTree = "<group>";
 		};
-		2B0CE72710CD822100325F30 /* SMS */ = {
+		2B0CE72710CD822100325F30 /* Messages */ = {
 			isa = PBXGroup;
 			children = (
 				1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */,
@@ -3129,7 +3129,7 @@
 				2B0CE72910CD824400325F30 /* SMSSession.xib */,
 				2B0CE73310CDE8CE00325F30 /* SMSView.xib */,
 			);
-			name = SMS;
+			name = Messages;
 			sourceTree = "<group>";
 		};
 		2B11B0B10FF55C3A007FC176 /* Logging */ = {
@@ -3462,7 +3462,7 @@
 				2BF42C7A107E6E7600F04A6C /* Audio */,
 				1FAF8D2E12DA1F5F0029857C /* Video */,
 				2B6328740FE421BD00446655 /* Chat */,
-				2B0CE72710CD822100325F30 /* SMS */,
+				2B0CE72710CD822100325F30 /* Messages */,
 				2BC09104106884CE0069AB9A /* ScreenSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
 				1F2276501A823D5900CA9A73 /* ZRTP */,
