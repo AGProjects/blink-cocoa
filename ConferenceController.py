@@ -324,7 +324,7 @@ class JoinConferenceWindowController(NSObject):
                             servers.add(server)
                             break
                 for server in servers:
-                    self.bonjour_server_combolist.addItemWithTitle_('%s %s:%s' % (server.host, transport, server.uri.host))
+                    self.bonjour_server_combolist.addItemWithTitle_('%s at %s (%s:%s:%d)' % (server.name, server.host, transport, server.uri.host, server.uri.port))
                     item = self.bonjour_server_combolist.lastItem()
                     item.setRepresentedObject_(server)
                     self.ok_button.setEnabled_(True)
@@ -578,7 +578,7 @@ class JoinConferenceWindowController(NSObject):
 
                 object = item.representedObject()
                 if hasattr(object, 'host'):
-                    self.target = '%s@%s:%s;transport=%s' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
+                    self.target = '%s@%s:%s;transport=%s;isfocus' % (room, object.uri.host, object.uri.port, object.uri.parameters.get('transport','udp'))
                 else:
                     NSRunAlertPanel(NSLocalizedString("Start a new Conference", "Window title"),
                                     NSLocalizedString("No conference server in this neighbourhood", "Label"),
