@@ -1072,7 +1072,7 @@ class ContactWindowController(NSWindowController):
             # Chat menu option only for contacts without a full SIP URI
             no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
             # SMS option disabled when using Bonjour Account
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendMessageToSelected:", "")
             item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
 
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
@@ -1180,7 +1180,7 @@ class ContactWindowController(NSWindowController):
             NSApp.delegate().urisToOpen = []
 
     @objc.python_method
-    def sendSMSToURI(self, uri=None):
+    def sendMessageToURI(self, uri=None):
         account = self.activeAccount()
         if not account:
             NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
@@ -1202,7 +1202,7 @@ class ContactWindowController(NSWindowController):
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
-
+            
         try:
             NSApp.activateIgnoringOtherApps_(True)
             SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
@@ -1591,7 +1591,7 @@ class ContactWindowController(NSWindowController):
                         if uri.type is not None and uri.type.lower() == 'url':
                             continue
 
-                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendSMSToSelected:", "")
+                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendMessageToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
@@ -1826,9 +1826,9 @@ class ContactWindowController(NSWindowController):
                         video_item.setEnabled_(self.contactSupportsMedia("video", item, item.uri) and settings.video.device)
 
                     if self.sessionControllersManager.isMediaTypeSupported('sms'):
-                        if item not in self.model.bonjour_group.contacts:
-                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendSMSToSelected:", "")
-                            sms_item.setEnabled_(not isinstance(self.activeAccount(), BonjourAccount))
+                        if has_fully_qualified_sip_uri:
+                            sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendMessageToSelected:", "")
+                            sms_item.setEnabled_(self.contactSupportsMedia("sms", item, item.uri))
 
                     if self.sessionControllersManager.isMediaTypeSupported('chat'):
                         if has_fully_qualified_sip_uri:
@@ -3210,7 +3210,7 @@ class ContactWindowController(NSWindowController):
             return None
 
         if media_type == "sms":
-            self.sendSMSToURI()
+            self.sendMessageToURI()
             return
 
         if media_type == "video":
@@ -3948,9 +3948,9 @@ class ContactWindowController(NSWindowController):
         self.startSessionToSelectedContact("chat", sender.representedObject())
 
     @objc.IBAction
-    def sendSMSToSelected_(self, sender):
+    def sendMessageToSelected_(self, sender):
         uri = sender.representedObject()
-        self.sendSMSToURI(uri)
+        self.sendMessageToURI(uri)
 
     @objc.IBAction
     def createPresenceContactFromOtherContact_(self, sender):
@@ -4294,7 +4294,7 @@ class ContactWindowController(NSWindowController):
                 handler.addToConference()
 
     @objc.IBAction
-    def sendSMSToSelectedUri_(self, sender):
+    def sendMessageToSelectedUri_(self, sender):
         account = self.activeAccount()
         if not account:
             NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
@@ -4427,7 +4427,7 @@ class ContactWindowController(NSWindowController):
                 elif self.sessionControllersManager.isMediaTypeSupported('sms'):
                     no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1
                     if not no_contact_selected:
-                        self.sendSMSToURI()
+                        self.sendMessageToURI()
                 return
 
             elif sender.selectedSegment() == screen_segment:
