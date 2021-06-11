@@ -145,6 +145,9 @@ class SMSViewController(NSObject):
     def initWithAccount_target_name_(self, account, target, display_name):
         self = objc.super(SMSViewController, self).init()
         if self:
+            self.public_key = None
+            self.private_key = None
+
             self.session_id = str(uuid.uuid1())
 
             self.notification_center = NotificationCenter()
@@ -166,11 +169,12 @@ class SMSViewController(NSObject):
 
             if self.contact and self.contact.contact.public_key:
                 self.public_key = RSA.importKey(self.contact.contact.public_key)
-            else:
-                self.public_key = None
 
-            self.private_key = None
-            if self.account.sms.private_key:
+            try:
+                private_key = self.account.sms.private_key
+            except AttributeError:
+                pass
+            else:
                 try:
                     self.private_key = RSA.importKey(self.account.sms.private_key)
                 except Exception as e:
