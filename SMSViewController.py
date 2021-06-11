@@ -501,7 +501,8 @@ class SMSViewController(NSObject):
             try:
                 (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
             except KeyError:
-                self.log_info('Cannot find IMDN outgoing message data in pending_outgoing_messages')
+                self.log_info('Cannot find pending outgoing message %s' % str(sender))
+                #self.log_info(self.pending_outgoing_messages)
                 pass
             else:
                 if event in ('sent'):
@@ -649,10 +650,15 @@ class SMSViewController(NSObject):
             message_request = Message(FromHeader(self.account.uri, self.account.display_name), ToHeader(self.target_uri),
                                       RouteHeader(route.uri), "message/cpim", payload, credentials=self.account.credentials)
             self.notification_center.add_observer(self, sender=message_request)
-            self.pending_outgoing_messages[str(message_request)] = (message_id, event, datetime.datetime.now())
+            self.add_pending_outgoing_message(str(message_request), message_id, event)
 
             message_request.send(15)
 
+    @objc.python_method
+    def add_pending_outgoing_message(self, id, message_id, event):
+        #print('Adding Pending message object %s' % id)
+        self.pending_outgoing_messages[id] = (message_id, event, datetime.datetime.now())
+    
     @objc.python_method
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
@@ -770,7 +776,7 @@ class SMSViewController(NSObject):
 
       
         if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-           self.pending_outgoing_messages[str(message_request)] = (message.id, 'sent', datetime.datetime.now())
+           self.add_pending_outgoing_message(str(message_request), message.id, 'sent')
 
         self.notification_center.add_observer(self, sender=message_request)
         
