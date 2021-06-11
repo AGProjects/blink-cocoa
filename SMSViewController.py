@@ -523,7 +523,7 @@ class SMSViewController(NSObject):
         if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
             return
 
-        if data.code == 408:
+        if data.code == 408 or data.code >= 500:
             self.last_route = None
             self.started = False
 
