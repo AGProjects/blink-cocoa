@@ -58,6 +58,13 @@ class SMSSettingsExtension(SettingsGroup):
     public_key_checksum = Setting(type=str, default=None, nillable=True)
 
 
+class BonjourSMSSettingsExtension(SettingsGroup):
+    use_cpim = Setting(type=bool, default=True)
+    enable_otr = Setting(type=bool, default=False)
+    enable_imdn = Setting(type=bool, default=True)
+    enable_composing = Setting(type=bool, default=True)
+
+
 class MessageSummarySettingsExtension(MessageSummarySettings):
     enabled = Setting(type=bool, default=False)
 
@@ -123,6 +130,12 @@ class ServerSettings(SettingsGroup):
 class ConferenceSettings(SettingsGroup):
     server_address = Setting(type=Hostname, default=None, nillable=True)
     nickname = Setting(type=str, default='', nillable=True)
+    tls_name = Setting(type=str, default=None, nillable=True)
+
+
+class BonjourConferenceSettings(SettingsGroup):
+    nickname = Setting(type=str, default='', nillable=True)
+    tls_name = Setting(type=str, default='Sylkserver', nillable=True)
 
 
 class GUISettings(SettingsGroup):
@@ -183,8 +196,9 @@ class BonjourAccountExtension(SettingsObjectExtension):
 
     audio = AudioSettingsExtension
     ldap = LDAPSettingsExtension
-    conference = ConferenceSettings
+    conference = BonjourConferenceSettings
     msrp = BonjourMSRPSettingsExtension
+    sms = BonjourSMSSettingsExtension
     sip = BonjourSIPSettingsExtension
     presence = BonjourPresenceSettingsExtension
     rtp = BonjourRTPSettingsExtension

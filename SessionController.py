@@ -1545,11 +1545,16 @@ class SessionController(NSObject):
         is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
 
         if self.account is BonjourAccount() and is_ip_address:
-            tls_name = self.account.sip.tls_name
+            tls_name = self.account.conference.tls_name if "isfocus" in str(uri) else self.account.sip.tls_name
             transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
             transport = 'tls' if uri.secure else transport.lower()
             port = uri.port or (5061 if transport=='tls' else 5060)
-            routes = [Route(address=uri.host, port=port, transport=transport, tls_name=tls_name or uri.host)]
+            if "isfocus" in str(uri) and self.account.conference.tls_name:
+                tls_name = self.account.conference.tls_name or uri.host
+            else:
+                tls_name=self.account.sip.tls_name or uri.host
+                
+            routes = [Route(address=uri.host, port=port, transport=transport, tls_name=tls_name)]
             self.setRoutesResolved(routes)
             return
 
@@ -1562,20 +1567,24 @@ class SessionController(NSObject):
         lookup = DNSLookup()
         self.notification_center.add_observer(self, sender=lookup)
 
-        if self.account is BonjourAccount():
-            tls_name = target_uri.host
-        else:
+        tls_name = target_uri.host.decode()
+        if self.account is not BonjourAccount():
             if self.account.id.domain == target_uri.host.decode():
                 tls_name = self.account.sip.tls_name or self.account.id.domain
-            else:
-                tls_name = target_uri.host.decode()
+            elif "isfocus" in str(target_uri) and target_uri.host.decode().endswith(self.account.id.domain):
+                tls_name = self.account.conference.tls_name or self.account.sip.tls_name or self.account.id.domain
+        else:
+            if "isfocus" in str(target_uri) and self.account.conference.tls_name:
+                tls_name = self.account.conference.tls_name
 
         if self.account.sip.outbound_proxy is not None:
             proxy = self.account.sip.outbound_proxy
             uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+            tls_name = self.account.sip.tls_name or proxy.host
             self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
         elif self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
+            tls_name = self.account.sip.tls_name or self.account.id.domain
             self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
         else:
             uri = target_uri

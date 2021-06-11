@@ -2241,7 +2241,7 @@ AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sm
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
-BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'sip', 'presence', 'ldap')
+BonjourAccountSectionOrder = ('audio', 'sounds', 'tls', 'msrp', 'rtp', 'sip', 'presence', 'ldap', 'sms', 'conference')
 
 AccountSettingsOrder = {
                        'audio': ['do_not_disturb', 'call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'reject_unauthorized_contacts', 'auto_accept', 'answer_delay'],
