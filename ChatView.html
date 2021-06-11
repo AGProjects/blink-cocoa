@@ -14,34 +14,23 @@ body
 .local_container {
 }
 
-.sys {
-  background-color: #47D29E;
-  border-style: solid;
-  border-width: 0.5px;
-  border-color: #ACA892;
+.system {
+  color: #47D29E;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
-  -webkit-border-radius: 5px;
-  word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
-  color: white
-}
-
-.sys_error {
-  background-color: #AD2044;
-  color: white;
-  border-style: solid;
-  border-width: 0.5px;
-  border-color: #ACA892;
-  padding: 2px 2px 2px 2px;
-  margin-top: 10px;
-  -webkit-border-radius: 5px;
+  margin-top: 5px;
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
 }
 
-.sysmsg {
-  padding: 8px 8px 8px 8px;
+.system_error {
+  color: red;
+  padding: 2px 2px 2px 2px;
+  margin-top: 5px;
+  text-align: right;
+}
+
+.system_message {
   font-family: Lucida Grande, Helvetica, Arial;
-  font-size: 11px;
+  font-size: 10px;
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
 }
 
@@ -267,7 +256,7 @@ body
   margin-top: 8px;
 }
 
-.systimestamp {
+.system_timestamp {
   color: white;
   padding-top: 8px;
   padding-right: 8px;
@@ -276,6 +265,7 @@ body
   float: right; /*width: 150px;*/
   text-align: right;
   word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;
+  display: none;
 }
 
 .td_session_info {
@@ -464,9 +454,9 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
   content = document.getElementById("content");
 
   if (is_error == null) {
-      sys_class = "sys"
+      system_class = "system"
   } else {
-      sys_class = "sys_error"
+      system_class = "system_error"
   }
 
   if (content != null)
@@ -474,12 +464,10 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
 
   chat_session.innerHTML +=
     "<div id='container_"+msgid+"'>"+
-    "<div class="+sys_class+">"+
-            "<div class='systimestamp'>"+timestamp+"</div>"+
-            "<div class='sysmsg'>"+
-                text+
-            "</div>"+
-    "</div>"+
+        "<div class="+system_class+">"+
+            "<div class='system_timestamp'>"+timestamp+"</div>"+
+            "<div class='system_message'>"+text+"</div>"+
+        "</div>"+
     "</div>";
 
   lastSender = "";
