@@ -533,7 +533,7 @@ class SMSViewController(NSObject):
         else:
             message.status = 'failed'
             if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                self.log_info("Outgoing setmroutesessage %s delivery failed: %s" % (call_id, reason))
+                self.log_info("Outgoing msessage %s delivery failed: %s" % (call_id, reason))
                 self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
                 self.add_to_history(message)
 
