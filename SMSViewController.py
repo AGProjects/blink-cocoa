@@ -175,10 +175,11 @@ class SMSViewController(NSObject):
             except AttributeError:
                 pass
             else:
-                try:
-                    self.private_key = RSA.importKey(self.account.sms.private_key)
-                except Exception as e:
-                    self.log_info('Cannot import private key: %s' % str(e))
+                if private_key:
+                    try:
+                        self.private_key = RSA.importKey(private_key)
+                    except Exception as e:
+                        self.log_info('Cannot import private key: %s' % str(e))
 
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
@@ -400,9 +401,8 @@ class SMSViewController(NSObject):
     def _NH_DNSLookupDidFail(self, lookup, data):
         self.dns_lookup_in_progress = False
         self.notification_center.remove_observer(self, sender=lookup)
-        message = "DNS lookup of SIP proxies for %s failed: %s" % (self.target_uri.host.decode(), data.error)
+        message = "DNS lookup for %s failed" % self.target_uri.host.decode()
         self.setRoutesFailed(message)
-        self.dns_lookup_in_progress = False
 
     @objc.python_method
     def _NH_DNSLookupDidSucceed(self, lookup, data):
@@ -446,6 +446,7 @@ class SMSViewController(NSObject):
         client = data.headers.get('Client', Null).body
         server = data.headers.get('Server', Null).body
         entity = user_agent or server or client
+        
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
@@ -490,20 +491,20 @@ class SMSViewController(NSObject):
     @objc.python_method
     def _NH_SIPMessageDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
+        message = None
         try:
             call_id = data.headers['Call-ID'].body
         except (AttributeError, KeyError):
             call_id = None
+            self.started = False
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
                 (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
-            except KeyError:
+            except KeyError as e:
                 self.log_info('Cannot find pending outgoing message %s' % str(sender))
-                #self.log_info(self.pending_outgoing_messages)
-                pass
             else:
                 if event in ('sent'):
                     message = self.messages.pop(message_id)
@@ -513,15 +514,18 @@ class SMSViewController(NSObject):
                 else:
                     self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
                     return
-            return
         else:
             message = self.messages.pop(message.id)
+
+        if not message:
+            self.log_info('Cannot find failed message %s' % str(sender))
 
         if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
             return
 
         if data.code == 408:
             self.last_route = None
+            self.started = False
 
         call_id = message.call_id
         reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
@@ -620,23 +624,40 @@ class SMSViewController(NSObject):
         if self.last_route is None:
             lookup = DNSLookup()
             settings = SIPSimpleSettings()
-
-            if self.account is BonjourAccount():
-                tls_name = uri.host
-            else:
-                if self.account.id.domain == uri.host.decode():
-                    tls_name = self.account.sip.tls_name
-                else:
-                    tls_name = uri.host.decode()
-
+            
             is_ip_address = re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", uri.host.decode()) or ":" in uri.host.decode()
             if self.account is BonjourAccount() and is_ip_address:
-                tls_name = self.account.sip.tls_name
+                tls_name = self.account.sip.tls_name or uri.host
                 transport = uri.transport.decode() if isinstance(uri.transport, bytes) else uri.transport
                 transport = 'tls' if uri.secure else transport.lower()
                 port = uri.port or (5061 if transport=='tls' else 5060)
                 route = Route(address=uri.host, port=port, transport=transport, tls_name=tls_name or uri.host)
             else:
+                target_uri = uri
+                tls_name = target_uri.host.decode()
+                if self.account is not BonjourAccount():
+                   if self.account.id.domain == target_uri.host.decode():
+                       tls_name = self.account.sip.tls_name or self.account.id.domain
+                   elif "isfocus" in str(target_uri) and target_uri.host.decode().endswith(self.account.id.domain):
+                       tls_name = self.account.conference.tls_name or self.account.sip.tls_name or self.account.id.domain
+                else:
+                   if "isfocus" in str(target_uri) and self.account.conference.tls_name:
+                       tls_name = self.account.conference.tls_name
+
+                if self.account.sip.outbound_proxy is not None:
+                   proxy = self.account.sip.outbound_proxy
+                   uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+                   tls_name = self.account.sip.tls_name or proxy.host
+                   self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
+                elif self.account.sip.always_use_my_proxy:
+                   uri = SIPURI(host=self.account.id.domain)
+                   tls_name = self.account.sip.tls_name or self.account.id.domain
+                   self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
+                else:
+                   uri = target_uri
+                   self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
+                
+
                 try:
                     routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
                 except DNSLookupError as e:
@@ -656,7 +677,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def add_pending_outgoing_message(self, id, message_id, event):
-        #print('Adding Pending message object %s' % id)
+        #self.log_info('Adding Pending message object %s %s' % (id, message_id))
         self.pending_outgoing_messages[id] = (message_id, event, datetime.datetime.now())
     
     @objc.python_method
@@ -670,8 +691,8 @@ class SMSViewController(NSObject):
         if self.started:
             return
 
-        self.started = True
         self.log_info('Using route %s' % self.last_route)
+        self.started = True
         self.message_queue.start()
 
         if not self.encryption.active and self.account.sms.enable_otr:
@@ -680,25 +701,26 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def setRoutesFailed(self, reason):
+        self.log_info('Routing failed: %s' % reason)
+        self.chatViewController.showSystemMessage('0', reason, ISOTimestamp.now(), True)
+
+        try:
+            for msgObject in self.message_queue.queue.queue:
+                try:
+                    message = self.messages.pop(msgObject.id)
+                except KeyError:
+                    self.log_info('Cannot find message %s' % msgObject.id)
+                else:
+                    if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                        self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+                        message.status='failed'
+                        self.add_to_history(message)
+
+        except Exception as e:
+            self.log_info('Error in routes failed %s' % str(e))
+
         self.started = False
         self.message_queue.stop()
-
-        for msgObject in self.message_queue.queue.queue:
-            id = msgObject.id
-
-            try:
-                message = self.messages.pop(id)
-            except KeyError:
-                pass
-            else:
-                if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                    self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-                    message.status='failed'
-                    self.add_to_history(message)
-
-        log_text =  NSLocalizedString("Routing failure: %s", "Label") % reason
-        self.chatViewController.showSystemMessage('0', log_text, ISOTimestamp.now(), True)
-        self.log_info(log_text)
 
     @objc.python_method
     def _send_message(self, message):
@@ -776,7 +798,7 @@ class SMSViewController(NSObject):
 
       
         if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-           self.add_pending_outgoing_message(str(message_request), message.id, 'sent')
+            self.add_pending_outgoing_message(str(message_request), message.id, 'sent')
 
         self.notification_center.add_observer(self, sender=message_request)
         
@@ -791,13 +813,14 @@ class SMSViewController(NSObject):
                 if self.encryption.active:
                     self.log_info('%s encrypted message %s pending to %s (SIP Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
                 else:
-                    self.log_info('%s message %s pending to %s (SIP Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
+                    self.log_info('%s message %s pending to %s (SIP Call-ID %s) using object' % (message.content_type, message.id, self.last_route.uri, message.call_id, str(message_request)))
         else:
             self.log_info('OTR message %s sent' % message.call_id)
 
     @objc.python_method
     def lookup_destination(self, uri):
         if self.dns_lookup_in_progress:
+            #self.log_info("Lookup destination for %s already in progress" % uri)
             return
 
         self.dns_lookup_in_progress = True
@@ -824,20 +847,24 @@ class SMSViewController(NSObject):
         lookup = DNSLookup()
         self.notification_center.add_observer(self, sender=lookup)
 
-        if self.account is BonjourAccount():
-            tls_name = target_uri.host
-        else:
+        tls_name = target_uri.host.decode()
+        if self.account is not BonjourAccount():
             if self.account.id.domain == target_uri.host.decode():
                 tls_name = self.account.sip.tls_name or self.account.id.domain
-            else:
-                tls_name = target_uri.host.decode()
+            elif "isfocus" in str(target_uri) and target_uri.host.decode().endswith(self.account.id.domain):
+                tls_name = self.account.conference.tls_name or self.account.sip.tls_name or self.account.id.domain
+        else:
+            if "isfocus" in str(target_uri) and self.account.conference.tls_name:
+                tls_name = self.account.conference.tls_name
 
         if self.account.sip.outbound_proxy is not None:
             proxy = self.account.sip.outbound_proxy
             uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+            tls_name = self.account.sip.tls_name or proxy.host
             self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
         elif self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
+            tls_name = self.account.sip.tls_name or self.account.id.domain
             self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
         else:
             uri = target_uri
