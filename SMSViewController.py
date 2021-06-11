@@ -45,7 +45,7 @@ from application.system import host
 from zope.interface import implementer
 
 from sipsimple.account import Account, BonjourAccount
-from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI
+from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI, Route
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
