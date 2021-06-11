@@ -4399,7 +4399,7 @@ class ContactWindowController(NSWindowController):
                 return
 
             if sender == self.contactOutline or sender == self.searchOutline:
-                if isinstance(contact, BonjourBlinkContact) and 'isfocus' in contact.uri:
+                if isinstance(contact, BonjourBlinkContact):  #and 'isfocus' in contact.uri:
                     media_type = ("chat", "audio")
                 elif contact.preferred_media == "chat":
                     media_type = "chat"
