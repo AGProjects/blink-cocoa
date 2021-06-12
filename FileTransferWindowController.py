@@ -97,6 +97,8 @@ class FileTransferWindowController(NSObject):
         already_added_file = set()
         transfers = []
         for transfer in results:
+            file_idx = '%s%s' % (transfer.file_path, transfer.remote_uri)
+
             if transfer.transfer_id in active_items:
                 continue
 
