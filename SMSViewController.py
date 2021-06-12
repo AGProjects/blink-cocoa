@@ -345,7 +345,7 @@ class SMSViewController(NSObject):
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
         timestamp = timestamp or ISOTimestamp.now()
 
-        self.log_info("Incoming message %s received (SIP Call-Id %s)" % (id, call_id))
+        self.log_info("Incoming message %s received (Call-ID %s)" % (id, call_id))
         encryption = ''
         if encrypted:
             encryption = 'verified' if self.encryption.verified else 'unverified'
@@ -515,7 +515,7 @@ class SMSViewController(NSObject):
     def _NH_SIPMessageDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
 
-        call_id = data.headersget('Call-ID', Null).body
+        call_id = data.headers.get('Call-ID', Null).body
         user_agent = data.headers.get('User-Agent', Null).body
         client = data.headers.get('Client', Null).body
         server = data.headers.get('Server', Null).body
@@ -540,7 +540,7 @@ class SMSViewController(NSObject):
                     self.log_info('%s notification for message %s failed' % (event, message_id))
                     return
                 else:
-                    self.log_info('Cannot find message with SIP CALL-Id %s' % call_id)
+                    self.log_info('Cannot find message with Call-ID %s' % call_id)
                     return
         else:
             message = self.messages.pop(message.id)
@@ -565,7 +565,7 @@ class SMSViewController(NSObject):
         if data.code == 202:
             self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
             message.status = MSG_STATE_DEFERRED
-            self.chatViewController.showSystemMessage('Message scheduled for later delivery', ISOTimestamp.now(), False)
+            #self.chatViewController.showSystemMessage('Message scheduled for later delivery', ISOTimestamp.now(), False)
             self.log_info("%s message %s for %s accepted by %s for later delivery (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
             self.add_to_history(message)
         else:
@@ -840,9 +840,9 @@ class SMSViewController(NSObject):
         if not isinstance(message, OTRInternalMessage):
             if message.content_type != IsComposingDocument.content_type:
                 if self.encryption.active:
-                    self.log_info('%s encrypted message %s pending to %s (SIP Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
+                    self.log_info('%s encrypted message %s pending to %s (Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
                 else:
-                    self.log_info('%s message %s pending to %s (SIP Call-ID %s) using object' % (message.content_type, message.id, self.last_route.uri, message.call_id, str(message_request)))
+                    self.log_info('%s message %s pending to %s (Call-ID %s)' % (message.content_type, message.id, self.last_route.uri, message.call_id))
         else:
             self.log_info('OTR message %s sent' % message.call_id)
 
