@@ -216,6 +216,34 @@ class SMSViewController(NSObject):
 
         self.chatViewController.close()
         objc.super(SMSViewController, self).dealloc()
+        
+    @objc.python_method
+    def heartbeat(self):
+        for key in list(self.pending_outgoing_messages.keys()):
+            try:
+                (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[key]
+            except KeyError:
+                pass
+            else:
+                if session_id != self.session_id:
+                    continue
+
+                if datetime.datetime.now() - timestamp > datetime.timedelta(seconds=20):
+                    try:
+                        message = self.messages.pop(message_id)
+                    except KeyError:
+                        pass
+                    else:
+                        message.status = MSG_STATE_FAILED
+                        self.log_info("%s message %s for %s delivery expired" % (message.content_type, message.id, message.recipient))
+                        self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+                        self.add_to_history(message)
+                        self.chatViewController.showSystemMessage('Timeout', ISOTimestamp.now(), True)
+
+                    try:
+                        del self.pending_outgoing_messages[key]
+                    except KeyError:
+                        pass
 
     def awakeFromNib(self):
         # setup smiley popup
@@ -444,17 +472,15 @@ class SMSViewController(NSObject):
 
         call_id = data.headers['Call-ID'].body
         user_agent = data.headers.get('User-Agent', Null).body
-        content_type = data.headers.get('Content-Type', Null).body
         client = data.headers.get('Client', Null).body
         server = data.headers.get('Server', Null).body
         entity = user_agent or server or client
-        
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
             try:
-                (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
+                (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[str(sender)]
             except (KeyError, IndexError):
                 pass
             else:
@@ -470,41 +496,41 @@ class SMSViewController(NSObject):
         
         message = self.messages.pop(message.id)
 
-        if message.content_type == IsComposingDocument.content_type:
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type) or message.id == 'OTR':
             return
 
-        self.composeReplicationMessage(message, data.code)
-
-        if message.id == 'OTR':
-            self.log_info("OTR message %s delivered to %s" % (call_id, entity))
+        if data.code == 202:
+            self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
+            message.status = MSG_STATE_DEFERRED
+            self.log_info("%s message %s for %s accepted by %s for later delivery (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
         else:
-            if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                if data.code == 202:
-                    self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
-                    message.status = MSG_STATE_DEFERRED
-                    self.log_info("%s message %s for %s accepted by %s for later delivery (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
-                else:
-                    self.chatViewController.markMessage(message.id, MSG_STATE_SENT)
-                    message.status = MSG_STATE_SENT
-                    self.log_info("%s message %s for %s accepted by %s (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
+            self.chatViewController.markMessage(message.id, MSG_STATE_SENT)
+            message.status = MSG_STATE_SENT
+            self.log_info("%s message %s for %s accepted by %s (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
 
-            self.add_to_history(message)
+        self.add_to_history(message)
+        self.composeReplicationMessage(message, data.code)
 
     @objc.python_method
     def _NH_SIPMessageDidFail(self, sender, data):
         self.notification_center.remove_observer(self, sender=sender)
-        message = None
-        try:
-            call_id = data.headers['Call-ID'].body
-        except (AttributeError, KeyError):
-            call_id = None
-            self.started = False
+
+        call_id = data.headersget('Call-ID', Null).body
+        user_agent = data.headers.get('User-Agent', Null).body
+        client = data.headers.get('Client', Null).body
+        server = data.headers.get('Server', Null).body
+        entity = user_agent or server or client
+
+        if self.otr_negotiation_timer:
+            self.otr_negotiation_timer.invalidate()
+        self.otr_negotiation_timer = None
 
         try:
             message = next(message for message in self.messages.values() if message.call_id == call_id)
         except StopIteration:
+            message = None
             try:
-                (message_id, event, timestamp) = self.pending_outgoing_messages[str(sender)]
+                (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[str(sender)]
             except KeyError as e:
                 self.log_info('Cannot find pending outgoing message %s' % str(sender))
             else:
@@ -522,8 +548,11 @@ class SMSViewController(NSObject):
         if not message:
             self.log_info('Cannot find failed message %s' % str(sender))
 
-        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type) or message.id == 'OTR':
             return
+
+        if not call_id:
+            self.started = False # we got probably local timeout 408
 
         if data.code == 408 or data.code >= 500:
             self.last_route = None
@@ -532,28 +561,26 @@ class SMSViewController(NSObject):
         call_id = message.call_id
         reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
         reason += ' (%s)' % data.code
-        
-        self.composeReplicationMessage(message, data.code)
 
-        if message.id == 'OTR':
-            self.log_info("OTR message %s failed: %s" % (call_id, reason))
+        if data.code == 202:
+            self.chatViewController.markMessage(message.id, MSG_STATE_DEFERRED)
+            message.status = MSG_STATE_DEFERRED
+            self.chatViewController.showSystemMessage('Message scheduled for later delivery', ISOTimestamp.now(), False)
+            self.log_info("%s message %s for %s accepted by %s for later delivery (Call-Id %s)" % (message.content_type, message.id, message.recipient, entity, call_id))
+            self.add_to_history(message)
         else:
-            message.status = 'failed'
-            if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                self.log_info("Outgoing msessage %s delivery failed: %s" % (call_id, reason))
-                self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-                self.add_to_history(message)
+            message.status = MSG_STATE_FAILED
+            self.log_info("%s message %s for %s delivery failed: %s" % (message.content_type, message.id, message.recipient, reason))
+            self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+            self.add_to_history(message)
 
-        if (data.code == 480 or 'not online' in reason) and reason != self.last_failure_reason:
-            self.chatViewController.showSystemMessage('0', 'User not online', ISOTimestamp.now(), True)
-        else:
-            self.chatViewController.showSystemMessage('0', reason, ISOTimestamp.now(), True)
-
-        if self.otr_negotiation_timer:
-            self.otr_negotiation_timer.invalidate()
-        self.otr_negotiation_timer = None
+            if (data.code == 480 or 'not online' in reason) and reason != self.last_failure_reason:
+                self.chatViewController.showSystemMessage('User not online', ISOTimestamp.now(), True)
+            else:
+                self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
 
         self.last_failure_reason = reason
+        self.composeReplicationMessage(message, data.code)
 
     @objc.python_method
     def update_message_status(self, msgid, status):
@@ -680,7 +707,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     def add_pending_outgoing_message(self, id, message_id, event):
         #self.log_info('Adding Pending message object %s %s' % (id, message_id))
-        self.pending_outgoing_messages[id] = (message_id, event, datetime.datetime.now())
+        self.pending_outgoing_messages[id] = (message_id, event, datetime.datetime.now(), self.session_id)
     
     @objc.python_method
     @run_in_gui_thread

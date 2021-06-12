@@ -56,6 +56,7 @@ class SMSWindowController(NSWindowController):
     encryptionMenu = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
     import_key_window = None
+    heartbeat_timer = None
 
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
@@ -68,8 +69,16 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="OTREncryptionDidStop")
             
             self.unreadMessageCounts = {}
+            self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "heartbeatTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSEventTrackingRunLoopMode)
+
         return self
 
+    def heartbeatTimer_(self, timer):
+         for viewer in self.viewers:
+             viewer.heartbeat()
+ 
     @objc.python_method
     def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
@@ -168,6 +177,9 @@ class SMSWindowController(NSWindowController):
         selected = self.selectedSessionController()
         if selected in self.unreadMessageCounts:
             del self.unreadMessageCounts[selected]
+            self.heartbeat_timer.invalidate()
+            self.heartbeat_timer = None
+
         self.tabSwitcher.removeTabViewItem_(self.tabView.selectedTabViewItem())
         if self.tabView.numberOfTabViewItems() == 0:
             self.window().performClose_(None)
@@ -218,7 +230,8 @@ class SMSWindowController(NSWindowController):
 
     def windowDidBecomeKey_(self, notification):
         session = self.selectedSessionController()
-        session.read_queue_start()
+        if session:
+            session.read_queue_start()
         #BlinkLogger().log_info("SMS window focused with tab %s" % format_identity_to_string(session.target_uri))
     
     @objc.IBAction
