@@ -489,7 +489,8 @@ class ChatViewController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
-        lock_icon_path = Resources.get('unlocked-darkgray.png')
+        lock_icon_path = ''
+        #lock_icon_path = Resources.get('unlocked-darkgray.png')
         if encryption is not None:
             if encryption == '':
                 #lock_icon_path = Resources.get('unlocked-darkgray.png')

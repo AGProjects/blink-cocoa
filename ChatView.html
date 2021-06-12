@@ -362,7 +362,10 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       box_class = default_box_class;
       status = timestamp;
   }
-  
+
+  if (direction == 'incoming')
+    delivered_class = "delivered_hidden";
+    displayed_class = "displayed_hidden";
 
     if (iconpath == null) {
         icon_class = "hidden";
@@ -548,7 +551,7 @@ function markDeferred(msgid)
   msg = document.getElementById('s'+msgid)
   if (msg != null)
     msg.style.display = "block";
-    msg.innerHTML = "Deferred for later ";
+    msg.innerHTML = "Scheduled for later delivery";
 }
 
 function markSent(msgid)
