@@ -49,7 +49,7 @@ from Foundation import (NSAttributedString,
                         NSZeroPoint,
                         NSZeroRect)
 import objc
-
+from BlinkLogger import BlinkLogger
 
 MIN_TAB_WIDTH = 100
 TAB_WIDTH = 220
@@ -137,18 +137,12 @@ class FancyTabItem(NSView):
            return self.cachedDragImage
 
         self.lockFocus()
-        rep = NSBitmapImageRep.alloc().initWithFocusedViewRect_(self.bounds())
-        self.unlockFocus()
-        tabImage = NSImage.alloc().initWithSize_(rep.size())
-        tabImage.addRepresentation_(rep)
 
-        image = NSImage.alloc().initWithSize_(rep.size())
-        image.addRepresentation_(rep)
-        image.lockFocus()
+        tabImage = NSImage.alloc().initWithSize_(NSMakeSize(200,30))
         tabImage.drawAtPoint_fromRect_operation_fraction_(NSZeroPoint,  NSZeroRect, NSCompositeSourceOver, 1.0)
-        image.unlockFocus()
+        tabImage.unlockFocus()
 
-        return image
+        return tabImage
 
     def drawRect_(self, rect):
         r = self.bounds()
@@ -384,10 +378,13 @@ class FancyTabSwitcher(NSView):
             self.removeTabViewItem_(item.item)
 
     def reorderByPosition_(self, sender):
+        if not self.items:
+            return
+
         def centerx(rect):
             return rect.origin.x + rect.size.width/2
 
-        self.items.sort(key=lambda a,b: int(centerx(a.frame()) - centerx(b.frame())))
+        self.items.sort(key=lambda item: int(centerx(item.frame()) - centerx(item.frame())))
 
         frame = self.frame()
         x = 5
@@ -397,7 +394,6 @@ class FancyTabSwitcher(NSView):
             if item != sender:
                 item.setFrame_(NSMakeRect(x, 2, w, h))
             x += w
-
 
     def startedDragging_event_(self, sender, event):
         self.dragPos = sender.convertPoint_fromView_(event.locationInWindow(), None)
@@ -434,8 +430,6 @@ class FancyTabSwitcher(NSView):
             pos.x -= self.dragPos.x
             pos.y -= self.dragPos.y
             self.dragWindow.setFrameOrigin_(pos)
-
-
 
             if abs(dy) < 25 and p.x > NSMinX(frame) and p.x < NSMaxX(frame):
                 self.dragWindow.close()
