@@ -204,7 +204,8 @@ class FileLogger(object, metaclass=Singleton):
             direction = "SENDING"
         buf = ["%s: Packet %d, +%s" % (direction, self._siptrace_packet_count, (notification.datetime - self._siptrace_start_time))]
         buf.append("%(source_ip)s:%(source_port)d -(SIP over %(transport)s)-> %(destination_ip)s:%(destination_port)d" % notification.data.__dict__)
-        buf.append(notification.data.data)
+        data = notification.data.data.decode() if isinstance(notification.data.data, bytes) else notification.data.data
+        buf.append(data)
         buf.append('--')
         message = '\n'.join(buf)
         try:
@@ -265,7 +266,8 @@ class FileLogger(object, metaclass=Singleton):
         local_address = '%s:%d' % (local_address.host, local_address.port)
         remote_address = notification.sender.getPeer()
         remote_address = '%s:%d' % (remote_address.host, remote_address.port)
-        message = '%s %s %s\n' % (local_address, arrow, remote_address) + notification.data.data
+        data = notification.data.data.decode() if isinstance(notification.data.data, bytes) else notification.data.data
+        message = '%s %s %s\n' % (local_address, arrow, remote_address) + data
         try:
             self._init_log_file('msrptrace')
         except Exception:
@@ -280,7 +282,7 @@ class FileLogger(object, metaclass=Singleton):
             return
         if notification.data.level < self.msrp_level:
             return
-        message = '%s%s' % (notification.data.level.prefix, notification.data.message)
+        message = '%s%s' % (notification.data.level, notification.data.message)
         try:
             self._init_log_file('msrptrace')
         except Exception:
