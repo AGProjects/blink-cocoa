@@ -464,13 +464,14 @@ class ChatViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def showSystemMessage(self, call_id, content, timestamp=None, is_error=False):
+    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0'):
         msgid = str(uuid.uuid1())
         rendered_message = ChatMessageObject(call_id, msgid, content, False, timestamp)
         self.rendered_messages.append(rendered_message)
 
         if timestamp is None:
             timestamp = ISOTimestamp.now()
+
         if isinstance(timestamp, datetime.datetime):
             if timestamp.date() != datetime.date.today():
                 timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))

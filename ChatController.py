@@ -427,7 +427,7 @@ class ChatController(MediaStream):
     @objc.python_method
     def showSystemMessage(self, message, timestamp, is_error=False):
         if self.chatViewController:
-            self.chatViewController.showSystemMessage(self.sessionController.call_id, message, timestamp, is_error)
+            self.chatViewController.showSystemMessage(message, timestamp, is_error, call_id=self.sessionController.call_id)
 
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
@@ -810,10 +810,10 @@ class ChatController(MediaStream):
 
             if self.chatViewController:
                 #if call_id is not None and call_id != message.sip_callid and  message.media_type == 'chat':
-                    #self.chatViewController.showSystemMessage(message.sip_callid, 'Connection established', timestamp, False)
+                    #self.chatViewController.showSystemMessage('Connection established', timestamp, False, call_id=message.sip_callid,)
 
                 #if message.media_type == 'sms' and last_media_type == 'chat':
-                    #self.chatViewController.showSystemMessage(message.sip_callid, 'Short messages', timestamp, False)
+                    #self.chatViewController.showSystemMessage('Short messages', timestamp, False, call_id=message.sip_callid,)
 
                 self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
