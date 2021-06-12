@@ -2800,6 +2800,9 @@ class ContactListModel(CustomListModel):
             pass
         else:
             groupsList.append(self.addressbook_group)
+            
+        if uri is None:
+            return None
 
         try:
             return next(blink_contact for group in groupsList if not group.ignore_search for blink_contact in group.contacts if blink_contact.matchesURI(uri, exact_match))

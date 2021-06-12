@@ -335,6 +335,9 @@ class HistoryViewer(NSWindowController):
 
         if results:
             for row in results:
+                if row[0] in ('None',None):
+                    continue
+
                 try:
                     found_contact = self.contact_cache[row[0]]
                 except KeyError:
@@ -435,25 +438,30 @@ class HistoryViewer(NSWindowController):
         getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
         self.dayly_entries = NSMutableArray.array()
         for result in results:
+            uri = result[2]
+
+            if uri is None:
+                continue
+
             display_name = None
             try:
-                found_contact = self.contact_cache[result[2]]
+                found_contact = self.contact_cache[uri]
             except KeyError:
-                found_contact = getFirstContactMatchingURI(result[2], exact_match=True)
-                self.contact_cache[result[2]] = found_contact
+                found_contact = getFirstContactMatchingURI(uri, exact_match=True)
+                self.contact_cache[uri] = found_contact
 
             if found_contact:
                 display_name = found_contact.name
-                remote_uri = '%s <%s>' % (display_name, result[2]) if '@' in result[2] else display_name
+                remote_uri = '%s <%s>' % (display_name, uri) if '@' in uri else display_name
             else:
                 try:
-                    display_name = self.display_name_cache[result[2]]
+                    display_name = self.display_name_cache[uri]
                 except KeyError:
-                    remote_uri = result[2]
+                    remote_uri = uri
                 else:
-                    remote_uri = '%s <%s>' % (display_name, result[2]) if '@' in result[2] else display_name
+                    remote_uri = '%s <%s>' % (display_name, uri) if '@' in uri else display_name
 
-            entry = NSMutableDictionary.dictionaryWithObjectsAndKeys_(result[1], "local_uri", remote_uri, "remote_uri", result[2], "remote_uri_sql", result[0], 'date', result[3], 'type', display_name, "display_name")
+            entry = NSMutableDictionary.dictionaryWithObjectsAndKeys_(result[1], 'local_uri', remote_uri, 'remote_uri', uri, 'remote_uri_sql', result[0], 'date', result[3], 'type', display_name, 'display_name')
             self.dayly_entries.addObject_(entry)
 
         self.dayly_entries.sortUsingDescriptors_(self.indexTable.sortDescriptors())
@@ -535,7 +543,7 @@ class HistoryViewer(NSWindowController):
         else:
             is_html = False if message.content_type == 'text' else True
             private = True if message.private == "1" else False
-            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type=message.media_type, encryption=message.encryption if message.media_type == 'chat' else None)
+            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status if message.media_type in ('chat', 'sms') else '', is_html=is_html, history_entry=True, media_type=message.media_type, encryption=message.encryption if message.media_type == 'chat' else None)
 
     @objc.IBAction
     def paginateResults_(self, sender):
@@ -583,7 +591,7 @@ class HistoryViewer(NSWindowController):
             row = self.indexTable.selectedRow()
             if row > 0:
                 self.refreshDailyEntries()
-                self.refreshMessages(local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
+                self.refreshMessages(local_uri=self.dayly_entries[row].objectForKey_('local_uri'), date=self.dayly_entries[row].objectForKey_('date'), media_type=self.dayly_entries[row].objectForKey_('type'))
             else:
                 row = self.contactTable.selectedRow()
                 if row > 0:
@@ -651,7 +659,7 @@ class HistoryViewer(NSWindowController):
             else:
                 row = self.indexTable.selectedRow()
                 if row >= 0:
-                    self.refreshMessages(remote_uri=(self.dayly_entries[row].objectForKey_("remote_uri_sql"),), local_uri=self.dayly_entries[row].objectForKey_("local_uri"), date=self.dayly_entries[row].objectForKey_("date"), media_type=self.dayly_entries[row].objectForKey_("type"))
+                    self.refreshMessages(remote_uri=(self.dayly_entries[row].objectForKey_('remote_uri_sql'),), local_uri=self.dayly_entries[row].objectForKey_('local_uri'), date=self.dayly_entries[row].objectForKey_('date'), media_type=self.dayly_entries[row].objectForKey_('type'))
 
     def numberOfRowsInTableView_(self, table):
         if table == self.indexTable:
@@ -782,11 +790,11 @@ class HistoryViewer(NSWindowController):
             elif self.selectedTableView == self.indexTable:
                 try:
                     row = self.indexTable.selectedRow()
-                    local_uri = self.dayly_entries[row].objectForKey_("local_uri")
-                    remote_uri = self.dayly_entries[row].objectForKey_("remote_uri")
-                    remote_uri_sql = self.dayly_entries[row].objectForKey_("remote_uri_sql")
-                    date = self.dayly_entries[row].objectForKey_("date")
-                    media_type = self.dayly_entries[row].objectForKey_("type")
+                    local_uri = self.dayly_entries[row].objectForKey_('local_uri')
+                    remote_uri = self.dayly_entries[row].objectForKey_('remote_uri')
+                    remote_uri_sql = self.dayly_entries[row].objectForKey_('remote_uri_sql')
+                    date = self.dayly_entries[row].objectForKey_('date')
+                    media_type = self.dayly_entries[row].objectForKey_('type')
 
                     label = NSLocalizedString("Please confirm the deletion of %s history entries", "Label") % media_type + NSLocalizedString(" from %s", "SIP Address label") % remote_uri + NSLocalizedString(" on %s. ", "Date label") % date + NSLocalizedString("This operation cannot be undone. ", "Label")
                     ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)

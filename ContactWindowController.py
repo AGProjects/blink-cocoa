@@ -2949,6 +2949,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def getFirstContactMatchingURI(self, uri, exact_match=False):
+        if uri is None:
+            return None
         return self.model.getFirstContactMatchingURI(uri, exact_match)
 
     @objc.python_method
