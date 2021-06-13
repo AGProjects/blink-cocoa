@@ -74,7 +74,6 @@ class FileTransferWindowController(NSObject):
             self.transferSpeed.setStringValue_('')
 
     @objc.python_method
-    @run_in_green_thread
     def load_transfers_from_history(self):
         active_items = []
         for item in self.listView.subviews().copy():
