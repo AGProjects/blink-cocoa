@@ -264,6 +264,7 @@ class ChatViewController(NSObject):
         self.showRelatedMessagesButton.setHidden_(True)
 
     @objc.IBAction
+    @run_in_gui_thread
     def searchMessages_(self, sender):
         for message in self.rendered_messages:
             self.unmarkFound(message.msgid)
@@ -437,6 +438,7 @@ class ChatViewController(NSObject):
         self.executeJavaScript(script)
 
     @objc.python_method
+    @run_in_gui_thread
     def markMessage(self, msgid, state, private=False): # delegate
         if state == MSG_STATE_SENT:
             is_private = 1 if private else "null"
@@ -456,6 +458,7 @@ class ChatViewController(NSObject):
             self.executeJavaScript(script)
 
     @objc.python_method
+    @run_in_gui_thread
     def clear(self):
         if self.finishedLoading:
             self.executeJavaScript("clear()")
@@ -616,6 +619,7 @@ class ChatViewController(NSObject):
         self.finishedLoading = True
         if hasattr(self.delegate, "chatViewDidLoad_"):
             self.delegate.chatViewDidLoad_(self)
+
         for script in self.messageQueue:
             self.outputView.stringByEvaluatingJavaScriptFromString_(script)
         self.messageQueue = []
@@ -628,10 +632,11 @@ class ChatViewController(NSObject):
         return defaultItems
 
     def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, info, request, frame, listener):
+    
         # intercept when user clicks on links so that we process them in different ways
         theURL = info[WebActionOriginalURLKey]
 
-        if self.delegate and hasattr(self.delegate, 'getWindow'):
+        if hasattr(self.delegate, 'getWindow'):
             window = self.delegate.getWindow()
             if window and window.showConferenceSharedScreen(theURL.absoluteString()):
                 return
@@ -640,7 +645,7 @@ class ChatViewController(NSObject):
             listener.use()
         else:
             # use system wide web browser
-            if theURL.absoluteString() in list(self.delegate.sessionController.screensharing_urls.values()):
+            if hasattr(self.delegate, 'sessionController') and theURL.absoluteString() in list(self.delegate.sessionController.screensharing_urls.values()):
                 self.delegate.chatWindowController.showConferenceSharedScreen(theURL.absoluteString())
             else:
                 listener.ignore()
