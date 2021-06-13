@@ -396,12 +396,16 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def openMessageWindow(self, target, target_name, account, create_if_needed=True, note_new_message=True, focusTab=False):
-        if target_name and target_name.startswith("sip:"):
-            target_name = target_name[4:]
+    def openMessageWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None):
+        if instance_id and instance_id.startswith('urn:uuid:'):
+            instance_id = instance_id[9:]
+
+        if display_name and display_name.startswith("sip:"):
+            display_name = display_name[4:]
+
         for window in self.windows:
             for viewer in window.viewers:
-                if viewer.matchesTargetAccount(target, account):
+                if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account):
                     break
             else:
                 continue
@@ -410,7 +414,7 @@ class SMSWindowManagerClass(NSObject):
             window, viewer = None, None
 
         if not viewer and create_if_needed:
-            viewer = SMSViewController.alloc().initWithAccount_target_name_(account, target, target_name)
+            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id)
             if not self.windows:
                 window = SMSWindowController.alloc().initWithOwner_(self)
                 self.windows.append(window)
@@ -454,7 +458,13 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):
-        account = AccountManager().find_account(data.request_uri)
+        try:
+            data.request_uri.parameters['instance_id']
+        except KeyError:
+            account = AccountManager().find_account(data.request_uri)
+        else:
+            account = BonjourAccount()
+
         if not account:
             BlinkLogger().log_warning("Could not find local account for incoming SMS to %s, using default" % data.request_uri)
             account = AccountManager().default_account
@@ -474,6 +484,7 @@ class SMSWindowManagerClass(NSObject):
         is_replication_message = False
         imdn_id = str(uuid.uuid4())
         imdn_timestamp = None
+        instance_id = data.from_header.uri.parameters.get('instance_id', None)
         
         if data.content_type == 'message/cpim':
             try:
@@ -507,7 +518,7 @@ class SMSWindowManagerClass(NSObject):
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = sender_identity
-
+            
         if content_type in ('text/plain', 'text/html'):
             BlinkLogger().log_info(u"Incoming %s message %s from %s to %s received" % (content_type, call_id, format_identity_to_string(sender_identity), account.id))
         elif content_type in ('text/rsa-public-key'):
@@ -566,7 +577,7 @@ class SMSWindowManagerClass(NSObject):
             imdn_message_id = document.message_id.value
             imdn_status = document.notification.status.__str__()
             BlinkLogger().log_info(u"Received IMDN status %s for message %s" % (imdn_status, imdn_message_id))
-            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account)
+            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id)
             if viewer:
                 if imdn_status == 'delivered':
                     viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
@@ -581,7 +592,7 @@ class SMSWindowManagerClass(NSObject):
             content_type = msg.content_type.value if msg.content_type is not None else None
             last_active = msg.last_active.value if msg.last_active is not None else None
 
-            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False)
+            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
             if viewer:
                 viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
@@ -591,7 +602,7 @@ class SMSWindowManagerClass(NSObject):
 
         # display the message
         note_new_message = False if is_replication_message else True
-        viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message)
+        viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         replication_state = None
         replication_timestamp = None

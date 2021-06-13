@@ -1969,7 +1969,7 @@ class SessionController(NSObject):
         self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host.decode(), result_text))
         routes = data.result
         if not routes:
-            self.setRoutesFailed("No routes found to SIP Proxy")
+            self.setRoutesFailed("No routes found")
         else:
             self.setRoutesResolved(routes)
 

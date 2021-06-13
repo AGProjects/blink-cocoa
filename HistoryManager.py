@@ -1635,11 +1635,12 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
 
         try:
             acc = AccountManager().get_account(account)
-        except KeyError:
-            return
-        else:
+            replication_password = acc.chat.replication_password
             if acc.chat.disable_replication:
                 return
+        except (KeyError, AttributeError):
+            return
+        else:
 
             try:
                 entry = json.dumps(data.entry)
@@ -1647,7 +1648,6 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
                 BlinkLogger().log_debug("Failed to json encode replication data for %s: %s" % (account, e))
                 return
 
-            replication_password = acc.chat.replication_password
             if replication_password:
                 try:
                     entry = encrypt(entry, replication_password).encode('base64')

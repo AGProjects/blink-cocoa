@@ -43,7 +43,7 @@ class AudioSettingsExtension(SettingsGroup):
 
 
 class ChatSettingsExtension(SettingsGroup):
-    disable_replication = Setting(type=bool, default=False)
+    disable_replication = Setting(type=bool, default=True)
     replication_password = Setting(type=str, default='') if memory_stick_mode() else KeychainPasswordSetting(type=str, default='', label='ChatReplication')
 
 

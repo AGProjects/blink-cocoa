@@ -1186,6 +1186,7 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
+        instance_id = None
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
@@ -1198,6 +1199,7 @@ class ContactWindowController(NSWindowController):
             display_name = contact.name
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
+                instance_id = contact.id
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
@@ -1205,7 +1207,7 @@ class ContactWindowController(NSWindowController):
             
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account, focusTab=True)
+            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account, focusTab=True, instance_id=instance_id)
         except Exception:
             pass
 
@@ -2954,6 +2956,23 @@ class ContactWindowController(NSWindowController):
         return self.model.getFirstContactMatchingURI(uri, exact_match)
 
     @objc.python_method
+    def getBonjourContact(self, instance, uri):
+        if instance:
+            try:
+                contact = next((contact for contact in self.model.bonjour_group.contacts if contact.id == instance))
+            except StopIteration:
+                try:
+                    contact = next((contact for contact in self.model.bonjour_group.contacts if contact.uri == uri))
+                except StopIteration:
+                    pass
+                else:
+                    return contact
+            else:
+                return contact
+
+        return None
+
+    @objc.python_method
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):
         return self.model.getFirstContactFromAllContactsGroupMatchingURI(uri, exact_match)
 
@@ -3377,6 +3396,7 @@ class ContactWindowController(NSWindowController):
                 account = AccountManager().get_account(parties[0])
             except KeyError:
                 account = AccountManager().default_account
+
             if account is BonjourAccount():
                 continue
 
