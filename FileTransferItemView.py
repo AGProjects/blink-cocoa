@@ -182,7 +182,7 @@ class FileTransferItemView(NSView):
         self.progressBar.setHidden_(True)
         self.checksumProgressBar.stopAnimation_(None)
         self.checksumProgressBar.setHidden_(True)
-        self.stopButton.setHidden_(True)
+        self.stopButton.setHidden_(False)
         frame = self.frame()
         frame.size.height = 52
         self.setFrame_(frame)
@@ -240,7 +240,10 @@ class FileTransferItemView(NSView):
 
     @objc.IBAction
     def stopTransfer_(self, sender):
-        self.transfer.end()
+        if self.done:
+            self.removeFromSuperview()
+        else:
+            self.transfer.end()
 
     @objc.IBAction
     def retryTransfer_(self, sender):
