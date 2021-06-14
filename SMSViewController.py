@@ -867,17 +867,17 @@ class SMSViewController(NSObject):
     def start_queue(self):
         if self.started:
             self.message_queue.unpause()
-            self.log_info('Queue unpaused')
+            #self.log_info('Queue unpaused')
         else:
             try:
                 self.message_queue.start()
-                self.log_info('Queue started')
+                #self.log_info('Queue started')
             except RuntimeError:
                 pass
 
     @objc.python_method
     def stop_queue(self):
-        self.log_info('Queue paused with %d messages' % len(self.message_queue.queue.queue))
+        #self.log_info('Queue paused with %d messages' % len(self.message_queue.queue.queue))
         self.message_queue.empty()
         self.message_queue.pause()
 
@@ -893,7 +893,6 @@ class SMSViewController(NSObject):
             if self.last_failure_reason != reason:
                 self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
             return
-
 
         if not isinstance(message, OTRInternalMessage):
             try:
