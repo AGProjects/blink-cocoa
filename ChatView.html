@@ -118,7 +118,7 @@ body
 }
 
 .msgbox_deferred {
-  background-color: #EDF2FF;
+  background-color: white;
   color: #404040;
   border-style: solid;
   border-width: 0.5px;
@@ -200,6 +200,13 @@ body
     margin-top: -1px;
     width: 14px;
     float: right ;
+}
+
+.queue {
+    margin-top: -1px;
+    width: 14px;
+    float: right;
+    display: block;
 }
 
 .timestamp_hidden {
@@ -309,7 +316,7 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid)
+function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid, queueiconpath)
 {
   var chat_session;
   var content;
@@ -337,12 +344,15 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       lock_class = "lock"
   }
 
+  delayed_class = "hidden";
+  
   if (state == "sending") {
       box_class = "msgbox_sending";
       show_sending_state = 'yes'
   } else if (state == "deferred") {
       box_class = "msgbox_deferred";
-      status = "Deferred for later ";
+      delayed_class = "queue";
+      status = "Delayed... ";
   } else if (state == "failed") {
       box_class = "msgbox_failed"
       status = timestamp;
@@ -367,16 +377,17 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     delivered_class = "delivered_hidden";
     displayed_class = "displayed_hidden";
 
+    if (show_sending_state == 'yes') {
+        recipient_class = "recipient_self";
+    } else {
+        recipient_class = "recipient";
+    }
+
     if (iconpath == null) {
         icon_class = "hidden";
         recipient_class = "hidden";
     } else {
         icon_class = "photobox";
-        if (show_sending_state == 'yes') {
-            recipient_class = "recipient_self";
-        } else {
-            recipient_class = "recipient";
-        }
     }
 
 
@@ -390,16 +401,18 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
         "<div class='"+box_class+"' id='"+msgid+"'>"+
              "<div class='header'>"+
                  "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
-                     "<div class='timestamp_hidden' id='t"+msgid+"'>"+
-                         "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
-                         "<div class='delivered_hidden' id='delivered"+msgid+"'>&#10004;</div>"+
-                         "<div class='displayed_hidden' id='displayed"+msgid+"'>&#10004;</div>"+
-                     "</div>"+
+                 "<div class='timestamp_hidden' id='t"+msgid+"'>"+
+                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+
+                     "<img width=14 height=14 id='q"+msgid+"' class="+delayed_class+" src='file:"+queueiconpath+"'/>"+
+                     timestamp+
+                     "<div class='delivered_hidden' id='delivered"+msgid+"'>&#10004;</div>"+
+                     "<div class='displayed_hidden' id='displayed"+msgid+"'>&#10004;</div>"+
+                 "</div>"+
                  "<div class='state' id='s"+msgid+"'>Sending...</div>"+
              "</div>"+
              "<div class='message' id='b"+msgid+"'>"+
                 "<span class='body'>"+text+"</span>"+
-            "</div>"+
+             "</div>"+
         "</div>"+
     "</div>";
   } else {
@@ -409,14 +422,18 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
         "<div class='"+box_class+"' id='"+msgid+"'>"+
              "<div class='header'>"+
                  "<div class='"+recipient_class+"'>"+sender+"</div>"+
-                     "<div class='timestamp'><img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
+                 "<div class='timestamp'>"+
+                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+
+                     "<img width=14 height=14 id='q"+msgid+"' class="+delayed_class+" src='file:"+queueiconpath+"'/>"+
+                     status+
                      "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
                      "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
+                     "</div>"+
                  "</div>"+
+                 "<div class='message' id='b"+msgid+"'>"+
+                    "<span class='body'>"+text+"</span>"+
+                "</div>"+
              "</div>"+
-             "<div class='message' id='b"+msgid+"'>"+
-                "<span class='body'>"+text+"</span>"+
-            "</div>"+
         "</div>"+
     "</div>";
   }
@@ -480,21 +497,6 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
   return 0;
 }
 
-function markDelivered(msgid)
-{
-  var msg = document.getElementById(msgid);
-
-  msg = document.getElementById('t'+msgid)
-  if (msg != null)
-    msg.style.display = "block";
-  msg = document.getElementById('s'+msgid)
-  if (msg != null)
-    msg.style.display = "none";
-  msg = document.getElementById('delivered'+msgid)
-  if (msg != null)
-    msg.style.display = "block";
-}
-
 function htmlBoxHidden(id)
 {
     var container = document.getElementById(id);
@@ -539,21 +541,6 @@ function unmarkFound(msgid)
     msg.style.color = "#404040";
 }
 
-function markDeferred(msgid)
-{
-  var msg = document.getElementById(msgid);
-  if (msg != null)
-    msg.className = "msgbox_deferred";
-
-  msg = document.getElementById('t'+msgid)
-  if (msg != null)
-    msg.style.display = "none";
-  msg = document.getElementById('s'+msgid)
-  if (msg != null)
-    msg.style.display = "block";
-    msg.innerHTML = "Scheduled for later delivery";
-}
-
 function markSent(msgid)
 {
   var msg = document.getElementById(msgid);
@@ -563,10 +550,54 @@ function markSent(msgid)
     msg = document.getElementById('t'+msgid)
     if (msg != null)
       msg.style.display = "block";
+
     msg = document.getElementById('s'+msgid)
     if (msg != null)
       msg.style.display = "none";
 }
+
+function markDeferred(msgid)
+{
+  var msg = document.getElementById(msgid);
+  if (msg != null)
+    msg.className = "msgbox_deferred";
+
+  msg = document.getElementById('t'+msgid)
+  if (msg != null)
+    msg.style.display = "none";
+
+  msg = document.getElementById('s'+msgid)
+  if (msg != null)
+    msg.style.display = "block";
+    msg.innerHTML = "Delayed... ";
+  
+  msg = document.getElementById('q'+msgid)
+  if (msg != null)
+    msg.style.display = "block";
+
+}
+
+function markDelivered(msgid)
+{
+  var msg = document.getElementById(msgid);
+
+  msg = document.getElementById('t'+msgid)
+  if (msg != null)
+    msg.style.display = "block";
+
+  msg = document.getElementById('s'+msgid)
+  if (msg != null)
+    msg.style.display = "none";
+
+  msg = document.getElementById('delivered'+msgid)
+  if (msg != null)
+    msg.style.display = "block";
+
+  msg = document.getElementById('q'+msgid)
+  if (msg != null)
+     msg.style.display = "none";
+}
+
 
 function markDisplayed(msgid)
 {
@@ -589,6 +620,10 @@ function markDisplayed(msgid)
     msg = document.getElementById('s'+msgid)
     if (msg != null)
       msg.style.display = "none";
+
+    msg = document.getElementById('q'+msgid)
+    if (msg != null)
+        msg.style.display = "none";
 }
 
 function markFailed(msgid)
@@ -602,19 +637,22 @@ function markFailed(msgid)
       msg.style.display = "block";
       msg.style.color = "white"
 
-   msg = document.getElementById('r'+msgid)
-    if (msg != null)
+  msg = document.getElementById('r'+msgid)
+  if (msg != null)
     msg.style.color = "white"
 
-   msg = document.getElementById('l'+msgid)
-    if (msg != null)
+  msg = document.getElementById('l'+msgid)
+  if (msg != null)
     msg.style.display = "none"
 
   msg = document.getElementById('s'+msgid)
   if (msg != null)
-  {
     msg.style.display = "none";
-  }
+
+  msg = document.getElementById('q'+msgid)
+  if (msg != null)
+      msg.style.display = "none";
+
 }
 
 function scrollToBottom()
