@@ -242,6 +242,7 @@ class FileTransferItemView(NSView):
     def stopTransfer_(self, sender):
         if self.done:
             self.removeFromSuperview()
+            NotificationCenter().post_notification('BlinkFileTransferWasRemoved', sender=self)
         else:
             self.transfer.end()
 

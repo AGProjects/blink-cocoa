@@ -66,6 +66,7 @@ class FileTransferWindowController(NSObject):
             notification_center.add_observer(self, name="BlinkFileTransferNewIncoming")
             notification_center.add_observer(self, name="BlinkFileTransferWillRestart")
             notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
+            notification_center.add_observer(self, name="BlinkFileTransferWasRemoved")
             notification_center.add_observer(self, name="BlinkFileTransferSpeedDidUpdate")
             notification_center.add_observer(self, name="BlinkShouldTerminate")
 
@@ -176,6 +177,17 @@ class FileTransferWindowController(NSObject):
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window:
             self.window.orderOut_(self)
+
+    @objc.python_method
+    def _NH_BlinkFileTransferWasRemoved(self, sender, data):
+        self.listView.relayout()
+        self.listView.display()
+        self.listView.setNeedsDisplay_(True)
+        count = len(self.listView.subviews())
+        if count == 1:
+            self.bottomLabel.setStringValue_(NSLocalizedString("1 item", "Label"))
+        else:
+            self.bottomLabel.setStringValue_(NSLocalizedString("%i items", "Label") % count if count else "")
 
     @objc.IBAction
     def showWindow_(self, sender):
