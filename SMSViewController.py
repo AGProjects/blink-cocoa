@@ -987,7 +987,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     def stopEncryption():
         self.log_info('Stopping OTR...')
-        self.stopEncryption()
+        self.encryption.stop()
         self.notification_center.post_notification('OTREncryptionDidStop', sender=self)
     
     @objc.python_method
