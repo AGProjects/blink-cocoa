@@ -2893,6 +2893,7 @@
 		1F922C461462B021001B7953 /* Sandbox */ = {
 			isa = PBXGroup;
 			children = (
+				1F46861F25E95D4A003EC986 /* Blink.entitlements */,
 				1F6FFA1A1462904C002A0CB7 /* BlinkPro.entitlements */,
 				1F8BA97914B083D20037F11F /* BlinkLite.entitlements */,
 			);
@@ -3067,7 +3068,6 @@
 		29B97314FDCFA39411CA2CEA /* MacSip */ = {
 			isa = PBXGroup;
 			children = (
-				1F46861F25E95D4A003EC986 /* Blink.entitlements */,
 				1F922C461462B021001B7953 /* Sandbox */,
 				1F485725191595FA002543C7 /* Branding */,
 				1F226DE312B54FBE0010A8B2 /* Dependencies */,
