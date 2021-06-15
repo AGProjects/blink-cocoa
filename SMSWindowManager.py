@@ -192,11 +192,13 @@ class SMSWindowController(NSWindowController):
     def tabView_didSelectTabViewItem_(self, sender, item):
         self.window().setTitle_(self.titleLong)
         session = self.selectedSessionController()
+
         self.updateEncryptionWidgets(session)
+
         for viewer in self.viewers:
             if viewer != session:
                 viewer.read_queue_stop()
-            else:
+            elif self.window().isKeyWindow():
                 viewer.read_queue_start()
 
         if item.identifier() in self.unreadMessageCounts:
@@ -226,13 +228,11 @@ class SMSWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             session.read_queue_stop()
-        #BlinkLogger().log_info("SMS window un-focused with tab %s" % format_identity_to_string(session.target_uri))
 
     def windowDidBecomeKey_(self, notification):
         session = self.selectedSessionController()
         if session:
             session.read_queue_start()
-        #BlinkLogger().log_info("SMS window focused with tab %s" % format_identity_to_string(session.target_uri))
     
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):
@@ -427,7 +427,10 @@ class SMSWindowManagerClass(NSObject):
 
         if window:
             if note_new_message:
-                window.window().orderFront_(None)
+                if focusTab:
+                    window.window().makeKeyAndOrderFront_(None)
+                else:
+                    window.window().orderFront_(None)
                 NSApp.delegate().noteNewMessage(window)
 
         return viewer
@@ -484,6 +487,7 @@ class SMSWindowManagerClass(NSObject):
         is_replication_message = False
         imdn_id = str(uuid.uuid4())
         imdn_timestamp = None
+        cpim_imdn_events = None
         instance_id = data.from_header.uri.parameters.get('instance_id', None)
         
         if data.content_type == 'message/cpim':
@@ -497,16 +501,12 @@ class SMSWindowManagerClass(NSObject):
                 content = cpim_message.content
                 content_type = cpim_message.content_type
                 sender_identity = cpim_message.sender or data.from_header
-                cpim_imdn_events = None
                 imdn_timestamp = cpim_message.timestamp
                 for h in cpim_message.additional_headers:
                     if h.name == "Message-ID":
                         imdn_id = h.value
                     if h.name == "Disposition-Notification":
                         cpim_imdn_events = h.value
-
-                if cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and imdn_timestamp and account.sms.enable_imdn:
-                    BlinkLogger().log_info("Will send IMDN delivery notification for %s" % imdn_id)
 
                 if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
                     is_replication_message = True
@@ -576,9 +576,9 @@ class SMSWindowManagerClass(NSObject):
             document = IMDNDocument.parse(content)
             imdn_message_id = document.message_id.value
             imdn_status = document.notification.status.__str__()
-            BlinkLogger().log_info(u"Received IMDN status %s for message %s" % (imdn_status, imdn_message_id))
             viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id)
             if viewer:
+                viewer.log_info("My message %s was %s" % (imdn_message_id, imdn_status))
                 if imdn_status == 'delivered':
                     viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
                 elif imdn_status == 'displayed':
@@ -622,7 +622,7 @@ class SMSWindowManagerClass(NSObject):
                 replication_timestamp = ISOTimestamp.now()
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, imdn_timestamp=imdn_timestamp, account=account)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 

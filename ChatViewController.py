@@ -501,8 +501,6 @@ class ChatViewController(NSObject):
             else:
                 lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
 
-        queue_icon_path = Resources.get('time.png')
-
         if self.last_sender == sender:
             icon_path = "null"
         else:
@@ -534,9 +532,9 @@ class ChatViewController(NSObject):
                 label = html.escape(self.account.display_name or self.account.id) if sender is None else html.escape(sender)
 
         try:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s', '%s')""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid, queue_icon_path)
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
         except UnicodeDecodeError:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s', '%s')""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid, queue_icon_path)
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
         except Exception as e:
             self.delegate.showSystemMessage("Chat message id %s rendering error: %s" % (msgid, e), ISOTimestamp.now(), True)
             return
