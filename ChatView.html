@@ -9,9 +9,13 @@ body
 }
 
 .remote_container {
+    width: 90%;
+    float: left;
 }
 
 .local_container {
+    width: 90%;
+    float: right;
 }
 
 .system {
@@ -180,6 +184,7 @@ body
 }
 
 .photobox {
+  padding-top: 10px;
   margin: 5px;
   width: 32px;
   float: left;
@@ -202,11 +207,17 @@ body
     float: right ;
 }
 
-.queue {
+.delayed_hidden {
+    display: none;
     margin-top: -1px;
     width: 14px;
     float: right;
-    display: block;
+}
+
+.delayed {
+    margin-top: -1px;
+    width: 14px;
+    float: right;
 }
 
 .timestamp_hidden {
@@ -316,13 +327,15 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid, queueiconpath)
+function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid)
 {
   var chat_session;
   var content;
   var message_class;
   var delivered_class = "delivered_hidden";
   var displayed_class = "displayed_hidden";
+  var delayed_class = "delayed_hidden";
+
   var container_class = direction == "outgoing" ? "local_container" : "remote_container";
   
   timestamp = formatTimestamp(timestamp);
@@ -344,15 +357,14 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       lock_class = "lock"
   }
 
-  delayed_class = "hidden";
-  
   if (state == "sending") {
       box_class = "msgbox_sending";
       show_sending_state = 'yes'
+      status = timestamp;
   } else if (state == "deferred") {
       box_class = "msgbox_deferred";
-      delayed_class = "queue";
       status = "Delayed... ";
+      delayed_class = "delayed"
   } else if (state == "failed") {
       box_class = "msgbox_failed"
       status = timestamp;
@@ -377,34 +389,32 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     delivered_class = "delivered_hidden";
     displayed_class = "displayed_hidden";
 
-    if (show_sending_state == 'yes') {
-        recipient_class = "recipient_self";
-    } else {
-        recipient_class = "recipient";
-    }
-
     if (iconpath == null) {
         icon_class = "hidden";
         recipient_class = "hidden";
     } else {
         icon_class = "photobox";
+        if (show_sending_state == 'yes') {
+            recipient_class = "recipient_self";
+        } else {
+            recipient_class = "recipient";
+        }
     }
-
 
   if (content != null)
       content.id = "";
 
   if (show_sending_state == 'yes') {
     chat_session.innerHTML +=
+    "<div clear='both'/>"+
     "<div class='"+container_class+"' id='container_"+msgid+"'>"+
         "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
         "<div class='"+box_class+"' id='"+msgid+"'>"+
              "<div class='header'>"+
                  "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
                  "<div class='timestamp_hidden' id='t"+msgid+"'>"+
-                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+
-                     "<img width=14 height=14 id='q"+msgid+"' class="+delayed_class+" src='file:"+queueiconpath+"'/>"+
-                     timestamp+
+                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
+                     "<div class='delayed_hidden' id='q"+msgid+"'> &#128351;</div>"+
                      "<div class='delivered_hidden' id='delivered"+msgid+"'>&#10004;</div>"+
                      "<div class='displayed_hidden' id='displayed"+msgid+"'>&#10004;</div>"+
                  "</div>"+
@@ -417,15 +427,15 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
     "</div>";
   } else {
     chat_session.innerHTML +=
+    "<div clear='both'/>"+
     "<div class='"+container_class+"' id='container_"+msgid+"'>"+
         "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
         "<div class='"+box_class+"' id='"+msgid+"'>"+
              "<div class='header'>"+
-                 "<div class='"+recipient_class+"'>"+sender+"</div>"+
+                 "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
                  "<div class='timestamp'>"+
-                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+
-                     "<img width=14 height=14 id='q"+msgid+"' class="+delayed_class+" src='file:"+queueiconpath+"'/>"+
-                     status+
+                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
+                     "<div class="+delayed_class+"   id='q"+msgid+"'> &#128351;</div>"+
                      "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
                      "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
                      "</div>"+
@@ -572,6 +582,7 @@ function markDeferred(msgid)
     msg.innerHTML = "Delayed... ";
   
   msg = document.getElementById('q'+msgid)
+  msg.innerHTML = "Delayed found... ";
   if (msg != null)
     msg.style.display = "block";
 
