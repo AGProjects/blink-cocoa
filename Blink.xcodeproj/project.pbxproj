@@ -2122,7 +2122,6 @@
 		1F5C0760140436E4001DA3EF /* SessionInfoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionInfoController.py; sourceTree = "<group>"; };
 		1F5C428619DF2B070099ABA4 /* BlinkPro-Icon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "BlinkPro-Icon.xcassets"; path = "icons/BlinkPro-Icon.xcassets"; sourceTree = "<group>"; };
 		1F5C428819DF2B270099ABA4 /* BlinkLite-Icon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "BlinkLite-Icon.xcassets"; path = "icons/BlinkLite-Icon.xcassets"; sourceTree = "<group>"; };
-		1F5C428A19DFD90E0099ABA4 /* ElQuijotePro-Icon.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "ElQuijotePro-Icon.xcassets"; path = "icons/ElQuijotePro-Icon.xcassets"; sourceTree = "<group>"; };
 		1F5D309112CDF04D00543DF3 /* ParticipantsTableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ParticipantsTableView.py; sourceTree = "<group>"; };
 		1F6009CD18F74D22005517FA /* mbFlipWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mbFlipWindow.h; sourceTree = "<group>"; };
 		1F6009CE18F74D22005517FA /* mbFlipWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mbFlipWindow.m; sourceTree = "<group>"; };
@@ -3154,7 +3153,6 @@
 		2B24517D0FCF8AA30023DBFB /* Icons */ = {
 			isa = PBXGroup;
 			children = (
-				1F5C428A19DFD90E0099ABA4 /* ElQuijotePro-Icon.xcassets */,
 				1F5C428619DF2B070099ABA4 /* BlinkPro-Icon.xcassets */,
 				1F5C428819DF2B270099ABA4 /* BlinkLite-Icon.xcassets */,
 				1F774C6619CB169800240DC1 /* video-active.png */,
