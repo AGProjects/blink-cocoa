@@ -2828,7 +2828,12 @@ class ContactListModel(CustomListModel):
         try:
             return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.uri == uri)
         except StopIteration:
-            return None
+            try:
+                return next(blink_contact for blink_contact in self.bonjour_group.contacts if uri in blink_contact.uri)
+            except StopIteration:
+                pass
+
+        return None
 
     @objc.python_method
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):

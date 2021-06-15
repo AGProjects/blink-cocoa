@@ -2957,20 +2957,15 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def getBonjourContact(self, instance, uri):
-        if instance:
-            try:
-                contact = next((contact for contact in self.model.bonjour_group.contacts if contact.id == instance))
-            except StopIteration:
-                try:
-                    contact = next((contact for contact in self.model.bonjour_group.contacts if contact.uri == uri))
-                except StopIteration:
-                    pass
-                else:
-                    return contact
-            else:
-                return contact
+        bonjour_contact = None
 
-        return None
+        if instance:
+            bonjour_contact = self.model.getBonjourContactMatchingDeviceId(instance)
+
+        if not bonjour_contact:
+            bonjour_contact = self.model.getBonjourContactMatchingUri(uri)
+
+        return bonjour_contact
 
     @objc.python_method
     def getFirstContactFromAllContactsGroupMatchingURI(self, uri, exact_match=False):

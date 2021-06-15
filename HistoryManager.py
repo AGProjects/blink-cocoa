@@ -1618,6 +1618,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
             except KeyError:
                 continue
             else:
+                if acc is BonjourAccount():
+                    return
                 if acc.chat.disable_replication:
                     continue
 
@@ -1635,6 +1637,8 @@ class ChatHistoryReplicator(object, metaclass=Singleton):
 
         try:
             acc = AccountManager().get_account(account)
+            if acc is BonjourAccount():
+                return
             replication_password = acc.chat.replication_password
             if acc.chat.disable_replication:
                 return

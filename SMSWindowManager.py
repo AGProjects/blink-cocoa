@@ -573,9 +573,14 @@ class SMSWindowManagerClass(NSObject):
                 self.import_key_window.show()
             return
         elif content_type in ('message/imdn+xml'):
-            document = IMDNDocument.parse(content)
-            imdn_message_id = document.message_id.value
-            imdn_status = document.notification.status.__str__()
+            try:
+                document = IMDNDocument.parse(content)
+            except ParserError as e:
+                self.log_error('Failed to parse IMDN payload: %s' % str(e))
+            else:
+                imdn_message_id = document.message_id.value
+                imdn_status = document.notification.status.__str__()
+    
             viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id)
             if viewer:
                 viewer.log_info("My message %s was %s" % (imdn_message_id, imdn_status))
@@ -586,15 +591,19 @@ class SMSWindowManagerClass(NSObject):
             return
         elif content_type == 'application/im-iscomposing+xml':
             content = cpim_message.content if is_cpim else data.body
-            msg = IsComposingMessage.parse(content)
-            state = msg.state.value
-            refresh = msg.refresh.value if msg.refresh is not None else None
-            content_type = msg.content_type.value if msg.content_type is not None else None
-            last_active = msg.last_active.value if msg.last_active is not None else None
+            try:
+                msg = IsComposingMessage.parse(content)
+            except ParserError as e:
+                self.log_error('Failed to parse Is-Composing payload: %s' % str(e))
+            else:
+                state = msg.state.value
+                refresh = msg.refresh.value if msg.refresh is not None else None
+                content_type = msg.content_type.value if msg.content_type is not None else None
+                last_active = msg.last_active.value if msg.last_active is not None else None
 
-            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
-            if viewer:
-                viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
+                viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
+                if viewer:
+                    viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         else:
             BlinkLogger().log_warning("Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, content_type))
