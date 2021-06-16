@@ -18,6 +18,11 @@ body
     float: right;
 }
 
+.system_container_class {
+    float: right;
+    width: 90%;
+}
+
 .system {
   color: #47D29E;
   padding: 2px 2px 2px 2px;
@@ -45,7 +50,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -59,7 +64,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -73,7 +78,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -87,7 +92,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -101,7 +106,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -114,7 +119,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -128,7 +133,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -141,7 +146,7 @@ body
   border-width: 0.5px;
   border-color: #A9A9A9;
   padding: 2px 2px 2px 2px;
-  margin-top: 10px;
+  margin-top: 5px;
   font-family: Lucida Grande, Helvetica, Arial;
   font-size: 11px;
   -webkit-border-radius: 5px;
@@ -207,18 +212,6 @@ body
     float: right ;
 }
 
-.delayed_hidden {
-    display: none;
-    margin-top: -1px;
-    width: 14px;
-    float: right;
-}
-
-.delayed {
-    margin-top: -1px;
-    width: 14px;
-    float: right;
-}
 
 .timestamp_hidden {
   color: #436294;
@@ -363,7 +356,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       status = timestamp;
   } else if (state == "deferred") {
       box_class = "msgbox_deferred";
-      status = "Delayed... ";
+      status = "Delayed... &#128351;";
       delayed_class = "delayed"
   } else if (state == "failed") {
       box_class = "msgbox_failed"
@@ -414,7 +407,6 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
                  "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
                  "<div class='timestamp_hidden' id='t"+msgid+"'>"+
                      "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
-                     "<div class='delayed_hidden' id='q"+msgid+"'> &#128351;</div>"+
                      "<div class='delivered_hidden' id='delivered"+msgid+"'>&#10004;</div>"+
                      "<div class='displayed_hidden' id='displayed"+msgid+"'>&#10004;</div>"+
                  "</div>"+
@@ -435,7 +427,6 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
                  "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
                  "<div class='timestamp'>"+
                      "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
-                     "<div class="+delayed_class+"   id='q"+msgid+"'> &#128351;</div>"+
                      "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
                      "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
                      "</div>"+
@@ -482,6 +473,7 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
 
   chat_session = document.getElementById("chat_session");
   content = document.getElementById("content");
+  container_class = "system_container_class";
 
   if (is_error == null) {
       system_class = "system"
@@ -493,7 +485,8 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
       content.id = "";
 
   chat_session.innerHTML +=
-    "<div id='container_"+msgid+"'>"+
+    "<div clear='both'/>"+
+    "<div class='"+container_class+"' id='container_"+msgid+"'>"+
         "<div class="+system_class+">"+
             "<div class='system_timestamp'>"+timestamp+"</div>"+
             "<div class='system_message'>"+text+"</div>"+
@@ -579,12 +572,7 @@ function markDeferred(msgid)
   msg = document.getElementById('s'+msgid)
   if (msg != null)
     msg.style.display = "block";
-    msg.innerHTML = "Delayed... ";
-  
-  msg = document.getElementById('q'+msgid)
-  msg.innerHTML = "Delayed found... ";
-  if (msg != null)
-    msg.style.display = "block";
+    msg.innerHTML = "Delayed... &#128351;";
 
 }
 
@@ -604,9 +592,6 @@ function markDelivered(msgid)
   if (msg != null)
     msg.style.display = "block";
 
-  msg = document.getElementById('q'+msgid)
-  if (msg != null)
-     msg.style.display = "none";
 }
 
 
@@ -631,10 +616,6 @@ function markDisplayed(msgid)
     msg = document.getElementById('s'+msgid)
     if (msg != null)
       msg.style.display = "none";
-
-    msg = document.getElementById('q'+msgid)
-    if (msg != null)
-        msg.style.display = "none";
 }
 
 function markFailed(msgid)
