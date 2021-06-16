@@ -1164,7 +1164,7 @@ class SMSViewController(NSObject):
  
     def otrNegotiationTimeout_(self, timer):
         if not self.encryption.active:
-            self.chatViewController.showSystemMessage("The other party did not answer", ISOTimestamp.now(), is_error=True)
+            self.chatViewController.showSystemMessage("Recipient did not reply to the encryption request", ISOTimestamp.now(), is_error=True)
 
         if self.otr_negotiation_timer:
             self.otr_negotiation_timer.invalidate()
