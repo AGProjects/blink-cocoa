@@ -402,26 +402,6 @@ class ChatWindowController(NSWindowController):
         return None
 
     @objc.python_method
-    def setVideoProducer(self, producer=None):
-        self.videoView.setProducer(producer)
-        self.refresh_drawer_counter += 1
-        session = self.selectedSessionController()
-        if session:
-            if session.remote_focus or session.hasStreamOfType("video"):
-                self.drawer.open()
-            else:
-                self.closeDrawer()
-        else:
-            self.closeDrawer()
-        self.refreshDrawer()
-
-    @objc.python_method
-    def detachVideo(self, sessionController):
-        if self.selectedSessionController() == sessionController:
-            self.setVideoProducer(None)
-            self.videoView.aspect_ratio = None
-
-    @objc.python_method
     def updateTitle(self):
         title = self.getConferenceTitle()
         icon = None
@@ -893,35 +873,8 @@ class ChatWindowController(NSWindowController):
             conference_file = self.conference_shared_files[row]
             self.sharedFileMenu.itemWithTag_(100).setEnabled_(conference_file.file.status == 'OK')
 
-    @objc.python_method
-    def resizeDrawerSplitter(self):
-        session = self.selectedSessionController()
-        if not session:
-            return
-        
-        chat_stream = session.streamHandlerOfType("chat")
-
-        if chat_stream and chat_stream.drawerSplitterPosition is not None:
-            chat_stream.drawerSplitterPosition['topFrame'].origin.y=0
-            self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['topFrame'])
-            self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['middleFrame'])
-            self.videoView.superview().setFrame_(chat_stream.drawerSplitterPosition['bottomFrame'])
-
-        else:
-            frame = self.conferenceFilesView.frame()
-            frame.size.height = 0
-            self.conferenceFilesView.setFrame_(frame)
-
-            frame = self.videoView.superview().frame()
-            frame.size.height = 0
-            self.videoView.superview().setFrame_(frame)
-
-        self.participantsTableView.reloadData()
-        self.conferenceFilesTableView.reloadData()
-
     def drawerSplitViewDidResize_(self, notification):
         session = self.selectedSessionController()
-
         if not session:
             return
 
@@ -931,61 +884,47 @@ class ChatWindowController(NSWindowController):
 
         parent_frame = self.drawerSplitView.frame()
         top_frame = self.participantsView.frame()
-        top_frame = self.participantsView.frame()
-        middle_frame = self.conferenceFilesView.frame()
-        bottom_frame = self.videoView.superview().frame()
-
+        bottom_frame = self.conferenceFilesView.frame()
         must_resize = False
 
-        video_stream = session.streamHandlerOfType("video")
-        if video_stream:
-            if self.videoView.aspect_ratio is not None:
-                new_height = bottom_frame.size.width / self.videoView.aspect_ratio
-            else:
-                new_height = bottom_frame.size.width / 1.77
-
-            if new_height != bottom_frame.size.height:
-                bottom_frame.size.height = new_height
-                must_resize = True
-                middle_frame.size.height = 170
-        else:
-            if bottom_frame.size.height > 0:
-                must_resize = True
-                bottom_frame.size.height = 0
-                middle_frame.size.height = 170
-
-            else:
-                if bottom_frame.size.height != 0:
-                    bottom_frame.size.height = 0
-                    middle_frame.size.height = 170
-                    must_resize = True
-                
-        if top_frame.size.height < 100:
-            middle_frame.size.height = 170
+        if top_frame.size.height < 200:
+            top_frame.size.height = 200
+            bottom_frame.size.height = parent_frame.size.height - top_frame.size.height
+            top_frame.origin.y = 0
+            bottom_frame.origin.y = top_frame.size.height
             must_resize = True
                 
-        if middle_frame.size.height < 50:
-            middle_frame.size.height = 0
-            must_resize = True
-
-        if not session.conference_shared_files:
-            middle_frame.size.height = 0
-            must_resize = True
-
-        if not video_stream or session.video_consumer == "standalone":
+        if bottom_frame.size.height < 50 and bottom_frame.size.height > 0:
+            top_frame.size.height = parent_frame.size.height
             bottom_frame.size.height = 0
+            top_frame.origin.y = 0
+            bottom_frame.origin.y = top_frame.size.height
             must_resize = True
 
-        top_frame.size.height = parent_frame.size.height - middle_frame.size.height - bottom_frame.size.height
-        top_frame.origin.y = 0
-
-        chat_stream.drawerSplitterPosition = { 'topFrame':    top_frame,
-                                               'middleFrame': middle_frame,
-                                               'bottomFrame': bottom_frame
-                                               }
+        chat_stream.drawerSplitterPosition = {'parent_frame': parent_frame, 'top_frame': top_frame, 'bottom_frame': bottom_frame}
 
         if must_resize:
             self.resizeDrawerSplitter()
+
+    @objc.python_method
+    def resizeDrawerSplitter(self):
+        session = self.selectedSessionController()
+        if not session:
+            return
+        
+        chat_stream = session.streamHandlerOfType("chat")
+        if not chat_stream:
+            return
+
+        if chat_stream.drawerSplitterPosition is None:
+            return
+
+        self.participantsView.setFrame_(chat_stream.drawerSplitterPosition['top_frame'])
+        self.conferenceFilesView.setFrame_(chat_stream.drawerSplitterPosition['bottom_frame'])
+
+        self.participantsTableView.reloadData()
+        self.conferenceFilesTableView.reloadData()
+        self.drawerSplitView.setNeedsDisplay_(True)
 
     @objc.python_method
     def sendPrivateMessage(self):
@@ -1717,6 +1656,10 @@ class ChatWindowController(NSWindowController):
         self.refresh_drawer_counter += 1
 
     @objc.python_method
+    def setVideoProducer(self, producer):
+        pass
+
+    @objc.python_method
     def refreshDrawerIfNecessary(self):
         session = self.selectedSessionController()
         video_stream = None
@@ -1735,6 +1678,9 @@ class ChatWindowController(NSWindowController):
         del participants
 
         self.updateTitle()
+        parent_frame = self.drawerSplitView.frame()
+        top_frame = self.participantsView.frame()
+        bottom_frame = self.conferenceFilesView.frame()
 
         if session is not None:
             state = session.state
@@ -1788,6 +1734,8 @@ class ChatWindowController(NSWindowController):
                 display_name = session.titleShort
                 contact = BlinkConferenceContact(uri, name=display_name)
             self.participants.append(contact)
+            self.hideSharedFilesView()
+
         elif session is not None and session.session is not None:
             if session.account is BonjourAccount():
                 own_uri = '%s@%s' % (session.account.uri.user.decode(), session.account.uri.host.decode())
@@ -1960,47 +1908,53 @@ class ChatWindowController(NSWindowController):
             self.participantsTableView.tableColumnWithIdentifier_('participant').headerCell(). setStringValue_(column_header_title)
 
             self.conference_shared_files = []
-
             for file in reversed(session.conference_shared_files):
                 item = ConferenceFile(file)
                 self.conference_shared_files.append(item)
 
-            chat_stream.drawerSplitterPosition = None
-            top_frame = self.participantsView.superview().frame()
-            middle_frame = self.conferenceFilesView.frame()
-            bottom_frame = self.videoView.superview().frame()
-            middle_frame.size.height = 0
-            bottom_frame.size.height = 0
+            if chat_stream.status == STREAM_CONNECTED:
+                if session.remote_focus or self.conference_shared_files:
+                    if chat_stream.drawerSplitterPosition is None or bottom_frame.size.height == 0:
+                        bottom_frame.size.height = 170
+                        top_frame.size.height = parent_frame.size.height - bottom_frame.size.height
+                        top_frame.origin.y = 0
+                        bottom_frame.origin.y = top_frame.size.height
+                        chat_stream.drawerSplitterPosition = {'parent_frame': parent_frame, 'top_frame': top_frame, 'bottom_frame': bottom_frame}
 
-            if chat_stream.status == STREAM_CONNECTED and (session.conference_shared_files or video_stream):
-                if session.conference_shared_files:
-                    column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
-                    if chat_stream and chat_stream.drawerSplitterPosition is None:
-                        middle_frame.size.height = 130
-                        middle_frame.origin.y -= 130
-                        top_frame.size.height -= middle_frame.size.height
+                    if session.conference_shared_files:
+                        column_header_title = NSLocalizedString("%d Remote Conference Files", "Label") % len(self.conference_shared_files) if len(self.conference_shared_files) > 1 else NSLocalizedString("Remote Conference Files", "Label")
+                    else:
+                        column_header_title = NSLocalizedString("Remote Conference Files", "Label")
                 else:
                     column_header_title = NSLocalizedString("Remote Conference Files", "Label")
+                    self.hideSharedFilesView()
 
                 self.conferenceFilesTableView.tableColumnWithIdentifier_('files').headerCell(). setStringValue_(column_header_title)
+                
+            else:
+                self.hideSharedFilesView()
 
-                if video_stream and session.video_consumer == "chat":
-                    if self.videoView.aspect_ratio is not None:
-                        bottom_frame.size.height = bottom_frame.size.width / self.videoView.aspect_ratio
-                    else:
-                        bottom_frame.size.height = bottom_frame.size.width / 1.77
+        self.resizeDrawerSplitter()
 
-                    top_frame.size.height -= bottom_frame.size.height
+    @objc.python_method
+    def hideSharedFilesView(self):
+        session = self.selectedSessionController()
+        if not session:
+           return
 
-            chat_stream.drawerSplitterPosition = {'topFrame'     : top_frame,
-                                                  'middleFrame'  : middle_frame,
-                                                  'bottomFrame'  : bottom_frame
-                                                    }
+        chat_stream = session.streamHandlerOfType("chat")
+        if not chat_stream:
+            return
 
-            self.resizeDrawerSplitter()
+        parent_frame = self.drawerSplitView.frame()
+        top_frame = self.participantsView.frame()
+        bottom_frame = self.conferenceFilesView.frame()
 
-        self.participantsTableView.reloadData()
-        self.conferenceFilesTableView.reloadData()
+        bottom_frame.size.height = 0
+        top_frame.size.height = parent_frame.size.height
+        top_frame.origin.y = 0
+        bottom_frame.origin.y = top_frame.size.height
+        chat_stream.drawerSplitterPosition = {'parent_frame': parent_frame, 'top_frame': top_frame, 'bottom_frame': bottom_frame}
 
     def drawerWillResizeContents_toSize_(self, drawer, size):
         self.drawerSplitViewDidResize_(None)
@@ -2024,6 +1978,7 @@ class ChatWindowController(NSWindowController):
         pass
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
+        self.resizeDrawerSplitter()
         if item.identifier() in self.sessions:
             self.revalidateToolbar()
             self.refreshDrawer()
