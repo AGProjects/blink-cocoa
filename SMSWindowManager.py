@@ -33,12 +33,11 @@ from zope.interface import implementer
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.payloads.iscomposing import IsComposingMessage
+from sipsimple.payloads.iscomposing import IsComposingMessage, IsComposingDocument
 from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError
 from sipsimple.util import ISOTimestamp
 from ChatViewController import MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED
-
 
 from BlinkLogger import BlinkLogger
 from SMSViewController import SMSViewController
@@ -396,7 +395,8 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def openMessageWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None):
+    def openMessageWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None):
+
         if instance_id and instance_id.startswith('urn:uuid:'):
             instance_id = instance_id[9:]
 
@@ -412,6 +412,29 @@ class SMSWindowManagerClass(NSObject):
             break
         else:
             window, viewer = None, None
+
+        if content_type == IMDNDocument.content_type:
+            if not viewer:
+                return
+
+            try:
+                document = IMDNDocument.parse(content)
+            except ParserError as e:
+                self.log_error('Failed to parse IMDN payload: %s' % str(e))
+            else:
+                imdn_message_id = document.message_id.value
+                imdn_status = document.notification.status.__str__()
+
+            if viewer.has_pending_message(imdn_message_id):
+                viewer.log_info("My message %s was %s" % (imdn_message_id, imdn_status))
+                if imdn_status == 'delivered':
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
+                elif imdn_status == 'displayed':
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
+            else:
+                msg = "My message %s sent from another device was %s" % (imdn_message_id, imdn_status)
+                viewer.log_info(msg)
+                viewer.chatViewController.showSystemMessage(msg, ISOTimestamp.now(), is_error=True)
 
         if not viewer and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id)
@@ -461,18 +484,9 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):
-        try:
-            data.request_uri.parameters['instance_id']
-        except KeyError:
-            account = AccountManager().find_account(data.request_uri)
-        else:
-            account = BonjourAccount()
-
-        if not account:
-            BlinkLogger().log_warning("Could not find local account for incoming SMS to %s, using default" % data.request_uri)
-            account = AccountManager().default_account
 
         call_id = data.headers.get('Call-ID', Null).body
+        is_replication_message = data.headers.get('X-Replicated-Message', Null).body
 
         try:
             self.received_call_ids.remove(call_id)
@@ -484,7 +498,6 @@ class SMSWindowManagerClass(NSObject):
 
         is_cpim = False
         cpim_message = None
-        is_replication_message = False
         imdn_id = str(uuid.uuid4())
         imdn_timestamp = None
         cpim_imdn_events = None
@@ -494,144 +507,135 @@ class SMSWindowManagerClass(NSObject):
             try:
                 cpim_message = CPIMPayload.decode(data.body)
             except CPIMParserError:
-                BlinkLogger().log_warning("Incoming SMS from %s to %s has invalid CPIM content" % format_identity_to_string(data.from_header), account.id)
+                BlinkLogger().log_warning("Incoming SMS from %s has invalid CPIM content" % format_identity_to_string(data.from_header))
                 return
             else:
                 is_cpim = True
                 content = cpim_message.content
                 content_type = cpim_message.content_type
-                sender_identity = cpim_message.sender or data.from_header
-                imdn_timestamp = cpim_message.timestamp
-                for h in cpim_message.additional_headers:
-                    if h.name == "Message-ID":
-                        imdn_id = h.value
-                    if h.name == "Disposition-Notification":
-                        cpim_imdn_events = h.value
-
-                if cpim_message.sender and data.from_header.uri == data.to_header.uri and data.from_header.uri == cpim_message.sender.uri:
-                    is_replication_message = True
+                if is_replication_message:
+                    sender_identity = cpim_message.sender or data.to_header
                     window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
                 else:
+                    sender_identity = cpim_message.sender or data.from_header
                     window_tab_identity = data.from_header
+
+                imdn_timestamp = cpim_message.timestamp
+                if not is_replication_message:
+                    for h in cpim_message.additional_headers:
+                        if h.name == "Message-ID":
+                            imdn_id = h.value
+                        if h.name == "Disposition-Notification":
+                            cpim_imdn_events = h.value
         else:
             content = data.body
             content_type = data.content_type
-            sender_identity = data.from_header
+            sender_identity = data.to_header if is_replication_message else data.from_header
             window_tab_identity = sender_identity
             
-        if content_type in ('text/plain', 'text/html'):
-            BlinkLogger().log_info(u"Incoming %s message %s from %s to %s received" % (content_type, call_id, format_identity_to_string(sender_identity), account.id))
-        elif content_type in ('text/rsa-public-key'):
-            uri = format_identity_to_string(sender_identity)
-            BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
+        try:
+            data.request_uri.parameters['instance_id']
+        except KeyError:
+            if is_replication_message:
+                acc_id = '%s@%s' % (data.from_header.uri, data.from_header.host)
+                account = AccountManager().find_account(acc_id)
+            else:
+                account = AccountManager().find_account(data.request_uri)
+        else:
+            account = BonjourAccount()
 
-            if uri == account.id:
-                BlinkLogger().log_info(u"Public key save skipped for own account")
+        if not account:
+            BlinkLogger().log_warning("Could not find local account for incoming message to %s, using default" % data.request_uri)
+            account = AccountManager().default_account
+
+        BlinkLogger().log_info(u"Incoming %s message %s from %s to %s received" % (content_type, call_id, format_identity_to_string(sender_identity), account.id))
+
+        if not is_replication_message:
+            if content_type in ('text/rsa-public-key'):
+                uri = format_identity_to_string(sender_identity)
+                BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
+
+                if uri == account.id:
+                    BlinkLogger().log_info(u"Public key save skipped for own account")
+                    return
+
+                public_key = ''
+                start_public = False
+
+                for l in content.decode().split("\n"):
+                    if l == "-----BEGIN RSA PUBLIC KEY-----":
+                        start_public = True
+
+                    if l == "-----END RSA PUBLIC KEY-----":
+                        public_key = public_key + l
+                        start_public = False
+                        break
+
+                    if start_public:
+                        public_key = public_key + l + '\n'
+                
+                if public_key:
+                    blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+
+                    if blink_contact is not None:
+                        contact = blink_contact.contact
+                        if contact.public_key != public_key:
+                            contact.public_key = public_key
+                            contact.public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
+                            contact.save()
+                            BlinkLogger().log_info(u"Public key %s from %s saved " % (contact.public_key_checksum, data.from_header.uri))
+                            nc_title = NSLocalizedString("Public key", "System notification title")
+                            nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
+                            nc_body = NSLocalizedString("Public key has changed", "System notification title")
+                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
+                        else:
+                            BlinkLogger().log_info(u"Public key from %s has not changed" % data.from_header.uri)
+                    else:
+                        BlinkLogger().log_info(u"No contact found to save the key")
+
+                return
+            elif content_type in ('text/rsa-private-key') and not is_replication_message:
+                BlinkLogger().log_info(u"Private key from %s to %s received" % (data.from_header.uri, account.id))
+
+                if account.id == str(data.from_header.uri).split(":")[1]:
+                    self.import_key_window = ImportPrivateKeyController(account, content);
+                    self.import_key_window.show()
+                return
+            elif content_type == IsComposingDocument.content_type and not is_replication_message:
+                content = cpim_message.content if is_cpim else data.body
+                try:
+                    msg = IsComposingMessage.parse(content)
+                except ParserError as e:
+                    self.log_error('Failed to parse Is-Composing payload: %s' % str(e))
+                else:
+                    state = msg.state.value
+                    refresh = msg.refresh.value if msg.refresh is not None else None
+                    content_type = msg.content_type.value if msg.content_type is not None else None
+                    last_active = msg.last_active.value if msg.last_active is not None else None
+
+                    viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
+                    if viewer:
+                        viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
                 return
 
-            public_key = ''
-            start_public = False
-
-            for l in content.decode().split("\n"):
-                if l == "-----BEGIN RSA PUBLIC KEY-----":
-                    start_public = True
-
-                if l == "-----END RSA PUBLIC KEY-----":
-                    public_key = public_key + l
-                    start_public = False
-                    break
-
-                if start_public:
-                    public_key = public_key + l + '\n'
-            
-            if public_key:
-                blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
-
-                if blink_contact is not None:
-                    contact = blink_contact.contact
-                    if contact.public_key != public_key:
-                        contact.public_key = public_key
-                        contact.public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
-                        contact.save()
-                        BlinkLogger().log_info(u"Public key %s from %s saved " % (contact.public_key_checksum, data.from_header.uri))
-                        nc_title = NSLocalizedString("Public key", "System notification title")
-                        nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
-                        nc_body = NSLocalizedString("Public key has changed", "System notification title")
-                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-
-                    else:
-                        BlinkLogger().log_info(u"Public key from %s has not changed" % data.from_header.uri)
-                else:
-                    BlinkLogger().log_info(u"No contact found to save the key")
-
+        if content_type == IMDNDocument.content_type:
+            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
             return
-        elif content_type in ('text/rsa-private-key'):
-            BlinkLogger().log_info(u"Private key from %s to %s received" % (data.from_header.uri, account.id))
-
-            if account.id == str(data.from_header.uri).split(":")[1]:
-                self.import_key_window = ImportPrivateKeyController(account, content);
-                self.import_key_window.show()
-            return
-        elif content_type in ('message/imdn+xml'):
-            try:
-                document = IMDNDocument.parse(content)
-            except ParserError as e:
-                self.log_error('Failed to parse IMDN payload: %s' % str(e))
-            else:
-                imdn_message_id = document.message_id.value
-                imdn_status = document.notification.status.__str__()
-    
-            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id)
-            if viewer:
-                viewer.log_info("My message %s was %s" % (imdn_message_id, imdn_status))
-                if imdn_status == 'delivered':
-                    viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
-                elif imdn_status == 'displayed':
-                    viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
-            return
-        elif content_type == 'application/im-iscomposing+xml':
-            content = cpim_message.content if is_cpim else data.body
-            try:
-                msg = IsComposingMessage.parse(content)
-            except ParserError as e:
-                self.log_error('Failed to parse Is-Composing payload: %s' % str(e))
-            else:
-                state = msg.state.value
-                refresh = msg.refresh.value if msg.refresh is not None else None
-                content_type = msg.content_type.value if msg.content_type is not None else None
-                last_active = msg.last_active.value if msg.last_active is not None else None
-
-                viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
-                if viewer:
-                    viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
-            return
-        else:
-            BlinkLogger().log_warning("Incoming SMS %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(data.from_header), account.id, content_type))
+        elif content_type not in ('text/plain', 'text/html'):
+            BlinkLogger().log_warning("Incoming message %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(sender_identity), account.id, content_type))
             return
 
         # display the message
-        note_new_message = False if is_replication_message else True
+        note_new_message = not is_replication_message and content_type not in ('message/imdn+xml')
         viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
-        self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
-        replication_state = None
+        
+        if note_new_message:
+            self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         replication_timestamp = None
 
-        if is_replication_message:
-            replicated_response_code = data.headers.get('X-Replication-Code', Null).body
-            if replicated_response_code == '202':
-                replication_state = 'deferred'
-            elif replicated_response_code == '200':
-                replication_state = 'delivered'
-            else:
-                replication_state = 'failed'
-            replicated_timestamp = data.headers.get('X-Replication-Timestamp', Null).body
-            try:
-                replication_timestamp = ISOTimestamp(replicated_timestamp)
-            except Exception:
-                replication_timestamp = ISOTimestamp.now()
-
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, imdn_message_id=imdn_message_id)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 

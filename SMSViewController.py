@@ -306,20 +306,27 @@ class SMSViewController(NSObject):
     def matchesTargetOrInstanceAndAccount(self, target, instance_id, account):
         that_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(target)
         this_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
+
         if instance_id is not None and instance_id == self.instance_id:
             return True
+
         return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
 
     @objc.python_method
-    def gotMessage(self, sender, id, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None):
+    def gotMessage(self, sender, id, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None):
+
         try:
-            require_delivered = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events
-            require_display = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events
+            if content_type == IMDNDocument.content_type and not self.has_pending_message(imdn_message_id):
+                self.log_info('IMDN message %s was sent from another devices' % imdn_message_id)
+                return
+
+            require_delivered = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
+            require_display = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
 
             is_html = content_type == 'text/html'
             encrypted = False
 
-            if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+            if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type) and not is_replication_message:
                 try:
                     content = self.encryption.otr_session.handle_input(content, content_type)
                 except IgnoreMessage:
@@ -346,17 +353,20 @@ class SMSViewController(NSObject):
             content = content.decode() if isinstance(content, bytes) else content
             
             if content.startswith('?OTR:'):
-                self.log_info('Dropped OTR message that could not be decoded')
-                self.chatViewController.showSystemMessage("The other party stopped encryption", ISOTimestamp.now(), is_error=True)
-                if self.encryption.active:
-                    self.stopEncryption()
+                if not is_replication_message:
+                    self.log_info('Dropped OTR message that could not be decoded')
+                    self.chatViewController.showSystemMessage("The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+                    if self.encryption.active:
+                        self.stopEncryption()
+                else:
+                    self.chatViewController.showSystemMessage("Encrypted message from another device of my own", ISOTimestamp.now())
       
                 return None
 
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
             timestamp = timestamp or ISOTimestamp.now()
 
-            self.log_info("Incoming %s message %s received (Call-ID %s)" % (content_type, id, call_id))
+            self.log_info("Incoming message %s message %s received (Call-ID %s)" % (content_type, id, call_id))
             if require_delivered:
                 self.sendIMDNNotification(id, 'delivered')
 
@@ -680,6 +690,15 @@ class SMSViewController(NSObject):
             except RuntimeError:
                 pass
 
+    @objc.python_method
+    def has_pending_message(self, id):
+        try:
+            message = next(message for message in self.messages.values() if message.id == id)
+        except StopIteration:
+            return False
+        else:
+            return True
+        
     @objc.python_method
     def stop_queue(self):
         self.log_info('Sending queue paused with %d messages' % len(self.message_queue.queue.queue))
