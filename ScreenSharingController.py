@@ -350,9 +350,10 @@ class ScreenSharingController(MediaStream):
         self.end()
 
     @objc.python_method
-    def end(self):
+    def end(self, windowIsClosing=False):
+        self.sessionController.log_info('Ending screen sharing in statis %s' % self.status)
         self.stopButton.setHidden_(True)
-        if self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_IDLE, STREAM_FAILED):
+        if self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_IDLE, STREAM_FAILED) and not windowIsClosing:
             if self.statusWindow:
                 self.statusWindow.close()
                 self.statusWindow = None
@@ -415,8 +416,7 @@ class ScreenSharingController(MediaStream):
                 if newstate == STREAM_CONNECTED:
                     _t = self.sessionController.titleShort
                     label = NSLocalizedString("%s requests your screen. Please confirm when asked.", "Label") % _t
-                    self.statusProgress.setHidden_(False)
-                    self.statusProgress.startAnimation_(None)
+                    self.statusProgress.setHidden_(True)
                 elif newstate == STREAM_DISCONNECTING:
                     self.statusLabel.setStringValue_(NSLocalizedString("Terminating Screen Sharing...", "Label"))
                     self.statusProgress.setHidden_(True)
@@ -431,6 +431,8 @@ class ScreenSharingController(MediaStream):
                     self.stopButton.setTitle_(NSLocalizedString("Cancel Proposal", "Button title"))
                 elif newstate == STREAM_CONNECTING:
                     self.statusLabel.setStringValue_(NSLocalizedString("Offering Screen Sharing...", "Label"))
+                    self.statusProgress.setHidden_(True)
+                    self.stopButton.setHidden_(False)
                 elif newstate == STREAM_FAILED:
                     _t = self.sessionController.failureReason or fail_reason
                     e = NSLocalizedString("Error starting screen sharing session.", "Label")
@@ -461,8 +463,9 @@ class ScreenSharingController(MediaStream):
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSEventTrackingRunLoopMode)
 
-    def windowWillClose_(self, sender):
-        self.end()
+    def windowShouldClose_(self, sender):
+        self.end(windowIsClosing=True)
+        return True
 
     def closeWindows_(self, timer):
         if self.statusWindow:
