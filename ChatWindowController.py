@@ -351,19 +351,17 @@ class ChatWindowController(NSWindowController):
             chat_stream.chatViewController.loadingProgressIndicator.stopAnimation_(None)
 
         self.updateTitle()
-        if session.remote_focus or session.hasStreamOfType("video"):
+        if session.remote_focus:
             self.drawer.open()
         else:
             self.closeDrawer()
 
-        self.drawer.open()
         if session.mustCloseAudioDrawer:
             NSApp.delegate().contactsWindowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
     @objc.python_method
     def closeDrawer(self):
-        return
         self.drawer.close()
 
     def removeSession_(self, session):
@@ -1978,6 +1976,7 @@ class ChatWindowController(NSWindowController):
         pass
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
+    
         self.resizeDrawerSplitter()
         if item.identifier() in self.sessions:
             self.revalidateToolbar()
@@ -1991,7 +1990,7 @@ class ChatWindowController(NSWindowController):
             session.setVideoConsumer(session.video_consumer)
 
             self.refreshDrawer()
-            if session.remote_focus or session.hasStreamOfType("video"):
+            if session.remote_focus:
                 self.drawer.open()
             else:
                 self.closeDrawer()

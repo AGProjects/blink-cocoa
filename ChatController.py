@@ -647,7 +647,6 @@ class ChatController(MediaStream):
             if self.outgoing_message_handler.must_propose_otr:
                 self.outgoing_message_handler.propose_otr()
 
-
     def chatViewDidLoad_(self, chatView):
         if self.closed:
             return
@@ -1692,6 +1691,7 @@ class ChatController(MediaStream):
 
         if self.sessionController.remote_focus:
             self.chatWindowController.drawer.open()
+
 
     @objc.python_method
     @run_in_gui_thread
