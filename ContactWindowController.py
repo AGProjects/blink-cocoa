@@ -1207,7 +1207,7 @@ class ContactWindowController(NSWindowController):
             
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account, focusTab=True, instance_id=instance_id)
+            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account, focusTab=True, instance_id=instance_id)
         except Exception:
             pass
 
@@ -3405,7 +3405,7 @@ class ContactWindowController(NSWindowController):
             else:
                 display_name = str(target)
 
-            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account)
+            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account)
 
     @objc.python_method
     @run_in_green_thread
@@ -4336,7 +4336,7 @@ class ContactWindowController(NSWindowController):
 
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().openMessageWindow(target, display_name, account, focusTab=True)
+            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account, focusTab=True)
         except Exception:
             pass
 
