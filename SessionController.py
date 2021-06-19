@@ -333,7 +333,11 @@ class SessionControllersManager(object, metaclass=Singleton):
             # Session could have ended before it was completely started
             session.start_time = session.end_time
 
-        duration = session.end_time - session.start_time
+        try:
+            duration = session.end_time - session.start_time
+        except TypeError:
+            duration = 0
+
         call_id = data.call_id if data.call_id is not None else str(uuid.uuid1())
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
