@@ -131,6 +131,7 @@ class SMSViewController(NSObject):
     contact = None
     read_queue_started = False
     read_queue_paused = False
+    render_queue_started = False
     started = False
     paused = False
 
@@ -149,6 +150,7 @@ class SMSViewController(NSObject):
         self = objc.super(SMSViewController, self).init()
         if self:
             self.messages = {}
+            self.sent_readable_messages = set()
 
             self.public_key = None
             self.private_key = None
@@ -165,6 +167,7 @@ class SMSViewController(NSObject):
 
             self.message_queue = EventQueue(self._send_message)
             self.read_queue = EventQueue(self._send_read_notification)
+            self.render_queue = EventQueue(self._render_message)
 
             self.history=ChatHistory()
 
@@ -310,16 +313,26 @@ class SMSViewController(NSObject):
         if instance_id is not None and instance_id == self.instance_id:
             return True
 
-        return (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
+        m = (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
+        #self.log_info('Viewer match with target %s and account %s: %s' % (target, account, m))
+        return m
 
     @objc.python_method
-    def gotMessage(self, sender, id, call_id, content, content_type, is_replication_message=False, timestamp=None, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None):
+    def gotMessage(self, sender, id, call_id, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None):
+    
+        if id in self.sent_readable_messages:
+            self.log_info('Discard message %s that looped back to myself' % id)
+            return
 
+        message_tuple = (sender, id, call_id, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id)
+
+        self.render_queue.put(message_tuple)
+
+    @objc.python_method
+    def _render_message(self, message_tuple):
+        (sender, id, call_id, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id) = message_tuple
+       
         try:
-            if content_type == IMDNDocument.content_type and not self.has_pending_message(imdn_message_id):
-                self.log_info('IMDN message %s was sent from another devices' % imdn_message_id)
-                return
-
             require_delivered = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
             require_display = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
 
@@ -364,7 +377,7 @@ class SMSViewController(NSObject):
                 return None
 
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
-            timestamp = timestamp or ISOTimestamp.now()
+            timestamp = ISOTimestamp.now()
 
             self.log_info("Incoming message %s message %s received (Call-ID %s)" % (content_type, id, call_id))
             if require_delivered:
@@ -380,25 +393,27 @@ class SMSViewController(NSObject):
                 nc_subtitle = format_identity_to_string(sender, format='full')
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-            self.chatViewController.showMessage(call_id, id, 'incoming', format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state="sent", media_type='sms', encryption=encryption)
             
             if content.endswith('==') and self.private_key:
                 pass
-                #print('Decrypt message with RSA', content)
                 #unhexed = unhexlify(content.encode())
-                #print(unhexed)
                 #d = self.private_key.decrypt(content)
-                #print(d)
 
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=id, direction='incoming', history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            direction = 'outgoing' if is_replication_message else 'incoming'
+            msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
+
+            self.chatViewController.showMessage(call_id, msg_id, direction, format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state="sent", media_type='sms', encryption=encryption)
+
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             # save to history
-            if not is_replication_message or (is_replication_message and self.local_uri == self.account.id):
-                message = MessageInfo(id, call_id=call_id, direction='incoming', sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status=MSG_STATE_DELIVERED, encryption=encryption, require_display=require_display, require_delivered=require_delivered)
-                self.add_to_history(message)
+            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status=MSG_STATE_DELIVERED, encryption=encryption, require_display=require_display, require_delivered=require_delivered)
+
+            self.add_to_history(message)
 
             if require_display:
                 self.read_queue.put(id)
+
         except Exception as e:
             import traceback
             self.log_info('Error in Got: %s' % str(e))
@@ -474,6 +489,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def update_message_status(self, msgid, status):
+        self.log_info("My message %s was %s" % (msgid, status))
         self.chatViewController.markMessage(msgid, status)
         self.history.update_message_status(msgid, status)
     
@@ -525,6 +541,7 @@ class SMSViewController(NSObject):
 
         notification = DisplayNotification('displayed') if event == 'displayed' else DeliveryNotification('delivered')
         content = IMDNDocument.create(message_id=message_id, datetime=ISOTimestamp.now(), recipient_uri=self.target_uri, notification=notification)
+        self.log_info('Composing IMDN %s for message %s' % (event, message_id))
         self.sendMessage(content, IMDNDocument.content_type)
     
     @objc.python_method
@@ -539,6 +556,8 @@ class SMSViewController(NSObject):
         timestamp = ISOTimestamp.now()
         content = content.decode() if isinstance(content, bytes) else content
         id = str(uuid.uuid4()) # use IMDN compatible id
+
+        self.log_info('Adding outgoing %s message %s to the sending queue' % (id, content_type))
 
         if self.encryption.active:
             encryption = 'verified' if self.encryption.verified else 'unverified'
@@ -843,7 +862,7 @@ class SMSViewController(NSObject):
                                   extra_headers=additional_sip_headers)
 
         self.notification_center.add_observer(self, sender=message_request)
-        
+        self.sent_readable_messages.add(message.id)
         message_request.send(timeout)
         message.status = MSG_STATE_SENDING
         message.call_id = message_request._request.call_id.decode()
@@ -1041,6 +1060,9 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_green_thread
     def replay_history(self):
+        self.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Loading previous messages...", "Label"))
+        self.chatViewController.loadingProgressIndicator.startAnimation_(None)
+
         if self.account is BonjourAccount():
             blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))
         else:
@@ -1055,6 +1077,7 @@ class SMSViewController(NSObject):
             remote_uris.append(self.instance_id)
             
         zoom_factor = self.chatViewController.scrolling_zoom_factor
+        self.log_info('Replay history with zoom factor %s' % zoom_factor)
 
         if zoom_factor:
             period_array = {
@@ -1171,6 +1194,11 @@ class SMSViewController(NSObject):
 
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
+
+        if not self.render_queue_started:
+            self.render_queue.start()
+            self.log_info('Render queue started')
+            self.render_queue_started = True
 
     @property
     def chatWindowController(self):

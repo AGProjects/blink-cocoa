@@ -395,7 +395,7 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def openMessageWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None):
+    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None):
 
         if instance_id and instance_id.startswith('urn:uuid:'):
             instance_id = instance_id[9:]
@@ -415,26 +415,21 @@ class SMSWindowManagerClass(NSObject):
 
         if content_type == IMDNDocument.content_type:
             if not viewer:
+                BlinkLogger().log_error('No viewer found')
                 return
 
             try:
                 document = IMDNDocument.parse(content)
             except ParserError as e:
-                self.log_error('Failed to parse IMDN payload: %s' % str(e))
+                BlinkLogger().log_error('Failed to parse IMDN payload: %s' % str(e))
             else:
                 imdn_message_id = document.message_id.value
                 imdn_status = document.notification.status.__str__()
 
-            if viewer.has_pending_message(imdn_message_id):
-                viewer.log_info("My message %s was %s" % (imdn_message_id, imdn_status))
                 if imdn_status == 'delivered':
                     viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
                 elif imdn_status == 'displayed':
                     viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
-            else:
-                msg = "My message %s sent from another device was %s" % (imdn_message_id, imdn_status)
-                viewer.log_info(msg)
-                viewer.chatViewController.showSystemMessage(msg, ISOTimestamp.now(), is_error=True)
 
         if not viewer and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id)
@@ -485,8 +480,15 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):
 
+        is_cpim = False
+        cpim_message = None
+        imdn_id = str(uuid.uuid4())
+        imdn_timestamp = None
+        cpim_imdn_events = None
+    
         call_id = data.headers.get('Call-ID', Null).body
         is_replication_message = data.headers.get('X-Replicated-Message', Null).body
+        instance_id = data.from_header.uri.parameters.get('instance_id', None)
 
         try:
             self.received_call_ids.remove(call_id)
@@ -496,49 +498,11 @@ class SMSWindowManagerClass(NSObject):
             # drop duplicate message received
             return
 
-        is_cpim = False
-        cpim_message = None
-        imdn_id = str(uuid.uuid4())
-        imdn_timestamp = None
-        cpim_imdn_events = None
-        instance_id = data.from_header.uri.parameters.get('instance_id', None)
-        
-        if data.content_type == 'message/cpim':
-            try:
-                cpim_message = CPIMPayload.decode(data.body)
-            except CPIMParserError:
-                BlinkLogger().log_warning("Incoming SMS from %s has invalid CPIM content" % format_identity_to_string(data.from_header))
-                return
-            else:
-                is_cpim = True
-                content = cpim_message.content
-                content_type = cpim_message.content_type
-                if is_replication_message:
-                    sender_identity = cpim_message.sender or data.to_header
-                    window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
-                else:
-                    sender_identity = cpim_message.sender or data.from_header
-                    window_tab_identity = data.from_header
-
-                imdn_timestamp = cpim_message.timestamp
-                if not is_replication_message:
-                    for h in cpim_message.additional_headers:
-                        if h.name == "Message-ID":
-                            imdn_id = h.value
-                        if h.name == "Disposition-Notification":
-                            cpim_imdn_events = h.value
-        else:
-            content = data.body
-            content_type = data.content_type
-            sender_identity = data.to_header if is_replication_message else data.from_header
-            window_tab_identity = sender_identity
-            
         try:
             data.request_uri.parameters['instance_id']
         except KeyError:
             if is_replication_message:
-                acc_id = '%s@%s' % (data.from_header.uri, data.from_header.host)
-                account = AccountManager().find_account(acc_id)
+                account = AccountManager().find_account(data.from_header.uri)
             else:
                 account = AccountManager().find_account(data.request_uri)
         else:
@@ -548,10 +512,49 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_warning("Could not find local account for incoming message to %s, using default" % data.request_uri)
             account = AccountManager().default_account
 
-        BlinkLogger().log_info(u"Incoming %s message %s from %s to %s received" % (content_type, call_id, format_identity_to_string(sender_identity), account.id))
+        if data.content_type == 'message/cpim':
+            is_cpim = True
 
-        if not is_replication_message:
-            if content_type in ('text/rsa-public-key'):
+            try:
+                cpim_message = CPIMPayload.decode(data.body)
+            except CPIMParserError:
+                BlinkLogger().log_warning("Incoming message from %s has invalid CPIM content" % format_identity_to_string(data.from_header))
+                return
+            else:
+                content = cpim_message.content
+                content_type = cpim_message.content_type
+
+                if is_replication_message:
+                    sender_identity = cpim_message.sender or data.to_header
+                    window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
+                else:
+                    sender_identity = cpim_message.sender or data.from_header
+                    window_tab_identity = data.from_header
+
+                imdn_timestamp = cpim_message.timestamp
+                for h in cpim_message.additional_headers:
+                    if h.name == "Message-ID":
+                        imdn_id = h.value
+                    if h.name == "Disposition-Notification":
+                        cpim_imdn_events = h.value
+        else:
+            content = data.body
+            content_type = data.content_type
+            sender_identity = data.to_header if is_replication_message else data.from_header
+            window_tab_identity = sender_identity
+
+        note_new_message = False
+
+        if is_replication_message:
+            if content_type not in ('text/plain', 'text/html'):
+                #BlinkLogger().log_info('Discard replicated %s message' % content_type)
+                return
+                
+            BlinkLogger().log_info('Replication of %s message %s from %s to %s' % (imdn_id, content_type, account.id, format_identity_to_string(sender_identity)))
+        else:
+            BlinkLogger().log_info('Incoming %s message %s from %s to %s received (CAll-id %s)' % (content_type, imdn_id,  format_identity_to_string(sender_identity), account.id, call_id))
+
+            if content_type == 'text/rsa-public-key':
                 uri = format_identity_to_string(sender_identity)
                 BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
 
@@ -595,47 +598,48 @@ class SMSWindowManagerClass(NSObject):
                         BlinkLogger().log_info(u"No contact found to save the key")
 
                 return
-            elif content_type in ('text/rsa-private-key') and not is_replication_message:
+            elif content_type == 'text/rsa-private-key':
                 BlinkLogger().log_info(u"Private key from %s to %s received" % (data.from_header.uri, account.id))
 
                 if account.id == str(data.from_header.uri).split(":")[1]:
                     self.import_key_window = ImportPrivateKeyController(account, content);
                     self.import_key_window.show()
                 return
-            elif content_type == IsComposingDocument.content_type and not is_replication_message:
+            elif content_type == IsComposingDocument.content_type:
                 content = cpim_message.content if is_cpim else data.body
                 try:
                     msg = IsComposingMessage.parse(content)
                 except ParserError as e:
-                    self.log_error('Failed to parse Is-Composing payload: %s' % str(e))
+                    BlinkLogger().log_error('Failed to parse Is-Composing payload: %s' % str(e))
                 else:
                     state = msg.state.value
                     refresh = msg.refresh.value if msg.refresh is not None else None
                     content_type = msg.content_type.value if msg.content_type is not None else None
                     last_active = msg.last_active.value if msg.last_active is not None else None
 
-                    viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
+                    viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
+
                     if viewer:
                         viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
                 return
+            elif content_type == IMDNDocument.content_type:
+                viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
+                return
 
-        if content_type == IMDNDocument.content_type:
-            viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
-            return
-        elif content_type not in ('text/plain', 'text/html'):
-            BlinkLogger().log_warning("Incoming message %s from %s to %s has unknown content-type %s" % (call_id, format_identity_to_string(sender_identity), account.id, content_type))
-            return
+            elif content_type not in ('text/plain', 'text/html'):
+                BlinkLogger().log_warning('Incoming message type %s from %s to %s is not supported' % (content_type, format_identity_to_string(sender_identity), account.id))
+                return
+            else:
+                note_new_message = True
 
         # display the message
-        note_new_message = not is_replication_message and content_type not in ('message/imdn+xml')
-        viewer = self.openMessageWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
+        viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
         
         if note_new_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
-        replication_timestamp = None
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, replication_timestamp, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, imdn_message_id=imdn_message_id)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, content, content_type, is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
