@@ -57,7 +57,6 @@ import PreferencesController
 import SMSWindowManager
 import ChatWindowController
 
-from ScreenSharingController import ScreenSharingController
 from resources import ApplicationData
 from util import external_url_pattern, run_in_gui_thread
 

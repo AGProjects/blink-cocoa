@@ -98,7 +98,7 @@ class ExternalVNCViewerHandler(ScreenSharingViewerHandler):
                         raise VNCConnectionError("connection with the VNC viewer was closed")
                     self.vnc_socket = sock
                     # Signal the VNC server needs to be reconnected
-                    self.outgoing_msrp_queue.send('BLINK_VNC_RECONNECT')
+                    self.outgoing_msrp_queue.send(b'BLINK_VNC_RECONNECT')
                     # Resume the MSRP reader
                     self._reconnect_event.send()
                     continue
@@ -152,7 +152,7 @@ class ExternalVNCServerHandler(ScreenSharingServerHandler):
         while True:
             try:
                 data = self.incoming_msrp_queue.wait()
-                if data == 'BLINK_VNC_RECONNECT':
+                if data == b'BLINK_VNC_RECONNECT':
                     # Interrupt MSRP writer
                     self.msrp_writer_thread.kill(Interrupt)
                     self.vnc_socket.close()
@@ -460,6 +460,9 @@ class ScreenSharingController(MediaStream):
             self.close_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "closeWindows:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSEventTrackingRunLoopMode)
+
+    def windowWillClose_(self, sender):
+        self.end()
 
     def closeWindows_(self, timer):
         if self.statusWindow:
