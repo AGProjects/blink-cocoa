@@ -21,8 +21,8 @@ import objc
 import re
 import hashlib
 import uuid
+import pgpy
 
-from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
 
@@ -554,7 +554,7 @@ class SMSWindowManagerClass(NSObject):
         else:
             BlinkLogger().log_info('Incoming %s message %s from %s to %s received (CAll-id %s)' % (content_type, imdn_id,  format_identity_to_string(sender_identity), account.id, call_id))
 
-            if content_type == 'text/rsa-public-key':
+            if content_type == 'text/pgp-public-key':
                 uri = format_identity_to_string(sender_identity)
                 BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
 
@@ -598,8 +598,8 @@ class SMSWindowManagerClass(NSObject):
                         BlinkLogger().log_info(u"No contact found to save the key")
 
                 return
-            elif content_type == 'text/rsa-private-key':
-                BlinkLogger().log_info(u"Private key from %s to %s received" % (data.from_header.uri, account.id))
+            elif content_type == 'text/pgp-private-key':
+                BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))
 
                 if account.id == str(data.from_header.uri).split(":")[1]:
                     self.import_key_window = ImportPrivateKeyController(account, content);
@@ -676,11 +676,21 @@ class ImportPrivateKeyController(NSObject):
         
     @objc.python_method
     def decrypt(self, data, pincode):
-        password = self.get_private_key(pincode)
-        data = unhexlify(data)
-        iv = data[:16]
-        cipher = AES.new(password, AES.MODE_CBC, iv)
-        return unpad(cipher.decrypt(data[16:]))
+        #password = self.get_private_key(pincode)
+        pgpMessage = pgpy.PGPMessage.from_blob(data.encode())
+        print('Passcode: %s' % pincode)
+        print('Decode %s' % data)
+        #cipher = pgpy.constants.SymmetricKeyAlgorithm.AES256
+        #compression = pgpy.constants.CompressionAlgorithm.Uncompressed
+        #hash = pgpy.constants.HashAlgorithm.SHA256
+
+        try:
+            decrypted_data = pgpMessage.decrypt(pincode)
+        except Exception as e:
+            decrypted_data = None
+            BlinkLogger().log_info("Import private key failed: %s" % str(e))
+
+        return decrypted_data
     
     @objc.IBAction
     def importButtonClicked_(self, sender):
@@ -691,7 +701,7 @@ class ImportPrivateKeyController(NSObject):
 
         try:
             keyPair = keyPair.decode()
-        except UnicodeDecodeError as e:
+        except (UnicodeDecodeError, AttributeError) as e:
             self.status.setTextColor_(NSColor.redColor())
             BlinkLogger().log_error("Import private key failed: %s" % str(e))
             self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
