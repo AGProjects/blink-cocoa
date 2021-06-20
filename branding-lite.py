@@ -18,7 +18,6 @@ def setup(delegate):
     delegate.help_url = "http://help-lite.icanblink.com"
     delegate.hidden_account_preferences_sections = ('audio', 'chat', 'pstn', 'ldap', 'web_alert', 'tls')
     delegate.maximum_accounts = 2
-    delegate.last_history_entries = 2
     delegate.icloud_enabled = False
     delegate.history_enabled = False
     delegate.answering_machine_enabled = False

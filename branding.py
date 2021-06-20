@@ -22,7 +22,6 @@ def setup(delegate):
     delegate.service_provider_help_url = None
     delegate.service_provider_name = None
     delegate.hidden_account_preferences_sections = ('tls')
-    delegate.last_history_entries = 10
     delegate.icloud_enabled = False
     delegate.history_enabled = True
     delegate.answering_machine_enabled = True

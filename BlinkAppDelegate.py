@@ -108,7 +108,6 @@ class BlinkAppDelegate(NSObject):
     about_version = "1.0"
     about_slogan = "A state of the art, easy to use SIP client"
     help_url = "http://help-pro.icanblink.com"
-    last_history_entries = 10
     allowed_domains = []
     icloud_enabled = False
     answering_machine_enabled = True

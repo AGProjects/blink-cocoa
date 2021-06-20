@@ -17,7 +17,6 @@ def init(delegate):
 def setup(delegate):
     delegate.help_url = "http://help-pro.icanblink.com"
     delegate.hidden_account_preferences_sections = ('tls')
-    delegate.last_history_entries = 10
     delegate.icloud_enabled = True
     delegate.history_enabled = True
     delegate.answering_machine_enabled = True

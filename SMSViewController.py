@@ -601,7 +601,6 @@ class SMSViewController(NSObject):
     @run_in_green_thread
     def lookup_dns(self, target_uri):
         if self.dns_lookup_in_progress:
-            #self.log_info("Lookup destination is already in progress")
             return
 
         self.log_info("Lookup DNS for %s" % target_uri)

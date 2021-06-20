@@ -30,7 +30,6 @@ def setup(delegate):
     delegate.service_provider_help_url = 'http://wiki.sip2sip.info'
     delegate.service_provider_name = 'SIPThor Net'
     delegate.hidden_account_preferences_sections = ('tls', 'auth', 'sip', 'xcap', 'ldap', 'conference', 'message_summary', 'msrp', 'gui')
-    delegate.last_history_entries = 10
     delegate.allowed_domains = ['sip2sip.info']
     delegate.icloud_enabled = False
     delegate.history_enabled = True

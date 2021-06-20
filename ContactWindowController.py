@@ -1149,6 +1149,7 @@ class ContactWindowController(NSWindowController):
         item.setState_(NSOnState if settings.contacts.enable_no_group else NSOffState)
 
     @objc.python_method
+    @run_in_gui_thread
     def updateHistoryMenu(self):
         if NSApp.delegate().recording_enabled:
             idx = self.historyMenu.indexOfItem_(self.recordingsSubMenu)
@@ -1160,7 +1161,7 @@ class ContactWindowController(NSWindowController):
         chat_privacy = self.historyMenu.itemWithTag_(101)
         chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
 
-        self.get_session_history_entries(NSApp.delegate().last_history_entries)
+        self.get_session_history_entries(10)
 
     @objc.python_method
     def getAccountWitDialPlan(self, uri):
@@ -3434,7 +3435,6 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     @run_in_green_thread
-    @allocate_autorelease_pool
     def get_session_history_entries(self, count=10):
         entries = {'incoming': [], 'outgoing': [], 'missed': []}
 
@@ -3443,12 +3443,17 @@ class ContactWindowController(NSWindowController):
 
         last_recipient = None
         for result in results:
+            if not result or not result.remote_uri or '@' not in result.remote_uri:
+                continue
+
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
+
             display_name = result.display_name or _display_name
             display_name = sip_prefix_pattern.sub("", display_name)
 
             if target_uri == last_recipient:
                 continue
+
             last_recipient = target_uri
             contact = self.getFirstContactMatchingURI(target_uri)
             if contact and contact.name and contact.name != contact.uri:
@@ -3481,6 +3486,8 @@ class ContactWindowController(NSWindowController):
 
         last_recipient = None
         for result in results:
+            if not result or not result.remote_uri or '@' not in result.remote_uri:
+                continue
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             display_name = result.display_name or _display_name
             display_name = sip_prefix_pattern.sub("", display_name)
@@ -3519,6 +3526,8 @@ class ContactWindowController(NSWindowController):
 
         last_recipient = None
         for result in results:
+            if not result or not result.remote_uri or '@' not in result.remote_uri:
+                continue
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
             display_name = result.display_name or _display_name
             display_name = sip_prefix_pattern.sub("", display_name)
@@ -5780,7 +5789,7 @@ class ContactWindowController(NSWindowController):
         BlinkLogger().log_debug('Application is ready')
         self.callPendingURIs()
         self.refreshLdapDirectory()
-        self.updateHistoryMenu()
+        #self.updateHistoryMenu()
         self.updateStartSessionButtons()
         self.removePresenceContactForOurselves()
         self.fileTransfersWindow = FileTransferWindowController()
