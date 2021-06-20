@@ -1368,9 +1368,6 @@ class SessionController(NSObject):
             log_data = NotificationData(timestamp=datetime.now(), target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
             self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
 
-        for streamHandler in self.streamHandlers:
-            self.endStream(streamHandler)
-
         if self.session is not None and self.session.state is not None:
             self.session.end()
         else:
