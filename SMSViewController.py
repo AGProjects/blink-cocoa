@@ -932,6 +932,8 @@ class SMSViewController(NSObject):
     def _NH_SIPMessageDidFail(self, sender, data):
         try:
             self.notification_center.discard_observer(self, sender=sender)
+            message = None
+            message_id = None
 
             if hasattr(data, 'headers'):
                 call_id = data.headers.get('Call-ID', Null).body
@@ -950,23 +952,31 @@ class SMSViewController(NSObject):
             try:
                 (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[str(sender)]
             except (KeyError, IndexError):
+                self.log_info('Pending outgoing message %s was not for found' % str(sender))
                 pass
             else:
+                self.log_info('Found pending message %s for event %s' % (message_id, event))
+                try:
+                    del self.pending_outgoing_messages[str(sender)]
+                except KeyError:
+                    pass
+
                 if event in ('delivered', 'displayed'):
                     self.log_info('%s notification for %s failed' % (event, message_id))
                     return
+                elif message_id:
+                    message = self.messages.pop(message_id)
 
-                del self.pending_outgoing_messages[str(sender)]
+            if not message and call_id:
+                try:
+                    message = next(message for message in self.messages.values() if message.call_id == call_id)
+                except StopIteration:
+                    self.log_info('Pending message was not for found for Call-Id %s' % call_id)
+                    return
+                else:
+                    message = self.messages.pop(message.id)
 
-            try:
-                message = next(message for message in self.messages.values() if message.call_id == call_id)
-            except StopIteration:
-                self.log_info('Pending message %s was not for found' % call_id)
-                return
-
-            message = self.messages.pop(message.id)
-
-            if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
+            if not message or message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
                 return
 
             if self.otr_negotiation_timer:
