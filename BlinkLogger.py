@@ -160,7 +160,8 @@ class FileLogger(object, metaclass=Singleton):
                     self._notifications_file.write('%s: %s\n' % (datetime.datetime.now(), message))
                     self._notifications_file.flush()
                 except Exception as e:
-                    print('Write message failed: %s' % message)
+                    pass
+                    #print('Debug write message failed: %s' % message)
 
 
     # notification handlers
