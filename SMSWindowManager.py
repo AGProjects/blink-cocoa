@@ -28,7 +28,9 @@ from binascii import unhexlify, hexlify
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
+from application.system import makedirs
 from zope.interface import implementer
+from resources import ApplicationData
 
 from sipsimple.account import AccountManager
 from sipsimple.core import SIPURI
@@ -379,6 +381,8 @@ class SMSWindowManagerClass(NSObject):
         if self:
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
+            self.keys_path = ApplicationData.get('keys')
+            makedirs(self.keys_path)
         return self
 
     def setOwner_(self, owner):
@@ -557,20 +561,20 @@ class SMSWindowManagerClass(NSObject):
             if content_type == 'text/pgp-public-key':
                 uri = format_identity_to_string(sender_identity)
                 BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
-
-                if uri == account.id:
-                    BlinkLogger().log_info(u"Public key save skipped for own account")
+                
+                if AccountManager().has_account(uri):
+                    BlinkLogger().log_info(u"Public key save skipped for own accounts")
                     return
 
                 public_key = ''
                 start_public = False
 
                 for l in content.decode().split("\n"):
-                    if l == "-----BEGIN RSA PUBLIC KEY-----":
+                    if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
                         start_public = True
 
-                    if l == "-----END RSA PUBLIC KEY-----":
-                        public_key = public_key + l
+                    if l == "-----END PGP PUBLIC KEY BLOCK-----":
+                        public_key = public_key + l + '\n'
                         start_public = False
                         break
 
@@ -578,25 +582,28 @@ class SMSWindowManagerClass(NSObject):
                         public_key = public_key + l + '\n'
                 
                 if public_key:
+                    public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
+                    key_file = "%s/%s.pubkey" % (self.keys_path, uri)
+                    fd = open(key_file, "wb+")
+                    fd.write(public_key.encode())
+                    fd.close()
+                    BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
+                    nc_title = NSLocalizedString("Public key", "System notification title")
+                    nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
+                    nc_body = NSLocalizedString("Public key has changed", "System notification title")
+                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+
                     blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
 
                     if blink_contact is not None:
                         contact = blink_contact.contact
-                        if contact.public_key != public_key:
-                            contact.public_key = public_key
-                            contact.public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
-                            contact.save()
-                            BlinkLogger().log_info(u"Public key %s from %s saved " % (contact.public_key_checksum, data.from_header.uri))
-                            nc_title = NSLocalizedString("Public key", "System notification title")
-                            nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
-                            nc_body = NSLocalizedString("Public key has changed", "System notification title")
-                            NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-
-                        else:
-                            BlinkLogger().log_info(u"Public key from %s has not changed" % data.from_header.uri)
+                        contact.public_key = key_file
+                        contact.public_key_checksum = public_key_checksum
+                        contact.save()
                     else:
                         BlinkLogger().log_info(u"No contact found to save the key")
-
+                else:
+                     BlinkLogger().log_info(u"No Public key detected in the payload")
                 return
             elif content_type == 'text/pgp-private-key':
                 BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))
@@ -659,6 +666,9 @@ class ImportPrivateKeyController(NSObject):
 
     def __init__(self, account, encryptedKeyPair):
         NSBundle.loadNibNamed_owner_("ImportPrivateKeyWindow", self)
+        self.keys_path = ApplicationData.get('keys')
+        makedirs(self.keys_path)
+
         self.account = account;
         self.encryptedKeyPair = encryptedKeyPair;
 
@@ -668,109 +678,102 @@ class ImportPrivateKeyController(NSObject):
         self.status.setTextColor_(NSColor.blackColor())
 
         self.status.setStringValue_(NSLocalizedString("Enter pincode to decrypt the key", "status label"));
-
-    @objc.python_method
-    def get_private_key(self, pincode):
-        salt = b'sylksalt';
-        return PBKDF2(pincode, salt, 32, 4096)
-        
-    @objc.python_method
-    def decrypt(self, data, pincode):
-        #password = self.get_private_key(pincode)
-        pgpMessage = pgpy.PGPMessage.from_blob(data.encode())
-        print('Passcode: %s' % pincode)
-        print('Decode %s' % data)
-        #cipher = pgpy.constants.SymmetricKeyAlgorithm.AES256
-        #compression = pgpy.constants.CompressionAlgorithm.Uncompressed
-        #hash = pgpy.constants.HashAlgorithm.SHA256
-
-        try:
-            decrypted_data = pgpMessage.decrypt(pincode)
-        except Exception as e:
-            decrypted_data = None
-            BlinkLogger().log_info("Import private key failed: %s" % str(e))
-
-        return decrypted_data
-    
+            
     @objc.IBAction
     def importButtonClicked_(self, sender):
-        BlinkLogger().log_info("Import private key")
+        BlinkLogger().log_info("Import private key...")
         pincode = str(self.pincode.stringValue()).strip()
-        data = self.encryptedKeyPair.decode()
-        keyPair = self.decrypt(data, pincode)
 
         try:
-            keyPair = keyPair.decode()
-        except (UnicodeDecodeError, AttributeError) as e:
+            pgpMessage = pgpy.PGPMessage.from_blob(self.encryptedKeyPair)
+            decryptedKeyPair = pgpMessage.decrypt(pincode)
+            keyPair = decryptedKeyPair.message
+        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
             self.status.setTextColor_(NSColor.redColor())
             BlinkLogger().log_error("Import private key failed: %s" % str(e))
-            self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
+            self.status.setStringValue_(NSLocalizedString("Key import failed: %s", "status label") % str(e));
         else:
-            public_key_checksum_match = re.findall(r"--PUBLIC KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
-            private_key_checksum_match = re.findall(r"--PRIVATE KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
-            
-            if (public_key_checksum_match):
-                public_key_checksum = public_key_checksum_match[0]
-            else:
-                public_key_checksum = None
-
-            if (private_key_checksum_match):
-                private_key_checksum = private_key_checksum_match[0]
-            else:
-                private_key_checksum = None
-
-            public_key = ''
-            private_key = ''
-
-            start_public = False
-            start_private = False
-
-            for l in keyPair.split("\n"):
-                if l == "-----BEGIN RSA PUBLIC KEY-----":
-                    start_public = True
-                    start_private = False
-
-                if l == "-----END RSA PUBLIC KEY-----":
-                    public_key = public_key + l
-                    start_public = False
-                    start_private = False
-
-                if l == "-----BEGIN RSA PRIVATE KEY-----":
-                    start_public = False
-                    start_private = True
-
-                if l == "-----END RSA PRIVATE KEY-----":
-                    private_key = private_key + l
-                    start_public = False
-                    start_private = False
-
-                if start_public:
-                    public_key = public_key + l + '\n'
-
-                if start_private:
-                    private_key = private_key + l + '\n'
-                    
-            if (public_key and private_key and public_key_checksum):
-                self.importButton.setEnabled_(False)
-                BlinkLogger().log_info("Key imported sucessfully")
-                self.status.setTextColor_(NSColor.greenColor())
-                self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
-                self.checksum.setStringValue_(public_key_checksum);
-
-                self.account.sms.private_key = private_key
-                self.account.sms.public_key = public_key
-                self.account.sms.public_key_checksum = public_key_checksum
-                self.account.save()
-
-                if self.dealloc_timer is None:
-                    self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)
-                    NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
-                    NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+            try:
+                public_key_checksum_match = re.findall(r"--PUBLIC KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
+                private_key_checksum_match = re.findall(r"--PRIVATE KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
                 
-            else:
-                BlinkLogger().log_error("Key import failed")
-                self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
-                self.status.setTextColor_(NSColor.redColor())
+                if (public_key_checksum_match):
+                    public_key_checksum = public_key_checksum_match[0]
+                else:
+                    public_key_checksum = None
+
+                if (private_key_checksum_match):
+                    private_key_checksum = private_key_checksum_match[0]
+                else:
+                    private_key_checksum = None
+
+                public_key = ''
+                private_key = ''
+
+                start_public = False
+                start_private = False
+
+                for l in keyPair.split("\n"):
+                    if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
+                        start_public = True
+                        start_private = False
+
+                    if l == "-----END PGP PUBLIC KEY BLOCK-----":
+                        public_key = public_key + l
+                        start_public = False
+                        start_private = False
+
+                    if l == "-----BEGIN PGP PRIVATE KEY BLOCK-----":
+                        start_public = False
+                        start_private = True
+
+                    if l == "-----END PGP PRIVATE KEY BLOCK-----":
+                        private_key = private_key + l
+                        start_public = False
+                        start_private = False
+
+                    if start_public:
+                        public_key = public_key + l + '\n'
+
+                    if start_private:
+                        private_key = private_key + l + '\n'
+                        
+                if (public_key and private_key and public_key_checksum):
+                    self.importButton.setEnabled_(False)
+                    BlinkLogger().log_info("Key imported sucessfully")
+                    self.status.setTextColor_(NSColor.greenColor())
+                    self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
+                    self.checksum.setStringValue_(public_key_checksum);
+                    
+                    private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
+                    fd = open(private_key_path, "wb+")
+                    fd.write(private_key.encode())
+                    fd.close()
+                    BlinkLogger().log_info("Private key saved to %s" % private_key_path)
+
+                    public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
+                    fd = open(public_key_path, "wb+")
+                    fd.write(public_key.encode())
+                    fd.close()
+                    BlinkLogger().log_info("Public key saved to %s" % public_key_path)
+
+                    self.account.sms.private_key = private_key_path
+                    self.account.sms.public_key = public_key_path
+                    self.account.sms.public_key_checksum = public_key_checksum
+                    self.account.save()
+
+                    if self.dealloc_timer is None:
+                        self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)
+                        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+                        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+                    
+                else:
+                    BlinkLogger().log_error("Key import failed")
+                    self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
+                    self.status.setTextColor_(NSColor.redColor())
+            except Exception:
+                import traceback
+                traceback.print_exc()
 
     def deallocTimer_(self, timer):
         self.dealloc_timer.invalidate()

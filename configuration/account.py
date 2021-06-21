@@ -51,6 +51,7 @@ class SMSSettingsExtension(SettingsGroup):
     enable_replication = Setting(type=bool, default=False)
     use_cpim = Setting(type=bool, default=True)
     enable_otr = Setting(type=bool, default=False)
+    enable_pgp = Setting(type=bool, default=True)
     enable_imdn = Setting(type=bool, default=True)
     enable_composing = Setting(type=bool, default=True)
     public_key = Setting(type=str, default=None, nillable=True)
@@ -61,6 +62,7 @@ class SMSSettingsExtension(SettingsGroup):
 class BonjourSMSSettingsExtension(SettingsGroup):
     use_cpim = Setting(type=bool, default=True)
     enable_otr = Setting(type=bool, default=False)
+    enable_pgp = Setting(type=bool, default=True)
     enable_imdn = Setting(type=bool, default=True)
     enable_composing = Setting(type=bool, default=True)
 

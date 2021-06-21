@@ -28,8 +28,9 @@ from Foundation import (NSAttributedString,
                         NSWorkspace,
                         NSURL)
 import objc
+import os
+import pgpy
 import uuid
-
 
 import datetime
 import hashlib
@@ -42,6 +43,10 @@ from application.python import Null
 from application.python.queue import EventQueue
 from application.system import host
 from zope.interface import implementer
+from resources import ApplicationData
+
+from otr import OTRTransport, OTRState, SMPStatus
+from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
 
 from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI, Route
@@ -52,10 +57,7 @@ from sipsimple.payloads.imdn import IMDNDocument, DisplayNotification, DeliveryN
 from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, CPIMHeader, ChatIdentity, OTREncryption, CPIMNamespace
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
-from Crypto.PublicKey import RSA
-
-from otr import OTRTransport, OTRState, SMPStatus
-from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
+from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 
 from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED
@@ -65,6 +67,13 @@ from util import format_identity_to_string, html2txt, sipuri_components_from_str
 from ChatOTR import ChatOtrSmp
 import SMSWindowManager
 
+# OpenPGP settings compatible with Sylk client
+pgpOptions = {'cipher': 'aes256',
+              'compression': 'zlib',
+              'hash': 'sha512',
+              'RSABits': 4096,
+              'compressionLevel': 5
+}
 
 MAX_MESSAGE_LENGTH = 16000
 
@@ -149,6 +158,7 @@ class SMSViewController(NSObject):
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id):
         self = objc.super(SMSViewController, self).init()
         if self:
+            self.keys_path = ApplicationData.get('keys')
             self.messages = {}
             self.sent_readable_messages = set()
 
@@ -175,17 +185,25 @@ class SMSViewController(NSObject):
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
             self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
 
-            try:
-                self.public_key = RSA.importKey(self.contact.contact.public_key)
-            except Exception as e:
-                pass
-                #self.log_info('Cannot import public key: %s' % str(e))
+            if self.contact.contact.public_key:
+                try:
+                    self.public_key, _ = pgpy.PGPKey.from_file(self.contact.contact.public_key)
+                except Exception as e:
+                    self.log_info('Cannot import PGP public key: %s' % str(e))
+                    self.contact.contact.public_key = None
+                    self.contact.contact.save()
+                else:
+                    self.log_info('PGP public key imported from %s' % self.contact.contact.public_key)
 
+            if not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
+                self.generateKeys()
+            
             try:
-                self.private_key = RSA.importKey(self.account.sms.private_key)
+                self.private_key, _ = pgpy.PGPKey.from_file(self.account.sms.private_key)
             except Exception as e:
-                pass
-                #self.log_info('Cannot import private key: %s' % str(e))
+                self.log_info('Cannot import PGP private key: %s' % str(e))
+            else:
+                self.log_info('PGP private key imported from %s' % self.account.sms.private_key)
 
             NSBundle.loadNibNamed_owner_("SMSView", self)
 
@@ -193,7 +211,6 @@ class SMSViewController(NSObject):
             self.chatViewController.setAccount_(self.account)
             self.chatViewController.resetRenderedMessages()
         
-
             self.chatViewController.inputText.unregisterDraggedTypes()
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
@@ -203,6 +220,33 @@ class SMSViewController(NSObject):
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
 
         return self
+
+    @objc.python_method
+    def generateKeys(self):
+        private_key = pgpy.PGPKey.new(PubKeyAlgorithm.RSAEncryptOrSign, 4096)
+        uid = pgpy.PGPUID.new(self.account.display_name, comment='Blink client',  email=self.account.id)
+        private_key.add_uid(uid, usage={KeyFlags.Sign, KeyFlags.EncryptCommunications, KeyFlags.EncryptStorage},
+                                 hashes=[HashAlgorithm.SHA512],
+                                 ciphers=[SymmetricKeyAlgorithm.AES256],
+                                 compression=[CompressionAlgorithm.Uncompressed])
+    
+        private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
+        fd = open(private_key_path, "wb+")
+        fd.write(str(private_key).encode())
+        fd.close()
+        BlinkLogger().log_info("PGP private key saved to %s" % private_key_path)
+
+        public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
+        fd = open(public_key_path, "wb+")
+        fd.write(str(private_key.pubkey).encode())
+        fd.close()
+        BlinkLogger().log_info("PGP public key saved to %s" % public_key_path)
+
+        public_key_checksum = hashlib.sha1(str(private_key.pubkey).encode()).hexdigest()
+        self.account.sms.private_key = private_key_path
+        self.account.sms.public_key = public_key_path
+        self.account.sms.public_key_checksum = public_key_checksum
+        self.account.save()
 
     @property
     def enableIsComposing(self):
@@ -289,6 +333,10 @@ class SMSViewController(NSObject):
     def log_info(self, text):
         BlinkLogger().log_info("[SMS with %s] %s" % (self.remote_uri, text))
 
+    @objc.python_method
+    def log_error(self, text):
+        BlinkLogger().log_error("[SMS with %s] %s" % (self.remote_uri, text))
+
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
         if sender.tag() == 1:
@@ -338,7 +386,26 @@ class SMSViewController(NSObject):
 
             is_html = content_type == 'text/html'
             encrypted = False
-
+            
+            if content.decode().startswith('-----BEGIN PGP MESSAGE-----') and content.decode().endswith('-----END PGP MESSAGE-----'):
+                if not self.private_key:
+                    self.chatViewController.showSystemMessage("No private key available", ISOTimestamp.now(), is_error=True)
+                    return
+                else:
+                    try:
+                        pgpMessage = pgpy.PGPMessage.from_blob(content)
+                        decrypted_message = self.private_key.decrypt(pgpMessage)
+                    except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                        self.chatViewController.showSystemMessage("Decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
+                        self.chatViewController.showSystemMessage(content.decode(), ISOTimestamp.now())
+                        self.log_error('PGP decrypt error: %s' % str(e))
+                        if require_delivered:
+                            self.sendIMDNNotification(id, 'failed')
+                        return
+                    else:
+                        self.log_error('PGP message %s decrypted' % id)
+                        content = str(decrypted_message.message).encode()
+            
             if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type) and not is_replication_message:
                 try:
                     content = self.encryption.otr_session.handle_input(content, content_type)
@@ -392,12 +459,6 @@ class SMSViewController(NSObject):
                 nc_title = NSLocalizedString("Message Received", "Label")
                 nc_subtitle = format_identity_to_string(sender, format='full')
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-
-            
-            if content.endswith('==') and self.private_key:
-                pass
-                #unhexed = unhexlify(content.encode())
-                #d = self.private_key.decrypt(content)
 
             direction = 'outgoing' if is_replication_message else 'incoming'
             msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
@@ -539,11 +600,21 @@ class SMSViewController(NSObject):
         if not self.account.sms.enable_imdn:
             return
 
-        notification = DisplayNotification('displayed') if event == 'displayed' else DeliveryNotification('delivered')
+        notification = DisplayNotification('displayed') if event == 'displayed' else DeliveryNotification(event)
         content = IMDNDocument.create(message_id=message_id, datetime=ISOTimestamp.now(), recipient_uri=self.target_uri, notification=notification)
         self.log_info('Composing IMDN %s for message %s' % (event, message_id))
         self.sendMessage(content, IMDNDocument.content_type)
-    
+
+    @objc.python_method
+    def sendMyPublicKey(self):
+        if not self.account.sms.enable_pgp:
+            return
+
+        if not self.account.sms.private_key or not self.private_key:
+            return
+
+        self.sendMessage(str(self.private_key.pubkey), 'text/pgp-public-key')
+
     @objc.python_method
     @run_in_gui_thread
     def sendMessage(self, content, content_type="text/plain"):
@@ -562,7 +633,7 @@ class SMSViewController(NSObject):
         if self.encryption.active:
             encryption = 'verified' if self.encryption.verified else 'unverified'
 
-        if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+        if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption='')
 
@@ -669,6 +740,8 @@ class SMSViewController(NSObject):
             return
 
         self.started = True
+        
+        self.sendMyPublicKey()
 
         if not self.encryption.active and self.account.sms.enable_otr:
             self.startEncryption()
@@ -802,7 +875,7 @@ class SMSViewController(NSObject):
                 return None
         else:
             content = message.content
-
+            
         timeout = 5 if message.content_type != IsComposingDocument.content_type else 15
         imdn_id = ''
         imdn_status = ''
@@ -829,10 +902,16 @@ class SMSViewController(NSObject):
                     additional_cpim_headers = [CPIMHeader('Message-ID', ns, message.id)]
                     additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
-            if self.public_key and message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                encrypted_content = self.public_key.encrypt(content, 32)
-                content = hexlify(encrypted_content[0])
-                additional_sip_headers = [Header("Public Key", self.contact.contact.public_key_checksum)]
+            pgp_encrypted = False
+            if self.public_key and self.account.sms.enable_pgp and and message.content_type not in ('text/pgp-public-key', 'text/pgp-private-key', IsComposingDocument.content_type, IMDNDocument.content_type) and not self.encryption.active and not isinstance(message, OTRInternalMessage):
+                try:
+                    pgp_message = pgpy.PGPMessage.new(content)
+                    encrypted_content = self.public_key.encrypt(pgp_message)
+                    content = str(encrypted_content).encode()
+                    pgp_encrypted = True
+                except Exception as e:
+                    import traceback
+                    self.log_error('Failed to encrypt message: %s' % traceback.format_exc())
 
             payload = CPIMPayload(content,
                                   message.content_type,
@@ -871,8 +950,8 @@ class SMSViewController(NSObject):
         pending_status = imdn_status  if message.content_type == IMDNDocument.content_type else 'sent'
         self.add_pending_outgoing_message(str(message_request), pending_message_id, imdn_status)
 
-        if message.content_type not in (IsComposingDocument.content_type) and not isinstance(message, OTRInternalMessage):
-            if self.encryption.active:
+        if message.content_type not in (IsComposingDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key') and not isinstance(message, OTRInternalMessage):
+            if self.encryption.active or pgp_encrypted:
                 self.log_info('%s encrypted message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
             else:
                 self.log_info('%s message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
@@ -905,7 +984,7 @@ class SMSViewController(NSObject):
                     self.log_error('Pending % notification for %s was not found' % (event, str(sender)))
                     self.log_info(self.pending_outgoing_messages.keys())
                 else:
-                    self.log_info('%s notification for %s was sent' % (event, message_id))
+                    #self.log_info('%s notification for %s was sent' % (event, message_id))
                     if event in ('delivered', 'displayed'):
                         self.history.update_message_status(message_id, event)
                         return
@@ -913,9 +992,10 @@ class SMSViewController(NSObject):
                     del self.pending_outgoing_messages[str(sender)]
                 return
             
-            self.log_info('%s message %s sent successfully' % (message.content_type, message.id))
-
             if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type) or message.id == 'OTR':
+                return
+
+            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
                 return
 
             message.status = MSG_STATE_DEFERRED if data.code == 202 else MSG_STATE_SENT
@@ -985,6 +1065,9 @@ class SMSViewController(NSObject):
             
             if message.id == 'OTR':
                 self.log_info("OTR message failed: %s" % reason)
+                return
+
+            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
                 return
 
             reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
@@ -1058,6 +1141,8 @@ class SMSViewController(NSObject):
             self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatViewDidLoad_(self, chatView):
+         self.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Loading previous messages...", "Label"))
+         self.chatViewController.loadingProgressIndicator.startAnimation_(None)
          self.replay_history()
 
     @objc.python_method
@@ -1069,60 +1154,61 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_green_thread
     def replay_history(self):
-        self.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Loading previous messages...", "Label"))
-        self.chatViewController.loadingProgressIndicator.startAnimation_(None)
+        try:
+            if self.account is BonjourAccount():
+                blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))
+            else:
+                blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
 
-        if self.account is BonjourAccount():
-            blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))
-        else:
-            blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
+            if not blink_contact:
+                remote_uris = [format_identity_to_string(self.target_uri)]
+            else:
+                remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
+                
+            if self.instance_id is not None:
+                remote_uris.append(self.instance_id)
+                
+            zoom_factor = self.chatViewController.scrolling_zoom_factor
+            self.log_info('Replay history with zoom factor %s' % zoom_factor)
 
-        if not blink_contact:
-            remote_uris = [format_identity_to_string(self.target_uri)]
-        else:
-            remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
-            
-        if self.instance_id is not None:
-            remote_uris.append(self.instance_id)
-            
-        zoom_factor = self.chatViewController.scrolling_zoom_factor
-        self.log_info('Replay history with zoom factor %s' % zoom_factor)
+            if zoom_factor:
+                period_array = {
+                    1: datetime.datetime.now()-datetime.timedelta(days=2),
+                    2: datetime.datetime.now()-datetime.timedelta(days=7),
+                    3: datetime.datetime.now()-datetime.timedelta(days=31),
+                    4: datetime.datetime.now()-datetime.timedelta(days=90),
+                    5: datetime.datetime.now()-datetime.timedelta(days=180),
+                    6: datetime.datetime.now()-datetime.timedelta(days=365),
+                    7: datetime.datetime.now()-datetime.timedelta(days=3650)
+                    }
 
-        if zoom_factor:
-            period_array = {
-                1: datetime.datetime.now()-datetime.timedelta(days=2),
-                2: datetime.datetime.now()-datetime.timedelta(days=7),
-                3: datetime.datetime.now()-datetime.timedelta(days=31),
-                4: datetime.datetime.now()-datetime.timedelta(days=90),
-                5: datetime.datetime.now()-datetime.timedelta(days=180),
-                6: datetime.datetime.now()-datetime.timedelta(days=365),
-                7: datetime.datetime.now()-datetime.timedelta(days=3650)
-                }
+                after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
 
-            after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
+                if zoom_factor == 1:
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
+                elif zoom_factor == 2:
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last week", "Label")
+                elif zoom_factor == 3:
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last month", "Label")
+                elif zoom_factor == 4:
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last three months", "Label")
+                elif zoom_factor == 5:
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last six months", "Label")
+                elif zoom_factor == 6:
+                    self.zoom_period_label = NSLocalizedString("Displaying messages from last year", "Label")
+                elif zoom_factor == 7:
+                    self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
+                    self.chatViewController.setHandleScrolling_(False)
+                
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
+            else:
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
-            if zoom_factor == 1:
-                self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
-            elif zoom_factor == 2:
-                self.zoom_period_label = NSLocalizedString("Displaying messages from last week", "Label")
-            elif zoom_factor == 3:
-                self.zoom_period_label = NSLocalizedString("Displaying messages from last month", "Label")
-            elif zoom_factor == 4:
-                self.zoom_period_label = NSLocalizedString("Displaying messages from last three months", "Label")
-            elif zoom_factor == 5:
-                self.zoom_period_label = NSLocalizedString("Displaying messages from last six months", "Label")
-            elif zoom_factor == 6:
-                self.zoom_period_label = NSLocalizedString("Displaying messages from last year", "Label")
-            elif zoom_factor == 7:
-                self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
-                self.chatViewController.setHandleScrolling_(False)
-            
-            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
-        else:
-            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
-
-        messages = [row for row in reversed(results)]
-        self.render_history_messages(messages)
+            messages = [row for row in reversed(results)]
+            self.render_history_messages(messages)
+        except Exception:
+            import traceback
+            traceback.print_exc()
 
 
     @objc.python_method

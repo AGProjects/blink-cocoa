@@ -114,7 +114,8 @@ def formatName(name):
     "url": "URL",
     "ice": "ICE",
     "imdn": "IMDN",
-    "composing": "Is-Composing"
+    "composing": "Is-Composing",
+    "pgp": "OpenPGP"
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
