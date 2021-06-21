@@ -903,7 +903,7 @@ class SMSViewController(NSObject):
                     additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
             pgp_encrypted = False
-            if self.public_key and self.account.sms.enable_pgp and and message.content_type not in ('text/pgp-public-key', 'text/pgp-private-key', IsComposingDocument.content_type, IMDNDocument.content_type) and not self.encryption.active and not isinstance(message, OTRInternalMessage):
+            if self.public_key and self.account.sms.enable_pgp and message.content_type not in ('text/pgp-public-key', 'text/pgp-private-key', IsComposingDocument.content_type, IMDNDocument.content_type) and not self.encryption.active and not isinstance(message, OTRInternalMessage):
                 try:
                     pgp_message = pgpy.PGPMessage.new(content)
                     encrypted_content = self.public_key.encrypt(pgp_message)
