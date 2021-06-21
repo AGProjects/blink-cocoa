@@ -147,6 +147,9 @@ class SMSViewController(NSObject):
     account = None
     target_uri = None
     routes = None
+    
+    private_key = None
+    public_key = None
 
     windowController = None
     last_route = None
@@ -161,9 +164,6 @@ class SMSViewController(NSObject):
             self.keys_path = ApplicationData.get('keys')
             self.messages = {}
             self.sent_readable_messages = set()
-
-            self.public_key = None
-            self.private_key = None
 
             self.session_id = str(uuid.uuid1())
             self.instance_id = instance_id
@@ -185,15 +185,7 @@ class SMSViewController(NSObject):
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
             self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
 
-            if self.contact.contact.public_key:
-                try:
-                    self.public_key, _ = pgpy.PGPKey.from_file(self.contact.contact.public_key)
-                except Exception as e:
-                    self.log_info('Cannot import PGP public key: %s' % str(e))
-                    self.contact.contact.public_key = None
-                    self.contact.contact.save()
-                else:
-                    self.log_info('PGP public key imported from %s' % self.contact.contact.public_key)
+            self.load_remote_public_key()
 
             if not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
                 self.generateKeys()
@@ -218,8 +210,24 @@ class SMSViewController(NSObject):
             self.log_info('Using account %s' % self.local_uri)
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
+            self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
 
         return self
+
+    @objc.python_method
+    def load_remote_public_key(self):
+    
+        public_key_path = "%s/%s.pubkey" % (self.keys_path, self.remote_uri)
+        
+        if not os.path.exists(public_key_path):
+            return
+
+        try:
+            self.public_key, _ = pgpy.PGPKey.from_file(public_key_path)
+        except Exception as e:
+            self.log_info('Cannot import PGP public key: %s' % str(e))
+        else:
+            self.log_info('PGP public key imported from %s' % public_key_path)
 
     @objc.python_method
     def generateKeys(self):
@@ -387,17 +395,17 @@ class SMSViewController(NSObject):
             is_html = content_type == 'text/html'
             encrypted = False
             
-            if content.decode().startswith('-----BEGIN PGP MESSAGE-----') and content.decode().endswith('-----END PGP MESSAGE-----'):
+            text_content = content.decode().strip()            
+            if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
                 if not self.private_key:
                     self.chatViewController.showSystemMessage("No private key available", ISOTimestamp.now(), is_error=True)
                     return
                 else:
                     try:
-                        pgpMessage = pgpy.PGPMessage.from_blob(content)
+                        pgpMessage = pgpy.PGPMessage.from_blob(text_content)
                         decrypted_message = self.private_key.decrypt(pgpMessage)
                     except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
                         self.chatViewController.showSystemMessage("Decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
-                        self.chatViewController.showSystemMessage(content.decode(), ISOTimestamp.now())
                         self.log_error('PGP decrypt error: %s' % str(e))
                         if require_delivered:
                             self.sendIMDNNotification(id, 'failed')
@@ -527,6 +535,11 @@ class SMSViewController(NSObject):
     def inject_otr_message(self, data):
         messageObject = OTRInternalMessage(data)
         self.sendMessage(messageObject)
+
+    @objc.python_method
+    def _NH_PGPPublicKeyReceived(self, stream, data):
+        self.log_info("PGP key for %s was updated" % self.remote_uri)
+        self.load_remote_public_key()
 
     @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
