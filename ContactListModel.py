@@ -1367,30 +1367,36 @@ class BlinkPresenceContact(BlinkContact):
         headers = {'If-None-Match': contact.icon_info.etag} if contact.icon_info.etag else {}
         req = urllib.request.Request(icon_url, headers=headers)
         try:
+            BlinkLogger().log_info('Getting icon for %s from %s' % (self.uri, icon_url))
             response = urllib.request.urlopen(req)
             content = response.read()
             info = response.info()
             content_type = info.get('content-type')
             etag = info.get('etag')
-        except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+        except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
+            BlinkLogger().log_error('Failed to get icon for %s: %s' % (self.uri, str(e)))
             contact.updating_remote_icon = False
             return
         else:
             if etag.startswith('W/'):
                 etag = etag[2:]
             etag = etag.replace('\"', '')
+
         if content_type == prescontent.PresenceContentDocument.content_type:
             try:
                 pres_content = prescontent.PresenceContentDocument.parse(content)
-                content = base64.decodestring(pres_content.data.value)
-            except Exception:
+                data = pres_content.data.value
+                content = base64.b64decode(data)
+            except Exception as e:
+                BlinkLogger().log_error('Failed to decode the icon: %s' % str(e))
                 contact.updating_remote_icon = False
                 return
 
         # Check if the icon can be loaded in a NSImage
         try:
             icon = NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(content, len(content)))
-        except Exception:
+        except Exception as e:
+            BlinkLogger().log_error('Failed to process the icon for %s: %s' % (self.uri, str(e)))
             contact.updating_remote_icon = False
             return
         del icon
