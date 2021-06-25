@@ -674,7 +674,8 @@ class SIPManager(object, metaclass=Singleton):
     @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, sender, data):
         if data.state.lower() == 'insync':
-            BlinkLogger().log_info("XCAP documents of account %s are now in sync" % sender.account.id)
+            pass
+            #BlinkLogger().log_info("XCAP documents of account %s are now in sync" % sender.account.id)
 
     @objc.python_method
     def _NH_XCAPManagerDidDiscoverServerCapabilities(self, sender, data):

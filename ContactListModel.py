@@ -81,7 +81,7 @@ import uuid
 import sys
 import time
 
-from application.notification import NotificationCenter, IObserver
+from application.notification import NotificationCenter, IObserver, NotificationData
 from application.python import Null
 from application.python.descriptor import classproperty
 from application.python.types import Singleton
@@ -735,8 +735,8 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
         NotificationCenter().add_observer(self, name="BlinkPresenceFailed")
-        #NotificationCenter().add_observer(self, name="SIPAccountGotPresenceState")
-
+        NotificationCenter().add_observer(self, name="ContactPresenceHasChanged", sender=self.contact)
+        
     @property
     def id(self):
         return self.contact.id
@@ -934,8 +934,7 @@ class BlinkPresenceContact(BlinkContact):
                 NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method
-    def handle_presence_resources(self, resources, account, full_state=False, log=False):
-        # log should be set only for contacts in all contacts group
+    def handle_presence_resources(self, resources, account, full_state=False):
         if self.application_will_end:
             return
 
@@ -948,8 +947,8 @@ class BlinkPresenceContact(BlinkContact):
         resources_uris = set()
         for uri, resource in resources.items():
             if not resource.pidf_list:
-                pass
                 #BlinkLogger().log_info('PIDF list for %s is empty' % uri)
+                pass
             uri_text = sip_prefix_pattern.sub('', uri)
             try:
                 SIPURI.parse(str('sip:%s' % uri_text))
@@ -957,7 +956,7 @@ class BlinkPresenceContact(BlinkContact):
                 continue
 
             resources_uris.add(uri_text)
-            if self.log_presence_transitions and log:
+            if self.log_presence_transitions:
                 model = NSApp.delegate().contactsWindowController.model
                 if resource.state == 'pending':
                     self.presence_state['pending_authorizations'][str(resource.uri)] = account
@@ -987,12 +986,12 @@ class BlinkPresenceContact(BlinkContact):
                 old_pidf_list_for_uri = self.pidfs_map[uri][account]
             except KeyError:
                 if resource.pidf_list:
-                    #BlinkLogger().log_info('Adding pidfs for %s: %s' % (uri, resource.pidf_list))
+                    #BlinkLogger().log_info('Presence changed, added pidfs for %s: %s' % (uri, resource.pidf_list))
                     self.pidfs_map[uri][account] = resource.pidf_list
                     changes = True
             else:
                 if old_pidf_list_for_uri != resource.pidf_list:
-                    #BlinkLogger().log_info('Updating pidfs for %s: %s' % (uri, resource.pidf_list))
+                    #BlinkLogger().log_info('Presence changed, updated pidfs for %s: %s' % (uri, resource.pidf_list))
                     self.pidfs_map[uri][account] = resource.pidf_list
                     changes = True
 
@@ -1001,6 +1000,7 @@ class BlinkPresenceContact(BlinkContact):
             for uri in list(self.pidfs_map.copy().keys()):
                 uri_text = sip_prefix_pattern.sub('', uri)
                 if uri_text not in resources_uris:
+                    #BlinkLogger().log_info('Presence changed, added uri %s' % uri_text)
                     changes = True
                     try:
                         del self.pidfs_map[uri][account]
@@ -1017,25 +1017,26 @@ class BlinkPresenceContact(BlinkContact):
             changes = False
 
         if old_pidfs != self.pidfs:
+            #BlinkLogger().log_info('Presence changed, list of pidfs are different')
             changes = True
 
         if not changes:
+            #BlinkLogger().log_info('Presence did not change')
             return False
 
-        self.handle_pidfs(log)
+        self.handle_pidfs()
         return True
 
     @objc.python_method
     @allocate_autorelease_pool
-    def handle_pidfs(self, log=False):
-        # log should be True when updating contacts in all contacts group to avoid duplicates
+    def handle_pidfs(self):
         if self.application_will_end:
             return
 
         if not self.contact:
             # as a result of pidfs changes we may go offline and some GUI contacts are destroyed
             return
-
+            
         basic_status = 'closed'
         self.init_presence_state()
         has_notes = 0
@@ -1206,7 +1207,7 @@ class BlinkPresenceContact(BlinkContact):
                             if old_device['status'] != device_wining_status or old_device['notes'] != _presence_notes:
                                 something_has_changed = True
 
-                        if something_has_changed and service.id and log:
+                        if something_has_changed and service.id:
                             if self.old_presence_status is None and device_wining_status == 'offline':
                                 pass
                             else:
@@ -1264,32 +1265,31 @@ class BlinkPresenceContact(BlinkContact):
                 elif self.old_presence_status == status:
                     pass
                 else:
-                    if log:
-                        if self.old_presence_status != status:
-                            log_line = 'Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status)
-                            BlinkLogger().log_info(log_line)
+                    if self.old_presence_status != status:
+                        log_line = 'Availability of %s changed from %s to %s' % (self.name, self.old_presence_status, status)
+                        BlinkLogger().log_info(log_line)
 
-                        if self.old_presence_note != self.presence_note:
-                            log_line = 'Presence note of %s changed from %s to %s' % (self.name, self.old_presence_note, self.presence_note)
-                            BlinkLogger().log_info(log_line)
+                    if self.old_presence_note != self.presence_note:
+                        log_line = 'Presence note of %s changed from %s to %s' % (self.name, self.old_presence_note, self.presence_note)
+                        BlinkLogger().log_info(log_line)
 
-                        message= '<h3>Availability Information</h3>'
-                        message += '<p>%s' % log_line
-                        media_type = 'availability'
-                        try:
-                            account = next((account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and self.account_has_pidfs_for_uris(account.id, all_uris)))
-                        except StopIteration:
-                            account = AccountManager().default_account
+                    message= '<h3>Availability Information</h3>'
+                    message += '<p>%s' % log_line
+                    media_type = 'availability'
+                    try:
+                        account = next((account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and self.account_has_pidfs_for_uris(account.id, all_uris)))
+                    except StopIteration:
+                        account = AccountManager().default_account
 
-                        if account is not None:
-                            local_uri = str(account.id)
-                            remote_uri = self.uri
-                            cpim_from = remote_uri
-                            cpim_to = local_uri
-                            timestamp = str(ISOTimestamp.now())
-                            id=str(uuid.uuid1())
+                    if account is not None:
+                        local_uri = str(account.id)
+                        remote_uri = self.uri
+                        cpim_from = remote_uri
+                        cpim_to = local_uri
+                        timestamp = str(ISOTimestamp.now())
+                        id=str(uuid.uuid1())
 
-                            NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
+                        NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
 
                     if status in ('available', 'offline') and self.name:
                         notify = True
@@ -1329,14 +1329,13 @@ class BlinkPresenceContact(BlinkContact):
                                 elif status == "offline":
                                     NSSound.soundNamed_("offline").play()
 
-                    if log and status == 'available':
+                    if status == 'available':
                         NotificationCenter().post_notification("BlinkContactBecameAvailable", sender=self.contact)
 
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
 
-        if log:
-            NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
+        NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
 
     @objc.python_method
     @run_in_green_thread
@@ -1367,7 +1366,7 @@ class BlinkPresenceContact(BlinkContact):
         headers = {'If-None-Match': contact.icon_info.etag} if contact.icon_info.etag and os.path.exists(icon_path) else {}
         req = urllib.request.Request(icon_url, headers=headers)
         try:
-            BlinkLogger().log_info('Getting icon for %s from %s' % (self.uri, icon_url))
+            BlinkLogger().log_info('Getting icon %s' % icon_url)
             response = urllib.request.urlopen(req)
             content = response.read()
             info = response.info()
@@ -1539,36 +1538,29 @@ class BlinkPresenceContact(BlinkContact):
         self.purge_pidfs_for_account(notification.sender.id)
 
     @objc.python_method
-    def _NH_SIPAccountGotPresenceState(self, notification):
-        # not used anymore because is inefficient, now update_presence is called
-        return
-        resource_map = notification.data.resource_map
-        for key, value in resource_map.items():
-            if self.matchesURI(key, True) and self.contact is not None:
-                contact_uris = list(uri.uri for uri in iter(self.contact.uris))
-                resources = dict((key, value) for key, value in resource_map.items() if key in contact_uris)
-                if resources:
-                    changed = self.handle_presence_resources(resources, notification.sender.id, notification.data.full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
-                    if changed:
-                        BlinkLogger().log_info('Availability for %s %s by account %s has changed' % (self.name, key, notification.sender.id))
-                        self.reloadModelItem(self)
-                        if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
-                            online_group_changed = self.addToOrRemoveFromOnlineGroup()
-                            if online_group_changed:
-                                self.reloadModelItem(online_group_changed)
+    @run_in_thread('addressbook')
+    def _NH_ContactPresenceHasChanged(self, notification):
+        if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
+            return
+
+        self.presence_state = notification.data.presence_state
+        self.reloadModelItem(self)
 
     @objc.python_method
     @run_in_thread('addressbook')
     def update_presence(self, resources, account, full_state):
-        changed = self.handle_presence_resources(resources, account, full_state, log=isinstance(self, AllContactsBlinkGroupBlinkPresenceContact))
+        changed = self.handle_presence_resources(resources, account, full_state)
 
-        if changed:
-            self.reloadModelItem(self)
-            if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
-                online_group_changed = self.addToOrRemoveFromOnlineGroup()
-                if online_group_changed:
-                    self.reloadModelItem(online_group_changed)
+        if not changed:
+            return
 
+        self.reloadModelItem(self)
+
+        NotificationCenter().post_notification("ContactPresenceHasChanged", sender=self.contact, data=NotificationData(presence_state=self.presence_state))
+
+        online_group_changed = self.addToOrRemoveFromOnlineGroup()
+        if online_group_changed:
+            self.reloadModelItem(online_group_changed)
 
     @objc.python_method
     def _NH_BlinkPresenceFailed(self, notification):
@@ -3164,7 +3156,9 @@ class ContactListModel(CustomListModel):
     @objc.python_method
     def getBlinkPresenceContactsForURI(self, uri):
         blink_contacts = []
-        allowed_groups = [group for group in self.groupsList if (group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup))]
+        #allowed_groups = [group for group in self.groupsList if (group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup))]
+        allowed_groups = [group for group in self.groupsList if (isinstance(group, AllContactsBlinkGroup))]
+        
         for group in allowed_groups:
             for blink_contact in group.contacts:
                 if not isinstance(blink_contact, BlinkPresenceContact):
