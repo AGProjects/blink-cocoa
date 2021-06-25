@@ -5679,7 +5679,6 @@ class ContactWindowController(NSWindowController):
         def wakeup():
             SIPApplication.engine.refresh_sound_devices()
             SIPApplication.engine.refresh_video_devices()
-            SIPApplication.initialize_tls()
 
             settings.video.device = last_video_device or 'system_default'
             settings.audio.input_device = last_audio_input_device or 'system_default'
