@@ -1364,7 +1364,7 @@ class BlinkPresenceContact(BlinkContact):
                 contact.updating_remote_icon = False
                 return
         # Need to download
-        headers = {'If-None-Match': contact.icon_info.etag} if contact.icon_info.etag else {}
+        headers = {'If-None-Match': contact.icon_info.etag} if contact.icon_info.etag and os.path.exists(icon_path) else {}
         req = urllib.request.Request(icon_url, headers=headers)
         try:
             BlinkLogger().log_info('Getting icon for %s from %s' % (self.uri, icon_url))
