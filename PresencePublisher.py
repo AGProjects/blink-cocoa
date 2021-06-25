@@ -237,15 +237,15 @@ class PresencePublisher(object):
         settings.save()
 
         if status_icon:
-            icon_hash = hashlib.sha512(status_icon.data).hexdigest()
-            user_icon = UserIcon(status_icon.url, icon_hash)
-            if not settings.presence_state.icon or settings.presence_state.icon.etag != icon_hash:
+            user_icon = UserIcon(status_icon.url, status_icon.etag)
+            if not settings.presence_state.icon or settings.presence_state.icon.etag != status_icon.etag:
                 # TODO: convert icon to PNG before saving it
-                self.owner.saveUserIcon(status_icon.data, icon_hash)
+                self.owner.saveUserIcon(status_icon.data, status_icon.etag)
         else:
             user_icon = None
             if settings.presence_state.icon:
                unlink(settings.presence_state.icon.path)
+
             settings.presence_state.icon = None
             settings.save()
 
