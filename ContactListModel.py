@@ -1346,10 +1346,10 @@ class BlinkPresenceContact(BlinkContact):
             # Contact may have been destroyed before this function runs
             return
 
-        # TODO: naive attempt for not downloading the same icon multiple times, contacts should
-        # not listen for this notification in the first place
+        icon_path = PresenceContactAvatar.path_for_contact(contact)
         if getattr(contact, 'updating_remote_icon', False):
             return
+
         contact.updating_remote_icon = True
 
         if not icon_url:
@@ -1374,7 +1374,8 @@ class BlinkPresenceContact(BlinkContact):
             content_type = info.get('content-type')
             etag = info.get('etag')
         except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
-            BlinkLogger().log_error('Failed to get icon for %s: %s' % (self.uri, str(e)))
+            if e.status != 304:
+                BlinkLogger().log_error('Failed to get icon for %s: %s' % (self.uri, str(e)))
             contact.updating_remote_icon = False
             return
         else:
@@ -1400,8 +1401,8 @@ class BlinkPresenceContact(BlinkContact):
             contact.updating_remote_icon = False
             return
         del icon
-
-        with open(PresenceContactAvatar.path_for_contact(contact), 'wb') as f:
+                
+        with open(icon_path, 'wb') as f:
             f.write(content)
         contact.icon_info.url = icon_url
         contact.icon_info.etag = etag
@@ -1540,6 +1541,7 @@ class BlinkPresenceContact(BlinkContact):
     @objc.python_method
     def _NH_SIPAccountGotPresenceState(self, notification):
         # not used anymore because is inefficient, now update_presence is called
+        return
         resource_map = notification.data.resource_map
         for key, value in resource_map.items():
             if self.matchesURI(key, True) and self.contact is not None:
