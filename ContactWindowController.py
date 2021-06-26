@@ -127,7 +127,7 @@ from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell  # this is used from the UI
-from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup
+from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroupBlinkPresenceContact
 from ContactListModel import BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar
 from ContactListModel import DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
 from MediaStream import STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
@@ -336,6 +336,7 @@ class ContactWindowController(NSWindowController):
     myvideo = None
     refresh_drawer_counter = 1
     last_failure_reason = None
+    ready = False
 
     @property
     def has_audio(self):
@@ -5499,15 +5500,12 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].subscribe_presence_state = 'active'
             self.accounts[position].subscribe_presence_purged = False
 
-        blink_contacts = set()
         resource_map = notification.data.resource_map
         for key, value in resource_map.items():
             resources = {key: value}
-            for c in self.model.getBlinkPresenceContactsForURI(key):
-                blink_contacts.add(c)
-
-        for blink_contact in blink_contacts:
-            blink_contact.update_presence(resources, notification.sender.id, notification.data.full_state)
+            (main_contacts, other_contacts) = self.model.getBlinkContactsAndGroupsForURI(key)
+            for blink_contact in main_contacts:
+                blink_contact.update_presence(resources, notification.sender.id, notification.data.full_state, other_contacts)
 
     @objc.python_method
     def _NH_AddressbookGroupWasActivated(self, notification):
@@ -5788,7 +5786,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, notification):
-        BlinkLogger().log_debug('Application is ready')
+        self.ready = True
+        BlinkLogger().log_info('Application is ready')
         self.callPendingURIs()
         self.refreshLdapDirectory()
         #self.updateHistoryMenu()

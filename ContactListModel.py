@@ -735,7 +735,6 @@ class BlinkPresenceContact(BlinkContact):
         NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
         NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
         NotificationCenter().add_observer(self, name="BlinkPresenceFailed")
-        NotificationCenter().add_observer(self, name="ContactPresenceHasChanged", sender=self.contact)
         
     @property
     def id(self):
@@ -863,14 +862,17 @@ class BlinkPresenceContact(BlinkContact):
         self.setPresenceNote()
 
     @objc.python_method
-    def _clone_presence_state(self, other=None):
-        # TODO: remove this ugly hack, also, need to 'synchronize' timers
+    def clone_presence_state(self, other=None):
+        if not NSApp.delegate().contactsWindowController.ready:
+            return
+
         model = NSApp.delegate().contactsWindowController.model
         if other is None:
             try:
                 other = next(item for item in model.all_contacts_group.contacts if item.contact == self.contact)
             except StopIteration:
                 return
+
         self.pidfs_map = other.pidfs_map.copy()
         self.presence_state = other.presence_state.copy()
         self.presence_note = other.presence_note
@@ -1366,7 +1368,7 @@ class BlinkPresenceContact(BlinkContact):
         headers = {'If-None-Match': contact.icon_info.etag} if contact.icon_info.etag and os.path.exists(icon_path) else {}
         req = urllib.request.Request(icon_url, headers=headers)
         try:
-            BlinkLogger().log_info('Getting icon %s' % icon_url)
+            BlinkLogger().log_debug('Getting icon for %s %s' % (self.uri, icon_url))
             response = urllib.request.urlopen(req)
             content = response.read()
             info = response.info()
@@ -1403,6 +1405,9 @@ class BlinkPresenceContact(BlinkContact):
                 
         with open(icon_path, 'wb') as f:
             f.write(content)
+
+        BlinkLogger().log_info('Saved icon for %s with etag %s' % (self.uri, etag))
+
         contact.icon_info.url = icon_url
         contact.icon_info.etag = etag
         contact.save()
@@ -1416,21 +1421,19 @@ class BlinkPresenceContact(BlinkContact):
         try:
             online_contact = next(online_contact for online_contact in model.online_contacts_group.contacts if online_contact.contact == self.contact)
         except StopIteration:
-            #if status not in (None, "offline"):
             if status is not None:
                 online_contact = BlinkOnlineContact(self.contact)
-                online_contact._clone_presence_state(other=self)
+                online_contact.clone_presence_state(other=self)
                 model.online_contacts_group.contacts.append(online_contact)
                 model.online_contacts_group.sortContacts()
                 return model.online_contacts_group
         else:
-#            if status in (None, "offline") or not self.contact.presence.subscribe:
             if status is None or not self.contact.presence.subscribe:
                 model.online_contacts_group.contacts.remove(online_contact)
                 online_contact.destroy()
                 return model.online_contacts_group
             else:
-                online_contact._clone_presence_state(other=self)
+                online_contact.clone_presence_state(other=self)
                 return online_contact
 
         return None
@@ -1519,9 +1522,10 @@ class BlinkPresenceContact(BlinkContact):
 
     @objc.python_method
     def _NH_SystemDidWakeUpFromSleep(self, notification):
-        self.pidfs_map = {}
-        self.init_presence_state()
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        #self.pidfs_map = {}
+        #self.init_presence_state()
+        pass
+        #NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
@@ -1538,31 +1542,6 @@ class BlinkPresenceContact(BlinkContact):
         self.purge_pidfs_for_account(notification.sender.id)
 
     @objc.python_method
-    @run_in_thread('addressbook')
-    def _NH_ContactPresenceHasChanged(self, notification):
-        if isinstance(self, AllContactsBlinkGroupBlinkPresenceContact):
-            return
-
-        self.presence_state = notification.data.presence_state
-        self.reloadModelItem(self)
-
-    @objc.python_method
-    @run_in_thread('addressbook')
-    def update_presence(self, resources, account, full_state):
-        changed = self.handle_presence_resources(resources, account, full_state)
-
-        if not changed:
-            return
-
-        self.reloadModelItem(self)
-
-        NotificationCenter().post_notification("ContactPresenceHasChanged", sender=self.contact, data=NotificationData(presence_state=self.presence_state))
-
-        online_group_changed = self.addToOrRemoveFromOnlineGroup()
-        if online_group_changed:
-            self.reloadModelItem(online_group_changed)
-
-    @objc.python_method
     def _NH_BlinkPresenceFailed(self, notification):
         if self.application_will_end:
             return
@@ -1570,8 +1549,26 @@ class BlinkPresenceContact(BlinkContact):
 
 
 class AllContactsBlinkGroupBlinkPresenceContact(BlinkPresenceContact):
-    pass
+    @objc.python_method
+    @run_in_thread('addressbook')
+    def update_presence(self, resources, account, full_state, other_contacts=[]):
+        changed = self.handle_presence_resources(resources, account, full_state)
 
+        if not changed:
+            return
+
+        self.reloadModelItem(self)
+
+        BlinkLogger().log_info('Presence state of %s: %s' % (self.uri, presence_status_for_contact(self)))
+
+        for (contact, group) in other_contacts:
+            contact.clone_presence_state(other=self)
+            self.reloadModelItem(contact)
+
+        online_group_changed = self.addToOrRemoveFromOnlineGroup()
+        if online_group_changed:
+            self.reloadModelItem(online_group_changed)
+ 
 
 class BlinkOnlineContact(BlinkPresenceContact):
     pass
@@ -3154,20 +3151,22 @@ class ContactListModel(CustomListModel):
             return [group for group in allowed_groups if blink_contact.contact in (item.contact for item in group.contacts if isinstance(item, BlinkPresenceContact))]
 
     @objc.python_method
-    def getBlinkPresenceContactsForURI(self, uri):
-        blink_contacts = []
-        #allowed_groups = [group for group in self.groupsList if (group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup))]
-        allowed_groups = [group for group in self.groupsList if (isinstance(group, AllContactsBlinkGroup))]
-        
+    def getBlinkContactsAndGroupsForURI(self, uri):
+        main_contacts = []
+        other_contacts = []
+        allowed_groups = [group for group in self.groupsList if (group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup))]
         for group in allowed_groups:
             for blink_contact in group.contacts:
                 if not isinstance(blink_contact, BlinkPresenceContact):
                     continue
 
                 if blink_contact.matchesURI(uri, True):
-                    blink_contacts.append(blink_contact)
+                    if isinstance(blink_contact, AllContactsBlinkGroupBlinkPresenceContact):
+                        main_contacts.append(blink_contact)
+                    else:
+                        other_contacts.append((blink_contact, group))
 
-        return blink_contacts
+        return (main_contacts, other_contacts)
 
     @objc.python_method
     def saveGroupPosition(self):
@@ -4092,7 +4091,7 @@ class ContactListModel(CustomListModel):
         self.groupsList.insert(index, blink_group)
         for contact in group.contacts:
             blink_contact = BlinkPresenceContact(contact)
-            blink_contact._clone_presence_state()
+            blink_contact.clone_presence_state()
             blink_group.contacts.append(blink_contact)
             self.removeContactFromBlinkGroups(contact, [self.no_group])
         blink_group.sortContacts()
@@ -4137,7 +4136,7 @@ class ContactListModel(CustomListModel):
                     blink_contact = next(blink_contact for blink_contact in blink_group.contacts if blink_contact.contact == contact)
                 except StopIteration:
                     blink_contact = BlinkPresenceContact(contact)
-                    blink_contact._clone_presence_state()
+                    blink_contact.clone_presence_state()
                     blink_group.contacts.append(blink_contact)
                     self.removeContactFromBlinkGroups(contact, [self.no_group])
             for contact in removed:
