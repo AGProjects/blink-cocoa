@@ -47,6 +47,9 @@ sudo rm Frameworks/Python.framework/Versions/3.9/lib/tdbc1.0.6/libtdbcstub1.0.6.
 sudo rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/libpython3.9.a
 find Frameworks/Python.framework -name *ncurses* -exec rm -r {} \;
 
+
+#Quartz framework: https://github.com/ronaldoussoren/pyobjc/issues/371
+
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python3.9/
 
 ./changelibs-python.sh 
