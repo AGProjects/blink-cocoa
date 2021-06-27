@@ -221,6 +221,13 @@ CA
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1601"/>
+                            <menuItem title="Open PGP sleutelsfolder" id="7yP-pa-A7B">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="goToPGPKeyFolderClicked:" target="389" id="I4c-n4-nHD"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="hNe-pl-4VI"/>
                             <menuItem title="Backup contacten en groepen" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
@@ -1079,17 +1086,17 @@ ABC</string>
                             <rect key="frame" x="0.0" y="394" width="280" height="0.0"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="Atq-KM-J9c">
-                                <rect key="frame" x="1" y="0.0" width="263" height="0.0"/>
+                                <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="263" height="36"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
-                                            <tableColumn identifier="participant" width="260" minWidth="40" maxWidth="1000" id="1539">
+                                            <tableColumn identifier="participant" width="275" minWidth="40" maxWidth="1000" id="1539">
                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Remote Conference Participants">
                                                     <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -1117,11 +1124,11 @@ ABC</string>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="1535">
-                                <rect key="frame" x="264" y="0.0" width="15" height="0.0"/>
+                                <rect key="frame" x="263" y="0.0" width="16" height="0.0"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <tableHeaderView key="headerView" id="1538">
-                                <rect key="frame" x="0.0" y="0.0" width="263" height="17"/>
+                                <rect key="frame" x="0.0" y="0.0" width="278" height="17"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>

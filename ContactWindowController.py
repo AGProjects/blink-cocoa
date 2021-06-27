@@ -5360,6 +5360,16 @@ class ContactWindowController(NSWindowController):
     def goToBackupContactsFolderClicked_(self, sender):
         NSWorkspace.sharedWorkspace().openFile_(sender.representedObject())
 
+    @property
+    def pgp_keys_directory(self):
+        path = ApplicationData.get('keys')
+        makedirs(path)
+        return path
+
+    @objc.IBAction
+    def goToPGPKeyFolderClicked_(self, sender):
+        NSWorkspace.sharedWorkspace().openFile_(self.pgp_keys_directory)
+
     @objc.IBAction
     def toggleDialPadClicked_(self, sender):
         identifier = "dialpad" if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else "contacts"
