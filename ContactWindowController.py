@@ -879,7 +879,7 @@ class ContactWindowController(NSWindowController):
         sylkserver_exists = True
 
         self.blinkMenu.itemWithTag_(2).setHidden_(bool(NSApp.delegate().updater is None))
-        if NSApp.delegate().applicationName == 'Blink Lite':
+        if NSApp.delegate().applicationName in ('Blink Pro', 'Blink Lite'):
             self.blinkMenu.itemWithTag_(3).setHidden_(True)
             self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
@@ -890,8 +890,8 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(8).setHidden_(sylkserver_exists)
             self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
         else:
-            self.blinkMenu.itemWithTag_(3).setHidden_(True)
-            self.blinkMenu.itemWithTag_(7).setHidden_(True)
+            self.blinkMenu.itemWithTag_(3).setHidden_(False)
+            self.blinkMenu.itemWithTag_(7).setHidden_(False)
             self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(9).setHidden_(True)
 
@@ -3775,7 +3775,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showDonate_(self, sender):
-        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("http://icanblink.com/payments.phtml"))
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://www.paypal.me/AGProjectsNL"))
 
     @objc.IBAction
     def showBlinkPro_(self, sender):
