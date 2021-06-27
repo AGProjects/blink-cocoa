@@ -1559,7 +1559,7 @@ class AllContactsBlinkGroupBlinkPresenceContact(BlinkPresenceContact):
 
         self.reloadModelItem(self)
 
-        BlinkLogger().log_info('Presence state of %s: %s' % (self.uri, presence_status_for_contact(self)))
+        #BlinkLogger().log_info('Presence state of %s: %s' % (self.uri, presence_status_for_contact(self)))
 
         for (contact, group) in other_contacts:
             contact.clone_presence_state(other=self)
