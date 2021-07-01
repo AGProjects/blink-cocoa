@@ -2514,7 +2514,7 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):
-        target = "%s@%s" % (data.transfer_destination.user, data.transfer_destination.host)
+        target = "%s@%s" % (data.transfer_destination.user.decode(), data.transfer_destination.host.decode())
         self.log_info('Incoming transfer request to %s' % target)
         self.notification_center.post_notification("BlinkSessionTransferNewIncoming", sender=self, data=data)
         if self.account.audio.auto_transfer:
