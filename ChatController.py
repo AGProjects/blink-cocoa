@@ -524,12 +524,12 @@ class ChatController(MediaStream):
         session = self.sessionController.session
         try:
             audio_stream = next(stream for stream in session.streams if stream.type=='audio' and stream.encryption.type=='ZRTP' and stream.encryption.active)
-        except StopIteration:
+        except (StopIteration, TypeError):
             return
         full_local_path = self.stream.msrp.full_local_path
         full_remote_path = self.stream.msrp.full_remote_path
         sas = audio_stream.encryption.zrtp.sas
-        if sas and all(len(path)==1 for path in (full_local_path, full_remote_path)):
+        if sas and self.stream and all(len(path)==1 for path in (full_local_path, full_remote_path)):
             self.stream.send_message(sas, 'application/blink-zrtp-sas')
 
     @objc.python_method

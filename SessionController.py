@@ -1595,6 +1595,8 @@ class SessionController(NSObject):
 
     @objc.python_method
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
+        self.finished = False
+    
         if self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED):
             self.resetSession()
 
