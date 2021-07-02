@@ -1777,6 +1777,7 @@ class ChatWindowController(NSWindowController):
                 icon = None
                 if chat_stream.remoteIcon:
                     icon = chat_stream.remoteIcon
+ 
                 if presence_contact:
                     contact = BlinkConferenceContact(session.remoteAOR, name=presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
                 else:

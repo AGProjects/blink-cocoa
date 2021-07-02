@@ -203,23 +203,25 @@ def presence_status_for_contact(contact, uri=None):
 def encode_icon(icon):
     if not icon:
         return None
+
     try:
         tiff_data = icon.TIFFRepresentation()
         bitmap_data = NSBitmapImageRep.alloc().initWithData_(tiff_data)
         png_data = bitmap_data.representationUsingType_properties_(NSPNGFileType, None)
-    except Exception:
+        return base64.b64encode(png_data.bytes().tobytes()).decode()
+    except Exception as e:
+        BlinkLogger().log_error('Failed to encode icon: %s' % str(e))
         return None
-    else:
-        return base64.b64encode(png_data.bytes().tobytes())
-
 
 def decode_icon(data):
     if not data:
         return None
+
     try:
-        data = base64.b64decode(data)
+        data = base64.b64decode(data if isinstance(data, bytes) else data.encode())
         return NSImage.alloc().initWithData_(NSData.alloc().initWithBytes_length_(data, len(data)))
-    except Exception:
+    except Exception as e:
+        BlinkLogger().log_error('Failed to decode icon: %s' % str(e))
         return None
 
 

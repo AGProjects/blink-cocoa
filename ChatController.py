@@ -144,6 +144,7 @@ kCGWindowImageDefault = 0
 
 class BlinkChatStream(ChatStream):
     priority = ChatStream.priority + 1
+    accept_wrapped_types = ['text/*', 'image/*', 'application/im-iscomposing+xml', 'application/blink-icon', 'application/blink-zrtp-sas', 'application/blink-logging-status']
 
     def _create_local_media(self, uri_path):
         local_media = super(BlinkChatStream, self)._create_local_media(uri_path)
@@ -356,6 +357,7 @@ class ChatController(MediaStream):
     def send_icon_allowed(self):
         if not self.stream:
             return false
+
         blink_features = self.stream.remote_media.attributes.getfirst(b'blink-features')
         blink_caps = blink_features.decode().split() if blink_features else []
         return 'icon' in blink_caps
@@ -503,9 +505,13 @@ class ChatController(MediaStream):
         if not self.send_icon_allowed:
             return
 
-        if self.stream and not self.sessionController.session.remote_focus:
+        if self.sessionController.account is not BonjourAccount():
+            return
+
+        if self.stream:
             base64icon = encode_icon(self.chatWindowController.own_icon)
-            self.stream.send_message(str(base64icon), content_type='application/blink-icon', timestamp=ISOTimestamp.now())
+            if base64icon:
+                self.stream.send_message(base64icon, content_type='application/blink-icon', timestamp=ISOTimestamp.now())
 
     @objc.python_method
     def sendLoggingState(self):
@@ -642,6 +648,7 @@ class ChatController(MediaStream):
     def chatView_becameActive_(self, chatView, time):
         if self.closed:
             return
+
         if self.stream:
             self.stream.send_composing_indication("active", 60, last_active=time)
             if self.outgoing_message_handler.must_propose_otr:
@@ -1103,7 +1110,6 @@ class ChatController(MediaStream):
                 video_stream = self.sessionController.streamHandlerOfType("video")
 
             if identifier == 'connect_button':
-                #print('Clicked connect button in stream status %s' % self.status)
                 if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
                     self.end()
                 else:
@@ -1473,16 +1479,11 @@ class ChatController(MediaStream):
             self.updateDatabaseRecordingButton()
 
         elif message.content_type == 'application/blink-icon':
-            if not self.session.remote_focus:
-                try:
-                    self.remoteIcon = decode_icon(message.content)
-                except Exception:
-                    pass
-                else:
-                    self.chatWindowController.refreshDrawer()
-            else:
-                pass
-                # TODO: update icons for the contacts in the drawer
+            self.remoteIcon = decode_icon(message.content)
+            if self.remoteIcon:
+                self.sessionController.log_info('Received remote icon')
+                self.chatWindowController.refreshDrawer()
+
             return
 
         # render images sent inline
@@ -1723,6 +1724,9 @@ class ChatController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
         self.databaseLoggingButton.setHidden_(not self.history_control_allowed)
         self.sessionController.log_info('Chat stream capabilities: %s' % ", ".join(self.stream.chatroom_capabilities))
+        self.sessionController.log_info('Chat stream remote accepted types: %s' % ", ".join(self.stream.remote_accept_types))
+        self.sessionController.log_info('Chat stream remote accepted wrapped types: %s' % ", ".join(self.stream.remote_accept_wrapped_types))
+
 
         if self.sessionController.remote_focus:
             self.chatWindowController.drawer.open()
@@ -2183,6 +2187,7 @@ class OutgoingMessageHandler(NSObject):
 
     @objc.python_method
     def _NH_ChatStreamDidNotDeliverMessage(self, sender, data):
+        self.delegate.sessionController.log_error("Chat message %s was not delivered: %s" % (data.message_id, data.reason))
         try:
             message = self.messages.pop(data.message_id)
             if message:
