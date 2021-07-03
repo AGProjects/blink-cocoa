@@ -61,14 +61,16 @@ from Quartz import (CGDisplayBounds,
                     kCGWindowListExcludeDesktopElements,
                     kCGWindowListOptionIncludingWindow,
                     kCGWindowNumber)
-import objc
-
+import base64
 import datetime
 import hashlib
 import os
+import objc
 import time
 import unicodedata
 import uuid
+import traceback
+
 from otr import OTRState
 from util import call_later
 
@@ -1360,7 +1362,10 @@ class ChatController(MediaStream):
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification.sender, notification.data)
+        try:
+            handler(notification.sender, notification.data)
+        except Exception:
+            self.sessionController.log_error(traceback.format_exc())
 
     @objc.python_method
     def _do_smp_verification(self):
@@ -1507,24 +1512,35 @@ class ChatController(MediaStream):
                         file_path = file_name + "." + file_extension
                         break
 
-                self.sessionController.log_info('Image %s received inline' % file_path)
-                fd = open(file_path, "wb+")
-                fd.write(message.content)
-                fd.close()
-
-                image = NSImage.alloc().initWithContentsOfFile_(file_path)
-                if image:
-                    try:
-                        w = image.size().width
-                        width = w if w and w < 600 else '100%'
-                    except Exception:
-                        width = '100%'
-
-                    content = '''<img src="%s" border=0 width=%s>''' % (file_path, width)
-                    name = self.sessionController.titleShort
-                    icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
+                try:
+                    data = base64.b64decode(message.content.encode())
+                    self.sessionController.log_info('Image %s received inline' % file_path)
+                    fd = open(file_path, "wb+")
+                    fd.write(data)
+                    fd.close()
                     
-                    self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, content, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
+                    image = NSImage.alloc().initWithContentsOfFile_(file_path)
+                    if image:
+                        try:
+                            w = image.size().width
+                            width = w if w and w < 600 else '100%'
+                        except Exception:
+                            width = '100%'
+
+                        content = '''<img src="data:%s;base64,%s" border=0 width=%s>''' % (message.content_type, message.content, width)
+
+                        name = self.sessionController.titleLong
+                        icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
+                        
+                        self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, content, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
+                        
+                        nc_title = NSLocalizedString(name, "System notification title")
+                        nc_subtitle = NSLocalizedString("Sent you an image", "System notification subtitle")
+                        nc_body = file_path
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                        
+                except Exception as e:
+                    pass
 
         if not message.content_type.startswith("text/"):
             return
