@@ -658,7 +658,10 @@ class SessionControllersManager(object, metaclass=Singleton):
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
-        handler(notification.sender, notification.data)
+        try:
+            handler(notification.sender, notification.data)
+        except Exception:
+            self.log_error(traceback.format_exc())
 
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.ringer = Ringer(self)

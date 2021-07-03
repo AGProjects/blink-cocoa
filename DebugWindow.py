@@ -430,8 +430,9 @@ class DebugWindow(NSObject):
     def renderActivity(self, text):
         try:
             iserror = text.lower().startswith("error")
-        except TypeError as e:
+        except (TypeError, AttributeError) as e:
             return
+
         text = "%s   %s"%(datetime.now().replace(microsecond=0), text)
         if iserror:
             self.append_error_line(self.activityTextView, text)
