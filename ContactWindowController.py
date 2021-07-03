@@ -110,7 +110,7 @@ from sipsimple.util import ISOTimestamp
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from operator import attrgetter
-from twisted.internet import reactor
+from twisted.internet import reactor, task
 from zope.interface import implementer
 
 from LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
@@ -5687,6 +5687,8 @@ class ContactWindowController(NSWindowController):
         settings.save()
 
         def wakeup():
+            BlinkLogger().log_info('Running _wakeup actions')
+
             SIPApplication.engine.refresh_sound_devices()
             SIPApplication.engine.refresh_video_devices()
 
@@ -5720,7 +5722,15 @@ class ContactWindowController(NSWindowController):
                 account.resubscribe()
 
         # wait for system to stabilize
-        reactor.callLater(5, wakeup)
+        BlinkLogger().log_info('Will run _wakeup actions in 5 seconds')
+        d = task.deferLater(reactor, 5, wakeup)
+
+        def called(result):
+            BlinkLogger().log_info(result)
+
+        d.addCallback(called)
+
+        #reactor.callLater(5, wakeup)
 
     @objc.python_method
     def _NH_SystemIPAddressDidChange(self, notification):
