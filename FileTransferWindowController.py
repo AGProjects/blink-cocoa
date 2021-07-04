@@ -81,8 +81,8 @@ class FileTransferWindowController(NSObject):
             if item.done:
                 item.removeFromSuperview()
             else:
-                if item.transfer:
-                    active_items.append(item.transfer.transfer_id)
+                if item.transfer and item.transfer.ft_info:
+                    active_items.append(item.transfer.ft_info.transfer_id)
 
         self.listView.relayout()
         self.listView.display()
@@ -220,7 +220,6 @@ class FileTransferWindowController(NSObject):
             self.listView.addItemView_(item)
             h = NSHeight(self.listView.frame())
             self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
-
 
         file_path = sender.ft_info.file_path.decode() if isinstance(sender.ft_info.file_path, bytes) else sender.ft_info.file_path
         if 'screencapture' not in file_path:
