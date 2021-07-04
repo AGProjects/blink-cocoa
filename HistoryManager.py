@@ -640,9 +640,9 @@ class ChatHistory(object, metaclass=Singleton):
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
-    def update_message_status(self, msgid, status):
+    def update_message_status(self, msgid, status, direction='outgoing'):
         try:
-            results = ChatMessage.selectBy(msgid=msgid)
+            results = ChatMessage.selectBy(msgid=msgid, direction=direction)
             message = results.getOne()
             if message:
                 if message.status != 'displayed' and message.status != status:
