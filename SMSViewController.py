@@ -988,7 +988,10 @@ class SMSViewController(NSObject):
             except StopIteration:
                 self.log_info('Message Call-Id %s not found in messages {}' % call_id)
             else:
-                message = self.messages.pop(message.id)
+                try:
+                    message = self.messages.pop(message.id)
+                except KeyError:
+                    return
 
             if message.content_type == IMDNDocument.content_type:
                 try:
@@ -1058,7 +1061,10 @@ class SMSViewController(NSObject):
                     self.log_info('%s notification for %s failed' % (event, message_id))
                     return
                 elif message_id:
-                    message = self.messages.pop(message_id)
+                    try:
+                        message = self.messages.pop(message_id)
+                    except KeyError:
+                        pass
 
             if not message and call_id:
                 try:
