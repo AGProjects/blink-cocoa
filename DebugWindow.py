@@ -470,7 +470,7 @@ class DebugWindow(NSObject):
         if audio_stream.codec and audio_stream.sample_rate:
             text += '%s Audio call established using %s codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.encryption.active:
-            text += '%s RTP audio stream is encrypted with %s (%s)\n' % (session.start_time, audio_stream.encryption.type, audio_stream.encryption.cipher)
+            text += '%s RTP audio stream is encrypted with %s (%s)\n' % (session.start_time, audio_stream.encryption.type, audio_stream.encryption.cipher.decode())
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
@@ -505,7 +505,7 @@ class DebugWindow(NSObject):
         if video_stream.codec and video_stream.sample_rate:
             text += '%s Video call established using %s codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.sample_rate)
         if video_stream.encryption.active:
-            text += '%s RTP video stream is encrypted with %s (%s)\n' % (session.start_time, video_stream.encryption.type, video_stream.encryption.cipher)
+            text += '%s RTP video stream is encrypted with %s (%s)\n' % (session.start_time, video_stream.encryption.type, video_stream.encryption.cipher.decode())
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
