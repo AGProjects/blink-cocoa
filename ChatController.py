@@ -2252,7 +2252,7 @@ class ConferenceScreenSharingHandler(object):
     framerate = 1
     width = 1024
     window_id = None
-    compression = 0.5 # jpeg compression
+    compression = 0.7 # jpeg compression
     quality = 'medium'
     quality_settings = {'low':    {'compression': 0.3, 'width': 800,  'max_width': None, 'framerate': 1},
                         'medium': {'compression': 0.5, 'width': 1024, 'max_width': None, 'framerate': 1},
@@ -2388,15 +2388,17 @@ class ConferenceScreenSharingHandler(object):
                 ScreensharingPreviewPanel(image)
                 self.show_preview = False
 
-            jpeg = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
+            jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: self.compression})
             # this also works and produces the same result, but it's not documented anywhere
             #jpeg = image.IKIPJPEGDataWithMaxSize_compression_(image.size().width, self.compression)
 
+            data = base64.b64encode(jpg_data.bytes().tobytes()).decode()
+
             if self.log_first_frame:
-                self.delegate.sessionController.log_info('Sending %s bytes with %dx%d screen' % (format_size(len(jpeg)), image.size().width, image.size().height))
+                self.delegate.sessionController.log_info('Sending %s bytes with %dx%d screen' % (format_size(len(data)), image.size().width, image.size().height))
                 self.log_first_frame = False
-            self.delegate.sessionController.log_debug('Sending %s bytes with %dx%d screen' % (format_size(len(jpeg)), image.size().width, image.size().height))
+            self.delegate.sessionController.log_debug('Sending %s bytes with %dx%d screen' % (format_size(len(data)), image.size().width, image.size().height))
             self.may_send = False
             if self.stream:
-                self.stream.send_message(str(jpeg), content_type='application/blink-screensharing', timestamp=ISOTimestamp.now())
+                self.stream.send_message(data, content_type='application/blink-screensharing', timestamp=ISOTimestamp.now())
 
