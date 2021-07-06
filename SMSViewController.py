@@ -157,6 +157,7 @@ class SMSViewController(NSObject):
     dns_lookup_in_progress = False
     last_failure_reason = None
     otr_negotiation_timer = None
+    pgp_encrypted = False
 
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id):
         self = objc.super(SMSViewController, self).init()
@@ -208,6 +209,9 @@ class SMSViewController(NSObject):
             self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
 
             self.log_info('Using account %s' % self.local_uri)
+            if self.account.sms.private_key and self.public_key:
+                self.pgp_encrypted = True
+                self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
@@ -405,6 +409,9 @@ class SMSViewController(NSObject):
                         pgpMessage = pgpy.PGPMessage.from_blob(text_content)
                         decrypted_message = self.private_key.decrypt(pgpMessage)
                     except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                        if self.pgp_encrypted:
+                            self.pgp_encrypted = False
+                            self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
                         self.chatViewController.showSystemMessage("Decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
                         self.log_error('PGP decrypt error: %s' % str(e))
                         if require_delivered:
@@ -412,7 +419,12 @@ class SMSViewController(NSObject):
                         return
                     else:
                         self.log_error('PGP message %s decrypted' % id)
+                        if not self.pgp_encrypted:
+                            self.pgp_encrypted = True
+                            self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
                         content = str(decrypted_message.message).encode()
+            else:
+                self.pgp_encrypted = False
             
             if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type) and not is_replication_message:
                 try:
@@ -460,7 +472,7 @@ class SMSViewController(NSObject):
 
             encryption = ''
             if encrypted:
-                encryption = 'verified' if self.encryption.verified else 'unverified'
+                encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
 
             if not is_replication_message and not window.isKeyWindow():
                 nc_body = html2txt(content) if is_html else content
@@ -645,10 +657,14 @@ class SMSViewController(NSObject):
 
         if self.encryption.active:
             encryption = 'verified' if self.encryption.verified else 'unverified'
+        elif self.pgp_encrypted:
+            encryption = 'verified'
+        else:
+            encryption = ''
 
         if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
-            self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption='')
+            self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption=encryption)
 
         recipient = ChatIdentity(self.target_uri, self.display_name)
         mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption='')
@@ -915,16 +931,20 @@ class SMSViewController(NSObject):
                     additional_cpim_headers = [CPIMHeader('Message-ID', ns, message.id)]
                     additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
-            pgp_encrypted = False
             if self.public_key and self.account.sms.enable_pgp and message.content_type not in ('text/pgp-public-key', 'text/pgp-private-key', IsComposingDocument.content_type, IMDNDocument.content_type) and not self.encryption.active and not isinstance(message, OTRInternalMessage):
                 try:
                     pgp_message = pgpy.PGPMessage.new(content)
                     encrypted_content = self.public_key.encrypt(pgp_message)
                     content = str(encrypted_content).encode()
-                    pgp_encrypted = True
+                    if not self.pgp_encrypted:
+                        self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
+                        self.pgp_encrypted = True
                 except Exception as e:
                     import traceback
                     self.log_error('Failed to encrypt message: %s' % traceback.format_exc())
+                    if self.pgp_encrypted:
+                        self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
+                        self.pgp_encrypted = False
 
             payload = CPIMPayload(content,
                                   message.content_type,
@@ -964,7 +984,7 @@ class SMSViewController(NSObject):
         self.add_pending_outgoing_message(str(message_request), pending_message_id, imdn_status)
 
         if message.content_type not in (IsComposingDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key') and not isinstance(message, OTRInternalMessage):
-            if self.encryption.active or pgp_encrypted:
+            if self.encryption.active or self.pgp_encrypted:
                 self.log_info('%s encrypted message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
             else:
                 self.log_info('%s message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
@@ -1349,7 +1369,10 @@ class SMSViewController(NSObject):
                 #self.chatOtrSmpWindow.show()
 
         elif tag == 7:
-            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html"))
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html"))
+
+        elif tag == 10:
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://www.openpgp.org/about/standard/"))
 
 
 OTRTransport.register(SMSViewController)

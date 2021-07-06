@@ -74,7 +74,6 @@
                                         <menuItem title="My Fingerprint" tag="2" enabled="NO" id="iMd-fT-B9t">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" tag="3" id="lhp-Zv-UwA"/>
                                         <menuItem title="No Fingerprint Discovered" tag="4" id="Mzt-R4-yiE">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
@@ -90,11 +89,20 @@
                                                 <action selector="userClickedEncryptionMenu:" target="-2" id="SGm-le-TRB"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="d7P-zm-tD6"/>
-                                        <menuItem title="About OTR protocol" tag="7" id="Onf-5o-LeQ">
+                                        <menuItem title="About OTR protocol" tag="7" id="OZL-It-bHY">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="userClickedEncryptionMenu:" target="-2" id="7QQ-Xx-iQj"/>
+                                                <action selector="userClickedEncryptionMenu:" target="-2" id="28M-Rv-pYf"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" tag="8" id="ED4-MM-dP7"/>
+                                        <menuItem title="PGP encryption active" tag="9" enabled="NO" id="w1q-GA-GY8">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="About PGP protocol" tag="10" id="v0K-Qf-Gct">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="userClickedEncryptionMenu:" target="-2" id="H2M-P1-4kU"/>
                                             </connections>
                                         </menuItem>
                                     </items>

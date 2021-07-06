@@ -68,6 +68,7 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkShouldTerminate")
             self.notification_center.add_observer(self, name="ChatStreamOTREncryptionStateChanged")
             self.notification_center.add_observer(self, name="OTREncryptionDidStop")
+            self.notification_center.add_observer(self, name="PGPEncryptionStateChanged")
             
             self.unreadMessageCounts = {}
             self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "heartbeatTimer:", None, True)
@@ -114,6 +115,10 @@ class SMSWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, sender, data):
+        self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_PGPEncryptionStateChanged(self, sender, data):
         self.updateEncryptionWidgets()
 
     @objc.python_method
@@ -269,10 +274,6 @@ class SMSWindowController(NSWindowController):
             item.setEnabled_(False)
             item.setState_(NSOffState)
 
-            item = menu.itemWithTag_(3)
-            item.setHidden_(True)
-            item.setState_(NSOffState)
-
             item = menu.itemWithTag_(4)
             item.setHidden_(True)
 
@@ -280,6 +281,16 @@ class SMSWindowController(NSWindowController):
             item.setHidden_(True)
 
             item = menu.itemWithTag_(6)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(8)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(9)
+            item.setEnabled_(False)
+            item.setHidden_(True)
+
+            item = menu.itemWithTag_(10)
             item.setHidden_(True)
 
             selectedSession = self.selectedSessionController()
@@ -303,8 +314,6 @@ class SMSWindowController(NSWindowController):
 
                 if settings.chat.enable_encryption:
                     if chat_stream.peer_fingerprint:
-                        item = menu.itemWithTag_(3)
-                        item.setHidden_(False)
 
                         item = menu.itemWithTag_(4)
                         item.setHidden_(False)
@@ -322,6 +331,16 @@ class SMSWindowController(NSWindowController):
                         item.setHidden_(False)
                         item.setTitle_(NSLocalizedString("Validate the identity of %s" % display_name, "Menu item"))
 
+                if selectedSession.pgp_encrypted:
+                    item = menu.itemWithTag_(8)
+                    item.setHidden_(False)
+
+                    item = menu.itemWithTag_(9)
+                    item.setEnabled_(True)
+                    item.setHidden_(False)
+
+                    item = menu.itemWithTag_(10)
+                    item.setHidden_(False)
 
     @objc.python_method
     def updateEncryptionWidgets(self, selectedSession=None):
@@ -334,8 +353,12 @@ class SMSWindowController(NSWindowController):
                     self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
                 else:
                     self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-red"))
+            elif selectedSession.pgp_encrypted:
+                self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
             else:
                 self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
+        elif selectedSession and selectedSession.pgp_encrypted:
+            self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("locked-green"))
         else:
             self.encryptionIconMenuItem.setImage_(NSImage.imageNamed_("unlocked-darkgray"))
 

@@ -58,7 +58,7 @@
                         <popUpButton key="view" id="NwY-cG-ibM">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="ijA-w1-Iar" id="m1W-dR-TZV">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="m1W-dR-TZV">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="6Qw-V8-ZON">
@@ -70,7 +70,6 @@
                                         <menuItem title="My Fingerprint" tag="2" enabled="NO" id="dMv-WQ-ktQ">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" tag="3" id="hdJ-kc-tfl"/>
                                         <menuItem title="No Fingerprint Discovered" tag="4" id="LAf-Ji-i97">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
@@ -80,8 +79,14 @@
                                         <menuItem title="Verify Remote Fingerprint using SMP Protocol" tag="6" id="f5k-fL-dcg">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="xRm-rL-3Jl"/>
                                         <menuItem title="About OTR protocol" tag="7" id="aMn-IA-3xE">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" tag="8" id="lbL-Gd-UzC"/>
+                                        <menuItem title="PGP encryption active" tag="9" enabled="NO" id="u6r-FY-7Ea">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="About PGP protocol" tag="10" id="xyo-Nq-6qN">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                     </items>
