@@ -973,7 +973,9 @@ class SMSViewController(NSObject):
                                   extra_headers=additional_sip_headers)
 
         self.notification_center.add_observer(self, sender=message_request)
-        self.sent_readable_messages.add(message.id)
+        if not isinstance(message, OTRInternalMessage) and message.content_type not in (IsComposingDocument.content_type):
+            self.sent_readable_messages.add(message.id)
+
         message_request.send(timeout)
         message.status = MSG_STATE_SENDING
         message.call_id = message_request._request.call_id.decode()
