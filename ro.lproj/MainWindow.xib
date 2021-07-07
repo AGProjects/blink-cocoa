@@ -30,14 +30,14 @@
                                     <action selector="checkForUpdates:" target="389" id="1868"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" tag="8" hidden="YES" id="1089">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
                             <menuItem title="Donează dacă îți place programul" tag="3" id="983">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showDonate:" target="389" id="1637"/>
                                 </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="8" hidden="YES" id="1089">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
                             <menuItem title="Obține Blink Pro..." tag="7" id="1087">
                                 <modifierMask key="keyEquivalentModifierMask"/>
