@@ -69,6 +69,7 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="ChatStreamOTREncryptionStateChanged")
             self.notification_center.add_observer(self, name="OTREncryptionDidStop")
             self.notification_center.add_observer(self, name="PGPEncryptionStateChanged")
+            self.notification_center.add_observer(self, name="PGPPublicKeyReceived")
             
             self.unreadMessageCounts = {}
             self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "heartbeatTimer:", None, True)
@@ -119,6 +120,10 @@ class SMSWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_PGPEncryptionStateChanged(self, sender, data):
+        self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_PGPPublicKeyReceived(self, sender, data):
         self.updateEncryptionWidgets()
 
     @objc.python_method

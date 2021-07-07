@@ -79,7 +79,7 @@ MAX_MESSAGE_LENGTH = 16000
 
 
 class MessageInfo(object):
-    def __init__(self, id, content=None, content_type=None, call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None, require_delivered=False, require_display=False):
+    def __init__(self, id, content=None, content_type=None, call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None, require_delivered_notification=False, require_displayed_notification=False):
         self.id = id
         self.call_id = call_id
         self.direction = direction
@@ -90,8 +90,8 @@ class MessageInfo(object):
         self.content_type = content_type
         self.status = status
         self.encryption = encryption
-        self.require_delivered = require_delivered
-        self.require_display = require_display
+        self.require_delivered_notification = require_delivered_notification
+        self.require_displayed_notification = require_displayed_notification
 
 
 class OTRInternalMessage(MessageInfo):
@@ -393,8 +393,8 @@ class SMSViewController(NSObject):
         (sender, id, call_id, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id) = message_tuple
        
         try:
-            require_delivered = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
-            require_display = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
+            require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
+            require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
 
             is_html = content_type == 'text/html'
             encrypted = False
@@ -414,7 +414,7 @@ class SMSViewController(NSObject):
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
                         self.chatViewController.showSystemMessage("Decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
                         self.log_error('PGP decrypt error: %s' % str(e))
-                        if require_delivered:
+                        if require_delivered_notification:
                             self.sendIMDNNotification(id, 'failed')
                         return
                     else:
@@ -448,14 +448,16 @@ class SMSViewController(NSObject):
                     self.log_info('OTP error: %s' % str(e))
                     return None
                 else:
+                    self.log_info('OTR message %s handled without error' % call_id)
                     encrypted = encryption_active = self.encryption.active
 
             content = content.decode() if isinstance(content, bytes) else content
             
             if content.startswith('?OTR:'):
                 if not is_replication_message:
-                    self.log_info('Dropped OTR message that could not be decoded')
+                    self.log_info('Dropped %s OTR message that could not be decoded' % content_type)
                     self.chatViewController.showSystemMessage("The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+
                     if self.encryption.active:
                         self.stopEncryption()
                 else:
@@ -467,12 +469,8 @@ class SMSViewController(NSObject):
             timestamp = ISOTimestamp.now()
 
             self.log_info("Incoming message %s message %s received (Call-ID %s)" % (content_type, id, call_id))
-            if require_delivered:
+            if require_delivered_notification:
                 self.sendIMDNNotification(id, 'delivered')
-
-            encryption = ''
-            if encrypted:
-                encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
 
             if not is_replication_message and not window.isKeyWindow():
                 nc_body = html2txt(content) if is_html else content
@@ -483,16 +481,23 @@ class SMSViewController(NSObject):
             direction = 'outgoing' if is_replication_message else 'incoming'
             msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
 
+            if encrypted:
+                encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
+            elif self.pgp_encrypted:
+                encryption = 'verified'
+            else:
+                encryption = ''
+
             self.chatViewController.showMessage(call_id, msg_id, direction, format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state="sent", media_type='sms', encryption=encryption)
 
             self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             # save to history
-            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status=MSG_STATE_DELIVERED, encryption=encryption, require_display=require_display, require_delivered=require_delivered)
+            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status=MSG_STATE_DELIVERED, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
 
             self.add_to_history(message)
 
-            if require_display:
+            if require_displayed_notification:
                 self.read_queue.put(id)
 
         except Exception as e:
@@ -892,12 +897,12 @@ class SMSViewController(NSObject):
                 return
             except OTRFinishedError:
                 self.log_info('Encryption has been disabled by remote party, please resend the message again')
-                self.chatViewController.showSystemMessage("The other party finished encryption", ISOTimestamp.now(), is_error=True)
+                self.chatViewController.showSystemMessage("The other party ended OTR encrypted session", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 return
 
             if self.encryption.active and not content.startswith(b'?OTR:'):
-                self.chatViewController.showSystemMessage("The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+                self.chatViewController.showSystemMessage("The other party stopped OTR encrypted session", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
                     self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
@@ -926,7 +931,7 @@ class SMSViewController(NSObject):
                         imdn_id = document.message_id.value
                         imdn_status = document.notification.status.__str__()
 
-                elif message.content_type != IsComposingDocument.content_type:
+                elif message.content_type != IsComposingDocument.content_type and not isinstance(message, OTRInternalMessage):
                     # request IMDN
                     additional_cpim_headers = [CPIMHeader('Message-ID', ns, message.id)]
                     additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
@@ -1009,6 +1014,7 @@ class SMSViewController(NSObject):
                 message = next(message for message in self.messages.values() if message.call_id == call_id)
             except StopIteration:
                 self.log_info('Message Call-Id %s not found in messages {}' % call_id)
+                return
             else:
                 try:
                     message = self.messages.pop(message.id)
@@ -1140,10 +1146,10 @@ class SMSViewController(NSObject):
         self.pending_outgoing_messages[id] = (message_id, event, datetime.datetime.now(), self.session_id)
 
     @objc.python_method
-    def stopEncryption():
+    def stopEncryption(self):
+        self.notification_center.post_notification('OTREncryptionDidStop', sender=self)
         self.log_info('Stopping OTR...')
         self.encryption.stop()
-        self.notification_center.post_notification('OTREncryptionDidStop', sender=self)
     
     def textView_doCommandBySelector_(self, textView, selector):
         if selector == "insertNewline:" and self.chatViewController.inputText == textView:
