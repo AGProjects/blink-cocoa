@@ -1371,10 +1371,10 @@ class SMSViewController(NSObject):
                 #self.chatOtrSmpWindow.show()
 
         elif tag == 7:
-        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html"))
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html"))
 
         elif tag == 10:
-        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://www.openpgp.org/about/standard/"))
+            NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://www.openpgp.org/about/standard/"))
 
 
 OTRTransport.register(SMSViewController)
