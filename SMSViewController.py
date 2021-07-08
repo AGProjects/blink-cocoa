@@ -1104,7 +1104,7 @@ class SMSViewController(NSObject):
             self.otr_negotiation_timer = None
             
             if message.id == 'OTR':
-                self.log_info("OTR message failed: %s" % reason)
+                self.log_info("OTR message failed")
                 return
 
             if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
