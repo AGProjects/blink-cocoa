@@ -406,7 +406,7 @@ class SMSViewController(NSObject):
             text_content = content.decode().strip()            
             if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
                 if not self.private_key:
-                    self.chatViewController.showSystemMessage("No private key available", ISOTimestamp.now(), is_error=True)
+                    self.chatViewController.showSystemMessage("No PGP private key available", ISOTimestamp.now(), is_error=True)
                     return
                 else:
                     try:
@@ -416,7 +416,7 @@ class SMSViewController(NSObject):
                         if self.pgp_encrypted:
                             self.pgp_encrypted = False
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
-                        self.chatViewController.showSystemMessage("Decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
+                        self.chatViewController.showSystemMessage("PGP decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
                         self.log_error('PGP decrypt error: %s' % str(e))
                         if require_delivered_notification:
                             self.sendIMDNNotification(id, 'failed')
@@ -444,7 +444,7 @@ class SMSViewController(NSObject):
                     self.log_info('OTP encrypted message error: %s' % str(e))
                     return None
                 except OTRFinishedError:
-                    self.chatViewController.showSystemMessage("The other party finished encryption", ISOTimestamp.now(), is_error=True)
+                    self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
                     self.log_info('OTR has finished')
                     encrypted = False
                     encryption_active = False
@@ -460,12 +460,12 @@ class SMSViewController(NSObject):
             if content.startswith('?OTR:'):
                 if not is_replication_message:
                     self.log_info('Dropped %s OTR message that could not be decoded' % content_type)
-                    self.chatViewController.showSystemMessage("The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+                    self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
 
                     if self.encryption.active:
                         self.stopEncryption()
                 else:
-                    self.chatViewController.showSystemMessage("Encrypted message from another device of my own", ISOTimestamp.now())
+                    self.chatViewController.showSystemMessage("OTR encrypted message from another device of my own", ISOTimestamp.now())
       
                 return None
 
@@ -571,13 +571,13 @@ class SMSViewController(NSObject):
                 self.log_info("Chat encryption activated using OTR protocol")
                 self.log_info("OTR local fingerprint %s" % local_fingerprint)
                 self.log_info("OTR remote fingerprint %s" % remote_fingerprint)
-                self.chatViewController.showSystemMessage("Encryption enabled", ISOTimestamp.now())
+                self.chatViewController.showSystemMessage("OTR encryption enabled", ISOTimestamp.now())
             elif data.new_state is OTRState.Finished:
-                self.log_info("Chat encryption deactivated")
-                self.chatViewController.showSystemMessage("Encryption deactivated", ISOTimestamp.now(), is_error=True)
+                self.log_info("OTR encryption deactivated")
+                self.chatViewController.showSystemMessage("OTR encryption deactivated", ISOTimestamp.now(), is_error=True)
             elif data.new_state is OTRState.Plaintext:
-                self.log_info("Chat encryption deactivated")
-                self.chatViewController.showSystemMessage("Encryption deactivated", ISOTimestamp.now(), is_error=True)
+                self.log_info("OTR encryption deactivated")
+                self.chatViewController.showSystemMessage("OTR encryption deactivated", ISOTimestamp.now(), is_error=True)
         except:
             import traceback
             traceback.print_exc()
@@ -894,19 +894,19 @@ class SMSViewController(NSObject):
             except OTRError as e:
                 if 'has ended the private conversation' in str(e):
                     self.log_info('Encryption has been disabled by remote party, please resend the message again')
-                    self.chatViewController.showSystemMessage("The other party stopped encryption", ISOTimestamp.now(), is_error=True)
+                    self.chatViewController.showSystemMessage("Recipient stopped OTR encryption", ISOTimestamp.now(), is_error=True)
                     self.stopEncryption()
                 else:
                     self.log_info('Failed to encrypt outgoing message: %s' % str(e))
                 return
             except OTRFinishedError:
                 self.log_info('Encryption has been disabled by remote party, please resend the message again')
-                self.chatViewController.showSystemMessage("The other party ended OTR encrypted session", ISOTimestamp.now(), is_error=True)
+                self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 return
 
             if self.encryption.active and not content.startswith(b'?OTR:'):
-                self.chatViewController.showSystemMessage("The other party stopped OTR encrypted session", ISOTimestamp.now(), is_error=True)
+                self.chatViewController.showSystemMessage("Recipient stopped OTR encryption", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
                     self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
@@ -1362,7 +1362,7 @@ class SMSViewController(NSObject):
  
     def otrNegotiationTimeout_(self, timer):
         if not self.encryption.active:
-            self.chatViewController.showSystemMessage("Recipient did not reply to the encryption request", ISOTimestamp.now(), is_error=True)
+            self.chatViewController.showSystemMessage("Recipient did not answer to OTR encryption request", ISOTimestamp.now(), is_error=True)
 
         if self.otr_negotiation_timer:
             self.otr_negotiation_timer.invalidate()

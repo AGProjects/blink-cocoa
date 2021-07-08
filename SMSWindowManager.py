@@ -25,7 +25,6 @@ import pgpy
 
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
-
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.system import makedirs
