@@ -872,6 +872,22 @@ class SMSViewController(NSObject):
         self.read_queue.pause()
 
     @objc.python_method
+    def message_needs_imdn_notifications(self, message):
+        if message.content_type == IsComposingDocument.content_type:
+            return False
+
+        if message.content_type == IMDNDocument.content_type:
+            return False
+
+        if isinstance(message, OTRInternalMessage):
+            return False
+
+        if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
+            return False
+
+        return True
+
+    @objc.python_method
     def _send_message(self, message):
         if message.content_type == IsComposingDocument.content_type:
             if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=30):
@@ -935,12 +951,12 @@ class SMSViewController(NSObject):
                         imdn_id = document.message_id.value
                         imdn_status = document.notification.status.__str__()
 
-                elif message.content_type != IsComposingDocument.content_type and not isinstance(message, OTRInternalMessage):
+                elif self.message_needs_imdn_notifications(message):
                     # request IMDN
                     additional_cpim_headers = [CPIMHeader('Message-ID', ns, message.id)]
                     additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery, display'))
 
-            if self.public_key and self.account.sms.enable_pgp and message.content_type not in ('text/pgp-public-key', 'text/pgp-private-key', IsComposingDocument.content_type, IMDNDocument.content_type) and not self.encryption.active and not isinstance(message, OTRInternalMessage):
+            if self.public_key and self.account.sms.enable_pgp and not self.encryption.active and self.message_needs_imdn_notifications(message):
                 try:
                     pgp_message = pgpy.PGPMessage.new(content)
                     encrypted_content = self.public_key.encrypt(pgp_message)
@@ -982,7 +998,8 @@ class SMSViewController(NSObject):
                                   extra_headers=additional_sip_headers)
 
         self.notification_center.add_observer(self, sender=message_request)
-        if not isinstance(message, OTRInternalMessage) and message.content_type not in (IsComposingDocument.content_type):
+
+        if self.message_needs_imdn_notifications(message):
             self.sent_readable_messages.add(message.id)
 
         message_request.send(timeout)
