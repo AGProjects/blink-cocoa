@@ -618,7 +618,7 @@ class SMSWindowManagerClass(NSObject):
                     nc_title = NSLocalizedString("Public key", "System notification title")
                     nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
                     nc_body = NSLocalizedString("Public key received", "System notification title")
-                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                    #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
                     self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
 
                     blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
