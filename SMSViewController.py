@@ -42,8 +42,11 @@ from application.notification import IObserver, NotificationCenter, Notification
 from application.python import Null
 from application.python.queue import EventQueue
 from application.system import host
+from dateutil.parser._parser import ParserError as DateParserError
 from zope.interface import implementer
 from resources import ApplicationData
+
+
 
 from otr import OTRTransport, OTRState, SMPStatus
 from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
@@ -52,6 +55,7 @@ from sipsimple.account import Account, BonjourAccount
 from sipsimple.core import Message, FromHeader, ToHeader, RouteHeader, Header, SIPURI, Route
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.lookup import DNSLookup, DNSLookupError
+from sipsimple.payloads import ParserError
 from sipsimple.payloads.iscomposing import IsComposingDocument, IsComposingMessage, State, LastActive, Refresh, ContentType
 from sipsimple.payloads.imdn import IMDNDocument, DisplayNotification, DeliveryNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, CPIMHeader, ChatIdentity, OTREncryption, CPIMNamespace
@@ -1322,7 +1326,12 @@ class SMSViewController(NSObject):
                 sender_uri = sipuri_components_from_string(message.cpim_from)[0]
                 icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
 
-            timestamp=ISOTimestamp(message.cpim_timestamp)
+            try:
+                timestamp=ISOTimestamp(message.cpim_timestamp)
+            except DateParserError as e:
+                self.log_error('Failed to parse timestamp %s for message id %s: %s' % (message.cpim_timestamp, message.id, str(e)))
+                timestamp = ISOTimestamp.now()
+            
             is_html = False if message.content_type == 'text' else True
             
             components = sipuri_components_from_string(message.cpim_from)
