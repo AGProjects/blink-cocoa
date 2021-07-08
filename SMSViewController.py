@@ -902,7 +902,7 @@ class SMSViewController(NSObject):
         else:
             content = message.content
             
-        timeout = 5 if message.content_type != IsComposingDocument.content_type else 15
+        timeout = 10 if message.content_type != IsComposingDocument.content_type else 30
         imdn_id = ''
         imdn_status = ''
 
@@ -1346,7 +1346,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     def startEncryption(self):
         self.encryption.start()
-        self.otr_negotiation_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(15, self, "otrNegotiationTimeout:", None, False)
+        self.otr_negotiation_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "otrNegotiationTimeout:", None, False)
  
     def otrNegotiationTimeout_(self, timer):
         if not self.encryption.active:
