@@ -1174,7 +1174,7 @@ class AudioController(MediaStream):
             else:
                 image = 'locked-orange'
         elif self.srtp_active:
-            image = 'locked-orange'
+            image = 'locked-green'
         else:
             image = 'unlocked-darkgray'
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_(image), self.encryption_segment)
