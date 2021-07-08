@@ -573,11 +573,11 @@ class SMSViewController(NSObject):
                 self.log_info("OTR remote fingerprint %s" % remote_fingerprint)
                 self.chatViewController.showSystemMessage("OTR encryption enabled", ISOTimestamp.now())
             elif data.new_state is OTRState.Finished:
-                self.log_info("OTR encryption deactivated")
-                self.chatViewController.showSystemMessage("OTR encryption deactivated", ISOTimestamp.now(), is_error=True)
+                self.log_info("OTR encryption has finished")
+                self.chatViewController.showSystemMessage("OTR encryption has finished", ISOTimestamp.now(), is_error=True)
             elif data.new_state is OTRState.Plaintext:
-                self.log_info("OTR encryption deactivated")
-                self.chatViewController.showSystemMessage("OTR encryption deactivated", ISOTimestamp.now(), is_error=True)
+                self.log_info("OTR encryption has been deactivated")
+                self.chatViewController.showSystemMessage("OTR encryption has been deactivated", ISOTimestamp.now(), is_error=True)
         except:
             import traceback
             traceback.print_exc()
@@ -882,14 +882,14 @@ class SMSViewController(NSObject):
             except OTRError as e:
                 if 'has ended the private conversation' in str(e):
                     self.log_info('Encryption has been disabled by remote party, please resend the message again')
-                    self.chatViewController.showSystemMessage("Recipient stopped OTR encryption", ISOTimestamp.now(), is_error=True)
+                    self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
                     self.stopEncryption()
                 else:
                     self.log_info('Failed to encrypt outgoing message: %s' % str(e))
                 return
             except OTRFinishedError:
                 self.log_info('Encryption has been disabled by remote party, please resend the message again')
-                self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
+                self.chatViewController.showSystemMessage("Recipient ended OTR encryption, you must resend the message again", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 return
 
