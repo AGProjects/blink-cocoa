@@ -943,10 +943,11 @@ class SMSViewController(NSObject):
                 if message.content_type == IMDNDocument.content_type:
                     # respond to IMDN requests
                     additional_cpim_headers = [CPIMHeader('Message-ID', ns, str(uuid.uuid4()))]
+                    additional_cpim_headers.append(CPIMHeader('Disposition-Notification', ns, 'positive-delivery'))
                     try:
                         document = IMDNDocument.parse(message.content)
                     except ParserError as e:
-                        self.log_error('Failed to parse IMDN payload: %s' % str(e))
+                        self.log_error('Failed to parse IMDN payload for %s: %s' % (message.id, str(e)))
                     else:
                         imdn_id = document.message_id.value
                         imdn_status = document.notification.status.__str__()
