@@ -602,34 +602,6 @@ class SMSViewController(NSObject):
         self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), content_type, "0", message.status, call_id=message.call_id)
 
     @objc.python_method
-    def composeReplicationMessage(self, sent_message, response_code):
-        if sent_message.content_type == IsComposingDocument.content_type:
-            return
-
-        if isinstance(self.account, Account):
-            if self.account.sms.enable_replication:
-                contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
-                msg = CPIMPayload(sent_message.content, sent_message.content_type, charset='utf-8', sender=ChatIdentity(self.account.uri, self.account.display_name), recipients=[ChatIdentity(self.target_uri, contact.name if contact else None)])
-                self.sendReplicationMessage(response_code, msg.encode()[0], content_type='message/cpim')
-
-    @objc.python_method
-    def sendReplicationMessage(self, response_code, content, content_type="message/cpim", timestamp=None):
-        return
-        # TODO must be refactored
-        timestamp = timestamp or ISOTimestamp.now()
-        additional_sip_headers = [Header("X-Offline-Storage", "no"), Header("X-Replication-Code", str(response_code)), Header("X-Replication-Timestamp", str(ISOTimestamp.now()))]
-
-        from_uri = self.account.uri
-        if self.account is BonjourAccount():
-            settings = SIPSimpleSettings()
-            from_uri.parameters['instance_id'] = settings.instance_id
-
-        message_request = Message(FromHeader(from_uri, self.account.display_name), ToHeader(self.account.uri),
-                                  RouteHeader(route.uri), content_type, content, credentials=self.account.credentials, extra_headers=additional_sip_headers)
-        message_request.send(15 if content_type != IsComposingDocument.content_type else 10)
-
-
-    @objc.python_method
     def sendIMDNNotification(self, message_id, event):
         if not self.account.sms.enable_imdn:
             return
@@ -1069,7 +1041,6 @@ class SMSViewController(NSObject):
             self.log_info("%s message %s accepted by %s (Call-Id %s)" % (message.content_type, message.id, entity, call_id))
 
             self.add_to_history(message)
-            self.composeReplicationMessage(message, data.code)
         except Exception as e:
             import traceback
             self.log_info(traceback.format_exc())
@@ -1153,7 +1124,6 @@ class SMSViewController(NSObject):
 
             self.add_to_history(message)
             self.last_failure_reason = reason
-            self.composeReplicationMessage(message, data.code)
 
             if (data.code == 408 and entity == 'local') or data.code >= 500:
                 self.setRoutesFailed(reason)
