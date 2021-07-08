@@ -1047,10 +1047,10 @@ class SMSViewController(NSObject):
                 try:
                     (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[str(sender)]
                 except (KeyError, IndexError):
-                    self.log_error('Pending % notification for %s was not found' % (event, str(sender)))
-                    self.log_info(self.pending_outgoing_messages.keys())
+                    self.log_error('Pending notification for %s was not found' % str(sender))
+                    #self.log_info(self.pending_outgoing_messages.keys())
                 else:
-                    #self.log_info('%s notification for %s was sent' % (event, message_id))
+                    self.log_info('%s notification for %s was sent' % (event, message_id))
                     if event in ('delivered', 'displayed'):
                         self.history.update_message_status(message_id, event)
                         return
