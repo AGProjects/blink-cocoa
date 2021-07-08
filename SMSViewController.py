@@ -676,7 +676,7 @@ class SMSViewController(NSObject):
             self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption=encryption)
 
         recipient = ChatIdentity(self.target_uri, self.display_name)
-        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption='')
+        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption=encryption)
     
         self.messages[id] = mInfo
         self.message_queue.put(mInfo)
