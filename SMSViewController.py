@@ -1052,7 +1052,7 @@ class SMSViewController(NSObject):
                 else:
                     self.log_info('%s notification for %s was sent' % (event, message_id))
                     if event in ('delivered', 'displayed'):
-                        self.history.update_message_status(message_id, event)
+                        self.history.update_message_status(message_id, event, direction='incoming')
                         return
 
                     del self.pending_outgoing_messages[str(sender)]
@@ -1101,7 +1101,7 @@ class SMSViewController(NSObject):
                 self.log_info('Pending outgoing message %s was not for found' % str(sender))
                 pass
             else:
-                self.log_info('Found pending message %s for event %s' % (message_id, event))
+                #self.log_info('Found pending message %s for event %s' % (message_id, event))
                 try:
                     del self.pending_outgoing_messages[str(sender)]
                 except KeyError:
