@@ -54,6 +54,8 @@ class SMSSettingsExtension(SettingsGroup):
     enable_pgp = Setting(type=bool, default=True)
     enable_imdn = Setting(type=bool, default=True)
     enable_composing = Setting(type=bool, default=True)
+    history_url = Setting(type=HTTPURL, default=None, nillable=True)
+    history_token = Setting(type=str, default=None, nillable=True)
     public_key = Setting(type=str, default=None, nillable=True)
     private_key = Setting(type=str, default=None, nillable=True)
     public_key_checksum = Setting(type=str, default=None, nillable=True)
