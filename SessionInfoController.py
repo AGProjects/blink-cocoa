@@ -365,12 +365,18 @@ class SessionInfoController(NSObject):
 
                 self.audio_codec.setStringValue_(codec)
                 self.audio_srtp_lock.setHidden_(False if self.audio_stream.encryption_active else True)
-                    
-                if self.audio_stream.encryption_active:
-                    if self.audio_stream.zrtp_active:
-                        self.audio_srtp_lock.setImage_(NSImage.imageNamed_("locked-green") if self.audio_stream.zrtp_verified else NSImage.imageNamed_("locked-red"))
+ 
+                if self.audio_stream.zrtp_active:
+                    if self.audio_stream.zrtp_verified:
+                        image = 'locked-green'
                     else:
-                        self.audio_srtp_lock.setImage_(NSImage.imageNamed_("srtp"))
+                        image = 'locked-orange'
+                elif self.audio_stream.srtp_active:
+                    image = 'locked-green'
+                else:
+                    image = 'unlocked-darkgray'
+
+                self.audio_srtp_lock.setImage_(NSImage.imageNamed_(image))
             else:
                 self.audio_codec.setStringValue_('')
                 self.audio_srtp_lock.setHidden_(True)
@@ -515,7 +521,11 @@ class SessionInfoController(NSObject):
                 self.audio_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.audio_stream.status == STREAM_CONNECTED:
                 if self.audio_stream.encryption_active:
-                    title = '%s (%s)' % (self.audio_stream.stream.encryption.type, self.audio_stream.stream.encryption.cipher.decode())
+                    stype = self.audio_stream.stream.encryption.type
+                    if stype.startswith('SRTP/SDES'):
+                        stype = stype[5:]
+                
+                    title = '%s (%s)' % (stype, self.audio_stream.stream.encryption.cipher.decode())
                 else:
                     title = NSLocalizedString("Not Encrypted", "Label")
 
