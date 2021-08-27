@@ -1577,20 +1577,24 @@ class SessionController(NSObject):
                 tls_name = self.account.sip.tls_name or self.account.id.domain
             elif "isfocus" in str(target_uri) and target_uri.host.decode().endswith(self.account.id.domain):
                 tls_name = self.account.conference.tls_name or self.account.sip.tls_name or self.account.id.domain
+
+            if self.account.sip.outbound_proxy is not None:
+                proxy = self.account.sip.outbound_proxy
+                uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+                tls_name = self.account.sip.tls_name or proxy.host
+                self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
+            elif self.account.sip.always_use_my_proxy:
+                uri = SIPURI(host=self.account.id.domain)
+                tls_name = self.account.sip.tls_name or self.account.id.domain
+                self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
+            else:
+                uri = target_uri
+                self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
+
         else:
             if "isfocus" in str(target_uri) and self.account.conference.tls_name:
                 tls_name = self.account.conference.tls_name
 
-        if self.account.sip.outbound_proxy is not None:
-            proxy = self.account.sip.outbound_proxy
-            uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
-            tls_name = self.account.sip.tls_name or proxy.host
-            self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
-        elif self.account.sip.always_use_my_proxy:
-            uri = SIPURI(host=self.account.id.domain)
-            tls_name = self.account.sip.tls_name or self.account.id.domain
-            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
-        else:
             uri = target_uri
             self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
