@@ -287,6 +287,7 @@ class ScreenSharingController(MediaStream):
     viewer = None
     exhanged_bytes = 0
     must_reset_trace_msrp = False
+    loaded = False
 
     #statusItem = StatusItem.alloc().init()
 
@@ -327,11 +328,15 @@ class ScreenSharingController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
+        if self.loaded:
+            return
+
         if self.direction == "active":
             self.sessionController.log_info("Requesting remote screen...")
         else:
             self.sessionController.log_info("Offering local screen...")
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
+            self.loaded = True
             self.statusProgress.startAnimation_(None)
             self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.titleShort)
             settings = SIPSimpleSettings()
@@ -350,15 +355,16 @@ class ScreenSharingController(MediaStream):
         self.end()
 
     @objc.python_method
-    def end(self, windowIsClosing=False):
-        self.sessionController.log_info('Ending screen sharing in statis %s' % self.status)
+    def end(self):
+        self.sessionController.log_info('Ending screen sharing in status %s' % self.status)
         self.stopButton.setHidden_(True)
-        if self.status in (STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_IDLE, STREAM_FAILED) and not windowIsClosing:
+        if self.status in (STREAM_CONNECTING, STREAM_DISCONNECTING, STREAM_CANCELLING, STREAM_IDLE, STREAM_FAILED):
             if self.statusWindow:
                 self.statusWindow.close()
                 self.statusWindow = None
-        elif self.status == STREAM_PROPOSING:
-            self.sessionController.log_info("Cancelling screen sharing...")
+        
+        if self.status == STREAM_PROPOSING:
+            self.sessionController.log_info("Cancelling screen sharing proposal...")
             self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
         elif self.status in (STREAM_CONNECTED, STREAM_INCOMING):
@@ -376,6 +382,9 @@ class ScreenSharingController(MediaStream):
 
     @objc.python_method
     def sessionStateChanged(self, newstate, detail):
+        if self.status == newstate:
+            return
+
         if newstate == STATE_DNS_FAILED:
             if self.statusWindow:
                 self.statusLabel.setStringValue_(NSLocalizedString("Error starting screen sharing session.", "Label"))
@@ -410,9 +419,8 @@ class ScreenSharingController(MediaStream):
                 url = NSURL.URLWithString_("vnc://%s:%i" % (ip, port))
                 NSWorkspace.sharedWorkspace().openURL_(url)
         else:
-            self.statusWindow.makeKeyAndOrderFront_(None)
             #self.statusItem.update(self, newstate)
-            if self.statusLabel and self.statusWindow:
+            if self.statusWindow:
                 if newstate == STREAM_CONNECTED:
                     _t = self.sessionController.titleShort
                     label = NSLocalizedString("%s requests your screen. Please confirm when asked.", "Label") % _t
@@ -433,12 +441,14 @@ class ScreenSharingController(MediaStream):
                     self.statusLabel.setStringValue_(NSLocalizedString("Offering Screen Sharing...", "Label"))
                     self.statusProgress.setHidden_(True)
                     self.stopButton.setHidden_(False)
+                    self.statusWindow.makeKeyAndOrderFront_(None)
                 elif newstate == STREAM_FAILED:
                     _t = self.sessionController.failureReason or fail_reason
                     e = NSLocalizedString("Error starting screen sharing session.", "Label")
                     label = e + "\n%s" % _t if self.sessionController.failureReason or fail_reason else e
                     self.statusLabel.setStringValue_("Screen Sharing Failed")
                     self.statusProgress.setHidden_(True)
+                    self.start_auto_close_timer()
                 elif newstate == STREAM_IDLE:
                     if self.status in (STREAM_CONNECTING, STREAM_PROPOSING):
                         self.statusLabel.setStringValue_(NSLocalizedString("Screen Sharing Failed", "Label"))
@@ -459,12 +469,12 @@ class ScreenSharingController(MediaStream):
     def start_auto_close_timer(self):
         if not self.close_timer:
             # auto-close everything in 5s
-            self.close_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(5, self, "closeWindows:", None, False)
+            self.close_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3, self, "closeWindows:", None, False)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSEventTrackingRunLoopMode)
 
     def windowShouldClose_(self, sender):
-        self.end(windowIsClosing=True)
+        self.end()
         return True
 
     def closeWindows_(self, timer):
