@@ -525,7 +525,9 @@ class SessionInfoController(NSObject):
                     if stype.startswith('SRTP/SDES'):
                         stype = stype[5:]
                 
-                    title = '%s (%s)' % (stype, self.audio_stream.stream.encryption.cipher.decode())
+                    cipher = self.audio_stream.stream.encryption.cipher
+                    cipher = cipher.decode() if isinstance(cipher, bytes) else cipher
+                    title = '%s (%s)' % (stype, cipher)
                 else:
                     title = NSLocalizedString("Not Encrypted", "Label")
 
@@ -544,7 +546,13 @@ class SessionInfoController(NSObject):
                 self.video_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.video_stream.status == STREAM_CONNECTED:
                 if self.video_stream.encryption_active:
-                    title = '%s (%s)' % (self.video_stream.stream.encryption.type, self.video_stream.stream.encryption.cipher.decode())
+                    stype = self.video_stream.stream.encryption.type
+                    if stype.startswith('SRTP/SDES'):
+                        stype = stype[5:]
+
+                    cipher = self.video_stream.stream.encryption.cipher
+                    cipher = cipher.decode() if isinstance(cipher, bytes) else cipher
+                    title = '%s (%s)' % (stype, cipher)
                 else:
                     title = NSLocalizedString("Not Encrypted", "Label")
                 self.video_status.setStringValue_(title)

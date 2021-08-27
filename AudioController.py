@@ -1392,7 +1392,7 @@ class AudioController(MediaStream):
     def updateTootip(self):
         if self.stream.local_rtp_address and self.stream.local_rtp_port and self.stream.remote_rtp_address and self.stream.remote_rtp_port:
             if self.encryption_active:
-                enc_type = '%s %s' % (self.stream.encryption.type, self.stream.encryption.cipher.decode())
+                enc_type = '%s %s' % (self.stream.encryption.type, self.stream.encryption.cipher)
             else:
                 enc_type = NSLocalizedString("None", "Label")
             
@@ -1579,7 +1579,7 @@ class AudioController(MediaStream):
     @objc.python_method
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.update_encryption_icon()
-        self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher.decode()))
+        self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
         try:
             self.sessionController.encryption['audio']
         except KeyError:
