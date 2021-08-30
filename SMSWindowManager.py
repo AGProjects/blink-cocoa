@@ -22,6 +22,8 @@ import re
 import hashlib
 import uuid
 import pgpy
+import json
+import urllib
 
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
@@ -31,16 +33,19 @@ from application.system import makedirs
 from zope.interface import implementer
 from resources import ApplicationData
 
-from sipsimple.account import AccountManager
+from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.core import SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads.iscomposing import IsComposingMessage, IsComposingDocument
 from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError
 from sipsimple.util import ISOTimestamp
-from ChatViewController import MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED
+from sipsimple.threading import run_in_thread
+
+from ChatViewController import MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 from BlinkLogger import BlinkLogger
+from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController
 from util import format_identity_to_string, html2txt, run_in_gui_thread
 
@@ -408,9 +413,194 @@ class SMSWindowManagerClass(NSObject):
         if self:
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
+            self.notification_center.add_observer(self, name="SIPAccountDidActivate")
+            self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
+            self.history = ChatHistory()
+
         return self
+
+    @objc.python_method
+    def _NH_CFGSettingsObjectDidChange(self, account, data):
+        if isinstance(account, Account):
+            if 'sms.history_token' in data.modified:
+                self.syncConversations(account)
+
+    @objc.python_method
+    def _NH_SIPAccountDidActivate(self, account, data):
+       BlinkLogger().log_info("Account %s activated" % account.id)
+       # Activate BonjourConferenceServer discovery
+       if account is not BonjourAccount():
+           self.syncConversations(account)
+
+    @objc.python_method
+    @run_in_thread('sms_sync')
+    def syncConversations(self, account):
+       if not account.sms.history_token:
+           BlinkLogger().log_info('Sync conversions token is missing for account %s' % account.id)
+           return
+
+       if not account.sms.history_url:
+           BlinkLogger().log_info('Sync conversions url is missing for account %s' % account.id)
+           return
+
+       if not account.sms.enable_replication:
+           BlinkLogger().log_info('Sync conversions is disabled for account %s' % account.id)
+           return
+
+       url = account.sms.history_url.replace("@", "%40")
+       if account.sms.history_last_id:
+           url = "%s/%s" % (url, account.sms.history_last_id)
+
+       BlinkLogger().log_info('Sync conversions from %s' % url)
+
+       req = urllib.request.Request(url, method="GET")
+       req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
+
+       try:
+           raw_response = urllib.request.urlopen(req, timeout=10)
+       except (urllib.error.URLError, TimeoutError) as e:
+           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
+       except (urllib.error.HTTPError) as e:
+           BlinkLogger().log_info('SylkServer API error for %s: %s' % (url, str(e)))
+       else:
+           try:
+               raw_data = raw_response.read().decode().replace('\\/', '/')
+           except Exception as e:
+               BlinkLogger().log_info('SylkServer API read error for %s: %s' % (url, str(e)))
+               return
+
+           try:
+               json_data = json.loads(raw_data)
+           except (TypeError, json.decoder.JSONDecodeError):
+               BlinkLogger().log_info('Error parsing SylkServer response: %s' % str(e))
+           else:
+               last_message_id = None
+               for msg in json_data['messages']:
+                   try:
+                       content_type = msg['content_type']
+                       last_message_id = msg['message_id']
+
+                       if content_type == 'application/sylk-conversation-remove':
+                           BlinkLogger().log_info('Remove conversation with %s' % msg['content'])
+                           self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
+                           self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
+                       elif content_type == 'application/sylk-message-remove':
+                           BlinkLogger().log_info('Remove message %s with %s' % (msg['message_id'], msg['contact']))
+                           self.history.delete_message(msg['message_id']);
+                       elif content_type == 'message/imdn':
+                           payload = eval(msg['content'])
+                           imdn_status = payload['state']
+                           imdn_message_id = payload['message_id']
+                           status = None
+                           if imdn_status == 'delivered':
+                               status = MSG_STATE_DELIVERED
+                           elif imdn_status == 'displayed':
+                               status = MSG_STATE_DISPLAYED
+                           elif imdn_status == 'failed':
+                               status = MSG_STATE_FAILED
+                               
+                           if status:
+                               BlinkLogger().log_info('Sync IMDN state %s for message %s' % (status, imdn_message_id))
+                               self.history.update_message_status(imdn_message_id, status)
+                       elif content_type == 'text/pgp-public-key':
+                           uri = msg['contact']
+                           content = msg['content'].encode()
+                           BlinkLogger().log_info(u"Public key from %s received" % (uri))
+                           
+                           if AccountManager().has_account(uri):
+                               BlinkLogger().log_info(u"Public key save skipped for own accounts")
+                               return
+
+                           public_key = ''
+                           start_public = False
+
+                           for l in content.decode().split("\n"):
+                               if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
+                                   start_public = True
+
+                               if l == "-----END PGP PUBLIC KEY BLOCK-----":
+                                   public_key = public_key + l + '\n'
+                                   start_public = False
+                                   break
+
+                               if start_public:
+                                   public_key = public_key + l + '\n'
+                           
+                           if public_key:
+                               public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
+                               key_file = "%s/%s.pubkey" % (self.keys_path, uri)
+                               fd = open(key_file, "wb+")
+                               fd.write(public_key.encode())
+                               fd.close()
+                               BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
+                               nc_title = NSLocalizedString("Public key", "System notification title")
+                               nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
+                               nc_body = NSLocalizedString("Public key received", "System notification title")
+                               #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                               self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
+
+                               blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+
+                               if blink_contact is not None:
+                                   contact = blink_contact.contact
+                                   contact.public_key = key_file
+                                   contact.public_key_checksum = public_key_checksum
+                                   contact.save()
+                               else:
+                                   BlinkLogger().log_info(u"No contact found to save the key")
+                           else:
+                                BlinkLogger().log_info(u"No Public key detected in the payload")
+
+                       elif content_type.startswith('text/'):
+                           if msg['direction'] == 'incoming':
+                               self.syncIncomingMessage(account, msg)
+                           elif msg['direction'] == 'outgoing':
+                               self.syncOutgoingMessage(account, msg)
+                       else:
+                           BlinkLogger().log_error("Unknown sync message type %s" % content_type)
+                           
+                   except Exception as e:
+                       BlinkLogger().log_error('Failed to sync message %s' % msg)
+                       import traceback
+                       traceback.print_exc()
+
+               if last_message_id:
+                   account.sms.history_last_id = last_message_id
+                   BlinkLogger().log_info('Sync done till %s' % last_message_id)
+                   account.save()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def syncIncomingMessage(self, account, msg):
+        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+        target = SIPURI.parse(str('sip:%s' % msg['contact']))
+        viewer = self.getWindow(target, msg['contact'], account, note_new_message=True)
+        self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
+        window = self.windowForViewer(viewer).window()
+        viewer.gotMessage(target, msg['message_id'], msg['message_id'], msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+        
+        self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def syncOutgoingMessage(self, account, msg):
+        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+        target = SIPURI.parse(str('sip:%s' % msg['contact']))
+        viewer = self.getWindow(target, msg['contact'], account, note_new_message=False)
+        self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
+        window = self.windowForViewer(viewer).window()
+        viewer.gotMessage(target, msg['message_id'], None, msg['content'].encode(), msg['content_type'], True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+        
+        if msg['state'] == 'delivered':
+            viewer.update_message_status(msg['message_id'], MSG_STATE_DELIVERED)
+        elif msg['state'] == 'displayed':
+            viewer.update_message_status(msg['message_id'], MSG_STATE_DISPLAYED)
+        elif msg['state'] == 'failed':
+            viewer.update_message_status(msg['message_id'], MSG_STATE_FAILED)
+
+        self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     def setOwner_(self, owner):
         self._owner = owner
@@ -461,6 +651,8 @@ class SMSWindowManagerClass(NSObject):
                     viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
                 elif imdn_status == 'displayed':
                     viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
+                elif imdn_status == 'failed':
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_FAILED)
 
         if not viewer and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id)
@@ -510,7 +702,6 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):
-
         is_cpim = False
         cpim_message = None
         imdn_id = str(uuid.uuid4())
@@ -639,6 +830,25 @@ class SMSWindowManagerClass(NSObject):
                 if account.id == str(data.from_header.uri).split(":")[1]:
                     self.import_key_window = ImportPrivateKeyController(account, content);
                     self.import_key_window.show()
+                return
+            elif content_type == 'application/sylk-api-token':
+                BlinkLogger().log_info('Sylk history token for %s received' % account.id)
+                try:
+                    data = json.loads(content)
+                except (TypeError, json.decoder.JSONDecodeError):
+                    pass
+                else:
+                    try:
+                        token = data['token']
+                        url = data['url']
+                    except KeyError:
+                        BlinkLogger().log_info('Failed to parse history url payload %s' % data)
+                    else:
+                        account.sms.history_token = token
+                        account.sms.history_url = url
+                        account.save()
+                        BlinkLogger().log_info('Saved history url %s' % url)
+
                 return
             elif content_type == IsComposingDocument.content_type:
                 content = cpim_message.content if is_cpim else data.body

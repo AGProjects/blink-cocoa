@@ -260,7 +260,7 @@ class PresencePublisher(object):
     def _cleanup_icons(self, account):
         try:
             address_book = account.xcap_manager.resource_lists.content['sipsimple_addressbook']
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, TypeError):
             return
         with account.xcap_manager.transaction():
             for contact in address_book[Contact, IterateItems]:

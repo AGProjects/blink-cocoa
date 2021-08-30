@@ -984,6 +984,19 @@ class ChatHistory(object, metaclass=Singleton):
             self.db.queryAll('vacuum')
             return True
 
+    @run_in_db_thread
+    def delete_message(self, msgid):
+        where =  " where msgid=%s" % ChatMessage.sqlrepr(msgid)
+        try:
+            query = "delete from chat_messages %s" % where
+            self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error("Error deleting messages from chat history table: %s" % e)
+            return False
+        else:
+            self.db.queryAll('vacuum')
+            return True
+
 
 class FileTransfer(SQLObject):
     class sqlmeta:

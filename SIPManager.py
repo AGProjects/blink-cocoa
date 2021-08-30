@@ -76,7 +76,7 @@ class SIPManager(object, metaclass=Singleton):
         self.notification_center.add_observer(self, name='XCAPManagerDidChangeState')
         self.notification_center.add_observer(self, name='TLSTransportHasChanged')
         self.notification_center.add_observer(self, name='SIPAccountManagerWillStart')
-        
+
         self.registrar_addresses = {}
         self.contact_addresses = {}
 

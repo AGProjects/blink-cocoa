@@ -224,7 +224,6 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def load_remote_public_key(self):
-    
         public_key_path = "%s/%s.pubkey" % (self.keys_path, self.remote_uri)
         
         if not os.path.exists(public_key_path):
