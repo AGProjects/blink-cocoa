@@ -34,13 +34,15 @@ from zope.interface import implementer
 from resources import ApplicationData
 
 from sipsimple.account import AccountManager, BonjourAccount, Account
-from sipsimple.core import SIPURI
+from sipsimple.core import SIPURI, Message, FromHeader, ToHeader, RouteHeader, Route
+from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads.iscomposing import IsComposingMessage, IsComposingDocument
 from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError
 from sipsimple.util import ISOTimestamp
 from sipsimple.threading import run_in_thread
+from sipsimple.threading.green import run_in_green_thread
 
 from ChatViewController import MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
@@ -415,6 +417,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
             self.notification_center.add_observer(self, name="SIPAccountDidActivate")
             self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
+            self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
             self.history = ChatHistory()
@@ -425,14 +428,59 @@ class SMSWindowManagerClass(NSObject):
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'sms.history_token' in data.modified:
-                self.syncConversations(account)
+                if sms.history_token and account.sms.history_token != sms.history_token:
+                    self.syncConversations(account)
+                else:
+                    BlinkLogger().log_info("Sync token has not changed for account %s" % account.id)
 
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
        BlinkLogger().log_info("Account %s activated" % account.id)
-       # Activate BonjourConferenceServer discovery
        if account is not BonjourAccount():
            self.syncConversations(account)
+
+    @objc.python_method
+    def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
+        if account is not BonjourAccount() and not account.sms.history_token:
+           self.requestSyncToken(account)
+
+    @objc.python_method
+    @run_in_green_thread
+    def requestSyncToken(self, account):
+        if not account.sms.enable_replication:
+            BlinkLogger().log_info('Sync conversions is disabled for account %s' % account.id)
+            return
+
+        if account.sip.outbound_proxy is not None:
+            proxy = account.sip.outbound_proxy
+            uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+            tls_name = account.sip.tls_name or proxy.host
+            BlinkLogger().log_info("Starting DNS lookup via proxy %s" % uri)
+        elif account.sip.always_use_my_proxy:
+            uri = SIPURI(host=account.id.domain)
+            tls_name = account.sip.tls_name or account.id.domain
+            BlinkLogger().log_info("Starting DNS lookup via proxy of account %s" % account.id)
+        else:
+            uri = SIPURI.parse('sip:%s' % account.id)
+
+        settings = SIPSimpleSettings()
+        lookup = DNSLookup()
+
+        try:
+           routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list).wait()
+        except DNSLookupError as e:
+           BlinkLogger().log_info('DNS Lookup error for token request: %s' % str(e))
+        else:
+            if not routes:
+               BlinkLogger().log_info('DNS Lookup failed for token request, no routes found')
+               return
+
+            route = routes[0]
+            from_uri = SIPURI.parse('sip:%s' % account.id)
+            message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), 'application/sylk-api-token', b'I need a token, please!')
+
+            message_request.send()
+            BlinkLogger().log_info('Requested sync token for account %s' % account.id)
 
     @objc.python_method
     @run_in_thread('sms_sync')
