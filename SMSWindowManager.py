@@ -829,8 +829,14 @@ class SMSWindowManagerClass(NSObject):
                 BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
                 
                 if AccountManager().has_account(uri):
-                    BlinkLogger().log_info(u"Public key save skipped for own accounts")
-                    return
+                    try:
+                        acc = AccountManager().get_account(uri);
+                    except KeyError:
+                        pass
+                    else:
+                        if (acc.enabled) {
+                            BlinkLogger().log_info(u"Public key save skipped for own accounts")
+                            return
 
                 public_key = ''
                 start_public = False
