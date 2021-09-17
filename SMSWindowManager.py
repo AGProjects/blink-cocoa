@@ -834,8 +834,8 @@ class SMSWindowManagerClass(NSObject):
                     except KeyError:
                         pass
                     else:
-                        if (acc.enabled) {
-                            BlinkLogger().log_info(u"Public key save skipped for own accounts")
+                        if acc.sms.private_key:
+                            BlinkLogger().log_info(u"Public key save skipped for accounts that have private keys")
                             return
 
                 public_key = ''
