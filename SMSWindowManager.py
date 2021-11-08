@@ -886,6 +886,10 @@ class SMSWindowManagerClass(NSObject):
                 BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))
 
                 if account.id == str(data.from_header.uri).split(":")[1]:
+                    if self.import_key_window:
+                        # close previous window
+                        self.import_key_window.close();
+                        
                     self.import_key_window = ImportPrivateKeyController(account, content);
                     self.import_key_window.show()
                 return
