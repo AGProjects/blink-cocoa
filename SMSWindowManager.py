@@ -428,10 +428,14 @@ class SMSWindowManagerClass(NSObject):
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'sms.history_token' in data.modified:
-                if sms.history_token and account.sms.history_token != sms.history_token:
+                if account.sms.history_token and account.sms.history_token != account.sms.history_token:
                     self.syncConversations(account)
                 else:
                     BlinkLogger().log_info("Sync token has not changed for account %s" % account.id)
+
+            if 'sms.enable_replication' in data.modified:
+                if account.sms.enable_replication:
+                    self.requestSyncToken(account)
 
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
@@ -477,7 +481,7 @@ class SMSWindowManagerClass(NSObject):
 
             route = routes[0]
             from_uri = SIPURI.parse('sip:%s' % account.id)
-            message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), 'application/sylk-api-token', b'I need a token, please!')
+            message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), 'application/sylk-api-token', b'I need a sync token, please!', credentials=account.credentials)
 
             message_request.send()
             BlinkLogger().log_info('Requested sync token for account %s' % account.id)
