@@ -476,10 +476,13 @@ class FancyTabSwitcher(NSView):
             self.rightButton.setHidden_(False)
 
             x += 20
-            for item in self.items[self.firstVisible : self.firstVisible + self.fitTabCount]:
-                item.setHidden_(False)
-                item.setFrame_(NSMakeRect(x, 2, tab_width, h))
-                x += tab_width
+            try:
+                for item in self.items[self.firstVisible : self.firstVisible + self.fitTabCount]:
+                    item.setHidden_(False)
+                    item.setFrame_(NSMakeRect(x, 2, tab_width, h))
+                    x += tab_width
+            except TypeError:
+                return
 
             for item in self.items[self.firstVisible + self.fitTabCount :]:
                 item.setHidden_(True)
