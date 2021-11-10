@@ -653,7 +653,23 @@ class ChatHistory(object, metaclass=Singleton):
 
             return True
         except Exception as e:
-            BlinkLogger().log_error("Error updating message %s: %s" % (msgid, e))
+            pass
+            #BlinkLogger().log_error("Error updating message %s: %s" % (msgid, e))
+
+    @run_in_db_thread
+    def update_decrypted_message(self, msgid, body, encryption='verified'):
+        try:
+            results = ChatMessage.selectBy(msgid=msgid)
+            message = results.getOne()
+            if message:
+                message.body = body
+                message.encryption = encryption
+            else:
+                BlinkLogger().log_error("Error updating message %s: not found" % msgid)
+
+            return True
+        except Exception as e:
+            BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
 
 
     @run_in_db_thread

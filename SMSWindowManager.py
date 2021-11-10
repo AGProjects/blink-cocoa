@@ -44,7 +44,7 @@ from sipsimple.util import ISOTimestamp
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 
-from ChatViewController import MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
+from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
@@ -409,6 +409,8 @@ class SMSWindowManagerClass(NSObject):
     windows = []
     received_call_ids = set()
     pending_outgoing_messages = {}
+    import_key_window = None
+    syncConversationsInProgress = {}
 
     def init(self):
         self = objc.super(SMSWindowManagerClass, self).init()
@@ -428,10 +430,23 @@ class SMSWindowManagerClass(NSObject):
     def _NH_CFGSettingsObjectDidChange(self, account, data):
         if isinstance(account, Account):
             if 'sms.history_token' in data.modified:
-                if account.sms.history_token and account.sms.history_token != account.sms.history_token:
+                if account.sms.history_token:
+                    BlinkLogger().log_info("Sync token for account %s has been updated" % account.id)
                     self.syncConversations(account)
                 else:
-                    BlinkLogger().log_info("Sync token has not changed for account %s" % account.id)
+                    BlinkLogger().log_info("Sync token for account %s has been removed" % account.id)
+                    account.sms.history_last_id = None
+                    account.sms.enable_replication = False
+                    account.save()
+
+            if 'sms.history_url' in data.modified:
+                if account.sms.history_url:
+                    BlinkLogger().log_info("Sync url for account %s has been updated: %s" % (account.id, account.sms.history_url))
+                else:
+                    account.sms.history_last_id = None
+                    account.sms.history_token = None
+                    account.sms.enable_replication = False
+                    account.save()
 
             if 'sms.enable_replication' in data.modified:
                 if account.sms.enable_replication:
@@ -440,13 +455,11 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
        BlinkLogger().log_info("Account %s activated" % account.id)
-       if account is not BonjourAccount():
-           self.syncConversations(account)
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
-        if account is not BonjourAccount() and not account.sms.history_token:
-           self.requestSyncToken(account)
+        if account is not BonjourAccount():
+           self.syncConversations(account)
 
     @objc.python_method
     @run_in_green_thread
@@ -491,6 +504,7 @@ class SMSWindowManagerClass(NSObject):
     def syncConversations(self, account):
        if not account.sms.history_token:
            BlinkLogger().log_info('Sync conversions token is missing for account %s' % account.id)
+           self.requestSyncToken(account)
            return
 
        if not account.sms.history_url:
@@ -500,11 +514,18 @@ class SMSWindowManagerClass(NSObject):
        if not account.sms.enable_replication:
            BlinkLogger().log_info('Sync conversions is disabled for account %s' % account.id)
            return
+           
+       try:
+           self.syncConversationsInProgress[account.id]
+       except KeyError:
+           self.syncConversationsInProgress[account.id] = True
+       else:
+           return
 
        url = account.sms.history_url.replace("@", "%40")
        if account.sms.history_last_id:
            url = "%s/%s" % (url, account.sms.history_last_id)
-
+           
        BlinkLogger().log_info('Sync conversions from %s' % url)
 
        req = urllib.request.Request(url, method="GET")
@@ -514,13 +535,25 @@ class SMSWindowManagerClass(NSObject):
            raw_response = urllib.request.urlopen(req, timeout=10)
        except (urllib.error.URLError, TimeoutError) as e:
            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
+           try:
+               del self.syncConversationsInProgress[account.id]
+           except KeyError:
+               pass
        except (urllib.error.HTTPError) as e:
            BlinkLogger().log_info('SylkServer API error for %s: %s' % (url, str(e)))
+           try:
+               del self.syncConversationsInProgress[account.id]
+           except KeyError:
+               pass
        else:
            try:
                raw_data = raw_response.read().decode().replace('\\/', '/')
            except Exception as e:
                BlinkLogger().log_info('SylkServer API read error for %s: %s' % (url, str(e)))
+               try:
+                   del self.syncConversationsInProgress[account.id]
+               except KeyError:
+                   pass
                return
 
            try:
@@ -529,6 +562,8 @@ class SMSWindowManagerClass(NSObject):
                BlinkLogger().log_info('Error parsing SylkServer response: %s' % str(e))
            else:
                last_message_id = None
+               BlinkLogger().log_info('Sync %d message journal entries for %s' % (len(json_data['messages']), account.id))
+
                for msg in json_data['messages']:
                    try:
                        content_type = msg['content_type']
@@ -607,9 +642,9 @@ class SMSWindowManagerClass(NSObject):
 
                        elif content_type.startswith('text/'):
                            if msg['direction'] == 'incoming':
-                               self.syncIncomingMessage(account, msg)
+                               self.syncIncomingMessage(account, msg, account.sms.history_last_id)
                            elif msg['direction'] == 'outgoing':
-                               self.syncOutgoingMessage(account, msg)
+                               self.syncOutgoingMessage(account, msg, account.sms.history_last_id)
                        else:
                            BlinkLogger().log_error("Unknown sync message type %s" % content_type)
                            
@@ -618,6 +653,11 @@ class SMSWindowManagerClass(NSObject):
                        import traceback
                        traceback.print_exc()
 
+               try:
+                   del self.syncConversationsInProgress[account.id]
+               except KeyError:
+                   pass
+
                if last_message_id:
                    account.sms.history_last_id = last_message_id
                    BlinkLogger().log_info('Sync done till %s' % last_message_id)
@@ -625,25 +665,87 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def syncIncomingMessage(self, account, msg):
+    def syncIncomingMessage(self, account, msg, last_id=None):
         BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
         target = SIPURI.parse(str('sip:%s' % msg['contact']))
-        viewer = self.getWindow(target, msg['contact'], account, note_new_message=True)
+        
+        if not last_id:
+            direction = 'incoming'
+
+            if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
+                encryption = 'pgp_encrypted'
+            else:
+                encryption = ''
+
+            if 'display' not in msg['disposition']:
+                state = MSG_STATE_DISPLAYED
+            else:
+                state = MSG_STATE_DELIVERED
+
+            self.history.add_message(msg['message_id'],
+                                   'sms',
+                                    str(account.id),
+                                    msg['contact'],
+                                    direction,
+                                    msg['contact'],
+                                    str(account.id),
+                                    msg['timestamp'],
+                                    msg['content'],
+                                    msg['content_type'],
+                                    "0",
+                                    state,
+                                    call_id=msg['message_id'],
+                                    encryption=encryption)
+            return
+
+        viewer = self.getWindow(target, msg['contact'], account, note_new_message=bool(last_id))
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         window = self.windowForViewer(viewer).window()
         viewer.gotMessage(target, msg['message_id'], msg['message_id'], msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
-        
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     @objc.python_method
     @run_in_gui_thread
-    def syncOutgoingMessage(self, account, msg):
-        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+    def syncOutgoingMessage(self, account, msg, last_id=None):
+        BlinkLogger().log_info('Sync %s state=%s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+
+        if not last_id:
+            direction = 'outgoing'
+            state = MSG_STATE_SENT
+
+            if msg['state'] == 'delivered':
+                state = MSG_STATE_DELIVERED
+            elif msg['state'] == 'displayed':
+                state = MSG_STATE_DISPLAYED
+            elif msg['state'] == 'failed':
+                state = MSG_STATE_FAILED
+                
+            if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
+                encryption = 'pgp_encrypted'
+            else:
+                encryption = ''
+
+            self.history.add_message(msg['message_id'],
+                                    'sms',
+                                    str(account.id),
+                                    msg['contact'],
+                                    direction,
+                                    str(account.id),
+                                    msg['contact'],
+                                    msg['timestamp'],
+                                    msg['content'],
+                                    msg['content_type'],
+                                    "0",
+                                    state,
+                                    call_id=msg['message_id'],
+                                    encryption=encryption)
+        return
+
         target = SIPURI.parse(str('sip:%s' % msg['contact']))
         viewer = self.getWindow(target, msg['contact'], account, note_new_message=False)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(target, msg['message_id'], None, msg['content'].encode(), msg['content_type'], True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+        viewer.gotMessage(target, msg['message_id'], msg['message_id'], msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
         
         if msg['state'] == 'delivered':
             viewer.update_message_status(msg['message_id'], MSG_STATE_DELIVERED)
@@ -652,7 +754,8 @@ class SMSWindowManagerClass(NSObject):
         elif msg['state'] == 'failed':
             viewer.update_message_status(msg['message_id'], MSG_STATE_FAILED)
 
-        self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+        if (last_id):
+            self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     def setOwner_(self, owner):
         self._owner = owner
@@ -886,11 +989,48 @@ class SMSWindowManagerClass(NSObject):
                 BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))
 
                 if account.id == str(data.from_header.uri).split(":")[1]:
+                    public_key = ''
+                    private_key_encrypted = ''
+
+                    start_public = False
+                    start_private = False
+
+                    for l in content.decode().split("\n"):
+                        if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
+                            start_public = True
+
+                        if l == "-----BEGIN PGP MESSAGE-----":
+                            start_public = False
+                            start_private = True
+
+                        if start_public:
+                            public_key = public_key + l + "\n"
+
+                        if start_private:
+                            private_key_encrypted = private_key_encrypted + l + "\n"
+
+                    public_key_path = "%s/%s.pubkey" % (self.keys_path, account.id)
+
+                    try:
+                        _public_key, _ = pgpy.PGPKey.from_file(public_key_path)
+                    except Exception as e:
+                        self.log_info('Cannot import my own PGP public key: %s' % str(e))
+                    else:
+                        print(_public_key)
+                        print(public_key)
+                        if _public_key == public_key:
+                            self.log_info('PGP key is the same')
+                            return
+                    
+                    if not private_key_encrypted:
+                        self.log_info('PGP private key not found')
+                        return
+
                     if self.import_key_window:
-                        # close previous window
-                        self.import_key_window.close();
-                        
-                    self.import_key_window = ImportPrivateKeyController(account, content);
+                        self.import_key_window.update(account, public_key, private_key_encrypted);
+                    else:
+                        self.import_key_window = ImportPrivateKeyController(account, public_key, private_key_encrypted);
+
                     self.import_key_window.show()
                 return
             elif content_type == 'application/sylk-api-token':
@@ -909,6 +1049,7 @@ class SMSWindowManagerClass(NSObject):
                         account.sms.history_token = token
                         account.sms.history_url = url
                         account.save()
+                        self.syncConversations(account)
                         BlinkLogger().log_info('Saved history url %s' % url)
 
                 return
@@ -964,116 +1105,77 @@ class ImportPrivateKeyController(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, account, encryptedKeyPair):
+    def __init__(self, account, public_key, private_key_encrypted):
         NSBundle.loadNibNamed_owner_("ImportPrivateKeyWindow", self)
         self.keys_path = ApplicationData.get('keys')
         makedirs(self.keys_path)
 
         self.account = account;
-        self.encryptedKeyPair = encryptedKeyPair;
+        self.private_key_encrypted = private_key_encrypted
+        self.public_key = public_key
 
-        self.checksum.setStringValue_('');
+        self.checksum.setStringValue_('')
         self.importButton.setEnabled_(False)
         self.window.makeFirstResponder_(self.pincode)
         self.status.setTextColor_(NSColor.blackColor())
 
         self.status.setStringValue_(NSLocalizedString("Enter pincode to decrypt the key", "status label"));
-            
+
+    @objc.python_method
+    def update(self, account, private_key_encrypted):
+        self.account = account
+        self.public_key = public_key
+        self.private_key_encrypted = private_key_encrypted
+        self.checksum.setStringValue_('')
+        self.importButton.setEnabled_(False)
+        self.window.makeFirstResponder_(self.pincode)
+
     @objc.IBAction
     def importButtonClicked_(self, sender):
-        BlinkLogger().log_info("Import private key...")
         pincode = str(self.pincode.stringValue()).strip()
+        BlinkLogger().log_info("Importing private key...")
 
         try:
-            pgpMessage = pgpy.PGPMessage.from_blob(self.encryptedKeyPair)
+            pgpMessage = pgpy.PGPMessage.from_blob(self.private_key_encrypted.encode())
             decryptedKeyPair = pgpMessage.decrypt(pincode)
-            keyPair = decryptedKeyPair.message
-        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
-            self.status.setTextColor_(NSColor.redColor())
+            private_key = decryptedKeyPair.message
+
+            BlinkLogger().log_info("Private decrypted")
+
+            self.importButton.setEnabled_(False)
+            BlinkLogger().log_info("Key imported sucessfully")
+            
+            private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
+            fd = open(private_key_path, "wb+")
+            fd.write(private_key.encode())
+            fd.close()
+            BlinkLogger().log_info("Private key saved to %s" % private_key_path)
+
+            public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
+            fd = open(public_key_path, "wb+")
+            fd.write(self.public_key.encode())
+            fd.close()
+            BlinkLogger().log_info("Public key saved to %s" % public_key_path)
+
+            self.account.sms.private_key = private_key_path
+            self.account.sms.public_key = public_key_path
+            self.account.sms.public_key_checksum = hashlib.sha1(self.public_key.encode()).hexdigest()
+            self.account.save()
+
+            if self.dealloc_timer is None:
+                self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+                NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+
+#        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+        except Exception as e:
             BlinkLogger().log_error("Import private key failed: %s" % str(e))
             self.status.setStringValue_(NSLocalizedString("Key import failed: %s", "status label") % str(e));
+            self.status.setTextColor_(NSColor.redColor())
         else:
-            try:
-                public_key_checksum_match = re.findall(r"--PUBLIC KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
-                private_key_checksum_match = re.findall(r"--PRIVATE KEY SHA1 CHECKSUM--(\w+)--",  keyPair)
-                
-                if (public_key_checksum_match):
-                    public_key_checksum = public_key_checksum_match[0]
-                else:
-                    public_key_checksum = None
+            self.status.setTextColor_(NSColor.greenColor())
+            self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
 
-                if (private_key_checksum_match):
-                    private_key_checksum = private_key_checksum_match[0]
-                else:
-                    private_key_checksum = None
-
-                public_key = ''
-                private_key = ''
-
-                start_public = False
-                start_private = False
-
-                for l in keyPair.split("\n"):
-                    if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
-                        start_public = True
-                        start_private = False
-
-                    if l == "-----END PGP PUBLIC KEY BLOCK-----":
-                        public_key = public_key + l
-                        start_public = False
-                        start_private = False
-
-                    if l == "-----BEGIN PGP PRIVATE KEY BLOCK-----":
-                        start_public = False
-                        start_private = True
-
-                    if l == "-----END PGP PRIVATE KEY BLOCK-----":
-                        private_key = private_key + l
-                        start_public = False
-                        start_private = False
-
-                    if start_public:
-                        public_key = public_key + l + '\n'
-
-                    if start_private:
-                        private_key = private_key + l + '\n'
-                        
-                if (public_key and private_key and public_key_checksum):
-                    self.importButton.setEnabled_(False)
-                    BlinkLogger().log_info("Key imported sucessfully")
-                    self.status.setTextColor_(NSColor.greenColor())
-                    self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
-                    self.checksum.setStringValue_(public_key_checksum);
-                    
-                    private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
-                    fd = open(private_key_path, "wb+")
-                    fd.write(private_key.encode())
-                    fd.close()
-                    BlinkLogger().log_info("Private key saved to %s" % private_key_path)
-
-                    public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
-                    fd = open(public_key_path, "wb+")
-                    fd.write(public_key.encode())
-                    fd.close()
-                    BlinkLogger().log_info("Public key saved to %s" % public_key_path)
-
-                    self.account.sms.private_key = private_key_path
-                    self.account.sms.public_key = public_key_path
-                    self.account.sms.public_key_checksum = public_key_checksum
-                    self.account.save()
-
-                    if self.dealloc_timer is None:
-                        self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)
-                        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
-                        NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
-                    
-                else:
-                    BlinkLogger().log_error("Key import failed")
-                    self.status.setStringValue_(NSLocalizedString("Key import failed", "status label"));
-                    self.status.setTextColor_(NSColor.redColor())
-            except Exception:
-                import traceback
-                traceback.print_exc()
 
     def deallocTimer_(self, timer):
         self.dealloc_timer.invalidate()

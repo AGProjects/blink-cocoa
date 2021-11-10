@@ -586,7 +586,7 @@ class SMSViewController(NSObject):
         self.log_info("My message %s was %s" % (msgid, status))
         self.chatViewController.markMessage(msgid, status)
         self.history.update_message_status(msgid, status)
-    
+
     @objc.python_method
     def add_to_history(self, message):
         self.log_info('Message %s saved with status %s' % (message.id, message.status))
@@ -1323,7 +1323,25 @@ class SMSViewController(NSObject):
             
             components = sipuri_components_from_string(message.cpim_from)
             recipient = components[1] or components[0] or message.cpim_from
-            self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, recipient, icon, message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
+            content = None
+            encryption = None
+            
+            if message.body.strip().startswith('-----BEGIN PGP MESSAGE-----') and message.body.strip().endswith('-----END PGP MESSAGE-----'):
+                if not self.private_key:
+                    content = 'Encrypted message for which we have no private key'
+                else:
+                    try:
+                        pgpMessage = pgpy.PGPMessage.from_blob(message.body.strip())
+                        decrypted_message = self.private_key.decrypt(pgpMessage)
+                    except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                        content = 'Encrypted message for which we have no private key'
+                    else:
+                        print('Message %s was decrypted' % message.id)
+                        content = str(decrypted_message.message)
+                        encryption = 'verified'
+                        self.history.update_decrypted_message(message.msgid, content)
+
+            self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, recipient, icon, content or message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
