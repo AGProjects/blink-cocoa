@@ -591,6 +591,7 @@ class SMSWindowManagerClass(NSObject):
                            if status:
                                BlinkLogger().log_info('Sync IMDN state %s for message %s' % (status, imdn_message_id))
                                self.history.update_message_status(imdn_message_id, status)
+                               # TODO: if sync partial and window is open, update the UI status
                        elif content_type == 'text/pgp-public-key':
                            uri = msg['contact']
                            content = msg['content'].encode()
@@ -628,17 +629,9 @@ class SMSWindowManagerClass(NSObject):
                                #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
                                self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
 
-                               blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
-
-                               if blink_contact is not None:
-                                   contact = blink_contact.contact
-                                   contact.public_key = key_file
-                                   contact.public_key_checksum = public_key_checksum
-                                   contact.save()
-                               else:
-                                   BlinkLogger().log_info(u"No contact found to save the key")
+                               this.saveContact(uri, key_file, public_key_checksum)
                            else:
-                                BlinkLogger().log_info(u"No Public key detected in the payload")
+                                BlinkLogger().log_info(u"No public key detected in the payload")
 
                        elif content_type.startswith('text/'):
                            if msg['direction'] == 'incoming':
@@ -662,6 +655,18 @@ class SMSWindowManagerClass(NSObject):
                    account.sms.history_last_id = last_message_id
                    BlinkLogger().log_info('Sync done till %s' % last_message_id)
                    account.save()
+
+    @objc.python_method
+    def saveContact(uri, key_file=None, public_key_checksum=None):
+        blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+
+        if blink_contact is not None:
+            contact = blink_contact.contact
+            contact.public_key = key_file
+            contact.public_key_checksum = public_key_checksum
+            contact.save()
+        else:
+            BlinkLogger().log_info(u"No contact found to save the key")
 
     @objc.python_method
     @run_in_gui_thread
@@ -866,7 +871,6 @@ class SMSWindowManagerClass(NSObject):
         call_id = data.headers.get('Call-ID', Null).body
         is_replication_message = data.headers.get('X-Replicated-Message', Null).body
         instance_id = data.from_header.uri.parameters.get('instance_id', None)
-
         try:
             self.received_call_ids.remove(call_id)
         except KeyError:
@@ -881,16 +885,19 @@ class SMSWindowManagerClass(NSObject):
             if is_replication_message:
                 account = AccountManager().find_account(data.from_header.uri)
             else:
-                account = AccountManager().find_account(data.request_uri)
+                account = AccountManager().find_account(data.to_header.uri)
         else:
             account = BonjourAccount()
 
         if not account:
-            BlinkLogger().log_warning("Could not find local account for incoming message to %s, using default" % data.request_uri)
+            BlinkLogger().log_warning("Could not find local account for incoming message to %s, using default" % data.to_header.uri)
             account = AccountManager().default_account
+        else:
+            BlinkLogger().log_info("Found account %s for message" % account.id)
 
         if data.content_type == 'message/cpim':
             is_cpim = True
+            imdn_id = None
 
             try:
                 cpim_message = CPIMPayload.decode(data.body)
@@ -901,38 +908,41 @@ class SMSWindowManagerClass(NSObject):
                 content = cpim_message.content
                 content_type = cpim_message.content_type
 
-                if is_replication_message:
-                    sender_identity = cpim_message.sender or data.to_header
-                    window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
-                else:
-                    sender_identity = cpim_message.sender or data.from_header
-                    window_tab_identity = data.from_header
-
                 imdn_timestamp = cpim_message.timestamp
+
                 for h in cpim_message.additional_headers:
                     if h.name == "Message-ID":
                         imdn_id = h.value
                     if h.name == "Disposition-Notification":
                         cpim_imdn_events = h.value
+                
+                if is_replication_message:
+                    sender_identity = cpim_message.sender or data.from_header
+                    window_tab_identity = cpim_message.recipients[0] if cpim_message.recipients else data.to_header
+                else:
+                    sender_identity = cpim_message.sender or data.from_header
+                    window_tab_identity = cpim_message.sender or data.from_header
+
         else:
             content = data.body
             content_type = data.content_type
-            sender_identity = data.to_header if is_replication_message else data.from_header
-            window_tab_identity = sender_identity
+            sender_identity = data.from_header
+            window_tab_identity = data.to_header if is_replication_message else data.from_header
 
         note_new_message = False
 
         if is_replication_message:
-            if content_type not in ('text/plain', 'text/html'):
-                #BlinkLogger().log_info('Discard replicated %s message' % content_type)
-                return
-                
-            BlinkLogger().log_info('Replication of %s message %s from %s to %s' % (imdn_id, content_type, account.id, format_identity_to_string(sender_identity)))
-        else:
-            BlinkLogger().log_info('Incoming %s message %s from %s to %s received (CAll-id %s)' % (content_type, imdn_id,  format_identity_to_string(sender_identity), account.id, call_id))
+            BlinkLogger().log_info("Outgoing %s replicated message %s %s -> %s" % (content_type, imdn_id, sender_identity, window_tab_identity))
 
+            if content_type not in ('text/plain', 'text/html'):
+                BlinkLogger().log_info('Discard %s replicated message payload' % content_type)
+                return
+            uri = format_identity_to_string(window_tab_identity)
+        else:
+            BlinkLogger().log_info("Incoming %s message %s %s -> %s" % (content_type, imdn_id, sender_identity, account.id))
+
+            uri = format_identity_to_string(sender_identity)
             if content_type == 'text/pgp-public-key':
-                uri = format_identity_to_string(sender_identity)
                 BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
                 
                 if AccountManager().has_account(uri):
@@ -972,16 +982,8 @@ class SMSWindowManagerClass(NSObject):
                     nc_body = NSLocalizedString("Public key received", "System notification title")
                     #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
                     self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
-
-                    blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
-
-                    if blink_contact is not None:
-                        contact = blink_contact.contact
-                        contact.public_key = key_file
-                        contact.public_key_checksum = public_key_checksum
-                        contact.save()
-                    else:
-                        BlinkLogger().log_info(u"No contact found to save the key")
+                    
+                    this.saveContact(uri, key_file, public_key_checksum)
                 else:
                      BlinkLogger().log_info(u"No Public key detected in the payload")
                 return
@@ -1012,16 +1014,16 @@ class SMSWindowManagerClass(NSObject):
                     public_key_path = "%s/%s.pubkey" % (self.keys_path, account.id)
 
                     try:
-                        _public_key, _ = pgpy.PGPKey.from_file(public_key_path)
+                        _public_key = open(public_key_path, 'rb').read()
                     except Exception as e:
-                        self.log_info('Cannot import my own PGP public key: %s' % str(e))
+                        BlinkLogger().log_info('Cannot import my own PGP public key: %s' % str(e))
                     else:
-                        print(_public_key)
-                        print(public_key)
-                        if _public_key == public_key:
-                            self.log_info('PGP key is the same')
+                        if _public_key.decode().strip() == public_key.strip():
+                            BlinkLogger().log_info('PGP keys are the same')
                             return
-                    
+                        else:
+                            BlinkLogger().log_info('PGP keys differ')
+
                     if not private_key_encrypted:
                         self.log_info('PGP private key not found')
                         return
@@ -1075,7 +1077,7 @@ class SMSWindowManagerClass(NSObject):
                 return
 
             elif content_type not in ('text/plain', 'text/html'):
-                BlinkLogger().log_warning('Incoming message type %s from %s to %s is not supported' % (content_type, format_identity_to_string(sender_identity), account.id))
+                BlinkLogger().log_warning('Incoming message type %s was dropped - not supported' % content_type)
                 return
             else:
                 note_new_message = True
@@ -1122,7 +1124,7 @@ class ImportPrivateKeyController(NSObject):
         self.status.setStringValue_(NSLocalizedString("Enter pincode to decrypt the key", "status label"));
 
     @objc.python_method
-    def update(self, account, private_key_encrypted):
+    def update(self, account, public_key, private_key_encrypted):
         self.account = account
         self.public_key = public_key
         self.private_key_encrypted = private_key_encrypted
@@ -1176,7 +1178,6 @@ class ImportPrivateKeyController(NSObject):
             self.status.setTextColor_(NSColor.greenColor())
             self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
 
-
     def deallocTimer_(self, timer):
         self.dealloc_timer.invalidate()
         self.dealloc_timer = None
@@ -1194,4 +1195,13 @@ class ImportPrivateKeyController(NSObject):
         self.window.makeKeyAndOrderFront_(None)
 
     def close(self):
+        print('import close')
         self.window.close()
+
+    def close_(self, sender):
+        print('import _close')
+        self.window.close()
+
+    def dealloc(self):
+        print('import dealloc')
+        objc.super(ImportPrivateKeyController, self).dealloc()

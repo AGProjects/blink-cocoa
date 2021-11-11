@@ -2928,6 +2928,14 @@ class ContactListModel(CustomListModel):
                 NSRunAlertPanel(NSLocalizedString("Contacts Backup", "Window title"), NSLocalizedString("There are no contacts available for backup.", "Label"), NSLocalizedString("OK", "Button title"), None, None)
 
     @objc.python_method
+    def addContactFromUri(self, uri, displayName=None):
+        contact = Contact()
+        contact.uris.add(ContactURI(uri=uri, type='SIP'))
+        contact.name = displayName or uri
+        contact.preferred_media = 'messages'
+        contact.save()
+
+    @objc.python_method
     def restore_contacts(self, backup):
         restored_contacts = 0
         restored_groups = 0

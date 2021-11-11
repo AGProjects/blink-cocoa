@@ -189,6 +189,8 @@ class SMSViewController(NSObject):
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
             self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
+            if not self.contact:
+                NSApp.delegate().contactsWindowController.model.addContactFromUri(self.remote_uri)
 
             self.load_remote_public_key()
 
@@ -421,7 +423,7 @@ class SMSViewController(NSObject):
                             self.sendIMDNNotification(id, 'failed')
                         return
                     else:
-                        self.log_error('PGP message %s decrypted' % id)
+                        self.log_info('PGP message %s decrypted' % id)
                         if not self.pgp_encrypted:
                             self.pgp_encrypted = True
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
@@ -491,13 +493,15 @@ class SMSViewController(NSObject):
             else:
                 encryption = ''
 
-            self.chatViewController.showMessage(call_id, msg_id, direction, format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state="sent", media_type='sms', encryption=encryption)
+            status = MSG_STATE_SENT if is_replication_message else MSG_STATE_DELIVERED
+            self.chatViewController.showMessage(call_id, msg_id, direction, format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
             self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             # save to history
-            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=self.account, timestamp=timestamp, content=content, content_type=content_type, status=MSG_STATE_DELIVERED, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
-
+            recipient = ChatIdentity(self.target_uri, self.display_name)
+            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
+            
             self.add_to_history(message)
 
             if require_displayed_notification:
@@ -598,7 +602,7 @@ class SMSViewController(NSObject):
         
         remote_uri = self.instance_id if (self.account is BonjourAccount() and self.instance_id) else self.remote_uri
 
-        self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), content_type, "0", message.status, call_id=message.call_id)
+        self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
 
     @objc.python_method
     def sendIMDNNotification(self, message_id, event):
