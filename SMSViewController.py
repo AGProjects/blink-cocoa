@@ -46,8 +46,6 @@ from dateutil.parser._parser import ParserError as DateParserError
 from zope.interface import implementer
 from resources import ApplicationData
 
-
-
 from otr import OTRTransport, OTRState, SMPStatus
 from otr.exceptions import IgnoreMessage, UnencryptedMessage, EncryptedMessageError, OTRError, OTRFinishedError
 
@@ -383,20 +381,20 @@ class SMSViewController(NSObject):
         return m
 
     @objc.python_method
-    def gotMessage(self, sender, id, call_id, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None):
+    def gotMessage(self, sender, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None):
     
         if id in self.sent_readable_messages:
             self.log_info('Discard message %s that looped back to myself' % id)
             return
 
-        message_tuple = (sender, id, call_id, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id)
+        message_tuple = (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id)
 
         self.render_queue.put(message_tuple)
 
     @objc.python_method
     def _render_message(self, message_tuple):
-        (sender, id, call_id, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id) = message_tuple
-       
+        (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id) = message_tuple
+        
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
             require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
@@ -471,7 +469,11 @@ class SMSViewController(NSObject):
                 return None
 
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
-            timestamp = ISOTimestamp.now()
+            try:
+                timestamp=ISOTimestamp(imdn_timestamp)
+            except DateParserError as e:
+                self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
+                timestamp = ISOTimestamp.now()
 
             self.log_info("Incoming message %s message %s received (Call-ID %s)" % (content_type, id, call_id))
             if require_delivered_notification:
@@ -483,7 +485,6 @@ class SMSViewController(NSObject):
                 nc_subtitle = format_identity_to_string(sender, format='full')
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-            direction = 'outgoing' if is_replication_message else 'incoming'
             msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
 
             if encrypted:
@@ -499,7 +500,7 @@ class SMSViewController(NSObject):
             self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             # save to history
-            recipient = ChatIdentity(self.target_uri, self.display_name)
+            recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
             message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
             
             self.add_to_history(message)
@@ -868,6 +869,7 @@ class SMSViewController(NSObject):
             if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=30):
                 return
     
+        pgp_encrypted = False
         if (not self.last_route):
             message.status = MSG_STATE_FAILED
             reason = 'No routes found'
@@ -946,6 +948,9 @@ class SMSViewController(NSObject):
                     if self.pgp_encrypted:
                         self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
                         self.pgp_encrypted = False
+                else:
+                    self.log_info('Message %s encrypted using PGP' % message.id)
+                    pgp_encrypted = True
 
             payload = CPIMPayload(content,
                                   message.content_type,
@@ -988,7 +993,7 @@ class SMSViewController(NSObject):
         self.add_pending_outgoing_message(str(message_request), pending_message_id, imdn_status)
 
         if message.content_type not in (IsComposingDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key') and not isinstance(message, OTRInternalMessage):
-            if self.encryption.active or self.pgp_encrypted:
+            if self.encryption.active or pgp_encrypted:
                 self.log_info('%s encrypted message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
             else:
                 self.log_info('%s message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
@@ -1025,7 +1030,7 @@ class SMSViewController(NSObject):
                     self.log_error('Pending notification for %s was not found' % str(sender))
                     #self.log_info(self.pending_outgoing_messages.keys())
                 else:
-                    self.log_info('%s notification for %s was sent' % (event, message_id))
+                    self.log_info('IMDN %s notification for %s was sent' % (event, message_id))
                     if event in ('delivered', 'displayed'):
                         self.history.update_message_status(message_id, event, direction='incoming')
                         return

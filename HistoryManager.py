@@ -50,6 +50,9 @@ from EncryptionWrappers import encrypt, decrypt
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
 
+from dateutil.parser._parser import ParserError as DateParserError
+import dateutil.parser
+
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI
@@ -647,15 +650,16 @@ class ChatHistory(object, metaclass=Singleton):
             if message:
                 if message.status != 'displayed' and message.status != status:
                     message.status = status
-                    BlinkLogger().log_debug("Updated message %s to %s" % (msgid, status))
+                    #BlinkLogger().log_info("Updated message %s to %s" % (msgid, status))
             else:
-                BlinkLogger().log_error("Error updating message %s: not found" % msgid)
+                pass
+                #BlinkLogger().log_error("Error updating message %s status: not found" % msgid)
 
             return True
         except Exception as e:
-            pass
             #BlinkLogger().log_error("Error updating message %s: %s" % (msgid, e))
-
+            pass
+ 
     @run_in_db_thread
     def update_decrypted_message(self, msgid, body, encryption='verified'):
         try:
@@ -669,61 +673,25 @@ class ChatHistory(object, metaclass=Singleton):
 
             return True
         except Exception as e:
-            BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
+            pass
+            #BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
 
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
     
-        body = body.encode().decode()
+        try:
+            timestamp = dateutil.parser.isoparse(cpim_timestamp)
+        except ValueError as e:
+            self.log_error('Failed to parse timestamp %s for message id %s: %s' % (cpim_timestamp, msgid, str(e)))
+            timestamp = datetime.utcnow()
 
         try:
-            if not journal_id and not skip_replication:
-                settings = SIPSimpleSettings()
-                uuid = settings.instance_id
-                time_entry          = datetime.utcnow()
-                date_entry          = datetime.utcnow().date()
-                journal_entry= {
-                    'msgid'               : msgid,
-                    'time'                : time_entry.strftime("%Y-%m-%d %H:%M:%S"),
-                    'date'                : date_entry.strftime("%Y-%m-%d"),
-                    'media_type'          : media_type,
-                    'direction'           : direction,
-                    'local_uri'           : local_uri,
-                    'remote_uri'          : remote_uri,
-                    'cpim_from'           : cpim_from,
-                    'cpim_to'             : cpim_to,
-                    'cpim_timestamp'      : cpim_timestamp,
-                    'body'                : body,
-                    'content_type'        : content_type,
-                    'private'             : private,
-                    'status'              : status,
-                    'call_id'             : call_id,
-                    'encryption'          : encryption
-                }
-
-                notification_center = NotificationCenter()
-                notification_center.post_notification('ChatReplicationJournalEntryAdded', sender=self, data=NotificationData(entry=journal_entry))
-            else:
-                try:
-                    time_entry = datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
-                    date_entry          = time_entry.date()
-                except Exception:
-                    time_entry          = datetime.utcnow()
-                    date_entry          = datetime.utcnow().date()
-
-            if call_id and media_type == 'sms':
-                try:
-                    results = ChatMessage.selectBy(sip_callid=call_id)
-                    message = results.getOne()
-                except SQLObjectNotFound:
-                    pass
-
             ChatMessage(
                           msgid               = msgid,
                           sip_callid          = call_id,
-                          time                = time_entry,
-                          date                = date_entry,
+                          time                = timestamp,
+                          date                = timestamp.date(),
                           media_type          = media_type,
                           direction           = direction,
                           local_uri           = local_uri,
