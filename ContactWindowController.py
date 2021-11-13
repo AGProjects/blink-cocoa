@@ -5560,7 +5560,15 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, notification):
+        account = notification.sender
         self.refreshAccountList()
+        if account is not BonjourAccount() and account.id.domain in ('sip2sip.info', 'sylk.link'):
+            if not account.server.settings_url:
+                account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
+                account.ldap.hostname = "ldap.sipthor.net"
+                account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
+                account.ldap.enabled = True
+                account.save()
 
     @objc.python_method
     def _NH_BonjourGroupWasActivated(self, notification):

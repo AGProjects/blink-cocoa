@@ -218,12 +218,12 @@ class EnrollmentController(NSObject):
             account.xcap.enabled = True if self.syncContactsCheckBox.state() == NSOnState else False
             account.presence.enabled = True if self.syncContactsCheckBox.state() == NSOnState else False
 
-            if account.id.domain == 'sip2sip.info':
+            if account.id.domain in ('sip2sip.info', 'sylk.link'):
                 account.server.settings_url = "https://blink.sipthor.net/settings.phtml"
                 account.ldap.hostname = "ldap.sipthor.net"
                 account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
                 account.ldap.enabled = True
-                account.nat_traversal.use_ice = True
+                account.nat_traversal.use_ice = False
                 account.rtp.srtp_encryption = 'optional'
 
             account.save()
