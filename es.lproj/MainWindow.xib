@@ -224,6 +224,12 @@ CA
                             <menuItem title="Abrir Ubicación de llaves PGP" id="ZDT-Z3-a7a">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
+                            <menuItem title="Exportar mi clave privada..." tag="67" id="cnY-er-V1X">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="exportButtonClicked:" target="389" id="fIo-oE-yjR"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="LJK-aV-l2b"/>
                             <menuItem title="Respaldar Contactos y Grupos" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>

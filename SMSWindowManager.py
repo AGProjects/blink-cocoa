@@ -24,6 +24,7 @@ import uuid
 import pgpy
 import json
 import urllib
+import random
 
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
@@ -61,7 +62,6 @@ class SMSWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     encryptionMenu = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
-    import_key_window = None
     heartbeat_timer = None
 
     def initWithOwner_(self, owner):
@@ -409,6 +409,7 @@ class SMSWindowManagerClass(NSObject):
     received_call_ids = set()
     pending_outgoing_messages = {}
     import_key_window = None
+    export_key_window = None
     syncConversationsInProgress = {}
 
     def init(self):
@@ -461,12 +462,16 @@ class SMSWindowManagerClass(NSObject):
            self.syncConversations(account)
 
     @objc.python_method
-    @run_in_green_thread
     def requestSyncToken(self, account):
         if not account.sms.enable_replication:
             BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
             return
+            
+        self.sendMessage(account, 'I need a token', 'application/sylk-api-token')
 
+    @objc.python_method
+    @run_in_green_thread
+    def sendMessage(self, account, content, content_type):
         if account.sip.outbound_proxy is not None:
             proxy = account.sip.outbound_proxy
             uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
@@ -493,10 +498,9 @@ class SMSWindowManagerClass(NSObject):
 
             route = routes[0]
             from_uri = SIPURI.parse('sip:%s' % account.id)
-            message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), 'application/sylk-api-token', b'I need a sync token, please!', credentials=account.credentials)
+            message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials)
 
             message_request.send()
-            BlinkLogger().log_info('Requested sync token for account %s' % account.id)
 
     @objc.python_method
     @run_in_thread('sms_sync')
@@ -867,6 +871,11 @@ class SMSWindowManagerClass(NSObject):
         handler(notification.sender, notification.data)
 
     @objc.python_method
+    @run_in_gui_thread
+    def showExportPrivateKeyPanel(self, account):
+        self.export_key_window = ExportPrivateKeyController(account, self.sendMessage);
+
+    @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):
         is_cpim = False
         cpim_message = None
@@ -1039,12 +1048,7 @@ class SMSWindowManagerClass(NSObject):
                     self.log_info('PGP private key not found')
                     return
 
-                if self.import_key_window:
-                    self.import_key_window.update(account, public_key, private_key_encrypted);
-                else:
-                    self.import_key_window = ImportPrivateKeyController(account, public_key, private_key_encrypted);
-
-                self.import_key_window.show()
+                self.import_key_window = ImportPrivateKeyController(account, public_key, private_key_encrypted);
             return
         elif content_type == 'application/sylk-api-token':
             BlinkLogger().log_info('Sylk history token for %s received' % account.id)
@@ -1108,7 +1112,6 @@ class SMSWindowManagerClass(NSObject):
 
 class ImportPrivateKeyController(NSObject):
     window = objc.IBOutlet()
-    checksum = objc.IBOutlet()
     pincode = objc.IBOutlet()
     status = objc.IBOutlet()
     importButton = objc.IBOutlet()
@@ -1127,20 +1130,17 @@ class ImportPrivateKeyController(NSObject):
         self.account = account;
         self.private_key_encrypted = private_key_encrypted
         self.public_key = public_key
-
-        self.checksum.setStringValue_('')
         self.importButton.setEnabled_(False)
         self.window.makeFirstResponder_(self.pincode)
         self.status.setTextColor_(NSColor.blackColor())
-
         self.status.setStringValue_(NSLocalizedString("Enter pincode to decrypt the key", "status label"));
+        self.window.makeKeyAndOrderFront_(None)
 
     @objc.python_method
     def update(self, account, public_key, private_key_encrypted):
         self.account = account
         self.public_key = public_key
         self.private_key_encrypted = private_key_encrypted
-        self.checksum.setStringValue_('')
         self.importButton.setEnabled_(False)
         self.window.makeFirstResponder_(self.pincode)
 
@@ -1186,6 +1186,8 @@ class ImportPrivateKeyController(NSObject):
             BlinkLogger().log_error("Import private key failed: %s" % str(e))
             self.status.setStringValue_(NSLocalizedString("Key import failed: %s", "status label") % str(e));
             self.status.setTextColor_(NSColor.redColor())
+            import traceback
+            traceback.print_exc()
         else:
             self.status.setTextColor_(NSColor.greenColor())
             self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
@@ -1203,17 +1205,76 @@ class ImportPrivateKeyController(NSObject):
     def cancelButtonClicked_(self, sender):
         self.close()
 
-    def show(self):
-        self.window.makeKeyAndOrderFront_(None)
+    def windowWillClose_(self, notification):
+        pass
 
     def close(self):
-        print('import close')
-        self.window.close()
-
-    def close_(self, sender):
-        print('import _close')
         self.window.close()
 
     def dealloc(self):
-        print('import dealloc')
+        #print('Dealloc ImportPrivateKeyController')
         objc.super(ImportPrivateKeyController, self).dealloc()
+
+
+class ExportPrivateKeyController(NSObject):
+    window = objc.IBOutlet()
+    pincode = objc.IBOutlet()
+    status = objc.IBOutlet()
+    exportButton = objc.IBOutlet()
+
+    def __new__(cls, *args, **kwargs):
+        return cls.alloc().init()
+
+    def __init__(self, account, sendMessageFunc):
+        NSBundle.loadNibNamed_owner_("ExportPrivateKeyWindow", self)
+        self.keys_path = ApplicationData.get('keys')
+        makedirs(self.keys_path)
+
+        self.account = account;
+        self.sendMessage = sendMessageFunc
+        self.passcode = ''.join([str(random.randint(0, 999)).zfill(3) for _ in range(2)])
+        self.pincode.setStringValue_(self.passcode);
+        self.status.setStringValue_(self.account.id);
+        self.window.makeKeyAndOrderFront_(None)
+
+    @objc.IBAction
+    def exportButtonClicked_(self, sender):
+        BlinkLogger().log_info("Exporting private key...")
+
+        try:
+            self.exportButton.setEnabled_(False)
+            private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
+            private_key = open(private_key_path, 'rb').read()
+            public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
+            public_key = open(public_key_path, 'rb').read()
+
+            pgpMessage = pgpy.PGPMessage.new(private_key)
+            enc_message = pgpMessage.encrypt(self.passcode)
+            message = public_key.decode() + str(enc_message)
+
+            self.sendMessage(self.account, message, 'text/pgp-private-key')
+
+        except Exception as e:
+            BlinkLogger().log_error("Export private key failed: %s" % str(e))
+            self.status.setStringValue_(NSLocalizedString("Export failed: %s", "status label") % str(e));
+            self.status.setTextColor_(NSColor.redColor())
+            import traceback
+            traceback.print_exc()
+        else:
+            self.status.setTextColor_(NSColor.blueColor())
+            self.status.setStringValue_(NSLocalizedString("Key Exported sucessfully", "status label"));
+            BlinkLogger().log_info("Key exported sucessfully")
+
+    @objc.IBAction
+    def cancelButtonClicked_(self, sender):
+        self.close()
+
+    def close(self):
+        self.window.close()
+
+    def windowWillClose_(self, notification):
+        pass
+
+    def dealloc(self):
+        print('Dealloc ExportPrivateKeyController')
+        objc.super(ExportPrivateKeyController, self).dealloc()

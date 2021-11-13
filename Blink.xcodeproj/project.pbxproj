@@ -556,6 +556,10 @@
 		1F35D0A217894FFF00C6FE38 /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
 		1F35D0A417894FFF00C6FE38 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1F35D0A617894FFF00C6FE38 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; };
+		1F366FC3273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */; };
+		1F366FC4273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */; };
+		1F366FC5273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */; };
+		1F366FC6273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */; };
 		1F37D7CE1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7CF1393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
 		1F37D7D01393F6B4007210E9 /* editor-changed.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F37D7CD1393F6B4007210E9 /* editor-changed.png */; };
@@ -2083,6 +2087,7 @@
 		1F331DCA193B655800831F31 /* voicemail-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "voicemail-red.png"; path = "icons/voicemail-red.png"; sourceTree = "<group>"; };
 		1F337A54194C95E000DB726B /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = moon.png; path = icons/moon.png; sourceTree = "<group>"; };
 		1F35D0B017894FFF00C6FE38 /* SIP2SIP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SIP2SIP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F366FC2273FE8FF00CE7FA5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
 		1F3C358215F521A8005356AE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
@@ -3123,6 +3128,7 @@
 			isa = PBXGroup;
 			children = (
 				1F99F568265A88390095E3FA /* ImportPrivateKeyWindow.xib */,
+				1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */,
 				1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */,
 				2B06A429111CFE74001D41E5 /* SMSViewController.py */,
 				2B0CE72910CD824400325F30 /* SMSSession.xib */,
@@ -3753,6 +3759,7 @@
 				1F22729F12B554F50010A8B2 /* MainWindow.xib in Resources */,
 				1F6EF80018E637E0008592D2 /* VideoLocalWindowController.py in Resources */,
 				1F2272A112B554F50010A8B2 /* PreferencesWindow.xib in Resources */,
+				1F366FC4273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */,
 				1F2272A212B554F50010A8B2 /* ChatWindow.xib in Resources */,
 				1F2272A312B554F50010A8B2 /* ChatView.xib in Resources */,
 				1F2272A412B554F50010A8B2 /* BlinkAppDelegate.py in Resources */,
@@ -4134,6 +4141,7 @@
 				1F7EAC6418E0FA6500CA7B86 /* paused-red.png in Resources */,
 				1F35CFE517894FFF00C6FE38 /* ChatView.html in Resources */,
 				1F35CFE617894FFF00C6FE38 /* smiley_off.png in Resources */,
+				1F366FC6273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */,
 				1F35CFE717894FFF00C6FE38 /* smiley_on.png in Resources */,
 				1F35CFE917894FFF00C6FE38 /* SMSWindowManager.py in Resources */,
 				1F35CFEA17894FFF00C6FE38 /* HistoryViewer.py in Resources */,
@@ -4428,6 +4436,7 @@
 				1F8DC395135084FA0034815C /* smiley_on.png in Resources */,
 				1FF63CD319128A1400A502FB /* MyVideoWindowController.py in Resources */,
 				1F8DC397135084FA0034815C /* SMSWindowManager.py in Resources */,
+				1F366FC5273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */,
 				1F8DC398135084FA0034815C /* HistoryViewer.py in Resources */,
 				1F8DC399135084FA0034815C /* HistoryViewer.xib in Resources */,
 				1F8DC39A135084FA0034815C /* SoundRecorder.xib in Resources */,
@@ -4594,6 +4603,7 @@
 				1FC99CF619BC93700013C580 /* close-small.png in Resources */,
 				2BAF381C0FE088C70040117A /* MainWindow.xib in Resources */,
 				2BAF381E0FE088C70040117A /* PreferencesWindow.xib in Resources */,
+				1F366FC3273FE90000CE7FA5 /* ExportPrivateKeyWindow.xib in Resources */,
 				2BAF381F0FE088C70040117A /* ChatWindow.xib in Resources */,
 				2BAF38210FE088C70040117A /* ChatView.xib in Resources */,
 				2BAF382A0FE088E80040117A /* BlinkAppDelegate.py in Resources */,
@@ -4970,6 +4980,14 @@
 				1FCEFA2419EBF9DD00E9647D /* nl */,
 			);
 			name = ChatOtrSmp.xib;
+			sourceTree = "<group>";
+		};
+		1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1F366FC2273FE8FF00CE7FA5 /* en */,
+			);
+			name = ExportPrivateKeyWindow.xib;
 			sourceTree = "<group>";
 		};
 		1F3C358315F521A8005356AE /* PresenceInfoPanel.xib */ = {

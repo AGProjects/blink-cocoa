@@ -623,7 +623,14 @@ class SMSViewController(NSObject):
         if not self.account.sms.private_key or not self.private_key:
             return
 
-        self.sendMessage(str(self.private_key.pubkey), 'text/pgp-public-key')
+        public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
+
+        try:
+            public_key = open(public_key_path, 'rb').read()
+        except Exception as e:
+            BlinkLogger().log_info('Cannot import my own PGP public key: %s' % str(e))
+        else:
+            self.sendMessage(public_key.decode(), 'text/pgp-public-key')
 
     @objc.python_method
     @run_in_gui_thread

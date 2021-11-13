@@ -227,6 +227,12 @@ CA
                                     <action selector="goToPGPKeyFolderClicked:" target="389" id="0oy-jT-INt"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Export PGP private key..." tag="67" id="fS7-ZG-QI4">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="exportButtonClicked:" target="389" id="ZfK-4G-r93"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="1601"/>
                             <menuItem title="Backup Contacts and Groups" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>

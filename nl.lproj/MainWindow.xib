@@ -227,6 +227,12 @@ CA
                                     <action selector="goToPGPKeyFolderClicked:" target="389" id="I4c-n4-nHD"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Exporteer mijn privésleutel..." tag="67" id="KaT-OL-50F">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="exportButtonClicked:" target="389" id="CpH-By-nXW"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="hNe-pl-4VI"/>
                             <menuItem title="Backup contacten en groepen" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>

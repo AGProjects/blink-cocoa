@@ -227,6 +227,12 @@ CA
                                     <action selector="goToPGPKeyFolderClicked:" target="389" id="laN-uK-UM4"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Exportar minha chave privada..." tag="67" id="cIc-Je-eBa">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="exportButtonClicked:" target="389" id="RBR-Nc-Cpq"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="9pE-eE-DoO"/>
                             <menuItem title="Cópia de Contatos e Grupos" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>

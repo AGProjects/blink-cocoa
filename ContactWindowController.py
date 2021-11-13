@@ -1213,6 +1213,10 @@ class ContactWindowController(NSWindowController):
         except Exception:
             pass
 
+    @objc.IBAction
+    def exportButtonClicked_(self, sender):
+        SMSWindowManager.SMSWindowManager().showExportPrivateKeyPanel(AccountManager().default_account)
+
     @objc.python_method
     def addParticipants(self):
         session = self.getSelectedAudioSession()
@@ -4960,6 +4964,15 @@ class ContactWindowController(NSWindowController):
             item = self.contactsMenu.itemWithTag_(42)  # Dialpad
             item.setEnabled_(True)
             item.setTitle_(NSLocalizedString("Show Dialpad", "Contacts menu item") if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else NSLocalizedString("Hide Dialpad", "Contacts menu item"))
+
+            item = self.contactsMenu.itemWithTag_(67)  # Dialpad
+            account = AccountManager().default_account
+            if not account:
+                item.setEnabled_(False)
+            else:
+                keys_path = ApplicationData.get('keys')
+                private_key_path = "%s/%s.privkey" % (keys_path, account.id)
+                item.setEnabled_(account is not BonjourAccount() and os.path.exists(private_key_path))
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
