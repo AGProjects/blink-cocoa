@@ -471,7 +471,7 @@ class SMSViewController(NSObject):
             icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
             try:
                 timestamp=ISOTimestamp(imdn_timestamp)
-            except DateParserError as e:
+            except (DateParse, rError, TypeError) as e:
                 self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
                 timestamp = ISOTimestamp.now()
 
