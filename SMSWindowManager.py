@@ -40,7 +40,7 @@ from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads.iscomposing import IsComposingMessage, IsComposingDocument
 from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
-from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError
+from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError, ChatIdentity
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 
@@ -755,14 +755,15 @@ class SMSWindowManagerClass(NSObject):
                                     state,
                                     call_id=msg['message_id'],
                                     encryption=encryption)
-        return
+            return
 
-        target = SIPURI.parse(str('sip:%s' % msg['contact']))
-        viewer = self.getWindow(target, msg['contact'], account, note_new_message=False)
-        self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
+        sender_identity = ChatIdentity(account.uri, account.display_name)
+        remote_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
+        viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False)
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(target, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
         
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+
         if msg['state'] == 'delivered':
             viewer.update_message_status(msg['message_id'], MSG_STATE_DELIVERED)
         elif msg['state'] == 'displayed':
