@@ -497,6 +497,7 @@ class SMSWindowManagerClass(NSObject):
                return
 
             route = routes[0]
+            BlinkLogger().log_info('Sending message to %s' % route.uri)
             from_uri = SIPURI.parse('sip:%s' % account.id)
             message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials)
 
@@ -1239,7 +1240,7 @@ class ExportPrivateKeyController(NSObject):
 
     @objc.IBAction
     def exportButtonClicked_(self, sender):
-        BlinkLogger().log_info("Exporting private key...")
+        #BlinkLogger().log_info("Exporting private key...")
 
         try:
             self.exportButton.setEnabled_(False)

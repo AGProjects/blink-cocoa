@@ -510,7 +510,8 @@ class SMSViewController(NSObject):
 
         except Exception as e:
             import traceback
-            self.log_info('Error in Got: %s' % str(e))
+            self.log_info('Error in render_message: %s' % str(e))
+            self.log_info(message_tuple)
             self.log_info(traceback.format_exc())
 
     @objc.python_method
