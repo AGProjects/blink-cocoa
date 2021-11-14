@@ -740,7 +740,7 @@ class SMSWindowManagerClass(NSObject):
                 encryption = 'pgp_encrypted'
             else:
                 encryption = ''
-
+                
             self.history.add_message(msg['message_id'],
                                     'sms',
                                     str(account.id),

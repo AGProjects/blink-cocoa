@@ -402,7 +402,7 @@ class SMSViewController(NSObject):
             is_html = content_type == 'text/html'
             encrypted = False
             
-            text_content = content.decode().strip()            
+            text_content = content.decode().strip()
             if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
                 if not self.private_key:
                     self.chatViewController.showSystemMessage("No PGP private key available", ISOTimestamp.now(), is_error=True)
@@ -425,7 +425,7 @@ class SMSViewController(NSObject):
                         if not self.pgp_encrypted:
                             self.pgp_encrypted = True
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
-                        content = str(decrypted_message.message).encode()
+                        content = bytes(decrypted_message.message, 'latin1')
             else:
                 self.pgp_encrypted = False
             
@@ -501,6 +501,7 @@ class SMSViewController(NSObject):
 
             # save to history
             recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
+
             message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
             
             self.add_to_history(message)
@@ -660,7 +661,7 @@ class SMSViewController(NSObject):
             self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption=encryption)
 
         recipient = ChatIdentity(self.target_uri, self.display_name)
-        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption=encryption)
+        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption=encryption, direction='outgoing')
     
         self.messages[id] = mInfo
         self.message_queue.put(mInfo)
@@ -1354,8 +1355,8 @@ class SMSViewController(NSObject):
                         content = 'Encrypted message for which we have no private key'
                     else:
                         print('Message %s was decrypted' % message.id)
-                        content = str(decrypted_message.message)
                         encryption = 'verified'
+                        content = bytes(decrypted_message.message, 'latin1').decode()
                         self.history.update_decrypted_message(message.msgid, content)
 
             self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, recipient, icon, content or message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
