@@ -1110,10 +1110,7 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
 
         note_new_message = False
-        
-        #print('Window tab identity: %s' % window_tab_identity)
-        #print('Sender identity: %s' % sender_identity)
-
+ 
         if direction == 'incoming':
             BlinkLogger().log_info("%s %s message %s %s -> %s" % (direction.title(), content_type, imdn_id, window_tab_identity.uri, account.id))
         else:

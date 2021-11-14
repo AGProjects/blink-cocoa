@@ -2034,6 +2034,7 @@ class ContactWindowController(NSWindowController):
                 lastItem.setRepresentedObject_(item)
             else:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete...", "Menu item"), "deleteItem:", "")
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete Contacts...", "Menu item"), "deleteContactsFromGroup:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
 
@@ -4092,6 +4093,20 @@ class ContactWindowController(NSWindowController):
                 self.model.deleteContact(item)
                 self.refreshContactsList()
                 self.searchContacts()
+
+    @objc.IBAction
+    def deleteContactsFromGroup_(self, sender):
+        item = sender.representedObject()
+        if not item:
+            row = self.contactOutline.selectedRow()
+            if row >= 0:
+                item = self.contactOutline.itemAtRow_(row)
+            else:
+                return
+        if isinstance(item, BlinkGroup):
+            self.model.deleteContactsFromGroup(item)
+            self.refreshContactsList()
+            self.searchContacts()
 
     @objc.IBAction
     def renameGroup_(self, sender):

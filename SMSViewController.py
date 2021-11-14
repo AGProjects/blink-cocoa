@@ -1341,7 +1341,7 @@ class SMSViewController(NSObject):
             is_html = False if message.content_type == 'text' else True
             
             components = sipuri_components_from_string(message.cpim_from)
-            recipient = components[1] or components[0] or message.cpim_from
+            sender = components[1] or components[0] or message.cpim_from
             content = None
             encryption = None
             
@@ -1355,12 +1355,13 @@ class SMSViewController(NSObject):
                     except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
                         content = 'Encrypted message for which we have no private key'
                     else:
-                        print('Message %s was decrypted' % message.id)
                         encryption = 'verified'
                         content = bytes(decrypted_message.message, 'latin1').decode()
                         self.history.update_decrypted_message(message.msgid, content)
 
-            self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, recipient, icon, content or message.body, timestamp, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
+            recipient = message.cpim_to
+            sender = self.display_name or sender if message.direction == 'incoming' else self.account.display_name or sender
+            self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'

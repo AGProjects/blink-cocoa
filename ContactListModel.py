@@ -2937,6 +2937,7 @@ class ContactListModel(CustomListModel):
         contact.name = displayName or uri
         contact.preferred_media = 'messages'
         contact.save()
+        return contact
 
     @objc.python_method
     def restore_contacts(self, backup):
@@ -3444,6 +3445,16 @@ class ContactListModel(CustomListModel):
         if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
             if blink_group.deletable:
                 blink_group.group.delete()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    @objc.python_method
+    def deleteContactsFromGroup(self, blink_group):
+        message =  NSLocalizedString("Please confirm the deletion of contacts from group '%s'", "Label") % blink_group.name
+        message = re.sub("%", "%%", message)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Contacts", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+        if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
+            for contact in blink_group.group.contacts:
+                contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method
