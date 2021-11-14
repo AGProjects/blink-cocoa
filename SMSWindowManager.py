@@ -30,10 +30,13 @@ from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
+from application.python.queue import EventQueue
 from application.system import makedirs
 from zope.interface import implementer
 from resources import ApplicationData
 
+from sipsimple.configuration import DuplicateIDError
+from sipsimple.addressbook import AddressbookManager, Group
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.core import SIPURI, Message, FromHeader, ToHeader, RouteHeader, Route
 from sipsimple.lookup import DNSLookup, DNSLookupError
@@ -75,7 +78,7 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="OTREncryptionDidStop")
             self.notification_center.add_observer(self, name="PGPEncryptionStateChanged")
             self.notification_center.add_observer(self, name="PGPPublicKeyReceived")
-            
+
             self.unreadMessageCounts = {}
             self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "heartbeatTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSRunLoopCommonModes)
@@ -411,6 +414,9 @@ class SMSWindowManagerClass(NSObject):
     import_key_window = None
     export_key_window = None
     syncConversationsInProgress = {}
+    pendingSaveMessage = {}
+    new_contacts = set()
+    private_keys = {}
 
     def init(self):
         self = objc.super(SMSWindowManagerClass, self).init()
@@ -420,9 +426,12 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="SIPAccountDidActivate")
             self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
+            self.notification_center.add_observer(self, name="MessageSaved")
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
             self.history = ChatHistory()
+            self.contacts_queue = EventQueue(self.handle_contacts_queue)
+            self.contacts_queue.start()
 
         return self
 
@@ -456,6 +465,28 @@ class SMSWindowManagerClass(NSObject):
     def _NH_SIPAccountDidActivate(self, account, data):
        BlinkLogger().log_info("Account %s activated" % account.id)
 
+    @objc.python_method
+    def _NH_MessageSaved(self, sender, data):
+        try:
+            del self.pendingSaveMessage[data.msgid]
+        except KeyError:
+            pass
+
+        remaining_messages = len(self.pendingSaveMessage.keys())
+
+        if remaining_messages > 1000:
+            remaining = 1000
+        elif remaining_messages > 100:
+            remaining = 100
+        else:
+            remaining = 10
+
+        if remaining_messages % remaining == 0:
+            if remaining_messages == 0:
+                BlinkLogger().log_info('Sync conversations completed')
+            else:
+                BlinkLogger().log_info('%d pending history messages' % remaining_messages)
+            
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         if account is not BonjourAccount():
@@ -504,6 +535,48 @@ class SMSWindowManagerClass(NSObject):
             message_request.send()
 
     @objc.python_method
+    @run_in_thread('contact_sync')
+    def handle_contacts_queue(self, payload):
+        content = payload['data']
+        account = payload['account']
+        if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
+            try:
+                private_key = self.private_keys[account]
+            except KeyError:
+                private_key_path = "%s/%s.privkey" % (self.keys_path, account)
+            
+                try:
+                    private_key, _ = pgpy.PGPKey.from_file(private_key_path)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
+                    return
+                else:
+                    BlinkLogger().log_info('PGP private key imported from %s' % private_key_path)
+                    self.private_keys[account] = private_key
+
+            if private_key:
+                try:
+                    pgpMessage = pgpy.PGPMessage.from_blob(content.strip())
+                    decrypted_message = private_key.decrypt(pgpMessage)
+                except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                    BlinkLogger().log_info('PGP decryption failed for contact update')
+                    return
+                else:
+                    content = bytes(decrypted_message.message, 'latin1').decode()
+
+        try:
+            contact_data = json.loads(content)
+            uri = contact_data['uri']
+            try:
+                display_name = contact_data['name']
+            except KeyError:
+                display_name = uri
+            organization = contact_data['organization']
+            self.saveContact(uri, {'name': display_name or uri, 'organization': organization})
+        except (TypeError, KeyError, json.decoder.JSONDecodeError):
+            BlinkLogger().log_error('Failed to update contact %s: %s' % (content, str(e)))
+
+    @objc.python_method
     @run_in_thread('sms_sync')
     def syncConversations(self, account):
        if not account.sms.history_token:
@@ -526,6 +599,7 @@ class SMSWindowManagerClass(NSObject):
        else:
            return
 
+       sync_contacts = set()
        url = account.sms.history_url.replace("@", "%40")
        last_id = account.sms.history_last_id
        
@@ -545,12 +619,15 @@ class SMSWindowManagerClass(NSObject):
                del self.syncConversationsInProgress[account.id]
            except KeyError:
                pass
+           return
        except (urllib.error.HTTPError) as e:
            BlinkLogger().log_info('SylkServer API error for %s: %s' % (url, str(e)))
            try:
                del self.syncConversationsInProgress[account.id]
            except KeyError:
                pass
+           return
+
        else:
            try:
                raw_data = raw_response.read().decode().replace('\\/', '/')
@@ -566,21 +643,27 @@ class SMSWindowManagerClass(NSObject):
                json_data = json.loads(raw_data)
            except (TypeError, json.decoder.JSONDecodeError):
                BlinkLogger().log_info('Error parsing SylkServer response: %s' % str(e))
+               return
+
            else:
                last_message_id = None
-               BlinkLogger().log_info('Sync %d message journal entries for %s' % (len(json_data['messages']), account.id))
+               BlinkLogger().log_info('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
 
+               i = 0
+               self.contacts_queue.pause()
                for msg in json_data['messages']:
+                   #BlinkLogger().log_info('Process journal %d: %s' % (i, msg['timestamp']))
+                   i = i + 1
                    try:
                        content_type = msg['content_type']
                        last_message_id = msg['message_id']
 
                        if content_type == 'application/sylk-conversation-remove':
-                           BlinkLogger().log_info('Remove conversation with %s' % msg['content'])
+                           #BlinkLogger().log_info('Remove conversation with %s' % msg['content'])
                            self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
                            self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
                        elif content_type == 'application/sylk-message-remove':
-                           BlinkLogger().log_info('Remove message %s with %s' % (msg['message_id'], msg['contact']))
+                           #BlinkLogger().log_info('Remove message %s with %s' % (msg['message_id'], msg['contact']))
                            self.history.delete_message(msg['message_id']);
                        elif content_type == 'message/imdn':
                            payload = eval(msg['content'])
@@ -596,15 +679,18 @@ class SMSWindowManagerClass(NSObject):
                                
                            if status:
                                #BlinkLogger().log_info('Sync IMDN state %s for message %s' % (status, imdn_message_id))
+                               self.pendingSaveMessage[imdn_message_id] = True
                                self.history.update_message_status(imdn_message_id, status)
+                       elif content_type == 'application/sylk-contact-update':
+                           self.contacts_queue.put({'account': str(account.id), 'data': msg['content']})
                        elif content_type == 'text/pgp-public-key':
                            uri = msg['contact']
-                           content = msg['content'].encode()
                            BlinkLogger().log_info(u"Public key from %s received" % (uri))
-                           
+                           content = msg['content'].encode()
+
                            if AccountManager().has_account(uri):
                                BlinkLogger().log_info(u"Public key save skipped for own accounts")
-                               return
+                               continue
 
                            public_key = ''
                            start_public = False
@@ -634,17 +720,20 @@ class SMSWindowManagerClass(NSObject):
                                #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
                                self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
 
-                               self.saveContact(uri, key_file, public_key_checksum)
+                               self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum})
                            else:
                                 BlinkLogger().log_info(u"No public key detected in the payload")
 
                        elif content_type.startswith('text/'):
                            if msg['direction'] == 'incoming':
+                               sync_contacts.add(msg['contact'])
                                self.syncIncomingMessage(account, msg, account.sms.history_last_id)
                            elif msg['direction'] == 'outgoing':
+                               sync_contacts.add(msg['contact'])
                                self.syncOutgoingMessage(account, msg, account.sms.history_last_id)
                        else:
-                           BlinkLogger().log_error("Unknown sync message type %s" % content_type)
+                           pass
+                           #BlinkLogger().log_error("Unknown sync message type %s" % content_type)
                            
                    except Exception as e:
                        BlinkLogger().log_error('Failed to sync message %s' % msg)
@@ -660,32 +749,96 @@ class SMSWindowManagerClass(NSObject):
                    account.sms.history_last_id = last_message_id
                    BlinkLogger().log_info('Sync done till %s' % last_message_id)
                    account.save()
+                
+               for uri in sync_contacts:
+                    self.saveContact(uri)
+            
+               self.addContactsToMessagesGroup()
+               self.contacts_queue.unpause()
 
     @objc.python_method
-    def saveContact(self, uri, key_file=None, public_key_checksum=None):
-        blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+    def saveContact(self, uri, data={}):
+        if self.illegal_uri(uri):
+            return
 
-        if blink_contact is not None:
-            contact = blink_contact.contact
-            contact.public_key = key_file
-            contact.public_key_checksum = public_key_checksum
+        contact = self.getContact(uri)
+        if contact is not None:
+            attrs = ('public_key', 'public_key_checksum', 'name', 'organization')
+            for a in attrs:
+                try:
+                    value = data[a]
+                except KeyError:
+                    pass
+                else:
+                    setattr(contact, a, value)
             contact.save()
-            BlinkLogger().log_info("Public key saved for %s" % uri)
         else:
             BlinkLogger().log_info("No contact found to save the public key for %s" % uri)
- 
+
     @objc.python_method
-    def addContact(self, uri):
-        contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
-        if not self.contact:
-            NSApp.delegate().contactsWindowController.model.addContactFromUri(self.remote_uri)
+    def illegal_uri(self, uri):
+        if '@videoconference.' in uri:
+            return True
+
+        if '@guest.' in uri:
+            return True
+
+        try:
+            SIPURI.parse('sip:%s' % uri)
+        except:
+            return True
+
+        return False
+
+    @objc.python_method
+    def getContact(self, uri, addGroup=False):
+        if self.illegal_uri(uri):
+            return None
+
+        blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+        if not blink_contact:
+            BlinkLogger().log_info('Adding messages contact for %s' % uri)
+            contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
+            self.new_contacts.add(contact)
+        else:
+            contact = blink_contact.contact
+            self.new_contacts.add(contact)
+
+        if addGroup:
+            self.addContactsToMessagesGroup()
+
+        return contact
+
+    @objc.python_method
+    def addContactsToMessagesGroup(self):
+        if len(self.new_contacts) == 0:
+            return
+            
+        group_id = '_messages'
+        try:
+            group = next((group for group in AddressbookManager().get_groups() if group.id == group_id))
+        except StopIteration:
+            try:
+                group = Group(id=group_id)
+            except DuplicateIDError as e:
+                return
+            else:
+                group.name = 'Messages'
+                group.position = 0
+                group.expanded = True
+        
+        for contact in self.new_contacts:
+            group.contacts.add(contact)
+
+        group.save()
+        self.new_contacts = set()
 
     @objc.python_method
     @run_in_gui_thread
     def syncIncomingMessage(self, account, msg, last_id=None):
-        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
-        target = SIPURI.parse(str('sip:%s' % msg['contact']))
+        sender_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
         direction = 'incoming'
+        self.pendingSaveMessage[msg['message_id']] = True
 
         if not last_id:
             if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
@@ -714,17 +867,20 @@ class SMSWindowManagerClass(NSObject):
                                     encryption=encryption)
             return
 
-        viewer = self.getWindow(target, msg['contact'], account, note_new_message=bool(last_id))
+        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+
+        viewer = self.getWindow(sender_identity, msg['contact'], account, note_new_message=bool(last_id))
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(target, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     @objc.python_method
     @run_in_gui_thread
     def syncOutgoingMessage(self, account, msg, last_id=None):
-        BlinkLogger().log_info('Sync %s state=%s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
         direction = 'outgoing'
+        
+        self.pendingSaveMessage[msg['message_id']] = True
 
         if not last_id:
             state = MSG_STATE_SENT
@@ -757,6 +913,7 @@ class SMSWindowManagerClass(NSObject):
                                     encryption=encryption)
             return
 
+        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
         sender_identity = ChatIdentity(account.uri, account.display_name)
         remote_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
         viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False)
@@ -917,8 +1074,6 @@ class SMSWindowManagerClass(NSObject):
         else:
             account = BonjourAccount()
 
-        BlinkLogger().log_info("Got MESSAGE for account %s" % account.id)
-
         if data.content_type == 'message/cpim':
             is_cpim = True
             imdn_id = None
@@ -933,6 +1088,7 @@ class SMSWindowManagerClass(NSObject):
                 content_type = cpim_message.content_type
 
                 imdn_timestamp = cpim_message.timestamp
+                BlinkLogger().log_info("Got MESSAGE %s for account %s: %s" % (content_type, account.id, imdn_timestamp))
 
                 for h in cpim_message.additional_headers:
                     if h.name == "Message-ID":
@@ -951,6 +1107,7 @@ class SMSWindowManagerClass(NSObject):
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
+            BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
 
         note_new_message = False
         
@@ -1005,9 +1162,13 @@ class SMSWindowManagerClass(NSObject):
                 #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
                 self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
                 
-                self.saveContact(uri, key_file, public_key_checksum)
+                self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum})
             else:
                  BlinkLogger().log_info(u"No Public key detected in the payload")
+            return
+
+        elif content_type == 'application/sylk-contact-update':
+            self.contacts_queue.put({'account': account.id, 'data': content.decode()})
             return
         elif content_type == 'text/pgp-private-key':
             BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))

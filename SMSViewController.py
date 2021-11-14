@@ -174,7 +174,6 @@ class SMSViewController(NSObject):
             self.notification_center = NotificationCenter()
             self.account = account
             self.target_uri = target
-            self.display_name = display_name
 
             self.encryption = OTREncryption(self)
 
@@ -186,11 +185,12 @@ class SMSViewController(NSObject):
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
-            self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remote_uri)
-            if not self.contact:
-                NSApp.delegate().contactsWindowController.model.addContactFromUri(self.remote_uri)
-
+            self.contact = SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
             self.load_remote_public_key()
+            
+            self.display_name = display_name if self.contact else self.contact.name
+            
+            print('SMS self.display_name %s' % self.display_name)
 
             if not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
                 self.generateKeys()
@@ -596,7 +596,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def add_to_history(self, message):
-        self.log_info('Message %s saved with status %s' % (message.id, message.status))
+        self.log_info('Message %s %s saved to history with status %s' % (message.id, message.content_type, message.status))
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient, format='full') if message.recipient else ''
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
@@ -647,8 +647,6 @@ class SMSViewController(NSObject):
         content = content.decode() if isinstance(content, bytes) else content
         id = str(uuid.uuid4()) # use IMDN compatible id
 
-        self.log_info('Adding outgoing %s message %s to the sending queue' % (id, content_type))
-
         if self.encryption.active:
             encryption = 'verified' if self.encryption.verified else 'unverified'
         elif self.pgp_encrypted:
@@ -657,6 +655,7 @@ class SMSViewController(NSObject):
             encryption = ''
 
         if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
+            self.log_info('Adding outgoing %s message %s to the sending queue' % (id, content_type))
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption=encryption)
 
@@ -778,7 +777,7 @@ class SMSViewController(NSObject):
         if self.last_failure_reason != reason:
             self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
             self.last_failure_reason = reason
-
+            
         for msgObject in self.message_queue.queue.queue:
             try:
                 message = self.messages.pop(msgObject.id)
@@ -889,8 +888,8 @@ class SMSViewController(NSObject):
                 self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
             return
 
-        if not isinstance(message, OTRInternalMessage) and message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-        
+        if not isinstance(message, OTRInternalMessage) and message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
+
             try:
                 content = self.encryption.otr_session.handle_output(message.content, message.content_type)
             except OTRError as e:
@@ -1001,7 +1000,7 @@ class SMSViewController(NSObject):
         pending_status = imdn_status  if message.content_type == IMDNDocument.content_type else 'sent'
         self.add_pending_outgoing_message(str(message_request), pending_message_id, imdn_status)
 
-        if message.content_type not in (IsComposingDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key') and not isinstance(message, OTRInternalMessage):
+        if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key') and not isinstance(message, OTRInternalMessage):
             if self.encryption.active or pgp_encrypted:
                 self.log_info('%s encrypted message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
             else:
@@ -1068,6 +1067,8 @@ class SMSViewController(NSObject):
             self.notification_center.discard_observer(self, sender=sender)
             message = None
             message_id = None
+            reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
+            reason += ' (%s)' % data.code
 
             if hasattr(data, 'headers'):
                 call_id = data.headers.get('Call-ID', Null).body
@@ -1075,6 +1076,7 @@ class SMSViewController(NSObject):
                 client = data.headers.get('Client', Null).body
                 server = data.headers.get('Server', Null).body
                 entity = user_agent or server or client
+                self.log_info("Message with Call Id %s delivery failed: %s" % (call_id, reason))
             else:
                 entity = 'local'
                 call_id = None
@@ -1126,12 +1128,10 @@ class SMSViewController(NSObject):
 
             if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
                 return
-
-            reason = data.reason.decode() if isinstance(data.reason, bytes) else data.reason
-            reason += ' (%s)' % data.code
             
             message.status = MSG_STATE_FAILED
-            self.log_info("%s message %s delivery failed: %s" % (message.content_type, message.id, reason))
+            self.log_info("Message %s with id %s delivery failed: %s" % (message.content_type, message.id, reason))
+
             self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
 
             if self.last_failure_reason != reason:
@@ -1144,6 +1144,7 @@ class SMSViewController(NSObject):
 
             if (data.code == 408 and entity == 'local') or data.code >= 500:
                 self.setRoutesFailed(reason)
+
         except Exception as e:
             import traceback
             self.log_info(traceback.format_exc())
