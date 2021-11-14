@@ -34,6 +34,7 @@ from Foundation import (NSBundle,
                         NSWindowController,
                         NSZeroPoint)
 import objc
+import pgpy
 
 import datetime
 
@@ -44,6 +45,7 @@ from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implementer
 
+from resources import ApplicationData
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
@@ -112,6 +114,7 @@ class HistoryViewer(NSWindowController):
     contact_cache = {}
     display_name_cache = {}
     refresh_in_progress = False
+    private_keys = {}
 
     daily_order_fields = {'date': 'DESC', 'local_uri': 'ASC', 'remote_uri': 'ASC'}
     media_type_array = {0: None, 1: ('audio', 'video'), 2: ('chat', 'sms'), 3: 'file-transfer', 4: 'audio-recording', 5: 'availability', 6: 'voicemail', 7: 'video-recording'}
@@ -185,6 +188,7 @@ class HistoryViewer(NSWindowController):
             self.chat_history = ChatHistory()
             self.session_history = SessionHistory()
             self.setPeriod(1)
+            self.keys_path = ApplicationData.get('keys')
 
             self.selectedTableView = self.contactTable
 
@@ -543,7 +547,38 @@ class HistoryViewer(NSWindowController):
         else:
             is_html = False if message.content_type == 'text' else True
             private = True if message.private == "1" else False
-            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status if message.media_type in ('chat', 'sms') else '', is_html=is_html, history_entry=True, media_type=message.media_type, encryption=message.encryption if message.media_type == 'chat' else None)
+            content = message.body
+            encryption = message.encryption
+            private_key = None
+
+            if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
+                try:
+                    private_key = self.private_keys[message.local_uri]
+                except KeyError:
+                    private_key_path = "%s/%s.privkey" % (self.keys_path, message.local_uri)
+                
+                    try:
+                        private_key, _ = pgpy.PGPKey.from_file(private_key_path)
+                    except Exception as e:
+                        BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
+                        content = 'Encrypted message for which we have no private key'
+                    else:
+                        BlinkLogger().log_info('PGP private key imported from %s' % private_key_path)
+                        self.private_keys[message.local_uri] = private_key
+
+                if private_key:
+                    try:
+                        pgpMessage = pgpy.PGPMessage.from_blob(content.strip())
+                        decrypted_message = private_key.decrypt(pgpMessage)
+                    except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                        content = 'Encrypted message for which we have no private key'
+                    else:
+                        #BlinkLogger().log_info('Message %s was decrypted' % message.id)
+                        encryption = 'verified'
+                        content = bytes(decrypted_message.message, 'latin1').decode()
+                        self.chat_history.update_decrypted_message(message.msgid, content)
+
+            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, content, timestamp, is_private=private, recipient=message.cpim_to, state=message.status if message.media_type in ('chat', 'sms', 'message') else '', is_html=is_html, history_entry=True, media_type=message.media_type, encryption=encryption if message.media_type in ('chat', 'message', 'sms') else None)
 
     @objc.IBAction
     def paginateResults_(self, sender):

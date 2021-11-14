@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request, urllib.parse, urllib.error
 import pytz
 
-from datetime import datetime
+from datetime import datetime, timezone as timezone2
 from uuid import uuid1
 from pytz import timezone
 
@@ -655,11 +655,12 @@ class ChatHistory(object, metaclass=Singleton):
                 pass
                 #BlinkLogger().log_error("Error updating message %s status: not found" % msgid)
 
-            return True
         except Exception as e:
             #BlinkLogger().log_error("Error updating message %s: %s" % (msgid, e))
             pass
- 
+
+        NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=True))
+
     @run_in_db_thread
     def update_decrypted_message(self, msgid, body, encryption='verified'):
         try:
@@ -679,10 +680,17 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
-    
+
+        if not cpim_timestamp:
+            cpim_timestamp = str(ISOTimestamp.now())
+
         try:
             timestamp = dateutil.parser.isoparse(cpim_timestamp)
-        except ValueError as e:
+            offset = timestamp.utcoffset()
+            timestamp = timestamp.replace(tzinfo=timezone2.utc)
+            timestamp = timestamp - offset
+            # save the date as UTC date 0 offset
+        except (ValueError, AttributeError) as e:
             self.log_error('Failed to parse timestamp %s for message id %s: %s' % (cpim_timestamp, msgid, str(e)))
             timestamp = datetime.utcnow()
 
@@ -707,10 +715,10 @@ class ChatHistory(object, metaclass=Singleton):
                           journal_id          = journal_id,
                           encryption          = encryption
                           )
+            NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=True))
             return True
         except ValueError as e:
             BlinkLogger().log_error('Error inserting Chat SQL record: %s' % str(e))
-            return False
         except dberrors.DuplicateEntryError as e:
             try:
                 results = ChatMessage.selectBy(msgid=msgid, local_uri=local_uri, remote_uri=remote_uri)
@@ -721,6 +729,7 @@ class ChatHistory(object, metaclass=Singleton):
                 if message.journal_id != journal_id:
                     message.journal_id = journal_id
 
+                NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=True))
                 return True
             except Exception as e:
                 BlinkLogger().log_error("Error updating record %s: %s" % (msgid, e))
@@ -728,6 +737,8 @@ class ChatHistory(object, metaclass=Singleton):
             #import traceback
             #traceback.print_exc()
             BlinkLogger().log_error("Error adding record %s to history table: %s" % (msgid, e))
+
+        NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=False))
         return False
 
     @run_in_db_thread
@@ -765,9 +776,9 @@ class ChatHistory(object, metaclass=Singleton):
         if search_text:
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         if after_date:
-            query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+            query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
-            query += " and date < %s" % ChatMessage.sqlrepr(before_date)
+            query += " and time < %s" % ChatMessage.sqlrepr(before_date)
         query += " order by remote_uri asc"
         try:
             return list(self.db.queryAll(query))
@@ -798,9 +809,9 @@ class ChatHistory(object, metaclass=Singleton):
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
             if after_date:
-                query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+                query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
             if before_date:
-                query += " and date < %s" % ChatMessage.sqlrepr(before_date)
+                query += " and time < %s" % ChatMessage.sqlrepr(before_date)
 
             query += " group by date, media_type, remote_uri order by date desc, local_uri asc"
 
@@ -819,9 +830,9 @@ class ChatHistory(object, metaclass=Singleton):
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
             if after_date:
-                query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+                query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
             if before_date:
-                query += " and date < %s" % ChatMessage.sqlrepr(before_date)
+                query += " and time < %s" % ChatMessage.sqlrepr(before_date)
 
             query += " group by date, remote_uri, media_type, local_uri"
 
@@ -844,9 +855,9 @@ class ChatHistory(object, metaclass=Singleton):
             if search_text:
                 query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
             if after_date:
-                query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+                query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
             if before_date:
-                query += " and date < %s" % ChatMessage.sqlrepr(before_date)
+                query += " and time < %s" % ChatMessage.sqlrepr(before_date)
 
             query += " group by date, local_uri, remote_uri, media_type"
 
@@ -894,11 +905,11 @@ class ChatHistory(object, metaclass=Singleton):
         if search_text:
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         if date:
-            query += " and date like %s" % ChatMessage.sqlrepr(date+'%')
+            query += " and time like %s" % ChatMessage.sqlrepr(date+'%')
         if after_date:
-            query += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+            query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
-            query += " and date < %s" % ChatMessage.sqlrepr(before_date)
+            query += " and time < %s" % ChatMessage.sqlrepr(before_date)
         query += " order by %s %s limit %d" % (orderBy, orderType, count)
 
         try:
@@ -919,7 +930,7 @@ class ChatHistory(object, metaclass=Singleton):
              journal_id_sql += '%s,' % ChatMessage.sqlrepr(journal_id)
              journal_id_sql = journal_id_sql.rstrip(",")
 
-        query = "delete from chat_messages where local_uri=%s and journal_id != '' and journal_id not in (%s) and date >= %s" % (ChatMessage.sqlrepr(account), journal_id_sql, ChatMessage.sqlrepr(after_date))
+        query = "delete from chat_messages where local_uri=%s and journal_id != '' and journal_id not in (%s) and time >= %s" % (ChatMessage.sqlrepr(account), journal_id_sql, ChatMessage.sqlrepr(after_date))
 
         try:
             self.db.queryAll(query)
@@ -950,11 +961,11 @@ class ChatHistory(object, metaclass=Singleton):
             media_type_sql = media_type_sql.lstrip("(")
             where += " and media_type in (%s)" % media_type_sql
         if date:
-            where += " and date = %s" % ChatMessage.sqlrepr(date)
+            where += " and time like %s" % ChatMessage.sqlrepr(date+'%')
         if after_date:
-            where += " and date >= %s" % ChatMessage.sqlrepr(after_date)
+            where += " and time >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
-            where += " and date < %s" % ChatMessage.sqlrepr(before_date)
+            where += " and time < %s" % ChatMessage.sqlrepr(before_date)
         try:
             query = "select journal_id, local_uri from chat_messages %s and journal_id != ''" % where
             entries = list(self.db.queryAll(query))
