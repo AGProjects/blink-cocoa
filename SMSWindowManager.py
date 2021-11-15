@@ -802,7 +802,6 @@ class SMSWindowManagerClass(NSObject):
             self.new_contacts.add(contact)
         else:
             contact = blink_contact.contact
-            self.new_contacts.add(contact)
 
         if addGroup:
             self.addContactsToMessagesGroup()
