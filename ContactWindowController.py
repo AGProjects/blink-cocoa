@@ -3186,7 +3186,7 @@ class ContactWindowController(NSWindowController):
         self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
 
     @objc.python_method
-    def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None):
+    def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None, from_history=False, display_name=''):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
 
@@ -3199,28 +3199,46 @@ class ContactWindowController(NSWindowController):
             return None
 
         account = None
-        if local_uri is not None:
-            try:
-                account = AccountManager().get_account(local_uri)
-            except KeyError:
-                pass
+        target_uri = None
 
-        try:
-            contact = next((contact for contact in self.model.bonjour_group.contacts if contact.uri == target))
-        except StopIteration:
-            if account is None:
+        if local_uri is not None:
+            if local_uri == 'bonjour.local':
+                account = BonjourAccount()
+            else:
+                try:
+                    account = AccountManager().get_account(local_uri)
+                except KeyError:
+                    pass
+
+        if not selected_contact:
+            if account is BonjourAccount():
+                try:
+                    contact = next((contact for contact in self.model.bonjour_group.contacts if contact.id == target))
+                except StopIteration:
+                    new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
+                    _uri = SIPURI.parse(new_target)
+                    selected_contact = BonjourBlinkContact(_uri, None, target, name=display_name)
+                    target = new_target
+                else:
+                    account = BonjourAccount()
+                    display_name = contact.name
+                    target = str(contact.uri)
+                    selected_contact = contact
+        else:
+            try:
+                contact = next((contact for contact in self.model.bonjour_group.contacts if contact.uri == target))
+            except StopIteration:
                 if isinstance(selected_contact, VoicemailBlinkContact):
                     account = AccountManager().get_account(selected_contact.name)
                     BlinkLogger().log_info('Auto-selecting voicemail account %s' % account.id)
                 else:
-                    account = self.activeAccount()
-            if selected_contact:
-                display_name = selected_contact.name
+                    display_name = selected_contact.name
             else:
-                display_name = ''
-        else:
-            account = BonjourAccount()
-            display_name = contact.name
+                account = BonjourAccount()
+                display_name = contact.name
+
+        if not account:
+            account = self.activeAccount()
 
         if not account:
             NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"),
@@ -3228,6 +3246,7 @@ class ContactWindowController(NSWindowController):
             return None
 
         target_uri = normalize_sip_uri_for_outgoing_session(target, account)
+
         if not target_uri:
             BlinkLogger().log_error("Error parsing URI %s" % target)
             return None
@@ -3239,11 +3258,15 @@ class ContactWindowController(NSWindowController):
         if media_type == "video":
             media_type = ("audio", "video")
 
-        session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, display_name, selected_contact)
-        session_controller.log_info('Using local account %s' % account.id)
+        try:
+            session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target_uri, display_name, selected_contact)
+        except AttributeError as e:
+            import traceback
+            traceback.print_exc()
+            return
 
         if type(media_type) is not tuple:
-            if media_type == "chat" and account is not BonjourAccount():
+            if media_type == "chat" and (account is not BonjourAccount() or from_history):
                 # just show the window and wait for user to type before starting the outgoing session
                 session_controller.open_chat_window_only = True
 
@@ -3384,7 +3407,7 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     @run_in_green_thread
     def show_last_sms_conversations(self):
-        results = SessionHistory().get_last_sms_conversations(4)
+        results = SessionHistory().get_last_sms_conversations()
         self.open_last_sms_conversations(results)
 
     @objc.python_method
@@ -3424,7 +3447,7 @@ class ContactWindowController(NSWindowController):
     @run_in_gui_thread
     def open_last_chat_conversations(self, conversations=()):
         for parties in conversations:
-            self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0])
+            self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0], from_history=True, display_name=parties[2])
 
     @objc.python_method
     @run_in_green_thread

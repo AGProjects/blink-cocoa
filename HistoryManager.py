@@ -420,7 +420,7 @@ class SessionHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def _get_last_chat_conversations(self, count):
-        query="select local_uri, remote_uri, sip_callid from sessions where media_types like '%chat%' order by start_time desc limit 100"
+        query="select local_uri, remote_uri, sip_callid, display_name from sessions where media_types like '%chat%' order by start_time desc limit 100"
         results = []
         try:
             rows = list(self.db.queryAll(query))
@@ -441,7 +441,7 @@ class SessionHistory(object, metaclass=Singleton):
                 continue
 
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
-            pair = (row[0], target_uri)
+            pair = (row[0], target_uri, row[3])
             if pair not in results:
                 results.append(pair)
                 if len(results) == count:

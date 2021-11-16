@@ -304,19 +304,26 @@ class ChatWindowController(NSWindowController):
 
     @objc.python_method
     def _findInactiveSessionCompatibleWith_(self, session):
-        session_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(session.remoteAOR)
         for k, s in self.sessions.items():
+            is_active = s.isActive()
             if s == session or s.identifier == session.identifier:
-                return k, s
-            if not s.isActive():
-                contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(s.remoteAOR)
-                if s.remoteAOR==session.remoteAOR or session_contact==contact!=None:
-                    return k, s
-        else:
-            return None, None
+                return s
+                
+            if not is_active:
+                if s.device_id and s.device_id == session.device_id:
+                    #s.contact = session.contact
+                    #s.remoteAOR = session.remoteAOR
+                    return s
+
+                if s.remoteAOR == session.remoteAOR:
+                    return s
+
+                if s.contact and s.contact == session.contact:
+                    return s
+        return None
 
     def replaceInactiveWithCompatibleSession_(self, newSession):
-        key, oldSession = self._findInactiveSessionCompatibleWith_(newSession)
+        oldSession = self._findInactiveSessionCompatibleWith_(newSession)
         ok = False
         if oldSession:
             for item in self.tabView.tabViewItems():

@@ -66,6 +66,7 @@ import datetime
 import hashlib
 import os
 import objc
+import re
 import time
 import unicodedata
 import uuid
@@ -252,6 +253,7 @@ class ChatController(MediaStream):
         self.history_msgid_list=set()
 
         self.remote_uri = self.sessionController.remoteAOR if self.sessionController.account is not BonjourAccount() else self.sessionController.device_id
+
         self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour.local'
 
         self.silence_notifications = self.sessionController.contact.contact.silence_notifications if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) else False
@@ -304,6 +306,22 @@ class ChatController(MediaStream):
         self.updateDatabaseRecordingButton()
 
         return self
+
+    @property
+    @objc.python_method
+    def local_identity(self):
+        if self.sessionController.account.display_name and self.sessionController.account.display_name != self.local_uri:
+            return ChatIdentity.parse('%s <sip:%s>' % (self.sessionController.account.display_name, self.local_uri))
+        else:
+            return ChatIdentity.parse('<sip:%s>' % self.local_uri)
+
+    @property
+    @objc.python_method
+    def remote_identity(self):
+        if self.sessionController.display_name and self.sessionController.display_name != self.sessionController.remoteAOR:
+            return ChatIdentity.parse('%s <sip:%s>' % (self.sessionController.display_name, self.sessionController.remoteAOR))
+        else:
+            return ChatIdentity.parse('<sip:%s>' % self.sessionController.remoteAOR)
 
     @objc.python_method
     def toggle_silence_notifications(self):
@@ -605,7 +623,7 @@ class ChatController(MediaStream):
                 documentAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSHTMLTextDocumentType, NSDocumentTypeDocumentAttribute, exclude, NSExcludedElementsDocumentAttribute)
                 data = text_storage.dataFromRange_documentAttributes_error_(NSMakeRange(0, text_storage.length()), documentAttributes, None)
                 htmlData = NSData.alloc().initWithBytes_length_(data[0], len(data[0]))
-                content = NSString.alloc().initWithData_encoding_(htmlData, NSUTF8StringEncoding)
+                content = str(NSString.alloc().initWithData_encoding_(htmlData, NSUTF8StringEncoding))
                 content_type = 'html'
             except Exception as e:
                 content = str(textView.string())
@@ -622,13 +640,7 @@ class ChatController(MediaStream):
 
             if content:
                 self.chatViewController.inputText.setString_("")
-                recipient = '%s <sip:%s>' % (self.sessionController.display_name, self.sessionController.remoteAOR)
-                try:
-                    identity = ChatIdentity.parse(recipient)
-                except ValueError as e:
-                    identity = None
-
-                if self.outgoing_message_handler.send(content, recipient=identity, content_type=content_type):
+                if self.outgoing_message_handler.send(content, recipient=self.remote_identity, content_type=content_type):
                     NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
@@ -687,60 +699,60 @@ class ChatController(MediaStream):
             return
 
         blink_contact = self.sessionController.contact
-        if not blink_contact:
+
+        if not blink_contact or self.sessionController.account is BonjourAccount():
             remote_uris = self.remote_uri
         else:
             remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
+    
+        zoom_factor = self.chatViewController.scrolling_zoom_factor
+        if zoom_factor:
+            period_array = {
+                            1: datetime.datetime.now()-datetime.timedelta(days=2),
+                            2: datetime.datetime.now()-datetime.timedelta(days=7),
+                            3: datetime.datetime.now()-datetime.timedelta(days=31),
+                            4: datetime.datetime.now()-datetime.timedelta(days=90),
+                            5: datetime.datetime.now()-datetime.timedelta(days=180),
+                            6: datetime.datetime.now()-datetime.timedelta(days=365),
+                            7: datetime.datetime.now()-datetime.timedelta(days=3650)
+                        }
 
-        if self.sessionController.account is not BonjourAccount():
-            zoom_factor = self.chatViewController.scrolling_zoom_factor
-            if zoom_factor:
-                period_array = {
-                                1: datetime.datetime.now()-datetime.timedelta(days=2),
-                                2: datetime.datetime.now()-datetime.timedelta(days=7),
-                                3: datetime.datetime.now()-datetime.timedelta(days=31),
-                                4: datetime.datetime.now()-datetime.timedelta(days=90),
-                                5: datetime.datetime.now()-datetime.timedelta(days=180),
-                                6: datetime.datetime.now()-datetime.timedelta(days=365),
-                                7: datetime.datetime.now()-datetime.timedelta(days=3650)
-                            }
+            after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
 
-                after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
+            if zoom_factor == 1:
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
+            elif zoom_factor == 2:
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last week", "Label")
+            elif zoom_factor == 3:
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last month", "Label")
+            elif zoom_factor == 4:
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last three months", "Label")
+            elif zoom_factor == 5:
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last six months", "Label")
+            elif zoom_factor == 6:
+                self.zoom_period_label = NSLocalizedString("Displaying messages from last year", "Label")
+            elif zoom_factor == 7:
+                self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
+                self.chatViewController.setHandleScrolling_(False)
 
-                if zoom_factor == 1:
-                    self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
-                elif zoom_factor == 2:
-                    self.zoom_period_label = NSLocalizedString("Displaying messages from last week", "Label")
-                elif zoom_factor == 3:
-                    self.zoom_period_label = NSLocalizedString("Displaying messages from last month", "Label")
-                elif zoom_factor == 4:
-                    self.zoom_period_label = NSLocalizedString("Displaying messages from last three months", "Label")
-                elif zoom_factor == 5:
-                    self.zoom_period_label = NSLocalizedString("Displaying messages from last six months", "Label")
-                elif zoom_factor == 6:
-                    self.zoom_period_label = NSLocalizedString("Displaying messages from last year", "Label")
-                elif zoom_factor == 7:
-                    self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
-                    self.chatViewController.setHandleScrolling_(False)
+            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
+        else:
+            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
-            else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+        # build a list of previously failed messages
+        last_failed_messages=[]
+        for row in results:
+            if row.status == 'delivered':
+                break
+            last_failed_messages.append(row)
+        last_failed_messages.reverse()
+        self.history_msgid_list = [row.msgid for row in reversed(list(results))]
 
-            # build a list of previously failed messages
-            last_failed_messages=[]
-            for row in results:
-                if row.status == 'delivered':
-                    break
-                last_failed_messages.append(row)
-            last_failed_messages.reverse()
-            self.history_msgid_list = [row.msgid for row in reversed(list(results))]
-
-            # render last delievered messages except those due to be resent
-            # messages_to_render = [row for row in reversed(list(results)) if row not in last_failed_messages]
-            messages_to_render = [row for row in reversed(list(results))]
-            #self.resend_last_failed_message(last_failed_messages)
-            self.render_history_messages(messages_to_render, scrollToMessageId)
+        # render last delievered messages except those due to be resent
+        # messages_to_render = [row for row in reversed(list(results)) if row not in last_failed_messages]
+        messages_to_render = [row for row in reversed(list(results))]
+        #self.resend_last_failed_message(last_failed_messages)
+        self.render_history_messages(messages_to_render, scrollToMessageId)
 
         self.send_pending_message()
 
@@ -791,6 +803,8 @@ class ChatController(MediaStream):
         seen_sms = {}
         last_media_type = None
 
+        cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
+
         for message in messages:
             if message.status == 'sent':
                 message.status = 'failed'
@@ -823,7 +837,18 @@ class ChatController(MediaStream):
                 #if message.media_type == 'sms' and last_media_type == 'chat':
                     #self.chatViewController.showSystemMessage('Short messages', timestamp, False, call_id=message.sip_callid,)
 
-                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, message.body, timestamp, is_private=private, recipient=message.cpim_to, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
+                sender = message.cpim_from
+                recipient = message.cpim_to
+
+                match = cpim_re.match(sender)
+                if match:
+                    sender = match.group('display_name') or match.group('uri')
+
+                match = cpim_re.match(recipient)
+                if match:
+                    recipient = match.group('display_name') or match.group('uri')
+
+                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, message.body, timestamp, is_private=private, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
@@ -841,17 +866,8 @@ class ChatController(MediaStream):
             return
 
         for message in messages:
-            if message.cpim_to:
-                address, display_name, full_uri, fancy_uri = sipuri_components_from_string(message.cpim_to)
-                try:
-                    recipient = ChatIdentity.parse('%s <sip:%s>' % (display_name, address))
-                except ValueError:
-                    continue
-            else:
-                recipient = None
-
             private = True if message.private == "1" else False
-            self.outgoing_message_handler.resend(message.msgid, message.body, recipient, private, message.content_type)
+            self.outgoing_message_handler.resend(message.msgid, message.body, self.remote_identity, private, message.content_type)
 
     @objc.python_method
     @run_in_gui_thread
@@ -883,6 +899,9 @@ class ChatController(MediaStream):
 
     @objc.python_method
     def connectButtonEnabled(self):
+        if '@127.0.0.1' in str(self.remote_identity.uri):
+            return False
+
         if self.status in (STREAM_IDLE, STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_CONNECTED):
             return True
         elif self.status == STREAM_PROPOSING:
@@ -894,6 +913,9 @@ class ChatController(MediaStream):
 
     @objc.python_method
     def audioButtonEnabled(self):
+        if '@127.0.0.1' in str(self.remote_identity.uri):
+            return False
+
         if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING, STREAM_CANCELLING):
             return False
 
@@ -911,7 +933,17 @@ class ChatController(MediaStream):
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
     @objc.python_method
+    def fileTransferButtonEnabled(self):
+        if '@127.0.0.1' in str(self.remote_identity.uri):
+            return False
+        
+        return True
+
+    @objc.python_method
     def videoButtonEnabled(self):
+        if '@127.0.0.1' in str(self.remote_identity.uri):
+            return False
+
         if self.status in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_DISCONNECTING, STREAM_CANCELLING):
             return False
             
@@ -959,6 +991,7 @@ class ChatController(MediaStream):
                     item.setToolTip_(NSLocalizedString("Start chat", "Tooltip"))
                     item.setLabel_(NSLocalizedString("Connect", "Button title"))
                     item.setImage_(NSImage.imageNamed_("start_chat"))
+                    
                 item.setEnabled_(self.connectButtonEnabled())
 
             elif identifier == 'audio':
@@ -1072,7 +1105,7 @@ class ChatController(MediaStream):
                     item.setImage_(NSImage.imageNamed_("video"))
                 return _video_enabled
             elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
-                return True
+                return self.fileTransferButtonEnabled()
             elif identifier == 'smileys':
                 return True
             elif identifier == 'editor' and self.sessionController.account is not BonjourAccount():
@@ -1218,7 +1251,7 @@ class ChatController(MediaStream):
                 if self.sessionController.account is BonjourAccount():
                     contactWindow.historyViewer.filterByURIs(('bonjour.local', ))
                 else:
-                    contactWindow.historyViewer.filterByURIs((format_identity_to_string(self.sessionController.target_uri),))
+                    contactWindow.historyViewer.filterByURIs((self.remote_uri, ))
                 days = 1
                 if self.chatViewController.scrolling_zoom_factor:
                     if self.chatViewController.scrolling_zoom_factor == 1:
@@ -1529,12 +1562,12 @@ class ChatController(MediaStream):
 
                         content = '''<img src="data:%s;base64,%s" border=0 width=%s>''' % (message.content_type, message.content, width)
 
-                        name = self.sessionController.titleLong
+                        sender_identity = self.sessionController.titleLong
                         icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
                         
-                        self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', name, icon, content, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
+                        self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', sender_identity, icon, content, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
                         
-                        nc_title = NSLocalizedString(name, "System notification title")
+                        nc_title = NSLocalizedString(sender_identity, "System notification title")
                         nc_subtitle = NSLocalizedString("Sent you an image", "System notification subtitle")
                         nc_body = file_path
                         NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
@@ -1550,24 +1583,30 @@ class ChatController(MediaStream):
         msgid = hash.hexdigest()
 
         if msgid not in self.history_msgid_list:
-            sender = message.sender
-            recipient = message.recipients[0]
+            sender_identity = self.remote_identity or message.sender
+            sender = format_identity_to_string(sender_identity, format='compact')
+            recipient_identity = message.recipients[0] if message.recipients else self.local_identity
+            recipient = format_identity_to_string(recipient_identity, format='compact')
+                
             private = data.private
             content = message.content
-            sender_aor = format_identity_to_string(sender)
+            #print('Chat got message %s -> %s' % (sender_identity, recipient_identity))
             status = 'delivered'
+
             if data.encrypted:
                 encryption = 'verified' if self.stream.encryption.verified else 'unverified'
             else:
                 encryption = ''
 
-            timestamp = message.timestamp
             is_html = True if message.content_type == 'text/html' else False
-            name = format_identity_to_string(sender, format='compact')
-            icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_aor, self.session.remote_focus)
-            recipient_html = '%s <%s@%s>' % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
+            # save to history
+            if 'Welcome to SylkServer!' not in content and 'Received ZRTP Short Authentication String' not in content:
+                message = MessageInfo(msgid, direction='incoming', sender=sender_identity, recipient=recipient_identity, timestamp=message.timestamp, content=content, private=private, status="delivered", content_type='html' if is_html else 'text', encryption=encryption)
+                self.outgoing_message_handler.add_to_history(message)
+                
             if self.chatViewController:
-                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', name, icon, content, timestamp, is_private=private, recipient=recipient_html, state=status, is_html=is_html, media_type='chat', encryption=encryption)
+                icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.remote_uri, self.session.remote_focus)
+                self.chatViewController.showMessage(self.sessionController.call_id, msgid, 'incoming', sender, icon, content, message.timestamp, is_private=private, recipient=recipient, state=status, is_html=is_html, media_type='chat', encryption=encryption)
 
             tab = self.chatViewController.outputView.window()
             tab_is_key = tab.isKeyWindow() if tab else False
@@ -1575,15 +1614,11 @@ class ChatController(MediaStream):
 
             # FancyTabViewSwitcher will set unfocused tab item views as Hidden
             if (not tab_is_key or self.chatViewController.view.isHiddenOrHasHiddenAncestor()) and not self.silence_notifications:
-
-                try:
-                    NSApp.requestUserAttention_(NSInformationalRequest)
-                    nc_title = NSLocalizedString("Chat Message Received", "Window title")
-                    nc_subtitle = format_identity_to_string(sender, format='full')
-                    nc_body = html2txt(content.decode('utf-8'))[0:400] if message.content_type == 'text/html' else content[0:400]
-                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-                except Exception as e:
-                    pass
+                NSApp.requestUserAttention_(NSInformationalRequest)
+                nc_title = NSLocalizedString("Chat Message Received", "Window title")
+                nc_subtitle = format_identity_to_string(sender_identity, format='full')
+                nc_body = html2txt(content.decode('utf-8'))[0:400] if message.content_type == 'text/html' else content[0:400]
+                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
             NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
 
@@ -1592,11 +1627,6 @@ class ChatController(MediaStream):
                 self.remoteTypingTimer.invalidate()
                 self.remoteTypingTimer = None
             self.chatWindowController.noteSession_isComposing_(self.sessionController, False)
-
-            # save to history
-            if 'Welcome to SylkServer!' not in content and 'Received ZRTP Short Authentication String' not in content:
-                message = MessageInfo(msgid, direction='incoming', sender=sender, recipient=recipient, timestamp=timestamp, content=content, private=private, status="delivered", content_type='html' if is_html else 'text', encryption=encryption)
-                self.outgoing_message_handler.add_to_history(message)
 
     @objc.python_method
     def _NH_ChatStreamGotComposingIndication(self, stream, data):
@@ -1656,15 +1686,15 @@ class ChatController(MediaStream):
 
         if self.status == STREAM_CONNECTED:
             if sender.direction == 'incoming':
-                name = self.sessionController.titleShort
+                sender_identity = self.sessionController.titleShort
                 icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
             else:
-                name = None
+                sender_identity = None
                 icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
 
             timestamp = ISOTimestamp.now()
             if self.chatViewController:
-                self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), sender.direction, name, icon, content, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
+                self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), sender.direction, sender_identity, icon, content, timestamp, state="delivered", history_entry=True, is_html=True, media_type='chat')
 
     @objc.python_method
     def _NH_BlinkSessionDidEnd(self, sender, data):
@@ -2071,7 +2101,8 @@ class OutgoingMessageHandler(NSObject):
     def send(self, content, recipient=None, private=False, content_type='text'):
         timestamp = ISOTimestamp.now()
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
-        recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
+        recipient_identity = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user.decode(), recipient.uri.host.decode()) if recipient else ''
+        sender_identity = self.delegate.account.display_name or self.local_uri
 
         hash = hashlib.sha1()
         hash.update((content+str(timestamp)).encode("utf-8"))
@@ -2085,19 +2116,19 @@ class OutgoingMessageHandler(NSObject):
                 id = self._send(msgid)
             except Exception as e:
                 self.delegate.sessionController.log_error("Error sending chat message %s: %s" % (msgid, e))
-                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="failed", recipient=recipient_html, is_html=is_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', sender_identity, icon, content, timestamp, is_private=private, state="failed", recipient=recipient_identity, is_html=is_html)
             else:
-                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption, is_html=is_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', sender_identity, icon, content, timestamp, is_private=private, state="sent", recipient=recipient_identity, encryption=self.messages[id].encryption, is_html=is_html)
         else:
             self.messages[msgid].pending=True
-            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="queued", recipient=recipient_html, is_html=is_html)
+            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', sender_identity, icon, content, timestamp, is_private=private, state="queued", recipient=recipient_identity, is_html=is_html)
 
         return True
 
     @objc.python_method
     def resend(self, msgid, content, recipient=None, private=False, content_type='text'):
         timestamp = ISOTimestamp.now()
-        recipient_html = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user, recipient.uri.host) if recipient else ''
+        recipient_identity = "%s <%s@%s>" % (recipient.display_name, recipient.uri.user.decode(), recipient.uri.host.decode()) if recipient else ''
         icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
 
         self.messages[msgid] = MessageInfo(msgid=msgid, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, private=private, status="queued")
@@ -2110,10 +2141,10 @@ class OutgoingMessageHandler(NSObject):
                 self.delegate.sessionController.log_error("Error sending chat message %s: %s" % (msgid, e))
                 self.delegate.showSystemMessage(self.delegate.sessionController.call_id, NSLocalizedString("Message delivery failure", "Label"), timestamp, True)
             else:
-                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="sent", recipient=recipient_html, encryption=self.messages[id].encryption, is_html=is_html)
+                self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="sent", recipient=recipient_identity, encryption=self.messages[id].encryption, is_html=is_html)
         else:
             self.messages[msgid].pending=True
-            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="queued", recipient=recipient_html, is_html=is_html)
+            self.delegate.showMessage(self.delegate.sessionController.call_id, msgid, 'outgoing', None, icon, content, timestamp, is_private=private, state="queued", recipient=recipient_identity, is_html=is_html)
 
     @objc.python_method
     def setConnected(self, stream):
@@ -2228,7 +2259,7 @@ class OutgoingMessageHandler(NSObject):
             return
 
         # writes the record to the sql database
-        cpim_to = "%s <%s@%s>" % (message.recipient.display_name, message.recipient.uri.user, message.recipient.uri.host) if message.recipient else ''
+        cpim_to = "%s <%s@%s>" % (message.recipient.display_name, message.recipient.uri.user.decode(), message.recipient.uri.host.decode()) if message.recipient else ''
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         private = "1" if message.private else "0"

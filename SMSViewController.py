@@ -1314,6 +1314,9 @@ class SMSViewController(NSObject):
         seen_sms = {}
         last_media_type = 'sms'
         last_chat_timestamp = None
+
+        cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
+
         for message in messages:
             if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED:
                 self.read_queue.put(message.msgid)
@@ -1359,8 +1362,17 @@ class SMSViewController(NSObject):
                         content = bytes(decrypted_message.message, 'latin1').decode()
                         self.history.update_decrypted_message(message.msgid, content)
 
+            sender = message.cpim_from
             recipient = message.cpim_to
-            sender = self.display_name or sender if message.direction == 'incoming' else self.account.display_name or sender
+
+            match = cpim_re.match(sender)
+            if match:
+                sender = match.group('display_name') or match.group('uri')
+
+            match = cpim_re.match(recipient)
+            if match:
+                recipient = match.group('display_name') or match.group('uri')
+
             self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
 
             call_id = message.sip_callid

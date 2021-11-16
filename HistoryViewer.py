@@ -35,6 +35,7 @@ from Foundation import (NSBundle,
                         NSZeroPoint)
 import objc
 import pgpy
+import re
 
 import datetime
 
@@ -179,6 +180,7 @@ class HistoryViewer(NSWindowController):
             self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
             self.chatViewController.setHandleScrolling_(False)
             self.entriesView.setShouldCloseWithWindow_(False)
+            self.cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
 
             for c in ('remote_uri', 'local_uri', 'date', 'type'):
                 col = self.indexTable.tableColumnWithIdentifier_(c)
@@ -578,7 +580,18 @@ class HistoryViewer(NSWindowController):
                         content = bytes(decrypted_message.message, 'latin1').decode()
                         self.chat_history.update_decrypted_message(message.msgid, content)
 
-            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, message.cpim_from, icon, content, timestamp, is_private=private, recipient=message.cpim_to, state=message.status if message.media_type in ('chat', 'sms', 'message') else '', is_html=is_html, history_entry=True, media_type=message.media_type, encryption=encryption if message.media_type in ('chat', 'message', 'sms') else None)
+            sender = message.cpim_from
+            recipient = message.cpim_to
+
+            match = self.cpim_re.match(sender)
+            if match:
+                sender = match.group('display_name') or match.group('uri')
+
+            match = self.cpim_re.match(recipient)
+            if match:
+                recipient = match.group('display_name') or match.group('uri')
+                            
+            self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content, timestamp, is_private=private, recipient=recipient, state=message.status if message.media_type in ('chat', 'sms', 'message') else '', is_html=is_html, history_entry=True, media_type=message.media_type, encryption=encryption if message.media_type in ('chat', 'message', 'sms') else None)
 
     @objc.IBAction
     def paginateResults_(self, sender):
