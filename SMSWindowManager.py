@@ -1066,14 +1066,19 @@ class SMSWindowManagerClass(NSObject):
         except KeyError:
             if is_replication_message:
                 account = AccountManager().find_account(data.from_header.uri)
+                if account and not account.enabled:
+                    account = None
+
                 if not account:
                     direction = 'incoming'
                     account = AccountManager().find_account(data.to_header.uri)
+                    if account and not account.enabled:
+                        account = None
                 else:
                     direction = 'outgoing'
 
                 if not account:
-                    BlinkLogger().log_warning("Could not find local account for message from %s to %s" % (data.from_header.uri, data.to_header.uri))
+                    BlinkLogger().log_warning("Could not find local enabled account for message from %s to %s" % (data.from_header.uri, data.to_header.uri))
                     return
             else:
                 account = AccountManager().find_account(data.to_header.uri)
