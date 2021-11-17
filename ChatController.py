@@ -67,6 +67,8 @@ import hashlib
 import os
 import objc
 import re
+import random
+import string
 import time
 import unicodedata
 import uuid
@@ -85,7 +87,7 @@ from itertools import chain
 from zope.interface import implementer
 
 from sipsimple.account import BonjourAccount
-from sipsimple.core import SDPAttribute
+from sipsimple.core import SDPAttribute, SIPURI
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams.msrp.chat import ChatStream, ChatStreamError, ChatIdentity, SMPStatus
 from sipsimple.threading.green import run_in_green_thread
@@ -254,7 +256,9 @@ class ChatController(MediaStream):
 
         self.remote_uri = self.sessionController.remoteAOR if self.sessionController.account is not BonjourAccount() else self.sessionController.device_id
 
-        self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour.local'
+        self.local_uri = '%s@%s' % (self.sessionController.account.id.username, self.sessionController.account.id.domain) if self.sessionController.account is not BonjourAccount() else 'bonjour@local'
+        
+        BlinkLogger().log_info('Init chat controller %s -> %s' % (self.local_uri, self.remote_uri))
 
         self.silence_notifications = self.sessionController.contact.contact.silence_notifications if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) else False
         
@@ -262,6 +266,9 @@ class ChatController(MediaStream):
         self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.add_observer(self, name='ChatReplicationJournalEntryReceived')
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
+        self.notification_center.add_observer(self, name='BonjourAccountDidAddNeighbour')
+        self.notification_center.add_observer(self, name='BonjourAccountDidUpdateNeighbour')
+        self.notification_center.add_observer(self, name='BonjourAccountDidRemoveNeighbour')
 
         NSBundle.loadNibNamed_owner_("ChatView", self)
 
@@ -641,7 +648,7 @@ class ChatController(MediaStream):
             if content:
                 self.chatViewController.inputText.setString_("")
                 if self.outgoing_message_handler.send(content, recipient=self.remote_identity, content_type=content_type):
-                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+                    NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
                 self.sessionController.log_info("Session not established, starting it")
@@ -847,7 +854,7 @@ class ChatController(MediaStream):
                 match = cpim_re.match(recipient)
                 if match:
                     recipient = match.group('display_name') or match.group('uri')
-
+                    
                 self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, message.body, timestamp, is_private=private, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
             call_id = message.sip_callid
@@ -1249,7 +1256,7 @@ class ChatController(MediaStream):
                 contactWindow = NSApp.delegate().contactsWindowController
                 contactWindow.showHistoryViewer_(None)
                 if self.sessionController.account is BonjourAccount():
-                    contactWindow.historyViewer.filterByURIs(('bonjour.local', ))
+                    contactWindow.historyViewer.filterByURIs(('bonjour@local', ))
                 else:
                     contactWindow.historyViewer.filterByURIs((self.remote_uri, ))
                 days = 1
@@ -1442,7 +1449,8 @@ class ChatController(MediaStream):
         if data.status is SMPStatus.Success:
             result = self.chatOtrSmpWindow.handle_remote_response(data.same_secrets)
             if result:
-                self.showSystemMessage('Peer identity verification succeeded', ISOTimestamp.now(), False)
+                pass
+                #self.showSystemMessage('Peer identity verification succeeded', ISOTimestamp.now(), False)
             else:
                 self.showSystemMessage('Please validate the identity in the encryption lock menu', ISOTimestamp.now(), True)
 
@@ -1493,6 +1501,34 @@ class ChatController(MediaStream):
             NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
 
         self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_BonjourAccountDidAddNeighbour(self, sender, data):
+        record = data.record
+        print('Add bonjour %s %s' % (record.uri, type(record.uri)))
+        if self.remote_uri == record.id:
+            self.sessionController.target_uri = record.uri
+            self.sessionController.display_name = record.name
+            self.revalidateToolbar()
+            BlinkLogger().log_info('Update chat controller %s -> %s' % (self.local_uri, self.remote_uri))
+
+    @objc.python_method
+    def _NH_BonjourAccountDidUpdateNeighbour(self, sender, data):
+        record = data.record
+        if self.remote_uri == record.id:
+            self.sessionController.target_uri = record.uri
+            self.sessionController.display_name = record.name
+            self.revalidateToolbar()
+            BlinkLogger().log_info('Update chat controller %s -> %s' % (self.local_uri, self.remote_uri))
+
+    @objc.python_method
+    def _NH_BonjourAccountDidRemoveNeighbour(self, sender, data):
+        record = data.record
+        if self.remote_uri == record.id:
+            new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
+            self.sessionController.target_uri = SIPURI.parse(new_target)
+            self.revalidateToolbar()
+            BlinkLogger().log_info('Update chat controller %s -> %s' % (self.local_uri, self.remote_uri))
 
     @objc.python_method
     def _NH_ChatStreamGotMessage(self, stream, data):
@@ -1620,7 +1656,7 @@ class ChatController(MediaStream):
                 nc_body = html2txt(content.decode('utf-8'))[0:400] if message.content_type == 'text/html' else content[0:400]
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             # disable composing indicator
             if self.remoteTypingTimer:
@@ -1911,6 +1947,10 @@ class ChatController(MediaStream):
         self.notification_center.discard_observer(self, name='BlinkFileTransferDidEnd')
         self.notification_center.discard_observer(self, name='ChatReplicationJournalEntryReceived')
         self.notification_center.discard_observer(self, name='CFGSettingsObjectDidChange')
+        self.notification_center.discard_observer(self, name='BonjourAccountDidAddNeighbour')
+        self.notification_center.discard_observer(self, name='BonjourAccountDidUpdateNeighbour')
+        self.notification_center.discard_observer(self, name='BonjourAccountDidRemoveNeighbour')
+
 
         # remove GUI observers
         NSNotificationCenter.defaultCenter().removeObserver_(self)
@@ -2043,7 +2083,7 @@ class OutgoingMessageHandler(NSObject):
             self.no_report_received_messages = {}
             self.history = ChatHistory()
             self.delegate = chatView
-            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour.local'
+            self.local_uri = '%s@%s' % (self.delegate.account.id.username, self.delegate.account.id.domain) if self.delegate.account is not BonjourAccount() else 'bonjour@local'
             self.remote_uri = self.delegate.delegate.sessionController.remoteAOR if self.delegate.account is not BonjourAccount() else self.delegate.delegate.sessionController.device_id
         return self
 

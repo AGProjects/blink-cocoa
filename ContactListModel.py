@@ -458,7 +458,7 @@ class BlinkContact(NSObject):
             host = host.partition(":")[0]
             return (user, host)
         else:
-            user = uri.partition(":")[0]
+            user = uri.partition(":")[0] if uri else ''
             return (user, '')
 
     @objc.python_method

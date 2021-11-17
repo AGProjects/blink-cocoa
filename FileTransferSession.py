@@ -351,7 +351,7 @@ class IncomingFileTransferHandler(FileTransfer):
         file_path = self.file_path.decode() if isinstance(self.file_path, bytes) else self.file_path
         self.ft_info = FileTransferInfo(transfer_id=self.stream.transfer_id,
                                         direction='incoming',
-                                        local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local' ,
+                                        local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local' ,
                                         file_size=self.file_selector.size,
                                         remote_uri=self.remote_identity,
                                         file_path=file_path)
@@ -410,7 +410,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.ft_info = FileTransferInfo(transfer_id=str(uuid.uuid4()),
                                         direction='outgoing',
                                         file_size=self._file_selector.size,
-                                        local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local',
+                                        local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local',
                                         remote_uri=self.remote_identity,
                                         file_path=file_path)
 
@@ -453,7 +453,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         file_path = self._file_selector.name.decode() if isinstance(self._file_selector.name, bytes) else self._file_selector.name
         self.ft_info = FileTransferInfo(transfer_id=str(uuid.uuid4()),
                                         direction='incoming',
-                                        local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local',
+                                        local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local',
                                         file_size=0,
                                         remote_uri=self.remote_identity,
                                         file_path=file_path)

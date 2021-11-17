@@ -68,6 +68,9 @@ class BonjourSMSSettingsExtension(SettingsGroup):
     enable_pgp = Setting(type=bool, default=True)
     enable_imdn = Setting(type=bool, default=True)
     enable_composing = Setting(type=bool, default=True)
+    public_key = Setting(type=str, default=None, nillable=True)
+    private_key = Setting(type=str, default=None, nillable=True)
+    public_key_checksum = Setting(type=str, default=None, nillable=True)
 
 
 class MessageSummarySettingsExtension(MessageSummarySettings):

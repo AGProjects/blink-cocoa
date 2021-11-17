@@ -267,7 +267,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         focus = "1" if data.focus else "0"
         failure_reason = ''
@@ -289,14 +289,14 @@ class SessionControllersManager(object, metaclass=Singleton):
             timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_voicemail(self, controller, data):
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         focus = "1" if data.focus else "0"
         failure_reason = ''
@@ -317,7 +317,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_ended(self, controller, data):
@@ -325,7 +325,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         session = controller.session
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         focus = "1" if data.focus else "0"
         failure_reason = ''
@@ -377,7 +377,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         timestamp = str(ISOTimestamp.now())
 
         self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+        NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -385,7 +385,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         focus = "1" if data.focus else "0"
         failure_reason = 'Answered elsewhere'
@@ -409,7 +409,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_failed(self, controller, data):
@@ -417,7 +417,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = '%s (%s)' % (data.reason or data.failure_reason, data.code)
@@ -441,7 +441,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_cancelled(self, controller, data):
@@ -450,7 +450,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         failure_reason = ''
@@ -471,7 +471,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_ended(self, controller, data):
@@ -483,7 +483,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
         focus = "1" if data.focus else "0"
-        local_uri = 'bonjour.local' if account is BonjourAccount() else format_identity_to_string(account)
+        local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
         direction = 'incoming'
@@ -541,7 +541,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             timestamp = str(ISOTimestamp.now())
 
             self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
-            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def get_printed_duration(self, start_time, end_time):

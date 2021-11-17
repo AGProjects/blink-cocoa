@@ -161,7 +161,7 @@ class SMSViewController(NSObject):
     otr_negotiation_timer = None
     pgp_encrypted = False
 
-    def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id):
+    def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None):
         self = objc.super(SMSViewController, self).init()
         if self:
             self.keys_path = ApplicationData.get('keys')
@@ -185,14 +185,12 @@ class SMSViewController(NSObject):
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
-            self.contact = SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
+            self.contact = selected_contact or SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
             self.load_remote_public_key()
             
             self.display_name = display_name if self.contact else self.contact.name
             
-            print('SMS self.display_name %s' % self.display_name)
-
-            if not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
+            if self.account.enabled and not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
                 self.generateKeys()
             
             try:
@@ -497,7 +495,7 @@ class SMSViewController(NSObject):
             status = MSG_STATE_SENT if is_replication_message else MSG_STATE_DELIVERED
             self.chatViewController.showMessage(call_id, msg_id, direction, format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             # save to history
             recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
@@ -1173,7 +1171,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient = ChatIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour.local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             return True
 
@@ -1318,7 +1316,7 @@ class SMSViewController(NSObject):
         cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
 
         for message in messages:
-            if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED:
+            if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
                 self.read_queue.put(message.msgid)
 
             if message.sip_callid != '' and message.media_type == 'sms':

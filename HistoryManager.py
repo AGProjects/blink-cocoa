@@ -21,6 +21,7 @@ from Foundation import NSLocalizedString
 import json
 import pickle
 import os
+import re
 import shutil
 import time
 import urllib.parse
@@ -59,7 +60,6 @@ from sipsimple.core import SIPURI
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implementer
-
 
 pool = ThreadPool(minthreads=1, maxthreads=1, name='db-ops')
 pool.start()
@@ -155,7 +155,7 @@ class SessionHistoryEntry(SQLObject):
 
 
 class SessionHistory(object, metaclass=Singleton):
-    __version__ = 6
+    __version__ = 7
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -272,17 +272,25 @@ class SessionHistory(object, metaclass=Singleton):
                 except Exception as e:
                     BlinkLogger().log_error("Error alter table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
-                query = "update chat_messages set local_uri = 'bonjour.local' where local_uri = 'bonjour'"
+                query = "update chat_messages set local_uri = 'bonjour@local' where local_uri = 'bonjour'"
                 try:
                     self.db.queryAll(query)
                 except Exception as e:
                     BlinkLogger().log_error("Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
 
-                query = "update sessions set local_uri = 'bonjour.local' where local_uri = 'bonjour'"
+                query = "update sessions set local_uri = 'bonjour@local' where local_uri = 'bonjour'"
                 try:
                     self.db.queryAll(query)
                 except Exception as e:
                     BlinkLogger().log_error("Error updating table %s: %s" % (SessionHistoryEntry.sqlmeta.table, e))
+
+            if previous_version.version < 7:
+                query = "update sessions set local_uri = 'bonjour@local' where local_uri = 'bonjour.local'"
+                try:
+                    self.db.queryAll(query)
+                except Exception as e:
+                    pass
+
 
         TableVersions().set_table_version(SessionHistoryEntry.sqlmeta.table, self.__version__)
 
@@ -419,58 +427,38 @@ class SessionHistory(object, metaclass=Singleton):
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
     @run_in_db_thread
-    def _get_last_chat_conversations(self, count):
-        query="select local_uri, remote_uri, sip_callid, display_name from sessions where media_types like '%chat%' order by start_time desc limit 100"
+    def _get_last_chat_conversations(self, count, media=['chat'], skip_conference_uris=False, days=60):
         results = []
+        media_type = list("'%s'" % m for m in media)
+        extra_where = "remote_uri not like '%@conference.%'" if skip_conference_uris else "1=1"
+        all_accounts = list("'%s'" % account.id for account in AccountManager().get_accounts() if account.enabled)
+ 
+        query = "select local_uri, remote_uri, direction, cpim_to, cpim_from, max(time) from chat_messages where remote_uri != '' and media_type in (%s) and local_uri in (%s) and %s and time > DATE('now', '-%d day') group by remote_uri order by time desc limit %s" % (", ".join(media_type), ", ".join(all_accounts), extra_where, days, count);
+
         try:
             rows = list(self.db.queryAll(query))
         except dberrors.OperationalError as e:
-            BlinkLogger().log_error("Error getting last chat sessions: %s" % e)
+            BlinkLogger().log_error("Error getting last conversations: %s" % e)
             return results
+
+        cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
+
         for row in rows:
-            if not row[2]:
-                continue
+            recipient = row[3] if row[2] == 'outgoing' else row[4]
+            match = cpim_re.match(recipient)
+            result = {'local_uri': row[0],
+                      'remote_uri': row[1],
+                      'display_name': match.group('display_name') if match else ''}
 
-            try:
-                query="select count(*) from chat_messages where sip_callid = '%s'" % row[2]
-                nr_messages = list(self.db.queryAll(query))
-                if nr_messages[0][0] == 0:
-                    continue
-            except dberrors.OperationalError as e:
-                BlinkLogger().log_error("Error getting count of chat messages: %s" % e)
-                continue
-
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
-            pair = (row[0], target_uri, row[3])
-            if pair not in results:
-                results.append(pair)
-                if len(results) == count:
-                    break
-        return reversed(results)
+            results.append(result)
+ 
+        return results
 
     def get_last_chat_conversations(self, count=5):
         return block_on(self._get_last_chat_conversations(count))
 
     def get_last_sms_conversations(self, count=5):
-        return block_on(self._get_last_sms_conversations(count))
-
-    @run_in_db_thread
-    def _get_last_sms_conversations(self, count):
-        query="select local_uri, remote_uri from chat_messages where media_type = 'sms' order by time desc limit 100"
-        results = []
-        try:
-            rows = list(self.db.queryAll(query))
-        except Exception as e:
-            BlinkLogger().log_error("Error getting last sms conversations: %s" % e)
-            return results
-        for row in rows:
-            target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(row[1])
-            pair = (row[0], target_uri)
-            if pair not in results:
-                results.append(pair)
-                if len(results) == count:
-                    break
-        return reversed(results)
+        return block_on(self._get_last_chat_conversations(count, media=['chat', 'sms', 'messages'], skip_conference_uris=True))
 
     @run_in_db_thread
     def delete_entries(self, local_uri=None, remote_uri=None, after_date=None, before_date=None):
@@ -530,7 +518,7 @@ class ChatMessage(SQLObject):
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 5
+    __version__ = 6
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -639,6 +627,12 @@ class ChatHistory(object, metaclass=Singleton):
                 if not str(e).startswith('duplicate column name'):
                     BlinkLogger().log_error("Error adding column uuid to table %s: %s" % (ChatMessage.sqlmeta.table, e))
 
+        if next_upgrade_version < 6:
+            query = "update chat_messages set local_uri = 'bonjour@local' where local_uri = 'bonjour.local'"
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                pass
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 

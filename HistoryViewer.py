@@ -164,7 +164,7 @@ class HistoryViewer(NSWindowController):
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.all_contacts = BlinkHistoryViewerContact('Any Address', name='All Contacts')
-            self.bonjour_contact = BlinkHistoryViewerContact('bonjour.local', name='Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
+            self.bonjour_contact = BlinkHistoryViewerContact('bonjour@local', name='Bonjour Neighbours', icon=NSImage.imageNamed_("NSBonjour"))
 
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name='ChatViewControllerDidDisplayMessage')
@@ -686,7 +686,7 @@ class HistoryViewer(NSWindowController):
                     self.searchContactBox.setStringValue_('')
                     self.refreshContacts()
                 elif row == 1:
-                    self.search_local = 'bonjour.local'
+                    self.search_local = 'bonjour@local'
                     self.search_uris = None
                 elif row > 1:
                     self.search_local = None
@@ -868,7 +868,7 @@ class HistoryViewer(NSWindowController):
             label = NSLocalizedString("Please confirm the deletion of %s Bonjour history entries", "Label") % media_print + period + ". "+ NSLocalizedString("This operation cannot be undone. ", "Label")
             ret = NSRunAlertPanel(NSLocalizedString("Purge History Entries", "Window title"), label, NSLocalizedString("Confirm", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
             if ret == NSAlertDefaultReturn:
-                self.delete_messages(local_uri='bonjour.local', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
+                self.delete_messages(local_uri='bonjour@local', media_type=self.search_media, after_date=self.after_date, before_date=self.before_date)
         else:
             contact = self.contacts[row]
             if contact.presence_contact is not None:
@@ -907,14 +907,14 @@ class HistoryViewer(NSWindowController):
 
     @objc.python_method
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
-        if notification.data.local_party != 'bonjour.local':
+        if notification.data.local_party != 'bonjour@local':
             exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
             if not exists:
                 self.refreshContacts()
 
     @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
-        if notification.data.local_party != 'bonjour.local':
+        if notification.data.local_party != 'bonjour@local':
             exists = any(contact for contact in self.contacts if notification.data.remote_party == contact.uri)
             if not exists:
                 self.refreshContacts()

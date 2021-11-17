@@ -3195,14 +3195,14 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_error("Missing voicemail URI for %s" % selected_contact.name)
                 NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("No voicemail URI set", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             else:
-                BlinkLogger().log_error("Missing target for %s" % selected_contact.name)
+                BlinkLogger().log_error("Missing target")
             return None
 
         account = None
         target_uri = None
 
         if local_uri is not None:
-            if local_uri == 'bonjour.local':
+            if local_uri == 'bonjour@local':
                 account = BonjourAccount()
             else:
                 try:
@@ -3357,7 +3357,7 @@ class ContactWindowController(NSWindowController):
     def redial(self, session_info):
         display_name = session_info.display_name
         streams = session_info.media_types.split(",")
-        if session_info.local_uri == 'bonjour.local':
+        if session_info.local_uri == 'bonjour@local':
             account = BonjourAccount()
             device_id = session_info.device_id
             BlinkLogger().log_info("Redialing to device %s of %s using bonjour account" % (device_id, display_name))
@@ -3412,30 +3412,34 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     @run_in_gui_thread
-    def open_last_sms_conversations(self, conversations=()):
+    def open_last_sms_conversations(self, conversations):
         if SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
             return
 
-        for parties in conversations:
+        for conversation in conversations:
+            selected_contact = None
             try:
-                account = AccountManager().get_account(parties[0])
+                account = AccountManager().get_account(conversation['local_uri'])
             except KeyError:
                 account = AccountManager().default_account
 
-            if account is BonjourAccount():
-                continue
-
-            target = normalize_sip_uri_for_outgoing_session(parties[1], account)
-            if not target:
-                continue
-
-            contact = self.model.getFirstContactFromAllContactsGroupMatchingURI(target, exact_match=True)
+            contact = self.model.getFirstContactFromAllContactsGroupMatchingURI(conversation['remote_uri'], exact_match=True)
             if contact:
                 display_name = contact.name
+                selected_contact = contact
             else:
-                display_name = str(target)
+                display_name = conversation['display_name'] or conversation['local_uri']
 
-            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account)
+            if '@' in conversation['remote_uri']:
+                instance_id = None
+                target_uri = SIPURI.parse(str('sip:%s' % conversation['remote_uri']))
+            else:
+                instance_id = conversation['remote_uri']
+                new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
+                target_uri = SIPURI.parse(new_target)
+                selected_contact = BonjourBlinkContact(target_uri, None, instance_id, name=display_name)
+
+            SMSWindowManager.SMSWindowManager().getWindow(target_uri, display_name, account, instance_id=instance_id, selected_contact=selected_contact)
 
     @objc.python_method
     @run_in_green_thread
@@ -3445,9 +3449,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     @run_in_gui_thread
-    def open_last_chat_conversations(self, conversations=()):
-        for parties in conversations:
-            self.startSessionWithTarget(parties[1], media_type="chat", local_uri=parties[0], from_history=True, display_name=parties[2])
+    def open_last_chat_conversations(self, conversations):
+        for conversation in conversations:
+            self.startSessionWithTarget(conversation['remote_uri'], media_type="chat", local_uri=conversation['local_uri'], from_history=True, display_name=conversation['display_name'])
 
     @objc.python_method
     @run_in_green_thread
@@ -3491,7 +3495,7 @@ class ContactWindowController(NSWindowController):
             if display_name == target_uri:
                 fancy_uri = target_uri
             elif display_name:
-                if result.local_uri == 'bonjour.local':
+                if result.local_uri == 'bonjour@local':
                     fancy_uri = display_name
                 else:
                     fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -3531,7 +3535,7 @@ class ContactWindowController(NSWindowController):
             if display_name == target_uri:
                 fancy_uri = target_uri
             elif display_name:
-                if result.local_uri == 'bonjour.local':
+                if result.local_uri == 'bonjour@local':
                     fancy_uri = display_name
                 else:
                     fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -3571,7 +3575,7 @@ class ContactWindowController(NSWindowController):
             if display_name == target_uri:
                 fancy_uri = target_uri
             elif display_name:
-                if result.local_uri == 'bonjour.local':
+                if result.local_uri == 'bonjour@local':
                     fancy_uri = display_name
                 else:
                     fancy_uri = '%s <%s>' % (display_name, target_uri)
@@ -5305,7 +5309,7 @@ class ContactWindowController(NSWindowController):
             item = sender.representedObject()
             target_uri = item["target_uri"]
             _search_text = target_uri
-            if item["account"] == 'bonjour.local':
+            if item["account"] == 'bonjour@local':
                 _search_text = item['display_name']
                 account = BonjourAccount()
             else:

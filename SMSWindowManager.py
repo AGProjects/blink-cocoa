@@ -23,8 +23,10 @@ import hashlib
 import uuid
 import pgpy
 import json
-import urllib
+import socket
+import string
 import random
+import urllib
 
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
@@ -611,9 +613,10 @@ class SMSWindowManagerClass(NSObject):
        req = urllib.request.Request(url, method="GET")
        req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
 
+       # request new token on 401
        try:
            raw_response = urllib.request.urlopen(req, timeout=10)
-       except (urllib.error.URLError, TimeoutError) as e:
+       except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
            try:
                del self.syncConversationsInProgress[account.id]
@@ -629,6 +632,10 @@ class SMSWindowManagerClass(NSObject):
            return
 
        else:
+           if raw_response.status == 401:
+               self.requestSyncToken(account)
+               return
+       
            try:
                raw_data = raw_response.read().decode().replace('\\/', '/')
            except Exception as e:
@@ -944,8 +951,8 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None):
-
+    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None, selected_contact=None):
+    
         if instance_id and instance_id.startswith('urn:uuid:'):
             instance_id = instance_id[9:]
 
@@ -983,7 +990,7 @@ class SMSWindowManagerClass(NSObject):
                     viewer.update_message_status(imdn_message_id, MSG_STATE_FAILED)
 
         if not viewer and create_if_needed:
-            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id)
+            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact)
             if not self.windows:
                 window = SMSWindowController.alloc().initWithOwner_(self)
                 self.windows.append(window)
@@ -1322,13 +1329,14 @@ class ImportPrivateKeyController(NSObject):
             fd = open(private_key_path, "wb+")
             fd.write(private_key.encode())
             fd.close()
-            BlinkLogger().log_info("Private key saved to %s" % private_key_path)
+
+            BlinkLogger().log_info("PGP private key saved to %s" % private_key_path)
 
             public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
             fd = open(public_key_path, "wb+")
             fd.write(self.public_key.encode())
             fd.close()
-            BlinkLogger().log_info("Public key saved to %s" % public_key_path)
+            BlinkLogger().log_info("PGP Public key saved to %s" % public_key_path)
 
             self.account.sms.private_key = private_key_path
             self.account.sms.public_key = public_key_path
