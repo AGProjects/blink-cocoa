@@ -449,7 +449,7 @@ class SMSViewController(NSObject):
                     self.log_info('OTP error: %s' % str(e))
                     return None
                 else:
-                    self.log_info('OTR message %s handled without error' % call_id)
+                    #self.log_info('OTR message %s handled without error' % call_id)
                     encrypted = encryption_active = self.encryption.active
 
             content = content.decode() if isinstance(content, bytes) else content
