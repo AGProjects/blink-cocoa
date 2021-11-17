@@ -1092,9 +1092,7 @@ class SMSWindowManagerClass(NSObject):
             else:
                 content = cpim_message.content
                 content_type = cpim_message.content_type
-
                 imdn_timestamp = cpim_message.timestamp
-                BlinkLogger().log_info("Got MESSAGE %s for account %s: %s" % (content_type, account.id, imdn_timestamp))
 
                 for h in cpim_message.additional_headers:
                     if h.name == "Message-ID":
@@ -1113,7 +1111,8 @@ class SMSWindowManagerClass(NSObject):
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
-            BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
+
+        BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
 
         note_new_message = False
  
