@@ -99,6 +99,12 @@
                                         <menuItem title="PGP encryption active" tag="9" enabled="NO" id="w1q-GA-GY8">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
+                                        <menuItem title="Lookup PGP public key" tag="11" id="mWs-ZR-sUh">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="requestPublicKey:" target="-2" id="7TM-aA-gv5"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="About PGP protocol" tag="10" id="v0K-Qf-Gct">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>

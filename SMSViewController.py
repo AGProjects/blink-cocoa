@@ -152,6 +152,7 @@ class SMSViewController(NSObject):
     
     private_key = None
     public_key = None
+    my_public_key = None
 
     windowController = None
     last_route = None
@@ -182,13 +183,14 @@ class SMSViewController(NSObject):
             self.render_queue = EventQueue(self._render_message)
 
             self.history=ChatHistory()
+            self.msg_id_list=set()
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
             self.contact = selected_contact or SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
-            self.load_remote_public_key()
+            self.load_remote_public_keys()
             
-            self.display_name = display_name if self.contact else self.contact.name
+            self.display_name = self.contact.name if self.contact else display_name
             
             if self.account.enabled and not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
                 self.generateKeys()
@@ -221,7 +223,7 @@ class SMSViewController(NSObject):
         return self
 
     @objc.python_method
-    def load_remote_public_key(self):
+    def load_remote_public_keys(self):
         public_key_path = "%s/%s.pubkey" % (self.keys_path, self.remote_uri)
         
         if not os.path.exists(public_key_path):
@@ -233,6 +235,18 @@ class SMSViewController(NSObject):
             self.log_info('Cannot import PGP public key: %s' % str(e))
         else:
             self.log_info('PGP public key imported from %s' % public_key_path)
+
+        public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
+        
+        if not os.path.exists(public_key_path):
+            return
+
+        try:
+            self.my_public_key, _ = pgpy.PGPKey.from_file(public_key_path)
+        except Exception as e:
+            self.log_info('Cannot import my PGP public key: %s' % str(e))
+        else:
+            self.log_info('My PGP public key imported from %s' % public_key_path)
 
     @objc.python_method
     def generateKeys(self):
@@ -379,8 +393,12 @@ class SMSViewController(NSObject):
         return m
 
     @objc.python_method
-    def gotMessage(self, sender, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None):
-    
+    def gotMessage(self, sender, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False):
+
+        if id in self.msg_id_list and from_journal:
+            self.log_info('Discard duplicate message %s from journal' % id)
+            return
+
         if id in self.sent_readable_messages:
             self.log_info('Discard message %s that looped back to myself' % id)
             return
@@ -564,7 +582,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     def _NH_PGPPublicKeyReceived(self, stream, data):
         self.log_info("PGP key for %s was updated" % self.remote_uri)
-        self.load_remote_public_key()
+        self.load_remote_public_keys()
 
     @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
@@ -602,6 +620,7 @@ class SMSViewController(NSObject):
         content_type="html" if "html" in message.content_type else "text"
         
         remote_uri = self.instance_id if (self.account is BonjourAccount() and self.instance_id) else self.remote_uri
+        self.msg_id_list.add(message.id)
 
         self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
 
@@ -630,7 +649,10 @@ class SMSViewController(NSObject):
         except Exception as e:
             BlinkLogger().log_info('Cannot import my own PGP public key: %s' % str(e))
         else:
+            self.log_info('Send my public key')
             self.sendMessage(public_key.decode(), 'text/pgp-public-key')
+
+        self.requestPublicKey()
 
     @objc.python_method
     @run_in_gui_thread
@@ -943,7 +965,15 @@ class SMSViewController(NSObject):
             if self.public_key and self.account.sms.enable_pgp and not self.encryption.active and self.message_needs_imdn_notifications(message):
                 try:
                     pgp_message = pgpy.PGPMessage.new(content)
-                    encrypted_content = self.public_key.encrypt(pgp_message)
+                    if self.my_public_key:
+                        cipher = pgpy.constants.SymmetricKeyAlgorithm.AES256
+                        sessionkey = cipher.gen_key()
+                        encrypted_content = self.public_key.encrypt(pgp_message, cipher=cipher, sessionkey=sessionkey)
+                        encrypted_content = self.my_public_key.encrypt(encrypted_content, cipher=cipher, sessionkey=sessionkey)
+                        del sessionkey
+                    else:
+                        encrypted_content = self.public_key.encrypt(pgp_message, cipher=cipher, sessionkey=sessionkey)
+                        
                     content = str(encrypted_content).encode()
                     if not self.pgp_encrypted:
                         self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
@@ -1371,6 +1401,7 @@ class SMSViewController(NSObject):
             if match:
                 recipient = match.group('display_name') or match.group('uri')
 
+            self.msg_id_list.add(message.id)
             self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
 
             call_id = message.sip_callid
@@ -1385,6 +1416,11 @@ class SMSViewController(NSObject):
             self.render_queue.start()
             self.log_info('Render queue started')
             self.render_queue_started = True
+
+    @objc.python_method
+    def requestPublicKey(self):
+        if '@' in self.remote_uri and 'bonjour' not in self.local_uri:
+            SMSWindowManager.SMSWindowManager().requestPublicKey(self.account, self.remote_uri)
 
     @property
     def chatWindowController(self):

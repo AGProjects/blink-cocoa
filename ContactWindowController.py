@@ -1189,15 +1189,16 @@ class ContactWindowController(NSWindowController):
             return
 
         instance_id = None
+        contact = None
+        display_name = ''
+
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
             target = str(self.searchBox.stringValue()).strip()
-            if not target:
-                return
             display_name = ''
         else:
-            target = uri or contact.uri
+            target = contact.uri
             display_name = contact.name
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
@@ -1206,12 +1207,13 @@ class ContactWindowController(NSWindowController):
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
-            
+
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account, focusTab=True, instance_id=instance_id)
+            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account, focusTab=True, instance_id=instance_id, selected_contact=contact)
         except Exception:
-            pass
+            import traceback
+            traceback.print_exc()
 
     @objc.IBAction
     def exportButtonClicked_(self, sender):

@@ -256,6 +256,12 @@ class SMSWindowController(NSWindowController):
             session.read_queue_start()
     
     @objc.IBAction
+    def requestPublicKey_(self, sender):
+        session = self.selectedSessionController()
+        if session:
+            session.requestPublicKey()
+
+    @objc.IBAction
     def toolbarButtonClicked_(self, sender):
         session = self.selectedSessionController()
         contactWindow = self._owner._owner
@@ -317,6 +323,10 @@ class SMSWindowController(NSWindowController):
                     item.setHidden_(False)
                     item.setEnabled_(True)
                     item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.active else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+
+                item = menu.itemWithTag_(11)
+                item.setHidden_('@' not in selectedSession.remote_uri)
+#                item.setRepresentedObject_({'account': selectedSession.account, 'recipient': selectedSession.remote_uri})
 
                 item = menu.itemWithTag_(2)
                 item.setHidden_(False)
@@ -503,8 +513,12 @@ class SMSWindowManagerClass(NSObject):
         self.sendMessage(account, 'I need a token', 'application/sylk-api-token')
 
     @objc.python_method
+    def requestPublicKey(self, account, recipient):
+        self.sendMessage(account, 'Public key lookup', 'application/sylk-api-pgp-key-lookup', recipient)
+
+    @objc.python_method
     @run_in_green_thread
-    def sendMessage(self, account, content, content_type):
+    def sendMessage(self, account, content, content_type, recipient=None):
         if account.sip.outbound_proxy is not None:
             proxy = account.sip.outbound_proxy
             uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
@@ -532,7 +546,8 @@ class SMSWindowManagerClass(NSObject):
             route = routes[0]
             BlinkLogger().log_info('Sending message to %s' % route.uri)
             from_uri = SIPURI.parse('sip:%s' % account.id)
-            message_request = Message(FromHeader(from_uri), ToHeader(from_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials)
+            to_uri = SIPURI.parse('sip:%s' % recipient or account.id)
+            message_request = Message(FromHeader(from_uri), ToHeader(to_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials)
 
             message_request.send()
 
@@ -802,9 +817,9 @@ class SMSWindowManagerClass(NSObject):
         if self.illegal_uri(uri):
             return None
 
-        blink_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+        blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri)
         if not blink_contact:
-            BlinkLogger().log_info('Adding messages contact for %s' % uri)
+            BlinkLogger().log_info('Adding contact for %s' % uri)
             contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
             self.new_contacts.add(contact)
         else:
@@ -878,7 +893,8 @@ class SMSWindowManagerClass(NSObject):
         viewer = self.getWindow(sender_identity, msg['contact'], account, note_new_message=bool(last_id))
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
+
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     @objc.python_method
@@ -925,7 +941,7 @@ class SMSWindowManagerClass(NSObject):
         viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False)
         window = self.windowForViewer(viewer).window()
         
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
 
         if msg['state'] == 'delivered':
             viewer.update_message_status(msg['message_id'], MSG_STATE_DELIVERED)
@@ -1130,7 +1146,8 @@ class SMSWindowManagerClass(NSObject):
 
         if content_type == 'text/pgp-public-key':
             BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
-            
+            viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
+           
             if AccountManager().has_account(uri):
                 try:
                     acc = AccountManager().get_account(uri);

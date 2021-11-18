@@ -2929,9 +2929,6 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def addContactForUri(self, uri, displayName=None):
-        if self.hasContactMatchingURI(uri):
-            return True
-
         contact = Contact()
         contact.uris.add(ContactURI(uri=uri, type='SIP'))
         contact.name = displayName or uri
