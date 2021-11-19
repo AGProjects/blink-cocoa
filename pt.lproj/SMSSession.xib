@@ -86,6 +86,18 @@
                                         <menuItem title="PGP encryption active" tag="9" enabled="NO" id="u6r-FY-7Ea">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
+                                        <menuItem title="Lookup PGP public key" tag="11" id="Wn5-zy-xPR">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="requestPublicKey:" target="-2" id="i69-wo-QAH"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Send my PGP public key" tag="12" id="w2F-WP-a0y">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="sendMyPublicKey:" target="-2" id="zza-5T-OOE"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="About PGP protocol" tag="10" id="xyo-Nq-6qN">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>

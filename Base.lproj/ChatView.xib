@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="ChatController">
+            <connections>
+                <outlet property="chatViewController" destination="164" id="240"/>
+                <outlet property="databaseLoggingButton" destination="234" id="238"/>
+                <outlet property="inputContainer" destination="23" id="209"/>
+                <outlet property="outputContainer" destination="178" id="193"/>
+                <outlet property="privateLabel" destination="253" id="255"/>
+                <outlet property="smileyButton" destination="126" id="170"/>
+                <outlet property="splitView" destination="19" id="210"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <splitView appearanceType="aqua" id="19">
+            <rect key="frame" x="0.0" y="0.0" width="501" height="500"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <customView fixedFrame="YES" id="178">
+                    <rect key="frame" x="0.0" y="0.0" width="501" height="418"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <subviews>
+                        <webView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="38" customClass="ChatWebView">
+                            <rect key="frame" x="0.0" y="0.0" width="501" height="391"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
+                                <nil key="identifier"/>
+                            </webPreferences>
+                            <accessibility description="Chat Session History"/>
+                            <connections>
+                                <outlet property="UIDelegate" destination="164" id="174"/>
+                                <outlet property="frameLoadDelegate" destination="164" id="171"/>
+                                <outlet property="policyDelegate" destination="164" id="172"/>
+                                <outlet property="resourceLoadDelegate" destination="164" id="173"/>
+                            </connections>
+                        </webView>
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="217">
+                            <rect key="frame" x="17" y="397" width="275" height="14"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                            <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Previous messages" id="218">
+                                <font key="font" metaFont="smallSystem"/>
+                                <color key="textColor" white="0.2063067036" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
+                        <progressIndicator horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="220">
+                            <rect key="frame" x="234" y="186" width="32" height="32"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                        </progressIndicator>
+                        <searchField wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="222">
+                            <rect key="frame" x="319" y="396" width="162" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <searchFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" borderStyle="bezel" placeholderString="Search Messages" usesSingleLineMode="YES" bezelStyle="round" id="223">
+                                <font key="font" metaFont="system" size="10"/>
+                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </searchFieldCell>
+                            <connections>
+                                <action selector="searchMessages:" target="164" id="229"/>
+                            </connections>
+                        </searchField>
+                        <button hidden="YES" toolTip="Show All Messages Belonging To The Same Session" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="230">
+                            <rect key="frame" x="297" y="395" width="18" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="NSAddTemplate" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="231">
+                                <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="systemBold" size="12"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="showRelatedMessages:" target="164" id="233"/>
+                            </connections>
+                        </button>
+                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bS8-LL-yJQ">
+                            <rect key="frame" x="10" y="133" width="483" height="45"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Lrh-hm-LDo">
+                                <font key="font" metaFont="system" size="32"/>
+                                <color key="textColor" name="controlShadowColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
+                    </subviews>
+                </customView>
+                <customView fixedFrame="YES" id="23">
+                    <rect key="frame" x="0.0" y="427" width="501" height="73"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <subviews>
+                        <popUpButton fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="126">
+                            <rect key="frame" x="466" y="45" width="34" height="30"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="bezel" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="129" id="127">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="menu"/>
+                                <menu key="menu" title="OtherViews" id="128">
+                                    <items>
+                                        <menuItem state="on" hidden="YES" id="129">
+                                            <attributedString key="attributedTitle"/>
+                                        </menuItem>
+                                        <menuItem title="Item 2" id="130"/>
+                                        <menuItem title="Item 3" id="131"/>
+                                    </items>
+                                </menu>
+                            </popUpButtonCell>
+                            <accessibility description="Select Smiley"/>
+                        </popUpButton>
+                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="24">
+                            <rect key="frame" x="0.0" y="0.0" width="464" height="73"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <clipView key="contentView" ambiguous="YES" drawsBackground="NO" id="TfF-ad-GAx">
+                                <rect key="frame" x="1" y="1" width="462" height="71"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <textView ambiguous="YES" importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" allowsUndo="YES" usesRuler="YES" id="25" customClass="ChatInputTextView">
+                                        <rect key="frame" x="0.0" y="0.0" width="462" height="71"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        <size key="minSize" width="462" height="71"/>
+                                        <size key="maxSize" width="1000" height="10000000"/>
+                                        <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        <accessibility description="Enter Text to send to the other party "/>
+                                        <connections>
+                                            <outlet property="delegate" destination="-2" id="177"/>
+                                        </connections>
+                                    </textView>
+                                </subviews>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="26">
+                                <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="27">
+                                <rect key="frame" x="451" y="1" width="16" height="71"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                        </scrollView>
+                        <button hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="234">
+                            <rect key="frame" x="472" y="8" width="22" height="23"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                            <buttonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="database-on" imagePosition="above" alignment="left" imageScaling="proportionallyUpOrDown" id="235">
+                                <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="userClickedDatabaseLoggingButton:" target="-2" id="239"/>
+                            </connections>
+                        </button>
+                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="253">
+                            <rect key="frame" x="380" y="53" width="83" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="PRIVATE" id="254">
+                                <font key="font" metaFont="systemBold" size="16"/>
+                                <color key="textColor" white="0.55884576610000003" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </textFieldCell>
+                        </textField>
+                        <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LjK-uM-s0s">
+                            <rect key="frame" x="144" y="19" width="212" height="32"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" heightSizable="YES"/>
+                            <buttonCell key="cell" type="push" title="Continue without encryption" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="vMR-fC-Ttm">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                            <connections>
+                                <action selector="confirmWithoutEncryption:" target="164" id="ofk-Wv-umH"/>
+                            </connections>
+                        </button>
+                        <textField hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ICD-zA-FAC">
+                            <rect key="frame" x="109" y="6" width="283" height="19"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Encryption has been disabled by remote party" id="XJi-kM-Rrw">
+                                <font key="font" metaFont="system"/>
+                                <color key="textColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </textFieldCell>
+                        </textField>
+                    </subviews>
+                </customView>
+            </subviews>
+            <holdingPriorities>
+                <real value="250"/>
+                <real value="250"/>
+            </holdingPriorities>
+            <point key="canvasLocation" x="140" y="154"/>
+        </splitView>
+        <customObject id="164" customClass="ChatViewController">
+            <connections>
+                <outlet property="continueWithoutEncryptionCheckbox" destination="LjK-uM-s0s" id="G8Z-vu-6Yk"/>
+                <outlet property="delegate" destination="-2" id="168"/>
+                <outlet property="encryptionDisabledWarningLabel" destination="ICD-zA-FAC" id="PEi-pq-6Iy"/>
+                <outlet property="inputText" destination="25" id="176"/>
+                <outlet property="inputView" destination="23" id="194"/>
+                <outlet property="lastMessagesLabel" destination="217" id="219"/>
+                <outlet property="loadingProgressIndicator" destination="220" id="221"/>
+                <outlet property="loadingTextIndicator" destination="bS8-LL-yJQ" id="TXB-av-ph4"/>
+                <outlet property="outputView" destination="38" id="165"/>
+                <outlet property="searchMessagesBox" destination="222" id="228"/>
+                <outlet property="showRelatedMessagesButton" destination="230" id="232"/>
+                <outlet property="view" destination="19" id="166"/>
+            </connections>
+        </customObject>
+    </objects>
+    <resources>
+        <image name="NSAddTemplate" width="11" height="11"/>
+        <image name="database-on" width="306" height="256"/>
+    </resources>
+</document>

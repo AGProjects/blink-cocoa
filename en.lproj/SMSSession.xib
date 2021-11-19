@@ -105,6 +105,12 @@
                                                 <action selector="requestPublicKey:" target="-2" id="7TM-aA-gv5"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Send my PGP public key" tag="12" id="X1M-vt-QIt">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="sendMyPublicKey:" target="-2" id="9Sy-Bq-dH5"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="About PGP protocol" tag="10" id="v0K-Qf-Gct">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>

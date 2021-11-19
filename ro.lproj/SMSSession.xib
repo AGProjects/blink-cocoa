@@ -64,27 +64,39 @@
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="34i-s5-RBW">
                                     <items>
                                         <menuItem state="on" image="unlocked-darkgray" hidden="YES" id="oAR-ae-sAh"/>
-                                        <menuItem title="Active" tag="1" id="5SB-In-EWd">
+                                        <menuItem title="Activă" tag="1" id="5SB-In-EWd">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="My Fingerprint" tag="2" enabled="NO" id="SWy-Bm-BoT">
+                                        <menuItem title="Amprenta mea digitală" tag="2" enabled="NO" id="SWy-Bm-BoT">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="No Fingerprint Discovered" tag="4" id="u1P-mJ-Hjr">
+                                        <menuItem title="Nu există amprentă digitala" tag="4" id="u1P-mJ-Hjr">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="I trust the remote identity" tag="5" id="EaQ-HV-sMb">
+                                        <menuItem title="Am incredere in identitatea prezentată" tag="5" id="EaQ-HV-sMb">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="Verify Remote Fingerprint using SMP Protocol" tag="6" id="NJx-j0-YiC">
+                                        <menuItem title="Verifică identitatea celulalt folosid protocolul SMP" tag="6" id="NJx-j0-YiC">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="About OTR protocol" tag="7" id="ZcG-xV-KCo">
+                                        <menuItem title="Despre protocolul OTR" tag="7" id="ZcG-xV-KCo">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" tag="8" id="gxP-Pz-Ne1"/>
                                         <menuItem title="Criptare cu PGP activă" tag="9" enabled="NO" id="umw-BT-N6S">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Caută cheia PGP publică" tag="11" id="fdg-SF-lo3">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="requestPublicKey:" target="-2" id="17D-6W-mGh"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Trimite cheia mea PGP publică" tag="12" id="LPd-0R-Bch">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="sendMyPublicKey:" target="-2" id="2Ue-ys-bgZ"/>
+                                            </connections>
                                         </menuItem>
                                         <menuItem title="Despre protocolul PGP" tag="10" id="UKD-Ce-CAK">
                                             <modifierMask key="keyEquivalentModifierMask"/>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="MyVideoWindowController">
+            <connections>
+                <outlet property="videoView" destination="6WE-Ek-cFR" id="702-EJ-Ahw"/>
+                <outlet property="window" destination="QvC-M9-y7g" id="liw-g7-E4J"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="My Video" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" appearanceType="aqua" frameAutosaveName="myvideo" animationBehavior="default" id="QvC-M9-y7g" customClass="BorderlessRoundWindow">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="196" y="240" width="467" height="247"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <view key="contentView" id="EiT-Mj-1SZ" customClass="BlackView">
+                <rect key="frame" x="0.0" y="0.0" width="467" height="247"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6WE-Ek-cFR" customClass="LocalVideoView">
+                        <rect key="frame" x="-10" y="-5" width="492" height="252"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    </customView>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sGj-Hi-JkA">
+                        <rect key="frame" x="446" y="224" width="20" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="rounded" image="mirror" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="Xad-RY-ylh">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="userClickedMirrorButton:" target="-2" id="wZl-tn-Igd"/>
+                        </connections>
+                    </button>
+                    <button hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0vJ-dE-guV">
+                        <rect key="frame" x="1" y="228" width="18" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="bevel" bezelStyle="circular" image="close-small" imagePosition="left" alignment="left" controlSize="small" imageScaling="proportionallyUpOrDown" inset="2" id="yUx-8P-oUi">
+                            <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="smallSystem"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performClose:" target="QvC-M9-y7g" id="yq0-af-NQI"/>
+                        </connections>
+                    </button>
+                </subviews>
+            </view>
+            <connections>
+                <outlet property="closeButton" destination="0vJ-dE-guV" id="d16-lx-a5I"/>
+                <outlet property="delegate" destination="-2" id="ats-lE-ZPZ"/>
+            </connections>
+            <point key="canvasLocation" x="140" y="147"/>
+        </window>
+    </objects>
+    <resources>
+        <image name="close-small" width="264" height="264"/>
+        <image name="mirror" width="104.16000366210938" height="104.87999725341797"/>
+    </resources>
+</document>

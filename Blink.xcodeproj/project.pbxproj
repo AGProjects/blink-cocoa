@@ -2052,6 +2052,14 @@
 		1F17C25D137335D700DF4724 /* silence.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = silence.wav; path = sounds/silence.wav; sourceTree = "<group>"; };
 		1F17D30F17F9825D00CB74EC /* database-local-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-local-off.png"; path = "icons/database-local-off.png"; sourceTree = SOURCE_ROOT; };
 		1F17D31017F9825D00CB74EC /* database-remote-off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "database-remote-off.png"; path = "icons/database-remote-off.png"; sourceTree = SOURCE_ROOT; };
+		1F1911302747E42C00A486AA /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911312747E43200A486AA /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911322747E43500A486AA /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911332747E43C00A486AA /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911342747E44300A486AA /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ImportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911352747E44500A486AA /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ImportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911362747E44700A486AA /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ImportPrivateKeyWindow.xib; sourceTree = "<group>"; };
+		1F1911372747E45700A486AA /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ImportPrivateKeyWindow.xib; sourceTree = "<group>"; };
 		1F194A8819B1F06200CE5A0F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/VideoLocalTitleBarView.xib; sourceTree = "<group>"; };
 		1F1CEB4619C9BBEE00BD378A /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		1F1DCC8513182ADF004DB88B /* end_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = end_arrow.png; path = icons/end_arrow.png; sourceTree = "<group>"; };
@@ -4986,6 +4994,10 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F366FC2273FE8FF00CE7FA5 /* en */,
+				1F1911302747E42C00A486AA /* nl */,
+				1F1911312747E43200A486AA /* ro */,
+				1F1911322747E43500A486AA /* es */,
+				1F1911332747E43C00A486AA /* pt */,
 			);
 			name = ExportPrivateKeyWindow.xib;
 			sourceTree = "<group>";
@@ -5174,6 +5186,10 @@
 			isa = PBXVariantGroup;
 			children = (
 				1F99F569265A88390095E3FA /* en */,
+				1F1911342747E44300A486AA /* nl */,
+				1F1911352747E44500A486AA /* pt */,
+				1F1911362747E44700A486AA /* ro */,
+				1F1911372747E45700A486AA /* es */,
 			);
 			name = ImportPrivateKeyWindow.xib;
 			sourceTree = "<group>";
