@@ -262,6 +262,12 @@ class SMSWindowController(NSWindowController):
             session.requestPublicKey()
 
     @objc.IBAction
+    def sendMyPublicKey_(self, sender):
+        session = self.selectedSessionController()
+        if session:
+            session.sendMyPublicKey()
+
+    @objc.IBAction
     def toolbarButtonClicked_(self, sender):
         session = self.selectedSessionController()
         contactWindow = self._owner._owner
@@ -546,7 +552,11 @@ class SMSWindowManagerClass(NSObject):
             route = routes[0]
             BlinkLogger().log_info('Sending message to %s' % route.uri)
             from_uri = SIPURI.parse('sip:%s' % account.id)
-            to_uri = SIPURI.parse('sip:%s' % recipient or account.id)
+            if recipient:
+                to_uri = SIPURI.parse('sip:%s' % recipient)
+            else:
+                to_uri = SIPURI.parse('sip:%s' % account.id)
+
             message_request = Message(FromHeader(from_uri), ToHeader(to_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials)
 
             message_request.send()
