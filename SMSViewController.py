@@ -491,7 +491,7 @@ class SMSViewController(NSObject):
                 self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
                 timestamp = ISOTimestamp.now()
 
-            self.log_info("Incoming message %s message %s received (Call-ID %s)" % (content_type, id, call_id))
+            self.log_info("%s message %s message %s received (Call-ID %s)" % (direction, content_type, id, call_id))
             if require_delivered_notification:
                 self.sendIMDNNotification(id, 'delivered')
 
@@ -511,7 +511,12 @@ class SMSViewController(NSObject):
                 encryption = ''
 
             status = MSG_STATE_SENT if is_replication_message else MSG_STATE_DELIVERED
-            self.chatViewController.showMessage(call_id, msg_id, direction, format_identity_to_string(sender, format='compact'), icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
+            if msg_id not in self.msg_id_list:
+                self.msg_id_list.add(msg_id)
+                sender_name = format_identity_to_string(sender, format='compact')
+                if direction == 'incoming':
+                    sender_name = self.normalizeSender(sender_name)
+                self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
             self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
@@ -526,9 +531,9 @@ class SMSViewController(NSObject):
                 self.read_queue.put(id)
 
         except Exception as e:
-            import traceback
             self.log_info('Error in render_message: %s' % str(e))
             self.log_info(message_tuple)
+            import traceback
             self.log_info(traceback.format_exc())
 
     @objc.python_method
@@ -1401,8 +1406,11 @@ class SMSViewController(NSObject):
             if match:
                 recipient = match.group('display_name') or match.group('uri')
 
-            self.msg_id_list.add(message.id)
-            self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
+            if message.id not in self.msg_id_list:
+                if message.direction == 'incoming':
+                    sender = self.normalizeSender(sender)
+                self.msg_id_list.add(message.id)
+                self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
@@ -1416,6 +1424,12 @@ class SMSViewController(NSObject):
             self.render_queue.start()
             self.log_info('Render queue started')
             self.render_queue_started = True
+
+    @objc.python_method
+    def normalizeSender(self, sender):
+        if sender == self.remote_uri and self.display_name:
+            sender = self.display_name
+        return sender
 
     @objc.python_method
     def requestPublicKey(self):

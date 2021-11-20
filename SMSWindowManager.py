@@ -867,7 +867,7 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def syncIncomingMessage(self, account, msg, last_id=None):
-        sender_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
+
         direction = 'incoming'
         self.pendingSaveMessage[msg['message_id']] = True
 
@@ -900,10 +900,12 @@ class SMSWindowManagerClass(NSObject):
 
         BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
 
-        viewer = self.getWindow(sender_identity, msg['contact'], account, note_new_message=bool(last_id))
+        sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
+        viewer = self.getWindow(sender_uri, msg['contact'], account, note_new_message=bool(last_id))
+        sender_identity = ChatIdentity(sender_uri, viewer.display_name)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
 
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
@@ -951,7 +953,7 @@ class SMSWindowManagerClass(NSObject):
         viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False)
         window = self.windowForViewer(viewer).window()
         
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
 
         if msg['state'] == 'delivered':
             viewer.update_message_status(msg['message_id'], MSG_STATE_DELIVERED)
@@ -1302,7 +1304,7 @@ class SMSWindowManagerClass(NSObject):
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
