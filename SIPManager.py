@@ -446,6 +446,14 @@ class SIPManager(object, metaclass=Singleton):
         else:
             BlinkLogger().log_info("Bonjour discovery is not available")
 
+    @property
+    @objc.python_method
+    def available_codecs(self):
+        if self._app and self._app.engine and self._app.engine._ua:
+            return self._app.engine._ua.available_codecs
+        else:
+            return []
+
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
@@ -455,10 +463,10 @@ class SIPManager(object, metaclass=Singleton):
 
         BlinkLogger().log_debug("SDK loaded")
         BlinkLogger().log_debug("SIP device ID: %s" % settings.instance_id)
-        available_codecs_print = list(beautify_audio_codec(codec.decode()) for codec in self._app.engine._ua.available_codecs)
+        available_codecs_print = list(beautify_audio_codec(codec.decode()) for codec in self.available_codecs)
         codecs_print = list(beautify_audio_codec(codec) for codec in settings.rtp.audio_codec_list)
         BlinkLogger().log_info("Available audio codecs: %s" % ", ".join(available_codecs_print))
-        BlinkLogger().log_info("Enabled audio codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_info("Configured audio codecs: %s" % ", ".join(codecs_print))
 
         if settings.audio.input_device is None:
             BlinkLogger().log_info("Switching audio input device to system default")

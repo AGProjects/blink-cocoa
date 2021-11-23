@@ -59,7 +59,9 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioBridge, WavePlayer, WaveRecorder
 from sipsimple.core import Engine
 from sipsimple.configuration import DefaultValue
-from sipsimple.configuration.datatypes import AudioCodecList, MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress, VideoResolution
+from sipsimple.configuration.datatypes import MSRPRelayAddress, PortRange, SIPProxyAddress, SIPTransportList, STUNServerAddress, VideoResolution
+
+from configuration.datatypes import AudioCodecList
 
 from sipsimple.configuration.datatypes import VideoCodecList, H264Profile
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -616,13 +618,16 @@ class AudioCodecListOption(MultipleSelectionOption):
         self.selection = set()
         self.options = []
         for option in list(self.available_codec_list.available_values):
+            if self.type == 'audio' and option.encode() not in NSApp.delegate().backend.available_codecs:
+                continue
+
             try:
                 codec_option = self.beautified_codecs[option]
             except KeyError:
                 codec_option = option
 
             self.options.append(codec_option)
-
+        
         self.sideView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 170, NSHeight(self.frame())))
         self.addSubview_(self.sideView)
 
@@ -690,6 +695,9 @@ class AudioCodecListOption(MultipleSelectionOption):
         value = self.get() or []
         options = []
         for val in list(value):
+            if self.type == 'audio' and val.encode() not in NSApp.delegate().backend.available_codecs:
+                continue
+
             try:
                 v = next((v for k, v in self.beautified_codecs.items() if val == k))
             except StopIteration:
@@ -727,6 +735,9 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         value = SIPSimpleSettings().rtp.audio_codec_list or []
         options = []
         for val in list(value):
+            if option.encode() not in NSApp.delegate().backend.available_codecs:
+                continue
+
             try:
                 v = next((v for k, v in audio_codecs.items() if val == k))
             except StopIteration:
@@ -883,7 +894,7 @@ class PopUpMenuOption(Option):
                 i += 1
 
             if index < 0 and self.addMissingOptions:
-                print("adding unknown item %s to popup for %s"%(value, self.option))
+                print("adding unknown item %s to popup for %s" % (value, self.option))
                 self.popup.addItemWithTitle_(str(value))
                 self.popup.lastItem().setRepresentedObject_(value)
                 index = self.popup.numberOfItems()

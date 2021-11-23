@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserIcon', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername', 'NightVolume']
+__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserIcon', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername', 'NightVolume', 'blink_audio_codecs']
 
 from Foundation import NSLocalizedString
 
@@ -17,13 +17,23 @@ from application.python import Null
 from application.python.descriptor import WriteOnceAttribute
 
 from resources import ApplicationData, Resources
-from sipsimple.configuration.datatypes import Hostname
+from sipsimple.configuration.datatypes import Hostname, CodecList
+
+blink_audio_codecs = ('opus', 'AMR-WB', 'G722', 'speex', 'AMR', 'PCMU', 'PCMA', 'iLBC', 'GSM')
+
 
 try:
     import ldap
 except ModuleNotFoundError:
     ldap = Null
 
+
+class AudioCodecList(CodecList):
+   available_values = blink_audio_codecs
+
+
+class VideoCodecList(CodecList):
+   available_values = blink_video_codecs
 
 ## PSTN datatypes
 
