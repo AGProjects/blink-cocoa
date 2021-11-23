@@ -443,7 +443,11 @@ class PreferencesController(NSWindowController, object):
             if not NSApp.delegate().icloud_enabled:
                 PreferenceOptionTypes['gui.sync_with_icloud'] = HiddenOption
 
-            view = self.createViewForSection(account, frame, section_name, getattr(account.__class__, section_name))
+            try:
+                view = self.createViewForSection(account, frame, section_name, getattr(account.__class__, section_name))
+            except Exception:
+                import traceback
+                traceback.print_exc()
 
             tabItem = NSTabViewItem.alloc().initWithIdentifier_(section_name)
             try:
