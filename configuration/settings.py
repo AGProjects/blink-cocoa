@@ -10,14 +10,12 @@ __all__ = ['SIPSimpleSettingsExtension']
 from sipsimple.configuration import Setting, SettingsGroup, SettingsObjectExtension, RuntimeSetting
 from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.datatypes import H264Profile, VideoResolution
-from sipsimple.configuration.settings import H264Settings, VideoSettings, VideoCodecList
+from sipsimple.configuration.settings import H264Settings, VideoSettings
 
 from sipsimple.configuration.settings import AudioSettings, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
-#from sipsimple.configuration.settings import AudioCodecList
-from configuration.datatypes import AudioCodecList, blink_audio_codecs
-
+from configuration.datatypes import AudioCodecList, VideoCodecList, blink_audio_codecs, blink_video_codecs
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
 
 
@@ -124,7 +122,7 @@ class GUISettings(SettingsGroup):
 
 class RTPSettingsExtension(RTPSettings):
     audio_codec_list = Setting(type=AudioCodecList, default=AudioCodecList(blink_audio_codecs))
-    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(('H264', 'VP8', 'VP9')))
+    video_codec_list = Setting(type=VideoCodecList, default=VideoCodecList(blink_video_codecs))
 
 
 class ServiceProviderSettings(SettingsGroup):

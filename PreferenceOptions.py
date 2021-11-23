@@ -621,6 +621,9 @@ class AudioCodecListOption(MultipleSelectionOption):
             if self.type == 'audio' and option.encode() not in NSApp.delegate().backend.available_codecs:
                 continue
 
+            if self.type == 'video' and option.encode() not in NSApp.delegate().backend.available_video_codecs:
+                continue
+
             try:
                 codec_option = self.beautified_codecs[option]
             except KeyError:
@@ -698,6 +701,9 @@ class AudioCodecListOption(MultipleSelectionOption):
             if self.type == 'audio' and val.encode() not in NSApp.delegate().backend.available_codecs:
                 continue
 
+            if self.type == 'video' and val.encode() not in NSApp.delegate().backend.available_video_codecs:
+                continue
+
             try:
                 v = next((v for k, v in self.beautified_codecs.items() if val == k))
             except StopIteration:
@@ -735,7 +741,10 @@ class AccountAudioCodecListOption(AudioCodecListOption):
         value = SIPSimpleSettings().rtp.audio_codec_list or []
         options = []
         for val in list(value):
-            if option.encode() not in NSApp.delegate().backend.available_codecs:
+            if self.type == 'audio' and val.encode() not in NSApp.delegate().backend.available_codecs:
+                continue
+
+            if self.type == 'video' and val.encode() not in NSApp.delegate().backend.available_video_codecs:
                 continue
 
             try:

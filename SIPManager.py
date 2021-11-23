@@ -454,6 +454,14 @@ class SIPManager(object, metaclass=Singleton):
         else:
             return []
 
+    @property
+    @objc.python_method
+    def available_video_codecs(self):
+        if self._app and self._app.engine and self._app.engine._ua:
+            return self._app.engine._ua.available_video_codecs
+        else:
+            return []
+
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
         settings = SIPSimpleSettings()
@@ -486,7 +494,7 @@ class SIPManager(object, metaclass=Singleton):
             if settings.video.max_bitrate is not None and settings.video.max_bitrate > 10000:
                 settings.video.max_bitrate = 4.0
 
-            available_video_codecs_print = list(beautify_video_codec(codec.decode()) for codec in self._app.engine._ua.available_video_codecs)
+            available_video_codecs_print = list(beautify_video_codec(codec.decode()) for codec in self.available_video_codecs)
             video_codecs_print = list(beautify_video_codec(codec) for codec in settings.rtp.video_codec_list)
             BlinkLogger().log_info("Available video codecs: %s" % ", ".join(available_video_codecs_print))
             BlinkLogger().log_info("Enabled video codecs: %s" % ", ".join(video_codecs_print))

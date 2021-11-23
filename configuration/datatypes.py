@@ -5,7 +5,7 @@
 Definitions of datatypes for use in settings extensions.
 """
 
-__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserIcon', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername', 'NightVolume', 'blink_audio_codecs']
+__all__ = ['Digits', 'AccountSoundFile', 'AnsweringMachineSoundFile', 'AccountTLSCertificate', 'SoundFile', 'UserDataPath', 'UserIcon', 'UserSoundFile','HTTPURL', 'LDAPdn', 'LDAPusername', 'NightVolume', 'blink_audio_codecs', 'blink_video_codecs', 'AudioCodecList', 'VideoCodecList']
 
 from Foundation import NSLocalizedString
 
@@ -20,6 +20,7 @@ from resources import ApplicationData, Resources
 from sipsimple.configuration.datatypes import Hostname, CodecList
 
 blink_audio_codecs = ('opus', 'AMR-WB', 'G722', 'speex', 'AMR', 'PCMU', 'PCMA', 'iLBC', 'GSM')
+blink_video_codecs = ('H264', 'VP8', 'VP9')
 
 
 try:
