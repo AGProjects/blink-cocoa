@@ -17,6 +17,7 @@
                        type="application/octet-stream"
                        />
          </item>
+         <item>
             <title>Version 8.7.4</title>
             <sparkle:minimumSystemVersion>10.11.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
