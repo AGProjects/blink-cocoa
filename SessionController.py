@@ -45,7 +45,7 @@ from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.core import SIPURI, ToHeader, SIPCoreError, Route
+from sipsimple.core import SIPURI, ToHeader, SIPCoreError, Route, Header
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
 from sipsimple.streams.rtp.audio import AudioStream

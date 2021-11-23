@@ -12,7 +12,7 @@ from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.datatypes import H264Profile, VideoResolution
 from sipsimple.configuration.settings import H264Settings, VideoSettings, VideoCodecList
 
-from sipsimple.configuration.settings import AudioSettings, AudioCodecList, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
+from sipsimple.configuration.settings import AudioSettings, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AnsweringMachineSoundFile, HTTPURL, SoundFile, UserDataPath, UserIcon, NightVolume
