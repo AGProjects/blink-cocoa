@@ -1911,7 +1911,17 @@ class SessionController(NSObject):
 
         self.log_info('Starting session to %s via %s' % (format_identity_to_string(target_uri, format='compact'), self.routes[0]))
         self.notification_center.add_observer(self, sender=self.session)
-        self.session.connect(ToHeader(target_uri), self.routes, streams)
+        
+        extra_headers = []
+        if self.session.account.pstn and self.session.account.pstn.asserted_identity:
+            try:
+                SIPURI.parse(self.session.account.pstn.asserted_identity)
+            except SIPCoreError:
+                self.log_info("Bad PSTN asserted identity URI: %s" % self.session.account.pstn.asserted_identity)
+            else:
+                extra_headers.append(Header('P-Asserted-Identity', '<%s>\r\n' % self.session.account.pstn.asserted_identity))
+                
+        self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers)
         self.changeSessionState(STATE_CONNECTING)
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 
