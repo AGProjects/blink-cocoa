@@ -867,21 +867,20 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def syncIncomingMessage(self, account, msg, last_id=None):
-
         direction = 'incoming'
         self.pendingSaveMessage[msg['message_id']] = True
+        
+        if 'display' not in msg['disposition']:
+            status = MSG_STATE_DISPLAYED
+        else:
+            status = MSG_STATE_DELIVERED
+
+        if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
+            encryption = 'pgp_encrypted'
+        else:
+            encryption = ''
 
         if not last_id:
-            if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
-                encryption = 'pgp_encrypted'
-            else:
-                encryption = ''
-
-            if 'display' not in msg['disposition']:
-                state = MSG_STATE_DISPLAYED
-            else:
-                state = MSG_STATE_DELIVERED
-
             self.history.add_message(msg['message_id'],
                                    'sms',
                                     str(account.id),
@@ -893,7 +892,7 @@ class SMSWindowManagerClass(NSObject):
                                     msg['content'],
                                     msg['content_type'],
                                     "0",
-                                    state,
+                                    status,
                                     call_id=msg['message_id'],
                                     encryption=encryption)
             return
@@ -905,7 +904,7 @@ class SMSWindowManagerClass(NSObject):
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
         self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
 
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
@@ -952,15 +951,17 @@ class SMSWindowManagerClass(NSObject):
         remote_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
         viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False)
         window = self.windowForViewer(viewer).window()
-        
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True)
 
         if msg['state'] == 'delivered':
-            viewer.update_message_status(msg['message_id'], MSG_STATE_DELIVERED)
+            status = MSG_STATE_DELIVERED
         elif msg['state'] == 'displayed':
-            viewer.update_message_status(msg['message_id'], MSG_STATE_DISPLAYED)
+            status = MSG_STATE_DISPLAYED
         elif msg['state'] == 'failed':
-            viewer.update_message_status(msg['message_id'], MSG_STATE_FAILED)
+            status = MSG_STATE_FAILED
+        else:
+            status = MSG_STATE_SENT
+
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
 
         if (last_id):
             self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
@@ -1304,7 +1305,7 @@ class SMSWindowManagerClass(NSObject):
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=MSG_STATE_DELIVERED)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 

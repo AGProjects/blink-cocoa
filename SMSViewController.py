@@ -393,7 +393,7 @@ class SMSViewController(NSObject):
         return m
 
     @objc.python_method
-    def gotMessage(self, sender, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False):
+    def gotMessage(self, sender, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None):
 
         if id in self.msg_id_list and from_journal:
             self.log_info('Discard duplicate message %s from journal' % id)
@@ -403,13 +403,13 @@ class SMSViewController(NSObject):
             self.log_info('Discard message %s that looped back to myself' % id)
             return
 
-        message_tuple = (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id)
+        message_tuple = (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status)
 
         self.render_queue.put(message_tuple)
 
     @objc.python_method
     def _render_message(self, message_tuple):
-        (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id) = message_tuple
+        (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status) = message_tuple
         
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
@@ -510,7 +510,7 @@ class SMSViewController(NSObject):
             else:
                 encryption = ''
 
-            status = MSG_STATE_SENT if is_replication_message else MSG_STATE_DELIVERED
+            status = status or MSG_STATE_DELIVERED
             if msg_id not in self.msg_id_list:
                 self.msg_id_list.add(msg_id)
                 sender_name = format_identity_to_string(sender, format='compact')
@@ -1411,6 +1411,9 @@ class SMSViewController(NSObject):
                     sender = self.normalizeSender(sender)
                 self.msg_id_list.add(message.id)
                 self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
+
+                if message.direction == 'outgoing':
+                    self.chatViewController.markMessage(message.id, message.status)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
