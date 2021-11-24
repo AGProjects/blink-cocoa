@@ -472,7 +472,7 @@ class SIPManager(object, metaclass=Singleton):
         BlinkLogger().log_debug("SDK loaded")
         BlinkLogger().log_debug("SIP device ID: %s" % settings.instance_id)
         available_codecs_print = list(beautify_audio_codec(codec.decode()) for codec in self.available_codecs)
-        codecs_print = list(beautify_audio_codec(codec) for codec in settings.rtp.audio_codec_list)
+        codecs_print = list(beautify_audio_codec(codec) for codec in settings.rtp.audio_codec_list if codec.encode() in self.available_codecs)
         BlinkLogger().log_info("Available audio codecs: %s" % ", ".join(available_codecs_print))
         BlinkLogger().log_info("Configured audio codecs: %s" % ", ".join(codecs_print))
 
