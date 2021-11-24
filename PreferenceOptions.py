@@ -2006,7 +2006,7 @@ PreferenceOptionTypes = {
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.per_device_aec": HiddenOption,
 "chat.disable_collaboration_editor": HiddenOption,
-"sms.history_last_id": HiddenOption,
+"sms.history_last_id": NullableStringOption,
 "chat.enable_encryption": BoolOption,
 "chat.font_size": HiddenOption,
 "contacts.missed_calls_period": HiddenOption,
