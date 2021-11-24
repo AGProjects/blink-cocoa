@@ -237,6 +237,7 @@ body
   margin-bottom: 10px;
   margin-left: 4px;
   float: right;
+  display: block;
 }
 
 .displayed_hidden {
@@ -247,6 +248,7 @@ body
 }
 
 .displayed {
+  display: block;
   margin-bottom: 10px;
   margin-left: 3px;
   float: right;
@@ -363,14 +365,13 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
   } else if (state == "failed") {
       box_class = "msgbox_failed"
       status = timestamp;
-  } else if (state == "displayed") {
-      box_class = "msgbox_displayed"
+  } else if (state == "delivered") {
+      box_class = "msgbox_delivered"
       status = timestamp;
       if (direction == 'outgoing')
         delivered_class = "delivered";
-        displayed_class = "displayed";
-  } else if (state == "delivered") {
-      box_class = "msgbox_delivered"
+  } else if (state == "displayed") {
+      box_class = "msgbox_displayed"
       status = timestamp;
       if (direction == 'outgoing')
         delivered_class = "delivered";
