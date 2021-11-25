@@ -1301,7 +1301,7 @@ class SMSWindowManagerClass(NSObject):
         # display the message
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
         
-        if note_new_message:
+        if note_new_message and not is_replication_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         window = self.windowForViewer(viewer).window()

@@ -85,8 +85,8 @@ class MessageInfo(object):
         self.id = id
         self.call_id = call_id
         self.direction = direction
-        self.sender = sender
-        self.recipient = recipient
+        self.sender = sender       # an identity object with uri and display_name
+        self.recipient = recipient # an identity object with uri and display_name
         self.timestamp = timestamp
         self.content = content if isinstance(content, bytes) else content.encode()
         self.content_type = content_type
@@ -393,7 +393,7 @@ class SMSViewController(NSObject):
         return m
 
     @objc.python_method
-    def gotMessage(self, sender, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None):
+    def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None):
 
         if id in self.msg_id_list and from_journal:
             self.log_info('Discard duplicate message %s from journal' % id)
@@ -403,13 +403,13 @@ class SMSViewController(NSObject):
             self.log_info('Discard message %s that looped back to myself' % id)
             return
 
-        message_tuple = (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status)
+        message_tuple = (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status)
 
         self.render_queue.put(message_tuple)
 
     @objc.python_method
     def _render_message(self, message_tuple):
-        (sender, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status) = message_tuple
+        (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status) = message_tuple
         
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
@@ -484,21 +484,21 @@ class SMSViewController(NSObject):
       
                 return None
 
-            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender))
+            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
             try:
                 timestamp=ISOTimestamp(imdn_timestamp)
             except (DateParse, rError, TypeError) as e:
                 self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
                 timestamp = ISOTimestamp.now()
 
-            self.log_info("%s message %s message %s received (Call-ID %s)" % (direction, content_type, id, call_id))
+            self.log_info("%s message %s message %s received from %s (Call-ID %s)" % (direction, content_type, id, sender_identity, call_id))
             if require_delivered_notification:
                 self.sendIMDNNotification(id, 'delivered')
 
             if not is_replication_message and not window.isKeyWindow():
                 nc_body = html2txt(content) if is_html else content
                 nc_title = NSLocalizedString("Message Received", "Label")
-                nc_subtitle = format_identity_to_string(sender, format='full')
+                nc_subtitle = format_identity_to_string(sender_identity, format='full')
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
             msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
@@ -513,17 +513,20 @@ class SMSViewController(NSObject):
             status = status or MSG_STATE_DELIVERED
             if msg_id not in self.msg_id_list:
                 self.msg_id_list.add(msg_id)
-                sender_name = format_identity_to_string(sender, format='compact')
+                sender_name = format_identity_to_string(sender_identity, format='compact')
                 if direction == 'incoming':
                     sender_name = self.normalizeSender(sender_name)
                 self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender_identity), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             # save to history
             recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
+            
+            if direction == 'outgoing' and not sender_identity.display_name:
+                sender_identity.display_name = self.account.display_name
 
-            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
+            message = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender_identity, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
             
             self.add_to_history(message)
 
