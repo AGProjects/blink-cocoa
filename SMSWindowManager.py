@@ -145,21 +145,27 @@ class SMSWindowController(NSWindowController):
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
+
         if index == NSNotFound:
             return
+
         tabItem = self.tabView.tabViewItemAtIndex_(index)
         item = self.tabSwitcher.itemForTabViewItem_(tabItem)
-        if item:
-            if self.tabView.selectedTabViewItem() == tabItem:
-                # TODO and window is focused
+
+        if not item:
+            return
+
+        count = self.unreadMessageCounts[session] = self.unreadMessageCounts.get(session, 0) + 1
+        if self.tabView.selectedTabViewItem() == tabItem:
+            session = self.selectedSessionController()
+            if self.window().isKeyWindow():
                 item.setBadgeLabel_("")
-                session = self.selectedSessionController()
-                if self.window().isKeyWindow():
-                    session.read_queue_start()
+                session.read_queue_start()
             else:
-                count = self.unreadMessageCounts[session] = self.unreadMessageCounts.get(session, 0) + 1
                 item.setBadgeLabel_(str(count))
-                session.read_queue_stop()
+        else:
+            item.setBadgeLabel_(str(count))
+            session.read_queue_stop()
 
     def noteView_isComposing_(self, smsview, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(smsview)
@@ -219,8 +225,11 @@ class SMSWindowController(NSWindowController):
         for viewer in self.viewers:
             if viewer != session:
                 viewer.read_queue_stop()
-            elif self.window().isKeyWindow():
-                viewer.read_queue_start()
+            else:
+                if self.window().isKeyWindow():
+                    _item = self.tabSwitcher.itemForTabViewItem_(item)
+                    _item.setBadgeLabel_("")
+                    viewer.read_queue_start()
 
         if item.identifier() in self.unreadMessageCounts:
             del self.unreadMessageCounts[item.identifier()]
@@ -501,7 +510,8 @@ class SMSWindowManagerClass(NSObject):
 
         if remaining_messages % remaining == 0:
             if remaining_messages == 0:
-                BlinkLogger().log_info('Sync conversations completed')
+                pass
+                #BlinkLogger().log_info('Sync conversations completed')
             else:
                 BlinkLogger().log_info('%d pending history messages' % remaining_messages)
             
@@ -1036,6 +1046,7 @@ class SMSWindowManagerClass(NSObject):
                     window.window().makeKeyAndOrderFront_(None)
                 else:
                     window.window().orderFront_(None)
+                #window.window().orderFront_(None)
                 NSApp.delegate().noteNewMessage(window)
 
         return viewer
@@ -1148,8 +1159,6 @@ class SMSWindowManagerClass(NSObject):
 
         BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
 
-        note_new_message = False
- 
         if direction == 'incoming':
             BlinkLogger().log_info("%s %s message %s %s -> %s" % (direction.title(), content_type, imdn_id, window_tab_identity.uri, account.id))
         else:
@@ -1295,17 +1304,16 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_warning('Message type %s is not supported' % content_type)
             return
 
-        else:
-            note_new_message = True
-
-        # display the message
+        note_new_message = content_type in ('text/plain', 'text/html') and direction == 'incoming'
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
         
-        if note_new_message and not is_replication_message:
+        if note_new_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
+        status = MSG_STATE_DELIVERED if direction == 'incoming' else MSG_STATE_SENT
+
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=MSG_STATE_DELIVERED)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=status)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 

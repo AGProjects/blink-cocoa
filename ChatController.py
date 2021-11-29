@@ -1656,7 +1656,7 @@ class ChatController(MediaStream):
                 nc_body = html2txt(content.decode('utf-8'))[0:400] if message.content_type == 'text/html' else content[0:400]
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
-            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
+            NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='incoming', history_entry=False, remote_party=self.sessionController.remoteAOR, is_replication_message=False, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             # disable composing indicator
             if self.remoteTypingTimer:

@@ -459,7 +459,7 @@ class Ringer(object):
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
         data = notification.data
         settings = SIPSimpleSettings()
-        if not settings.audio.silent:
+        if not settings.audio.silent and not data.is_replication_message:
             now = time.time()
             if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
                 if data.direction == 'outgoing' and self.chat_message_outgoing_sound:

@@ -412,9 +412,9 @@ class SMSViewController(NSObject):
         (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status) = message_tuple
         
         try:
-            require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
-            require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and not is_replication_message and content_type != IMDNDocument.content_type
-
+            require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
+            require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
+            
             is_html = content_type == 'text/html'
             encrypted = False
             
@@ -492,6 +492,7 @@ class SMSViewController(NSObject):
                 timestamp = ISOTimestamp.now()
 
             self.log_info("%s message %s message %s received from %s (Call-ID %s)" % (direction, content_type, id, sender_identity, call_id))
+
             if require_delivered_notification:
                 self.sendIMDNNotification(id, 'delivered')
 
@@ -518,7 +519,7 @@ class SMSViewController(NSObject):
                     sender_name = self.normalizeSender(sender_name)
                 self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, remote_party=format_identity_to_string(sender_identity), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, is_replication_message=is_replication_message,  remote_party=format_identity_to_string(sender_identity), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             # save to history
             recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
@@ -541,6 +542,10 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _send_read_notification(self, id):
+        if id is None:
+            return
+
+        self.log_info('read_queue_paused = %s' % self.read_queue_paused)
         self.log_info('Send read notification for message %s' % id)
         self.sendIMDNNotification(id, 'displayed')
 
@@ -845,6 +850,7 @@ class SMSViewController(NSObject):
         self.log_info('Sending queue paused with %d messages' % len(self.message_queue.queue.queue))
         self.paused = True
         self.message_queue.pause()
+        self.message_queue.put(None)
 
     @objc.python_method
     def read_queue_start(self):
@@ -882,6 +888,8 @@ class SMSViewController(NSObject):
 
         self.read_queue_paused = True
         self.read_queue.pause()
+        # work around for the queue that still runs on next tick
+        self.read_queue.put(None)
 
     @objc.python_method
     def message_needs_imdn_notifications(self, message):
@@ -901,6 +909,9 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _send_message(self, message):
+        if message is None:
+            return
+
         if message.content_type == IsComposingDocument.content_type:
             if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=30):
                 return
@@ -1209,7 +1220,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient = ChatIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, is_replication_message=False, remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             return True
 
