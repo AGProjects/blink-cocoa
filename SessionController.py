@@ -1922,12 +1922,16 @@ class SessionController(NSObject):
         
         extra_headers = []
         if self.session.account.pstn and self.session.account.pstn.asserted_identity:
+            asserted_identity = asserted_identity if self.session.account.pstn.asserted_identity.startswith('sip:') else 'sip:%s' % self.session.account.pstn.asserted_identity
+            
             try:
-                SIPURI.parse(self.session.account.pstn.asserted_identity)
+                SIPURI.parse(asserted_identity)
             except SIPCoreError:
-                self.log_info("Bad PSTN asserted identity URI: %s" % self.session.account.pstn.asserted_identity)
+                message = "Bad PSTN asserted identity SIP URI: %s" % self.session.account.pstn.asserted_identity
+                message = re.sub("%", "%%", message)
+                NSRunAlertPanel(NSLocalizedString("Error", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
             else:
-                extra_headers.append(Header('P-Asserted-Identity', '<%s>\r\n' % self.session.account.pstn.asserted_identity))
+                extra_headers.append(Header('P-Asserted-Identity', '<%s>' % asserted_identity))
                 
         self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers)
         self.changeSessionState(STATE_CONNECTING)
