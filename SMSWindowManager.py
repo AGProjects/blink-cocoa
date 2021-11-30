@@ -263,7 +263,11 @@ class SMSWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             session.read_queue_start()
-    
+
+        tabItem = self.tabView.selectedTabViewItem()
+        item = self.tabSwitcher.itemForTabViewItem_(tabItem)
+        item.setBadgeLabel_("")
+
     @objc.IBAction
     def requestPublicKey_(self, sender):
         session = self.selectedSessionController()
@@ -689,7 +693,8 @@ class SMSWindowManagerClass(NSObject):
 
            else:
                last_message_id = None
-               BlinkLogger().log_info('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
+               if len(json_data['messages']) > 0:
+                   BlinkLogger().log_info('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
 
                i = 0
                self.contacts_queue.pause()
@@ -907,12 +912,14 @@ class SMSWindowManagerClass(NSObject):
                                     encryption=encryption)
             return
 
-        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], status, msg['message_id'], msg['contact']))
 
         sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
         viewer = self.getWindow(sender_uri, msg['contact'], account, note_new_message=bool(last_id))
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
-        self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
+        if status != MSG_STATE_DISPLAYED:
+            self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
+
         window = self.windowForViewer(viewer).window()
         viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
 

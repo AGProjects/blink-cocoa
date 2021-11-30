@@ -459,16 +459,22 @@ class Ringer(object):
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
         data = notification.data
         settings = SIPSimpleSettings()
-        if not settings.audio.silent and not data.is_replication_message:
-            now = time.time()
-            if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
-                if data.direction == 'outgoing' and self.chat_message_outgoing_sound:
-                    self.chat_message_outgoing_sound.stop()
-                    self.chat_message_outgoing_sound.start()
-                elif self.chat_message_incoming_sound:
-                    self.chat_message_incoming_sound.stop()
-                    self.chat_message_incoming_sound.start()
-                self.chat_beep_time = now
+
+        if settings.audio.silent:
+            return
+
+        if data.is_replication_message or (hasattr(data, 'status') and data.status == 'displayed'):
+            return
+        
+        now = time.time()
+        if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
+            if data.direction == 'outgoing' and self.chat_message_outgoing_sound:
+                self.chat_message_outgoing_sound.stop()
+                self.chat_message_outgoing_sound.start()
+            elif self.chat_message_incoming_sound:
+                self.chat_message_incoming_sound.stop()
+                self.chat_message_incoming_sound.start()
+            self.chat_beep_time = now
 
     def _NH_BlinkFileTransferDidEnd(self, notification):
         settings = SIPSimpleSettings()

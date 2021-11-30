@@ -395,8 +395,8 @@ class SMSViewController(NSObject):
     @objc.python_method
     def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None):
 
-        if id in self.msg_id_list and from_journal:
-            self.log_info('Discard duplicate message %s from journal' % id)
+        if id in self.msg_id_list:
+            self.log_info('Discard duplicate message %s' % id)
             return
 
         if id in self.sent_readable_messages:
@@ -491,18 +491,25 @@ class SMSViewController(NSObject):
                 self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
                 timestamp = ISOTimestamp.now()
 
-            self.log_info("%s message %s message %s received from %s (Call-ID %s)" % (direction, content_type, id, sender_identity, call_id))
+            self.log_info("%s %s with id %s" % (direction, content_type, id))
+
+            msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
+
+            if msg_id in self.msg_id_list:
+                return
+
+            self.msg_id_list.add(msg_id)
+
+            status = status or MSG_STATE_DELIVERED
 
             if require_delivered_notification:
                 self.sendIMDNNotification(id, 'delivered')
 
-            if not is_replication_message and not window.isKeyWindow():
+            if not is_replication_message and not window.isKeyWindow() and status != 'displayed':
                 nc_body = html2txt(content) if is_html else content
                 nc_title = NSLocalizedString("Message Received", "Label")
                 nc_subtitle = format_identity_to_string(sender_identity, format='full')
                 NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-
-            msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
 
             if encrypted:
                 encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
@@ -511,15 +518,12 @@ class SMSViewController(NSObject):
             else:
                 encryption = ''
 
-            status = status or MSG_STATE_DELIVERED
-            if msg_id not in self.msg_id_list:
-                self.msg_id_list.add(msg_id)
-                sender_name = format_identity_to_string(sender_identity, format='compact')
-                if direction == 'incoming':
-                    sender_name = self.normalizeSender(sender_name)
-                self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
+            sender_name = format_identity_to_string(sender_identity, format='compact')
+            if direction == 'incoming':
+                sender_name = self.normalizeSender(sender_name)
+            self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, is_replication_message=is_replication_message,  remote_party=format_identity_to_string(sender_identity), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, status=status, is_replication_message=is_replication_message, remote_party=format_identity_to_string(sender_identity), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             # save to history
             recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
@@ -545,7 +549,6 @@ class SMSViewController(NSObject):
         if id is None:
             return
 
-        self.log_info('read_queue_paused = %s' % self.read_queue_paused)
         self.log_info('Send read notification for message %s' % id)
         self.sendIMDNNotification(id, 'displayed')
 
@@ -644,7 +647,7 @@ class SMSViewController(NSObject):
 
         notification = DisplayNotification('displayed') if event == 'displayed' else DeliveryNotification(event)
         content = IMDNDocument.create(message_id=message_id, datetime=ISOTimestamp.now(), recipient_uri=self.target_uri, notification=notification)
-        self.log_info('Composing IMDN %s for message %s' % (event, message_id))
+        #self.log_info('Composing IMDN %s for message %s' % (event, message_id))
         self.sendMessage(content, IMDNDocument.content_type)
 
     @objc.python_method
@@ -1220,7 +1223,7 @@ class SMSViewController(NSObject):
             self.chatViewController.resetTyping()
 
             recipient = ChatIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, is_replication_message=False, remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
+            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, is_replication_message=False, status=MSG_STATE_SENT,  remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
             return True
 
@@ -1273,7 +1276,7 @@ class SMSViewController(NSObject):
                 remote_uris.append(self.instance_id)
                 
             zoom_factor = self.chatViewController.scrolling_zoom_factor
-            self.log_info('Replay history with zoom factor %s' % zoom_factor)
+            #self.log_info('Replay history with zoom factor %s' % zoom_factor)
 
             if zoom_factor:
                 period_array = {
@@ -1439,7 +1442,7 @@ class SMSViewController(NSObject):
 
         if not self.render_queue_started:
             self.render_queue.start()
-            self.log_info('Render queue started')
+            #self.log_info('Render queue started')
             self.render_queue_started = True
 
     @objc.python_method
