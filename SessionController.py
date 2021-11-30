@@ -1173,7 +1173,7 @@ class SessionController(NSObject):
         self.contact = None
 
         if self.dealloc_timer is None:
-            self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "deallocTimer:", None, True)
+            self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(7.0, self, "deallocTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
 
@@ -1490,7 +1490,14 @@ class SessionController(NSObject):
 
     @objc.python_method
     def resetSession(self):
-        self.log_debug("Reset session")
+        self.log_info("Reset session")
+        # Remove the GUI session if call failed before it started in the middleware (e.g. DNS failure)
+        if self.hasStreamOfType("audio"):
+            audioStream = self.streamHandlerOfType("audio")
+            if audioStream:
+                audioStream.removeFromSession()
+                NSApp.delegate().contactsWindowController.finalizeAudioSession(audioStream)
+
         self.state = STATE_IDLE
         self.sub_state = None
         self.session = None
@@ -1857,7 +1864,8 @@ class SessionController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def setRoutesFailed(self, msg):
-        self.log_info("Routing failure: '%s'"%msg)
+        self.startDeallocTimer()
+        self.log_info("Routing failure: '%s'" % msg)
         log_data = NotificationData(direction='outgoing', target_uri=format_identity_to_string(self.target_uri, check_contact=True), timestamp=datetime.now(), code=478, originator='local', reason='DNS Lookup Failed', failure_reason='DNS Lookup Failed', streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id='', from_tag='', to_tag='')
         self.notification_center.post_notification("BlinkSessionDidFail", sender=self, data=log_data)
         self.changeSessionState(STATE_FAILED, NSLocalizedString(msg, "Label"))
