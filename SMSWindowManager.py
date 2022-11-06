@@ -564,7 +564,7 @@ class SMSWindowManagerClass(NSObject):
                return
 
             route = routes[0]
-            BlinkLogger().log_info('Sending message to %s' % route.uri)
+            BlinkLogger().log_info('Sending %s message to %s' % (content_type, route.uri))
             from_uri = SIPURI.parse('sip:%s' % account.id)
             if recipient:
                 to_uri = SIPURI.parse('sip:%s' % recipient)
