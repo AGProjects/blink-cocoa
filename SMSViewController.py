@@ -817,7 +817,7 @@ class SMSViewController(NSObject):
         for msgObject in self.message_queue.queue.queue:
             try:
                 message = self.messages.pop(msgObject.id)
-            except KeyError:
+            except (KeyError, AttributeError):
                 pass
             else:
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
