@@ -1184,10 +1184,7 @@ class SessionController(NSObject):
             self.notification_center.post_notification("BlinkSessionChangedDisplayName", sender=self)
 
     def deallocTimer_(self, timer):
-        self.resetSession()
-        if self.chatPrintView is None:
-            self.dealloc_timer.invalidate()
-            self.dealloc_timer = None
+        self.resetSession(dealloc=True)
 
     def dealloc(self):
         self.notification_center = None
@@ -1489,7 +1486,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkSessionChangedState", sender=self, data=NotificationData(state=newstate, reason=fail_reason))
 
     @objc.python_method
-    def resetSession(self):
+    def resetSession(self, dealloc=False):
         self.log_info("Reset session")
         # Remove the GUI session if call failed before it started in the middleware (e.g. DNS failure)
         if self.hasStreamOfType("audio"):
@@ -1497,6 +1494,10 @@ class SessionController(NSObject):
             if audioStream:
                 audioStream.removeFromSession()
                 NSApp.delegate().contactsWindowController.finalizeAudioSession(audioStream)
+
+        if dealloc and self.dealloc_timer is not None and self.dealloc_timer.isValid():
+            self.dealloc_timer.invalidate()
+            self.dealloc_timer = None
 
         self.state = STATE_IDLE
         self.sub_state = None
