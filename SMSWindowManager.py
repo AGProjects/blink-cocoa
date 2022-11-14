@@ -155,11 +155,14 @@ class SMSWindowController(NSWindowController):
         if not item:
             return
 
-        count = self.unreadMessageCounts[session] = self.unreadMessageCounts.get(session, 0) + 1
+        count = self.unreadMessageCounts.get(session, 0)
+        count = self.unreadMessageCounts[session] = count + 1
+
         if self.tabView.selectedTabViewItem() == tabItem:
             session = self.selectedSessionController()
             if self.window().isKeyWindow():
                 item.setBadgeLabel_("")
+                del self.unreadMessageCounts[session]
                 session.read_queue_start()
             else:
                 item.setBadgeLabel_(str(count))
@@ -263,8 +266,13 @@ class SMSWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             session.read_queue_start()
+            
 
         tabItem = self.tabView.selectedTabViewItem()
+
+        if tabItem.identifier() in self.unreadMessageCounts:
+            del self.unreadMessageCounts[tabItem.identifier()]
+
         item = self.tabSwitcher.itemForTabViewItem_(tabItem)
         item.setBadgeLabel_("")
 
