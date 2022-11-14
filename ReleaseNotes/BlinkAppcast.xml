@@ -6,6 +6,18 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 8.8.5</title>
+            <sparkle:minimumSystemVersion>10.11.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Nov 14 18:05:02 -03 2022</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="8.8.5"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 8.8.4</title>
             <sparkle:minimumSystemVersion>10.11.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
