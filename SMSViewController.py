@@ -470,7 +470,10 @@ class SMSViewController(NSObject):
                     #self.log_info('OTR message %s handled without error' % call_id)
                     encrypted = encryption_active = self.encryption.active
 
-            content = content.decode() if isinstance(content, bytes) else content
+            try:
+                content = content.decode() if isinstance(content, bytes) else content
+            except UnicodeDecodeError:
+                return
             
             if content.startswith('?OTR:'):
                 if not is_replication_message:
