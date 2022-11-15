@@ -462,7 +462,7 @@ class AddContactController(NSObject):
             return True
         return False
 
-    def tableView_writeRows_toPasteboard_(self, table, rows, pboard):
+    def tableView_writeRowsWithIndexes_toPasteboard_(self, table, rows, pboard):
         index = rows[0]
         pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-row"), self)
         pboard.setString_forType_(NSString.stringWithString_(str(index)), "dragged-row")

@@ -566,7 +566,7 @@ class MultipleSelectionOption(Option):
             return True
         return False
 
-    def tableView_writeRows_toPasteboard_(self, table, rows, pboard):
+    def tableView_writeRowsWithIndexes_toPasteboard_(self, table, rows, pboard):
         if not self.allowReorder: return False
         index = rows[0]
         pboard.declareTypes_owner_(NSArray.arrayWithObject_("dragged-row"), self)
@@ -1822,7 +1822,7 @@ class ObjectTupleOption(Option):
             return True
         return False
 
-    def tableView_writeRows_toPasteboard_(self, table, rows, pboard):
+    def tableView_writeRowsWithIndexes_toPasteboard_(self, table, rows, pboard):
         if rows[0] >= len(self.values):
             return NSDragOperationNone
 
