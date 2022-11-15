@@ -1264,6 +1264,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_green_thread
     def replay_history(self):
+        BlinkLogger().log_info("Replay message history for %s" % str(self.target_uri))
         try:
             if self.account is BonjourAccount():
                 blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))

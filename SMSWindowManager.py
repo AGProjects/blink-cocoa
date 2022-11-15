@@ -27,6 +27,7 @@ import socket
 import string
 import random
 import urllib
+from http.client import RemoteDisconnected
 
 from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
@@ -502,7 +503,8 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
-       BlinkLogger().log_info("Account %s activated" % account.id)
+       pass
+       #BlinkLogger().log_info("Account %s activated" % account.id)
 
     @objc.python_method
     def _NH_MessageSaved(self, sender, data):
@@ -662,8 +664,8 @@ class SMSWindowManagerClass(NSObject):
 
        # request new token on 401
        try:
-           raw_response = urllib.request.urlopen(req, timeout=10)
-       except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
+           raw_response = urllib.request.urlopen(req, timeout=20)
+       except (urllib.error.URLError, TimeoutError, socket.timeout, RemoteDisconnected) as e:
            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
            try:
                del self.syncConversationsInProgress[account.id]
@@ -806,7 +808,11 @@ class SMSWindowManagerClass(NSObject):
                    account.save()
                 
                for uri in sync_contacts:
-                    self.saveContact(uri)
+                   self.saveContact(uri)
+                   for viewer in self.viewers:
+                       if viewer.remote_uri == uri and account == viewer.account:
+                           # reload messages in open viewer
+                           viewer.scroll_back_in_time()
             
                self.addContactsToMessagesGroup()
                self.contacts_queue.unpause()
