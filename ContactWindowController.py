@@ -587,6 +587,26 @@ class ContactWindowController(NSWindowController):
     def init_aspect_ratio(self, width, height):
         self.refresh_drawer_counter += 1
 
+    @objc.IBAction
+    def refreshDevices_(self, sender):
+        #BlinkLogger().log_info('Refresh audio devices')
+        SIPApplication().engine._ua.refresh_sound_devices()
+        
+        settings = SIPSimpleSettings()
+        in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
+        in_out_devices.append('system_default')
+        #BlinkLogger().log_info('Selected input device %s' % settings.audio.input_device)
+        #BlinkLogger().log_info('Selected output device %s' % settings.audio.input_device)
+        #BlinkLogger().log_info('Available devices %s' % in_out_devices)
+        if settings.audio.input_device not in in_out_devices:
+            BlinkLogger().log_info('Changing input to system_default')
+            settings.audio.input_device = 'system_default'
+        if settings.audio.output_device not in in_out_devices:
+            BlinkLogger().log_info('Changing output to system_default')
+            settings.audio.output_device = 'system_default'
+        
+        settings.save()
+
     @objc.python_method
     @run_in_gui_thread
     def refreshAccountList(self):
@@ -2746,7 +2766,7 @@ class ContactWindowController(NSWindowController):
                 settings.audio.output_device = str(device)
                 settings.save()
 
-        self.menuWillOpen_(self.devicesMenu)
+        #self.menuWillOpen_(self.devicesMenu)
 
     @objc.python_method
     def showAudioSession(self, streamController, add_to_conference=False):
@@ -4870,6 +4890,8 @@ class ContactWindowController(NSWindowController):
                     index += 1
 
         if menu == self.devicesMenu:
+            self.refreshDevices_(None)
+            
             in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
             if NSLocalizedString("Built-in Microphone", "Label") in self.backend._app.engine.input_devices and NSLocalizedString("Built-in Output", "Label") in self.backend._app.engine.output_devices:
                 in_out_devices.append(NSLocalizedString("Built-in Microphone and Output", "Label"))
@@ -5835,13 +5857,15 @@ class ContactWindowController(NSWindowController):
             if new_device in in_devices and new_device in out_devices:
                 self.switchAudioDevice(new_device)
             else:
-                self.menuWillOpen_(self.devicesMenu)
-        else:
-            self.menuWillOpen_(self.devicesMenu)
+                pass
+                #self.menuWillOpen_(self.devicesMenu)
+        #else:
+        #    self.menuWillOpen_(self.devicesMenu)
 
     @objc.python_method
     def _NH_DefaultAudioDeviceDidChange(self, notification):
-        self.menuWillOpen_(self.devicesMenu)
+        pass
+        #self.menuWillOpen_(self.devicesMenu)
 
     @objc.python_method
     def _NH_MediaStreamDidInitialize(self, notification):
