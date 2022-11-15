@@ -1922,7 +1922,7 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, sender=self.session)
         
         extra_headers = []
-        if self.session.account.pstn and self.session.account.pstn.asserted_identity:
+        if self.session.account is not BonjourAccount() and self.session.account.pstn and self.session.account.pstn.asserted_identity:
             asserted_identity = asserted_identity if self.session.account.pstn.asserted_identity.startswith('sip:') else 'sip:%s' % self.session.account.pstn.asserted_identity
             
             try:
