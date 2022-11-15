@@ -628,7 +628,7 @@ CA
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <clipView key="contentView" ambiguous="YES" id="7tk-Pf-Fob">
                                                 <rect key="frame" x="1" y="1" width="272" height="346"/>
-                                                <autoresizingMask key="autoresizingMask"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" autosaveColumns="NO" autosaveName="contactList" indentationPerLevel="14" indentationMarkerFollowsCell="NO" autoresizesOutlineColumn="YES" outlineTableColumn="507" id="504" customClass="ContactOutlineView">
                                                         <rect key="frame" x="0.0" y="0.0" width="272" height="346"/>
@@ -1073,7 +1073,7 @@ ABC</string>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" copiesOnScroll="NO" id="pYz-Y5-ScY">
                                 <rect key="frame" x="1" y="1" width="278" height="391"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="547" userLabel="Audio Sessions List View" customClass="ListView">
                                         <rect key="frame" x="0.0" y="0.0" width="259" height="16"/>
@@ -1098,7 +1098,7 @@ ABC</string>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" ambiguous="YES" id="Atq-KM-J9c">
                                 <rect key="frame" x="1" y="0.0" width="278" height="0.0"/>
-                                <autoresizingMask key="autoresizingMask"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="1538" id="1537" customClass="ParticipantsTableView">
                                         <rect key="frame" x="0.0" y="0.0" width="278" height="36"/>

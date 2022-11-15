@@ -2067,6 +2067,7 @@
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
+		1F1FD58D292418AB008C2D05 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
 		1F21A22A19C60254006866C8 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F21A22B19C60256006866C8 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoWindow.xib; sourceTree = "<group>"; };
 		1F21A22C19C60258006866C8 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/VideoWindow.xib; sourceTree = "<group>"; };
@@ -2095,7 +2096,6 @@
 		1F331DCA193B655800831F31 /* voicemail-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "voicemail-red.png"; path = "icons/voicemail-red.png"; sourceTree = "<group>"; };
 		1F337A54194C95E000DB726B /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = moon.png; path = icons/moon.png; sourceTree = "<group>"; };
 		1F35D0B017894FFF00C6FE38 /* SIP2SIP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SIP2SIP.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1F366FC2273FE8FF00CE7FA5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
 		1F37D7CD1393F6B4007210E9 /* editor-changed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "editor-changed.png"; path = "icons/editor-changed.png"; sourceTree = "<group>"; };
 		1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WorldMapView.py; sourceTree = "<group>"; };
 		1F3C358215F521A8005356AE /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PresenceInfoPanel.xib; sourceTree = "<group>"; };
@@ -3726,14 +3726,15 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				en,
-				Japanese,
-				French,
 				en,
 				ro,
 				es,
 				pt,
 				nl,
 				de,
+				fr,
+				ja,
+				Base,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* MacSip */;
 			projectDirPath = "";
@@ -4993,11 +4994,11 @@
 		1F366FC1273FE8FF00CE7FA5 /* ExportPrivateKeyWindow.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1F366FC2273FE8FF00CE7FA5 /* en */,
 				1F1911302747E42C00A486AA /* nl */,
 				1F1911312747E43200A486AA /* ro */,
 				1F1911322747E43500A486AA /* es */,
 				1F1911332747E43C00A486AA /* pt */,
+				1F1FD58D292418AB008C2D05 /* en */,
 			);
 			name = ExportPrivateKeyWindow.xib;
 			sourceTree = "<group>";
@@ -5577,13 +5578,13 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MARKETING_VERSION = 6.1.0;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
+				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.Blink;
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -5624,7 +5625,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/2.7/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -5632,6 +5632,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
+				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.Blink;
 				PRODUCT_NAME = "Blink Pro";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
