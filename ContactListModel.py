@@ -1320,6 +1320,8 @@ class BlinkPresenceContact(BlinkContact):
                                     break
 
                         # TODO don't send notifications if transports are dead -adi
+                        # this is happening too often when network flips, need to throttle this - adi
+                        notify = False
 
                         if notify:
                             nc_title = NSLocalizedString("%s's Availability", "System notification title") % self.name

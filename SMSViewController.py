@@ -34,10 +34,10 @@ import uuid
 
 import datetime
 import hashlib
-from binascii import unhexlify, hexlify
 import ast
 import re
 
+from binascii import unhexlify, hexlify
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.queue import EventQueue
@@ -59,10 +59,12 @@ from sipsimple.payloads.imdn import IMDNDocument, DisplayNotification, DeliveryN
 from sipsimple.streams.msrp.chat import CPIMPayload, SimplePayload, CPIMParserError, CPIMHeader, ChatIdentity, OTREncryption, CPIMNamespace
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
+from util import call_later
+
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 
 from BlinkLogger import BlinkLogger
-from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DEFERRED, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED
+from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED_LOCAL, MSG_STATE_DEFERRED
 from HistoryManager import ChatHistory
 from SmileyManager import SmileyManager
 from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
@@ -142,7 +144,7 @@ class SMSViewController(NSObject):
     contact = None
     read_queue_started = False
     read_queue_paused = False
-    render_queue_started = False
+    incoming_queue_started = False
     started = False
     paused = False
 
@@ -178,12 +180,12 @@ class SMSViewController(NSObject):
 
             self.encryption = OTREncryption(self)
 
-            self.message_queue = EventQueue(self._send_message)
-            self.read_queue = EventQueue(self._send_read_notification)
-            self.render_queue = EventQueue(self._render_message)
+            self.message_queue = EventQueue(self._send_message)   # outgoing messages
+            self.read_queue = EventQueue(self._send_read_notification) # unread incoming messsages
+            self.incoming_queue = EventQueue(self._receive_message) # displayed messages
 
-            self.history=ChatHistory()
-            self.msg_id_list=set()
+            self.history = ChatHistory()
+            self.msg_id_list = set() # prevent display of duplicate messages
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
@@ -295,31 +297,74 @@ class SMSViewController(NSObject):
         
     @objc.python_method
     def heartbeat(self):
-        keys = list(self.pending_outgoing_messages.keys())
-        for key in keys:
+        must_resend = False
+        if len(self.messages.keys()) > 0:
+            self.log_info('--- We have %d total messages' % len(self.messages.keys()))
+
+        for message in list(self.messages.values()):
+            self.log_info('Message id %s %s: %s' % (message.id, message.content_type, message.status))
+            if message.content_type in (IsComposingDocument.content_type, "text/pgp-public-key"):
+                if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=30):
+                    self.log_info('We must remove this message')
+                    try:
+                        del self.messages[message.id]
+                    except KeyError:
+                        pass
+
+                    continue
+            
+            if message.status == MSG_STATE_FAILED_LOCAL:
+                if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20):
+                    if host and host.default_ip is not None:
+                        self.log_info('Resending message with existing route %s' % self.last_route)
+                        self.message_queue.put(message)
+                        self.log_info('Sending queue status: %s' % self.paused)
+                        must_resend = True
+                    else:
+                        self.log_info('Waiting for connectivity to resend message')
+            elif message.status in (MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED, MSG_STATE_SENT):
+                try:
+                    del self.messages[message.id]
+                except KeyError:
+                    pass
+                continue
+
+        if must_resend:
+            self.log_info('Sending queue status: %s' % self.paused)
+            if self.last_route is None:
+                self.lookup_destination(self.target_uri)
+            else:
+                self.setRoutesResolved([self.last_route])
+
+        pending_messages = list(self.pending_outgoing_messages.keys())
+        if len(pending_messages) > 0:
+            self.log_info('We have %d pending messages' % len(pending_messages))
+
+        for key in pending_messages:
+            self.log_info('Handle pending message %s' % key)
             try:
                 (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[key]
             except KeyError:
-                pass
+                self.log_error('Message not found')
             else:
                 if session_id != self.session_id:
+                    self.log_error('Message is not part of this session')
                     continue
 
-                if datetime.datetime.now() - timestamp > datetime.timedelta(seconds=20):
+                if datetime.datetime.now() - timestamp > datetime.timedelta(seconds=30):
+                    # these messages have no PJSIP event about their final state (maybe things failed earlier for example due to a DNS timeout)
                     try:
-                        message = self.messages.pop(message_id)
+                        message = self.messages[message_id]
                     except KeyError:
+                        self.log_error('Message is not found in messages stack')
                         pass
                     else:
-                        message.status = MSG_STATE_FAILED
-                        self.log_info("%s message %s for %s delivery expired" % (message.content_type, message.id, message.recipient))
-                        self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-                        self.add_to_history(message)
-                        reason = 'Timeout'
-                        if self.last_failure_reason != reason:
-                            self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
-
+                        self.log_info('Found message with status %s' % message.status)
+                        if message.status == MSG_STATE_SENDING:
+                            self.log_info("%s message %s for %s sent notification missing" % (message.content_type, message.id, message.recipient))
+                            self.update_message_status(MSG_STATE_FAILED_LOCAL, message=message)
                     try:
+                        self.log_info('Removed pending message')
                         del self.pending_outgoing_messages[key]
                     except KeyError:
                         pass
@@ -405,12 +450,15 @@ class SMSViewController(NSObject):
 
         message_tuple = (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status)
 
-        self.render_queue.put(message_tuple)
+        self.incoming_queue.put(message_tuple)
 
     @objc.python_method
-    def _render_message(self, message_tuple):
+    def _receive_message(self, message_tuple):
         (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status) = message_tuple
-        
+
+        if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
+            return
+
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
             require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
@@ -419,6 +467,7 @@ class SMSViewController(NSObject):
             encrypted = False
             
             text_content = content.decode().strip()
+            
             if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
                 if not self.private_key:
                     self.chatViewController.showSystemMessage("No PGP private key available", ISOTimestamp.now(), is_error=True)
@@ -624,14 +673,14 @@ class SMSViewController(NSObject):
             traceback.print_exc()
 
     @objc.python_method
-    def update_message_status(self, msgid, status):
-        self.log_info("My message %s was %s" % (msgid, status))
-        self.chatViewController.markMessage(msgid, status)
-        self.history.update_message_status(msgid, status)
+    def update_message_status(self, status, message=None, id=None):
+        self.log_info("Message %s %s status updated: %s" % (id or message.id, message.content, status))
+        self.chatViewController.markMessage(id or message.id, status)
+        self.history.update_message_status(id or message.id, status)
 
     @objc.python_method
     def add_to_history(self, message):
-        self.log_info('Message %s %s saved to history with status %s' % (message.id, message.content_type, message.status))
+        self.log_info('Message %s %s %s saved to history with status %s' % (message.id, message.content_type, message.content.decode(), message.status))
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient, format='full') if message.recipient else ''
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
@@ -678,9 +727,13 @@ class SMSViewController(NSObject):
     def sendMessage(self, content, content_type="text/plain"):
         # entry point for sending messages, they will be added to self.message_queue
 
-        if isinstance(content, OTRInternalMessage):
-            self.message_queue.put(content)
-            return
+        if host and host.default_ip:
+            status = "queued"
+            if isinstance(content, OTRInternalMessage):
+                self.message_queue.put(content)
+                return
+        else:
+            status = MSG_STATE_FAILED_LOCAL
 
         timestamp = ISOTimestamp.now()
         content = content.decode() if isinstance(content, bytes) else content
@@ -694,20 +747,23 @@ class SMSViewController(NSObject):
             encryption = ''
 
         if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
-            self.log_info('Adding outgoing %s message %s to the sending queue' % (id, content_type))
+            self.log_info('Adding outgoing %s %s message %s to the sending queue' % (id, status, content_type))
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
-            self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state="sending", media_type='sms', encryption=encryption)
+            self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state=status, media_type='sms', encryption=encryption)
 
         recipient = ChatIdentity(self.target_uri, self.display_name)
-        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status="queued", encryption=encryption, direction='outgoing')
+        mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status=status, encryption=encryption, direction='outgoing')
     
+        #self.log_info(mInfo)
         self.messages[id] = mInfo
         self.message_queue.put(mInfo)
+        self.add_to_history(mInfo)
 
-        if self.last_route is None:
-            self.lookup_destination(self.target_uri)
-        else:
-            self.setRoutesResolved([self.last_route])
+        if host and host.default_ip:
+            if self.last_route is None:
+                self.lookup_destination(self.target_uri)
+            else:
+                self.setRoutesResolved([self.last_route])
 
     @objc.python_method
     def lookup_destination(self, uri):
@@ -814,26 +870,26 @@ class SMSViewController(NSObject):
         self.stop_queue()
 
         if self.last_failure_reason != reason:
-            self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
+            #self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
             self.last_failure_reason = reason
-            
+        
         for msgObject in self.message_queue.queue.queue:
+            self.log_info('Updating message %s' % msgObject)
             try:
-                message = self.messages.pop(msgObject.id)
-            except (KeyError, AttributeError):
-                pass
+                message = self.messages[msgObject.id]
+            except Exception as e:
+                self.log_info('Message id not found: %s' % str(e))
             else:
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                    self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-                    message.status='failed'
-                    self.add_to_history(message)
+                    self.update_message_status(MSG_STATE_FAILED_LOCAL, message=message)
 
     @objc.python_method
     def start_queue(self):
         if self.started:
             if self.paused:
                 self.message_queue.unpause()
-                self.log_info('Sendind queue resumed with %d messages' % len(self.message_queue.queue.queue))
+                if len(self.message_queue.queue.queue) > 0:
+                    self.log_info('Sendind queue resumed with %d messages' % len(self.message_queue.queue.queue))
                 self.paused = False
         else:
             try:
@@ -856,7 +912,7 @@ class SMSViewController(NSObject):
         self.log_info('Sending queue paused with %d messages' % len(self.message_queue.queue.queue))
         self.paused = True
         self.message_queue.pause()
-        self.message_queue.put(None)
+        #self.message_queue.put(None)
 
     @objc.python_method
     def read_queue_start(self):
@@ -915,6 +971,8 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _send_message(self, message):
+        # called by event queue
+
         if message is None:
             return
 
@@ -923,14 +981,17 @@ class SMSViewController(NSObject):
                 return
     
         pgp_encrypted = False
+
         if (not self.last_route):
-            message.status = MSG_STATE_FAILED
             reason = 'No routes found'
-            self.log_info("%s message %s for %s delivery failed: %s" % (message.content_type, message.id, message.recipient, reason))
-            self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
-            self.add_to_history(message)
+            self.log_info("%s message %s for %s sent failed: %s" % (message.content_type, message.id, message.recipient, reason))
+
+            self.update_message_status(MSG_STATE_FAILED_LOCAL, message=message)
+
             if self.last_failure_reason != reason:
-                self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
+                if host and host.default_ip:
+                    pass
+                    #self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
             return
 
         if not isinstance(message, OTRInternalMessage) and message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
@@ -955,7 +1016,7 @@ class SMSViewController(NSObject):
                 self.chatViewController.showSystemMessage("Recipient stopped OTR encryption", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                    self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+                    self.update_message_status(MSG_STATE_FAILED_LOCAL, message=message)
                 return None
         else:
             content = message.content
@@ -1010,7 +1071,7 @@ class SMSViewController(NSObject):
                         self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
                         self.pgp_encrypted = False
                 else:
-                    self.log_info('Message %s encrypted using PGP' % message.id)
+                    #self.log_info('Message %s encrypted using PGP' % message.id)
                     pgp_encrypted = True
 
             payload = CPIMPayload(content,
@@ -1027,6 +1088,7 @@ class SMSViewController(NSObject):
             content_type = message.content_type
 
         from_uri = self.account.uri
+
         if self.account is BonjourAccount():
             settings = SIPSimpleSettings()
             from_uri.parameters['instance_id'] = settings.instance_id
@@ -1047,25 +1109,29 @@ class SMSViewController(NSObject):
         message_request.send(timeout)
         message.status = MSG_STATE_SENDING
         message.call_id = message_request._request.call_id.decode()
-        self.messages[message.id] = message
-        
-        pending_message_id = imdn_id if message.content_type == IMDNDocument.content_type else message.id
+
+        message_id = imdn_id if message.content_type == IMDNDocument.content_type else message.id
         pending_status = imdn_status  if message.content_type == IMDNDocument.content_type else 'sent'
-        self.add_pending_outgoing_message(str(message_request), pending_message_id, imdn_status)
+
+        self.messages[message.id] = message
+        self.pending_outgoing_messages[str(message_request)] = (message_id, pending_status, datetime.datetime.now(), self.session_id)
 
         if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key') and not isinstance(message, OTRInternalMessage):
             if self.encryption.active or pgp_encrypted:
-                self.log_info('%s encrypted message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
+                self.log_info('Message %s encrypted with PGP will be sent to %s (Call-ID %s)' % (message_id, self.last_route.uri, message.call_id))
             else:
-                self.log_info('%s message %s pending to %s (Call-ID %s)' % (message.content_type, pending_message_id, self.last_route.uri, message.call_id))
-
+                self.log_info('Message %s will be sent to %s (Call-ID %s)' % (message_id, self.last_route.uri, message.call_id))
 
     @objc.python_method
     def _NH_SIPMessageDidSucceed(self, sender, data):
         self.notification_center.discard_observer(self, sender=sender)
-        
         self.last_failure_reason = None
     
+        try:
+            del self.pending_outgoing_messages[str(sender)]
+        except KeyError:
+            pass
+
         try:
             call_id = data.headers['Call-ID'].body
             user_agent = data.headers.get('User-Agent', Null).body
@@ -1076,12 +1142,13 @@ class SMSViewController(NSObject):
             try:
                 message = next(message for message in self.messages.values() if message.call_id == call_id)
             except StopIteration:
-                self.log_info('Message Call-Id %s not found in messages {}' % call_id)
+                self.log_info('Message with Call-Id %s not found' % call_id)
                 return
             else:
                 try:
                     message = self.messages.pop(message.id)
                 except KeyError:
+                    self.log_info('Message id %s not found in messages {}' % message.id)
                     return
 
             if message.content_type == IMDNDocument.content_type:
@@ -1093,10 +1160,9 @@ class SMSViewController(NSObject):
                 else:
                     self.log_info('IMDN %s notification for %s was sent' % (event, message_id))
                     if event in ('delivered', 'displayed'):
-                        self.history.update_message_status(message_id, event, direction='incoming')
+                        self.history.update_message_status(message, event, direction='incoming')
                         return
 
-                    del self.pending_outgoing_messages[str(sender)]
                 return
             
             if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type) or message.id == 'OTR':
@@ -1105,11 +1171,8 @@ class SMSViewController(NSObject):
             if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
                 return
 
-            message.status = MSG_STATE_DEFERRED if data.code == 202 else MSG_STATE_SENT
-            self.chatViewController.markMessage(message.id, message.status)
-            self.log_info("%s message %s accepted by %s (Call-Id %s)" % (message.content_type, message.id, entity, call_id))
-
-            self.add_to_history(message)
+            self.log_info("Message %s was sent to %s" % (message.id, entity))
+            self.update_message_status(MSG_STATE_SENT, message=message)
         except Exception as e:
             import traceback
             self.log_info(traceback.format_exc())
@@ -1129,10 +1192,11 @@ class SMSViewController(NSObject):
                 client = data.headers.get('Client', Null).body
                 server = data.headers.get('Server', Null).body
                 entity = user_agent or server or client
-                self.log_info("Message with Call Id %s delivery failed: %s" % (call_id, reason))
+                self.log_info("Message with Call Id %s sent failed by %s: %s (%s)" % (call_id, entity, reason, data.code))
             else:
                 entity = 'local'
                 call_id = None
+                self.log_info("Message with no Call Id sent failed locally: %s (%s)" % (reason, data.code))
 
             if data.code == 202:
                 self._NH_SIPMessageDidSucceed(sender, data)
@@ -1141,10 +1205,11 @@ class SMSViewController(NSObject):
             try:
                 (message_id, event, timestamp, session_id) = self.pending_outgoing_messages[str(sender)]
             except (KeyError, IndexError):
-                self.log_info('Pending outgoing message %s was not for found' % str(sender))
+                self.log_info('Pending outgoing message %s was not found' % str(sender))
                 pass
             else:
-                #self.log_info('Found pending message %s for event %s' % (message_id, event))
+                self.log_info('Found a pending message %s for event %s' % (message_id or call_id or str(sender), event))
+
                 try:
                     del self.pending_outgoing_messages[str(sender)]
                 except KeyError:
@@ -1153,22 +1218,24 @@ class SMSViewController(NSObject):
                 if event in ('delivered', 'displayed'):
                     self.log_info('%s notification for %s failed' % (event, message_id))
                     return
-                elif message_id:
-                    try:
-                        message = self.messages.pop(message_id)
-                    except KeyError:
-                        pass
+                    
+                try:
+                    message = self.messages[message_id]
+                except KeyError:
+                    self.log_error('Cannot find the correspondent message in the stack')
+                    return
 
             if not message and call_id:
                 try:
                     message = next(message for message in self.messages.values() if message.call_id == call_id)
                 except StopIteration:
-                    self.log_info('Pending message was not for found for Call-Id %s' % call_id)
+                    self.log_info('Message not found for Call-Id %s' % call_id)
                     return
                 else:
-                    message = self.messages.pop(message.id)
-
-            if not message or message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                    message = self.messages[message.id]
+                    self.log_info('Message id %s found for Call-Id %s' % (message.id, call_id))
+            
+            if not message:
                 return
 
             if self.otr_negotiation_timer:
@@ -1179,34 +1246,24 @@ class SMSViewController(NSObject):
                 self.log_info("OTR message failed")
                 return
 
-            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
-                return
+            if (data.code == 408 and entity == 'local') or data.code >= 500:
+                self.setRoutesFailed(reason)
             
-            message.status = MSG_STATE_FAILED
-            self.log_info("Message %s with id %s delivery failed: %s" % (message.content_type, message.id, reason))
-
-            self.chatViewController.markMessage(message.id, MSG_STATE_FAILED)
+            message.status = MSG_STATE_FAILED if entity != 'local' else MSG_STATE_FAILED_LOCAL
 
             if self.last_failure_reason != reason:
                 if data.code == 480 or 'not online' in reason:
                     reason = 'User not online'
-                self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
 
-            self.add_to_history(message)
+                if entity != 'local':
+                    self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
+
+            self.update_message_status(message.status, message=message)
             self.last_failure_reason = reason
-
-            if (data.code == 408 and entity == 'local') or data.code >= 500:
-                self.setRoutesFailed(reason)
 
         except Exception as e:
             import traceback
             self.log_info(traceback.format_exc())
-        
-
-    @objc.python_method
-    def add_pending_outgoing_message(self, id, message_id, event):
-        #self.log_info('Adding pending %s message object %s for message %s' % (event, id, message_id))
-        self.pending_outgoing_messages[id] = (message_id, event, datetime.datetime.now(), self.session_id)
 
     @objc.python_method
     def stopEncryption(self):
@@ -1241,12 +1298,12 @@ class SMSViewController(NSObject):
         return self.chatViewController.view
 
     def chatView_becameIdle_(self, chatView, last_active):
-        if self.enableIsComposing:
+        if self.enableIsComposing and host and host.default_ip:
             content = IsComposingMessage(state=State("idle"), refresh=Refresh(60), last_active=LastActive(last_active or ISOTimestamp.now()), content_type=ContentType('text')).toxml()
             self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatView_becameActive_(self, chatView, last_active):
-        if self.enableIsComposing:
+        if self.enableIsComposing and host and host.default_ip:
             content = IsComposingMessage(state=State("active"), refresh=Refresh(60), last_active=LastActive(last_active or ISOTimestamp.now()), content_type=ContentType('text')).toxml()
             self.sendMessage(content, IsComposingDocument.content_type)
 
@@ -1345,6 +1402,7 @@ class SMSViewController(NSObject):
                 self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages", "Label"))
 
         if len(messages):
+            self.log_info('Render %d messages' % len(messages))
             message = messages[0]
             delta = datetime.date.today() - message.date
 
@@ -1370,17 +1428,25 @@ class SMSViewController(NSObject):
         last_chat_timestamp = None
 
         cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
+        must_resend = False
 
         for message in messages:
+            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
+                continue
+                
+            if message.body.strip().startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----'):
+                continue
+
             if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
                 self.read_queue.put(message.msgid)
 
-            if message.sip_callid != '' and message.media_type == 'sms':
+            if message.sip_callid and message.media_type == 'sms':
                 try:
                     seen = seen_sms[message.sip_callid]
                 except KeyError:
                     seen_sms[message.sip_callid] = True
                 else:
+                    self.log_info('Skip duplicate message %s' % message.sip_callid)
                     continue
 
             if message.direction == 'outgoing':
@@ -1431,10 +1497,29 @@ class SMSViewController(NSObject):
                 if message.direction == 'incoming':
                     sender = self.normalizeSender(sender)
                 self.msg_id_list.add(message.id)
-                self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
+                status = MSG_STATE_DEFERRED if message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing' else message.status
+                self.chatViewController.showMessage(message.sip_callid, message.id, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
 
-                if message.direction == 'outgoing':
-                    self.chatViewController.markMessage(message.id, message.status)
+                if message.direction == 'outgoing' and message.status == MSG_STATE_FAILED_LOCAL and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7):
+                    self.log_info('We must resend message %s to %s' % (message.id, recipient))
+
+                    if self.encryption.active:
+                        encryption = 'verified' if self.encryption.verified else 'unverified'
+                    elif self.pgp_encrypted:
+                        encryption = 'verified'
+                    else:
+                        encryption = ''
+
+                    recipient = ChatIdentity(self.target_uri, self.display_name)
+                    mInfo = MessageInfo(message.id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=message.content_type, content=message.body, status=message.status, encryption=encryption, direction='outgoing')
+                    
+                    #self.log_info(mInfo)
+
+                    #self.messages[message.id] = mInfo
+                    #self.message_queue.put(mInfo)
+                    must_resend = True
+
+            #self.log_info('Render history message %s %s %s' % (str(message.date), message.direction, message.status))
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
@@ -1444,10 +1529,17 @@ class SMSViewController(NSObject):
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
 
-        if not self.render_queue_started:
-            self.render_queue.start()
-            #self.log_info('Render queue started')
-            self.render_queue_started = True
+        if not self.incoming_queue_started:
+            self.incoming_queue.start()
+            self.log_info('Render queue started')
+            self.incoming_queue_started = True
+ 
+        if must_resend:
+             self.log_info('Sending queue status: %s' % self.paused)
+             if self.last_route is None:
+                 self.lookup_destination(self.target_uri)
+             else:
+                 self.setRoutesResolved([self.last_route])
 
     @objc.python_method
     def normalizeSender(self, sender):

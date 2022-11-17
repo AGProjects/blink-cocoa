@@ -450,7 +450,7 @@ class SMSWindowManagerClass(NSObject):
 
     windows = []
     received_call_ids = set()
-    pending_outgoing_messages = {}
+    pending_outgoing_messages = {}  # store messages until we get a PJSIP event that message failed or succeded
     import_key_window = None
     export_key_window = None
     syncConversationsInProgress = {}
@@ -809,10 +809,13 @@ class SMSWindowManagerClass(NSObject):
                 
                for uri in sync_contacts:
                    self.saveContact(uri)
-                   for viewer in self.viewers:
-                       if viewer.remote_uri == uri and account == viewer.account:
-                           # reload messages in open viewer
-                           viewer.scroll_back_in_time()
+                   for window in self.windows:
+                       for viewer in window.viewers:
+                           if viewer.remote_uri == uri and account == viewer.account:
+                               pass
+                               # reload messages in open viewer
+                               #BlinkLogger().log_info('Refresh viewer for %s' % uri)
+                               #viewer.scroll_back_in_time()
             
                self.addContactsToMessagesGroup()
                self.contacts_queue.unpause()
@@ -1043,11 +1046,11 @@ class SMSWindowManagerClass(NSObject):
                 imdn_status = document.notification.status.__str__()
 
                 if imdn_status == 'delivered':
-                    viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
+                    viewer.update_message_status(MSG_STATE_DELIVERED, id=imdn_message_id)
                 elif imdn_status == 'displayed':
-                    viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
+                    viewer.update_message_status(MSG_STATE_DISPLAYED, id=imdn_message_id)
                 elif imdn_status == 'failed':
-                    viewer.update_message_status(imdn_message_id, MSG_STATE_FAILED)
+                    viewer.update_message_status(MSG_STATE_FAILED, id=imdn_message_id)
 
         if not viewer and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact)

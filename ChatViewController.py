@@ -2,7 +2,7 @@
 #
 
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
-           'MSG_STATE_SENDING', 'MSG_STATE_SENT', 'MSG_STATE_FAILED', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED', 'MSG_STATE_DISPLAYED']
+           'MSG_STATE_SENDING', 'MSG_STATE_SENT', 'MSG_STATE_FAILED', 'MSG_STATE_FAILED_LOCAL', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED', 'MSG_STATE_DISPLAYED']
 
 import calendar
 import html
@@ -26,12 +26,13 @@ from SmileyManager import SmileyManager
 from util import escape_html, run_in_gui_thread
 
 
-MSG_STATE_SENDING   = "sending"   # middleware told us the message is being sent
-MSG_STATE_SENT      = "sent"      # middleware told us the message was sent the next SIP hop
-MSG_STATE_FAILED    = "failed"    # msg delivery failed (either SIP next hop or end-user using IMDN)
-MSG_STATE_DEFERRED  = "deferred"  # msg delivered to a server but deferred for later delivery
-MSG_STATE_DELIVERED = "delivered" # msg successfully delivered to end-user (IMDN support required)
-MSG_STATE_DISPLAYED = "displayed" # msg was read on end-user device (IMDN support required)
+MSG_STATE_SENDING      = "sending"      # middleware told us the message is being sent
+MSG_STATE_SENT         = "sent"         # middleware told us the message was sent the next SIP hop
+MSG_STATE_FAILED       = "failed"       # msg delivery failed (either SIP next hop or end-user using IMDN)
+MSG_STATE_FAILED_LOCAL = "failed_local" # msg sent failed (either a a local timeout or a DNS failure)
+MSG_STATE_DEFERRED     = "deferred"     # msg delivered to a server but deferred for later delivery
+MSG_STATE_DELIVERED    = "delivered"    # msg successfully delivered to end-user (IMDN support required)
+MSG_STATE_DISPLAYED    = "displayed"    # msg was read on end-user device (IMDN support required)
 
 # if user doesnt type for this time, we consider it idling
 TYPING_IDLE_TIMEOUT = 5
@@ -455,6 +456,9 @@ class ChatViewController(NSObject):
             self.executeJavaScript(script)
         elif state == MSG_STATE_FAILED:
             script = "markFailed('%s')"%msgid
+            self.executeJavaScript(script)
+        elif state == MSG_STATE_FAILED_LOCAL:
+            script = "markDeferred('%s')"%msgid
             self.executeJavaScript(script)
 
     @objc.python_method
