@@ -83,7 +83,7 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="PGPPublicKeyReceived")
 
             self.unreadMessageCounts = {}
-            self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "heartbeatTimer:", None, True)
+            self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "heartbeatTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSRunLoopCommonModes)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSEventTrackingRunLoopMode)
 
@@ -450,7 +450,6 @@ class SMSWindowManagerClass(NSObject):
 
     windows = []
     received_call_ids = set()
-    pending_outgoing_messages = {}  # store messages until we get a PJSIP event that message failed or succeded
     import_key_window = None
     export_key_window = None
     syncConversationsInProgress = {}
@@ -1046,11 +1045,11 @@ class SMSWindowManagerClass(NSObject):
                 imdn_status = document.notification.status.__str__()
 
                 if imdn_status == 'delivered':
-                    viewer.update_message_status(MSG_STATE_DELIVERED, id=imdn_message_id)
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_DELIVERED)
                 elif imdn_status == 'displayed':
-                    viewer.update_message_status(MSG_STATE_DISPLAYED, id=imdn_message_id)
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_DISPLAYED)
                 elif imdn_status == 'failed':
-                    viewer.update_message_status(MSG_STATE_FAILED, id=imdn_message_id)
+                    viewer.update_message_status(imdn_message_id, MSG_STATE_FAILED)
 
         if not viewer and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact)
