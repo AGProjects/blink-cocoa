@@ -144,6 +144,7 @@ body
 
 .msgbox_displayed {
   background-color: white;
+  color: #404040;
   border-style: solid;
   border-width: 0.5px;
   border-color: #A9A9A9;
@@ -354,40 +355,43 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
       lock_class = "lock"
   }
 
-  if (state == "sending") {
-      box_class = "msgbox_sending";
-      show_sending_state = 'yes'
-      status = timestamp;
-  } else if (state == "deferred") {
-      box_class = "msgbox_deferred";
-      status = "&#128351; " + timestamp;
-      delayed_class = "delayed"
-  } else if (state == "failed") {
-      box_class = "msgbox_failed"
-      status = timestamp;
-  } else if (state == "failed_local") {
-      box_class = "msgbox_deferred";
-      status = "&#128351; " + timestamp;
-      delayed_class = "delayed"
-  } else if (state == "delivered") {
-      box_class = "msgbox_delivered"
-      status = timestamp;
-      if (direction == 'outgoing')
-        delivered_class = "delivered";
-  } else if (state == "displayed") {
-      box_class = "msgbox_displayed"
-      status = timestamp;
-      if (direction == 'outgoing')
-        delivered_class = "delivered";
-        displayed_class = "displayed";
-  } else {
-      box_class = default_box_class;
-      status = timestamp;
+  if (direction == 'outgoing') {
+      if (state == "sending") {
+          box_class = "msgbox_sending";
+          show_sending_state = 'yes'
+          status = timestamp;
+      } else if (state == "deferred") {
+          box_class = "msgbox_deferred";
+          status = "&#128351; " + timestamp;
+          delayed_class = "delayed"
+      } else if (state == "failed") {
+          box_class = "msgbox_failed"
+          status = timestamp;
+      } else if (state == "failed_local") {
+          box_class = "msgbox_deferred";
+          status = "&#128351; " + timestamp;
+          delayed_class = "delayed"
+      } else if (state == "delivered") {
+          box_class = "msgbox_delivered"
+          status = timestamp;
+          if (direction == 'outgoing')
+            delivered_class = "delivered";
+      } else if (state == "displayed") {
+          box_class = "msgbox_displayed"
+          status = timestamp;
+          if (direction == 'outgoing')
+            delivered_class = "delivered";
+            displayed_class = "displayed";
+      } else {
+          box_class = default_box_class;
+          status = timestamp;
+      }
   }
-
-  if (direction == 'incoming')
+  
+  if (direction == 'incoming') {
     delivered_class = "delivered_hidden";
     displayed_class = "displayed_hidden";
+  }
 
     if (iconpath == null) {
         icon_class = "hidden";
@@ -455,7 +459,6 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
         previous_box.style.borderBottomColor = "#EDEDED";
         previous_box.borderBottomRightRadius = "0px";
         previous_box.borderBottomLeftRadius = "0px";
-
     }
 
   lastSender = sender;
@@ -580,12 +583,12 @@ function markDeferred(msgid)
   if (msg != null)
     msg.style.display = "block";
     msg.innerHTML = "&#128351; " + msg.innerHTML;
-
 }
 
 function markDelivered(msgid)
 {
   var msg = document.getElementById(msgid);
+  msg.className = "msgbox_delivered";
 
   msg = document.getElementById('t'+msgid)
   if (msg != null)
@@ -600,7 +603,6 @@ function markDelivered(msgid)
     msg.style.display = "block";
 
 }
-
 
 function markDisplayed(msgid)
 {

@@ -164,12 +164,12 @@ class SMSWindowController(NSWindowController):
             if self.window().isKeyWindow():
                 item.setBadgeLabel_("")
                 del self.unreadMessageCounts[session]
-                session.read_queue_start()
+                session.not_read_queue_start()
             else:
                 item.setBadgeLabel_(str(count))
         else:
             item.setBadgeLabel_(str(count))
-            session.read_queue_stop()
+            session.not_read_queue_stop()
 
     def noteView_isComposing_(self, smsview, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(smsview)
@@ -228,12 +228,12 @@ class SMSWindowController(NSWindowController):
 
         for viewer in self.viewers:
             if viewer != session:
-                viewer.read_queue_stop()
+                viewer.not_read_queue_stop()
             else:
                 if self.window().isKeyWindow():
                     _item = self.tabSwitcher.itemForTabViewItem_(item)
                     _item.setBadgeLabel_("")
-                    viewer.read_queue_start()
+                    viewer.not_read_queue_start()
 
         if item.identifier() in self.unreadMessageCounts:
             del self.unreadMessageCounts[item.identifier()]
@@ -261,12 +261,12 @@ class SMSWindowController(NSWindowController):
     def windowDidResignKey_(self, notification):
         session = self.selectedSessionController()
         if session:
-            session.read_queue_stop()
+            session.not_read_queue_stop()
 
     def windowDidBecomeKey_(self, notification):
         session = self.selectedSessionController()
         if session:
-            session.read_queue_start()
+            session.not_read_queue_start()
             
 
         tabItem = self.tabView.selectedTabViewItem()
@@ -769,7 +769,7 @@ class SMSWindowManagerClass(NSObject):
                                fd = open(key_file, "wb+")
                                fd.write(public_key.encode())
                                fd.close()
-                               BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
+                               #BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
                                nc_title = NSLocalizedString("Public key", "System notification title")
                                nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
                                nc_body = NSLocalizedString("Public key received", "System notification title")
@@ -1180,17 +1180,12 @@ class SMSWindowManagerClass(NSObject):
             sender_identity = data.from_header
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
 
-        BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
-
-        if direction == 'incoming':
-            BlinkLogger().log_info("%s %s message %s %s -> %s" % (direction.title(), content_type, imdn_id, window_tab_identity.uri, account.id))
-        else:
-            BlinkLogger().log_info("%s %s message %s %s -> %s" % (direction.title(), content_type, imdn_id, account.id, window_tab_identity.uri))
+        #BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
 
         uri = format_identity_to_string(window_tab_identity)
 
         if content_type == 'text/pgp-public-key':
-            BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
+            #BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
             viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
            
             if AccountManager().has_account(uri):
@@ -1224,7 +1219,7 @@ class SMSWindowManagerClass(NSObject):
                 fd = open(key_file, "wb+")
                 fd.write(public_key.encode())
                 fd.close()
-                BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
+                #BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
                 nc_title = NSLocalizedString("Public key", "System notification title")
                 nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
                 nc_body = NSLocalizedString("Public key received", "System notification title")

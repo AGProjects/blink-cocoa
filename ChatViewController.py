@@ -497,7 +497,7 @@ class ChatViewController(NSObject):
     @run_in_gui_thread
     def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
     
-        #print('showMessage %s %s -> %s' % (direction, sender, recipient))
+        #print('showMessage %s %s -> %s (%s)' % (direction, sender, recipient, state))
         #print('showMessage %s %s -> %s' % (direction, self.delegate.local_uri, self.delegate.remote_uri))
         lock_icon_path = ''
         #lock_icon_path = Resources.get('unlocked-darkgray.png')
