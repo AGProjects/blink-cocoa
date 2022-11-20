@@ -568,6 +568,11 @@ class ContactWindowController(NSWindowController):
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.purge_presence_timer, NSModalPanelRunLoopMode)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.purge_presence_timer, NSDefaultRunLoopMode)
 
+        if host.default_ip:
+            t = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10, self, "showUnsentMessages:", None, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(t, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(t, NSDefaultRunLoopMode)
+
         self.loaded = True
 
     @objc.python_method
@@ -3433,6 +3438,13 @@ class ContactWindowController(NSWindowController):
         self.open_last_sms_conversations(results)
 
     @objc.python_method
+    @run_in_green_thread
+    def show_unsent_messages(self):
+        results = SessionHistory().get_last_unsent_messages()
+        BlinkLogger().log_info(results)
+        self.open_last_sms_conversations(results)
+
+    @objc.python_method
     @run_in_gui_thread
     def open_last_sms_conversations(self, conversations):
         if SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
@@ -3826,6 +3838,10 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def showSMSWindow_(self, sender):
         self.show_last_sms_conversations()
+
+    @objc.IBAction
+    def showUnsentMessages_(self, sender):
+        self.show_unsent_messages()
 
     @objc.IBAction
     def showDonate_(self, sender):
@@ -5909,7 +5925,7 @@ class ContactWindowController(NSWindowController):
         self.updateStartSessionButtons()
         self.removePresenceContactForOurselves()
         self.fileTransfersWindow = FileTransferWindowController()
-
+        
     @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):
         NotificationCenter().remove_observer(self, name="BlinkContactsHaveChanged")

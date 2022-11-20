@@ -427,10 +427,14 @@ class SessionHistory(object, metaclass=Singleton):
         NotificationCenter().post_notification('HistoryEntriesVisibilityChanged')
 
     @run_in_db_thread
-    def _get_last_chat_conversations(self, count, media=['chat'], skip_conference_uris=False, days=60):
+    def _get_last_chat_conversations(self, count, media=['chat'], skip_conference_uris=False, days=60, status=None):
         results = []
         media_type = list("'%s'" % m for m in media)
-        extra_where = "remote_uri not like '%@conference.%'" if skip_conference_uris else "1=1"
+        extra_where = "1=1"
+        if skip_conference_uris:
+            extra_where += " and remote_uri not like '%@conference.%'"
+        if status:
+            extra_where += " and status = '%s'" % status
         all_accounts = list("'%s'" % account.id for account in AccountManager().get_accounts() if account.enabled)
  
         query = "select local_uri, remote_uri, direction, cpim_to, cpim_from, max(time) from chat_messages where remote_uri != '' and media_type in (%s) and local_uri in (%s) and %s and time > DATE('now', '-%d day') group by remote_uri order by time desc limit %s" % (", ".join(media_type), ", ".join(all_accounts), extra_where, days, count);
@@ -459,6 +463,9 @@ class SessionHistory(object, metaclass=Singleton):
 
     def get_last_sms_conversations(self, count=5):
         return block_on(self._get_last_chat_conversations(count, media=['chat', 'sms', 'messages'], skip_conference_uris=True))
+
+    def get_last_unsent_messages(self):
+        return block_on(self._get_last_chat_conversations(20, media=['sms', 'messages'], skip_conference_uris=True, status='failed_local'))
 
     @run_in_db_thread
     def delete_entries(self, local_uri=None, remote_uri=None, after_date=None, before_date=None):

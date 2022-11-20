@@ -484,6 +484,7 @@ class BlinkAppDelegate(NSObject):
             BlinkLogger().log_info("No IP address")
         else:
             BlinkLogger().log_info("IP address changed to %s" % host.default_ip)
+            self.contactsWindowController.showUnsentMessages_(None)
 
     @objc.python_method
     def _NH_SIPApplicationWillEnd(self, notification):
