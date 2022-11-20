@@ -215,18 +215,6 @@ body
     float: right ;
 }
 
-
-.timestamp_hidden {
-  color: #436294;
-  font-family: Lucida Grande, Helvetica, Arial;
-  font-size: 11px;
-  float: right; /*width: 150px;*/
-  text-align: right;
-  display: none;
-  margin-top: 8px;
-  margin-left: 10px;
-}
-
 .delivered_hidden {
   display: none;
   margin-bottom: 10px;
@@ -251,8 +239,23 @@ body
 .displayed {
   display: block;
   margin-bottom: 10px;
-  margin-left: 3px;
+  margin-left: 4px;
   float: right;
+}
+
+.delayed_hidden {
+  display: none;
+  margin-bottom: -4px;
+  margin-left: 4px;
+  float: right;
+}
+
+.delayed {
+  display: block;
+  margin-top: -4px;
+  margin-left: 4px;
+  float: right;
+  border: 1px;
 }
 
 .hidden {
@@ -327,21 +330,17 @@ function formatTimestamp(timestamp)
 
 function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid)
 {
-  var chat_session;
   var content;
   var message_class;
+
   var delivered_class = "delivered_hidden";
   var displayed_class = "displayed_hidden";
   var delayed_class = "delayed_hidden";
 
   var container_class = direction == "outgoing" ? "local_container" : "remote_container";
-  
-  timestamp = formatTimestamp(timestamp);
+  var timestamp = formatTimestamp(timestamp);
 
-  chat_session = document.getElementById("chat_session");
-
-  status = ''
-  show_sending_state = ''
+  var chat_session = document.getElementById("chat_session");
 
   if (private == null) {
     default_box_class = "msgbox"
@@ -356,41 +355,34 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
   }
 
   if (direction == 'outgoing') {
+      recipient_class = "recipient_self";
+
       if (state == "sending") {
           box_class = "msgbox_sending";
-          show_sending_state = 'yes'
-          status = timestamp;
       } else if (state == "deferred") {
           box_class = "msgbox_deferred";
-          status = "&#128351; " + timestamp;
-          delayed_class = "delayed"
+          delayed_class = "delayed";
       } else if (state == "failed") {
-          box_class = "msgbox_failed"
-          status = timestamp;
+          box_class = "msgbox_failed";
       } else if (state == "failed_local") {
           box_class = "msgbox_deferred";
-          status = "&#128351; " + timestamp;
-          delayed_class = "delayed"
+          delayed_class = "delayed";
       } else if (state == "delivered") {
-          box_class = "msgbox_delivered"
-          status = timestamp;
-          if (direction == 'outgoing')
-            delivered_class = "delivered";
+          box_class = "msgbox_delivered";
+          delivered_class = "delivered";
+          delayed_class = "delayed_hidden";
       } else if (state == "displayed") {
-          box_class = "msgbox_displayed"
-          status = timestamp;
-          if (direction == 'outgoing')
-            delivered_class = "delivered";
-            displayed_class = "displayed";
+          box_class = "msgbox_displayed";
+          delivered_class = "delivered";
+          displayed_class = "displayed";
+          delayed_class = "delayed_hidden";
       } else {
           box_class = default_box_class;
-          status = timestamp;
       }
-  }
-  
-  if (direction == 'incoming') {
+  } else {
     delivered_class = "delivered_hidden";
     displayed_class = "displayed_hidden";
+    recipient_class = "recipient";
   }
 
     if (iconpath == null) {
@@ -398,37 +390,11 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
         recipient_class = "hidden";
     } else {
         icon_class = "photobox";
-        if (show_sending_state == 'yes') {
-            recipient_class = "recipient_self";
-        } else {
-            recipient_class = "recipient";
-        }
     }
 
   if (content != null)
       content.id = "";
 
-  if (show_sending_state == 'yes') {
-    chat_session.innerHTML +=
-    "<div clear='both'/>"+
-    "<div class='"+container_class+"' id='container_"+msgid+"'>"+
-        "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
-        "<div class='"+box_class+"' id='"+msgid+"'>"+
-             "<div class='header'>"+
-                 "<div class='"+recipient_class+"' id='r"+msgid+"'>"+sender+"</div>"+
-                 "<div class='timestamp_hidden' id='t"+msgid+"'>"+
-                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
-                     "<div class='delivered_hidden' id='delivered"+msgid+"'>&#10004;</div>"+
-                     "<div class='displayed_hidden' id='displayed"+msgid+"'>&#10004;</div>"+
-                 "</div>"+
-                 "<div class='state' id='s"+msgid+"'>Sending...</div>"+
-             "</div>"+
-             "<div class='message' id='b"+msgid+"'>"+
-                "<span class='body'>"+text+"</span>"+
-             "</div>"+
-        "</div>"+
-    "</div>";
-  } else {
     chat_session.innerHTML +=
     "<div clear='both'/>"+
     "<div class='"+container_class+"' id='container_"+msgid+"'>"+
@@ -437,7 +403,8 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
              "<div class='header'>"+
                  "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
                  "<div class='timestamp'>"+
-                     "<img id='l"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+status+
+                     "<img id='encryption"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
+                     "<div class="+delayed_class+" id='delayed"+msgid+"'>&#128351;</div>"+
                      "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
                      "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
                      "</div>"+
@@ -448,7 +415,6 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
              "</div>"+
         "</div>"+
     "</div>";
-  }
 
     if (iconpath == null) {
         box = document.getElementById(msgid);
@@ -535,7 +501,7 @@ function markFound(msgid)
 
 function updateEncryptionLock(msgid, lockiconpath)
     {
-        var img = document.getElementById('l'+msgid)
+        var img = document.getElementById('encryption'+msgid)
 
         if (img != null)
             if (lockiconpath == "") {
@@ -564,9 +530,14 @@ function markSent(msgid)
     if (msg != null)
       msg.style.display = "block";
 
-    msg = document.getElementById('s'+msgid)
+    msg = document.getElementById('sending'+msgid)
     if (msg != null)
       msg.style.display = "none";
+
+    msg = document.getElementById('delayed'+msgid)
+    if (msg != null)
+      msg.style.display = "none";
+
 }
 
 function markDeferred(msgid)
@@ -575,14 +546,9 @@ function markDeferred(msgid)
   if (msg != null)
     msg.className = "msgbox_deferred";
 
-  msg = document.getElementById('t'+msgid)
-  if (msg != null)
-    msg.style.display = "none";
-
-  msg = document.getElementById('s'+msgid)
+  msg = document.getElementById('delayed'+msgid)
   if (msg != null)
     msg.style.display = "block";
-    msg.innerHTML = "&#128351; " + msg.innerHTML;
 }
 
 function markDelivered(msgid)
@@ -594,13 +560,17 @@ function markDelivered(msgid)
   if (msg != null)
     msg.style.display = "block";
 
-  msg = document.getElementById('s'+msgid)
+  msg = document.getElementById('sending'+msgid)
   if (msg != null)
     msg.style.display = "none";
 
   msg = document.getElementById('delivered'+msgid)
   if (msg != null)
     msg.style.display = "block";
+
+  msg = document.getElementById('delayed'+msgid)
+  if (msg != null)
+    msg.style.display = "none";
 
 }
 
@@ -622,9 +592,14 @@ function markDisplayed(msgid)
     if (msg != null)
       msg.style.display = "block";
 
-    msg = document.getElementById('s'+msgid)
+    msg = document.getElementById('sending'+msgid)
     if (msg != null)
       msg.style.display = "none";
+
+    msg = document.getElementById('delayed'+msgid)
+    if (msg != null)
+      msg.style.display = "none";
+
 }
 
 function markFailed(msgid)
@@ -646,7 +621,7 @@ function markFailed(msgid)
   if (msg != null)
     msg.style.display = "none"
 
-  msg = document.getElementById('s'+msgid)
+  msg = document.getElementById('sending'+msgid)
   if (msg != null)
     msg.style.display = "none";
 
