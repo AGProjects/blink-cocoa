@@ -5744,6 +5744,12 @@ class ContactWindowController(NSWindowController):
                 else:
                     self.accounts[position].register_failure_reason = reason
 
+        elif 'timeout' in reason:
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label")
+
+        elif 'failed' in reason:
+            self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label")
+
         self.refreshAccountList()
         if isinstance(notification.sender, Account):
             if not self.authFailPopupShown and self.accounts[position].register_state != 'failed':
