@@ -17,6 +17,7 @@ from Foundation import (NSBundle,
                         NSNotificationCenter,
                         NSWindowController)
 
+import datetime
 import objc
 import re
 import hashlib
@@ -49,6 +50,7 @@ from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayN
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError, ChatIdentity
 from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
+from sipsimple.util import ISOTimestamp
 
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
@@ -542,10 +544,6 @@ class SMSWindowManagerClass(NSObject):
         self.sendMessage(account, 'I need a token', 'application/sylk-api-token')
 
     @objc.python_method
-    def requestPublicKey(self, account, recipient):
-        self.sendMessage(account, 'Public key lookup', 'application/sylk-api-pgp-key-lookup', recipient)
-
-    @objc.python_method
     @run_in_green_thread
     def sendMessage(self, account, content, content_type, recipient=None):
         if account.sip.outbound_proxy is not None:
@@ -629,17 +627,17 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_thread('sms_sync')
     def syncConversations(self, account):
+       if not account.sms.enable_replication:
+           #BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
+           return
+
        if not account.sms.history_token:
            BlinkLogger().log_info('Sync conversations token is missing for account %s' % account.id)
            self.requestSyncToken(account)
            return
 
        if not account.sms.history_url:
-           BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
-           return
-
-       if not account.sms.enable_replication:
-           BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
+           #BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
            return
            
        try:
@@ -702,8 +700,7 @@ class SMSWindowManagerClass(NSObject):
 
            else:
                last_message_id = None
-               if len(json_data['messages']) > 0:
-                   BlinkLogger().log_info('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
+               BlinkLogger().log_info('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
 
                i = 0
                self.contacts_queue.pause()
@@ -811,10 +808,8 @@ class SMSWindowManagerClass(NSObject):
                    for window in self.windows:
                        for viewer in window.viewers:
                            if viewer.remote_uri == uri and account == viewer.account:
-                               pass
-                               # reload messages in open viewer
-                               #BlinkLogger().log_info('Refresh viewer for %s' % uri)
-                               #viewer.scroll_back_in_time()
+                               BlinkLogger().log_info('Refresh viewer for %s' % uri)
+                               viewer.scroll_back_in_time()
             
                self.addContactsToMessagesGroup()
                self.contacts_queue.unpause()
@@ -931,15 +926,21 @@ class SMSWindowManagerClass(NSObject):
         BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], status, msg['message_id'], msg['contact']))
 
         sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
-        viewer = self.getWindow(sender_uri, msg['contact'], account, note_new_message=bool(last_id))
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
-        if status != MSG_STATE_DISPLAYED:
+
+        # only open windows for messages newer than one week
+        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
+
+        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=bool(last_id))
+
+        if status != MSG_STATE_DISPLAYED and create_if_needed:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         window = self.windowForViewer(viewer).window()
         viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
 
-        self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+        if create_if_needed:
+            self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     @objc.python_method
     @run_in_gui_thread
@@ -982,7 +983,9 @@ class SMSWindowManagerClass(NSObject):
         BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
         sender_identity = ChatIdentity(account.uri, account.display_name)
         remote_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
-        viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False)
+        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
+
+        viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False, create_if_needed=create_if_needed)
         window = self.windowForViewer(viewer).window()
 
         if msg['state'] == 'delivered':
@@ -996,7 +999,7 @@ class SMSWindowManagerClass(NSObject):
 
         viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
 
-        if (last_id):
+        if (last_id and create_if_needed):
             self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     def setOwner_(self, owner):
@@ -1053,6 +1056,7 @@ class SMSWindowManagerClass(NSObject):
 
         if not viewer and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact)
+
             if not self.windows:
                 window = SMSWindowController.alloc().initWithOwner_(self)
                 self.windows.append(window)
@@ -1129,6 +1133,7 @@ class SMSWindowManagerClass(NSObject):
         except KeyError:
             if is_replication_message:
                 account = AccountManager().find_account(data.from_header.uri)
+
                 if account and not account.enabled:
                     account = None
 
@@ -1180,23 +1185,21 @@ class SMSWindowManagerClass(NSObject):
             sender_identity = data.from_header
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
 
-        #BlinkLogger().log_info("Got MESSAGE %s for account %s" % (content_type, account.id))
-
         uri = format_identity_to_string(window_tab_identity)
+        #BlinkLogger().log_info("Got MESSAGE %s for account %s from %s" % (content_type, account.id, uri))
 
         if content_type == 'text/pgp-public-key':
-            #BlinkLogger().log_info(u"Public key from %s received" % (format_identity_to_string(sender_identity)))
+            #BlinkLogger().log_info(u"Public key of %s received" % (format_identity_to_string(sender_identity)))
             viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
            
-            if AccountManager().has_account(uri):
-                try:
-                    acc = AccountManager().get_account(uri);
-                except KeyError:
-                    pass
-                else:
-                    if acc.sms.private_key:
-                        BlinkLogger().log_info(u"Public key save skipped for accounts that have private keys")
-                        return
+            try:
+                acc = AccountManager().get_account(uri);
+            except KeyError:
+                pass
+            else:
+                if acc.sms.private_key:
+                    BlinkLogger().log_info(u"Public key save skipped for accounts that have private keys")
+                    return
 
             public_key = ''
             start_public = False
@@ -1219,7 +1222,6 @@ class SMSWindowManagerClass(NSObject):
                 fd = open(key_file, "wb+")
                 fd.write(public_key.encode())
                 fd.close()
-                #BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
                 nc_title = NSLocalizedString("Public key", "System notification title")
                 nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
                 nc_body = NSLocalizedString("Public key received", "System notification title")
@@ -1227,8 +1229,9 @@ class SMSWindowManagerClass(NSObject):
                 self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
                 
                 self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum})
+                #BlinkLogger().log_info(u"Public key for %s saved to %s" % (uri, key_file))
             else:
-                 BlinkLogger().log_info(u"No Public key detected in the payload")
+                 BlinkLogger().log_info(u"No public PGP key detected in the payload")
             return
 
         elif content_type == 'application/sylk-contact-update':
