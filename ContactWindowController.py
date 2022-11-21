@@ -651,9 +651,7 @@ class ContactWindowController(NSWindowController):
             else:
                 if not account_info.register_state == 'succeeded':
                     if account_info.account.sip.register:
-                        if account_info.register_failure_reason and account_info.register_failure_code:
-                            name = '%s (%s %s)' % (label, account_info.register_failure_code, account_info.register_failure_reason)
-                        elif account_info.register_failure_reason:
+                        if account_info.register_failure_reason:
                             name = '%s (%s)' % (label, account_info.register_failure_reason)
                         else:
                             name = label
