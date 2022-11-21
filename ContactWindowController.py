@@ -3439,7 +3439,6 @@ class ContactWindowController(NSWindowController):
     @run_in_green_thread
     def show_unsent_messages(self):
         results = SessionHistory().get_last_unsent_messages()
-        BlinkLogger().log_info(results)
         self.open_last_sms_conversations(results)
 
     @objc.python_method
