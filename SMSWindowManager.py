@@ -289,7 +289,7 @@ class SMSWindowController(NSWindowController):
     def sendMyPublicKey_(self, sender):
         session = self.selectedSessionController()
         if session:
-            session.sendMyPublicKey()
+            session.sendMyPublicKey(force=True)
 
     @objc.IBAction
     def toolbarButtonClicked_(self, sender):

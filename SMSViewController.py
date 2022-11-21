@@ -676,8 +676,8 @@ class SMSViewController(NSObject):
         self.sendMessage(content, IMDNDocument.content_type)
 
     @objc.python_method
-    def sendMyPublicKey(self):
-        if self.public_key_sent:
+    def sendMyPublicKey(self, force=False):
+        if self.public_key_sent and not force:
             return
 
         if not self.account.sms.enable_pgp:
@@ -971,8 +971,10 @@ class SMSViewController(NSObject):
         imdn_id = ''
         imdn_status = ''
 
+        can_use_cpim = message.content_type not in ('application/sylk-api-pgp-key-lookup', 'application/sylk-api-token', 'text/pgp-public-key')
+        
         additional_sip_headers = []
-        if self.account.sms.use_cpim:
+        if self.account.sms.use_cpim and can_use_cpim:
             additional_cpim_headers = []
 
             if self.account.sms.enable_imdn:
