@@ -83,6 +83,7 @@ MAX_MESSAGE_LENGTH = 16000
 
 class MessageInfo(object):
     def __init__(self, id, content=None, content_type='text/plain', call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None, require_delivered_notification=False, require_displayed_notification=False):
+    
         self.id = id
         self.call_id = call_id
         self.pjsip_id = None
@@ -164,6 +165,7 @@ class SMSViewController(NSObject):
     last_failure_reason = None
     otr_negotiation_timer = None
     pgp_encrypted = False
+    bonjour_lookup_enabled = True
 
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None):
         self = objc.super(SMSViewController, self).init()
@@ -208,12 +210,13 @@ class SMSViewController(NSObject):
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
 
-            self.log_info('Using account %s' % self.local_uri)
+            self.log_info('Using account %s with target %s' % (self.local_uri, self.target_uri))
             if self.account.sms.private_key and self.public_key:
                 self.pgp_encrypted = True
                 self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
+            self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
             self.lookup_destination(self.target_uri)
 
@@ -317,8 +320,13 @@ class SMSViewController(NSObject):
 
             if message.status == MSG_STATE_FAILED_LOCAL and not message.pjsip_id and ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20):
                 if host.default_ip is not None:
-                    self.log_info('Resending message %s' % message.id)
-                    self.outgoing_queue.put(message)
+                    if self.account is BonjourAccount():
+                        if self.bonjour_lookup_enabled:
+                            self.log_info('Resending message %s' % message.id)
+                            self.outgoing_queue.put(message)
+                    else:
+                        self.log_info('Resending message %s' % message.id)
+                        self.outgoing_queue.put(message)
                 else:
                     self.log_debug('Waiting for connectivity to resend message %s' % message.id)
                     continue
@@ -369,15 +377,15 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def log_info(self, text):
-        BlinkLogger().log_info("[SMS with %s] %s" % (self.remote_uri, text))
+        BlinkLogger().log_info("[SMS with %s] %s" % (self.instance_id or self.remote_uri, text))
 
     @objc.python_method
     def log_debug(self, text):
-        BlinkLogger().log_debug("[SMS with %s] %s" % (self.remote_uri, text))
+        BlinkLogger().log_debug("[SMS with %s] %s" % (self.instance_id or self.remote_uri, text))
 
     @objc.python_method
     def log_error(self, text):
-        BlinkLogger().log_error("[SMS with %s] %s" % (self.remote_uri, text))
+        BlinkLogger().log_error("[SMS with %s] %s" % (self.instance_id or self.remote_uri, text))
 
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
@@ -429,6 +437,18 @@ class SMSViewController(NSObject):
         if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
             return
 
+        icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
+
+        sender_name = format_identity_to_string(sender_identity, format='compact')
+        if direction == 'incoming':
+            sender_name = self.normalizeSender(sender_name)
+
+        try:
+            timestamp=ISOTimestamp(imdn_timestamp)
+        except (DateParse, rError, TypeError) as e:
+            self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
+            timestamp = ISOTimestamp.now()
+
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
             require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
@@ -450,7 +470,10 @@ class SMSViewController(NSObject):
                         if self.pgp_encrypted:
                             self.pgp_encrypted = False
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
-                        self.chatViewController.showSystemMessage("PGP decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
+                        #self.chatViewController.showSystemMessage("PGP decryption error: %s" % str(e), ISOTimestamp.now(), is_error=True)
+
+                        self.chatViewController.showMessage(call_id, id, direction, sender_name, icon, "PGP decryption error: %s" % str(e), timestamp, state=MSG_STATE_FAILED, media_type='sms')
+
                         self.log_error('PGP decrypt error: %s' % str(e))
                         if require_delivered_notification:
                             self.sendIMDNNotification(id, 'failed')
@@ -506,13 +529,6 @@ class SMSViewController(NSObject):
       
                 return None
 
-            icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
-            try:
-                timestamp=ISOTimestamp(imdn_timestamp)
-            except (DateParse, rError, TypeError) as e:
-                self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
-                timestamp = ISOTimestamp.now()
-
             msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
 
             if msg_id in self.msg_id_list:
@@ -537,10 +553,6 @@ class SMSViewController(NSObject):
                 encryption = 'verified'
             else:
                 encryption = ''
-
-            sender_name = format_identity_to_string(sender_identity, format='compact')
-            if direction == 'incoming':
-                sender_name = self.normalizeSender(sender_name)
 
             self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
@@ -625,6 +637,10 @@ class SMSViewController(NSObject):
         self.load_remote_public_keys()
 
     @objc.python_method
+    def _NH_BlinkContactsHaveChanged(self, sender, data):
+        self.bonjour_lookup_enabled = True
+
+    @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         try:
             if data.new_state is OTRState.Encrypted:
@@ -700,7 +716,7 @@ class SMSViewController(NSObject):
     @run_in_gui_thread
     def sendMessage(self, content, content_type="text/plain"):
         # entry point for sending messages, they will be added to self.outgoing_queue
-        status = ''
+        status = MSG_STATE_FAILED_LOCAL if self.paused else 'queued'
 
         if host.default_ip:
             if isinstance(content, OTRInternalMessage):
@@ -739,21 +755,28 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def lookup_destination(self, uri):
-        self.log_info("Lookup destination for %s" % uri)
-
         if host is None or host.default_ip is None:
             self.setRoutesFailed(NSLocalizedString("No Internet connection", "Label"))
             return
 
         if self.account is BonjourAccount():
+            if not self.bonjour_lookup_enabled:
+                return
+            
             blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(uri))
+
             if blink_contact:
                 uri = SIPURI.parse(str(blink_contact.uri))
                 route = Route(address=uri.host, port=uri.port, transport=uri.transport, tls_name=self.account.sip.tls_name or uri.host)
+                self.target_uri = uri
+                self.log_info('Found Bonjour neighbour %s with uri %s' % (self.instance_id, str(self.target_uri)))
                 self.setRoutesResolved([route])
             else:
-                self.setRoutesFailed('No bonjour contact found')
+                self.setRoutesFailed('Bonjour neighbour %s not found' % self.instance_id)
+                self.bonjour_lookup_enabled = False
             return
+        else:
+            self.log_info("Lookup destination for %s" % uri)
 
         self.lookup_dns(uri)
 

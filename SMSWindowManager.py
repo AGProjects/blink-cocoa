@@ -108,10 +108,15 @@ class SMSWindowController(NSWindowController):
         if session:
             display_name = session.display_name
             sip_address = '%s@%s' % (session.target_uri.user.decode(), session.target_uri.host.decode())
-            if display_name and display_name != sip_address:
-                title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
+
+            if session.account is BonjourAccount():
+                title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name
+                title = title + ' (Bonjour)'
             else:
-                title = NSLocalizedString("Short Messages with %s", "Window Title") %  format_identity_to_string(session.target_uri)
+                if display_name and display_name != sip_address:
+                    title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
+                else:
+                    title = NSLocalizedString("Short Messages with %s", "Window Title") %  format_identity_to_string(session.target_uri)
         else:
             title = NSLocalizedString("Short Messages", "Window Title")
         return title
@@ -355,7 +360,7 @@ class SMSWindowController(NSWindowController):
                     item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.active else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
 
                 item = menu.itemWithTag_(11)
-                item.setHidden_('@' not in selectedSession.remote_uri)
+                item.setHidden_('@' not in selectedSession.remote_uri or selectedSession.account is BonjourAccount())
 #                item.setRepresentedObject_({'account': selectedSession.account, 'recipient': selectedSession.remote_uri})
 
                 item = menu.itemWithTag_(2)
