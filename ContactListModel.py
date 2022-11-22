@@ -2426,8 +2426,8 @@ class CustomListModel(NSObject):
                 else:
                     sourceContact = None
 
-                if isinstance(sourceGroup, BonjourBlinkGroup):
-                    return NSDragOperationNone
+                #if isinstance(sourceGroup, BonjourBlinkGroup):
+                #    return NSDragOperationNone
 
                 if isinstance(sourceContact, BlinkBlockedPresenceContact):
                     return NSDragOperationNone
@@ -2602,13 +2602,18 @@ class CustomListModel(NSObject):
                         table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row if row>=0 else 0), False)
                     return True
                 else:
+
+
                     targetGroup = table.parentForItem_(item)
                     targetContact = targetGroup.contacts[self.drop_on_contact_index]
+                    target_uris = {uri.uri for uri in targetContact.contact.uris}
+                    if isinstance(sourceContact, BonjourBlinkContact) and  sourceContact.id in target_uris:
+                        return False
 
                     if (sourceContact.name == targetContact.name):
                         message = NSLocalizedString("Would you like to consolidate the two contacts into %s", "Label") % targetContact.name + ' (%s)?' % targetContact.uri
                     else:
-                        message = NSLocalizedString("Would you like to merge %s ", "Label") % sourceContact.name + " " + NSLocalizedString("and", "Label") + targetContact.name + NSLocalizedString(" contacts into %s", "Label") % targetContact.name + " (%s)?" % targetContact.uri
+                        message = NSLocalizedString("Would you like to merge %s ", "Label") % sourceContact.name + " " + NSLocalizedString("and", "Label") + " " + targetContact.name + NSLocalizedString(" contacts into %s", "Label") % targetContact.name + " (%s)?" % targetContact.uri
 
                     merge_controller = MergeContactController(message)
                     ret = merge_controller.runModal_(message)
@@ -2616,7 +2621,6 @@ class CustomListModel(NSObject):
                         return False
 
                     target_changed = False
-                    target_uris = {uri.uri for uri in targetContact.contact.uris}
 
                     if isinstance(sourceContact, BlinkPendingWatcher):
                         if sourceContact.uri not in target_uris:
@@ -2630,6 +2634,9 @@ class CustomListModel(NSObject):
                             for uri in (uri for uri in sourceContact.contact.uris if uri.uri not in target_uris):
                                 targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=uri.type))
                                 target_changed = True
+                        elif isinstance(sourceContact, BonjourBlinkContact):
+                            targetContact.contact.uris.add(ContactURI(uri=sourceContact.id, type='Bonjour'))
+                            target_changed = True
 
                         if targetContact.avatar is DefaultUserAvatar() and sourceContact.avatar is not DefaultUserAvatar():
                             avatar = PresenceContactAvatar(sourceContact.avatar.icon)

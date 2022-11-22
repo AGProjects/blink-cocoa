@@ -1530,6 +1530,9 @@ class ContactWindowController(NSWindowController):
                 for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
                     if uri.type is not None and uri.type.lower() == 'url':
                         continue
+                        
+                    if uri.type == 'Bonjour':
+                        continue
 
                     audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
@@ -1574,6 +1577,9 @@ class ContactWindowController(NSWindowController):
 
                     for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
                         if uri.type is not None and uri.type.lower() == 'url':
+                            continue
+
+                        if uri.type == 'Bonjour':
                             continue
 
                         video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
@@ -1624,6 +1630,9 @@ class ContactWindowController(NSWindowController):
                         if uri.type is not None and uri.type.lower() == 'url':
                             continue
 
+                        if uri.type == 'Bonjour':
+                            continue
+
                         sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendMessageToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         sms_item.setRepresentedObject_(target_uri)
@@ -1642,6 +1651,9 @@ class ContactWindowController(NSWindowController):
 
                     for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
                         if uri.type is not None and uri.type.lower() == 'url':
+                            continue
+
+                        if uri.type == 'Bonjour':
                             continue
 
                         chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
@@ -1693,6 +1705,9 @@ class ContactWindowController(NSWindowController):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
 
+                            if uri.type == 'Bonjour':
+                                continue
+
                             ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
                             target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                             ft_item.setRepresentedObject_(target_uri)
@@ -1741,6 +1756,10 @@ class ContactWindowController(NSWindowController):
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
+
+                            if uri.type == 'Bonjour':
+                                continue
+
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(1)
@@ -1788,6 +1807,10 @@ class ContactWindowController(NSWindowController):
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
                             if uri.type is not None and uri.type.lower() == 'url':
                                 continue
+
+                            if uri.type == 'Bonjour':
+                                continue
+
                             ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(2)
