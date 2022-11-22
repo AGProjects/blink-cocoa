@@ -662,7 +662,7 @@ class SMSWindowManagerClass(NSObject):
        if last_id:
            url = "%s/%s" % (url, account.sms.history_last_id)
 
-       BlinkLogger().log_info('Sync conversations from %s' % url)
+       BlinkLogger().log_debug('Sync conversations from %s' % url)
 
        req = urllib.request.Request(url, method="GET")
        req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
@@ -671,14 +671,14 @@ class SMSWindowManagerClass(NSObject):
        try:
            raw_response = urllib.request.urlopen(req, timeout=20)
        except (urllib.error.URLError, TimeoutError, socket.timeout, RemoteDisconnected) as e:
-           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
+           BlinkLogger().log_debug('SylkServer connection error for %s: %s' % (url, str(e)))
            try:
                del self.syncConversationsInProgress[account.id]
            except KeyError:
                pass
            return
        except (urllib.error.HTTPError) as e:
-           BlinkLogger().log_info('SylkServer API error for %s: %s' % (url, str(e)))
+           BlinkLogger().log_debug('SylkServer API error for %s: %s' % (url, str(e)))
            try:
                del self.syncConversationsInProgress[account.id]
            except KeyError:
@@ -693,7 +693,7 @@ class SMSWindowManagerClass(NSObject):
            try:
                raw_data = raw_response.read().decode().replace('\\/', '/')
            except Exception as e:
-               BlinkLogger().log_info('SylkServer API read error for %s: %s' % (url, str(e)))
+               BlinkLogger().log_debug('SylkServer API read error for %s: %s' % (url, str(e)))
                try:
                    del self.syncConversationsInProgress[account.id]
                except KeyError:
@@ -703,12 +703,12 @@ class SMSWindowManagerClass(NSObject):
            try:
                json_data = json.loads(raw_data)
            except (TypeError, json.decoder.JSONDecodeError):
-               BlinkLogger().log_info('Error parsing SylkServer response: %s' % str(e))
+               BlinkLogger().log_debug('Error parsing SylkServer response: %s' % str(e))
                return
 
            else:
                last_message_id = None
-               BlinkLogger().log_info('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
+               BlinkLogger().log_debug('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
 
                i = 0
                self.contacts_queue.pause()
@@ -750,7 +750,7 @@ class SMSWindowManagerClass(NSObject):
                            content = msg['content'].encode()
 
                            if AccountManager().has_account(uri):
-                               BlinkLogger().log_info(u"Public key save skipped for own accounts")
+                               BlinkLogger().log_debug(u"Public key save skipped for own accounts")
                                continue
 
                            public_key = ''

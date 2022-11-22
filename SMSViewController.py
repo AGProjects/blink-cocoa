@@ -880,13 +880,13 @@ class SMSViewController(NSObject):
             if self.paused:
                 self.outgoing_queue.unpause()
                 if len(self.outgoing_queue.queue.queue) > 0:
-                    self.log_info('Sendind queue resumed with %d messages' % len(self.outgoing_queue.queue.queue))
+                    self.log_debug('Sendind queue resumed with %d messages' % len(self.outgoing_queue.queue.queue))
                 self.paused = False
         else:
             self.started = True
             try:
                 self.outgoing_queue.start()
-                self.log_info('Sending queue started')
+                self.log_debug('Sending queue started')
             except RuntimeError:
                 pass
         
@@ -895,7 +895,7 @@ class SMSViewController(NSObject):
         if self.paused:
             return
 
-        self.log_info('Sending queue paused with %d messages' % len(self.outgoing_queue.queue.queue))
+        self.log_debug('Sending queue paused with %d messages' % len(self.outgoing_queue.queue.queue))
         self.paused = True
         self.outgoing_queue.pause()
         # work around for the queue that still runs on next tick
@@ -1464,7 +1464,7 @@ class SMSViewController(NSObject):
 
         if not self.incoming_queue_started:
             self.incoming_queue.start()
-            self.log_info('Render queue started')
+            #self.log_info('Render queue started')
             self.incoming_queue_started = True
  
     @objc.python_method
