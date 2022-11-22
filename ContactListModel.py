@@ -3835,45 +3835,67 @@ class ContactListModel(CustomListModel):
 
         if neighbour not in (blink_contact.bonjour_neighbour for blink_contact in self.bonjour_group.contacts):
             same_neighbours = any(n for n in self.bonjour_group.contacts if n.id == id)
-            BlinkLogger().log_info('We found existing neighbour %s' % same_neighbours)
+            #BlinkLogger().log_info('We found existing neighbour %s' % same_neighbours)
             if same_neighbours:
-                tls_neighbours = (n for n in list(self.bonjour_group.contacts) if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tls')
-                tcp_neighbours = (n for n in list(self.bonjour_group.contacts) if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'tcp')
-                udp_neighbours = (n for n in list(self.bonjour_group.contacts) if n.aor.user == uri.user and n.aor.host == uri.host and n.aor.transport == 'udp')
-
+                tls_neighbours = list(n for n in list(self.bonjour_group.contacts) if n.aor.transport == 'tls')
+                tcp_neighbours = list(n for n in list(self.bonjour_group.contacts) if n.aor.transport == 'tcp')
+                udp_neighbours = list(n for n in list(self.bonjour_group.contacts) if n.aor.transport == 'udp')
+                
                 if uri.transport == 'tls':
-                    BlinkLogger().log_info("TLS Bonjour neighbour %s joined: %s <%s>" % (id, display_name, uri))
-                    blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
-                    blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
-                    blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
-                    self.bonjour_group.contacts.append(blink_contact)
+                    if tls_neighbours:
+                        BlinkLogger().log_info("TCP Bonjour neighbour %s updated: %s" % (id, uri))
+                        tls_neighbours[0].update_uri(uri)
+                        tls_neighbours[0].bonjour_neighbour = neighbour
+                        tls_neighbours[0].presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
+                        tls_neighbours[0].detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                    else:
+                        BlinkLogger().log_info("TLS Bonjour neighbour %s added: %s <%s>" % (id, display_name, uri))
+                        blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
+                        blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
+                        blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                        self.bonjour_group.contacts.append(blink_contact)
 
                     for tcp_neighbour in tcp_neighbours:
-                        BlinkLogger().log_debug("Bonjour neighbour already has a TLS contact, removing %s <%s>" % ( display_name, uri))
+                        BlinkLogger().log_debug("Bonjour neighbour has a TLS contact, removing TCP <%s>" % uri)
                         self.bonjour_group.contacts.remove(tcp_neighbour)
                         tcp_neighbour.destroy()
+
                     for udp_neighbour in udp_neighbours:
-                        BlinkLogger().log_debug("Bonjour neighbour already has a TLS contact, removing %s <%s>" % (display_name, uri))
+                        BlinkLogger().log_debug("Bonjour neighbour has a TLS contact, removing UDP <%s>" % uri)
                         self.bonjour_group.contacts.remove(udp_neighbour)
                         udp_neighbour.destroy()
 
                 elif uri.transport == 'tcp' and not tls_neighbours:
+                    if tcp_neighbours:
+                        BlinkLogger().log_info("TCP Bonjour neighbour %s updated: %s" % (id, uri))
+                        tcp_neighbours[0].update_uri(uri)
+                        tcp_neighbours[0].bonjour_neighbour = neighbour
+                        tcp_neighbours[0].presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
+                        tcp_neighbours[0].detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                    else:
+                        BlinkLogger().log_info("TCP Bonjour neighbour %s added: %s <%s>" % (id, display_name, uri))
+                        blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
+                        blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
+                        blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                        self.bonjour_group.contacts.append(blink_contact)
 
-                    BlinkLogger().log_info("TCP Bonjour neighbour %s joined: %s <%s>" % (id, display_name, uri))
-                    blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
-                    blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
-                    blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
-                    self.bonjour_group.contacts.append(blink_contact)
                     for udp_neighbour in udp_neighbours:
-                        BlinkLogger().log_debug("Bonjour neighbour already has a TCP contact, removing %s <%s>" % ( display_name, uri))
+                        BlinkLogger().log_debug("Bonjour neighbour already has a TCP contact, removing UDP %s" % uri)
                         self.bonjour_group.contacts.remove(udp_neighbour)
                         udp_neighbour.destroy()
                 elif uri.transport == 'udp' and not tcp_neighbours and not tls_neighbours:
-                    BlinkLogger().log_info("UDP Bonjour neighbour %s joined: %s <%s>" % (id, display_name, uri))
-                    blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
-                    blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
-                    blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
-                    self.bonjour_group.contacts.append(blink_contact)
+                    if udp_neighbours:
+                        BlinkLogger().log_info("UDP Bonjour neighbour %s updated: %s" % (id, uri))
+                        udp_neighbours[0].update_uri(uri)
+                        udp_neighbours[0].bonjour_neighbour = neighbour
+                        udp_neighbours[0].presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
+                        udp_neighbours[0].detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                    else:
+                        BlinkLogger().log_info("UDP Bonjour neighbour %s added: %s <%s>" % (id, display_name, uri))
+                        blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
+                        blink_contact.presence_state = record.presence.state.lower() if record.presence is not None and record.presence.state is not None else None
+                        blink_contact.detail = note if note else sip_prefix_pattern.sub('', blink_contact.uri)
+                        self.bonjour_group.contacts.append(blink_contact)
             else:
                 BlinkLogger().log_info("New %s Bonjour neighbour: %s <%s>" % (uri.transport.upper(), display_name, uri))
                 blink_contact = BonjourBlinkContact(uri, neighbour, id, name='%s (%s)' % (display_name or 'Unknown', host))
