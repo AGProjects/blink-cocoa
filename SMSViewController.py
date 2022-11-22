@@ -1253,22 +1253,25 @@ class SMSViewController(NSObject):
     @run_in_green_thread
     def replay_history(self):
         #BlinkLogger().log_info("Replay message history for %s" % str(self.target_uri))
+        blink_contact = None
         try:
             if self.account is BonjourAccount():
-                blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))
+                blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.instance_id)
+                if not blink_contact:
+                    blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))
             else:
                 blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
 
             if not blink_contact:
-                remote_uris = [format_identity_to_string(self.target_uri)]
+                remote_uris = [format_identity_to_string(self.target_uri, format='aor')]
             else:
-                remote_uris = list(str(uri.uri) for uri in blink_contact.uris if '@' in uri.uri)
+                remote_uris = list(str(uri.uri) for uri in blink_contact.uris)
                 
-            if self.instance_id is not None:
+            if self.instance_id is not None and self.instance_id not in remote_uris:
                 remote_uris.append(self.instance_id)
                 
             zoom_factor = self.chatViewController.scrolling_zoom_factor
-            #self.log_info('Replay history with zoom factor %s' % zoom_factor)
+            self.log_info('Replay history with zoom factor %s for %s' % (zoom_factor, ", ".join(remote_uris)))
 
             if zoom_factor:
                 period_array = {
