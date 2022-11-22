@@ -483,7 +483,14 @@ class SMSViewController(NSObject):
                         if not self.pgp_encrypted:
                             self.pgp_encrypted = True
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
-                        content = bytes(decrypted_message.message, 'latin1')
+
+                        try:
+                            content = bytes(decrypted_message.message, 'latin1')
+                        except TypeError as e:
+                            self.log_error('Data decode error: %s' % str(e))
+                            self.log_error('Decrypted data type: %s' % type(decrypted_message.message))
+                            self.log_error('Decrypted data: %s' % decrypted_message)
+                            return
             else:
                 self.pgp_encrypted = False
             
