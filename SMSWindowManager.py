@@ -242,8 +242,11 @@ class SMSWindowController(NSWindowController):
                     _item.setBadgeLabel_("")
                     viewer.not_read_queue_start()
 
-        if item.identifier() in self.unreadMessageCounts:
+        try:
             del self.unreadMessageCounts[item.identifier()]
+        except KeyError:
+            pass
+        else:
             self.noteNewMessageForSession_(item.identifier())
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
