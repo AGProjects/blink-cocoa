@@ -1278,6 +1278,10 @@ class SMSWindowManagerClass(NSObject):
                 else:
                     if _public_key.decode().strip() == public_key.strip():
                         BlinkLogger().log_info('PGP keys are the same')
+                        nc_title = NSLocalizedString("Private key", "System notification title")
+                        nc_subtitle = format_identity_to_string(account, format='full')
+                        nc_body = NSLocalizedString("Private key is the same", "System notification title")
+                        NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
                         return
                     else:
                         BlinkLogger().log_info('PGP keys differ')
