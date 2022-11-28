@@ -445,7 +445,7 @@ class SMSViewController(NSObject):
 
         try:
             timestamp=ISOTimestamp(imdn_timestamp)
-        except (DateParse, rError, TypeError) as e:
+        except (DateParserError, TypeError) as e:
             self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
             timestamp = ISOTimestamp.now()
 
@@ -1397,7 +1397,7 @@ class SMSViewController(NSObject):
 
             try:
                 timestamp=ISOTimestamp(message.cpim_timestamp)
-            except DateParserError as e:
+            except (DateParserError, TypeError) as e:
                 self.log_error('Failed to parse timestamp %s for message id %s: %s' % (message.cpim_timestamp, message.id, str(e)))
                 timestamp = ISOTimestamp.now()
             
