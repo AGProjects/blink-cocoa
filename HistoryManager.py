@@ -197,8 +197,6 @@ class SessionHistory(object, metaclass=Singleton):
             else:
                 for result in results:
                     id, local_uri, remote_uri = result
-                    local_uri = local_uri.decode('latin1').encode('utf-8')
-                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
                     query = "UPDATE sessions SET local_uri=%s, remote_uri=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(id))
                     try:
                         self.db.queryAll(query)
@@ -568,10 +566,6 @@ class ChatHistory(object, metaclass=Singleton):
             else:
                 for result in results:
                     id, local_uri, remote_uri, cpim_from, cpim_to = result
-                    local_uri = local_uri.decode('latin1').encode('utf-8')
-                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
-                    cpim_from = cpim_from.decode('latin1').encode('utf-8')
-                    cpim_to = cpim_to.decode('latin1').encode('utf-8')
                     query = "UPDATE chat_messages SET local_uri=%s, remote_uri=%s, cpim_from=%s, cpim_to=%s WHERE id=%s" % (SessionHistoryEntry.sqlrepr(local_uri), SessionHistoryEntry.sqlrepr(remote_uri), SessionHistoryEntry.sqlrepr(cpim_from), SessionHistoryEntry.sqlrepr(cpim_to), SessionHistoryEntry.sqlrepr(id))
                     try:
                         self.db.queryAll(query)
@@ -1056,8 +1050,6 @@ class FileTransferHistory(object, metaclass=Singleton):
             else:
                 for result in results:
                     id, local_uri, remote_uri = result
-                    local_uri = local_uri.decode('latin1').encode('utf-8')
-                    remote_uri = remote_uri.decode('latin1').encode('utf-8')
                     query = "UPDATE file_transfers SET local_uri='%s', remote_uri='%s' WHERE id='%s'" % (local_uri, remote_uri, id)
                     try:
                         self.db.queryAll(query)
