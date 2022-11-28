@@ -285,16 +285,17 @@ class FileTransfer(object):
             else:
                 tls_name = target_uri.host.decode()
 
-        if self.account.sip.outbound_proxy is not None:
-            proxy = self.account.sip.outbound_proxy
-            uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
-            self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
-        elif self.account.sip.always_use_my_proxy:
-            uri = SIPURI(host=self.account.id.domain)
-            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
-        else:
-            uri = target_uri
-            self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
+        uri = target_uri
+        if self.account is not BonjourAccount():
+            if self.account.sip.outbound_proxy is not None:
+                proxy = self.account.sip.outbound_proxy
+                uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+                self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
+            elif self.account.sip.always_use_my_proxy:
+                uri = SIPURI(host=self.account.id.domain)
+                self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
+
+        self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
