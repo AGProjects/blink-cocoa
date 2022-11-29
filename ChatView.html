@@ -215,7 +215,18 @@ body
     float: right ;
 }
 
-.delivered_hidden {
+.delete_button {
+    margin-top: -1px;
+    width: 14px;
+    float: right ;
+    text-decoration: none;
+}
+
+.delete_link {
+   text-decoration: none;
+}
+
+    .delivered_hidden {
   display: none;
   margin-bottom: 10px;
   margin-left: 4px;
@@ -403,6 +414,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
              "<div class='header'>"+
                  "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
                  "<div class='timestamp'>"+
+                     "<div class='delete_button'><a class='delete_link' href='delete_message?id="+msgid+"'>&#x2612;</a></div>"+
                      "<img id='encryption"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
                      "<div class="+delayed_class+" id='delayed"+msgid+"'>&#128351;</div>"+
                      "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
@@ -549,6 +561,14 @@ function markDeferred(msgid)
   msg = document.getElementById('delayed'+msgid)
   if (msg != null)
     msg.style.display = "block";
+}
+
+
+function markDeleted(msgid)
+{
+  var msg = document.getElementById(msgid);
+  if (msg != null)
+    msg.style.display = "none";
 }
 
 function markDelivered(msgid)

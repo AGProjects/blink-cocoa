@@ -402,6 +402,13 @@ class SMSViewController(NSObject):
         self.chatViewController.outputView.setFrame_(frame)
 
     @objc.python_method
+    def delete_message(self, id):
+        self.log_info('Delete message %s ' % id)
+        self.chatViewController.markMessage(id, 'deleted')
+        self.sendMessage(id, 'application/sylk-message-remove')
+        self.history.delete_message(id);
+
+    @objc.python_method
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
@@ -690,12 +697,11 @@ class SMSViewController(NSObject):
         cpim_to = format_identity_to_string(message.recipient, format='full') if message.recipient else ''
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
         cpim_timestamp = str(message.timestamp)
-        content_type="html" if "html" in message.content_type else "text"
         
         remote_uri = self.instance_id if (self.account is BonjourAccount() and self.instance_id) else self.remote_uri
         self.msg_id_list.add(message.id)
 
-        self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
+        self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), message.content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
 
     @objc.python_method
     def sendIMDNNotification(self, message_id, event):
@@ -758,6 +764,11 @@ class SMSViewController(NSObject):
         if self.is_renderable(mInfo):
             icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
             self.chatViewController.showMessage('', id, 'outgoing', None, icon, content, timestamp, state=status, media_type='sms', encryption=encryption)
+
+            self.add_to_history(mInfo)
+            self.messages[mInfo.id] = mInfo
+        
+        if content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
 
             self.add_to_history(mInfo)
             self.messages[mInfo.id] = mInfo
@@ -945,8 +956,8 @@ class SMSViewController(NSObject):
     def is_renderable(self, message):
         if isinstance(message, OTRInternalMessage):
             return False
-
-        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup'):
+            
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
             return False
 
         return True
@@ -954,7 +965,6 @@ class SMSViewController(NSObject):
     @objc.python_method
     def _send_message(self, message):
         # called by event queue
-
         if message is None:
             return
 
@@ -1126,6 +1136,10 @@ class SMSViewController(NSObject):
 
                     if message.content_type == IMDNDocument.content_type:
                         self.update_message_status(message.imdn_id, message.imdn_status, direction='incoming')
+
+                    if message.content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
+                        self.update_message_status(message.id, MSG_STATE_SENT)
+
                 else:
                     self.update_message_status(message.id, MSG_STATE_SENT)
 
@@ -1329,7 +1343,6 @@ class SMSViewController(NSObject):
             import traceback
             traceback.print_exc()
 
-
     @objc.python_method
     @run_in_gui_thread
     def render_history_messages(self, messages):
@@ -1381,9 +1394,9 @@ class SMSViewController(NSObject):
         cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
 
         for message in messages:
-            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
+            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
                 continue
-                
+        
             if message.body.strip().startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----'):
                 continue
 

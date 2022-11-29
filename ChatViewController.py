@@ -24,7 +24,7 @@ from sipsimple.util import ISOTimestamp
 from resources import Resources
 from SmileyManager import SmileyManager
 from util import escape_html, run_in_gui_thread
-
+from BlinkLogger import BlinkLogger
 
 MSG_STATE_SENDING      = "sending"      # middleware told us the message is being sent
 MSG_STATE_SENT         = "sent"         # middleware told us the message was sent the next SIP hop
@@ -460,6 +460,9 @@ class ChatViewController(NSObject):
         elif state == MSG_STATE_FAILED_LOCAL:
             script = "markDeferred('%s')"%msgid
             self.executeJavaScript(script)
+        elif state == 'deleted':
+            script = "markDeleted('%s')"%msgid
+            self.executeJavaScript(script)
 
     @objc.python_method
     @run_in_gui_thread
@@ -648,13 +651,19 @@ class ChatViewController(NSObject):
             if window and window.showConferenceSharedScreen(theURL.absoluteString()):
                 return
 
+        BlinkLogger().log_info('Open %s' % theURL.absoluteString())
         if theURL.scheme() == "file":
-            listener.use()
+            if hasattr(self.delegate, 'delete_message') and 'delete_message' in theURL.absoluteString():
+                msg_id = theURL.absoluteString().split('=')[1]
+                self.delegate.delete_message(msg_id)
+                listener.ignore()
+            else:
+                listener.use()
         else:
-            # use system wide web browser
             if hasattr(self.delegate, 'sessionController') and theURL.absoluteString() in list(self.delegate.sessionController.screensharing_urls.values()):
                 self.delegate.chatWindowController.showConferenceSharedScreen(theURL.absoluteString())
             else:
+                # use system wide web browser
                 listener.ignore()
                 NSWorkspace.sharedWorkspace().openURL_(theURL)
 

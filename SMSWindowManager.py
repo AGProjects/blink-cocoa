@@ -720,11 +720,11 @@ class SMSWindowManagerClass(NSObject):
                        last_message_id = msg['message_id']
 
                        if content_type == 'application/sylk-conversation-remove':
-                           #BlinkLogger().log_info('Remove conversation with %s' % msg['content'])
+                           BlinkLogger().log_info('Remove conversation with %s' % msg['content'])
                            self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
                            self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
                        elif content_type == 'application/sylk-message-remove':
-                           #BlinkLogger().log_info('Remove message %s with %s' % (msg['message_id'], msg['contact']))
+                           BlinkLogger().log_info('Remove message %s with %s' % (msg['message_id'], msg['contact']))
                            self.history.delete_message(msg['message_id']);
                        elif content_type == 'message/imdn':
                            payload = eval(msg['content'])
