@@ -939,7 +939,7 @@ class SMSWindowManagerClass(NSObject):
         # only open windows for messages newer than one week
         create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
 
-        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=bool(last_id))
+        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=bool(last_id), is_replication_message=False)
 
         if status != MSG_STATE_DISPLAYED and create_if_needed:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
@@ -1024,7 +1024,7 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None, selected_contact=None):
+    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None, selected_contact=None, is_replication_message=False):
     
         if instance_id and instance_id.startswith('urn:uuid:'):
             instance_id = instance_id[9:]
@@ -1063,7 +1063,7 @@ class SMSWindowManagerClass(NSObject):
                     viewer.update_message_status(imdn_message_id, MSG_STATE_FAILED)
 
         if not viewer and create_if_needed:
-            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact)
+            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact, is_replication_message=is_replication_message)
 
             if not self.windows:
                 window = SMSWindowController.alloc().initWithOwner_(self)

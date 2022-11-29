@@ -167,7 +167,7 @@ class SMSViewController(NSObject):
     pgp_encrypted = False
     bonjour_lookup_enabled = True
 
-    def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None):
+    def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False):
         self = objc.super(SMSViewController, self).init()
         if self:
             self.keys_path = ApplicationData.get('keys')
@@ -195,6 +195,8 @@ class SMSViewController(NSObject):
             self.contact = selected_contact or SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
 
             self.display_name = self.contact.name if self.contact else display_name
+            
+            self.is_replication_message = is_replication_message
 
             self.load_remote_public_keys()
 
@@ -218,7 +220,8 @@ class SMSViewController(NSObject):
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
-            self.lookup_destination(self.target_uri)
+            if not self.is_replication_message:
+                self.lookup_destination(self.target_uri)
 
         return self
 
@@ -417,6 +420,8 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None):
+    
+        self.is_replication_message = is_replication_message
 
         if id in self.msg_id_list:
             self.log_info('Discard duplicate message %s' % id)
@@ -854,8 +859,9 @@ class SMSViewController(NSObject):
             return
 
         self.start_queue()
-
-        self.sendMyPublicKey()
+        
+        if not self.is_replication_message:
+            self.sendMyPublicKey()
 
         if not self.encryption.active and self.account.sms.enable_otr:
             self.startEncryption()
