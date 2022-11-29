@@ -57,7 +57,7 @@ from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DI
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController
-from util import format_identity_to_string, html2txt, run_in_gui_thread
+from util import format_identity_to_string, run_in_gui_thread
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
