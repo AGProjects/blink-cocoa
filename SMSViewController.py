@@ -574,7 +574,11 @@ class SMSViewController(NSObject):
             recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
             
             if direction == 'outgoing' and not sender_identity.display_name:
-                sender_identity.display_name = self.account.display_name
+                try:
+                    sender_identity.display_name = self.account.display_name
+                except AttributeError:
+                    # this happens for replicated messages where we have FrozenIdentityHeader received from network
+                    pass
 
             mInfo = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender_identity, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
             
