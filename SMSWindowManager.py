@@ -277,8 +277,7 @@ class SMSWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             session.not_read_queue_start()
-            
-
+    
         tabItem = self.tabView.selectedTabViewItem()
 
         if tabItem.identifier() in self.unreadMessageCounts:
@@ -1195,7 +1194,7 @@ class SMSWindowManagerClass(NSObject):
 
         uri = format_identity_to_string(window_tab_identity)
         #BlinkLogger().log_info("Got MESSAGE %s for account %s from %s" % (content_type, account.id, uri))
-
+        
         if content_type == 'text/pgp-public-key':
             #BlinkLogger().log_info(u"Public key of %s received" % (format_identity_to_string(sender_identity)))
             viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
@@ -1333,13 +1332,33 @@ class SMSWindowManagerClass(NSObject):
             viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
             return
 
-        elif content_type not in ('text/plain', 'text/html'):
+        elif content_type == 'application/sylk-conversation-read':
+            pass
+            # TODO
+ 
+        elif content_type == 'application/sylk-conversation-remove':
+           self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
+           self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
+           return
+
+        elif content_type not in ('text/plain', 'text/html', 'application/sylk-message-remove'):
             BlinkLogger().log_warning('Message type %s is not supported' % content_type)
             return
 
         note_new_message = content_type in ('text/plain', 'text/html') and direction == 'incoming'
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
-        
+
+        if content_type == 'application/sylk-message-remove':
+            try:
+                json_data = json.loads(content.decode())
+                msg_id = json_data['message_id']
+            except (json.decoder.JSONDecodeError, TypeError, KeyError):
+                BlinkLogger().log_debug('Error parsing message remove %s: %s' % (content.decode(), str(e)))
+            else:
+                viewer.delete_message(msg_id, local=True);
+
+            return
+
         if note_new_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 

@@ -36,6 +36,7 @@ import datetime
 import hashlib
 import ast
 import re
+import json
 
 from binascii import unhexlify, hexlify
 from application.notification import IObserver, NotificationCenter, NotificationData
@@ -402,11 +403,12 @@ class SMSViewController(NSObject):
         self.chatViewController.outputView.setFrame_(frame)
 
     @objc.python_method
-    def delete_message(self, id):
+    def delete_message(self, id, local=False):
         self.log_info('Delete message %s ' % id)
-        self.chatViewController.markMessage(id, 'deleted')
-        self.sendMessage(id, 'application/sylk-message-remove')
         self.history.delete_message(id);
+        self.chatViewController.markMessage(id, 'deleted')
+        if not local:
+            self.sendMessage(id, 'application/sylk-api-message-remove')
 
     @objc.python_method
     def insertSmiley_(self, sender):
@@ -957,7 +959,7 @@ class SMSViewController(NSObject):
         if isinstance(message, OTRInternalMessage):
             return False
             
-        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove'):
             return False
 
         return True
@@ -1021,7 +1023,7 @@ class SMSViewController(NSObject):
         imdn_id = ''
         imdn_status = ''
 
-        can_use_cpim = message.content_type not in ('application/sylk-api-pgp-key-lookup', 'application/sylk-api-token', 'text/pgp-public-key')
+        can_use_cpim = message.content_type not in ('application/sylk-api-pgp-key-lookup', 'application/sylk-api-token', 'text/pgp-public-key', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-remove', 'application/sylk-api-conversation-read')
         
         additional_sip_headers = []
         if self.account.sms.use_cpim and can_use_cpim:
