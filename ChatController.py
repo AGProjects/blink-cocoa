@@ -397,6 +397,12 @@ class ChatController(MediaStream):
         blink_caps = blink_features.decode().split() if blink_features else []
         return 'history-control' in blink_caps
 
+    @objc.python_method
+    def delete_message(self, id, local=False):
+        self.sessionController.log_info('Delete message %s ' % id)
+        self.history.delete_message(id);
+        self.chatViewController.markMessage(id, 'deleted')
+
     @property
     def control_allowed(self):
         if not self.stream:

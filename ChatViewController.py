@@ -651,11 +651,12 @@ class ChatViewController(NSObject):
             if window and window.showConferenceSharedScreen(theURL.absoluteString()):
                 return
 
-        BlinkLogger().log_info('Open %s' % theURL.absoluteString())
+        #BlinkLogger().log_info('Open %s' % theURL.absoluteString())
         if theURL.scheme() == "file":
-            if hasattr(self.delegate, 'delete_message') and 'delete_message' in theURL.absoluteString():
-                msg_id = theURL.absoluteString().split('=')[1]
-                self.delegate.delete_message(msg_id)
+            if 'delete_message' in theURL.absoluteString():
+                if hasattr(self.delegate, 'delete_message'):
+                    msg_id = theURL.absoluteString().split('=')[1]
+                    self.delegate.delete_message(msg_id)
                 listener.ignore()
             else:
                 listener.use()
