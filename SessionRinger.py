@@ -463,7 +463,7 @@ class Ringer(object):
         if settings.audio.silent:
             return
 
-        if data.is_replication_message or (hasattr(data, 'status') and data.status == 'displayed'):
+        if (hasattr(data, 'is_replication_message') and data.is_replication_message) or (hasattr(data, 'status') and data.status == 'displayed'):
             return
         
         now = time.time()
