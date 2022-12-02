@@ -1759,8 +1759,10 @@ class ChatController(MediaStream):
                     message = NSLocalizedString("No Internet connection", "Label")
                 else:
                     message = reason.title()
+        else:
+            message = '%s (%s)' % (reason, data.code)
 
-                self.showSystemMessage(message, ISOTimestamp.now(), True)
+        self.showSystemMessage(message, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 

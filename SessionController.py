@@ -2143,7 +2143,12 @@ class SessionController(NSObject):
                 status += ' (%s)' % data.code
             self.failureReason = "failed"
 
-        self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed %sly: %s, %s (%s)" % (data.originator, data.reason, data.failure_reason, data.code))
+        self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed %sly: %s, %s (%s)" % (data.originator or 'loca', data.reason, data.failure_reason, data.code))
+        
+        if data.code != 487:
+            nc_title = 'Call failed'
+            nc_body = '%s (%s)' % (data.reason, data.code)
+            NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=format_identity_to_string(self.target_uri))
 
         must_retry = False
         if self.routes is not None and len(self.routes) > 1 and self.retries < 2:
