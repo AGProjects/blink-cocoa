@@ -1348,6 +1348,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def render_history_messages(self, messages):
+        self.log_info('Render history started')
         if self.chatViewController.scrolling_zoom_factor:
             if not self.message_count_from_history:
                 self.message_count_from_history = len(messages)
@@ -1444,8 +1445,13 @@ class SMSViewController(NSObject):
                         content = 'Encrypted message for which we have no private key'
                     else:
                         encryption = 'verified'
-                        content = bytes(decrypted_message.message, 'latin1').decode()
-                        self.history.update_decrypted_message(message.msgid, content)
+                        try:
+                            content = bytes(decrypted_message.message, 'latin1').decode()
+                        except (TypeError, UnicodeEncodeError) as e:
+                            #self.log_info('Failed to decrypt message: %s' % str(e))
+                            continue
+                        else:
+                            self.history.update_decrypted_message(message.msgid, content)
 
             sender = message.cpim_from
             recipient = message.cpim_to
@@ -1484,6 +1490,7 @@ class SMSViewController(NSObject):
             if message.media_type == 'chat':
                 last_chat_timestamp = timestamp
 
+        self.log_info('Render history completed')
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
 

@@ -635,7 +635,7 @@ class SMSWindowManagerClass(NSObject):
     @run_in_thread('sms_sync')
     def syncConversations(self, account):
        if not account.sms.enable_replication:
-           #BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
+           BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
            return
 
        if not account.sms.history_token:
@@ -644,7 +644,7 @@ class SMSWindowManagerClass(NSObject):
            return
 
        if not account.sms.history_url:
-           #BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
+           BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
            return
            
        try:
@@ -661,34 +661,32 @@ class SMSWindowManagerClass(NSObject):
        if last_id:
            url = "%s/%s" % (url, account.sms.history_last_id)
 
-       BlinkLogger().log_debug('Sync conversations from %s' % url)
+       BlinkLogger().log_info('Sync conversations from %s' % url)
 
        req = urllib.request.Request(url, method="GET")
        req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
 
-       # request new token on 401
        try:
            raw_response = urllib.request.urlopen(req, timeout=20)
-       except (urllib.error.URLError, TimeoutError, socket.timeout, RemoteDisconnected) as e:
-           BlinkLogger().log_debug('SylkServer connection error for %s: %s' % (url, str(e)))
+       except (urllib.error.URLError) as e:
+           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, e.code))
            try:
                del self.syncConversationsInProgress[account.id]
            except KeyError:
                pass
-           return
-       except (urllib.error.HTTPError) as e:
-           BlinkLogger().log_debug('SylkServer API error for %s: %s' % (url, str(e)))
-           try:
-               del self.syncConversationsInProgress[account.id]
-           except KeyError:
-               pass
-           return
 
-       else:
-           if raw_response.status == 401:
+           if e.code == 401:
+               # request new token on 401
                self.requestSyncToken(account)
-               return
-       
+           return
+       except (TimeoutError, socket.timeout, RemoteDisconnected, urllib.error.HTTPError) as e:
+           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
+           try:
+               del self.syncConversationsInProgress[account.id]
+           except KeyError:
+               pass
+           return
+       else:
            try:
                raw_data = raw_response.read().decode().replace('\\/', '/')
            except Exception as e:
