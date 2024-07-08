@@ -3427,6 +3427,20 @@ class ContactListModel(CustomListModel):
             self.addGroupsForContact(contact, new_groups)
 
     @objc.python_method
+    def deleteContacts(self, blink_contacts, selected_item=None):
+        BlinkLogger().log_info('Will delete %d contacts' % (len(blink_contacts) - 1))
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            for blink_contact in blink_contacts:
+                if not blink_contact.deletable:
+                    continue
+                if blink_contact.contact.id == selected_item.contact.id:
+                    continue
+                BlinkLogger().log_info('Delete contact %s' % blink_contact.contact.id)
+                blink_contact.contact.delete()
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    @objc.python_method
     def deleteContact(self, blink_contact):
         if not blink_contact.deletable:
             return

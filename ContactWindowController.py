@@ -2052,6 +2052,10 @@ class ContactWindowController(NSWindowController):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Menu item"), "deleteItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
+            if group and group.delete_contact_allowed:
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete duplicates", "Menu item"), "deleteDuplicateItems:", "")
+                lastItem.setEnabled_(item.deletable)
+                lastItem.setRepresentedObject_(item)
             if group and group.remove_contact_allowed:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Remove From Group", "Menu item"), "removeContactFromGroup:", "")
                 lastItem.setEnabled_(item.deletable)
@@ -3128,6 +3132,7 @@ class ContactWindowController(NSWindowController):
         else:
             self.contactOutline.deselectAll_(None)
             self.mainTabView.selectTabViewItemWithIdentifier_("search")
+
         self.updateStartSessionButtons()
 
         if self.mainTabView.selectedTabViewItem().identifier() == "search":
@@ -4156,6 +4161,28 @@ class ContactWindowController(NSWindowController):
     def deletePolicyItem_(self, sender):
         item = sender.representedObject()
         item.policy.delete()
+
+    @objc.IBAction
+    def deleteDuplicateItems_(self, sender):
+        item = sender.representedObject()
+        try:
+            uri = item.uri
+            #blink_contacts = list(self.model.getBlinkContactsForName(item.name))
+            blink_contacts = list(self.model.getBlinkContactsForURI(str(uri), exact_match=True))
+            if len(blink_contacts) > 1:
+                message = NSLocalizedString("Delete %d duplicates for %s from the Contacts list?", "Label") % (len(blink_contacts) - 1, item.uri)
+                message = re.sub("%", "%%", message)
+                ret = NSRunAlertPanel(NSLocalizedString("Delete Duplicates", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+                if ret == NSAlertDefaultReturn:
+                    self.model.deleteContacts(blink_contacts, selected_item=item)
+            else:
+                message = NSLocalizedString("No duplicates found", "Label")
+                NSRunAlertPanel(NSLocalizedString("Delete Duplicates", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
+
+        except Exception as e:
+            print(str(e))
+            import traceback
+            traceback.print_exc()
 
     @objc.IBAction
     def deleteItem_(self, sender):
