@@ -13,7 +13,7 @@ License
 -------
 
 Blink is licensed under GNU General Public License version 3. A copy of the
-license is available at http://www.fsf.org/licensing/licenses/agpl-3.0.html
+license is available at http://www.fsf.org/licensing/licenses/gpl-3.0.html
 
 The following restrictions apply:
 
