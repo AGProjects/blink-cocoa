@@ -1,3 +1,5 @@
+Fix dragging SMS tabs
+
  * remove video tab from photo picker
  * add otr smp for sms
  * fix audio and chat drawers in dark mode
@@ -7,3 +9,10 @@
 
 Crypto unmerged patch
 https://github.com/pycrypto/pycrypto/pull/296/commits/6d41ad025331afce9e495d7be3205730ddfa8f07
+
+When a text/plain message arrives:
+
+2023-05-09 11:00:03   Warning: Message type application/sylk-file-transfer is not supported
+2023-05-09 11:00:04   Error: [SMS with tijmen@sip2sip.info] Failed to parse timestamp None for message id 517c7a82-944a-4dda-a147-2782931779a2: an integer is required (got type NoneType)
+2023-05-09 11:00:04   [SMS with tijmen@sip2sip.info] Incoming text/plain message with id 517c7a82-944a-4dda-a147-2782931779a2 saved with status delivered
+2023-05-09 11:00:04   Error: Error inserting Chat SQL record: Unknown SQL builtin type: <class 'sipsimple.core._core.ContentType'> for 'text/plain'
