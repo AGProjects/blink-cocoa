@@ -134,11 +134,10 @@ class FancyTabItem(NSView):
 
     def dragImage(self):
         if self.cachedDragImage:
-           return self.cachedDragImage
-
-        self.lockFocus()
+            return self.cachedDragImage
 
         tabImage = NSImage.alloc().initWithSize_(NSMakeSize(200,30))
+        tabImage.self.lockFocus()
         tabImage.drawAtPoint_fromRect_operation_fraction_(NSZeroPoint,  NSZeroRect, NSCompositeSourceOver, 1.0)
         tabImage.unlockFocus()
 
@@ -214,7 +213,6 @@ class FancyTabItem(NSView):
             self.busyIndicator.setHidden_(True)
 
         self.setNeedsDisplay_(True)
-
 
     def mouseExited_(self, event):
         self.mouseInside = False
