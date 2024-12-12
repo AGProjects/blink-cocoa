@@ -933,9 +933,8 @@ class SMSWindowManagerClass(NSObject):
         # only open windows for messages newer than one week
         create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
 
-        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=bool(last_id), is_replication_message=False)
-
         sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
+        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=bool(last_id), is_replication_message=False)
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
 
         if status != MSG_STATE_DISPLAYED and create_if_needed:
