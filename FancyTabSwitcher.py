@@ -137,7 +137,7 @@ class FancyTabItem(NSView):
             return self.cachedDragImage
 
         tabImage = NSImage.alloc().initWithSize_(NSMakeSize(200,30))
-        tabImage.self.lockFocus()
+        tabImage.lockFocus()
         tabImage.drawAtPoint_fromRect_operation_fraction_(NSZeroPoint,  NSZeroRect, NSCompositeSourceOver, 1.0)
         tabImage.unlockFocus()
 
