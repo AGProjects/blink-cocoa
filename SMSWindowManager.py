@@ -178,6 +178,25 @@ class SMSWindowController(NSWindowController):
             item.setBadgeLabel_(str(count))
             session.not_read_queue_stop()
 
+    def noteNoMessageForSession_(self, session):
+        print('noteNoMessageForSession_')
+        index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
+
+        if index == NSNotFound:
+            return
+
+        tabItem = self.tabView.tabViewItemAtIndex_(index)
+        item = self.tabSwitcher.itemForTabViewItem_(tabItem)
+
+        if not item:
+            return
+
+        item.setBadgeLabel_("")
+        try:
+            del self.unreadMessageCounts[session]
+        except KeyError:
+            pass
+
     def noteView_isComposing_(self, smsview, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(smsview)
         if index == NSNotFound:
@@ -1330,8 +1349,7 @@ class SMSWindowManagerClass(NSObject):
             return
 
         elif content_type == 'application/sylk-conversation-read':
-            pass
-            # TODO
+            BlinkLogger().log_info('We read the messages on another device')
  
         elif content_type == 'application/sylk-conversation-remove':
            self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
@@ -1344,6 +1362,12 @@ class SMSWindowManagerClass(NSObject):
 
         note_new_message = content_type in ('text/plain', 'text/html') and direction == 'incoming'
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
+
+        if content_type == 'application/sylk-conversation-read':
+            viewer.messages_read()
+            self.windowForViewer(viewer).noteNoMessageForSession_(viewer)
+
+            return
 
         if content_type == 'application/sylk-message-remove':
             try:

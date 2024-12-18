@@ -411,6 +411,12 @@ class SMSViewController(NSObject):
             self.sendMessage(id, 'application/sylk-api-message-remove')
 
     @objc.python_method
+    def messages_read(self):
+        for message in self.messages.values():
+            if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                self.update_message_status(message.id, MSG_STATE_DISPLAYED)
+
+    @objc.python_method
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
@@ -460,7 +466,7 @@ class SMSViewController(NSObject):
         try:
             timestamp=ISOTimestamp(imdn_timestamp)
         except (DateParserError, TypeError) as e:
-            self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
+            #self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
             timestamp = ISOTimestamp.now()
 
         try:
