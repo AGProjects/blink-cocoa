@@ -777,7 +777,6 @@ class SMSViewController(NSObject):
             self.messages[mInfo.id] = mInfo
         
         if content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
-
             self.add_to_history(mInfo)
             self.messages[mInfo.id] = mInfo
 
@@ -932,10 +931,15 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def not_read_queue_start(self):
+        not_read_messages = len(self.not_read_queue.queue.queue)
+        if not_read_messages:
+            payload = json.dumps({'contact': self.remote_uri})
+            self.sendMessage(payload, 'application/sylk-conversation-read')
+
         if self.not_read_queue_started:
             if self.not_read_queue_paused:
                 if len(self.not_read_queue.queue.queue):
-                    self.log_debug('Display notifications queue resumed with %d pending messages' % len(self.not_read_queue.queue.queue))
+                    self.log_debug('Display notifications queue resumed with %d pending messages' % not_read_messages)
                 else:
                     self.log_debug('Display notifications queue resumed')
                 
@@ -965,7 +969,7 @@ class SMSViewController(NSObject):
         if isinstance(message, OTRInternalMessage):
             return False
             
-        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove'):
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove', 'application/sylk-message-remove'):
             return False
 
         return True
