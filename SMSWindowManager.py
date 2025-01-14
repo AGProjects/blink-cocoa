@@ -259,6 +259,7 @@ class SMSWindowController(NSWindowController):
                 if self.window().isKeyWindow():
                     _item = self.tabSwitcher.itemForTabViewItem_(item)
                     _item.setBadgeLabel_("")
+                    viewer.send_read_messages_notifications()
                     viewer.not_read_queue_start()
 
         try:
@@ -1366,7 +1367,6 @@ class SMSWindowManagerClass(NSObject):
         if content_type == 'application/sylk-conversation-read':
             viewer.messages_read()
             self.windowForViewer(viewer).noteNoMessageForSession_(viewer)
-
             return
 
         if content_type == 'application/sylk-message-remove':

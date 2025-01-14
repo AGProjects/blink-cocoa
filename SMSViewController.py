@@ -766,7 +766,11 @@ class SMSViewController(NSObject):
         else:
             encryption = ''
 
-        recipient = ChatIdentity(self.target_uri, self.display_name)
+        if content_type == 'application/sylk-conversation-read':
+            recipient = ChatIdentity(self.local_uri)
+        else:
+            recipient = ChatIdentity(self.target_uri, self.display_name)
+
         mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status=status, encryption=encryption)
 
         if self.is_renderable(mInfo):
@@ -786,6 +790,12 @@ class SMSViewController(NSObject):
  
         if host.default_ip and (not self.last_route or self.paused):
             self.lookup_destination(self.target_uri)
+
+        if content_type == 'application/sylk-conversation-read':
+            self.lookup_dns(self.account.id)
+        else:
+            self.lookup_destination(self.target_uri)
+
 
     @objc.python_method
     def lookup_destination(self, uri):
@@ -930,11 +940,17 @@ class SMSViewController(NSObject):
         self.outgoing_queue.put(None)
 
     @objc.python_method
-    def not_read_queue_start(self):
+    def send_read_messages_notifications(self):
+        return
+        #TODO: send message to myself
         not_read_messages = len(self.not_read_queue.queue.queue)
         if not_read_messages:
             payload = json.dumps({'contact': self.remote_uri})
             self.sendMessage(payload, 'application/sylk-conversation-read')
+
+    @objc.python_method
+    def not_read_queue_start(self):
+        not_read_messages = len(self.not_read_queue.queue.queue)
 
         if self.not_read_queue_started:
             if self.not_read_queue_paused:
