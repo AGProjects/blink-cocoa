@@ -30,7 +30,7 @@ for d in $core_deps; do
                 cp -a $odep Frameworks/$ob
                 ../build_scripts/change_lib_names.sh Frameworks/$ob
                 codesign -v -s "Developer ID Application" Frameworks/$ob
-                codesign --verify --deep --strict --verbose=1
+                codesign --verify --deep --strict --verbose=1 Frameworks/$ob
                 otool -L Frameworks/$ob
                 break
             fi
