@@ -959,10 +959,8 @@
 		1FD671D512F5A58D00B0E78C /* outgoing_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD671D312F5A58D00B0E78C /* outgoing_file.png */; };
 		1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
 		1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD7AB8915D2F18B00ECBAF5 /* blocked.png */; };
-		1FD90C452D4172DD0036EB92 /* libvpx.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C442D4172DC0036EB92 /* libvpx.8.dylib */; };
 		1FD90C482D4172DD0036EB92 /* libvpx.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C442D4172DC0036EB92 /* libvpx.8.dylib */; };
 		1FD90C492D4172FA0036EB92 /* libvpx.8.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C442D4172DC0036EB92 /* libvpx.8.dylib */; };
-		1FD90C4B2D4173150036EB92 /* libuuid.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C4A2D4173150036EB92 /* libuuid.16.dylib */; };
 		1FD90C4E2D4173150036EB92 /* libuuid.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C4A2D4173150036EB92 /* libuuid.16.dylib */; };
 		1FD90C4F2D41731A0036EB92 /* libuuid.16.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C4A2D4173150036EB92 /* libuuid.16.dylib */; };
 		1FD99700142DEFC400EE171F /* start_chat.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD996FD142DEFC400EE171F /* start_chat.png */; };
@@ -2316,8 +2314,6 @@
 				1FC6343318F9D38A0098945F /* ScriptingBridge.framework in Frameworks */,
 				1F6EF80F18E64FF0008592D2 /* QuartzCore.framework in Frameworks */,
 				1F6EF80E18E64FEB008592D2 /* OpenGL.framework in Frameworks */,
-				1FD90C452D4172DD0036EB92 /* libvpx.8.dylib in Frameworks */,
-				1FD90C4B2D4173150036EB92 /* libuuid.16.dylib in Frameworks */,
 				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
 				1F69E8EB17F5613C00B98B1E /* Sparkle.framework in Frameworks */,
 			);
