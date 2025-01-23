@@ -167,9 +167,9 @@ class PresenceStateSettings(SettingsGroup):
 
 
 class TLSSettingsExtension(TLSSettings):
-    ca_list = Setting(type=UserDataPath, default=None, nillable=True)
+    ca_list = Setting(type=UserDataPath, default=UserDataPath('tls/ca.crt'), nillable=True)
     certificate = Setting(type=UserDataPath, default=UserDataPath('tls/default.crt'), nillable=True)
-    verify_server = Setting(type=bool, default=False)
+    verify_server = Setting(type=bool, default=True)
 
 
 class SIPSimpleSettingsExtension(SettingsObjectExtension):
