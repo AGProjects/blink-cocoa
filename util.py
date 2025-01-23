@@ -17,6 +17,8 @@ import time
 import calendar
 import threading
 
+from gnutls.crypto import X509Certificate
+from gnutls.errors import GNUTLSError
 
 from datetime import datetime
 from html.entities import name2codepoint
@@ -650,4 +652,32 @@ def execute_once(func):
             return func(*args, **kwargs)
     wrapper.has_run = False
     return wrapper
+
+
+def trusted_cas(content):
+    trusted_cas = []
+    crt = ''
+    start = False
+    end = False
+
+    content = content or ''
+    content = content.decode() if isinstance(content, bytes) else content
+
+    for line in content.split("\n"):
+        if "BEGIN CERT" in line:
+            start = True
+            crt = line + "\n"
+        elif "END CERT" in line:
+            crt = crt + line + "\n"
+            end = True
+            start = False
+
+            try:
+                trusted_cas.append(X509Certificate(crt))
+            except (GNUTLSError, ValueError) as e:
+                continue
+        elif start:
+            crt = crt + line + "\n"
+
+    return trusted_cas
 

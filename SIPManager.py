@@ -172,9 +172,19 @@ class SIPManager(object, metaclass=Singleton):
         try:
             existing_cas = open(ca_path, "rb").read().strip()
         except Exception as e:
-            existing_cas = None
+            BlinkLogger().log_info('Missing default ca.crt file')
+            existing_cas = False
+        else:
+            cas = trusted_cas(existing_cas)
 
-        if not existing_cas or len(existing_cas) < 1000:
+            hasR11 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=R11")
+            hasR10 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=R10")
+            hasE6 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=E6")
+            hasE5 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=E5")
+
+            existing_cas = existing_cas and hasR11 and hasR10 and hasE6 and hasE5
+
+        if not existing_cas:
             # copy default certificate authority file
             ca = open(Resources.get('ca.crt'), "rb").read().strip()
             with open(ca_path, "wb") as f:
