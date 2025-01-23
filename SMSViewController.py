@@ -766,7 +766,7 @@ class SMSViewController(NSObject):
         else:
             encryption = ''
 
-        if content_type == 'application/sylk-conversation-read':
+        if content_type == 'application/sylk-api-conversation-read':
             recipient = ChatIdentity(self.local_uri)
         else:
             recipient = ChatIdentity(self.target_uri, self.display_name)
@@ -946,7 +946,7 @@ class SMSViewController(NSObject):
         not_read_messages = len(self.not_read_queue.queue.queue)
         if not_read_messages:
             payload = json.dumps({'contact': self.remote_uri})
-            self.sendMessage(payload, 'application/sylk-conversation-read')
+            self.sendMessage(payload, 'application/sylk-api-conversation-read')
 
     @objc.python_method
     def not_read_queue_start(self):
