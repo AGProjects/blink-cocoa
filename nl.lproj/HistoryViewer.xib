@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="15705"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="21701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -32,7 +31,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="656" y="340" width="755" height="524"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="875"/>
             <value key="minSize" type="size" width="755" height="524"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="755" height="524"/>
@@ -51,14 +50,13 @@
                                     <subviews>
                                         <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="68" id="67" customClass="ParticipantsTableView">
                                             <rect key="frame" x="0.0" y="0.0" width="180" height="487"/>
-                                            <autoresizingMask key="autoresizingMask"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
-                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
-                                                <tableColumn identifier="contacts" editable="NO" width="177" minWidth="40" maxWidth="1000" id="69">
+                                                <tableColumn identifier="contacts" editable="NO" width="148" minWidth="40" maxWidth="1000" id="69">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Contacten">
-                                                        <font key="font" metaFont="smallSystem"/>
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                     </tableHeaderCell>
@@ -86,7 +84,7 @@
                                     <rect key="frame" x="224" y="17" width="15" height="102"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <tableHeaderView key="headerView" id="68">
+                                <tableHeaderView key="headerView" wantsLayer="YES" id="68">
                                     <rect key="frame" x="0.0" y="0.0" width="180" height="17"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </tableHeaderView>
@@ -99,19 +97,18 @@
                                         <rect key="frame" x="0.0" y="0.0" width="567" height="167"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                         <clipView key="contentView" id="c6k-iO-je6">
-                                            <rect key="frame" x="1" y="0.0" width="565" height="166"/>
+                                            <rect key="frame" x="1" y="1" width="565" height="165"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" multipleSelection="NO" emptySelection="NO" autosaveName="transcriptIndex" headerView="11" id="10" customClass="MyTableView">
-                                                    <rect key="frame" x="0.0" y="0.0" width="565" height="149"/>
-                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="565" height="148"/>
+                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <size key="intercellSpacing" width="3" height="2"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                     <tableColumns>
                                                         <tableColumn identifier="type" editable="NO" width="62" minWidth="40" maxWidth="200" id="31">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Media">
-                                                                <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                             </tableHeaderCell>
@@ -125,7 +122,6 @@
                                                         </tableColumn>
                                                         <tableColumn identifier="local_uri" editable="NO" width="218" minWidth="40" maxWidth="1000" id="13">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Lokale account">
-                                                                <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                             </tableHeaderCell>
@@ -139,7 +135,6 @@
                                                         </tableColumn>
                                                         <tableColumn identifier="remote_uri" editable="NO" width="200" minWidth="40" maxWidth="1000" id="12">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Externe adres">
-                                                                <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                             </tableHeaderCell>
@@ -151,9 +146,8 @@
                                                             <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="remote_uri"/>
                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                         </tableColumn>
-                                                        <tableColumn identifier="date" editable="NO" width="73" minWidth="10" maxWidth="3.4028229999999999e+38" id="17">
+                                                        <tableColumn identifier="date" editable="NO" width="64" minWidth="10" maxWidth="3.4028229999999999e+38" id="17">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Datum">
-                                                                <font key="font" metaFont="smallSystem"/>
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                             </tableHeaderCell>
@@ -181,7 +175,7 @@
                                             <rect key="frame" x="576" y="17" width="15" height="132"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </scroller>
-                                        <tableHeaderView key="headerView" id="11">
+                                        <tableHeaderView key="headerView" wantsLayer="YES" id="11">
                                             <rect key="frame" x="0.0" y="0.0" width="565" height="17"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                         </tableHeaderView>
@@ -189,7 +183,7 @@
                                     <webView focusRingType="none" fixedFrame="YES" id="5">
                                         <rect key="frame" x="0.0" y="176" width="567" height="328"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
+                                        <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12" javaEnabled="NO">
                                             <nil key="identifier"/>
                                         </webPreferences>
                                         <connections>
@@ -273,7 +267,7 @@
                     </button>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="48BE55B7-C662-4483-91B1-686E4E16A638" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="34">
+            <toolbar key="toolbar" implicitIdentifier="48BE55B7-C662-4483-91B1-686E4E16A638" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="34">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Filter resultaten op contact" paletteLabel="Filter resultaten op contact" toolTip="Tiep tekst en druk op enter" id="112">
                         <size key="minSize" width="97" height="22"/>
@@ -304,11 +298,15 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="6F411DA1-8DE1-40E2-908F-C7609724A924" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Toon/Verberg emoticons" tag="100" image="smiley_on" id="61">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="63"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="8C097A50-0FB6-4D94-A38F-75AA87F9C79F" explicitItemIdentifier="delete" label="Verwijder" paletteLabel="Verwijder" toolTip="Verwijder berichten" tag="101" image="trash" id="78">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="79"/>
                         </connections>
@@ -342,7 +340,7 @@
                             <action selector="filterByMediaChanged:" target="-2" id="110"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Zoek op datum" paletteLabel="Zoek op datum" id="121">
+                    <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Zoek op datum" paletteLabel="Zoek op datum" title="Laatste dag" id="121">
                         <nil key="toolTip"/>
                         <size key="minSize" width="100" height="22"/>
                         <size key="maxSize" width="172" height="26"/>
@@ -453,9 +451,9 @@
         </menu>
     </objects>
     <resources>
-        <image name="NSActionTemplate" width="14" height="14"/>
-        <image name="NSLeftFacingTriangleTemplate" width="9" height="12"/>
-        <image name="NSRightFacingTriangleTemplate" width="9" height="12"/>
+        <image name="NSActionTemplate" width="20" height="20"/>
+        <image name="NSLeftFacingTriangleTemplate" width="12" height="17"/>
+        <image name="NSRightFacingTriangleTemplate" width="12" height="17"/>
         <image name="begin_arrow" width="48" height="30"/>
         <image name="end_arrow" width="48" height="30"/>
         <image name="smiley_on" width="32" height="32"/>
