@@ -129,7 +129,7 @@ class DebugWindow(NSObject):
                           'UPDATE': ['sessions']
                          }
 
-    grayText = NSDictionary.dictionaryWithObject_forKey_(NSColor.grayColor(), NSForegroundColorAttributeName)
+    normalText = NSDictionary.dictionaryWithObject_forKey_(NSColor.controlTextColor(), NSForegroundColorAttributeName)
     boldTextAttribs = NSDictionary.dictionaryWithObject_forKey_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
     boldRedTextAttribs = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName, NSColor.redColor(), NSForegroundColorAttributeName)
     newline = NSAttributedString.alloc().initWithString_("\n")
@@ -412,7 +412,7 @@ class DebugWindow(NSObject):
         if isinstance(line, NSAttributedString):
             textView.textStorage().appendAttributedString_(line)
         else:
-            textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_(line+"\n"))
+            textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", self.normalText))
 
         if self.autoScrollCheckbox.state() == NSOnState:
             textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
@@ -474,7 +474,7 @@ class DebugWindow(NSObject):
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -509,7 +509,7 @@ class DebugWindow(NSObject):
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -540,10 +540,10 @@ class DebugWindow(NSObject):
             text.appendAttributedString_(self.sendingText)
 
         line = " Packet %d, +%s\n" % (self._siptrace_packet_count, (notification.datetime - self._siptrace_start_time))
-        text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
+        text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line, self.normalText))
 
         line = "%s: %s:%d -(SIP over %s)-> %s:%d\n" % (notification.datetime, event_data.source_ip, event_data.source_port, event_data.transport, event_data.destination_ip, event_data.destination_port)
-        text.appendAttributedString_(NSAttributedString.alloc().initWithString_(line))
+        text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line, self.normalText))
 
         try:
             data = event_data.data.decode().strip()
@@ -584,13 +584,13 @@ class DebugWindow(NSObject):
 
                 if settings.logs.trace_sip_in_gui == Full:
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", attribs))
-                    text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
+                    text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(rest+"\n", self.normalText))
                 else:
                     line = '%s for %s %s' % (first.strip(), method, event)
                     text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", attribs))
 
             except:
-                text.appendAttributedString_(NSAttributedString.alloc().initWithString_(data+"\n"))
+                text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(data+"\n", self.normalText))
         else:
             _method = first.split()[0]
             try:
@@ -619,7 +619,7 @@ class DebugWindow(NSObject):
 
             if settings.logs.trace_sip_in_gui == Full:
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(first+"\n", self.boldTextAttribs))
-                text.appendAttributedString_(NSAttributedString.alloc().initWithString_(rest+"\n"))
+                text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(rest+"\n", self.normalText))
             else:
                 line = '%s %s' % (first.strip(), event or content_type)
                 text.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", self.boldTextAttribs))
@@ -751,7 +751,7 @@ class DebugWindow(NSObject):
     @objc.python_method
     def _NH_AudioSessionHasQualityIssues(self, notification):
         text = '%s Audio call quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss_rx, notification.data.latency)
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -759,7 +759,7 @@ class DebugWindow(NSObject):
     @objc.python_method
     def _NH_AudioSessionQualityRestored(self, notification):
         text = '%s Audio call quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss_rx, notification.data.latency)
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -825,7 +825,7 @@ class DebugWindow(NSObject):
             return
 
         message = '%s %s%s\n\n' % (notification.datetime, notification.data.level, notification.data.message)
-        text = NSAttributedString.alloc().initWithString_attributes_(message, self.grayText)
+        text = NSAttributedString.alloc().initWithString_attributes_(message, self.normalText)
         self.append_line(self.msrpTextView, text)
 
     @objc.python_method
@@ -845,7 +845,7 @@ class DebugWindow(NSObject):
             text += '%s %s call established using %s codec at %sHz\n' % (notification.datetime, mType, stream.codec, stream.sample_rate)
         if stream.srtp_active:
             text += '%s %s RTP stream is encrypted\n' % (notification.datetime, mType)
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -876,7 +876,7 @@ class DebugWindow(NSObject):
         text += '\%s ICE connectivity checks results:\n' % mType
         for check in data.valid_list:
             text += '\t%s\n' % check
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -900,7 +900,7 @@ class DebugWindow(NSObject):
             mtype = 'ICE %s negotiation failed\n' % mtype
             
         if text:
-            astring = NSAttributedString.alloc().initWithString_(text)
+            astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
             self.rtpTextView.textStorage().appendAttributedString_(astring)
             if self.autoScrollCheckbox.state() == NSOnState:
                 self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
@@ -912,7 +912,7 @@ class DebugWindow(NSObject):
         mtype = notification.sender.type.upper()
 
         text = '%s %s ICE negotiation failed: %s\n' % (notification.datetime, mtype, reason)
-        astring = NSAttributedString.alloc().initWithString_(text)
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
