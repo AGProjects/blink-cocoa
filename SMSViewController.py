@@ -439,7 +439,7 @@ class SMSViewController(NSObject):
         self.is_replication_message = is_replication_message
 
         if id in self.msg_id_list:
-            self.log_info('Discard duplicate message %s' % id)
+            self.log_debug('Discard duplicate message %s' % id)
             return
 
         if id in self.sent_readable_messages:
@@ -515,6 +515,8 @@ class SMSViewController(NSObject):
                 self.pgp_encrypted = False
             
             if content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type) and not is_replication_message:
+                self.sendMyPublicKey()
+
                 try:
                     content = self.encryption.otr_session.handle_input(content, content_type)
                 except IgnoreMessage:
@@ -740,6 +742,7 @@ class SMSViewController(NSObject):
             BlinkLogger().log_info('Cannot import my own PGP public key: %s' % str(e))
         else:
             self.log_info('Send my public key')
+            self.public_key_sent = True
             self.sendMessage(public_key.decode(), 'text/pgp-public-key')
 
     @objc.python_method
@@ -799,6 +802,11 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def lookup_destination(self, uri):
+        if self.dns_lookup_in_progress:
+            return
+
+        self.dns_lookup_in_progress = True
+
         if host is None or host.default_ip is None:
             self.setRoutesFailed(NSLocalizedString("No Internet connection", "Label"))
             return
@@ -827,11 +835,7 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_green_thread
     def lookup_dns(self, target_uri):
-        if self.dns_lookup_in_progress:
-            return
-
         self.log_info("Lookup DNS for %s" % target_uri)
-        self.dns_lookup_in_progress = True
  
         settings = SIPSimpleSettings()
         lookup = DNSLookup()
@@ -892,9 +896,6 @@ class SMSViewController(NSObject):
 
         self.start_queue()
         
-        if not self.is_replication_message:
-            self.sendMyPublicKey()
-
         if not self.encryption.active and self.account.sms.enable_otr:
             self.startEncryption()
 
@@ -1197,7 +1198,7 @@ class SMSViewController(NSObject):
                 user_agent = data.headers.get('User-Agent', Null).body
                 client = data.headers.get('Client', Null).body
                 server = data.headers.get('Server', Null).body
-                entity = user_agent or server or client
+                entity = user_agent or server or client or 'remote'
                 self.log_info("Message with Call Id %s sent to %s failed: %s (%s)" % (call_id, entity, reason, data.code))
             else:
                 entity = 'local'
@@ -1266,6 +1267,8 @@ class SMSViewController(NSObject):
             content = str(textView.string())
             textView.setString_("")
             textView.didChangeText()
+
+            self.sendMyPublicKey()
 
             if content:
                 self.sendMessage(content)
