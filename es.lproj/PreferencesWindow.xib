@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -37,7 +36,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="132" width="728" height="441"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="875"/>
             <value key="minSize" type="size" width="728" height="441"/>
             <view key="contentView" id="198">
                 <rect key="frame" x="0.0" y="0.0" width="728" height="441"/>
@@ -49,7 +48,7 @@
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="Cuentas" identifier="accounts" id="200">
-                                <view key="view" ambiguous="YES" id="203">
+                                <view key="view" id="203">
                                     <rect key="frame" x="10" y="7" width="720" height="434"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
@@ -80,20 +79,19 @@
                                         <scrollView focusRingType="none" fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="20">
                                             <rect key="frame" x="17" y="34" width="285" height="378"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
-                                            <clipView key="contentView" ambiguous="YES" id="u4D-Sn-la0">
-                                                <rect key="frame" x="1" y="0.0" width="283" height="377"/>
+                                            <clipView key="contentView" id="u4D-Sn-la0">
+                                                <rect key="frame" x="1" y="1" width="283" height="376"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="sequential" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="24" id="23">
-                                                        <rect key="frame" x="0.0" y="0.0" width="283" height="360"/>
-                                                        <autoresizingMask key="autoresizingMask"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="283" height="359"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <size key="intercellSpacing" width="3" height="2"/>
-                                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                         <tableColumns>
                                                             <tableColumn identifier="enable" width="25" minWidth="25" maxWidth="25" headerToolTip="Habilita la Cuenta" id="25" userLabel="Enable/Disable Account checkbox">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                                    <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
                                                                 </tableHeaderCell>
@@ -103,9 +101,8 @@
                                                                     <accessibility description="Habilita la Cuenta"/>
                                                                 </buttonCell>
                                                             </tableColumn>
-                                                            <tableColumn identifier="name" editable="NO" width="231" minWidth="10" maxWidth="3.4028229999999999e+38" id="64" userLabel="Label">
+                                                            <tableColumn identifier="name" editable="NO" width="220" minWidth="10" maxWidth="3.4028229999999999e+38" id="64" userLabel="Label">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Cuentas">
-                                                                    <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                 </tableHeaderCell>
@@ -120,9 +117,8 @@
                                                                     <accessibilityConnection property="title" destination="43" id="312"/>
                                                                 </connections>
                                                             </tableColumn>
-                                                            <tableColumn identifier="status" width="18" minWidth="17" maxWidth="20" id="213">
+                                                            <tableColumn identifier="status" width="20" minWidth="17" maxWidth="20" id="213">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                                    <font key="font" metaFont="smallSystem"/>
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                                 </tableHeaderCell>
@@ -147,7 +143,7 @@
                                                 <rect key="frame" x="269" y="17" width="15" height="325"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
-                                            <tableHeaderView key="headerView" id="24">
+                                            <tableHeaderView key="headerView" wantsLayer="YES" id="24">
                                                 <rect key="frame" x="0.0" y="0.0" width="283" height="17"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </tableHeaderView>
@@ -390,57 +386,79 @@
             <toolbar key="toolbar" implicitIdentifier="46C73AA8-C878-4E81-945F-DA08EFCFC87B" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="243">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="EBC02DE0-FBD7-4988-883A-1FD48678C6E6" explicitItemIdentifier="accounts" label="Cuentas" paletteLabel="Cuentas" image="NSUserGroup" autovalidates="NO" selectable="YES" id="251">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="255"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="259"/>
                     <toolbarItem implicitItemIdentifier="AD8D94E1-3CF8-437D-A1C6-C26E571B8712" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" image="audio" autovalidates="NO" selectable="YES" id="263">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="271"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Chat" paletteLabel="Chat" image="pencil" autovalidates="NO" selectable="YES" id="269">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Enviar Archivos" paletteLabel="Enviar Archivos" image="upfile" autovalidates="NO" selectable="YES" id="264">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="273"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Contestador" paletteLabel="Contestador" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
+                        <size key="minSize" width="26" height="22"/>
+                        <size key="maxSize" width="26" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="283"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Compartir Pantalla" paletteLabel="Compartir Pantalla" image="display" autovalidates="NO" selectable="YES" id="276">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3842C6BF-5A9E-47A3-BAFB-78A5081C34C5" explicitItemIdentifier="alerts" label="Alertas" paletteLabel="Alertas" image="alerts" autovalidates="NO" selectable="YES" id="265">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="274"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="7F6CEF6E-EA19-49AD-9637-E43C55808FD8" explicitItemIdentifier="contacts" label="Contactos" paletteLabel="Contactos" image="contacts" autovalidates="NO" selectable="YES" id="286">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="287"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Avanzado" paletteLabel="Avanzado" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="EA96B188-9160-464B-85E4-3A14A26A039F" explicitItemIdentifier="help" label="Ayuda" paletteLabel="Ayuda" tag="6" image="help" autovalidates="NO" id="288">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="289"/>
                         </connections>
@@ -474,9 +492,9 @@
         <userDefaultsController representsSharedInstance="YES" id="225"/>
     </objects>
     <resources>
-        <image name="NSAddTemplate" width="11" height="11"/>
+        <image name="NSAddTemplate" width="18" height="17"/>
         <image name="NSAdvanced" width="32" height="32"/>
-        <image name="NSRemoveTemplate" width="11" height="11"/>
+        <image name="NSRemoveTemplate" width="18" height="5"/>
         <image name="NSUserGroup" width="32" height="32"/>
         <image name="alerts" width="102.40000152587891" height="102.40000152587891"/>
         <image name="answering_machine" width="177" height="150"/>
