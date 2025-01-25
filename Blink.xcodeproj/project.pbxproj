@@ -2005,8 +2005,6 @@
 		1FC38F01192234E1007B0340 /* layers.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers.png; path = icons/layers.png; sourceTree = SOURCE_ROOT; };
 		1FC6342F18F9D3450098945F /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		1FC66DE7139E17D600D03D71 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MigrationPanel.xib; sourceTree = "<group>"; };
-		1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = ElQuijote.icns; sourceTree = "<group>"; };
-		1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ElQuijote-logo.png"; sourceTree = "<group>"; };
 		1FC99CF519BC93700013C580 /* close-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "close-small.png"; path = "icons/close-small.png"; sourceTree = "<group>"; };
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
@@ -2739,8 +2737,6 @@
 				1F331DCA193B655800831F31 /* voicemail-red.png */,
 				1F331DC4193B5CB600831F31 /* voicemail.png */,
 				1FC99CF519BC93700013C580 /* close-small.png */,
-				1FC80F72192E520200BD62F4 /* ElQuijote-logo.png */,
-				1FC80F6C192E3FA800BD62F4 /* ElQuijote.icns */,
 				1FE50E59164D1B6200840B18 /* presence */,
 				1F29D0EB1905BD670051B1BC /* sip2sip.icns */,
 				1FAE0B1118FD7A2300038AA4 /* pencil_16.png */,
