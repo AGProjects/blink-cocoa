@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -22,7 +21,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="515" y="330" width="353" height="397"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="875"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="353" height="397"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -45,9 +44,11 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="C36076B5-C975-4610-88DB-9159B4C1BFAD" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="small" id="119">
+            <toolbar key="toolbar" implicitIdentifier="C36076B5-C975-4610-88DB-9159B4C1BFAD" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="119">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="F27CFD60-AECF-4FBC-A9C2-259F9AA9C0C8" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" tag="1" image="audio" autovalidates="NO" id="133">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="134"/>
                         </connections>
@@ -126,12 +127,16 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="100" image="smiley_on" id="127">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="131"/>
                     <toolbarItem implicitItemIdentifier="F706FBD6-3282-4E5A-B901-59387DE517EE" explicitItemIdentifier="history" label="History" paletteLabel="History" toolTip="Show previously exchanged messages" tag="101" image="time" id="128">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="130"/>
                         </connections>
