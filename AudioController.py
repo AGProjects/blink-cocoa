@@ -6,6 +6,7 @@ from AppKit import (NSAccessibilityChildrenAttribute,
                     NSAccessibilityRoleDescriptionAttribute,
                     NSAccessibilityTitleAttribute,
                     NSAccessibilityUnignoredDescendant,
+                    NSForegroundColorAttributeName,
                     NSApp,
                     NSOffState,
                     NSOnState,
@@ -26,7 +27,9 @@ from Foundation import (NSBundle,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSString,
+                        NSAttributedString,
                         NSLocalizedString,
+                        NSDictionary,
                         NSThread,
                         NSTimer,
                         NSZeroPoint,
@@ -219,6 +222,8 @@ class AudioController(MediaStream):
 
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.sessionController.target_uri, exact_match=True)
 
+        self.label.setTextColor_(NSColor.labelColor())
+
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)
         item.setTitle_(NSLocalizedString("Add %s to Contacts", "Audio contextual menu") % format_identity_to_string(self.sessionController.remoteIdentity))
@@ -294,7 +299,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def startIncoming(self, is_update, is_answering_machine=False, add_to_conference=False):
-        self.sessionController.log_debug("Start incoming %s" % self)
+        self.sessionController.log_info("Start incoming %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
 
@@ -310,7 +315,7 @@ class AudioController(MediaStream):
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
 
-        self.label.setStringValue_(self.sessionController.titleShort)
+        self.updateSessionLabel(self.sessionController.titleShort)
         self.label.setToolTip_(self.sessionController.remoteAOR)
         self.updateTLSIcon()
         NSApp.delegate().contactsWindowController.showAudioSession(self, add_to_conference=add_to_conference)
@@ -318,10 +323,10 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
-        #self.sessionController.log_info("Start outgoing %s" % self)
+        self.sessionController.log_info("Start outgoing %s" % self)
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.label.setStringValue_(self.sessionController.titleShort)
+        self.updateSessionLabel(self.sessionController.titleShort)
         self.label.setToolTip_(self.sessionController.remoteAOR)
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
@@ -611,6 +616,11 @@ class AudioController(MediaStream):
         self.changeStatus(STREAM_CONNECTED)
 
     @objc.python_method
+    def updateSessionLabel(self, text):
+        #formattedText = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString(text, "audio_status_Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.labelColor(), NSForegroundColorAttributeName))
+        self.label.setStringValue_(text)
+        
+    @objc.python_method
     def updateAudioStatusWithSessionState(self, text, error=False):
         if not error and self.zrtp_show_verify_phrase:
             return
@@ -619,7 +629,10 @@ class AudioController(MediaStream):
             self.audioStatus.setTextColor_(NSColor.redColor())
         else:
             self.audioStatus.setTextColor_(NSColor.blackColor())
-        self.audioStatus.setStringValue_(text)
+            
+        formattedText = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString(text, "audio_status_Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
+
+        self.audioStatus.setStringValue_(formattedText)
         self.audioStatus.sizeToFit()
         self.audioStatus.display()
 
@@ -665,14 +678,14 @@ class AudioController(MediaStream):
     def updateLabelColor(self):
         if self.isConferencing:
             if self.view.selected:
-                self.label.setTextColor_(NSColor.blackColor())
+                self.label.setTextColor_(NSColor.selectedContentBackgroundColor())
             else:
-                self.label.setTextColor_(NSColor.grayColor())
+                self.label.setTextColor_(NSColor.labelColor())
         else:
             if self.holdByLocal or self.holdByRemote:
-                self.label.setTextColor_(NSColor.grayColor())
+                self.label.setTextColor_(NSColor.selectedContentBackgroundColor())
             else:
-                self.label.setTextColor_(NSColor.blackColor())
+                self.label.setTextColor_(NSColor.labelColor())
 
     @objc.python_method
     def updateTLSIcon(self):
@@ -1601,8 +1614,9 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
+        self.sessionController.log_info('Display name updated')
         peer_name = self.sessionController.titleShort
-        self.label.setStringValue_(peer_name)
+        self.updateSessionLabel(peer_name)
 
     @objc.python_method
     def _NH_RTPStreamDidNotEnableEncryption(self, sender, data):
@@ -1649,5 +1663,4 @@ class AudioController(MediaStream):
         chatStream = self.sessionController.streamHandlerOfType("chat")
         if chatStream and chatStream.status == STREAM_CONNECTED and chatStream.stream.encryption.active and not not chatStream.stream.encryption.verified:
             chatStream._do_smp_verification()
-
 

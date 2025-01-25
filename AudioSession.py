@@ -121,7 +121,7 @@ class AudioSession(NSView):
         if self.conferencing and not self.draggedOut:
             NSColor.selectedControlColor().colorWithAlphaComponent_(0.7).set()
         else:
-            NSColor.whiteColor().colorWithAlphaComponent_(0.7).set()
+            NSColor.textBackgroundColor().colorWithAlphaComponent_(0.7).set()
         path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
         path.fill()
 
@@ -350,13 +350,20 @@ class AudioSession(NSView):
     def drawRect_(self, rect):
         rect = NSInsetRect(self.bounds(), 1.5, 1.5)
         if not self.conferencing:
-            NSColor.whiteColor().set()
+            if self.draggedOut:
+                NSColor.whiteColor().set()
+            else:
+                if self.selected:
+                    NSColor.textBackgroundColor().set()
+                else:
+                    NSColor.textBackgroundColor().set()
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
             path.fill()
 
         if self.conferencing:
             if self.draggedOut:
-                NSColor.whiteColor().set()
+                pass
+                #NSColor.whiteColor().set()
             else:
                 # bgcolor for conference area
                 NSColor.colorWithDeviceRed_green_blue_alpha_(196/255.0, 230/255.0, 254/255.0, 1.0).set()
@@ -394,26 +401,36 @@ class AudioSession(NSView):
                 path.setLineWidth_(3)
             else:
                 path.setLineWidth_(1)
+
             if self.highlighted:
                 NSColor.orangeColor().set()
             else:
-                NSColor.grayColor().set()
+                NSColor.orangeColor().set()
+
             if self.selected or self.highlighted:
                 path.stroke()
+
+                NSColor.colorWithDeviceRed_green_blue_alpha_(196/255.0, 230/255.0, 254/255.0, 1.0).set()
         elif self.highlighted:
+            NSColor.colorWithDeviceRed_green_blue_alpha_(196/255.0, 230/255.0, 254/255.0, 1.0).set()
+            #NSColor.whiteColor().set()
+            border = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
+            border.setLineWidth_(3)
+            border.fill()
+            NSColor.grayColor().set()
+            border.stroke()
+        elif self.selected:
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
             path.setLineWidth_(3)
             NSColor.orangeColor().set()
             path.stroke()
-        elif self.selected:
-            path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
-            path.setLineWidth_(3)
-            NSColor.grayColor().set()
-            path.stroke()
+            NSColor.textBackgroundColor().set()
+            path.fill()
         else:
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
             path.setLineWidth_(1)
             NSColor.grayColor().set()
             path.stroke()
-
+            NSColor.textBackgroundColor().set()
+            path.fill()
 

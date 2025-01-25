@@ -41,9 +41,9 @@ class ContactCell(NSTextFieldCell):
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
-    firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName, style, NSParagraphStyleAttributeName)
-    firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(12.0), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
-    secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.grayColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.labelColor(), NSForegroundColorAttributeName)
+    firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
     secondLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
 
     def setContact_(self, contact):
