@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -41,7 +40,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="438" y="279" width="770" height="520"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="875"/>
             <value key="minSize" type="size" width="770" height="520"/>
             <view key="contentView" id="2">
                 <rect key="frame" x="0.0" y="0.0" width="770" height="520"/>
@@ -65,40 +64,54 @@
                     </tabView>
                 </subviews>
             </view>
-            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar2" displayMode="iconAndLabel" sizeMode="small" id="72">
+            <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar2" displayMode="iconAndLabel" sizeMode="regular" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Connect" paletteLabel="Connect" toolTip="Start chat session" tag="100" image="start_chat" id="81">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="83"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" toolTip="Add audio session" tag="101" image="audio" id="113">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Hold" paletteLabel="Hold" toolTip="Hold/Unhold audio" tag="102" image="pause" id="224">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Record" paletteLabel="Record" toolTip="Record audio" tag="103" image="record" autovalidates="NO" id="244">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="C3E6F7C9-F452-4335-BCFB-4A71AC47C40A" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Add audio session" tag="107" image="video" id="MK1-En-CVo">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="n7e-tx-St4"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Show collaborative editor" tag="109" image="editor" id="441">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
                     <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Send File" paletteLabel="Send File" toolTip="Send files" tag="105" image="upfile" id="92">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
@@ -164,7 +177,7 @@
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="unlocked-darkgray" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="647" id="661">
+                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="647" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="menu"/>
                                 <menu key="menu" title="OtherViews" autoenablesItems="NO" id="662">
@@ -218,16 +231,22 @@
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="99"/>
                     <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="106" image="smiley_on" id="443">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="444"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="History" paletteLabel="History" toolTip="Show previously exchanged messages" tag="107" image="time" id="253">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="9277B918-C2D9-41A1-A62A-32504D846977" explicitItemIdentifier="participants" label="Participants" paletteLabel="Participants" toolTip="Toogle participants drawer" tag="108" image="NSEveryone" id="208">
+                        <size key="minSize" width="22" height="22"/>
+                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toggle:" target="136" id="210"/>
                         </connections>
@@ -272,20 +291,19 @@
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="381">
                             <rect key="frame" x="0.0" y="0.0" width="260" height="405"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <clipView key="contentView" ambiguous="YES" id="yUA-3Y-z1g">
-                                <rect key="frame" x="1" y="0.0" width="258" height="404"/>
+                            <clipView key="contentView" id="yUA-3Y-z1g">
+                                <rect key="frame" x="1" y="1" width="258" height="403"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="382" id="383" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="387"/>
-                                        <autoresizingMask key="autoresizingMask"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="386"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
-                                            <tableColumn identifier="participant" width="255" minWidth="40" maxWidth="1000" id="386">
+                                            <tableColumn identifier="participant" width="246" minWidth="40" maxWidth="1000" id="386">
                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Participants">
-                                                    <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
                                                 </tableHeaderCell>
@@ -314,7 +332,7 @@
                                 <rect key="frame" x="224" y="17" width="15" height="102"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <tableHeaderView key="headerView" id="382">
+                            <tableHeaderView key="headerView" wantsLayer="YES" id="382">
                                 <rect key="frame" x="0.0" y="0.0" width="258" height="17"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
@@ -322,20 +340,19 @@
                         <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="36" horizontalPageScroll="10" verticalLineScroll="36" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="391">
                             <rect key="frame" x="0.0" y="406" width="260" height="193"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <clipView key="contentView" ambiguous="YES" id="5Kd-5Q-uhu">
-                                <rect key="frame" x="1" y="0.0" width="258" height="192"/>
+                            <clipView key="contentView" id="5Kd-5Q-uhu">
+                                <rect key="frame" x="1" y="1" width="258" height="191"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="34" headerView="395" id="394" customClass="ParticipantsTableView">
-                                        <rect key="frame" x="0.0" y="0.0" width="258" height="175"/>
-                                        <autoresizingMask key="autoresizingMask"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="258" height="174"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <size key="intercellSpacing" width="3" height="2"/>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
-                                            <tableColumn identifier="files" width="255" minWidth="40" maxWidth="1000" id="396">
+                                            <tableColumn identifier="files" width="246" minWidth="40" maxWidth="1000" id="396">
                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Shared Files">
-                                                    <font key="font" metaFont="smallSystem"/>
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
                                                 </tableHeaderCell>
@@ -364,7 +381,7 @@
                                 <rect key="frame" x="244" y="17" width="15" height="32"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
-                            <tableHeaderView key="headerView" id="395">
+                            <tableHeaderView key="headerView" wantsLayer="YES" id="395">
                                 <rect key="frame" x="0.0" y="0.0" width="258" height="17"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
@@ -406,7 +423,7 @@
                             </connections>
                         </button>
                         <button toolTip="Mute Microphone" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="220">
-                            <rect key="frame" x="222.5" y="2" width="29" height="25"/>
+                            <rect key="frame" x="223" y="2" width="29" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                             <buttonCell key="cell" type="roundTextured" alternateTitle="Mute Microphone" bezelStyle="texturedRounded" image="mute" imagePosition="overlaps" alignment="center" alternateImage="muted" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="221">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -692,7 +709,7 @@
         </menu>
     </objects>
     <resources>
-        <image name="NSActionTemplate" width="14" height="14"/>
+        <image name="NSActionTemplate" width="20" height="20"/>
         <image name="NSEveryone" width="32" height="32"/>
         <image name="audio" width="240" height="240"/>
         <image name="display" width="32" height="32"/>
