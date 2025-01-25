@@ -506,7 +506,7 @@ CA
             </connections>
             <point key="canvasLocation" x="140" y="153"/>
         </menu>
-        <window title="Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" appearanceType="aqua" frameAutosaveName="ContactWindow" animationBehavior="default" id="371" userLabel="Blink Contacts Window" customClass="NSPanel">
+        <window title="Blink" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="ContactWindow" animationBehavior="default" id="371" userLabel="Blink Contacts Window" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" texturedBackground="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="311" width="274" height="480"/>
@@ -560,7 +560,7 @@ CA
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" state="on" focusRingType="none" placeholderString="Weergavenaam" id="732">
                             <font key="font" metaFont="smallSystem"/>
-                            <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <accessibility description="Weergavenaam" help="Mijn weergavenaam"/>
@@ -597,7 +597,7 @@ CA
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" controlSize="mini" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" focusRingType="none" placeholderString="Notitie delen met mijn contacten" usesSingleLineMode="YES" id="692">
                             <font key="font" metaFont="cellTitle"/>
-                            <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                            <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                         </textFieldCell>
                         <accessibility description="Availability Note"/>
@@ -631,7 +631,7 @@ CA
                                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                         <tableColumns>
-                                                            <tableColumn identifier="stuff" width="260" minWidth="16" maxWidth="1000" id="507">
+                                                            <tableColumn identifier="stuff" width="231" minWidth="16" maxWidth="1000" id="507">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -726,7 +726,7 @@ to start a session.</string>
                                                         <tableViewGridLines key="gridStyleMask" horizontal="YES"/>
                                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                         <tableColumns>
-                                                            <tableColumn identifier="name" width="260" minWidth="40" maxWidth="1000" id="623">
+                                                            <tableColumn identifier="name" width="231" minWidth="40" maxWidth="1000" id="623">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Contact">
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="0.33333299" alpha="1" colorSpace="calibratedWhite"/>
@@ -1052,7 +1052,7 @@ ABC</string>
             </connections>
             <point key="canvasLocation" x="139" y="-181"/>
         </window>
-        <customView appearanceType="aqua" id="474" userLabel="Audio Sessions Drawer View">
+        <customView id="474" userLabel="Audio Sessions Drawer View">
             <rect key="frame" x="0.0" y="0.0" width="280" height="395"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
             <subviews>
@@ -1099,7 +1099,7 @@ ABC</string>
                                         <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
-                                            <tableColumn identifier="participant" width="266" minWidth="40" maxWidth="1000" id="1539">
+                                            <tableColumn identifier="participant" width="237" minWidth="40" maxWidth="1000" id="1539">
                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Remote Conference Participants">
                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -1155,7 +1155,7 @@ ABC</string>
                         <outlet property="delegate" destination="389" id="1541"/>
                     </connections>
                 </splitView>
-                <customView appearanceType="aqua" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="642" userLabel="Buttons View">
+                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="642" userLabel="Buttons View">
                     <rect key="frame" x="0.0" y="0.0" width="280" height="25"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                     <subviews>

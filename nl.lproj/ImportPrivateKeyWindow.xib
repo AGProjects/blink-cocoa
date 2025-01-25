@@ -16,7 +16,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window title="Importeer privé sleutel" autorecalculatesKeyViewLoop="NO" appearanceType="aqua" frameAutosaveName="import-private-key" animationBehavior="default" id="1">
+        <window title="Importeer privé sleutel" autorecalculatesKeyViewLoop="NO" frameAutosaveName="import-private-key" animationBehavior="default" id="1">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="352" width="496" height="211"/>
