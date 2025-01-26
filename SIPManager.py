@@ -482,9 +482,10 @@ class SIPManager(object, metaclass=Singleton):
         BlinkLogger().log_debug("SDK loaded")
         BlinkLogger().log_debug("SIP device ID: %s" % settings.instance_id)
         available_codecs_print = list(beautify_audio_codec(codec.decode()) for codec in self.available_codecs)
+        BlinkLogger().log_info("Core audio codecs: %s" % ", ".join(available_codecs_print))
+
         codecs_print = list(beautify_audio_codec(codec) for codec in settings.rtp.audio_codec_list if codec.encode() in self.available_codecs)
-        BlinkLogger().log_info("Available audio codecs: %s" % ", ".join(available_codecs_print))
-        BlinkLogger().log_info("Configured audio codecs: %s" % ", ".join(codecs_print))
+        BlinkLogger().log_info("Configured audio codecs: %s" % settings.rtp.audio_codec_list)
 
         if settings.audio.input_device is None:
             BlinkLogger().log_info("Switching audio input device to system default")
@@ -506,8 +507,9 @@ class SIPManager(object, metaclass=Singleton):
 
             available_video_codecs_print = list(beautify_video_codec(codec.decode()) for codec in self.available_video_codecs)
             video_codecs_print = list(beautify_video_codec(codec) for codec in settings.rtp.video_codec_list)
-            BlinkLogger().log_info("Available video codecs: %s" % ", ".join(available_video_codecs_print))
-            BlinkLogger().log_info("Enabled video codecs: %s" % ", ".join(video_codecs_print))
+            BlinkLogger().log_info("Core video codecs: %s" % ", ".join(available_video_codecs_print))
+            BlinkLogger().log_info("Configured video codecs: %s" % ", ".join(video_codecs_print))
+
             BlinkLogger().log_info(u"Available video cameras: %s" % ", ".join(NSApp.delegate().video_devices))
             if settings.video.device != "system_default" and settings.video.device != self._app.video_device.real_name and self._app.video_device.real_name != None:
                 settings.video.device = self._app.video_device.real_name
