@@ -130,7 +130,7 @@ class DebugWindow(NSObject):
                          }
 
     normalText = NSDictionary.dictionaryWithObject_forKey_(NSColor.controlTextColor(), NSForegroundColorAttributeName)
-    boldTextAttribs = NSDictionary.dictionaryWithObject_forKey_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName)
+    boldTextAttribs = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName, NSColor.controlTextColor(), NSForegroundColorAttributeName)
     boldRedTextAttribs = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()), NSFontAttributeName, NSColor.redColor(), NSForegroundColorAttributeName)
     newline = NSAttributedString.alloc().initWithString_("\n")
     receivedText = NSAttributedString.alloc().initWithString_attributes_("RECEIVED:", NSDictionary.dictionaryWithObject_forKey_(NSColor.blueColor(), NSForegroundColorAttributeName))
@@ -843,8 +843,6 @@ class DebugWindow(NSObject):
                                                                   stream.remote_rtp_port)
         if stream.codec and stream.sample_rate:
             text += '%s %s call established using %s codec at %sHz\n' % (notification.datetime, mType, stream.codec, stream.sample_rate)
-        if stream.srtp_active:
-            text += '%s %s RTP stream is encrypted\n' % (notification.datetime, mType)
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
