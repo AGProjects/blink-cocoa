@@ -688,17 +688,22 @@ class SMSWindowManagerClass(NSObject):
 
        try:
            raw_response = urllib.request.urlopen(req, timeout=20)
-       except (urllib.error.URLError) as e:
-           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, e.code))
+       except (urllib.error.URLError, ConnectionRefusedError) as e:
+           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
            try:
                del self.syncConversationsInProgress[account.id]
            except KeyError:
                pass
 
-           if e.code == 401:
-               # request new token on 401
-               self.requestSyncToken(account)
-           return
+           try:
+               code = getattr(e, "code")
+           except AttributeError:
+               pass
+           else:
+               if code == 401:
+                   # request new token on 401
+                   self.requestSyncToken(account)
+               return
        except (TimeoutError, socket.timeout, RemoteDisconnected, urllib.error.HTTPError) as e:
            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
            try:
