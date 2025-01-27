@@ -989,25 +989,27 @@ class AudioController(MediaStream):
         elif menu == self.transferMenu:
             while menu.numberOfItems() > 1:
                 menu.removeItemAtIndex_(1)
-            for session_controller in (s for s in self.sessionControllersManager.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
-                item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.titleLong, "userClickedTransferMenuItem:", "")
-                item.setIndentationLevel_(1)
-                item.setTarget_(self)
-                item.setRepresentedObject_(session_controller)
-
-            item = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("A contact by dragging this audio call over it", "Menu item"), "", "")
-            item.setIndentationLevel_(1)
-            item.setEnabled_(False)
-
-            # use typed search text as blind transfer destination
-            target = NSApp.delegate().contactsWindowController.searchBox.stringValue()
-            if target:
-                parsed_target = normalize_sip_uri_for_outgoing_session(target, self.sessionController.account)
-                if parsed_target:
-                    item = menu.addItemWithTitle_action_keyEquivalent_(format_identity_to_string(parsed_target), "userClickedBlindTransferMenuItem:", "")
+                
+            if self.isActive:
+                for session_controller in (s for s in self.sessionControllersManager.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
+                    item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.titleLong, "userClickedTransferMenuItem:", "")
                     item.setIndentationLevel_(1)
                     item.setTarget_(self)
-                    item.setRepresentedObject_(parsed_target)
+                    item.setRepresentedObject_(session_controller)
+    
+                item = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("A contact by dragging this audio call over it", "Menu item"), "", "")
+                item.setIndentationLevel_(1)
+                item.setEnabled_(False)
+    
+                # use typed search text as blind transfer destination
+                target = NSApp.delegate().contactsWindowController.searchBox.stringValue()
+                if target:
+                    parsed_target = normalize_sip_uri_for_outgoing_session(target, self.sessionController.account)
+                    if parsed_target:
+                        item = menu.addItemWithTitle_action_keyEquivalent_(format_identity_to_string(parsed_target), "userClickedBlindTransferMenuItem:", "")
+                        item.setIndentationLevel_(1)
+                        item.setTarget_(self)
+                        item.setRepresentedObject_(parsed_target)
         else:
             aor_supports_chat = True
             aor_supports_screen_sharing_server = True
