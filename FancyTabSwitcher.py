@@ -78,7 +78,7 @@ class FancyTabItem(NSView):
         paraStyle.setAlignment_(NSCenterTextAlignment)
 
         self.badgeAttributes = NSMutableDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(8),
-                                NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName,
+                                NSFontAttributeName, NSColor.textBackgroundColor(), NSForegroundColorAttributeName,
                                 paraStyle, NSParagraphStyleAttributeName)
 
     def close(self):
@@ -105,7 +105,6 @@ class FancyTabItem(NSView):
             self.switcher = switcher
             self.item = item
         return self
-
 
     def updateTrackingAreas(self):
         if self.trackingArea:
@@ -153,11 +152,12 @@ class FancyTabItem(NSView):
             path.fill()
         else:
             if self == self.switcher.activeItem():
-                NSColor.controlColor().set()
+                NSColor.labelColor().set()
             else:
-                NSColor.colorWithDeviceWhite_alpha_(0.6, 1.0).set()
+                NSColor.textBackgroundColor().set()
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(r, 5, 5)
             path.fill()
+
             NSColor.colorWithDeviceRed_green_blue_alpha_(0.3, 0.3, 0.3, 1.0).set()
             path.stroke()
 
@@ -188,15 +188,14 @@ class FancyTabItem(NSView):
             shadow = NSShadow.alloc().init()
             shadow.setShadowOffset_(NSMakeSize(0, -1))
             if self == self.switcher.activeItem():
-                shadow.setShadowColor_(NSColor.whiteColor())
+                textColor = NSColor.textBackgroundColor()
             else:
-                shadow.setShadowColor_(NSColor.colorWithDeviceWhite_alpha_(0.7, 1.0))
+                textColor = NSColor.labelColor()
             para = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
             para.setLineBreakMode_(NSLineBreakByTruncatingTail)
             para.setAlignment_(NSCenterTextAlignment)
             attribs = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(11), NSFontAttributeName,
-                            shadow, NSShadowAttributeName,
-                            para, NSParagraphStyleAttributeName)
+                            para, NSParagraphStyleAttributeName, textColor, NSForegroundColorAttributeName)
 
             rect = self.bounds()
             rect.origin.y -= 3
