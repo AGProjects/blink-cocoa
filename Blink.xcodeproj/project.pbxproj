@@ -27,7 +27,7 @@
 		1F0D4A3819BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F0D4A3A19BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F0F8BA22D424445008002E6 /* libvpx.8.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C442D4172DC0036EB92 /* libvpx.8.dylib */; };
-		1F0F8BA32D42444C008002E6 /* libuuid.16.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C4A2D4173150036EB92 /* libuuid.16.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1F0F8BA32D42444C008002E6 /* libuuid.16.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD90C4A2D4173150036EB92 /* libuuid.16.dylib */; };
 		1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255D1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
@@ -559,6 +559,7 @@
 		1F455F41260A5A6300DB289F /* libev.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F455F39260A5A6300DB289F /* libev.4.dylib */; };
 		1F455F42260A5A7400DB289F /* libev.4.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F455F39260A5A6300DB289F /* libev.4.dylib */; };
 		1F455F43260A5A7400DB289F /* libuv.1.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1F455F38260A5A6300DB289F /* libuv.1.dylib */; };
+		1F49325E2D48179D00B2ACF8 /* libvpx.9.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F4B789119AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789219AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
 		1F4B789419AEAEC200F854CB /* VideoWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F4B789819AEAEC200F854CB /* VideoWindow.xib */; };
@@ -861,9 +862,7 @@
 		1FB3AE7418F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FB3AE7518F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FB3AE7718F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
-		1FB461332D46BEC200912201 /* libvpx.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; };
 		1FB461342D46BEC200912201 /* libvpx.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; };
-		1FB461372D46BED200912201 /* libopenh264.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
 		1FB461382D46BED200912201 /* libopenh264.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
 		1FB461392D46BEDE00912201 /* libvpx.9.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; };
 		1FB4613A2D46BEE200912201 /* libopenh264.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
@@ -977,7 +976,6 @@
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
-		1FE24D1E2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */; };
 		1FE24D1F2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */; };
 		1FE24D202D466F8F00EDD804 /* libvpx.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */; };
 		1FE59BB9161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
@@ -1281,6 +1279,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1F49325E2D48179D00B2ACF8 /* libvpx.9.dylib in Copy Frameworks */,
+				1F9EA1252D1030CD008DE22C /* libx264.dylib in Copy Frameworks */,
 				1F0F8BA32D42444C008002E6 /* libuuid.16.dylib in Copy Frameworks */,
 				1F0F8BA22D424445008002E6 /* libvpx.8.dylib in Copy Frameworks */,
 				1F9EA1052D1030CA008DE22C /* libmpc.3.dylib in Copy Frameworks */,
@@ -1315,7 +1315,6 @@
 				1F9EA1222D1030CC008DE22C /* libpostproc.55.5.100.dylib in Copy Frameworks */,
 				1F9EA1232D1030CC008DE22C /* libpostproc.55.dylib in Copy Frameworks */,
 				1F9EA1242D1030CD008DE22C /* libx264.157.dylib in Copy Frameworks */,
-				1F9EA1252D1030CD008DE22C /* libx264.dylib in Copy Frameworks */,
 				1F9EA1262D1030CD008DE22C /* libswresample.3.5.100.dylib in Copy Frameworks */,
 				1F9EA1272D1030CD008DE22C /* libswresample.3.dylib in Copy Frameworks */,
 				1F9EA1282D1030CD008DE22C /* libswscale.5.5.100.dylib in Copy Frameworks */,
@@ -2281,13 +2280,10 @@
 				1FF02E982D10362300420726 /* libpython3.9.dylib in Frameworks */,
 				1F2436861912B27000E71253 /* AVFoundation.framework in Frameworks */,
 				1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */,
-				1FE24D1E2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */,
-				1FB461372D46BED200912201 /* libopenh264.7.dylib in Frameworks */,
 				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
 				1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
-				1FB461332D46BEC200912201 /* libvpx.9.dylib in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
