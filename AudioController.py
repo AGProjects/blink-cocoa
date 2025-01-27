@@ -676,6 +676,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def updateLabelColor(self):
+        return
         if self.isConferencing:
             if self.view.selected:
                 self.label.setTextColor_(NSColor.selectedContentBackgroundColor())
