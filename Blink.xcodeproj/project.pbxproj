@@ -861,6 +861,12 @@
 		1FB3AE7418F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FB3AE7518F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
 		1FB3AE7718F1E73E001C612B /* close.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB3AE7318F1E73E001C612B /* close.png */; };
+		1FB461332D46BEC200912201 /* libvpx.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; };
+		1FB461342D46BEC200912201 /* libvpx.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; };
+		1FB461372D46BED200912201 /* libopenh264.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
+		1FB461382D46BED200912201 /* libopenh264.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
+		1FB461392D46BEDE00912201 /* libvpx.9.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461312D46BEC200912201 /* libvpx.9.dylib */; };
+		1FB4613A2D46BEE200912201 /* libopenh264.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
 		1FB9B1191095BFF500284E18 /* answering_machine_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */; };
 		1FB9B11A1095BFF500284E18 /* dtmf_0_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */; };
 		1FB9B11B1095BFF500284E18 /* dtmf_1_tone.wav in Resources */ = {isa = PBXBuildFile; fileRef = 1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */; };
@@ -971,6 +977,9 @@
 		1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */; };
 		1FDFAE2E12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
 		1FDFAE2F12E06E01005BA20F /* ChatPrivateMessage.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FDFAE2D12E06E01005BA20F /* ChatPrivateMessage.xib */; };
+		1FE24D1E2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */; };
+		1FE24D1F2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */; };
+		1FE24D202D466F8F00EDD804 /* libvpx.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */; };
 		1FE59BB9161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FE59BBA161621BB00CD7B21 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1FEC3E9114D41678003745B9 /* ca.crt in Resources */ = {isa = PBXBuildFile; fileRef = 1FEC3E9014D41678003745B9 /* ca.crt */; };
@@ -1543,6 +1552,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FB4613A2D46BEE200912201 /* libopenh264.7.dylib in Copy Frameworks */,
+				1FB461392D46BEDE00912201 /* libvpx.9.dylib in Copy Frameworks */,
+				1FE24D202D466F8F00EDD804 /* libvpx.7.dylib in Copy Frameworks */,
 				1FD90C4F2D41731A0036EB92 /* libuuid.16.dylib in Copy Frameworks */,
 				1FD90C492D4172FA0036EB92 /* libvpx.8.dylib in Copy Frameworks */,
 				1FF9AD212667AD680008EA46 /* libvo-amrwbenc.0.dylib in Copy Frameworks */,
@@ -1976,6 +1988,8 @@
 		1FB247E015D99AEB00703D24 /* OfflineNoteController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = OfflineNoteController.py; sourceTree = "<group>"; };
 		1FB30807146D540C001430B5 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/JoinConferenceWindow.xib; sourceTree = "<group>"; };
 		1FB3AE7318F1E73E001C612B /* close.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = close.png; path = icons/close.png; sourceTree = "<group>"; };
+		1FB461312D46BEC200912201 /* libvpx.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvpx.9.dylib; path = Distribution/Frameworks/libvpx.9.dylib; sourceTree = "<group>"; };
+		1FB461352D46BED100912201 /* libopenh264.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopenh264.7.dylib; path = Distribution/Frameworks/libopenh264.7.dylib; sourceTree = "<group>"; };
 		1FB9B1041095BFF500284E18 /* answering_machine_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = answering_machine_tone.wav; path = sounds/answering_machine_tone.wav; sourceTree = "<group>"; };
 		1FB9B1051095BFF500284E18 /* dtmf_0_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_0_tone.wav; path = sounds/dtmf_0_tone.wav; sourceTree = "<group>"; };
 		1FB9B1061095BFF500284E18 /* dtmf_1_tone.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = dtmf_1_tone.wav; path = sounds/dtmf_1_tone.wav; sourceTree = "<group>"; };
@@ -2085,6 +2099,7 @@
 		1FD99702142DEFD100EE171F /* stop_chat.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = stop_chat.png; path = icons/stop_chat.png; sourceTree = "<group>"; };
 		1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSWindowManager.py; sourceTree = "<group>"; };
 		1FDFA9B412DF4689005BA20F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ChatPrivateMessage.xib; sourceTree = "<group>"; };
+		1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvpx.7.dylib; path = Distribution/Frameworks/libvpx.7.dylib; sourceTree = "<group>"; };
 		1FE59BB8161621BB00CD7B21 /* location.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = location.png; path = icons/location.png; sourceTree = "<group>"; };
 		1FEBE8A919E48E9000E60336 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FEBE8AA19E48E9600E60336 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/VideoLocalWindow.xib; sourceTree = "<group>"; };
@@ -2266,10 +2281,13 @@
 				1FF02E982D10362300420726 /* libpython3.9.dylib in Frameworks */,
 				1F2436861912B27000E71253 /* AVFoundation.framework in Frameworks */,
 				1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */,
+				1FE24D1E2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */,
+				1FB461372D46BED200912201 /* libopenh264.7.dylib in Frameworks */,
 				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
 				1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
+				1FB461332D46BEC200912201 /* libvpx.9.dylib in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2293,9 +2311,12 @@
 				1F2FF6D1297046A900C06768 /* libcrypto.3.dylib in Frameworks */,
 				1F35D06B17894FFF00C6FE38 /* Security.framework in Frameworks */,
 				1F4D746C261B517E00DF09D7 /* libopencore-amrnb.0.dylib in Frameworks */,
+				1FB461382D46BED200912201 /* libopenh264.7.dylib in Frameworks */,
 				1F4D7464261B502A00DF09D7 /* libopus.0.dylib in Frameworks */,
 				1F35D06C17894FFF00C6FE38 /* Carbon.framework in Frameworks */,
 				1F3F8FC525D16E85001DA381 /* libpython3.9.dylib in Frameworks */,
+				1FB461342D46BEC200912201 /* libvpx.9.dylib in Frameworks */,
+				1FE24D1F2D466F6E00EDD804 /* libvpx.7.dylib in Frameworks */,
 				1F2FF6C72970468900C06768 /* libssl.3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2505,6 +2526,7 @@
 		1FA06CF625EF7C3700268FF3 /* video-codecs */ = {
 			isa = PBXGroup;
 			children = (
+				1FE24D1C2D466F6E00EDD804 /* libvpx.7.dylib */,
 				1F78AA3025EACDD400F43414 /* liblzma.5.dylib */,
 				1F78AB5F25EAD83100F43414 /* libXdmcp.6.dylib */,
 				1F78AB6025EAD83100F43414 /* libXau.6.dylib */,
@@ -2516,6 +2538,8 @@
 				1F78AA1025EACDCF00F43414 /* libpostproc.55.5.100.dylib */,
 				1F78AA0A25EACDCE00F43414 /* libpostproc.55.dylib */,
 				1F78AB3625EACF2400F43414 /* libx264.157.dylib */,
+				1FB461352D46BED100912201 /* libopenh264.7.dylib */,
+				1FB461312D46BEC200912201 /* libvpx.9.dylib */,
 				1F78AB3525EACF2400F43414 /* libx264.dylib */,
 				1F78AA2725EACDD300F43414 /* libswresample.3.5.100.dylib */,
 				1F78AA1225EACDCF00F43414 /* libswresample.3.dylib */,
