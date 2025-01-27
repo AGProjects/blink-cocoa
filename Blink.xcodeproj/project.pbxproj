@@ -48,6 +48,7 @@
 		1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
 		1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
+		1F1F88BE2D481BD9004C701F /* libopenh264.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; };
 		1F1FC04812D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
 		1F1FC04912D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
 		1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
@@ -1341,6 +1342,7 @@
 				1F9EA13F2D1030CF008DE22C /* libnettle.8.1.dylib in Copy Frameworks */,
 				1F9EA1402D1030CF008DE22C /* libnettle.8.dylib in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
+				1F1F88BE2D481BD9004C701F /* libopenh264.7.dylib in Copy Frameworks */,
 				1FC6562A25DC27CB00C2AE06 /* libpython3.9.dylib in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
