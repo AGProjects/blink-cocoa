@@ -124,7 +124,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     uri = "%s@%s" % (user, host)
 
     if format == 'aor':
-        return "%s@%s" % (user, host)
+        return user if user.isnumeric() else  "%s@%s" % (user, host)
 
     if identity.port is not None and identity.port != 5060:
         port = identity.port
@@ -137,14 +137,16 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     finally:
         del pool
 
-    if port == 5060 and transport == 'udp':
-        address = "%s@%s" % (user, host)
+    if port == 5060 and transport in ('udp', 'tcp'):
+        address = user if user.isnumeric() else  "%s@%s" % (user, host)
+    elif port == 5061 and transport in ('tls'):
+        address = user if user.isnumeric() else  "%s@%s" % (user, host)
     elif transport == 'udp':
         address = "%s@%s:%d" % (user, host, port)
     else:
         address = "%s@%s:%d;transport=%s" % (user, host, port, transport)
 
-    match = re.match(r'^(?P<number>\+[1-9][0-9]\d{5,15})@(\d{1,3}\.){3}\d{1,3}$', address)
+    match = re.match(r'^(?P<number>\+[1-9][0-9]\d{2,15})@(\d{1,3}\.){3}\d{1,3}$', address)
     if contact:
         if format == 'compact':
             if display_name == user or not display_name:
