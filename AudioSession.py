@@ -408,8 +408,13 @@ class AudioSession(NSView):
         elif self.selected:
             # current active call
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
+            
+            subviews = self.superview().subviews()
+            if subviews.count() > 1:
+                NSColor.greenColor().set()
+            else:
+                NSColor.grayColor().set()
 
-            NSColor.greenColor().set()
             path.setLineWidth_(3)
             path.stroke()
 
