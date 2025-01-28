@@ -323,7 +323,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
-        self.sessionController.log_info("Start outgoing %s" % self)
+        self.sessionController.log_info("Start outgoing audio session...")
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
         self.updateSessionLabel(self.sessionController.titleShort)

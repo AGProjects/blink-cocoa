@@ -498,7 +498,7 @@ class ChatController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
-        self.sessionController.log_debug("Start outgoing...")
+        self.sessionController.log_debug("Start outgoing chat session...")
         self.sessionController.video_consumer = "chat"
         self.session_succeeded = False
         self.last_failure_reason = None
