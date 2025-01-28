@@ -32,19 +32,18 @@
 		<array>
 			<string>com.apple.Mail.compose</string>
 		</array>
-		<key>com.apple.iTunes</key>
+		<key>com.apple.Music</key>
 		<array>
-			<string>com.apple.iTunes.playback</string>
+			<string>com.apple.Music.playback</string>
 		</array>
 		<key>com.spotify.client</key>
 		<array>
 			<string>com.spotify.client.playback</string>
 		</array>
 	</dict>
-        <key>com.apple.security.application-groups</key>
-        <array>
-           <string>4DFEFUDLKZ.pjsip</string>
-        </array>
-
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>4DFEFUDLKZ.pjsip</string>
+	</array>
 </dict>
 </plist>

@@ -56,7 +56,7 @@ class MusicApplications(object):
 
 class MusicInterface(object):
     __metaclass__ = Singleton
-    application_id = 'com.apple.iTunes'
+    application_id = 'com.apple.Music'
     is_playing_status = 1800426320
 
     def __init__(self, delegate):
