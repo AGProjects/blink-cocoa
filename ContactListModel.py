@@ -2363,6 +2363,7 @@ class CustomListModel(NSObject):
             cell.setContact_(item)
         else:
             cell.setContact_(None)
+            cell.setGroup_(item)
 
     def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
         if isinstance(item, BlinkContact):

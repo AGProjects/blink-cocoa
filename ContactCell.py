@@ -29,6 +29,7 @@ from ContactListModel import presence_status_for_contact, presence_status_icons,
 
 class ContactCell(NSTextFieldCell):
     contact = None
+    group = None
     view = None
     frame = None
 
@@ -41,6 +42,7 @@ class ContactCell(NSTextFieldCell):
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
+    groupAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.labelColor(), NSForegroundColorAttributeName, NSFont.boldSystemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
     firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.labelColor(), NSForegroundColorAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
     firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
     secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
@@ -48,6 +50,9 @@ class ContactCell(NSTextFieldCell):
 
     def setContact_(self, contact):
         self.contact = contact
+
+    def setGroup_(self, group):
+        self.group = group
 
     def setMessageIcon_(self, icon):
         self.messageIcon = icon
@@ -61,11 +66,11 @@ class ContactCell(NSTextFieldCell):
         return NSMakeSize(100, 30)
 
     def drawWithFrame_inView_(self, frame, view):
-        if self.contact is None:
-            return objc.super(ContactCell, self).drawWithFrame_inView_(frame, view)
-
         self.frame = frame
         self.view = view
+
+        if self.contact is None:
+            self.drawGroup()
 
         try:
             icon = self.contact.avatar.icon
@@ -77,6 +82,15 @@ class ContactCell(NSTextFieldCell):
             self.drawPresenceIcon()
         except Exception:
             pass
+
+    @objc.python_method
+    def drawGroup(self):
+        #return objc.super(ContactCell, self).drawWithFrame_inView_(frame, view)
+        frame = self.frame
+        frame.origin.x = 20
+        frame.origin.y += 2
+        rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)
+        self.stringValue().drawInRect_withAttributes_(rect, self.groupAttributes)
 
     @objc.python_method
     def drawFirstLine(self):
