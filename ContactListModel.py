@@ -2350,7 +2350,7 @@ class CustomListModel(NSObject):
         return None
 
     def outlineView_heightOfRowByItem_(self, outline, item):
-        return 18 if isinstance(item, BlinkGroup) else 34
+        return 22 if isinstance(item, BlinkGroup) else 44
 
     # delegate methods
     def outlineView_isGroupItem_(self, outline, item):

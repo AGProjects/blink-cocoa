@@ -41,10 +41,10 @@ class ContactCell(NSTextFieldCell):
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
-    firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.labelColor(), NSForegroundColorAttributeName)
-    firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
-    secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
-    secondLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.labelColor(), NSForegroundColorAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
+    firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
+    secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    secondLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
 
     def setContact_(self, contact):
         self.contact = contact
@@ -69,7 +69,7 @@ class ContactCell(NSTextFieldCell):
 
         try:
             icon = self.contact.avatar.icon
-            self.drawIcon(icon, 2, self.frame.origin.y+3, 28, 28)
+            self.drawIcon(icon, 2, self.frame.origin.y+7, 28, 28)
 
             self.drawActiveMedia()
             self.drawFirstLine()
@@ -82,7 +82,7 @@ class ContactCell(NSTextFieldCell):
     def drawFirstLine(self):
         frame = self.frame
         frame.origin.x = 35
-        frame.origin.y += 2
+        frame.origin.y += 6
 
         rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width-10, frame.size.height)
         attrs = self.firstLineAttributes if not self.isHighlighted() else self.firstLineAttributes_highlighted
@@ -91,7 +91,7 @@ class ContactCell(NSTextFieldCell):
     @objc.python_method
     def drawSecondLine(self):
         frame = self.frame
-        frame.origin.y += 15
+        frame.origin.y += 16
         if self.contact.detail:
             rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width - 25, frame.size.height)
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
@@ -182,7 +182,7 @@ class ContactCell(NSTextFieldCell):
                 pass
 
         frame = self.frame
-        frame.origin.y -= 17
+        frame.origin.y -= 22
         #if has_locations:
         #    left = self.view.frame().size.width - 22
         #    self.drawIcon(self.locationIcon, left, self.frame.origin.y +14, 16, 16)
