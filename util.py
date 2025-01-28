@@ -138,9 +138,9 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
         del pool
 
     if port == 5060 and transport in ('udp', 'tcp'):
-        address = user if user.isnumeric() else  "%s@%s" % (user, host)
+        address = user if user and user.isnumeric() else  "%s@%s" % (user, host)
     elif port == 5061 and transport in ('tls'):
-        address = user if user.isnumeric() else  "%s@%s" % (user, host)
+        address = user if user and user.isnumeric() else  "%s@%s" % (user, host)
     elif transport == 'udp':
         address = "%s@%s:%d" % (user, host, port)
     else:
