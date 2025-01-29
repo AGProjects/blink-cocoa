@@ -4811,7 +4811,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 27267;
+				CURRENT_PROJECT_VERSION = 27268;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4834,8 +4834,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				MARKETING_VERSION = 6.2.6;
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MARKETING_VERSION = 6.2.7;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.Blink;
@@ -4860,7 +4860,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27266;
+				CURRENT_PROJECT_VERSION = 27268;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4882,8 +4882,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				MARKETING_VERSION = 6.2.6;
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				MARKETING_VERSION = 6.2.7;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
@@ -5028,7 +5028,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/3.9/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
 				MARKETING_VERSION = 8.9.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
@@ -5078,7 +5078,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/3.9/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.4;
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
 				MARKETING_VERSION = 8.9.9;
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
