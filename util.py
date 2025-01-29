@@ -168,7 +168,7 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
         else:
             return "%s <%s>" % (display_name, address)
     else:
-        if compact and checkValidPhoneNumber(user):
+        if format == 'compact' and checkValidPhoneNumber(user):
             return user
         else:
             return address
