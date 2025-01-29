@@ -42,7 +42,7 @@ class ContactCell(NSTextFieldCell):
 
     style = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
     style.setLineBreakMode_(NSLineBreakByTruncatingTail)
-    groupAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.labelColor(), NSForegroundColorAttributeName, NSFont.boldSystemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName)
+    groupAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.grayColor(), NSForegroundColorAttributeName, NSFont.boldSystemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName)
     firstLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.labelColor(), NSForegroundColorAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
     firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
     secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)

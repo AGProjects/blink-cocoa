@@ -78,7 +78,7 @@ class FancyTabItem(NSView):
         paraStyle.setAlignment_(NSCenterTextAlignment)
 
         self.badgeAttributes = NSMutableDictionary.dictionaryWithObjectsAndKeys_(NSFont.boldSystemFontOfSize_(8),
-                                NSFontAttributeName, NSColor.textBackgroundColor(), NSForegroundColorAttributeName,
+                                NSFontAttributeName, NSColor.darkGrayColor(), NSForegroundColorAttributeName,
                                 paraStyle, NSParagraphStyleAttributeName)
 
     def close(self):
@@ -154,7 +154,7 @@ class FancyTabItem(NSView):
             if self == self.switcher.activeItem():
                 NSColor.labelColor().set()
             else:
-                NSColor.textBackgroundColor().set()
+                NSColor.darkGrayColor().set()
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(r, 5, 5)
             path.fill()
 
@@ -188,7 +188,7 @@ class FancyTabItem(NSView):
             shadow = NSShadow.alloc().init()
             shadow.setShadowOffset_(NSMakeSize(0, -1))
             if self == self.switcher.activeItem():
-                textColor = NSColor.textBackgroundColor()
+                textColor = NSColor.darkGrayColor()
             else:
                 textColor = NSColor.labelColor()
             para = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
