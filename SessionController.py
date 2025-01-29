@@ -1857,10 +1857,12 @@ class SessionController(NSObject):
 
     @property
     def titleShort(self):
-        if self.display_name and self.display_name != 'None' and not self.display_name.startswith('sip:') and not self.display_name.startswith('sips:'):
-            return self.display_name.title()
+        aor = format_identity_to_string(self.remoteIdentity, format='aor')
+        if self.display_name and self.display_name not in ('None', aor) and not self.display_name.startswith('sip:') and not self.display_name.startswith('sips:'):
+            ret = self.display_name
         else:
-            return format_identity_to_string(self.remoteIdentity, format='compact', check_contact=True)
+            ret = format_identity_to_string(self.remoteIdentity, format='compact', check_contact=True)
+        return ret
 
     @objc.python_method
     @run_in_gui_thread
