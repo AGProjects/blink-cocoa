@@ -973,7 +973,7 @@ ABC</string>
                         </connections>
                     </button>
                     <button toolTip="Click para desplegar menú de grupos o agregar contactos" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1689" userLabel="Navigate to Group Button">
-                        <rect key="frame" x="13" y="6" width="29" height="25"/>
+                        <rect key="frame" x="13" y="4" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Click para desplegar menú de grupos o agregar contactos" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -986,9 +986,9 @@ ABC</string>
                         </connections>
                     </button>
                     <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="457" userLabel="Start Session Buttons">
-                        <rect key="frame" x="74" y="6" width="126" height="25"/>
+                        <rect key="frame" x="50" y="-3" width="175" height="40"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="458" userLabel="Session Types ">
+                        <segmentedCell key="cell" controlSize="large" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="458" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
                             <segments>
                                 <segment toolTip="Comenzar Llamada de Audio" image="audio" width="30">
@@ -1012,7 +1012,7 @@ ABC</string>
                         </connections>
                     </segmentedControl>
                     <button toolTip="Modo Silencioso" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="589" userLabel="Silence Alerts Button">
-                        <rect key="frame" x="232" y="6" width="30" height="25"/>
+                        <rect key="frame" x="232" y="4" width="30" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Modo Silencioso" bezelStyle="texturedRounded" image="bellon" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" inset="2" id="590">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
@@ -1025,9 +1025,9 @@ ABC</string>
                         </connections>
                     </button>
                     <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ehj-vS-brq" userLabel="Start Session Buttons">
-                        <rect key="frame" x="90" y="6" width="95" height="25"/>
+                        <rect key="frame" x="71" y="-3" width="134" height="40"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <segmentedCell key="cell" state="on" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="momentary" id="w3P-Yo-vMJ" userLabel="Session Types ">
+                        <segmentedCell key="cell" controlSize="large" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="w3P-Yo-vMJ" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
                             <segments>
                                 <segment toolTip="Comenzar Llamada de Audio" image="audio" width="30">
