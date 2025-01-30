@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>January 27th, 2025</string>
+	<string>January 30th, 2025</string>
 	<key>BrandingFile</key>
 	<string>branding-pro</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -48,7 +48,7 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.business</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.11.0</string>
+	<string>11.3.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Required for VoIP calls</string>
 	<key>NSContactsUsageDescription</key>
