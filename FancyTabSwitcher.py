@@ -152,7 +152,7 @@ class FancyTabItem(NSView):
             path.fill()
         else:
             if self == self.switcher.activeItem():
-                NSColor.labelColor().set()
+                NSColor.whiteColor().set()
             else:
                 NSColor.darkGrayColor().set()
             path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(r, 5, 5)
@@ -190,10 +190,11 @@ class FancyTabItem(NSView):
             if self == self.switcher.activeItem():
                 textColor = NSColor.darkGrayColor()
             else:
-                textColor = NSColor.labelColor()
+                textColor = NSColor.whiteColor()
             para = NSParagraphStyle.defaultParagraphStyle().mutableCopy()
             para.setLineBreakMode_(NSLineBreakByTruncatingTail)
             para.setAlignment_(NSCenterTextAlignment)
+
             attribs = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(11), NSFontAttributeName,
                             para, NSParagraphStyleAttributeName, textColor, NSForegroundColorAttributeName)
 
