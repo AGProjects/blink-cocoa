@@ -973,7 +973,7 @@ ABC</string>
                         </connections>
                     </button>
                     <button toolTip="Click para desplegar menú de grupos o agregar contactos" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1689" userLabel="Navigate to Group Button">
-                        <rect key="frame" x="13" y="4" width="29" height="25"/>
+                        <rect key="frame" x="10" y="6" width="29" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="roundTextured" alternateTitle="Click para desplegar menú de grupos o agregar contactos" bezelStyle="texturedRounded" image="NSUser" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1690">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
