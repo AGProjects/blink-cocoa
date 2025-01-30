@@ -411,7 +411,7 @@ class AudioSession(NSView):
             
             subviews = self.superview().subviews()
             if subviews.count() > 1:
-                NSColor.greenColor().set()
+                NSColor.redColor().set()
             else:
                 NSColor.grayColor().set()
 
