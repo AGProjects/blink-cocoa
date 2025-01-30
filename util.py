@@ -117,6 +117,8 @@ def format_identity_to_string(identity, check_contact=False, format='aor'):
     transport = 'udp'
 
     display_name = identity.display_name if hasattr(identity, 'display_name') else None
+    if display_name == 'None':
+        display_name = None
     identity = identity if isinstance(identity, (SIPURI, FrozenSIPURI)) else identity.uri;
     user = identity.user.decode() if isinstance(identity.user, bytes) else identity.user
     host = identity.host.decode() if isinstance(identity.host, bytes) else identity.host
