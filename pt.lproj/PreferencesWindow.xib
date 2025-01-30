@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -101,7 +101,7 @@
                                                                     <accessibility description="Habilitar Conta"/>
                                                                 </buttonCell>
                                                             </tableColumn>
-                                                            <tableColumn identifier="name" editable="NO" width="220" minWidth="10" maxWidth="3.4028229999999999e+38" id="64" userLabel="Label">
+                                                            <tableColumn identifier="name" editable="NO" width="194" minWidth="10" maxWidth="3.4028229999999999e+38" id="64" userLabel="Label">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Contas">
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -117,7 +117,7 @@
                                                                     <accessibilityConnection property="title" destination="43" id="312"/>
                                                                 </connections>
                                                             </tableColumn>
-                                                            <tableColumn identifier="status" width="20" minWidth="17" maxWidth="20" id="213">
+                                                            <tableColumn identifier="status" width="17" minWidth="17" maxWidth="20" id="213">
                                                                 <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                                     <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -392,7 +392,6 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="255"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="259"/>
                     <toolbarItem implicitItemIdentifier="AD8D94E1-3CF8-437D-A1C6-C26E571B8712" explicitItemIdentifier="audio" label="Áudio" paletteLabel="Áudio" image="audio" autovalidates="NO" selectable="YES" id="263">
                         <size key="minSize" width="22" height="22"/>
                         <size key="maxSize" width="22" height="22"/>
@@ -467,7 +466,6 @@
                 </allowedToolbarItems>
                 <defaultToolbarItems>
                     <toolbarItem reference="251"/>
-                    <toolbarItem reference="259"/>
                     <toolbarItem reference="286"/>
                     <toolbarItem reference="265"/>
                     <toolbarItem reference="263"/>
@@ -492,9 +490,9 @@
         <userDefaultsController representsSharedInstance="YES" id="225"/>
     </objects>
     <resources>
-        <image name="NSAddTemplate" width="18" height="17"/>
+        <image name="NSAddTemplate" width="14" height="13"/>
         <image name="NSAdvanced" width="32" height="32"/>
-        <image name="NSRemoveTemplate" width="18" height="5"/>
+        <image name="NSRemoveTemplate" width="14" height="4"/>
         <image name="NSUserGroup" width="32" height="32"/>
         <image name="alerts" width="102.40000152587891" height="102.40000152587891"/>
         <image name="answering_machine" width="177" height="150"/>
