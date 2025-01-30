@@ -1185,7 +1185,7 @@ class ContactWindowController(NSWindowController):
         chat_privacy = self.historyMenu.itemWithTag_(101)
         chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
 
-        self.get_session_history_entries(10)
+        self.get_session_history_entries(20)
 
     @objc.python_method
     def getAccountWitDialPlan(self, uri):
@@ -3540,39 +3540,43 @@ class ContactWindowController(NSWindowController):
 
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
 
-            display_name = result.display_name or _display_name
-            display_name = sip_prefix_pattern.sub("", display_name)
+            try:
+                existing_entry = next(e for e in entries['incoming'] if e['account'] == result.local_uri and e['target_uri'] == target_uri)
+            except StopIteration:
+                display_name = result.display_name or _display_name
+                display_name = sip_prefix_pattern.sub("", display_name)
 
-            if target_uri == last_recipient:
-                continue
+                if target_uri == last_recipient:
+                    continue
 
-            last_recipient = target_uri
-            contact = self.getFirstContactMatchingURI(target_uri)
-            if contact and contact.name and contact.name != contact.uri:
-                display_name = contact.name
+                last_recipient = target_uri
+                contact = self.getFirstContactMatchingURI(target_uri)
+                if contact and contact.name and contact.name != contact.uri:
+                    display_name = contact.name
 
-            if display_name == target_uri:
-                fancy_uri = target_uri
-            elif display_name:
-                if result.local_uri == 'bonjour@local':
-                    fancy_uri = display_name
-                else:
-                    fancy_uri = '%s <%s>' % (display_name, target_uri)
+                if display_name == target_uri:
+                    fancy_uri = target_uri
+                elif display_name:
+                    if result.local_uri == 'bonjour@local':
+                        fancy_uri = display_name
+                    else:
+                        fancy_uri = '%s <%s>' % (display_name, target_uri)
 
-            item = {
-                "streams": result.media_types.split(","),
-                "account": result.local_uri,
-                "remote_party": fancy_uri,
-                "display_name": display_name,
-                "target_uri": target_uri,
-                "status": result.status,
-                "failure_reason": result.failure_reason,
-                "start_time": format_date(utc_to_local(result.start_time)),
-                "duration": result.end_time - result.start_time,
-                "focus": result.remote_focus,
-                "participants": result.participants.split(",") if result.participants else []
-            }
-            entries['incoming'].append(item)
+                item = {
+                    "streams": result.media_types.split(","),
+                    "account": result.local_uri,
+                    "remote_party": fancy_uri,
+                    "display_name": display_name,
+                    "target_uri": target_uri,
+                    "status": result.status,
+                    "failure_reason": result.failure_reason,
+                    "start_time": format_date(utc_to_local(result.start_time)),
+                    "duration": result.end_time - result.start_time,
+                    "focus": result.remote_focus,
+                    "participants": result.participants.split(",") if result.participants else []
+                }
+
+                entries['incoming'].append(item)
 
         results = session_history.get_entries(direction='outgoing', count=count)
 
@@ -3580,39 +3584,45 @@ class ContactWindowController(NSWindowController):
         for result in results:
             if not result or not result.remote_uri or '@' not in result.remote_uri:
                 continue
+
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            display_name = result.display_name or _display_name
-            display_name = sip_prefix_pattern.sub("", display_name)
+            
+            try:
+                existing_entry = next(e for e in entries['outgoing'] if e['account'] == result.local_uri and e['target_uri'] == target_uri)
+            except StopIteration:
+                display_name = result.display_name or _display_name
+                display_name = sip_prefix_pattern.sub("", display_name)
 
-            if target_uri == last_recipient:
-                continue
-            last_recipient = target_uri
-            contact = self.getFirstContactMatchingURI(target_uri)
-            if contact and contact.name and contact.name != target_uri:
-                display_name = contact.name
+                if target_uri == last_recipient:
+                    continue
+                last_recipient = target_uri
+                contact = self.getFirstContactMatchingURI(target_uri)
+                if contact and contact.name and contact.name != target_uri:
+                    display_name = contact.name
 
-            if display_name == target_uri:
-                fancy_uri = target_uri
-            elif display_name:
-                if result.local_uri == 'bonjour@local':
-                    fancy_uri = display_name
-                else:
-                    fancy_uri = '%s <%s>' % (display_name, target_uri)
+                if display_name == target_uri:
+                    fancy_uri = target_uri
+                elif display_name:
+                    if result.local_uri == 'bonjour@local':
+                        fancy_uri = display_name
+                    else:
+                        fancy_uri = '%s <%s>' % (display_name, target_uri)
 
-            item = {
-                "streams": result.media_types.split(","),
-                "account": result.local_uri,
-                "remote_party": fancy_uri,
-                "display_name": display_name,
-                "target_uri": target_uri,
-                "status": result.status,
-                "failure_reason": result.failure_reason,
-                "start_time": format_date(utc_to_local(result.start_time)),
-                "duration": result.end_time - result.start_time,
-                "focus": result.remote_focus,
-                "participants": result.participants.split(",") if result.participants else []
-            }
-            entries['outgoing'].append(item)
+                item = {
+                    "streams": result.media_types.split(","),
+                    "account": result.local_uri,
+                    "remote_party": fancy_uri,
+                    "display_name": display_name,
+                    "target_uri": target_uri,
+                    "status": result.status,
+                    "failure_reason": result.failure_reason,
+                    "start_time": format_date(utc_to_local(result.start_time)),
+                    "duration": result.end_time - result.start_time,
+                    "focus": result.remote_focus,
+                    "participants": result.participants.split(",") if result.participants else []
+                }
+
+                entries['outgoing'].append(item)
 
         results = session_history.get_entries(direction='incoming', status='missed', count=count)
 
@@ -3620,39 +3630,44 @@ class ContactWindowController(NSWindowController):
         for result in results:
             if not result or not result.remote_uri or '@' not in result.remote_uri:
                 continue
+
             target_uri, _display_name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            display_name = result.display_name or _display_name
-            display_name = sip_prefix_pattern.sub("", display_name)
 
-            if target_uri == last_recipient:
-                continue
-            last_recipient = target_uri
-            contact = self.getFirstContactMatchingURI(target_uri)
-            if contact and contact.name and contact.name != target_uri:
-                display_name = contact.name
+            try:
+                existing_entry = next(e for e in entries['missed'] if e['account'] == result.local_uri and e['target_uri'] == target_uri)
+            except StopIteration:
+                display_name = result.display_name or _display_name
+                display_name = sip_prefix_pattern.sub("", display_name)
 
-            if display_name == target_uri:
-                fancy_uri = target_uri
-            elif display_name:
-                if result.local_uri == 'bonjour@local':
-                    fancy_uri = display_name
-                else:
-                    fancy_uri = '%s <%s>' % (display_name, target_uri)
+                if target_uri == last_recipient:
+                    continue
+                last_recipient = target_uri
+                contact = self.getFirstContactMatchingURI(target_uri)
+                if contact and contact.name and contact.name != target_uri:
+                    display_name = contact.name
 
-            item = {
-                "streams": result.media_types.split(","),
-                "account": result.local_uri,
-                "remote_party": fancy_uri,
-                "display_name": display_name,
-                "target_uri": target_uri,
-                "status": result.status,
-                "failure_reason": result.failure_reason,
-                "start_time": format_date(utc_to_local(result.start_time)),
-                "duration": result.end_time - result.start_time,
-                "focus": result.remote_focus,
-                "participants": result.participants.split(",") if result.participants else []
-            }
-            entries['missed'].append(item)
+                if display_name == target_uri:
+                    fancy_uri = target_uri
+                elif display_name:
+                    if result.local_uri == 'bonjour@local':
+                        fancy_uri = display_name
+                    else:
+                        fancy_uri = '%s <%s>' % (display_name, target_uri)
+
+                item = {
+                    "streams": result.media_types.split(","),
+                    "account": result.local_uri,
+                    "remote_party": fancy_uri,
+                    "display_name": display_name,
+                    "target_uri": target_uri,
+                    "status": result.status,
+                    "failure_reason": result.failure_reason,
+                    "start_time": format_date(utc_to_local(result.start_time)),
+                    "duration": result.end_time - result.start_time,
+                    "focus": result.remote_focus,
+                    "participants": result.participants.split(",") if result.participants else []
+                }
+                entries['missed'].append(item)
 
         self.renderHistoryEntriesInHistoryMenu(entries)
         self.renderHistoryEntriesInStatusBarMenu(entries)

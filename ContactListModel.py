@@ -347,11 +347,12 @@ class BlinkContact(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, uri, uri_type=None, name=None, icon=None):
+    def __init__(self, uri, uri_type=None, name=None, icon=None, start_time=None):
         self.id = None
         self.uris = [ContactURI(uri=uri, type=format_uri_type(uri_type))]
         self.name = name or self.uri
         self.detail = self.uri
+        self.start_time = start_time
         if icon is not None:
             self.avatar = Avatar(icon)
         else:
@@ -1948,6 +1949,10 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
         self.refresh_contacts(results)
 
     @objc.python_method
+    def sortContacts(self):
+        self.contacts.sort(key=lambda item: getattr(item, 'start_time'), reverse=True)
+
+    @objc.python_method
     @run_in_green_thread
     def load_contacts(self, force_reload=False):
         if self.days is None:
@@ -1960,113 +1965,75 @@ class HistoryBlinkGroup(VirtualBlinkGroup):
     @objc.python_method
     @run_in_gui_thread
     def refresh_contacts(self, results):
-        for blink_contact in list(self.contacts):
-            self.contacts.remove(blink_contact)
-            blink_contact.destroy()
-        seen = {}
-        contacts = []
-        skip_target = set()
-        session_ids = {}
-        last_missed_call_start_time = {}
         
+        must_refresh = False
+
         for result in results:
             if result is None or result.remote_uri is None:
                 continue
 
-            target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
-            getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
-            contact = getFirstContactMatchingURI(target_uri)
-            k = contact if contact is not None else result.remote_uri
-            if isinstance(self, MissedCallsBlinkGroup):
-                if result.direction == 'incoming':
-                    if result.status == 'missed':
-                        if k not in last_missed_call_start_time:
-                            last_missed_call_start_time[target_uri] = result.start_time
+            if self.type == 'missed' and result.status != 'missed':
+                continue
 
-                    # skip missed calls that happened before any successful incoming call
-                    if result.duration > 0 or result.am_filename != '':
-                        if target_uri not in last_missed_call_start_time:
-                            if contact:
-                                for uri in contact.uris:
-                                    if uri is None:
-                                        continue
-                                    skip_target.add(uri.uri)
-                            skip_target.add(target_uri)
-                            continue
+            if self.type == 'outgoing' and result.direction != 'outgoing':
+                continue
 
-                # skip missed calls that happened before any successful outgoing call
-                elif result.direction == 'outgoing' and result.duration > 0:
-                    if target_uri not in last_missed_call_start_time:
-                        if contact:
-                            for uri in contact.uris:
-                                if uri is None:
-                                    continue
-                                skip_target.add(uri.uri)
-                        skip_target.add(target_uri)
-                        continue
-
-                if target_uri in skip_target:
-                    continue
-
-                if result.status != 'missed':
-                    continue
+            if self.type == 'incoming' and result.direction != 'incoming':
+                continue
 
             try:
-                current_session_ids = session_ids[k]
-            except KeyError:
-                session_ids[k]=[result.id]
-            else:
-                current_session_ids.append(result.id)
+                blink_contact = next(c for c in self.contacts if result.remote_uri == c.uri)
+            except StopIteration:
+                must_refresh = True
+                target_uri, name, full_uri, fancy_uri = sipuri_components_from_string(result.remote_uri)
 
-            if k in seen:
-                seen[k] += 1
-            else:
-                seen[k] = 1
+                getFirstContactMatchingURI = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI
+                contact = getFirstContactMatchingURI(target_uri)
+
                 if contact:
                     name = contact.name
                     icon = contact.avatar.icon
                 else:
                     icon = None
+
                 name = NSLocalizedString("Anonymous", "Contact detail") if is_anonymous(target_uri) else name
-                blink_contact = HistoryBlinkContact(result.remote_uri, icon=icon, name=name)
+                #print('--- adding %s history contact %s with uri = %s and status %s' % (self.type, name, result.remote_uri, result.duration))
+                blink_contact = HistoryBlinkContact(result.remote_uri, icon=icon, name=name, start_time=result.start_time)
                 blink_contact.answering_machine_filenames = set()
+
                 if len(result.am_filename):
                     blink_contact.answering_machine_filenames.add(result.am_filename)
+
                 if self.type == "missed":
                     blink_contact.detail = NSLocalizedString("Missed call", "Contact detail") + " " + format_date(utc_to_local(result.start_time))
                 elif self.type == "incoming":
                     blink_contact.detail = NSLocalizedString("Incoming call", "Contact detail")  + " " + format_date(utc_to_local(result.start_time))
                 elif self.type == "outgoing":
                     blink_contact.detail = NSLocalizedString("Outgoing call", "Contact detail") + " " + format_date(utc_to_local(result.start_time))
+
                 blink_contact.contact = contact
-                contacts.append(blink_contact)
+                self.contacts.append(blink_contact)
+                must_refresh = True
 
-        for blink_contact in contacts:
-            k = blink_contact.contact if blink_contact.contact is not None else blink_contact.uri
-            try:
-                blink_contact.session_ids = session_ids[k]
-            except KeyError:
-                pass
-            try:
-                if seen[k] > 1:
-                    if seen[k] - 2:
-                        new_detail = blink_contact.detail + NSLocalizedString(" and %d other times", "Label") % seen[k]
-                    else:
-                        new_detail = blink_contact.detail + NSLocalizedString(" and one other time", "Label")
-                    blink_contact.detail = new_detail
+            else:
+                if len(result.am_filename):
+                    blink_contact.answering_machine_filenames.add(result.am_filename)
 
-            except KeyError:
-                pass
+                if self.type == "missed":
+                    detail = NSLocalizedString("Missed call", "Contact detail") + " " + format_date(utc_to_local(result.start_time))
+                elif self.type == "incoming":
+                    detail = NSLocalizedString("Incoming call", "Contact detail")  + " " + format_date(utc_to_local(result.start_time))
+                elif self.type == "outgoing":
+                    detail = NSLocalizedString("Outgoing call", "Contact detail") + " " + format_date(utc_to_local(result.start_time))
+                    
+                if result.start_time > blink_contact.start_time:
+                    must_refresh = True
+                    print('Update Blink history %s contact %s detail: %s' % (self.type, blink_contact.uri, detail))
+                    blink_contact.start_time = result.start_time
 
-            if len(blink_contact.answering_machine_filenames):
-                v1 = NSLocalizedString("Voice Message", "Contact detail")
-                v2 = NSLocalizedString("Voice Messages", "Contact detail")
-                new_detail = blink_contact.detail + ' (%d %s)' % (len(blink_contact.answering_machine_filenames), (v2 if len(blink_contact.answering_machine_filenames) > 1 else v1))
-                blink_contact.detail = new_detail
-
-            self.contacts.append(blink_contact)
-
-        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        if must_refresh:
+            self.sortContacts()
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
 
 
 class MissedCallsBlinkGroup(HistoryBlinkGroup):
@@ -2077,7 +2044,7 @@ class MissedCallsBlinkGroup(HistoryBlinkGroup):
 
     @objc.python_method
     def get_history_entries(self):
-        return SessionHistory().get_entries(hidden=0, after_date=self.after_date, count=200)
+        return SessionHistory().get_entries(hidden=0, after_date=self.after_date, count=50)
 
 
 class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
@@ -2088,7 +2055,7 @@ class OutgoingCallsBlinkGroup(HistoryBlinkGroup):
 
     @objc.python_method
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='outgoing', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
+        return SessionHistory().get_entries(direction='outgoing', remote_focus="0", hidden=0, after_date=self.after_date, count=50)
 
 
 class IncomingCallsBlinkGroup(HistoryBlinkGroup):
@@ -2099,7 +2066,7 @@ class IncomingCallsBlinkGroup(HistoryBlinkGroup):
 
     @objc.python_method
     def get_history_entries(self):
-        return SessionHistory().get_entries(direction='incoming', status='completed', remote_focus="0", hidden=0, after_date=self.after_date, count=100)
+        return SessionHistory().get_entries(direction='incoming', status='completed', remote_focus="0", hidden=0, after_date=self.after_date, count=50)
 
 
 class VoicemailBlinkGroup(VirtualBlinkGroup):
