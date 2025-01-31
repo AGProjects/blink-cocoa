@@ -6,9 +6,19 @@
 # This script must be run inside ./Distribution folder
 
 # This script assumes packages are installed using pip3 in user folder 
+
+pip3 install --user pyobjc
 site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
 
-sudo rm -r Frameworks/Python.framework
+if [ ! -d Resources ]; then
+    mkdir Resources
+    mkdir Resources/lib
+fi
+
+if [ -d Frameworks/Python.framework ]; then
+    sudo rm -r Frameworks/Python.framework
+fi
+
 sudo cp -a /Library/Frameworks/Python.framework Frameworks/
 sudo chown -R adigeo Frameworks/Python.framework 
 sudo chmod -R u+rwX Frameworks/Python.framework 
@@ -89,7 +99,7 @@ done
 
 
 # Copy lxml
-# LXML must be built from sctat as the pip version is too old
+# LXML must be built from scratch as the pip version is too old
 # git clone https://github.com/lxml
 #python3 setup.py build --static-deps
 #python3 setup.py install

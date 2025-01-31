@@ -5,7 +5,7 @@ new_path="@executable_path/../Frameworks/"
 
 for library in $@; do
   new_basename=$(basename $library)
-  echo $new_basename
+  #echo $new_basename
   install_name_tool -id $new_path$new_basename $library
   dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
   for dependency in $dependencies; do

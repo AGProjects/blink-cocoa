@@ -19,10 +19,12 @@ Dependencies must be installed as follwos:
 - Distribution/Resources/lib
      -> Contain all Python packages
 
-Download and install Python Framework using build_scripts/copy_python.sh
-script.
+Download and install Python Framework and Objective C using script:
 
-Copy all related C dependencies installed using Brew to Distribution/Frameworks/
+cd Distribution
+../build_scripts/copy_python.sh
+
+Copy all necessary dynamic libraries to Distribution/Frameworks/
 
 Python.framework          libhogweed.6.dylib        
 Sparkle.framework         libidn2.0.dylib           
@@ -52,6 +54,8 @@ libssl.1.1.dylib          libswresample.3.dylib
 
 # Find and copy all their dependencies:
 
+../build_scripts/copy_dynamic_libs.sh
+
 cd Distribution/Frameworks/
 for j in *.dylib; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .; done; done
 for j in *.so; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .; done; done
@@ -59,9 +63,6 @@ for j in *.so; do for i in `ldd $j |grep local|cut -f 1 -d " "`; do sudo cp $i .
 Change the relative path inside all libraries to point to @executable_path/../Frameworks/
 
 ./build_scripts/change_lib_names.sh Distribution/Frameworks/*.dylib
-
-Download and install Python Framework using this script inside Distribution
-folder: copy_python.sh
 
 Download and install python3-sipsimple and its dependencies:
 
