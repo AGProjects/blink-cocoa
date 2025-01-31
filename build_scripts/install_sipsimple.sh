@@ -19,7 +19,7 @@ fi
 echo "Installing python dependencies..."
 
 pip3 install --upgrade pip
-pip3 install --user cython==0.29.37 dnspython lxml twisted python-dateutil greenlet zope.interface requests gmpy2 wheel gevent
+pip3 install --user cython==0.29.37 dnspython lxml twisted python-dateutil greenlet zope.interface requests gmpy2 wheel gevent pytz
 
 RESULT=$?
 if [ $RESULT -ne 0 ]; then
