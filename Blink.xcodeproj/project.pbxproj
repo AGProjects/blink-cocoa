@@ -48,6 +48,12 @@
 		1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
 		1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
+		1F1ED3472D50046200C5ABE1 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3452D50046200C5ABE1 /* belloff.png */; };
+		1F1ED3482D50046200C5ABE1 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3452D50046200C5ABE1 /* belloff.png */; };
+		1F1ED3492D50046200C5ABE1 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3452D50046200C5ABE1 /* belloff.png */; };
+		1F1ED34A2D50046200C5ABE1 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3462D50046200C5ABE1 /* bellon.png */; };
+		1F1ED34B2D50046200C5ABE1 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3462D50046200C5ABE1 /* bellon.png */; };
+		1F1ED34C2D50046200C5ABE1 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3462D50046200C5ABE1 /* bellon.png */; };
 		1F1F88BE2D481BD9004C701F /* libopenh264.7.dylib in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB461352D46BED100912201 /* libopenh264.7.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1F1FC04812D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
 		1F1FC04912D0FC77007A31A3 /* video.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1FC04712D0FC77007A31A3 /* video.png */; };
@@ -116,8 +122,6 @@
 		1F2272DE12B554F50010A8B2 /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
 		1F2272DF12B554F50010A8B2 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
 		1F2272E112B554F50010A8B2 /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
-		1F2272E212B554F50010A8B2 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
-		1F2272E312B554F50010A8B2 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
 		1F2272E412B554F50010A8B2 /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
 		1F2272E612B554F50010A8B2 /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
 		1F2272E712B554F50010A8B2 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
@@ -335,8 +339,6 @@
 		1F35CFBE17894FFF00C6FE38 /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
 		1F35CFBF17894FFF00C6FE38 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
 		1F35CFC017894FFF00C6FE38 /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
-		1F35CFC117894FFF00C6FE38 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
-		1F35CFC217894FFF00C6FE38 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
 		1F35CFC317894FFF00C6FE38 /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
 		1F35CFC417894FFF00C6FE38 /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
 		1F35CFC517894FFF00C6FE38 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
@@ -1150,8 +1152,6 @@
 		2BEFC12E0FD0BE4700447EFB /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
 		2BEFC1490FD0C73400447EFB /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
 		2BF42B54107D7DFF00F04A6C /* hangup.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42B53107D7DFF00F04A6C /* hangup.png */; };
-		2BF42BA4107D8B4D00F04A6C /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA2107D8B4D00F04A6C /* belloff.png */; };
-		2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BF42BA3107D8B4D00F04A6C /* bellon.png */; };
 		2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF430B01082EEFE00F04A6C /* AudioController.py */; };
 		2BF432B61084187100F04A6C /* MediaStream.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BF432B51084187100F04A6C /* MediaStream.py */; };
 		2BFB33E4101674BD002D79FB /* muted.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E2101674BD002D79FB /* muted.png */; };
@@ -1669,6 +1669,8 @@
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
+		1F1ED3452D50046200C5ABE1 /* belloff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = belloff.png; path = icons/belloff.png; sourceTree = "<group>"; };
+		1F1ED3462D50046200C5ABE1 /* bellon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bellon.png; path = icons/bellon.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
 		1F1FD58D292418AB008C2D05 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
 		1F21A22A19C60254006866C8 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/VideoWindow.xib; sourceTree = "<group>"; };
@@ -2247,8 +2249,6 @@
 		2BEFC12D0FD0BE4700447EFB /* SessionController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionController.py; sourceTree = "<group>"; };
 		2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HorizontalBoxView.py; sourceTree = "<group>"; };
 		2BF42B53107D7DFF00F04A6C /* hangup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup.png; path = icons/hangup.png; sourceTree = "<group>"; };
-		2BF42BA2107D8B4D00F04A6C /* belloff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = belloff.png; path = icons/belloff.png; sourceTree = "<group>"; };
-		2BF42BA3107D8B4D00F04A6C /* bellon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bellon.png; path = icons/bellon.png; sourceTree = "<group>"; };
 		2BF430B01082EEFE00F04A6C /* AudioController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioController.py; sourceTree = "<group>"; };
 		2BF432B51084187100F04A6C /* MediaStream.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MediaStream.py; sourceTree = "<group>"; };
 		2BFB33E2101674BD002D79FB /* muted.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = muted.png; path = icons/muted.png; sourceTree = "<group>"; };
@@ -2784,6 +2784,8 @@
 				1FC9FE9514378A450056B3A8 /* shrinktofit.png */,
 				1FFB38D6143209E0003B29ED /* display_red_16.png */,
 				1FFB38691432026D003B29ED /* display_red.png */,
+				1F1ED3452D50046200C5ABE1 /* belloff.png */,
+				1F1ED3462D50046200C5ABE1 /* bellon.png */,
 				1F9406BE14307D180053D741 /* display_16.png */,
 				1FD99702142DEFD100EE171F /* stop_chat.png */,
 				1FD996FD142DEFC400EE171F /* start_chat.png */,
@@ -2823,8 +2825,6 @@
 				2BD014EB10DB239B00D27A92 /* smiley_off.png */,
 				2BD014EC10DB239B00D27A92 /* smiley_on.png */,
 				2B1FC09C10B104F8004C7355 /* pencil.png */,
-				2BF42BA2107D8B4D00F04A6C /* belloff.png */,
-				2BF42BA3107D8B4D00F04A6C /* bellon.png */,
 				2BF42B53107D7DFF00F04A6C /* hangup.png */,
 				2B0C2369107BB2FA008266C7 /* incoming_file.png */,
 				2B0C236A107BB2FA008266C7 /* upfile.png */,
@@ -3374,8 +3374,6 @@
 				1F2272DE12B554F50010A8B2 /* incoming_file.png in Resources */,
 				1F2272DF12B554F50010A8B2 /* upfile.png in Resources */,
 				1F2272E112B554F50010A8B2 /* hangup.png in Resources */,
-				1F2272E212B554F50010A8B2 /* belloff.png in Resources */,
-				1F2272E312B554F50010A8B2 /* bellon.png in Resources */,
 				1F2276521A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1F2272E412B554F50010A8B2 /* AudioController.py in Resources */,
 				1F2272E612B554F50010A8B2 /* MediaStream.py in Resources */,
@@ -3388,6 +3386,7 @@
 				1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1F2272EC12B554F50010A8B2 /* dtmf_2_tone.wav in Resources */,
 				1F2272ED12B554F50010A8B2 /* dtmf_3_tone.wav in Resources */,
+				1F1ED3482D50046200C5ABE1 /* belloff.png in Resources */,
 				1F2272EE12B554F50010A8B2 /* dtmf_4_tone.wav in Resources */,
 				1F2272EF12B554F50010A8B2 /* dtmf_5_tone.wav in Resources */,
 				1F2272F012B554F50010A8B2 /* dtmf_6_tone.wav in Resources */,
@@ -3423,6 +3422,7 @@
 				1F22730A12B554F50010A8B2 /* smiley_on.png in Resources */,
 				1F22730C12B554F50010A8B2 /* SMSWindowManager.py in Resources */,
 				1F22730D12B554F50010A8B2 /* HistoryViewer.py in Resources */,
+				1F1ED34B2D50046200C5ABE1 /* bellon.png in Resources */,
 				1F22730E12B554F50010A8B2 /* HistoryViewer.xib in Resources */,
 				1F7EAC6218E0FA6500CA7B86 /* paused-red.png in Resources */,
 				1F22730F12B554F50010A8B2 /* SoundRecorder.xib in Resources */,
@@ -3651,8 +3651,6 @@
 				1F35CFBE17894FFF00C6FE38 /* incoming_file.png in Resources */,
 				1F35CFBF17894FFF00C6FE38 /* upfile.png in Resources */,
 				1F35CFC017894FFF00C6FE38 /* hangup.png in Resources */,
-				1F35CFC117894FFF00C6FE38 /* belloff.png in Resources */,
-				1F35CFC217894FFF00C6FE38 /* bellon.png in Resources */,
 				1F35CFC317894FFF00C6FE38 /* AudioController.py in Resources */,
 				1F35CFC417894FFF00C6FE38 /* MediaStream.py in Resources */,
 				1F35CFC517894FFF00C6FE38 /* AccountSettings.py in Resources */,
@@ -3676,6 +3674,7 @@
 				1FC38F05192234E1007B0340 /* layers.png in Resources */,
 				1F35CFD717894FFF00C6FE38 /* dtmf_star_tone.wav in Resources */,
 				1F35CFD817894FFF00C6FE38 /* hangup_tone.wav in Resources */,
+				1F1ED3492D50046200C5ABE1 /* belloff.png in Resources */,
 				1F35CFD917894FFF00C6FE38 /* hold_tone.wav in Resources */,
 				1F35CFDA17894FFF00C6FE38 /* ring_outbound2.wav in Resources */,
 				1F35CFDB17894FFF00C6FE38 /* ring_tone.wav in Resources */,
@@ -3778,6 +3777,7 @@
 				1F2276541A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
 				1F35D02F17894FFF00C6FE38 /* display_16.png in Resources */,
 				1F35D03017894FFF00C6FE38 /* display_red.png in Resources */,
+				1F1ED34C2D50046200C5ABE1 /* bellon.png in Resources */,
 				1F35D03117894FFF00C6FE38 /* display_red_16.png in Resources */,
 				1F35D03217894FFF00C6FE38 /* shrinktofit.png in Resources */,
 				1F35D03317894FFF00C6FE38 /* shrinktofit-pressed.png in Resources */,
@@ -3939,8 +3939,6 @@
 				1F774C6719CB169800240DC1 /* video-active.png in Resources */,
 				2BF42B54107D7DFF00F04A6C /* hangup.png in Resources */,
 				1F2276511A823D6E00CA9A73 /* ZRTPAuthentication.xib in Resources */,
-				2BF42BA4107D8B4D00F04A6C /* belloff.png in Resources */,
-				2BF42BA5107D8B4D00F04A6C /* bellon.png in Resources */,
 				2BF430B11082EEFE00F04A6C /* AudioController.py in Resources */,
 				2BF432B61084187100F04A6C /* MediaStream.py in Resources */,
 				2B01284A1093922A009B2112 /* AccountSettings.py in Resources */,
@@ -3950,6 +3948,7 @@
 				1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1FB9B11A1095BFF500284E18 /* dtmf_0_tone.wav in Resources */,
 				1FB9B11B1095BFF500284E18 /* dtmf_1_tone.wav in Resources */,
+				1F1ED3472D50046200C5ABE1 /* belloff.png in Resources */,
 				1FB9B11C1095BFF500284E18 /* dtmf_2_tone.wav in Resources */,
 				1FB9B11D1095BFF500284E18 /* dtmf_3_tone.wav in Resources */,
 				1FB9B11E1095BFF500284E18 /* dtmf_4_tone.wav in Resources */,
@@ -3985,6 +3984,7 @@
 				1F08DB16193DEDB200187373 /* offline.aif in Resources */,
 				2B0CE73710CDEF1700325F30 /* ChatViewController.py in Resources */,
 				2BD011E210D8198400D27A92 /* ChatView.html in Resources */,
+				1F1ED34A2D50046200C5ABE1 /* bellon.png in Resources */,
 				2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */,
 				2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */,
 				1FDDE5FB10E9851800B03A52 /* SMSWindowManager.py in Resources */,

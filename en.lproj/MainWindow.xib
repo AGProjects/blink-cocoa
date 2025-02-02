@@ -1016,7 +1016,7 @@ ABC</string>
                     <button toolTip="Disable Ringtones (Silent mode)" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="589" userLabel="Silence Alerts Button">
                         <rect key="frame" x="232" y="4" width="30" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="roundTextured" alternateTitle="Silent Mode" bezelStyle="texturedRounded" image="bellon" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" inset="2" id="590">
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Silent Mode" bezelStyle="texturedRounded" image="bell2" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="590">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -1545,8 +1545,8 @@ ABC</string>
         <image name="NSUser" width="32" height="32"/>
         <image name="audio" width="240" height="240"/>
         <image name="bell" width="14" height="12"/>
+        <image name="bell2" width="511" height="511"/>
         <image name="belloff" width="18" height="18"/>
-        <image name="bellon" width="18" height="18"/>
         <image name="display" width="32" height="32"/>
         <image name="mic" width="15" height="19"/>
         <image name="mute" width="24" height="24"/>
