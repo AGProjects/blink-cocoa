@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -37,9 +36,9 @@
                     </connections>
                 </imageView>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="31">
-                    <rect key="frame" x="4" y="6" width="171" height="14"/>
+                    <rect key="frame" x="4" y="6" width="145" height="14"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Established" id="34">
+                    <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="Established" id="34">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -50,12 +49,12 @@
                     </connections>
                 </textField>
                 <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="71" userLabel="Session Control Buttons">
-                    <rect key="frame" x="173" y="3" width="89" height="20"/>
+                    <rect key="frame" x="173" y="3" width="89" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="72">
-                        <font key="font" metaFont="smallSystem"/>
+                    <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="72">
+                        <font key="font" metaFont="system"/>
                         <segments>
-                            <segment toolTip="Mute" image="mute" width="20" tag="3"/>
+                            <segment toolTip="Mute" image="mute" imageScaling="proportionallyUpOrDown" width="20" tag="3"/>
                             <segment toolTip="Pause" image="pause" width="20"/>
                             <segment toolTip="Record" image="record" width="20" tag="1"/>
                             <segment toolTip="Hangup" image="hangup" width="20" tag="2"/>
@@ -64,34 +63,6 @@
                     <accessibility description="Session Control Buttons"/>
                     <connections>
                         <action selector="userClickedSegmentButton:" target="-2" id="74"/>
-                    </connections>
-                </segmentedControl>
-                <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="198" userLabel="Session Control Buttons">
-                    <rect key="frame" x="153" y="3" width="110" height="20"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <segmentedCell key="cell" controlSize="small" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="199">
-                        <font key="font" metaFont="smallSystem"/>
-                        <segments>
-                            <segment toolTip="Encryption" image="unlocked-darkgray" imageScaling="proportionallyUpOrDown" width="20" tag="4">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Transfer" image="transfer" width="20">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Pause" image="pause" width="20" tag="1">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Record" image="record" width="20" tag="1">
-                                <nil key="label"/>
-                            </segment>
-                            <segment toolTip="Hangup" image="hangup" width="20" tag="1">
-                                <nil key="label"/>
-                            </segment>
-                        </segments>
-                    </segmentedCell>
-                    <accessibility description="Session Control Buttons"/>
-                    <connections>
-                        <action selector="userClickedSegmentButton:" target="-2" id="200"/>
                     </connections>
                 </segmentedControl>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="26">
@@ -154,11 +125,39 @@
                         <action selector="userClickedSessionInfoButton:" target="-2" id="169"/>
                     </connections>
                 </button>
+                <segmentedControl hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="198" userLabel="Session Control Buttons">
+                    <rect key="frame" x="152" y="3" width="110" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="199">
+                        <font key="font" metaFont="system"/>
+                        <segments>
+                            <segment toolTip="Encryption" image="unlocked-darkgray" imageScaling="proportionallyUpOrDown" width="20" tag="4">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Transfer" image="transfer" width="20">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Pause" image="pause" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Record" image="record" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                            <segment toolTip="Hangup" image="hangup" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                        </segments>
+                    </segmentedCell>
+                    <accessibility description="Session Control Buttons"/>
+                    <connections>
+                        <action selector="userClickedSegmentButton:" target="-2" id="200"/>
+                    </connections>
+                </segmentedControl>
             </subviews>
             <connections>
                 <outlet property="menu" destination="53" id="57"/>
             </connections>
-            <point key="canvasLocation" x="140" y="154"/>
+            <point key="canvasLocation" x="139.5" y="153.5"/>
         </customView>
         <menu title="Session" autoenablesItems="NO" id="53">
             <items>
