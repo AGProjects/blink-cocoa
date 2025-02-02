@@ -1355,7 +1355,7 @@ class SMSWindowManagerClass(NSObject):
             return
 
         elif content_type == 'application/sylk-conversation-read':
-            BlinkLogger().log_info('We read the messages on another device')
+            BlinkLogger().log_debug('We read the messages on another device')
  
         elif content_type == 'application/sylk-conversation-remove':
            self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
