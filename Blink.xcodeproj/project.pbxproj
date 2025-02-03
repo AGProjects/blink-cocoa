@@ -48,9 +48,6 @@
 		1F1DCC8D13182C69004DB88B /* begin_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1DCC8B13182C69004DB88B /* begin_arrow.png */; };
 		1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
 		1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1E6DCC12D07FF1003C63FB /* hangup_small.png */; };
-		1F1ED3472D50046200C5ABE1 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3452D50046200C5ABE1 /* belloff.png */; };
-		1F1ED3482D50046200C5ABE1 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3452D50046200C5ABE1 /* belloff.png */; };
-		1F1ED3492D50046200C5ABE1 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3452D50046200C5ABE1 /* belloff.png */; };
 		1F1ED34A2D50046200C5ABE1 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3462D50046200C5ABE1 /* bellon.png */; };
 		1F1ED34B2D50046200C5ABE1 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3462D50046200C5ABE1 /* bellon.png */; };
 		1F1ED34C2D50046200C5ABE1 /* bellon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1ED3462D50046200C5ABE1 /* bellon.png */; };
@@ -713,6 +710,9 @@
 		1F8A7631138A982E007E84C0 /* mute-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8A762F138A982E007E84C0 /* mute-white.png */; };
 		1F8BA97A14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
 		1F8BA97B14B083D20037F11F /* BlinkLite.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 1F8BA97914B083D20037F11F /* BlinkLite.entitlements */; };
+		1F8EA3A02D510C6B00D22473 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8EA39F2D510C6B00D22473 /* belloff.png */; };
+		1F8EA3A12D510C6B00D22473 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8EA39F2D510C6B00D22473 /* belloff.png */; };
+		1F8EA3A22D510C6B00D22473 /* belloff.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F8EA39F2D510C6B00D22473 /* belloff.png */; };
 		1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F9268F514868A82006F2FD8 /* EMKeychainItem.m */; };
 		1F9406C114307D180053D741 /* display_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9406BE14307D180053D741 /* display_16.png */; };
@@ -1669,7 +1669,6 @@
 		1F1DCC8B13182C69004DB88B /* begin_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = begin_arrow.png; path = icons/begin_arrow.png; sourceTree = "<group>"; };
 		1F1E26D91393AD1A00AC2BE7 /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
 		1F1E6DCC12D07FF1003C63FB /* hangup_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hangup_small.png; path = icons/hangup_small.png; sourceTree = "<group>"; };
-		1F1ED3452D50046200C5ABE1 /* belloff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = belloff.png; path = icons/belloff.png; sourceTree = "<group>"; };
 		1F1ED3462D50046200C5ABE1 /* bellon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = bellon.png; path = icons/bellon.png; sourceTree = "<group>"; };
 		1F1FC04712D0FC77007A31A3 /* video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = video.png; path = icons/video.png; sourceTree = "<group>"; };
 		1F1FD58D292418AB008C2D05 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ExportPrivateKeyWindow.xib; sourceTree = "<group>"; };
@@ -1959,6 +1958,7 @@
 		1F8A762F138A982E007E84C0 /* mute-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mute-white.png"; path = "icons/mute-white.png"; sourceTree = "<group>"; };
 		1F8BA97914B083D20037F11F /* BlinkLite.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = BlinkLite.entitlements; sourceTree = "<group>"; };
 		1F8DC9111351D7460034815C /* Info-lite.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-lite.plist"; sourceTree = "<group>"; };
+		1F8EA39F2D510C6B00D22473 /* belloff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = belloff.png; path = icons/belloff.png; sourceTree = "<group>"; };
 		1F9268F414868A82006F2FD8 /* EMKeychainItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EMKeychainItem.h; path = keychain/EMKeychainItem.h; sourceTree = "<group>"; };
 		1F9268F514868A82006F2FD8 /* EMKeychainItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EMKeychainItem.m; path = keychain/EMKeychainItem.m; sourceTree = "<group>"; };
 		1F9406BE14307D180053D741 /* display_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display_16.png; path = icons/display_16.png; sourceTree = "<group>"; };
@@ -2784,7 +2784,7 @@
 				1FC9FE9514378A450056B3A8 /* shrinktofit.png */,
 				1FFB38D6143209E0003B29ED /* display_red_16.png */,
 				1FFB38691432026D003B29ED /* display_red.png */,
-				1F1ED3452D50046200C5ABE1 /* belloff.png */,
+				1F8EA39F2D510C6B00D22473 /* belloff.png */,
 				1F1ED3462D50046200C5ABE1 /* bellon.png */,
 				1F9406BE14307D180053D741 /* display_16.png */,
 				1FD99702142DEFD100EE171F /* stop_chat.png */,
@@ -3386,7 +3386,6 @@
 				1F52D5B319FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1F2272EC12B554F50010A8B2 /* dtmf_2_tone.wav in Resources */,
 				1F2272ED12B554F50010A8B2 /* dtmf_3_tone.wav in Resources */,
-				1F1ED3482D50046200C5ABE1 /* belloff.png in Resources */,
 				1F2272EE12B554F50010A8B2 /* dtmf_4_tone.wav in Resources */,
 				1F2272EF12B554F50010A8B2 /* dtmf_5_tone.wav in Resources */,
 				1F2272F012B554F50010A8B2 /* dtmf_6_tone.wav in Resources */,
@@ -3535,6 +3534,7 @@
 				1FD0F0AB15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 				1FD7AB8B15D2F18B00ECBAF5 /* blocked.png in Resources */,
 				1F88639A15D6F62B00373743 /* PresencePublisher.py in Resources */,
+				1F8EA3A12D510C6B00D22473 /* belloff.png in Resources */,
 				1FB247E215D99AEB00703D24 /* OfflineNoteController.py in Resources */,
 				1F3C358015F521A8005356AE /* PresenceInfoPanel.xib in Resources */,
 				1F3C358615F522FA005356AE /* PresenceInfoController.py in Resources */,
@@ -3663,6 +3663,7 @@
 				1F35CFCC17894FFF00C6FE38 /* dtmf_4_tone.wav in Resources */,
 				1F35CFCD17894FFF00C6FE38 /* dtmf_5_tone.wav in Resources */,
 				1F35CFCE17894FFF00C6FE38 /* dtmf_6_tone.wav in Resources */,
+				1F8EA3A22D510C6B00D22473 /* belloff.png in Resources */,
 				1F35CFCF17894FFF00C6FE38 /* dtmf_7_tone.wav in Resources */,
 				1F35CFD017894FFF00C6FE38 /* dtmf_8_tone.wav in Resources */,
 				1F35CFD117894FFF00C6FE38 /* dtmf_9_tone.wav in Resources */,
@@ -3674,7 +3675,6 @@
 				1FC38F05192234E1007B0340 /* layers.png in Resources */,
 				1F35CFD717894FFF00C6FE38 /* dtmf_star_tone.wav in Resources */,
 				1F35CFD817894FFF00C6FE38 /* hangup_tone.wav in Resources */,
-				1F1ED3492D50046200C5ABE1 /* belloff.png in Resources */,
 				1F35CFD917894FFF00C6FE38 /* hold_tone.wav in Resources */,
 				1F35CFDA17894FFF00C6FE38 /* ring_outbound2.wav in Resources */,
 				1F35CFDB17894FFF00C6FE38 /* ring_tone.wav in Resources */,
@@ -3948,7 +3948,6 @@
 				1F52D5B219FAF1AF00F44E56 /* locked-gray.png in Resources */,
 				1FB9B11A1095BFF500284E18 /* dtmf_0_tone.wav in Resources */,
 				1FB9B11B1095BFF500284E18 /* dtmf_1_tone.wav in Resources */,
-				1F1ED3472D50046200C5ABE1 /* belloff.png in Resources */,
 				1FB9B11C1095BFF500284E18 /* dtmf_2_tone.wav in Resources */,
 				1FB9B11D1095BFF500284E18 /* dtmf_3_tone.wav in Resources */,
 				1FB9B11E1095BFF500284E18 /* dtmf_4_tone.wav in Resources */,
@@ -4097,6 +4096,7 @@
 				1FB247E115D99AEB00703D24 /* OfflineNoteController.py in Resources */,
 				1F3C357F15F521A8005356AE /* PresenceInfoPanel.xib in Resources */,
 				1F3C358515F522FA005356AE /* PresenceInfoController.py in Resources */,
+				1F8EA3A02D510C6B00D22473 /* belloff.png in Resources */,
 				1F3BF8BE1611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BB9161621BB00CD7B21 /* location.png in Resources */,
 				1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */,
