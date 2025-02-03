@@ -1016,7 +1016,7 @@ ABC</string>
                     <button toolTip="Disable Ringtones (Silent mode)" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="589" userLabel="Silence Alerts Button">
                         <rect key="frame" x="232" y="4" width="30" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                        <buttonCell key="cell" type="roundTextured" alternateTitle="Silent Mode" bezelStyle="texturedRounded" image="bell2" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="590">
+                        <buttonCell key="cell" type="roundTextured" alternateTitle="Silent Mode" bezelStyle="texturedRounded" image="bellon" imagePosition="overlaps" alignment="center" alternateImage="belloff" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="590">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -1190,10 +1190,10 @@ ABC</string>
                             </connections>
                         </button>
                         <button toolTip="Mute Microphone" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="878" userLabel="Mute Button">
-                            <rect key="frame" x="226" y="2" width="29" height="25"/>
+                            <rect key="frame" x="226" y="2" width="29" height="23"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
-                            <buttonCell key="cell" type="roundTextured" alternateTitle="Mute Microphone" bezelStyle="texturedRounded" image="mute" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="879">
-                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                            <buttonCell key="cell" type="roundTextured" alternateTitle="Mute Microphone" bezelStyle="texturedRounded" image="mic" imagePosition="only" alignment="center" alternateImage="muted" borderStyle="border" inset="2" id="879">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                 <font key="font" metaFont="system"/>
                             </buttonCell>
                             <accessibility description="Mute Microphone"/>
@@ -1549,7 +1549,7 @@ ABC</string>
         <image name="bellon" width="511" height="511"/>
         <image name="display" width="32" height="32"/>
         <image name="mic" width="15" height="19"/>
-        <image name="mute" width="24" height="24"/>
+        <image name="muted" width="24" height="24"/>
         <image name="pencil" width="403.20001220703125" height="403.20001220703125"/>
         <image name="speaker" width="14" height="12"/>
         <image name="video" width="520" height="520"/>
