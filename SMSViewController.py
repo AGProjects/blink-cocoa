@@ -331,6 +331,10 @@ class SMSViewController(NSObject):
                     else:
                         self.log_info('Resending message %s' % message.id)
                         self.outgoing_queue.put(message)
+                    
+                    if not self.routes:
+                        self.lookup_destination(self.target_uri)
+
                 else:
                     self.log_debug('Waiting for connectivity to resend message %s' % message.id)
                     continue
@@ -825,7 +829,6 @@ class SMSViewController(NSObject):
                 self.setRoutesResolved([route])
             else:
                 self.setRoutesFailed('Bonjour neighbour %s not found' % self.instance_id)
-                self.bonjour_lookup_enabled = False
             return
         else:
             self.log_info("Lookup destination for %s" % uri)
@@ -901,17 +904,23 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def setRoutesFailed(self, reason):
-        self.log_info('Routing failed: %s' % reason)
         self.last_route = None
+        self.dns_lookup_in_progress = False
+
         self.stop_queue()
 
         if self.last_failure_reason != reason:
-            #self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
+            self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
             self.last_failure_reason = reason
         
         for message in self.messages.values():
             if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                self.update_message_status(message.id, MSG_STATE_FAILED_LOCAL)
+                status = MSG_STATE_FAILED if self.account is BonjourAccount() else MSG_STATE_FAILED_LOCAL
+                self.log_info('Routing message %s set to status %s' % (message.id, status))
+                self.update_message_status(message.id, status)
+                message.status = status
+
+        #self.bonjour_lookup_enabled = False
 
     @objc.python_method
     def start_queue(self):
@@ -1008,8 +1017,9 @@ class SMSViewController(NSObject):
             self.log_info("%s message %s for %s sent failed: %s" % (message.content_type, message.id, message.recipient, reason))
 
             if self.is_renderable(message):
-                self.update_message_status(message.id, MSG_STATE_FAILED_LOCAL)
-                message.status = MSG_STATE_FAILED_LOCAL
+                status = MSG_STATE_FAILED if self.account is BonjourAccount() else MSG_STATE_FAILED_LOCAL
+                self.update_message_status(message.id, status)
+                message.status = status
                 message.pjsip_id = None
                 self.messages[message.id] = message
 
@@ -1041,7 +1051,9 @@ class SMSViewController(NSObject):
                 self.chatViewController.showSystemMessage("Recipient stopped OTR encryption", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                    self.update_message_status(message.id, MSG_STATE_FAILED_LOCAL)
+                    status = MSG_STATE_FAILED if self.account is BonjourAccount() else MSG_STATE_FAILED_LOCAL
+                    self.update_message_status(message.id, status)
+                    message.status = status
                 return None
         else:
             content = message.content
@@ -1230,7 +1242,7 @@ class SMSViewController(NSObject):
             if (data.code == 408 and entity == 'local') or data.code >= 500:
                 self.setRoutesFailed(reason)
             
-            message.status = MSG_STATE_FAILED if entity != 'local' else MSG_STATE_FAILED_LOCAL
+            message.status = MSG_STATE_FAILED if entity != 'local' and self.account is not BonjourAccount() else MSG_STATE_FAILED_LOCAL
 
             if message.status == MSG_STATE_FAILED:
                 try:
@@ -1511,6 +1523,8 @@ class SMSViewController(NSObject):
                     self.log_info('Resending message %s to %s' % (message.msgid, recipient))
                     self.messages[mInfo.id] = mInfo
                     self.outgoing_queue.put(mInfo)
+                    if not self.routes:
+                        self.lookup_destination(self.target_uri)
 
             #self.log_info('Render %s history message %s status=%s' % (message.direction, message.msgid, message.status))
 

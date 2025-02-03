@@ -376,6 +376,7 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
           delayed_class = "delayed";
       } else if (state == "failed") {
           box_class = "msgbox_failed";
+          delayed_class = "delayed_hidden";
       } else if (state == "failed_local") {
           box_class = "msgbox_deferred";
           delayed_class = "delayed";
