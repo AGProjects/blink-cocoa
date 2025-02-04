@@ -167,6 +167,7 @@ class SMSViewController(NSObject):
     otr_negotiation_timer = None
     pgp_encrypted = False
     bonjour_lookup_enabled = True
+    account_info = None
 
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False):
         self = objc.super(SMSViewController, self).init()
@@ -213,6 +214,15 @@ class SMSViewController(NSObject):
             self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
             self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
 
+            try:
+                position = NSApp.delegate().contactsWindowController.accounts.index(self.account)
+            except ValueError:
+                self.account_info = None
+            else:
+                self.account_info = NSApp.delegate().contactsWindowController.accounts[position]
+                if self.account is not BonjourAccount() and self.account.sip.always_use_my_proxy:
+                    self.last_route = self.account_info.route
+
             self.log_info('Using account %s with target %s' % (self.local_uri, self.target_uri))
             if self.account.sms.private_key and self.public_key:
                 self.pgp_encrypted = True
@@ -220,8 +230,10 @@ class SMSViewController(NSObject):
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
+            self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
+
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
-            if not self.is_replication_message:
+            if not self.is_replication_message and not self.last_route:
                 self.lookup_destination(self.target_uri)
 
         return self
@@ -318,9 +330,9 @@ class SMSViewController(NSObject):
                     continue
             
             if message.status != MSG_STATE_SENDING:
-                self.log_debug('Message id %s %s: %s' % (message.id, message.content_type, message.status))
+                self.log_debug('Message %s %s: %s' % (message.id, message.content_type, message.status))
             else:
-                self.log_debug('Message id %s is sent by PJSIP: %s' % (message.id, message.pjsip_id))
+                self.log_debug('Message % %s is sent by PJSIP: %s' % (message.content_type, message.id, message.pjsip_id))
 
             if message.status == MSG_STATE_FAILED_LOCAL and not message.pjsip_id and ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20):
                 if host.default_ip is not None:
@@ -678,6 +690,12 @@ class SMSViewController(NSObject):
         self.bonjour_lookup_enabled = True
 
     @objc.python_method
+    def _NH_SIPAccountRegistrationDidSucceed(self, sender, data):
+        if self.account is not BonjourAccount() and self.account.sip.always_use_my_proxy:
+            self.last_route = data.registrar
+        
+            
+    @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, stream, data):
         try:
             if data.new_state is OTRState.Encrypted:
@@ -706,7 +724,7 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def add_to_history(self, message):
-        self.log_info('%s %s message with id %s saved with status %s' % (message.direction.title(), message.content_type, message.id, message.status))
+        #self.log_info('%s %s message %s saved with status %s' % (message.direction.title(), message.content_type, message.id, message.status))
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient, format='full') if message.recipient else ''
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
@@ -754,6 +772,9 @@ class SMSViewController(NSObject):
     def sendMessage(self, content, content_type="text/plain"):
         # entry point for sending messages, they will be added to self.outgoing_queue
         status = MSG_STATE_FAILED_LOCAL if self.paused else 'queued'
+        
+        if self.last_route:
+            self.start_queue()
 
         if host.default_ip:
             if isinstance(content, OTRInternalMessage):
@@ -792,17 +813,13 @@ class SMSViewController(NSObject):
             self.messages[mInfo.id] = mInfo
 
         if mInfo.status != MSG_STATE_FAILED_LOCAL:
-            self.log_info('Adding outgoing %s %s message %s to the sending queue' % (id, status, content_type))
-            self.outgoing_queue.put(mInfo)
- 
+             # we can only send 'application/sylk-conversation-read' to our own account
+             if (content_type == 'application/sylk-conversation-read' and self.account.sip.always_use_my_proxy) or content_type != 'application/sylk-conversation-read':
+                 #self.log_info('Adding outgoing %s %s message %s to the sending queue' % (id, status, content_type))
+                 self.outgoing_queue.put(mInfo)
+
         if host.default_ip and (not self.last_route or self.paused):
-            self.lookup_destination(self.target_uri)
-
-        if content_type == 'application/sylk-conversation-read':
-            self.lookup_dns(self.account.id)
-        else:
-            self.lookup_destination(self.target_uri)
-
+             self.lookup_destination(self.target_uri)
 
     @objc.python_method
     def lookup_destination(self, uri):
@@ -1169,7 +1186,7 @@ class SMSViewController(NSObject):
             except StopIteration:
                 return
             else:
-                self.log_info("Message %s with id %s sent to %s (%s)" % (message.content_type, message.id, entity, data.code))
+                self.log_info("Message %s %s sent to %s (%s)" % (message.content_type, message.id, entity, data.code))
 
                 if not self.is_renderable(message):
                     if message.content_type == 'text/pgp-public-key':

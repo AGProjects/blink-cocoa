@@ -5756,6 +5756,7 @@ class ContactWindowController(NSWindowController):
 
         if notification.sender is not BonjourAccount():
             registrar = '%s:%s:%s' % (notification.data.registrar.transport, notification.data.registrar.address, notification.data.registrar.port)
+            self.accounts[position].route = notification.data.registrar
             self.accounts[position].registrar = registrar
             self.accounts[position].register_expires = notification.data.expires
             self.accounts[position].register_timestamp = time.time()
@@ -5785,6 +5786,7 @@ class ContactWindowController(NSWindowController):
             return
 
         if notification.data.code > 200:
+            self.accounts[position].route = None
             self.accounts[position].register_failure_code = notification.data.code
             self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if reason == 'Unknown error 61' else reason
         else:

@@ -484,6 +484,7 @@ class AccountInfo(object):
         self.subscribe_presence_purged = False
         self.subscribe_presence_state = None
         self.registrar = None
+        self.route = None
         self.register_expires = None
         self.register_timestamp = None
         self.register_state = None
