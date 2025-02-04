@@ -56,7 +56,9 @@ rm Frameworks/Python.framework/Versions/3.9/lib/itcl4.1.1/libitclstub4.1.1.a
 rm Frameworks/Python.framework/Versions/3.9/lib/tdbc1.0.6/libtdbcstub1.0.6.a
 rm Frameworks/Python.framework/Versions/3.9/lib/python3.9/config-3.9-darwin/libpython3.9.a
 
-ln -s Frameworks/Python.framework/Versions/3.9 Frameworks/Python.framework/Versions/A
+cd Frameworks/Python.framework/Versions
+ln -sf 3.9 A
+cd -
 
 find Frameworks/Python.framework -name *ncurses* -exec rm -r {} \;
 
@@ -86,7 +88,7 @@ cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/
 # Copy Objc Python modules
 pyobjc_modules="objc AVFoundation AddressBook AppKit Cocoa \
 CoreFoundation CoreServices Foundation LaunchServices \
-PyObjCTools Quartz ScriptingBridge WebKit FSEvents CoreMedia"
+PyObjCTools Quartz ScriptingBridge WebKit FSEvents CoreMedia CoreAudio"
 
 for m in $pyobjc_modules; do
     rm -r Resources/lib/$m; 
@@ -95,19 +97,16 @@ for m in $pyobjc_modules; do
     libs=`find Resources/lib/$m -name *.so`; 
 done
 
+py_modules="incremental typing_extensions.py attr attrs constantly OpenSSL cryptography _cffi_backend.cpython-39-darwin.so pycrypto"
+site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
+for m in $py_modules; do
+    rm -r Resources/lib/$m; 
+    echo "Copy $site_packages_folder/$m"
+    cp -a $site_packages_folder/$m Resources/lib/;
+    sos=`find ./Resources/lib/$m -name *.so`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+done
 
-#Sign
-./codesign.sh
-
-
-# Copy lxml
-# LXML must be built from scratch as the pip version is too old
-# git clone https://github.com/lxml
-#python3 setup.py build --static-deps
-#python3 setup.py install
-# cp -a ~/Library/Python/3.9/lib/python/site-packages/lxml-4.6.2-py3.9-macosx-10.9-x86_64.egg/lxml Resources/lib/
-#cp -a ~/Library/Python/3.9/lib/python/site-packages/lxml Resources/lib/
-#sign_id="Developer ID Application"
-#codesign -f -s "$sign_id" Resources/lib/lxml/*.so
-
-# Other dependencies installed for python3-sipsimple must be copied io the same way
+codesign -f -o runtime --timestamp  -s "Developer ID Application"  ./Resources/lib/*.so
+sos=`find ./Resources/lib -name *.dylib`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+sos=`find ./Resources/lib -name *.so`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+sos=`find ./Frameworks -name *.so`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done

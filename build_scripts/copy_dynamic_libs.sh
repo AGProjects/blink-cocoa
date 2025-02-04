@@ -1,7 +1,7 @@
 #!/bin/bash
 # 2025-02-04 on Catalina
 
-packages="libmpc sqlite3 ffmpeg mpfr libmpc libvpx wget libuuid x264 gnutls libxml2 libuuid libopus zlib nettle icu webp libsdl2 libffi cairo pango aom openjpeg svt-av1 soxr gettext-runtime p11-kit libidn2 libunistring libtasn1 gmp"
+packages="libmpc sqlite3 ffmpeg mpfr libmpc libvpx wget libuuid x264 gnutls libxml2 libuuid libopus zlib nettle icu webp libsdl2 libffi cairo pango aom openjpeg svt-av1 soxr gettext-runtime p11-kit libidn2 libunistring libtasn1 gmp libiconv fribidi libass libvidstab zimg fontconfig mpfr mpc"
 lib_dir="Frameworks/libs"
 
 for p in $packages; do
@@ -12,10 +12,6 @@ for p in $packages; do
             if [ ! -f $lib_dir/$fn ]; then
                 echo "Copy library $l to $lib_dir/"
                 cp -a $l $lib_dir/
-                if [ ! -L $lib_dir/$bn ]; then
-                ./change_lib_names.sh $lib_dir/$fn
-                codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-                fi
             fi
     done
 done
@@ -27,35 +23,21 @@ for l in $extra_libs; do
     if [ ! -f $lib_dir/$fn ]; then
         echo "Copy library $l to $lib_dir/"
         cp -a $l $lib_dir/
-        if [ ! -L $lib_dir/$bn ]; then
-        ./change_lib_names.sh $lib_dir/$fn
-        codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-        fi
     fi
 done
 
-# NOTE: you must add symlinks for libav.N.*.*.dylib to libav.Number.N.dylib
-
-for j in $lib_dir/*.dylib; do for i in `otool -L $j |grep local|cut -f 1 -d " "`; do if [ ! -L $i ]; then 
-   #ls $i ;
+for j in $lib_dir/*.dylib; do for i in `otool -L $j |grep /opt/local | cut -f 1 -d " "`; do 
    bn=`basename $i`
-   if [ ! -f $bn ]; then
-      echo "Missing library $i"
+   if [ ! -f $lib_dir/$bn ]; then
+      echo "Copy library $i"
       cp -a $i $lib_dir/
-      if [ ! -L $lib_dir/$bn ]; then
-          ./change_lib_names.sh $lib_dir/$bn
-          codesign -f --timestamp -s "Developer ID Application" $lib_dir/$bn
-      fi
    fi
     
-fi ; done; done
+done; done
+
+exit;
 
 for j in $lib_dir/*.dylib; do
-    codesign --verify $j
-    if [ $? -ne 0 ]; then
-        ./change_lib_names.sh $j
-        codesign -f --timestamp -s "Developer ID Application" $j
-    fi
-    #./change_lib_names.sh $j
-    #codesign -f --timestamp -s "Developer ID Application" $j
+    ./change_lib_names.sh $j
+    codesign -f --timestamp -s "Developer ID Application" $j
 done
