@@ -459,7 +459,7 @@ class SessionHistory(object, metaclass=Singleton):
     def get_last_chat_conversations(self, count=5):
         return block_on(self._get_last_chat_conversations(count))
 
-    def get_last_sms_conversations(self, count=5):
+    def get_last_sms_conversations(self, count=6):
         return block_on(self._get_last_chat_conversations(count, media=['chat', 'sms', 'messages'], skip_conference_uris=True))
 
     def get_last_unsent_messages(self):
