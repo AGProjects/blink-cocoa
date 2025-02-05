@@ -148,8 +148,8 @@ class BlinkAppDelegate(NSObject):
     active_transports = set()
     terminating = False
 
-    @objc.python_method
     @property
+    @objc.python_method
     def video_devices(self):
         devices = set()
         for item in Engine().video_devices:
