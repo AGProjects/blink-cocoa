@@ -4834,6 +4834,7 @@
 				INFOPLIST_FILE = "Info-pro.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INSTALL_PATH = /Applications;
+				LD_RUNPATH_SEARCH_PATHS = "$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST)) @executable_path/../Frameworks @executable_path/../Frameworks/libs";
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
@@ -4882,6 +4883,8 @@
 				INFOPLIST_FILE = "Info-pro.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INSTALL_PATH = /Applications;
+				LD_RUNPATH_SEARCH_PATHS = "$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST)) @executable_path/../Frameworks @executable_path/../Frameworks/libs";
+				"LD_RUNPATH_SEARCH_PATHS[arch=*]" = "$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST))";
 				LIBRARY_SEARCH_PATHS = (
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
@@ -5026,7 +5029,7 @@
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../Frameworks/libs";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
@@ -5076,7 +5079,7 @@
 				GCC_PREFIX_HEADER = Blink_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../Frameworks/libs";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
