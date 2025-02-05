@@ -82,7 +82,12 @@ import hashlib
 import os
 import re
 import random
-import ldap
+
+try:
+    import ldap
+except ImportError:
+    from application.python import Null
+    ldap = Null
 
 import shutil
 import string
