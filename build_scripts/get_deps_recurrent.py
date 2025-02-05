@@ -50,7 +50,7 @@ def main():
     try:
         lib_path = sys.argv[1]
     except Exception as e:
-        lib_path = input("Enter the path to the dynamic library: ").strip()
+        lib_path = "../../../Library/Python/3.9/lib/python/site-packages/sipsimple/core/_core.cpython-39-darwin.so"
 
     if not os.path.exists(lib_path):
         print(f"The library path '{lib_path}' does not exist.")

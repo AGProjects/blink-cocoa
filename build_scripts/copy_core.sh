@@ -22,3 +22,7 @@ codesign -v -s "Developer ID Application" Resources/lib/sipsimple/core/_core.cpy
 codesign -v -s "Developer ID Application" Resources/lib/sipsimple/util/_sha1.cpython-39-darwin.so
 
 
+
+find Resources/lib -name __pycache__ -exec rm -rf {} \;
+find Resources/lib -name \*~ -exec rm {} \;
+find Resources/lib -name *.pyc -exec rm {} \;
