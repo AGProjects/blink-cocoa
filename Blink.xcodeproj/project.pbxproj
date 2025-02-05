@@ -920,6 +920,9 @@
 		1FCA7D5C195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5D195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
+		1FCDE5AE2D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
+		1FCDE5AF2D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
+		1FCDE5B02D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
 		1FCE2BDF166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1FCE2BE0166BABBC00090A86 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1FCE80B11408FDA1000C48A7 /* lock-zrtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FB22A07140306EC0024F921 /* lock-zrtp.png */; };
@@ -2025,6 +2028,7 @@
 		1FC9FE9514378A450056B3A8 /* shrinktofit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = shrinktofit.png; path = icons/shrinktofit.png; sourceTree = "<group>"; };
 		1FC9FEF214379AC50056B3A8 /* shrinktofit-pressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "shrinktofit-pressed.png"; path = "icons/shrinktofit-pressed.png"; sourceTree = "<group>"; };
 		1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = "support@conference.sip2sip.info.tiff"; path = "icons/support@conference.sip2sip.info.tiff"; sourceTree = "<group>"; };
+		1FCDE5AD2D539BC100140B1F /* libs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libs; path = Distribution/Frameworks/libs; sourceTree = "<group>"; };
 		1FCE106A19BD308D006F64C1 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FCE106B19BD308F006F64C1 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
 		1FCE106C19BD3092006F64C1 /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/MyVideoLocalWindow.xib; sourceTree = "<group>"; };
@@ -2636,6 +2640,7 @@
 		1FEDE7CF17AFD4C50038C579 /* C libraries */ = {
 			isa = PBXGroup;
 			children = (
+				1FCDE5AD2D539BC100140B1F /* libs */,
 				1FD90C4A2D4173150036EB92 /* libuuid.16.dylib */,
 				1F78AB7825EAE1EC00F43414 /* libmpc.3.dylib */,
 				1F78AB7725EAE1EC00F43414 /* libmpfr.6.dylib */,
@@ -3351,6 +3356,7 @@
 				1F2272CA12B554F50010A8B2 /* record.png in Resources */,
 				1F774C6819CB169800240DC1 /* video-active.png in Resources */,
 				1F2272CB12B554F50010A8B2 /* recording1.png in Resources */,
+				1FCDE5AF2D539BC100140B1F /* libs in Resources */,
 				1F2272CC12B554F50010A8B2 /* recording2.png in Resources */,
 				1F2272CD12B554F50010A8B2 /* recording3.png in Resources */,
 				1F2272CE12B554F50010A8B2 /* mic.png in Resources */,
@@ -3753,6 +3759,7 @@
 				1F35D01C17894FFF00C6FE38 /* audio-preferences.png in Resources */,
 				1F35D01D17894FFF00C6FE38 /* answering_machine.png in Resources */,
 				1F35D01E17894FFF00C6FE38 /* editor-changed.png in Resources */,
+				1FCDE5B02D539BC100140B1F /* libs in Resources */,
 				1F35D01F17894FFF00C6FE38 /* MigrationPanel.xib in Resources */,
 				1FD0808718C02DA800A3B313 /* busy.png in Resources */,
 				1F35D02017894FFF00C6FE38 /* default.crt in Resources */,
@@ -3913,6 +3920,7 @@
 				2B2392AF1039E69C00D9023B /* SoundSetting.xib in Resources */,
 				2B239608103B1C6600D9023B /* audio.png in Resources */,
 				2B23991F103C823D00D9023B /* display.png in Resources */,
+				1FCDE5AE2D539BC100140B1F /* libs in Resources */,
 				2B5F4A451040EC0F00BEE04E /* record.png in Resources */,
 				2B5F4A571040FF0C00BEE04E /* recording1.png in Resources */,
 				2B5F4A581040FF0C00BEE04E /* recording2.png in Resources */,
