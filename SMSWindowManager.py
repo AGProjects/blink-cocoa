@@ -52,6 +52,8 @@ from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
+from twisted.internet import reactor
+
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 from BlinkLogger import BlinkLogger
@@ -653,6 +655,16 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_thread('sms_sync')
+    def request_token(self, account):
+        BlinkLogger().log_info('Request another token...')
+        try:
+           del self.syncConversationsInProgress[account.id]
+        except KeyError:
+           pass
+        self.requestSyncToken(account)
+                   
+    @objc.python_method
+    @run_in_thread('sms_sync')
     def syncConversations(self, account):
        if not account.sms.enable_replication:
            BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
@@ -691,18 +703,13 @@ class SMSWindowManagerClass(NSObject):
        except (urllib.error.URLError, ConnectionRefusedError) as e:
            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
            try:
-               del self.syncConversationsInProgress[account.id]
-           except KeyError:
-               pass
-
-           try:
                code = getattr(e, "code")
            except AttributeError:
                pass
            else:
                if code == 401:
                    # request new token on 401
-                   self.requestSyncToken(account)
+                   reactor.callLater(30, self.request_token, account)
                return
        except (TimeoutError, socket.timeout, RemoteDisconnected, urllib.error.HTTPError) as e:
            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
