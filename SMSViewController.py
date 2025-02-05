@@ -1197,6 +1197,7 @@ class SMSViewController(NSObject):
 
                     if message.content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
                         self.update_message_status(message.id, MSG_STATE_SENT)
+                        self.playOutgoingSound()
 
                 else:
                     self.update_message_status(message.id, MSG_STATE_SENT)
@@ -1304,12 +1305,13 @@ class SMSViewController(NSObject):
 
             self.chatViewController.resetTyping()
 
-            recipient = ChatIdentity(self.target_uri, self.display_name)
-            self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, is_replication_message=False, status=MSG_STATE_SENT,  remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
-
             return True
 
         return False
+
+    def playOutgoingSound(self):
+        recipient = ChatIdentity(self.target_uri, self.display_name)
+        self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, is_replication_message=False, status=MSG_STATE_SENT,  remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
     def textDidChange_(self, notif):
         chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
