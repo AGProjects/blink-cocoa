@@ -7,7 +7,14 @@
 
 # This script assumes packages are installed using pip3 in user folder 
 
-pip3 install --user pyobjc
+d=`pwd`
+curent_dir=`basename $d`
+if [ $curent_dir != "Distribution" ]; then
+    echo "Must run inside distribution folder"
+    exit 1
+fi
+
+#pip3 install --user pyobjc
 site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
 
 if [ ! -d Resources ]; then
@@ -67,46 +74,3 @@ find Frameworks/Python.framework -name *ncurses* -exec rm -r {} \;
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python3.9/
 
 ./changelibs-python.sh 
-
-# Copy CA certificates
-# python3 -c "import ssl; print(ssl.get_default_verify_paths())"
-# pip3 install certifi
-
-src_ca_list=`python3 -c "import certifi; print(certifi.where())"`
-dst_ca_list=`python3 -c"import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
-cp $src_ca_list $dst_ca_list
-
-#./codesign-python.sh
-
-# Remove unused libraries
-find Resources/lib/ -name test -exec rm -r {} \;
-find Resources/lib/ -name tests -exec rm -r {} \;
-
-# Blink needs to by linked against Python in this location
-cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/
-
-# Copy Objc Python modules
-pyobjc_modules="objc AVFoundation AddressBook AppKit Cocoa \
-CoreFoundation CoreServices Foundation LaunchServices \
-PyObjCTools Quartz ScriptingBridge WebKit FSEvents CoreMedia CoreAudio"
-
-for m in $pyobjc_modules; do
-    rm -r Resources/lib/$m; 
-    echo "Copy $site_packages_folder/$m"
-    cp -a $site_packages_folder/$m Resources/lib/;
-    libs=`find Resources/lib/$m -name *.so`; 
-done
-
-py_modules="incremental typing_extensions.py attr attrs constantly OpenSSL cryptography _cffi_backend.cpython-39-darwin.so pycrypto"
-site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
-for m in $py_modules; do
-    rm -r Resources/lib/$m; 
-    echo "Copy $site_packages_folder/$m"
-    cp -a $site_packages_folder/$m Resources/lib/;
-    sos=`find ./Resources/lib/$m -name \*.so`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
-done
-
-codesign -f -o runtime --timestamp  -s "Developer ID Application"  ./Resources/lib/*.so
-sos=`find ./Resources/lib -name *.dylib`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
-sos=`find ./Resources/lib -name *.so`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
-sos=`find ./Frameworks -name *.so`; for s in $sos; do codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done

@@ -19,8 +19,12 @@ for l in $libs; do
         fi
 done
 
+cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/libs
+../build_scripts/change_lib_names2.sh Frameworks/libs/libpython3.9.dylib
+codesign -f --timestamp -s "Developer ID Application" Frameworks/libs/libpython3.9.dylib
+
 lib_dir="Frameworks/libs"
-extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib"
+extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib /usr/local/lib/libopencore-amr*dylib /usr/local/opt/vo-amrwbenc/lib/libvo-amrwbenc.0.dylib"
 
 for l in $extra_libs; do
     fn=`basename $l`
