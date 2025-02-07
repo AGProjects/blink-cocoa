@@ -838,6 +838,9 @@ class SMSWindowManagerClass(NSObject):
                if last_message_id:
                    account.sms.history_last_id = last_message_id
                    BlinkLogger().log_info('Sync done till %s' % last_message_id)
+                   nc_title = NSLocalizedString("Offline messages received", "Label")
+                   nc_body = NSLocalizedString("From %d contacts" % len(sync_contacts), "Label")
+                   NSApp.delegate().gui_notify(nc_title, nc_body)
                    account.save()
                 
                for uri in sync_contacts:
