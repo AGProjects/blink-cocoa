@@ -56,6 +56,11 @@ class ChatMessageObject(object):
 
 
 def processHTMLText(content='', usesmileys=True, is_html=False):
+    try:
+        content = content.decode() if isinstance(content, bytes) else content
+    except UnicodeDecodeError:
+        return ''
+
     if is_html:
         content = urlify(content)
         content = content.replace('\n', '')

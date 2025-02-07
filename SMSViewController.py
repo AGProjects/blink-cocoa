@@ -522,11 +522,13 @@ class SMSViewController(NSObject):
 
                         try:
                             content = bytes(decrypted_message.message, 'latin1')
-                        except TypeError as e:
-                            self.log_error('Data decode error: %s' % str(e))
-                            self.log_error('Decrypted data type: %s' % type(decrypted_message.message))
-                            self.log_error('Decrypted data: %s' % decrypted_message)
-                            return
+                        except (TypeError, UnicodeEncodeError) as e:
+                            try:
+                                content = bytes(decrypted_message.message, 'utf-8')
+                            except (TypeError, UnicodeEncodeError) as e:
+                                self.log_error('Decrypted data encode error: %s' % str(e))
+                                self.log_error('Decrypted data: %s' % decrypted_message)
+                                return
             else:
                 self.pgp_encrypted = False
             
@@ -1506,11 +1508,15 @@ class SMSViewController(NSObject):
                     else:
                         encryption = 'verified'
                         try:
-                            content = bytes(decrypted_message.message, 'latin1').decode()
+                            content = bytes(decrypted_message.message, 'latin1')
                         except (TypeError, UnicodeEncodeError) as e:
-                            #self.log_info('Failed to decrypt message: %s' % str(e))
-                            continue
+                            try:
+                                content = bytes(decrypted_message.message, 'utf-8')
+                            except (TypeError, UnicodeEncodeError) as e:
+                                self.log_info('Failed to decrypt message %s: %s' % (message.id, str(e)))
+                                continue
                         else:
+                            content = content.decode()
                             self.history.update_decrypted_message(message.msgid, content)
 
             sender = message.cpim_from
