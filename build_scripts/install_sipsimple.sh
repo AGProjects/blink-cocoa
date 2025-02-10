@@ -49,16 +49,14 @@ for p in python3-application python3-eventlib python3-gnutls python3-otr python3
     echo "Installing $p..."
     pip3 install --user .
 
-    if [ $RESULT -ne 0 ]; then
+    if [ $? -ne 0 ]; then
         echo
         echo "Failed to install $p dependency"
         cd ..
         echo
         exit 1
         fi
-
     cd ..
-
 done
 
 # Download and build SIP SIMPLE client SDK
