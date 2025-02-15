@@ -5,7 +5,7 @@ packages="libmpc sqlite3 ffmpeg mpfr libmpc libvpx wget libuuid x264 gnutls libx
 lib_dir="Frameworks/libs"
 
 for p in $packages; do
-    #echo "Get libs for $p"
+    echo "Get libs for $p"
     libs=`port contents $p|grep dylib`
     for l in $libs; do
             fn=`basename $l`

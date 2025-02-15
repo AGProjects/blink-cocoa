@@ -1,12 +1,15 @@
 # Change library paths 
 
-sudo cp -a /Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/lib-dynload/*.so Frameworks/Python.framework/Versions/3.9/lib/python3.9/lib-dynload/
+arch=`python3 -c "import platform; print(platform.processor())"`
+pver=`python3 -c "import sys; print(sys.version[0:3])"`
+
+#cp -a /Library/Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/*.so Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/
 old_path="/Library/Frameworks/Python.framework/"
 new_path="@executable_path/../Frameworks/Python.framework/Versions/Current/lib/"
 
-libs=`ls Frameworks/Python.framework/Versions/3.9/lib/python3.9/lib-dynload/*.so`
+libs=`ls Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/*.so`
  for library in $libs; do
-  sudo install_name_tool -id $new_path$library $library
+  install_name_tool -id $new_path$library $library
   dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
   for dependency in $dependencies; do
       new_basename=$(basename $dependency)
@@ -18,15 +21,15 @@ done
 
 # Change library paths 
 
-sudo cp -a /Library/Frameworks/Python.framework/Versions/3.9/lib/*.dylib Frameworks/Python.framework/Versions/3.9/lib/
+#cp -a /Library/Frameworks/Python.framework/Versions/$pver/lib/*.dylib Frameworks/Python.framework/Versions/$pver/lib/
 
-old_path="/Library/Frameworks/Python.framework/Versions/3.9/lib/"
+old_path="/Library/Frameworks/Python.framework/Versions/$pver/lib/"
 new_path="@executable_path/../"
-new_dep_path="@executable_path/../Frameworks/Python.framework/Versions/3.9/lib/"
+new_dep_path="@executable_path/../Frameworks/Python.framework/Versions/$pver/lib/"
 
-libs=`ls Frameworks/Python.framework/Versions/3.9/lib/*.dylib`
+libs=`ls Frameworks/Python.framework/Versions/$pver/lib/*.dylib`
  for library in $libs; do
-  sudo install_name_tool -id $new_path$library $library
+  install_name_tool -id $new_path$library $library
   dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
   for dependency in $dependencies; do
       new_basename=$(basename $dependency)

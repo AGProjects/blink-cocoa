@@ -14,8 +14,14 @@ if [ $curent_dir != "Distribution" ]; then
     exit 1
 fi
 
-#pip3 install --user pyobjc
-site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
+
+arch=`python3 -c "import platform; print(platform.processor())"`
+pver=`python3 -c "import sys; print(sys.version[0:3])"`
+
+venv="$HOME/work/blink-python-$pver-$arch-env"
+
+site_packages_folder="$venv/lib/python3.9/site-packages/"
+echo $site_packages_folder
 
 if [ ! -d Resources ]; then
     mkdir Resources

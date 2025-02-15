@@ -1,4 +1,5 @@
 #!/bin/bash
+cd ../Distribution
 d=`pwd`
 curent_dir=`basename $d`
 if [ $curent_dir != "Distribution" ]; then
@@ -11,12 +12,15 @@ libs=`./get_deps_recurrent.py ~/Library/Python/3.9/lib/python/site-packages/sips
 
 for l in $libs; do
         fn=`basename $l`
-        if [ ! -f $lib_dir/$fn ]; then
-            echo "Copy library $l to $lib_dir/"
+        #echo "Checking library $l"
+        #if [ ! -f $lib_dir/$fn ]; then
+            echo "cp $l to $lib_dir/"
             cp $l $lib_dir/
             ../build_scripts/change_lib_names2.sh $lib_dir/$fn
             codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-        fi
+        #else
+        #    file $lib_dir/$fn
+        #fi
 done
 
 cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/libs
@@ -24,14 +28,15 @@ cp Frameworks/Python.framework/Versions/3.9/lib/libpython3.9.dylib Frameworks/li
 codesign -f --timestamp -s "Developer ID Application" Frameworks/libs/libpython3.9.dylib
 
 lib_dir="Frameworks/libs"
-extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib /usr/local/lib/libopencore-amr*dylib /usr/local/opt/vo-amrwbenc/lib/libvo-amrwbenc.0.dylib"
+extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib"
 
 for l in $extra_libs; do
     fn=`basename $l`
-    if [ ! -f $lib_dir/$fn ]; then
+    echo $lib_dir/$fn
+    #if [ ! -f $lib_dir/$fn ]; then
         echo "Copy library $l to $lib_dir/"
         cp $l $lib_dir/
         ../build_scripts/change_lib_names2.sh $lib_dir/$fn
         codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-    fi
+    #fi
 done

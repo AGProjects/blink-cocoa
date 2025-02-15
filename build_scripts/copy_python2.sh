@@ -3,6 +3,8 @@
 # Download Python from https://www.python.org/downloads/release/python-391/
 # This script assumes packages are installed using pip3 in user folder 
 
+cd ../Distribution
+
 d=`pwd`
 curent_dir=`basename $d`
 if [ $curent_dir != "Distribution" ]; then
@@ -18,11 +20,9 @@ if [ ! -d Resources ]; then
 fi
 
 # Copy CA certificates
-# python3 -c "import ssl; print(ssl.get_default_verify_paths())"
-# pip3 install certifi
-
+python3 -c "import ssl; print(ssl.get_default_verify_paths())"
 src_ca_list=`python3 -c "import certifi; print(certifi.where())"`
-dst_ca_list=`python3 -c"import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
+dst_ca_list=`python3 -c "import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
 cp $src_ca_list $dst_ca_list
 
 #./codesign-python.sh
@@ -31,7 +31,7 @@ cp $src_ca_list $dst_ca_list
 find Resources/lib/ -name test -exec rm -r {} \;
 find Resources/lib/ -name tests -exec rm -r {} \;
 
-py_modules="packaging pkg_resources Crypto incremental typing_extensions.py attr attrs constantly OpenSSL cryptography _cffi_backend.cpython-39-darwin.so six greenlet gnutls application otr twisted zope certifi cffi pgpy pyasn1 pytz sqlobject dns formencode gevent service_identity lxml dateutil pydispatch gmpy2"
+py_modules="packaging pkg_resources incremental typing_extensions.py attr attrs constantly OpenSSL cryptography _cffi_backend.cpython-39-darwin.so six greenlet gnutls application otr twisted zope certifi cffi pgpy pyasn1 pytz sqlobject dns formencode gevent service_identity lxml dateutil pydispatch gmpy2"
 site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages"
 
 for m in $py_modules; do
@@ -52,3 +52,4 @@ done
 
 sos=`find ./Resources/lib/ -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
 sos=`find ./Resources/lib/ -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+
