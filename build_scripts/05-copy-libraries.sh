@@ -7,12 +7,23 @@ if [ $curent_dir != "Distribution" ]; then
     exit 1
 fi
 
+arch=`python3 -c "import platform; print(platform.processor())"`
+pver=`python3 -c "import sys; print(sys.version[0:3])"`
+venv="$HOME/work/blink-python-$pver-$arch-env"
+site_packages_folder="$venv/lib/python3.9/site-packages/"
+core="$site_packages_folder/sipsimple/core/_core.cpython-39-darwin.so"
+
+if [ ! -f $core ]; then
+   echo "SDK core not found at $core"
+   exit 1
+fi
+
+libs=`./get_deps_recurrent.py $site_packages_folder/sipsimple/core/_core.cpython-39-darwin.so`
 lib_dir="Frameworks/libs"
-libs=`./get_deps_recurrent.py ~/Library/Python/3.9/lib/python/site-packages/sipsimple/core/_core.cpython-39-darwin.so`
 
 for l in $libs; do
         fn=`basename $l`
-        #echo "Checking library $l"
+        echo "Checking SDK dependency $l"
         #if [ ! -f $lib_dir/$fn ]; then
             echo "cp $l to $lib_dir/"
             cp $l $lib_dir/
@@ -40,3 +51,4 @@ for l in $extra_libs; do
         codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
     #fi
 done
+

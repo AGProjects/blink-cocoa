@@ -18,6 +18,7 @@ pver=`python3 -c "import sys; print(sys.version[0:3])"`
 venv="$HOME/work/blink-python-$pver-$arch-env"
 
 site_packages_folder="$venv/lib/python3.9/site-packages/"
+site_packages_folder="$HOME/Library/Python/3.9/lib/python/site-packages/"
 echo $site_packages_folder
 
 if [ ! -d Resources ]; then
@@ -38,5 +39,6 @@ find Resources/lib/ -name test -exec rm -r {} \;
 find Resources/lib/ -name tests -exec rm -r {} \;
 
 cp -a $site_packages_folder/* Resources/lib/
-sos=`find ./Resources/lib/$m -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
-sos=`find ./Resources/lib/$m -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+
+sos=`find ./Resources/lib -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+sos=`find ./Resources/lib -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
