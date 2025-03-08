@@ -4,7 +4,7 @@ Blink
 
 This is Blink, a state of the art, easy to use SIP client.
 
-Copyright (c) 2009-2021 AG Projects
+Copyright (c) 2009-2025 AG Projects
 http://ag-projects.com
 
 Homepage: http://icanblink.com
