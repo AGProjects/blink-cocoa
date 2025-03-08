@@ -769,6 +769,9 @@
 		1FCA7D5C195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5D195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
+		1FCDCF382D7CE7DF0050A35C /* libpython3.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7436BA2D53AD7D00792754 /* libpython3.9.dylib */; };
+		1FCDCF3A2D7CE8EE0050A35C /* libs in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
+		1FCDCF3B2D7CE8FC0050A35C /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FCDE5AE2D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
 		1FCDE5AF2D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
 		1FCDE5B02D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
@@ -787,7 +790,6 @@
 		1FCF11F113910878001D1CAF /* audio-preferences.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF11EE13910878001D1CAF /* audio-preferences.png */; };
 		1FCF129F1391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
 		1FCF12A11391151A001D1CAF /* answering_machine.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCF129E1391151A001D1CAF /* answering_machine.png */; };
-		1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = DE4E6F0F174F9C0900E1D5F9 /* Python.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1FD0807C18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
 		1FD0807D18C02DA800A3B313 /* available.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD0807818C02DA800A3B313 /* available.png */; };
@@ -1112,7 +1114,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 7;
 			files = (
-				1FCF1FA012B57D2A00F71BE5 /* lib in Copy Libraries */,
+				1FCDCF3B2D7CE8FC0050A35C /* lib in Copy Libraries */,
 			);
 			name = "Copy Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1123,6 +1125,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				1FCDCF3A2D7CE8EE0050A35C /* libs in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
@@ -1916,6 +1919,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FCDCF382D7CE7DF0050A35C /* libpython3.9.dylib in Frameworks */,
 				1F2436861912B27000E71253 /* AVFoundation.framework in Frameworks */,
 				1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */,
 				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
@@ -4347,6 +4351,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
+					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.3;
 				MARKETING_VERSION = 6.2.8;
@@ -4397,6 +4402,7 @@
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
 					"$(inherited)",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
+					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.3;
 				MARKETING_VERSION = 6.2.8;
