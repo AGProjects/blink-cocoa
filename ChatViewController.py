@@ -503,7 +503,7 @@ class ChatViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None):
+    def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None, before=False):
     
         #print('showMessage %s %s -> %s (%s)' % (direction, sender, recipient, state))
         #print('showMessage %s %s -> %s' % (direction, self.delegate.local_uri, self.delegate.remote_uri))
@@ -537,6 +537,7 @@ class ChatViewController(NSObject):
 
         content = processHTMLText(content, self.expandSmileys, is_html)
         private = 1 if is_private else "null"
+        before = 1 if before else "null"
 
         if is_private and recipient:
             label = NSLocalizedString("Private message to %s", "Label") % html.escape(recipient) if direction == 'outgoing' else NSLocalizedString("Private message from %s", "Label") % html.escape(sender)
@@ -547,9 +548,9 @@ class ChatViewController(NSObject):
                 label = html.escape(self.account.display_name or self.account.id) if sender is None else html.escape(sender)
 
         try:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s', %s)""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid, before)
         except UnicodeDecodeError:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s')""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid)
+            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s', %s)""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid, before)
         except Exception as e:
             self.delegate.showSystemMessage("Chat message id %s rendering error: %s" % (msgid, e), ISOTimestamp.now(), True)
             return
@@ -712,7 +713,7 @@ class ChatViewController(NSObject):
 
     def scrollTimerDelay_(self, timer):
         if self.scrolling_back:
-            self.scrolling_zoom_factor += 1
+            #self.scrolling_zoom_factor += 1
             if self.scrolling_zoom_factor > 7:
                 self.scrolling_zoom_factor = 7
             self.loadingProgressIndicator.startAnimation_(None)

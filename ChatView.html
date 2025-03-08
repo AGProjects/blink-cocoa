@@ -340,7 +340,7 @@ function formatTimestamp(timestamp)
     return ts[0]+":"+ts[1]+":"+ts[2];
 }
 
-function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid)
+function renderMessage(msgid, direction, sender, iconpath, text, timestamp, state, private, lockiconpath, previous_msgid, before)
 {
   var content;
   var message_class;
@@ -408,43 +408,70 @@ function renderMessage(msgid, direction, sender, iconpath, text, timestamp, stat
   if (content != null)
       content.id = "";
 
-    chat_session.innerHTML +=
-    "<div clear='both'/>"+
-    "<div class='"+container_class+"' id='container_"+msgid+"'>"+
-        "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
-        "<div class='"+box_class+"' id='"+msgid+"'>"+
-             "<div class='header'>"+
-                 "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
-                 "<div class='timestamp'>"+
-                     "<div class='delete_button'><a class='delete_link' href='delete_message?id="+msgid+"'>&#x2612;</a></div>"+
-                     "<img id='encryption"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
-                     "<div class="+delayed_class+" id='delayed"+msgid+"'>&#128351;</div>"+
-                     "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
-                     "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
-                     "</div>"+
-                 "</div>"+
-                 "<div class='message' id='b"+msgid+"'>"+
-                    "<span class='body'>"+text+"</span>"+
-                "</div>"+
-             "</div>"+
-        "</div>"+
-    "</div>";
+      if (before == null) {
+          chat_session.innerHTML +=
+          "<div clear='both'/>"+
+          "<div class='"+container_class+"' id='container_"+msgid+"'>"+
+              "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
+              "<div class='"+box_class+"' id='"+msgid+"'>"+
+                   "<div class='header'>"+
+                       "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
+                       "<div class='timestamp'>"+
+                           "<div class='delete_button'><a class='delete_link' href='delete_message?id="+msgid+"'>&#x2612;</a></div>"+
+                           "<img id='encryption"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
+                           "<div class="+delayed_class+" id='delayed"+msgid+"'>&#128351;</div>"+
+                           "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
+                           "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
+                           "</div>"+
+                       "</div>"+
+                       "<div class='message' id='b"+msgid+"'>"+
+                          "<span class='body'>"+text+"</span>"+
+                      "</div>"+
+                   "</div>"+
+              "</div>"+
+          "</div>";
 
-    if (iconpath == null) {
-        box = document.getElementById(msgid);
-        box.style.marginTop = "0px";
-        box.style.borderTopStyle = "hidden";
+          if (iconpath == null) {
+              box = document.getElementById(msgid);
+              box.style.marginTop = "0px";
+              box.style.borderTopStyle = "hidden";
 
-        previous_box = document.getElementById(previous_msgid);
-        previous_box.style.borderBottomColor = "#EDEDED";
-        previous_box.borderBottomRightRadius = "0px";
-        previous_box.borderBottomLeftRadius = "0px";
-    }
+              previous_box = document.getElementById(previous_msgid);
+              previous_box.style.borderBottomColor = "#EDEDED";
+              previous_box.borderBottomRightRadius = "0px";
+              previous_box.borderBottomLeftRadius = "0px";
+          }
 
-  lastSender = sender;
-  lastTimestamp = timestamp;
+        lastSender = sender;
+        lastTimestamp = timestamp;
 
-  scrollToBottom();
+        scrollToBottom();
+
+      } else {
+
+          chat_session.innerHTML =
+          "<div clear='both'/>"+
+          "<div class='"+container_class+"' id='container_"+msgid+"'>"+
+              "<img class='"+icon_class+"' src='file:"+iconpath+"'/>"+
+              "<div class='"+box_class+"' id='"+msgid+"'>"+
+                   "<div class='header'>"+
+                       "<div class='"+recipient_class+"'id='r"+msgid+"'>"+sender+"</div>"+
+                       "<div class='timestamp'>"+
+                           "<div class='delete_button'><a class='delete_link' href='delete_message?id="+msgid+"'>&#x2612;</a></div>"+
+                           "<img id='encryption"+msgid+"' class="+lock_class+" src='file:"+lockiconpath+"'/>"+timestamp+
+                           "<div class="+delayed_class+" id='delayed"+msgid+"'>&#128351;</div>"+
+                           "<div class="+delivered_class+" id='delivered"+msgid+"'>&#10004;</div>"+
+                           "<div class="+displayed_class+" id='displayed"+msgid+"'>&#10004;</div>"+
+                           "</div>"+
+                       "</div>"+
+                       "<div class='message' id='b"+msgid+"'>"+
+                          "<span class='body'>"+text+"</span>"+
+                      "</div>"+
+                   "</div>"+
+              "</div>"+
+          "</div>" + chat_session.innerHTML;
+
+      }
 }
 
 function updateMessageBodyContent(msgid, text)

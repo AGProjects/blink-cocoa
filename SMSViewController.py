@@ -136,7 +136,7 @@ class SMSViewController(NSObject):
     addContactLabel = objc.IBOutlet()
     zoom_period_label = ''
 
-    showHistoryEntries = 50
+    showHistoryEntries = 25
     remoteTypingTimer = None
     handle_scrolling = True
     scrollingTimer = None
@@ -168,6 +168,7 @@ class SMSViewController(NSObject):
     pgp_encrypted = False
     bonjour_lookup_enabled = True
     account_info = None
+    oldest_timestamp = None
 
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False):
         self = objc.super(SMSViewController, self).init()
@@ -201,18 +202,7 @@ class SMSViewController(NSObject):
             self.is_replication_message = is_replication_message
 
             self.load_remote_public_keys()
-
             self.load_private_key()
-
-            NSBundle.loadNibNamed_owner_("SMSView", self)
-
-            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
-            self.chatViewController.setAccount_(self.account)
-            self.chatViewController.resetRenderedMessages()
-        
-            self.chatViewController.inputText.unregisterDraggedTypes()
-            self.chatViewController.inputText.setMaxLength_(MAX_MESSAGE_LENGTH)
-            self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % MAX_MESSAGE_LENGTH)
 
             try:
                 position = NSApp.delegate().contactsWindowController.accounts.index(self.account)
@@ -231,8 +221,10 @@ class SMSViewController(NSObject):
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
             self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
-
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
+
+            NSBundle.loadNibNamed_owner_("SMSView", self)
+
             if not self.is_replication_message and not self.last_route:
                 self.lookup_destination(self.target_uri)
 
@@ -365,13 +357,19 @@ class SMSViewController(NSObject):
 
     def awakeFromNib(self):
         # setup smiley popup
+        self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+        self.chatViewController.setAccount_(self.account)
+        self.chatViewController.resetRenderedMessages()
+
         smileys = SmileyManager().get_smiley_list()
 
         menu = self.smileyButton.menu()
+
         while menu.numberOfItems() > 0:
             menu.removeItemAtIndex_(0)
 
         bigText = NSAttributedString.alloc().initWithString_attributes_(" ", NSDictionary.dictionaryWithObject_forKey_(NSFont.systemFontOfSize_(16), NSFontAttributeName))
+
         for text, file in smileys:
             image = NSImage.alloc().initWithContentsOfFile_(file)
             if not image:
@@ -385,6 +383,7 @@ class SMSViewController(NSObject):
             item.setTarget_(self)
             item.setAttributedTitle_(atext)
             item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
+            item.setImage_(None)
             item.setImage_(image)
 
     @objc.python_method
@@ -432,7 +431,7 @@ class SMSViewController(NSObject):
             if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
                 self.update_message_status(message.id, MSG_STATE_DISPLAYED)
 
-    @objc.python_method
+    @objc.IBAction
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
@@ -1340,8 +1339,6 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def scroll_back_in_time(self):
-         self.chatViewController.clear()
-         self.chatViewController.resetRenderedMessages()
          self.replay_history()
 
     @objc.python_method
@@ -1367,6 +1364,7 @@ class SMSViewController(NSObject):
                 
             zoom_factor = self.chatViewController.scrolling_zoom_factor
             self.log_info('Replay history with zoom factor %s for %s' % (zoom_factor, ", ".join(remote_uris)))
+            after_date = None
 
             if zoom_factor:
                 period_array = {
@@ -1379,7 +1377,7 @@ class SMSViewController(NSObject):
                     7: datetime.datetime.now()-datetime.timedelta(days=3650)
                     }
 
-                after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
+                #after_date = period_array[zoom_factor].strftime("%Y-%m-%d")
 
                 if zoom_factor == 1:
                     self.zoom_period_label = NSLocalizedString("Displaying messages from last day", "Label")
@@ -1397,31 +1395,49 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=10000, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, before_date=self.oldest_timestamp, count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text, before_date=self.oldest_timestamp)
 
             messages = [row for row in reversed(results)]
-            self.render_history_messages(messages)
         except Exception:
             import traceback
             traceback.print_exc()
+        else:
+            self.render_history_messages(messages)
 
     @objc.python_method
     @run_in_gui_thread
     def render_history_messages(self, messages):
+        before = False
+        if self.oldest_timestamp is not None:
+            messages.reverse()
+            before = True
+
+#        self.log_info('Oldest message timestamp %s' % self.oldest_timestamp)
+
+        if len(messages):
+            oldest_timestamp = messages[0].time
+            if self.oldest_timestamp is None:
+                self.oldest_timestamp = oldest_timestamp
+            else:
+                if oldest_timestamp < self.oldest_timestamp:
+                    self.oldest_timestamp = oldest_timestamp
+
         self.log_info('Render history started')
         if self.chatViewController.scrolling_zoom_factor:
             if not self.message_count_from_history:
                 self.message_count_from_history = len(messages)
-                self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
+                #self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
             else:
                 if self.message_count_from_history == len(messages):
                     self.chatViewController.setHandleScrolling_(False)
-                    self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages.", "Label") % self.zoom_period_label)
+                    #self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages.", "Label") % self.zoom_period_label)
+                    self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages.", "Label"))
                     self.chatViewController.setHandleScrolling_(False)
                 else:
-                    self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
+                    pass
+                    #self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
         else:
             self.message_count_from_history = len(messages)
             if len(messages):
@@ -1458,105 +1474,120 @@ class SMSViewController(NSObject):
 
         cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
 
+        i = 0
+        icon_for_self = NSApp.delegate().contactsWindowController.iconPathForSelf()
+        icon_for_remote = None
+
         for message in messages:
-            if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
-                continue
-        
-            if message.body.strip().startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----'):
-                continue
-
-            if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
-                self.not_read_queue.put(message.msgid)
-
-            if message.sip_callid and message.media_type == 'sms':
-                try:
-                    seen = seen_sms[message.sip_callid]
-                except KeyError:
-                    seen_sms[message.sip_callid] = True
-                else:
-                    self.log_info('Skip duplicate message %s' % message.sip_callid)
+            #print('Render msg %3d %s before = %s' % (i, message.time, before))
+            i = i + 1
+            try:
+                if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
+                    continue
+            
+                if message.body.strip().startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----'):
                     continue
 
-            if message.direction == 'outgoing':
-                icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
-            else:
-                sender_uri = sipuri_components_from_string(message.cpim_from)[0]
-                icon = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
+                if message.body.strip().startswith('?OTRv3?'):
+                    continue
 
-            try:
-                timestamp=ISOTimestamp(message.cpim_timestamp)
-            except (DateParserError, TypeError) as e:
-                self.log_error('Failed to parse timestamp %s for message id %s: %s' % (message.cpim_timestamp, message.id, str(e)))
-                timestamp = ISOTimestamp.now()
-            
-            is_html = False if message.content_type == 'text' else True
-            
-            components = sipuri_components_from_string(message.cpim_from)
-            sender = components[1] or components[0] or message.cpim_from
-            content = None
-            encryption = None
-            
-            if message.body.strip().startswith('-----BEGIN PGP MESSAGE-----') and message.body.strip().endswith('-----END PGP MESSAGE-----'):
-                if not self.private_key:
-                    content = 'Encrypted message for which we have no private key'
-                else:
+                if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
+                    self.not_read_queue.put(message.msgid)
+
+                if message.sip_callid and message.media_type == 'sms':
                     try:
-                        pgpMessage = pgpy.PGPMessage.from_blob(message.body.strip())
-                        decrypted_message = self.private_key.decrypt(pgpMessage)
-                    except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                        seen = seen_sms[message.sip_callid]
+                    except KeyError:
+                        seen_sms[message.sip_callid] = True
+                    else:
+                        self.log_info('Skip duplicate message %s' % message.sip_callid)
+                        continue
+
+                if message.direction == 'outgoing':
+                    icon = icon_for_self
+                else:
+                    sender_uri = sipuri_components_from_string(message.cpim_from)[0]
+                    if not icon_for_remote:
+                        icon_for_remote = NSApp.delegate().contactsWindowController.iconPathForURI(sender_uri)
+                    icon = icon_for_remote
+
+                try:
+                    timestamp=ISOTimestamp(message.cpim_timestamp)
+                except (DateParserError, TypeError) as e:
+                    self.log_error('Failed to parse timestamp %s for message id %s: %s' % (message.cpim_timestamp, message.id, str(e)))
+                    timestamp = ISOTimestamp.now()
+                
+                is_html = False if message.content_type == 'text' else True
+                
+                components = sipuri_components_from_string(message.cpim_from)
+                sender = components[1] or components[0] or message.cpim_from
+                content = None
+                encryption = None
+                
+                if message.body.strip().startswith('-----BEGIN PGP MESSAGE-----') and message.body.strip().endswith('-----END PGP MESSAGE-----'):
+                    print('Must decrypt message')
+                    if not self.private_key:
                         content = 'Encrypted message for which we have no private key'
                     else:
-                        encryption = 'verified'
                         try:
-                            content = bytes(decrypted_message.message, 'latin1')
-                        except (TypeError, UnicodeEncodeError) as e:
-                            try:
-                                content = bytes(decrypted_message.message, 'utf-8')
-                            except (TypeError, UnicodeEncodeError) as e:
-                                self.log_info('Failed to decrypt message %s: %s' % (message.id, str(e)))
-                                continue
+                            pgpMessage = pgpy.PGPMessage.from_blob(message.body.strip())
+                            decrypted_message = self.private_key.decrypt(pgpMessage)
+                        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                            content = 'Encrypted message for which we have no private key'
                         else:
-                            content = content.decode()
-                            self.history.update_decrypted_message(message.msgid, content)
+                            encryption = 'verified'
+                            try:
+                                content = bytes(decrypted_message.message, 'latin1')
+                            except (TypeError, UnicodeEncodeError) as e:
+                                try:
+                                    content = bytes(decrypted_message.message, 'utf-8')
+                                except (TypeError, UnicodeEncodeError) as e:
+                                    self.log_info('Failed to decrypt message %s: %s' % (message.id, str(e)))
+                                    continue
+                            else:
+                                content = content.decode()
+                                self.history.update_decrypted_message(message.msgid, content)
 
-            sender = message.cpim_from
-            recipient = message.cpim_to
+                sender = message.cpim_from
+                recipient = message.cpim_to
 
-            match = cpim_re.match(sender)
-            if match:
-                sender = match.group('display_name') or match.group('uri')
+                match = cpim_re.match(sender)
+                if match:
+                    sender = match.group('display_name') or match.group('uri')
 
-            match = cpim_re.match(recipient)
-            if match:
-                recipient = match.group('display_name') or match.group('uri')
+                match = cpim_re.match(recipient)
+                if match:
+                    recipient = match.group('display_name') or match.group('uri')
 
-            if message.id not in self.msg_id_list:
-                if message.direction == 'incoming':
-                    sender = self.normalizeSender(sender)
-                self.msg_id_list.add(message.id)
-                status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
+                if message.id not in self.msg_id_list:
+                    if message.direction == 'incoming':
+                        sender = self.normalizeSender(sender)
+                    self.msg_id_list.add(message.id)
+                    status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
 
-                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption)
+                    self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption, before=before)
 
-                if message.direction == 'outgoing' and message.status == MSG_STATE_FAILED_LOCAL and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7):
+                    if message.direction == 'outgoing' and message.status == MSG_STATE_FAILED_LOCAL and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7):
 
-                    encryption = 'verified' if self.pgp_encrypted else ''
+                        encryption = 'verified' if self.pgp_encrypted else ''
 
-                    recipient = ChatIdentity(self.target_uri, self.display_name)
-                    mInfo = MessageInfo(message.msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content=message.body, status=message.status, encryption=encryption)
-                    
-                    self.log_info('Resending message %s to %s' % (message.msgid, recipient))
-                    self.messages[mInfo.id] = mInfo
-                    self.outgoing_queue.put(mInfo)
-                    if not self.routes:
-                        self.lookup_destination(self.target_uri)
+                        recipient = ChatIdentity(self.target_uri, self.display_name)
+                        mInfo = MessageInfo(message.msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content=message.body, status=message.status, encryption=encryption)
+                        
+                        self.log_info('Resending message %s to %s' % (message.msgid, recipient))
+                        self.messages[mInfo.id] = mInfo
+                        self.outgoing_queue.put(mInfo)
+                        if not self.routes:
+                            self.lookup_destination(self.target_uri)
 
-            #self.log_info('Render %s history message %s status=%s' % (message.direction, message.msgid, message.status))
+                #self.log_info('Render %d %s history message %s status=%s' % (id, message.direction, message.msgid, message.status))
 
-            call_id = message.sip_callid
-            last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
-            if message.media_type == 'chat':
-                last_chat_timestamp = timestamp
+                call_id = message.sip_callid
+                last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
+                if message.media_type == 'chat':
+                    last_chat_timestamp = timestamp
+            except Exception as e:
+                print('Render message exception: %s' % str(e))
 
         self.log_info('Render history completed')
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
