@@ -59,7 +59,7 @@ from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DI
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController
-from util import format_identity_to_string, run_in_gui_thread
+from util import format_identity_to_string, run_in_gui_thread, call_later
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
@@ -562,7 +562,8 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         if account is not BonjourAccount():
-           self.syncConversations(account)
+            call_later(10, self.syncConversations, account)
+
 
     @objc.python_method
     def requestSyncToken(self, account):
