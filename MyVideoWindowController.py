@@ -45,6 +45,7 @@ from Foundation import (NSBundle,
 
 from AVFoundation import (AVCaptureDeviceInput,
                           AVCaptureVideoDataOutput,
+                          CMVideoFormatDescriptionGetDimensions,
                           AVCaptureDevice,
                           AVCaptureSession,
                           AVCaptureVideoPreviewLayer,
@@ -260,8 +261,6 @@ class LocalVideoView(NSView):
     step_y = 0
     is_dragging = False
     active = False
-
-    resolution_re = re.compile(".* enc dims = (?P<width>\d+)x(?P<height>\d+),.*")    # i'm sorry
 
     def close(self):
         BlinkLogger().log_debug('Close %s' % self)
@@ -482,12 +481,11 @@ class LocalVideoView(NSView):
             max_resolution = (0, 0)
             BlinkLogger().log_debug("%s camera provides %d formats" % (device.localizedName(), len(device.formats())))
             for desc in device.formats():
-                m = self.resolution_re.match(repr(desc))
-                if m:
-                    data = m.groupdict()
-                    width = int(data['width'])
-                    height = int(data['height'])
-                    BlinkLogger().log_debug("Supported resolution: %dx%d %.2f" % (width, height, width/float(height)))
+                dimensions = CMVideoFormatDescriptionGetDimensions(desc.formatDescription())
+                if dimensions:
+                    width = dimensions.width
+                    height = dimensions.height
+                    #BlinkLogger().log_info("Supported resolution: %dx%d %.2f" % (width, height, width/float(height)))
                     if width > max_resolution[0]:
                         max_resolution = (width, height)
 
@@ -496,22 +494,22 @@ class LocalVideoView(NSView):
                 width = 1280
                 height = 720
                 BlinkLogger().log_info("Error: %s camera does not provide any supported video format" % device.localizedName())
-            else:
-                if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
-                    BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 
             self.captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
-            if self.captureDeviceInput:
-                try: 
-                    self.captureSession.addInput_(self.captureDeviceInput[0])
-                except ValueError as e:
-                    BlinkLogger().log_info('Failed to add camera input to capture session: %s' % str(e))
-                    return
-            else:
+
+            if not self.captureDeviceInput:
                 BlinkLogger().log_info('Failed to aquire input %s' % self)
                 return
+
+            try:
+                self.captureSession.addInput_(self.captureDeviceInput)
+            except Exception as e:
+                BlinkLogger().log_info('Failed to add camera input to capture session: %s' % str(e))
+                return
+
+            BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
             self.setWantsLayer_(True)
             self.videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
@@ -533,7 +531,6 @@ class LocalVideoView(NSView):
             self.captureSession.addOutput_(self.stillImageOutput)
 
         if self.captureSession and self.videoPreviewLayer:
-            BlinkLogger().log_info('Start aquire local video %s' % self)
             self.videoPreviewLayer.setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.4))
             self.captureSession.startRunning()
 
@@ -552,7 +549,6 @@ class LocalVideoView(NSView):
             self.videoPreviewLayer.connection().setVideoMirrored_(True)
         else:
             self.videoPreviewLayer.connection().setVideoMirrored_(False)
-    
 
     @objc.python_method
     def getSnapshot(self):
