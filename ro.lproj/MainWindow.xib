@@ -549,7 +549,7 @@ CA
                             <outlet property="nextKeyView" destination="504" id="741"/>
                         </connections>
                     </searchField>
-                    <imageView toolTip="Apasă pentru a schimba avatarul" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="656" userLabel="My Photo View" customClass="PhotoView">
+                    <imageView clipsToBounds="YES" toolTip="Apasă pentru a schimba avatarul" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="656" userLabel="My Photo View" customClass="PhotoView">
                         <rect key="frame" x="8" y="390" width="32" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="photo" image="NSUser" id="657"/>
