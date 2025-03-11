@@ -7,6 +7,7 @@
 
 # This script assumes packages are installed using pip3 in user folder 
 
+site_packages_folder=`./get_site_packages_folder.sh`
 cd ../Distribution
 
 d=`pwd`
@@ -15,14 +16,6 @@ if [ $curent_dir != "Distribution" ]; then
     echo "Must run inside distribution folder"
     exit 1
 fi
-
-arch=`python3 -c "import platform; print(platform.processor())"`
-pver=`python3 -c "import sys; print(sys.version[0:3])"`
-
-venv="$HOME/work/blink-python-$pver-$arch-env"
-
-site_packages_folder="$venv/lib/python3.9/site-packages/"
-echo $site_packages_folder
 
 # Copy Objc Python modules
 pyobjc_modules="objc AVFoundation AddressBook AppKit Cocoa \

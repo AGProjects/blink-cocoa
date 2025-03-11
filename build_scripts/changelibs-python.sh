@@ -1,7 +1,7 @@
 # Change library paths 
 
 arch=`python3 -c "import platform; print(platform.processor())"`
-pver=`python3 -c "import sys; print(sys.version[0:3])"`
+pver=`python3 -c "import sys; print(sys.version[0:4])"`
 
 #cp -a /Library/Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/*.so Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/
 old_path="/Library/Frameworks/Python.framework/"

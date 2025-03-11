@@ -1,1 +1,5 @@
-pyobjc==8.2
+pgpy
+pycryptodome
+sqlobject
+formencode
+pydispatch

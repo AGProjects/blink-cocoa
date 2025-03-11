@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# Download Python from https://www.python.org/downloads/release/python-391/
-# Then Install pyobjc pip3 install --user pyobjc
-
 # This script must be run inside ./Distribution folder
-
 # This script assumes packages are installed using pip3 in user folder 
+
+pver=`./get_python_version.sh`
 
 cd ../Distribution
 
@@ -16,24 +14,24 @@ if [ $curent_dir != "Distribution" ]; then
     exit 1
 fi
 
-arch=`python3 -c "import platform; print(platform.processor())"`
-pver=`python3 -c "import sys; print(sys.version[0:3])"`
-
-venv="$HOME/work/blink-python-$pver-$arch-env"
-
-site_packages_folder="$venv/lib/python$pver/site-packages/"
-echo $site_packages_folder
-
-if [ ! -d Resources ]; then
-    mkdir Resources
-    mkdir Resources/lib
-fi
-
 if [ -d Frameworks/Python.framework ]; then
-    rm -r Frameworks/Python.framework
+    rm -rf Frameworks/Python.framework
 fi
 
-cp -a /Library/Frameworks/Python.framework Frameworks/
+mkdir Frameworks/Python.framework
+mkdir Frameworks/Python.framework/Versions
+
+echo "Copy Framework /Library/Frameworks/Python.framework/Versions/$pver"
+
+cp -a /Library/Frameworks/Python.framework/Versions/$pver Frameworks/Python.framework/Versions/$pver
+cd Frameworks/Python.framework/Versions/
+ln -s $pver Current
+cd ..
+ln -s Versions/Current/Headers .
+ln -s Versions/Current/Resources .
+ln -s Versions/Current/Python .
+cd ../../
+
 chmod -R u+rwX Frameworks/Python.framework
 
 # Clean up
@@ -58,19 +56,15 @@ rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/ensurepip
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/pkgconfig 
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_tkinter.cpython-39-darwin.so
 
-rm -f Frameworks/Python.framework/Versions/$pver/lib/libssl*
+#rm -f Frameworks/Python.framework/Versions/$pver/lib/libssl*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libformw*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libpanelw*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libmenuw*
-rm -f Frameworks/Python.framework/Versions/$pver/lib/libcrypto*
+#rm -f Frameworks/Python.framework/Versions/$pver/lib/libcrypto*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/python$pver/config-$pver-darwin/python.o
 rm -f Frameworks/Python.framework/Versions/$pver/lib/itcl4.1.1/libitclstub4.1.1.a
 rm -f Frameworks/Python.framework/Versions/$pver/lib/tdbc1.0.6/libtdbcstub1.0.6.a
 rm -f Frameworks/Python.framework/Versions/$pver/lib/python$pver/config-$pver-darwin/libpython$pver.a
-
-cd Frameworks/Python.framework/Versions
-ln -sf $pver A
-cd -
 
 find Frameworks/Python.framework -name *ncurses* -exec rm -rf {} \; >/dev/null 2>&1
 
@@ -78,5 +72,12 @@ cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/li
 
 ./changelibs-python.sh 
 
-sos=`find Frameworks/Python.framework -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
-sos=`find Frameworks/Python.framework -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+sos=`find Frameworks/Python.framework -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp -s "Developer ID Application" $s; done
+sos=`find Frameworks/Python.framework -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp -s "Developer ID Application" $s; done
+
+cp Frameworks/Python.framework/Versions/$pver/lib/libpython$pver.dylib Frameworks/libs/
+cd Frameworks/libs/
+codesign -f -o runtime --timestamp -s "Developer ID Application" libpython$pver.dylib
+ln -sf libpython$pver.dylib libpython.dylib
+cd -
+

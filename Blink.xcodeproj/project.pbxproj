@@ -18,6 +18,7 @@
 		1F08DB1B193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08DB1C193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08DB1E193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
+		1F08F3822D7FAE3700F91619 /* libpython.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F08F3812D7FAE3700F91619 /* libpython.dylib */; };
 		1F092DB412B2785E000CEE7F /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
 		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
@@ -627,7 +628,6 @@
 		1F72E53B16A027F600837311 /* MergeContactController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E53916A027F600837311 /* MergeContactController.py */; };
 		1F72E53E16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
 		1F72E53F16A02B3600837311 /* MergeContacts.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F72E54316A02B3600837311 /* MergeContacts.xib */; };
-		1F7436BB2D53AD7D00792754 /* libpython3.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7436BA2D53AD7D00792754 /* libpython3.9.dylib */; };
 		1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */ = {isa = PBXBuildFile; fileRef = DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */; };
 		1F774C6719CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
 		1F774C6819CB169800240DC1 /* video-active.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F774C6619CB169800240DC1 /* video-active.png */; };
@@ -1346,6 +1346,7 @@
 		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
 		1F08DB14193DEDB200187373 /* offline.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = offline.aif; path = sounds/offline.aif; sourceTree = "<group>"; };
 		1F08DB15193DEDB200187373 /* online.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = online.aif; path = sounds/online.aif; sourceTree = "<group>"; };
+		1F08F3812D7FAE3700F91619 /* libpython.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython.dylib; path = Distribution/Frameworks/libs/libpython.dylib; sourceTree = "<group>"; };
 		1F092DB312B2785E000CEE7F /* ConferenceController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceController.py; sourceTree = "<group>"; };
 		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
@@ -1949,7 +1950,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F7436BB2D53AD7D00792754 /* libpython3.9.dylib in Frameworks */,
+				1F08F3822D7FAE3700F91619 /* libpython.dylib in Frameworks */,
 				1FF63CD619128C4800A502FB /* AVFoundation.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
@@ -2171,6 +2172,7 @@
 		1FF02E972D10362300420726 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F08F3812D7FAE3700F91619 /* libpython.dylib */,
 				1F7436BA2D53AD7D00792754 /* libpython3.9.dylib */,
 			);
 			name = Frameworks;

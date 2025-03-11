@@ -1,12 +1,11 @@
 #!/bin/bash
 
-version="5.2.3-mac"
-wget https://github.com/AGProjects/python3-sipsimple/archive/refs/tags/$version.tar.gz
-
+version="5.3.3-mac"
 if [ -f $version.tar.gz ]; then
     rm $version.tar.gz
 fi
 
+wget https://github.com/AGProjects/python3-sipsimple/archive/refs/tags/$version.tar.gz
 tar zxvf $version.tar.gz
 rm $version.tar.gz
 
@@ -21,7 +20,7 @@ cd python3-sipsimple-$version
 echo "Installing SIP Simple SDK..."
 
 chmod +x ./get_dependencies*
-./get_dependencies-211.sh 
+./get_dependencies.sh 
 
 if [ $? -ne 0 ]; then
     echo
