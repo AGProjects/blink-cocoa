@@ -63,6 +63,7 @@ from AVFoundation import (AVCaptureDeviceInput,
                           )
 
 import objc
+import platform
 
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
 from Quartz.CoreGraphics import kCGColorBlack, CGColorGetConstantColor
@@ -88,7 +89,7 @@ from application.python import Null
 from zope.interface import implementer
 from util import run_in_gui_thread
 
-
+macos_version = tuple(map(int, platform.mac_ver()[0].split(".")))
 ALPHA = 1.0
 
 @implementer(IObserver)
@@ -472,6 +473,7 @@ class LocalVideoView(NSView):
             device = self.getDevice()
 
             if not device:
+                BlinkLogger().log_info('No video device')
                 return
 
             self.captureSession = AVCaptureSession.alloc().init()
@@ -482,7 +484,7 @@ class LocalVideoView(NSView):
             NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(self, "computerWillSleep:", NSWorkspaceWillSleepNotification, None)
 
             max_resolution = (0, 0)
-            BlinkLogger().log_debug("%s camera provides %d formats" % (device.localizedName(), len(device.formats())))
+            #BlinkLogger().log_info("%s camera provides %d formats" % (device.localizedName(), len(device.formats())))
             for desc in device.formats():
                 dimensions = CMVideoFormatDescriptionGetDimensions(desc.formatDescription())
                 if dimensions:
@@ -500,7 +502,12 @@ class LocalVideoView(NSView):
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 
-            self.captureDeviceInput, error = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
+            ret = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
+
+            try:
+                self.captureDeviceInput, error = ret
+            except TypeError:
+                self.captureDeviceInput = ret
 
             BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
@@ -514,8 +521,6 @@ class LocalVideoView(NSView):
                 BlinkLogger().log_info('Failed to add camera input to capture session: %s' % str(e))
                 return
 
-            BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
-
             self.setWantsLayer_(True)
             self.videoPreviewLayer = AVCaptureVideoPreviewLayer.alloc().initWithSession_(self.captureSession)
             self.layer().addSublayer_(self.videoPreviewLayer)
@@ -528,10 +533,14 @@ class LocalVideoView(NSView):
             self.videoPreviewLayer.setMasksToBounds_(True)
 
             self.setMirroring()
-
-            self.stillImageOutput = AVCaptureStillImageOutput.alloc().init()
-            pixelFormat = NSNumber.numberWithInt_(kCVPixelFormatType_32BGRA)
-            self.stillImageOutput.setOutputSettings_(NSDictionary.dictionaryWithObject_forKey_(pixelFormat, kCVPixelBufferPixelFormatTypeKey))
+            
+            if macos_version >= (10, 12):
+                self.stillImageOutput = AVCapturePhotoOutput.alloc().init()
+            else:
+                self.stillImageOutput = AVCaptureStillImageOutput.alloc().init()
+                pixelFormat = NSNumber.numberWithInt_(kCVPixelFormatType_32BGRA)
+                self.stillImageOutput.setOutputSettings_(NSDictionary.dictionaryWithObject_forKey_(pixelFormat, kCVPixelBufferPixelFormatTypeKey))
+            
             self.captureSession.addOutput_(self.stillImageOutput)
 
         if self.captureSession and self.videoPreviewLayer:
@@ -556,31 +565,46 @@ class LocalVideoView(NSView):
 
     @objc.python_method
     def getSnapshot(self):
-        connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
-        if not connection:
+        if macos_version >= (10, 12):
+            settings = AVCapturePhotoSettings.photoSettings()
+            self.stillImageOutput.capturePhotoWithSettings_delegate_(settings, self)
+        else:
+            connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
+
+            if not connection:
+                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
+                return
+
+            def completionHandler(buffer, error):
+                if error:
+                    NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
+                    return
+
+                imageBuffer = CMSampleBufferGetImageBuffer(buffer)
+                if not imageBuffer:
+                    NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
+                    return
+
+                CVBufferRetain(imageBuffer)
+                imageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(imageBuffer))
+                image = NSImage.alloc().initWithSize_(imageRep.size())
+                image.addRepresentation_(imageRep)
+                CVBufferRelease(imageBuffer)
+                
+                NotificationCenter().post_notification('CameraSnapshotDidSucceed', sender=self, data=NotificationData(image=image))
+
+            self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, completionHandler)
+
+    def captureOutput_didFinishProcessingPhoto_error_(self, output, photo, error):
+        if error:
+            BlinkLogger().log_info('Image capture failed')
             NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
-            return
-
-        def completionHandler(buffer, error):
-            if error:
-                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
-                return
-
-            imageBuffer = CMSampleBufferGetImageBuffer(buffer)
-            if not imageBuffer:
-                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
-                return
-
-            CVBufferRetain(imageBuffer)
-            imageRep = NSCIImageRep.imageRepWithCIImage_(CIImage.imageWithCVImageBuffer_(imageBuffer))
-            image = NSImage.alloc().initWithSize_(imageRep.size())
-            image.addRepresentation_(imageRep)
-            CVBufferRelease(imageBuffer)
-            
+        else:
+            image_data = photo.fileDataRepresentation()
+            image = NSImage.alloc().initWithData_(image_data)
+            BlinkLogger().log_info('Image capture complete')
             NotificationCenter().post_notification('CameraSnapshotDidSucceed', sender=self, data=NotificationData(image=image))
-
-        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, completionHandler)
-
+            
     @objc.python_method
     def visible(self):
         return self.captureSession is not None
