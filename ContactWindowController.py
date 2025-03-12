@@ -6367,8 +6367,10 @@ class LdapSearch(object):
 
             while True:
                 try:
-                    result_type, result_data = self.ldap_directory.l.result(self.ldap_query_id, all=0)
-                except ldap.LDAPError:
+                    q = self.ldap_directory.l.result(self.ldap_query_id, all=0)
+                    result_type, result_data = q
+                except Exception as e:
+                    print('LDAP error: %s' % str(e))
                     return
 
                 if not result_data:
