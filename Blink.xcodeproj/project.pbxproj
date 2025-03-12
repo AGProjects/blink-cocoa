@@ -19,6 +19,7 @@
 		1F08DB1C193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08DB1E193DEDB200187373 /* online.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1F08DB15193DEDB200187373 /* online.aif */; };
 		1F08F3822D7FAE3700F91619 /* libpython.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F08F3812D7FAE3700F91619 /* libpython.dylib */; };
+		1F08F3832D81D33900F91619 /* libpython.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F08F3812D7FAE3700F91619 /* libpython.dylib */; };
 		1F092DB412B2785E000CEE7F /* ConferenceController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F092DB312B2785E000CEE7F /* ConferenceController.py */; };
 		1F0D0ECA132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
 		1F0D0ECB132D236200614205 /* ConferenceConfigurationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */; };
@@ -769,7 +770,6 @@
 		1FCA7D5C195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5D195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
 		1FCA7D5F195465F900765366 /* support@conference.sip2sip.info.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1FCA7D5B195465F900765366 /* support@conference.sip2sip.info.tiff */; };
-		1FCDCF382D7CE7DF0050A35C /* libpython3.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7436BA2D53AD7D00792754 /* libpython3.9.dylib */; };
 		1FCDCF3A2D7CE8EE0050A35C /* libs in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
 		1FCDCF3B2D7CE8FC0050A35C /* lib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 1FCF1D1E12B57D1400F71BE5 /* lib */; };
 		1FCDE5AE2D539BC100140B1F /* libs in Resources */ = {isa = PBXBuildFile; fileRef = 1FCDE5AD2D539BC100140B1F /* libs */; };
@@ -1920,7 +1920,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FCDCF382D7CE7DF0050A35C /* libpython3.9.dylib in Frameworks */,
+				1F08F3832D81D33900F91619 /* libpython.dylib in Frameworks */,
 				1F2436861912B27000E71253 /* AVFoundation.framework in Frameworks */,
 				1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */,
 				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
