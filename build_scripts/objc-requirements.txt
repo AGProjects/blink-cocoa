@@ -1,0 +1,8 @@
+pyobjc_core==10.0
+pyobjc-framework-AVFoundation==10.0
+pyobjc-framework-AddressBook==10.0
+pyobjc-framework-CoreAudio==10.0
+pyobjc-framework-FSEvents==10.0
+pyobjc-framework-LaunchServices==10.0
+pyobjc-framework-WebKit==10.0
+pyobjc-framework-ScriptingBridge==10.0
