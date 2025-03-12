@@ -1525,7 +1525,6 @@ class SMSViewController(NSObject):
                 encryption = None
                 
                 if message.body.strip().startswith('-----BEGIN PGP MESSAGE-----') and message.body.strip().endswith('-----END PGP MESSAGE-----'):
-                    print('Must decrypt message')
                     if not self.private_key:
                         content = 'Encrypted message for which we have no private key'
                     else:
