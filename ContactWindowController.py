@@ -325,8 +325,7 @@ class ContactWindowController(NSWindowController):
     presenceInfoPanel = None
     tellMeWhenContactBecomesAvailableList = set()
 
-    #statusbar = NSStatusBar.systemStatusBar()
-    statusbar = Null
+    statusbar = NSStatusBar.systemStatusBar()
     statusBarMenu = objc.IBOutlet()
     speech_synthesizer = None
     speech_synthesizer_active = False
