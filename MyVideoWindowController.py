@@ -558,13 +558,12 @@ class LocalVideoView(NSView):
     def getSnapshot(self):
         connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
         if not connection:
-            print("No valid connection for capturing image")
+            NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
             return
 
         def completionHandler(buffer, error):
-            print('completionHandler %s' % buffer)
             if error:
-                print("Error capturing photo:", error)
+                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
                 return
 
             imageBuffer = CMSampleBufferGetImageBuffer(buffer)
