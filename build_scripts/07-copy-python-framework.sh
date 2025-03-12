@@ -70,6 +70,7 @@ find Frameworks/Python.framework -name *ncurses* -exec rm -rf {} \; >/dev/null 2
 
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python$pver/
 
+
 ./changelibs-python.sh 
 
 sos=`find Frameworks/Python.framework -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_names2.sh $s; codesign -f -o runtime --timestamp -s "Developer ID Application" $s; done

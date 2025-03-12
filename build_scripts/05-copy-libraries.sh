@@ -20,24 +20,21 @@ fi
 
 
 libs=`./get_deps_recurrent.py $core`
+mkdir Frameworks/libs
 lib_dir="Frameworks/libs"
 
 for l in $libs; do
         fn=`basename $l`
         echo "Checking SDK dependency $l"
-        #if [ ! -f $lib_dir/$fn ]; then
+        if [ ! -f $lib_dir/$fn ]; then
             echo "cp $l to $lib_dir/"
             cp $l $lib_dir/
             ../build_scripts/change_lib_names2.sh $lib_dir/$fn
             codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-        #else
-        #    file $lib_dir/$fn
-        #fi
+        else
+            file $lib_dir/$fn
+        fi
 done
-
-cp Frameworks/Python.framework/Versions/$pver/lib/libpython$pver.dylib Frameworks/libs
-../build_scripts/change_lib_names2.sh Frameworks/libs/libpython$pver.dylib
-codesign -f --timestamp -s "Developer ID Application" Frameworks/libs/libpython$pver.dylib
 
 lib_dir="Frameworks/libs"
 extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib"
@@ -45,11 +42,11 @@ extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib"
 for l in $extra_libs; do
     fn=`basename $l`
     echo $lib_dir/$fn
-    #if [ ! -f $lib_dir/$fn ]; then
+    if [ ! -f $lib_dir/$fn ]; then
         echo "Copy library $l to $lib_dir/"
         cp $l $lib_dir/
         ../build_scripts/change_lib_names2.sh $lib_dir/$fn
         codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-    #fi
+    fi
 done
 

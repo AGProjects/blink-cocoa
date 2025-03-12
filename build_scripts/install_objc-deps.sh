@@ -5,4 +5,4 @@ echo "Installing Blink dependencies..."
 
 source activate_venv.sh
 
-pip3 install -r objc-requirements.txt
+pip3 install -r requirements-objc.txt
