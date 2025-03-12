@@ -40,7 +40,8 @@ from Foundation import (NSBundle,
                         NSMenuItem,
                         NSScreen,
                         NSTrackingArea,
-                        NSZeroRect
+                        NSZeroRect,
+                        NSObject
                         )
 
 from AVFoundation import (AVCaptureDeviceInput,
@@ -50,16 +51,18 @@ from AVFoundation import (AVCaptureDeviceInput,
                           AVCaptureSession,
                           AVCaptureVideoPreviewLayer,
                           AVCaptureStillImageOutput,
+                          AVCapturePhotoSettings,
+                          AVCapturePhotoOutput,
                           AVCaptureSessionPresetHigh,
                           AVLayerVideoGravityResizeAspectFill,
                           AVMediaTypeVideo,
                           AVMediaTypeMuxed,
                           AVVideoCodecJPEG,
-                          AVVideoCodecKey
+                          AVVideoCodecKey,
+                          AVCaptureConnection
                           )
 
 import objc
-
 
 from Quartz.QuartzCore import kCALayerHeightSizable, kCALayerWidthSizable
 from Quartz.CoreGraphics import kCGColorBlack, CGColorGetConstantColor
@@ -497,7 +500,9 @@ class LocalVideoView(NSView):
 
             self.aspect_ratio = width/float(height) if width > height else height/float(width)
 
-            self.captureDeviceInput = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
+            self.captureDeviceInput, error = AVCaptureDeviceInput.alloc().initWithDevice_error_(device, None)
+
+            BlinkLogger().log_info("Opened %s camera at %0.fx%0.f resolution" % (SIPApplication.video_device.real_name, width, height))
 
             if not self.captureDeviceInput:
                 BlinkLogger().log_info('Failed to aquire input %s' % self)
@@ -524,10 +529,9 @@ class LocalVideoView(NSView):
 
             self.setMirroring()
 
-            self.stillImageOutput = AVCaptureStillImageOutput.new()
+            self.stillImageOutput = AVCaptureStillImageOutput.alloc().init()
             pixelFormat = NSNumber.numberWithInt_(kCVPixelFormatType_32BGRA)
             self.stillImageOutput.setOutputSettings_(NSDictionary.dictionaryWithObject_forKey_(pixelFormat, kCVPixelBufferPixelFormatTypeKey))
-
             self.captureSession.addOutput_(self.stillImageOutput)
 
         if self.captureSession and self.videoPreviewLayer:
@@ -552,12 +556,18 @@ class LocalVideoView(NSView):
 
     @objc.python_method
     def getSnapshot(self):
-        def captureHandler(sampleBuffer, requiredNoneArg):
-            if not sampleBuffer:
-                NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
+        connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
+        if not connection:
+            print("No valid connection for capturing image")
+            return
+
+        def completionHandler(buffer, error):
+            print('completionHandler %s' % buffer)
+            if error:
+                print("Error capturing photo:", error)
                 return
 
-            imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+            imageBuffer = CMSampleBufferGetImageBuffer(buffer)
             if not imageBuffer:
                 NotificationCenter().post_notification('CameraSnapshotDidFail', sender=self)
                 return
@@ -567,12 +577,10 @@ class LocalVideoView(NSView):
             image = NSImage.alloc().initWithSize_(imageRep.size())
             image.addRepresentation_(imageRep)
             CVBufferRelease(imageBuffer)
-
+            
             NotificationCenter().post_notification('CameraSnapshotDidSucceed', sender=self, data=NotificationData(image=image))
 
-        if self.stillImageOutput:
-            connection = self.stillImageOutput.connectionWithMediaType_(AVMediaTypeVideo)
-            self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, captureHandler)
+        self.stillImageOutput.captureStillImageAsynchronouslyFromConnection_completionHandler_(connection, completionHandler)
 
     @objc.python_method
     def visible(self):
