@@ -18,6 +18,7 @@ if [ ! -f $core ]; then
    exit 1
 fi
 
+echo $core
 
 libs=`./get_deps_recurrent.py $core`
 mkdir Frameworks/libs
@@ -29,7 +30,7 @@ for l in $libs; do
         if [ ! -f $lib_dir/$fn ]; then
             echo "cp $l to $lib_dir/"
             cp $l $lib_dir/
-            ../build_scripts/change_lib_names2.sh $lib_dir/$fn
+            ../build_scripts/change_lib_paths.sh $lib_dir/$fn
             codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
         else
             file $lib_dir/$fn
@@ -45,7 +46,7 @@ for l in $extra_libs; do
     if [ ! -f $lib_dir/$fn ]; then
         echo "Copy library $l to $lib_dir/"
         cp $l $lib_dir/
-        ../build_scripts/change_lib_names2.sh $lib_dir/$fn
+        ../build_scripts/change_lib_paths.sh $lib_dir/$fn
         codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
     fi
 done

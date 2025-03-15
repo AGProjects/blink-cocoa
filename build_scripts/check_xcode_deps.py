@@ -53,7 +53,7 @@ for dep in core_deps:
         if os.path.exists('Frameworks/%s' % filename):
             print(f"{i} You must add {dep} to the 'Copy Frameworks' phase")
         else:
-            print(f'{dep} core dependecny is missing from Frameworks/{dep}')
+            print(f'{dep} core dependency is missing from Frameworks/{dep}')
         
         i = i + 1
         

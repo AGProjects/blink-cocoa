@@ -1,0 +1,17 @@
+Build harfbuzz from source
+--------------------------
+
+The curent map port harfbuzz is broken. To build it from source do:
+
+
+sudo port install autoconf automake libtool pkgconfig cairo icu +universal
+sudo port fetch harfbuzz
+cd $(port dir harfbuzz)
+
+Edit Portfile and comment out this line:
+
+#gobject_introspection yes
+
+sudo port -d configure harfbuzz +universal
+sudo port -d build harfbuzz
+sudo port install harfbuzz +universal universal_archs="x86_64 arm64"
