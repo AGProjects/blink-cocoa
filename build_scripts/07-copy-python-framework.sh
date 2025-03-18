@@ -54,7 +54,7 @@ rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/distutils
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/idlelib
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/ensurepip
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/pkgconfig 
-rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_tkinter.cpython-39-darwin.so
+rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_tkinter.cpython-$pver/-darwin.so
 
 #rm -f Frameworks/Python.framework/Versions/$pver/lib/libssl*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libformw*
