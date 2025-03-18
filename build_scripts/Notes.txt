@@ -1,17 +1,8 @@
-Build harfbuzz from source
---------------------------
+Sometimes libuuid is needed: 
 
-The curent map port harfbuzz is broken. To build it from source do:
+sudo port install libuuid
 
+But the header file uuid.h is conflicting with the build-in MacOS version, so
+move it out of the way:
 
-sudo port install autoconf automake libtool pkgconfig cairo icu +universal
-sudo port fetch harfbuzz
-cd $(port dir harfbuzz)
-
-Edit Portfile and comment out this line:
-
-#gobject_introspection yes
-
-sudo port -d configure harfbuzz +universal
-sudo port -d build harfbuzz
-sudo port install harfbuzz +universal universal_archs="x86_64 arm64"
+sudo mv /opt/local/include/uuid/uuid.h /opt/local/include/uuid/uuid.h.old
