@@ -25,7 +25,7 @@ if [ ! -d Resources/lib ]; then
     mkdir Resources/lib
 fi
 
-for arch in arm64 x86_64; do
+for arch in x86_64 arm64; do
     if [ ! -d Resources/lib-$arch ]; then
         mkdir Resources/lib-$arch
     fi
