@@ -85,7 +85,7 @@ class VideoLocalWindowController(NSWindowController):
             self._finish_close()
             return
         
-        from VideoWindowController import TitleBarView
+        #from VideoWindowController import TitleBarView
 
         NSBundle.loadNibNamed_owner_("VideoLocalWindow", self)
         self.window().center()
@@ -93,20 +93,8 @@ class VideoLocalWindowController(NSWindowController):
         NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
         self.window().setTitle_(title)
         self.window().setLevel_(NSFloatingWindowLevel)
-        themeFrame = self.window().contentView().superview()
-        self.titleBarView = LocalTitleBarView.alloc().init()
-        topmenu_frame = self.titleBarView.view.frame()
+
         self.disconnectLabel.superview().hide()
-
-        newFrame = NSMakeRect(
-                                0,
-                                themeFrame.frame().size.height - topmenu_frame.size.height,
-                                themeFrame.frame().size.width,
-                                topmenu_frame.size.height)
-
-        self.titleBarView.view.setFrame_(newFrame)
-        themeFrame.addSubview_(self.titleBarView.view)
-        self.titleBarView.textLabel.setHidden_(False)
         self.updateTrackingAreas()
         
         self.videoView.setProducer(SIPApplication.video_device.producer)
@@ -265,7 +253,6 @@ class VideoLocalWindowController(NSWindowController):
         self.notification_center = None
 
     def fade_(self, timer):
-        self.titleBarView.close()
         self.videoView.close()
         self.window().close()
     
@@ -317,23 +304,4 @@ class VideoLocalWindowController(NSWindowController):
     @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.videoView.setProducer(notification.data.new_camera)
-
-
-class LocalTitleBarView(NSObject):
-    view = objc.IBOutlet()
-    textLabel = objc.IBOutlet()
-    
-    def init(self):
-        self = objc.super(LocalTitleBarView, self).init()
-        if self:
-            NSBundle.loadNibNamed_owner_("VideoLocalTitleBarView", self)
-        
-        return self
-    
-    def close(self):
-        self.view.removeFromSuperview()
-
-    @objc.IBAction
-    def performClose_(self, sender):
-        self.view.window().performClose_(sender)
 

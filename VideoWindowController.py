@@ -658,36 +658,10 @@ class VideoWindowController(NSWindowController):
         self.window().setTitle_(title)
         self.updateTrackingAreas()
 
-        self.showTitleBar()
-        
         if SIPSimpleSettings().video.keep_window_on_top:
             self.toogleAlwaysOnTop()
 
         self.startIdleTimer()
-
-    @objc.python_method
-    def showTitleBar(self):
-        if self.streamController.ended:
-            return
-
-        if self.titleBarView is None:
-            self.titleBarView = TitleBarView.alloc().initWithWindowController_(self)
-
-        themeFrame = self.window().contentView().superview()
-        topmenu_frame = self.titleBarView.view.frame()
-        
-        newFrame = NSMakeRect(
-                              0,
-                              themeFrame.frame().size.height - topmenu_frame.size.height,
-                              themeFrame.frame().size.width,
-                              topmenu_frame.size.height)
-            
-        self.titleBarView.view.setFrame_(newFrame)
-        themeFrame.addSubview_(self.titleBarView.view)
-
-    @objc.python_method
-    def hideTitleBar(self):
-        self.titleBarView.view.removeFromSuperview()
 
     def rightMouseDown_(self, event):
         if self.closed:
@@ -1133,7 +1107,6 @@ class VideoWindowController(NSWindowController):
 
     def windowWillEnterFullScreen_(self, notification):
         self.full_screen_in_progress = True
-        self.hideTitleBar()
 
     def windowWillExitFullScreen_(self, notification):
         self.full_screen_in_progress = True
@@ -1159,7 +1132,6 @@ class VideoWindowController(NSWindowController):
     def windowDidExitFullScreen_(self, notification):
         self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
         self.fullScreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
-        self.showTitleBar()
 
         self.full_screen_in_progress = False
         self.full_screen = False
@@ -1227,7 +1199,6 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.close()
 
         if self.window():
-            self.titleBarView.close()
             self.videoView.close()
             self.window().close()
 
@@ -1244,8 +1215,6 @@ class VideoWindowController(NSWindowController):
     def toogleAlwaysOnTop(self):
         self.always_on_top  = not self.always_on_top
         self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)
-        self.titleBarView.alwaysOnTop.setState_(self.always_on_top)
-        self.titleBarView.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.always_on_top else NSImage.imageNamed_('layers2'))
 
     def toogleAlwaysOnTop_(self, sender):
         self.toogleAlwaysOnTop()
@@ -1539,45 +1508,6 @@ class VideoWindowController(NSWindowController):
         title = NSLocalizedString("Video with %s", "Window title") % self.title
         self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
         self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(NSImage.imageNamed_(image))
-
-
-class TitleBarView(NSObject):
-    view = objc.IBOutlet()
-    alwaysOnTop = objc.IBOutlet()
-    textLabel = objc.IBOutlet()
-
-    def initWithWindowController_(self, windowController):
-        self.windowController = windowController
-        self = objc.super(TitleBarView, self).init()
-        if self:
-            NSBundle.loadNibNamed_owner_("VideoTitleBarView", self)
-
-        return self
-
-        self.alwaysOnTop.setState_(NSOnState if self.windowController.always_on_top else NSOffState)
-        self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
-
-    def close(self):
-        if self.view:
-            self.view.removeFromSuperview()
-            self.release()
-
-    @objc.IBAction
-    def removeVideo_(self, sender):
-        self.view.window().delegate().removeVideo()
-
-    def dealloc(self):
-        self.windowController = None
-        objc.super(TitleBarView, self).dealloc()
-
-    @objc.IBAction
-    def userClickedCheckbox_(self, sender):
-        if self.windowController.always_on_top and sender.state() == NSOffState:
-            self.windowController.toogleAlwaysOnTop()
-        elif not self.windowController.always_on_top and sender.state() == NSOnState:
-            self.windowController.toogleAlwaysOnTop()
-        self.alwaysOnTop.setImage_(NSImage.imageNamed_('layers') if self.windowController.always_on_top else NSImage.imageNamed_('layers2'))
-
 
 class RoundedCornersView(NSView):
     def hide(self):
