@@ -6,3 +6,4 @@ pyobjc-framework-FSEvents==10.0
 pyobjc-framework-LaunchServices==10.0
 pyobjc-framework-WebKit==10.0
 pyobjc-framework-ScriptingBridge==10.0
+pyobjc-framework-Contacts==10.0

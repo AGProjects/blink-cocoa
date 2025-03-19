@@ -18,7 +18,7 @@ if [ $curent_dir != "Distribution" ]; then
 fi
 
 # Copy Objc Python modules
-pyobjc_modules="objc AVFoundation AddressBook AppKit Cocoa \
+pyobjc_modules="objc AVFoundation AddressBook Contacts AppKit Cocoa \
 CoreFoundation CoreServices Foundation LaunchServices \
 PyObjCTools Quartz ScriptingBridge WebKit FSEvents CoreMedia CoreAudio"
 
