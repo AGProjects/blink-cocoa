@@ -2069,6 +2069,9 @@ class SessionController(NSObject):
         self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         self.log_info("Session started with %s" % ", ".join(stream.type for stream in data.streams))
+        if len(data.streams) == 1 and data.streams[0].type == 'audio':
+            NSApp.delegate().contactsWindowController.showAudioDrawer()
+            self.mustCloseAudioDrawer = False
 
         if self.session.transport == 'tls':
             try:
