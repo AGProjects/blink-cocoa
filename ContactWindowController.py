@@ -75,6 +75,7 @@ from Foundation import (NSArray,
                         NSWorkspace,
                         NSZeroRect)
 import objc
+import Contacts
 
 import pickle
 import datetime
@@ -355,9 +356,22 @@ class ContactWindowController(NSWindowController):
 
     def __del__(self):
         NSNotificationCenter.defaultCenter().removeObserver_(self)
-
+    
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
+
+        def request_access_to_contacts():
+            def handler(granted, error):
+                if granted:
+                    BlinkLogger().log_info("Access granted to Contacts")
+                else:
+                    BlinkLogger().log_info(f"Access denied: {error}")
+
+            store.requestAccessForEntityType_completionHandler_(Contacts.CNEntityTypeContacts, handler)
+
+        # Initialize the CNContactStore properly
+        store = Contacts.CNContactStore.alloc().init()
+        request_access_to_contacts()
 
         # check how much space there is left for the search Outline, so we can restore it after
         # minimizing
