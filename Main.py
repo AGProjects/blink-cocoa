@@ -71,6 +71,8 @@ sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
 # import modules containing classes required to start application and load MainMenu.nib
+import platform
+print("Machine is %s" % platform.machine())
 import BlinkAppDelegate
 import ContactWindowController
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)
