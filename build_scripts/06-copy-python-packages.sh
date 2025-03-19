@@ -35,6 +35,9 @@ cp -a $site_packages_folder/* Resources/lib/
 rm -r Resources/lib/Cython
 rm -r Resources/lib/rust
 rm -r Resources/lib/enum
+rm -r Resources/lib/*.dist-info 
+rm -r Resources/lib/*.virtualenv 
+rm -r Resources/lib/*.pth
 
 sos=`find ./Resources/lib -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
 sos=`find ./Resources/lib -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
