@@ -180,6 +180,9 @@ class VideoWidget(NSView):
 
     @property
     def delegate(self):
+        if not self.window():
+            return
+    
         if NSApp.delegate().contactsWindowController.drawer.contentView().window() == self.window():
             delegate = NSApp.delegate().contactsWindowController.drawer.parentWindow().delegate()
         elif NSApp.delegate().chatWindowController.drawer.contentView().window() == self.window():
@@ -215,7 +218,8 @@ class VideoWidget(NSView):
         aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
         if self.aspect_ratio != aspect_ratio:
             self.aspect_ratio = aspect_ratio
-            self.delegate.init_aspect_ratio(*frame.size)
+            if self.delegate:
+                self.delegate.init_aspect_ratio(*frame.size)
 
         self.setNeedsDisplay_(True)
 

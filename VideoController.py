@@ -314,7 +314,8 @@ class VideoController(MediaStream):
         if self.sessionController.video_consumer == "audio":
             NSApp.delegate().contactsWindowController.detachVideo(self.sessionController)
         elif self.sessionController.video_consumer == "chat":
-            NSApp.delegate().chatWindowController.detachVideo(self.sessionController)
+            pass
+            #NSApp.delegate().chatWindowController.detachVideo(self.sessionController)
 
         status = self.status
         if status in [STREAM_IDLE, STREAM_FAILED]:
@@ -375,6 +376,8 @@ class VideoController(MediaStream):
             elif newstate == STREAM_CONNECTED:
                 if not self.media_received:
                     self.videoWindowController.showStatusLabel(self.waiting_label)
+                else:
+                    self.videoWindowController.hideStatusLabel()
             elif newstate == STREAM_PROPOSING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 

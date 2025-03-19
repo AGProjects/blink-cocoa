@@ -661,7 +661,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         try:
             handler(notification.sender, notification.data)
         except Exception:
-            self.log_error(traceback.format_exc())
+            BlinkLogger().log_error(traceback.format_exc())
 
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.ringer = Ringer(self)
