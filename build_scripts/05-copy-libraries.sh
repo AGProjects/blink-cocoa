@@ -38,7 +38,7 @@ for l in $libs; do
 done
 
 lib_dir="Frameworks/libs"
-extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib"
+extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib /opt/local/lib/libuuid.1.dylib"
 
 for l in $extra_libs; do
     fn=`basename $l`

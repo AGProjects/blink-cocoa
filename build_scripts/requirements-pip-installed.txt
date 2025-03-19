@@ -1,0 +1,57 @@
+attrs==25.2.0
+Automat==24.8.1
+certifi==2025.1.31
+cffi==1.17.1
+charset-normalizer==3.4.1
+colorama==0.4.6
+constantly==23.10.4
+cryptography==44.0.2
+Cython==0.29.37
+dnspython==2.7.0
+enum34==1.1.10
+FormEncode==2.1.1
+gevent==24.11.1
+gmpy2==2.2.1
+greenlet==3.1.1
+hyperlink==21.0.0
+idna==3.10
+incremental==24.7.2
+lxml==5.3.1
+PGPy==0.6.0
+pyasn1==0.6.1
+pyasn1_modules==0.4.1
+pycparser==2.22
+pycryptodome==3.22.0
+pydispatch==1.1.0
+PyDispatcher==2.0.7
+pyobjc-core==10.0
+pyobjc-framework-AddressBook==10.0
+pyobjc-framework-AVFoundation==10.0
+pyobjc-framework-Cocoa==10.0
+pyobjc-framework-CoreAudio==10.0
+pyobjc-framework-CoreMedia==10.0
+pyobjc-framework-CoreServices==10.0
+pyobjc-framework-FSEvents==10.0
+pyobjc-framework-LaunchServices==10.0
+pyobjc-framework-Quartz==10.0
+pyobjc-framework-ScriptingBridge==10.0
+pyobjc-framework-WebKit==10.0
+pyOpenSSL==25.0.0
+python-dateutil==2.9.0.post0
+python3-application @ https://github.com/AGProjects/python3-application/archive/refs/tags/release-3.0.7.tar.gz#sha256=26d2ed9cd627f29925d2e5379de3e03945b78ac59552299711e98148462c856b
+python3-eventlib @ https://github.com/AGProjects/python3-eventlib/archive/refs/tags/0.3.0.tar.gz#sha256=acaf69b700dc389aa22c45cfcba824bbc6b2b1a2b2a795341574b71a85b342bf
+python3-gnutls @ https://github.com/AGProjects/python3-gnutls/archive/refs/tags/release-3.1.10.tar.gz#sha256=f4778dec884113c5335b3081f36dd2ead6ff471663dfb2c296f5745228d274c1
+python3-msrplib @ https://github.com/AGProjects/python3-msrplib/archive/refs/tags/0.21.0.tar.gz#sha256=39b246f14f1a02fabdedc9d2229fe8c82d2abfb59c7cac273b5f46b142e431b5
+python3-otr @ https://github.com/AGProjects/python3-otr/archive/refs/tags/2.0.2.tar.gz#sha256=a189c1acff3fa7bf439f98a632ed6ef909984956276e7de2004511ada087f19f
+python3-sipsimple @ file:///Users/adigeo/work/blink/build_scripts/python3-sipsimple-5.3.3.1-mac
+python3-xcaplib @ https://github.com/AGProjects/python3-xcaplib/archive/refs/tags/2.0.1.tar.gz#sha256=03bbeb12c69480470047bf35e377d48683f26db5bfeefb9ad044d474b850106a
+pytz==2025.1
+requests==2.32.3
+service-identity==24.2.0
+six==1.17.0
+SQLObject==3.13.0
+Twisted==24.11.0
+typing_extensions==4.12.2
+urllib3==2.3.0
+zope.event==5.0
+zope.interface==7.2

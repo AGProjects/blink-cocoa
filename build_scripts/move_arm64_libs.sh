@@ -17,7 +17,8 @@ else
 fi
 
 for l in $libs; do
-     cp libs/$l libs-arm64/
+    echo "mv libs/$l libs-arm64/"
+    mv libs/$l libs-arm64/
 done
 
 cd $o

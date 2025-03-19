@@ -68,6 +68,9 @@ rm -f Frameworks/Python.framework/Versions/$pver/lib/python$pver/config-$pver-da
 
 find Frameworks/Python.framework -name *ncurses* -exec rm -rf {} \; >/dev/null 2>&1
 
+cp /Library/Frameworks/Python.framework/Versions/$pver/lib/python$pver/enum.py Resources/lib
+rm -r Resources/lib/enum
+
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python$pver/
 
 ./changelibs-python.sh 
