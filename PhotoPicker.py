@@ -325,23 +325,18 @@ class PhotoPicker(NSObject):
             self.cameraLabel.setHidden_(True)
             self.useButton.setEnabled_(True)
         else:
-            if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
-                self.captureView.show()
-                self.cameraLabel.setHidden_(False)
-                self.photoView.setHidden_(True)
-                self.captureView.setHidden_(False)
-                self.previewButton.setHidden_(True)
-                #self.countdownCheckbox.setHidden_(False)
-                self.mirrorButton.setHidden_(False)
-                self.captureButton.setHidden_(False)
-                if self.captureView.captureSession and self.captureView.captureSession.isRunning():
-                    self.captureButton.setEnabled_(True)
-                else: 
-                    self.captureButton.setEnabled_(False)
-
-                self.useButton.setEnabled_(False)
+            self.captureView.show()
+            self.cameraLabel.setHidden_(False)
+            self.photoView.setHidden_(True)
+            self.captureView.setHidden_(False)
+            self.previewButton.setHidden_(True)
+            #self.countdownCheckbox.setHidden_(False)
+            self.mirrorButton.setHidden_(False)
+            self.captureButton.setHidden_(False)
+            if self.captureView.captureSession and self.captureView.captureSession.isRunning():
+                self.captureButton.setEnabled_(True)
             else:
-                self.previewButton.setEnabled_(False)
+                self.captureButton.setEnabled_(False)
 
     @objc.IBAction
     def previewButtonClicked_(self, sender):
