@@ -15,7 +15,7 @@ if [ $? -eq 0 ]; then
     fi
     sudo port install ffmpeg +universal 
 else
-    sudo port install yasm x264 gnutls openssl sqlite3 ffmpeg mpfr libmpc libvpx wget gmp mpc libuuid
+    sudo port install yasm x264 gnutls openssl sqlite3 ffmpeg mpfr libmpc libvpx wget gmp mpc libuuid create-dmg
 fi
 
 RESULT=$?

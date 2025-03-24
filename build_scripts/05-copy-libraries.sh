@@ -27,14 +27,14 @@ lib_dir="Frameworks/libs"
 for l in $libs; do
         fn=`basename $l`
         echo "Checking SDK dependency $l"
-        if [ ! -f $lib_dir/$fn ]; then
+#        if [ ! -f $lib_dir/$fn ]; then
             echo "cp $l to $lib_dir/"
             cp $l $lib_dir/
             ../build_scripts/change_lib_paths.sh $lib_dir/$fn
             codesign -f --timestamp -s "Developer ID Application" $lib_dir/$fn
-        else
-            file $lib_dir/$fn
-        fi
+ #       else
+ #           file $lib_dir/$fn
+ #       fi
 done
 
 lib_dir="Frameworks/libs"
