@@ -11,7 +11,7 @@ ZIP_PATH="$EXPORT_PATH/$PRODUCT_NAME.zip"
 /usr/bin/ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
 
 # As a convenience, open the export folder in Finder.
-/usr/bin/open "$EXPORT_PATH"
+#/usr/bin/open "$EXPORT_PATH"
 
 codesign --verify --verbose=1 $EXPORT_PATH/Blink.app
 xcrun notarytool submit $EXPORT_PATH/Blink.zip --keychain-profile "notarytool-password" --wait

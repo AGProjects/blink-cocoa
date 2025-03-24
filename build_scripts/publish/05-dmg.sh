@@ -1,31 +1,25 @@
 #!/bin/bash
 
-cd ../../Distribution
-d=`pwd`
-curent_dir=`basename $d`
-if [ $curent_dir != "Distribution" ]; then
-    echo "Must run inside distribution folder"
-    exit 1
-fi
+# brew install create-dmg
 
-if [ -f Blink.dmg ]; then rm -rf Blink.dmg; fi
+if [ -f d,g/Blink.dmg ]; then rm -rf dmg/Blink.dmg; fi
 
-rm -r staging/Blink.app
-cp -a Notary/Blink.app staging/
-spctl -a -t exec -vvv staging/Blink.app
+rm -r dmg/staging/*
 
-# Copy Release Notes
-cp ../ReleaseNotes/ReleaseNotes.txt staging/
-cp ../LICENSE staging/License.txt
+cp -a ../../Distribution/Notary/Blink.app dmg/staging/
+cp ../../ReleaseNotes/ReleaseNotes.txt dmg/staging/
+cp ../../LICENSE dmg/staging/LICENSE
 
-# Make dmg
-hdiutil makehybrid -hfs -hfs-volume-name Blink -hfs-openfolder staging staging -o tmp.dmg
-hdiutil convert -format UDBZ tmp.dmg -o Blink.dmg
-rm tmp.dmg
+cd dmg/staging
+    ln -sf /Applications .
+cd -
 
-echo "DMG size:"
-du -sk Blink.dmg
+create-dmg --window-size 475 520 --icon "Blink.app" 0 165 \
+--icon "Applications" 240 165 \
+--icon "LICENSE" 0 365 \
+--icon "ReleaseNotes.txt" 240 365 \
+--volname "Blink SIP Client" \
+--background dmg/background.png \
+--icon-size 64 dmg/Blink.dmg dmg/staging
 
-id="Developer ID Application: AG Projects"
-codesign -f -s "$id" Blink.dmg
-
+open dmg/Blink.dmg
