@@ -6,3 +6,54 @@ But the header file uuid.h is conflicting with the build-in MacOS version, so
 move it out of the way:
 
 sudo mv /opt/local/include/uuid/uuid.h /opt/local/include/uuid/uuid.h.old
+
+
+Build harfbuzz from source
+--------------------------
+
+The curent map port harfbuzz is broken. To build it from source do:
+
+sudo port install autoconf automake libtool pkgconfig cairo icu +universal
+sudo port fetch harfbuzz
+cd $(port dir harfbuzz)
+
+Edit Portfile and comment out this line:
+
+#gobject_introspection yes
+
+sudo port -d configure harfbuzz +universal
+sudo port -d build harfbuzz +universal
+sudo port install harfbuzz +universal universal_archs="x86_64 arm64"
+
+
+HarfBuzz
+--------
+
+Get HarfBuzz-0.0.gir from Debian package libharfbuzz-dev
+sudo cp HarfBuzz-0.0.gir /opt/local/share/gir-1.0/HarfBuzz-0.0.gir
+
+Get HarfBuzz-0.0.gir from Debian package libharfbuzz-dev
+sudo cp HarfBuzz-0.0.gir /opt/local/share/gir-1.0/HarfBuzz-0.0.gir
+
+
+Build pango from source
+-----------------------
+
+The curent map port pango is broken. To build it from source do:
+
+
+sudo port install autoconf automake libtool pkgconfig cairo icu +universal
+sudo port fetch pango
+cd $(port dir pango)
+
+Edit Portfile and comment out this line:
+
+#gobject_introspection yes
+
+sudo port -d configure pango +universal
+sudo port -d build pango +universal
+sudo port install pango +universal universal_archs="x86_64 arm64"
+
+
+
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ../Distribution
+cd ../../Distribution
 d=`pwd`
 curent_dir=`basename $d`
 if [ $curent_dir != "Distribution" ]; then

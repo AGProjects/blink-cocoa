@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #https://developer.apple.com/documentation/security/customizing-the-notarization-workflow
-export EXPORT_PATH=~/work/blink/Distribution/Notary
+export EXPORT_PATH=../../Distribution/Notary
 export PRODUCT_NAME=Blink
 
 APP_PATH="$EXPORT_PATH/$PRODUCT_NAME.app"
