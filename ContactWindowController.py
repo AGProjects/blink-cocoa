@@ -76,6 +76,7 @@ from Foundation import (NSArray,
                         NSZeroRect)
 import objc
 import Contacts
+from AVFoundation import AVCaptureDevice
 
 import pickle
 import datetime
@@ -360,6 +361,23 @@ class ContactWindowController(NSWindowController):
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
 
+        def check_camera_permission():
+            # Get camera permission status
+            status = AVCaptureDevice.authorizationStatusForMediaType_("vide")
+
+            if status == 0:  # Not determined
+                BlinkLogger().log_info("Camera access is not yet determined. Requesting access...")
+                # Request camera access
+                AVCaptureDevice.requestAccessForMediaType_completionHandler_("vide", lambda granted: BlinkLogger().log_info("Camera access granted!" if granted else "Camera access denied"))
+            elif status == 1:  # Authorized
+                BlinkLogger().log_info("Camera access is granted.")
+            elif status == 2:  # Denied
+                BlinkLogger().log_info("Camera access denied. Please enable it in System Settings.")
+            elif status == 3:  # Restricted
+                BlinkLogger().log_info("Camera access is restricted.")
+            else:
+                BlinkLogger().log_info("Unknown camera access status.")
+        
         def request_access_to_contacts():
             def handler(granted, error):
                 if granted:
@@ -369,9 +387,12 @@ class ContactWindowController(NSWindowController):
 
             store.requestAccessForEntityType_completionHandler_(Contacts.CNEntityTypeContacts, handler)
 
+            
         # Initialize the CNContactStore properly
         store = Contacts.CNContactStore.alloc().init()
         request_access_to_contacts()
+        
+        check_camera_permission()
 
         # check how much space there is left for the search Outline, so we can restore it after
         # minimizing
