@@ -2,7 +2,7 @@
 
 # brew install create-dmg
 
-if [ -f d,g/Blink.dmg ]; then rm -rf dmg/Blink.dmg; fi
+if [ -f dmg/Blink.dmg ]; then rm -rf dmg/Blink.dmg; fi
 
 rm -r dmg/staging/*
 
