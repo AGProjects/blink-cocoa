@@ -23,11 +23,7 @@ cd python3-sipsimple-$version
 echo "Fetching SIP SIMPLE SDK dependencies..."
 
 chmod +x ./get_dependencies.sh
-if [[ "$(uname -v)" = *ARM64* ]]; then
-    ./get_dependencies.sh 2.11
-else
-    ./get_dependencies.sh
-fi
+./get_dependencies.sh
 
 if [ $? -ne 0 ]; then
     echo
