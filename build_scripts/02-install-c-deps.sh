@@ -13,7 +13,6 @@ if [ $? -eq 0 ]; then
          echo "See Notes.txt about building harfbuzz from source"   
          exit 1
     fi
-    sudo port install ffmpeg +universal 
 else
     sudo port install yasm x264 gnutls openssl sqlite3 ffmpeg mpfr libmpc libvpx wget gmp mpc libuuid create-dmg
 fi
@@ -25,3 +24,5 @@ if [ $RESULT -ne 0 ]; then
     echo
     exit 1
 fi
+
+echo "Please install ffmpeg as described in ffmpeg/readme.txt"
