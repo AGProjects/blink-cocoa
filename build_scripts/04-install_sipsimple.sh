@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="5.3.3.1-mac"
+version="5.3.3.2-mac"
 if [ -f $version.tar.gz ]; then
     rm $version.tar.gz
 fi
