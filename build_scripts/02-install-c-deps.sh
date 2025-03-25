@@ -8,14 +8,12 @@ uname -v|grep ARM64 |grep Darwin > /dev/null
 if [ $? -eq 0 ]; then
     sudo port install yasm +universal x264 +universal gnutls +universal openssl +universal sqlite3 +universal libuuid +universal
     sudo port install mpfr +universal libmpc +universal libvpx +universal wget +universal gmp +universal mpc +universal
-    sudo port install harfbuzz +universal
-    if [ $? -ne 0 ]; then
-         echo "See Notes.txt about building harfbuzz from source"   
-         exit 1
-    fi
 else
-    sudo port install yasm x264 gnutls openssl sqlite3 ffmpeg mpfr libmpc libvpx wget gmp mpc libuuid create-dmg
+    sudo port install yasm x264 gnutls openssl sqlite3 mpfr libmpc libvpx wget gmp mpc libuuid
 fi
+
+sudo mv /opt/local/include/uuid/uuid.h /opt/local/include/uuid/uuid.h.old
+sudo port install create-dmg
 
 RESULT=$?
 if [ $RESULT -ne 0 ]; then
