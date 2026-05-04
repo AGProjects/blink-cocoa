@@ -1404,11 +1404,76 @@ class SMSViewController(NSObject):
             import traceback
             traceback.print_exc()
         else:
-            self.render_history_messages(messages)
+            # Decrypt PGP messages off the GUI thread so the UI stays responsive
+            # while we work through the journal. The render method below only
+            # consumes the pre-decrypted text.
+            decrypted_bodies = self._decrypt_history_messages(messages)
+            self.render_history_messages(messages, decrypted_bodies)
+
+    @objc.python_method
+    def _decrypt_history_messages(self, messages):
+        """Decrypt PGP-encrypted history messages off the GUI thread.
+
+        Returns a dict ``{msgid: (text, encryption_label)}`` for every encrypted
+        message in ``messages``. ``encryption_label`` is ``'verified'`` when the
+        message was successfully decrypted and ``None`` otherwise (in which case
+        ``text`` holds a placeholder so the GUI does not try to decrypt again).
+        """
+        decrypted_bodies = {}
+        private_key = self.private_key
+
+        for message in messages:
+            body = message.body
+            if not body:
+                continue
+
+            stripped = body.strip()
+            if not (stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----')):
+                continue
+
+            if not private_key:
+                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+                continue
+
+            try:
+                pgpMessage = pgpy.PGPMessage.from_blob(stripped)
+                decrypted_message = private_key.decrypt(pgpMessage)
+            except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError):
+                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+                continue
+
+            try:
+                content_bytes = bytes(decrypted_message.message, 'latin1')
+            except (TypeError, UnicodeEncodeError):
+                try:
+                    content_bytes = bytes(decrypted_message.message, 'utf-8')
+                except (TypeError, UnicodeEncodeError) as e:
+                    self.log_info('Failed to decrypt message %s: %s' % (message.id, str(e)))
+                    continue
+
+            try:
+                text = content_bytes.decode()
+            except UnicodeDecodeError:
+                try:
+                    text = content_bytes.decode('utf-8', errors='replace')
+                except Exception as e:
+                    self.log_info('Failed to decode message %s: %s' % (message.id, str(e)))
+                    continue
+
+            decrypted_bodies[message.msgid] = (text, 'verified')
+
+            try:
+                self.history.update_decrypted_message(message.msgid, text)
+            except Exception as e:
+                self.log_error('Failed to persist decrypted message %s: %s' % (message.msgid, str(e)))
+
+        return decrypted_bodies
 
     @objc.python_method
     @run_in_gui_thread
-    def render_history_messages(self, messages):
+    def render_history_messages(self, messages, decrypted_bodies=None):
+        if decrypted_bodies is None:
+            decrypted_bodies = {}
         before = False
         if self.oldest_timestamp is not None:
             messages.reverse()
@@ -1525,27 +1590,15 @@ class SMSViewController(NSObject):
                 encryption = None
                 
                 if message.body.strip().startswith('-----BEGIN PGP MESSAGE-----') and message.body.strip().endswith('-----END PGP MESSAGE-----'):
-                    if not self.private_key:
+                    # Decryption already happened off the GUI thread in
+                    # replay_history -> _decrypt_history_messages.
+                    decrypted = decrypted_bodies.get(message.msgid)
+                    if decrypted is None:
                         content = 'Encrypted message for which we have no private key'
                     else:
-                        try:
-                            pgpMessage = pgpy.PGPMessage.from_blob(message.body.strip())
-                            decrypted_message = self.private_key.decrypt(pgpMessage)
-                        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
-                            content = 'Encrypted message for which we have no private key'
-                        else:
-                            encryption = 'verified'
-                            try:
-                                content = bytes(decrypted_message.message, 'latin1')
-                            except (TypeError, UnicodeEncodeError) as e:
-                                try:
-                                    content = bytes(decrypted_message.message, 'utf-8')
-                                except (TypeError, UnicodeEncodeError) as e:
-                                    self.log_info('Failed to decrypt message %s: %s' % (message.id, str(e)))
-                                    continue
-                            else:
-                                content = content.decode()
-                                self.history.update_decrypted_message(message.msgid, content)
+                        content, decrypted_encryption = decrypted
+                        if decrypted_encryption:
+                            encryption = decrypted_encryption
 
                 sender = message.cpim_from
                 recipient = message.cpim_to

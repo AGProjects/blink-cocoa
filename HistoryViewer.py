@@ -493,8 +493,74 @@ class HistoryViewer(NSWindowController):
             if not before_date:
                 before_date = self.before_date if self.before_date else None
             results = self.chat_history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
+            # Pre-decrypt PGP messages off the GUI thread so pagination and the
+            # initial render don't block while pgpy decrypts every message.
+            self._decrypted_bodies = self._decrypt_history_messages(results)
             self.renderMessages(results)
             self.updateBusyIndicator(False)
+
+    @objc.python_method
+    def _decrypt_history_messages(self, messages):
+        """Decrypt PGP-encrypted history messages off the GUI thread.
+
+        Caches the per-account private keys in ``self.private_keys`` and writes
+        the plaintext back to the history database so subsequent loads are fast.
+        Returns a dict ``{msgid: (text, encryption_label)}``; ``encryption_label``
+        is ``'verified'`` for successfully decrypted entries and ``None`` when
+        decryption failed (in which case ``text`` is a placeholder).
+        """
+        decrypted_bodies = {}
+
+        for message in messages:
+            body = message.body
+            if not body:
+                continue
+
+            if not (body.startswith('-----BEGIN PGP MESSAGE-----') and body.endswith('-----END PGP MESSAGE-----')):
+                continue
+
+            try:
+                private_key = self.private_keys[message.local_uri]
+            except KeyError:
+                private_key_path = "%s/%s.privkey" % (self.keys_path, message.local_uri)
+                try:
+                    private_key, _ = pgpy.PGPKey.from_file(private_key_path)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
+                    self.private_keys[message.local_uri] = None
+                    decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+                    continue
+                else:
+                    BlinkLogger().log_info('PGP private key imported from %s' % private_key_path)
+                    self.private_keys[message.local_uri] = private_key
+
+            if not private_key:
+                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+                continue
+
+            try:
+                pgpMessage = pgpy.PGPMessage.from_blob(body.strip())
+                decrypted_message = private_key.decrypt(pgpMessage)
+            except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError):
+                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+                continue
+
+            try:
+                text = bytes(decrypted_message.message, 'latin1').decode()
+            except (TypeError, UnicodeEncodeError, UnicodeDecodeError):
+                try:
+                    text = bytes(decrypted_message.message, 'utf-8').decode('utf-8', errors='replace')
+                except Exception as e:
+                    BlinkLogger().log_error('Failed to decode message %s: %s' % (message.msgid, str(e)))
+                    continue
+
+            decrypted_bodies[message.msgid] = (text, 'verified')
+            try:
+                self.chat_history.update_decrypted_message(message.msgid, text)
+            except Exception as e:
+                BlinkLogger().log_error('Failed to persist decrypted message %s: %s' % (message.msgid, str(e)))
+
+        return decrypted_bodies
 
     @objc.python_method
     @run_in_gui_thread
@@ -551,34 +617,19 @@ class HistoryViewer(NSWindowController):
             private = True if message.private == "1" else False
             content = message.body
             encryption = message.encryption
-            private_key = None
 
             if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
-                try:
-                    private_key = self.private_keys[message.local_uri]
-                except KeyError:
-                    private_key_path = "%s/%s.privkey" % (self.keys_path, message.local_uri)
-                
-                    try:
-                        private_key, _ = pgpy.PGPKey.from_file(private_key_path)
-                    except Exception as e:
-                        BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
-                        content = 'Encrypted message for which we have no private key'
-                    else:
-                        BlinkLogger().log_info('PGP private key imported from %s' % private_key_path)
-                        self.private_keys[message.local_uri] = private_key
-
-                if private_key:
-                    try:
-                        pgpMessage = pgpy.PGPMessage.from_blob(content.strip())
-                        decrypted_message = private_key.decrypt(pgpMessage)
-                    except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
-                        content = 'Encrypted message for which we have no private key'
-                    else:
-                        #BlinkLogger().log_info('Message %s was decrypted' % message.id)
-                        encryption = 'verified'
-                        content = bytes(decrypted_message.message, 'latin1').decode()
-                        self.chat_history.update_decrypted_message(message.msgid, content)
+                # Decryption already happened off the GUI thread in
+                # refreshMessages -> _decrypt_history_messages.
+                decrypted_bodies = getattr(self, '_decrypted_bodies', {}) or {}
+                decrypted = decrypted_bodies.get(message.msgid)
+                if decrypted is None:
+                    content = 'Encrypted message for which we have no private key'
+                else:
+                    text, decrypted_encryption = decrypted
+                    content = text
+                    if decrypted_encryption:
+                        encryption = decrypted_encryption
 
             sender = message.cpim_from
             recipient = message.cpim_to

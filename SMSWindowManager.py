@@ -692,7 +692,7 @@ class SMSWindowManagerClass(NSObject):
        last_id = account.sms.history_last_id
        
        if last_id:
-           url = "%s/%s" % (url, account.sms.history_last_id)
+           url = "%s/%s" % (url, last_id)
 
        BlinkLogger().log_info('Sync conversations from %s' % url)
 
@@ -932,11 +932,10 @@ class SMSWindowManagerClass(NSObject):
         self.new_contacts = set()
 
     @objc.python_method
-    @run_in_gui_thread
     def syncIncomingMessage(self, account, msg, last_id=None):
         direction = 'incoming'
         self.pendingSaveMessage[msg['message_id']] = True
-        
+
         if 'display' not in msg['disposition']:
             status = MSG_STATE_DISPLAYED
         else:
@@ -964,13 +963,49 @@ class SMSWindowManagerClass(NSObject):
                                     encryption=encryption)
             return
 
+        # Only open windows for messages newer than one week. For older entries
+        # without an existing viewer we persist directly to history and skip the
+        # GUI hop — scroll_back_in_time at the end of syncConversations will
+        # surface them when the user opens the conversation.
+        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
+        if not create_if_needed and not self._hasViewerFor(msg['contact'], account):
+            self.history.add_message(msg['message_id'],
+                                     'sms',
+                                     str(account.id),
+                                     msg['contact'],
+                                     direction,
+                                     msg['contact'],
+                                     str(account.id),
+                                     msg['timestamp'],
+                                     msg['content'],
+                                     msg['content_type'],
+                                     "0",
+                                     status,
+                                     call_id=msg['message_id'],
+                                     encryption=encryption)
+            return
+
+        self._presentJournalIncomingMessage(account, msg, status, create_if_needed)
+
+    @objc.python_method
+    def _hasViewerFor(self, remote_uri, account):
+        for window in self.windows:
+            for viewer in window.viewers:
+                if viewer.account == account and viewer.remote_uri == remote_uri:
+                    return True
+        return False
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _presentJournalIncomingMessage(self, account, msg, status, create_if_needed):
+        direction = 'incoming'
         BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], status, msg['message_id'], msg['contact']))
 
-        # only open windows for messages newer than one week
-        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
-
         sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
-        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=bool(last_id), is_replication_message=False)
+        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=True, is_replication_message=False)
+        if viewer is None:
+            return
+
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
 
         if status != MSG_STATE_DISPLAYED and create_if_needed:
@@ -983,27 +1018,26 @@ class SMSWindowManagerClass(NSObject):
             self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 
     @objc.python_method
-    @run_in_gui_thread
     def syncOutgoingMessage(self, account, msg, last_id=None):
         direction = 'outgoing'
-        
+
         self.pendingSaveMessage[msg['message_id']] = True
 
-        if not last_id:
+        if msg['state'] == 'delivered':
+            state = MSG_STATE_DELIVERED
+        elif msg['state'] == 'displayed':
+            state = MSG_STATE_DISPLAYED
+        elif msg['state'] == 'failed':
+            state = MSG_STATE_FAILED
+        else:
             state = MSG_STATE_SENT
 
-            if msg['state'] == 'delivered':
-                state = MSG_STATE_DELIVERED
-            elif msg['state'] == 'displayed':
-                state = MSG_STATE_DISPLAYED
-            elif msg['state'] == 'failed':
-                state = MSG_STATE_FAILED
-                
-            if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
-                encryption = 'pgp_encrypted'
-            else:
-                encryption = ''
-                
+        if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
+            encryption = 'pgp_encrypted'
+        else:
+            encryption = ''
+
+        if not last_id:
             self.history.add_message(msg['message_id'],
                                     'sms',
                                     str(account.id),
@@ -1020,22 +1054,43 @@ class SMSWindowManagerClass(NSObject):
                                     encryption=encryption)
             return
 
+        # Only open windows for messages newer than one week. Older replicated
+        # outgoing messages with no open viewer are persisted directly so we
+        # don't pay the GUI-thread cost for every entry in the journal.
+        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
+        if not create_if_needed and not self._hasViewerFor(msg['contact'], account):
+            self.history.add_message(msg['message_id'],
+                                    'sms',
+                                    str(account.id),
+                                    msg['contact'],
+                                    direction,
+                                    str(account.id),
+                                    msg['contact'],
+                                    msg['timestamp'],
+                                    msg['content'],
+                                    msg['content_type'],
+                                    "0",
+                                    state,
+                                    call_id=msg['message_id'],
+                                    encryption=encryption)
+            return
+
+        self._presentJournalOutgoingMessage(account, msg, state, create_if_needed, last_id)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _presentJournalOutgoingMessage(self, account, msg, status, create_if_needed, last_id):
+        direction = 'outgoing'
         BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+
         sender_identity = ChatIdentity(account.uri, account.display_name)
         remote_identity = SIPURI.parse(str('sip:%s' % msg['contact']))
-        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
 
         viewer = self.getWindow(remote_identity, msg['contact'], account, note_new_message=False, create_if_needed=create_if_needed)
-        window = self.windowForViewer(viewer).window()
+        if viewer is None:
+            return
 
-        if msg['state'] == 'delivered':
-            status = MSG_STATE_DELIVERED
-        elif msg['state'] == 'displayed':
-            status = MSG_STATE_DISPLAYED
-        elif msg['state'] == 'failed':
-            status = MSG_STATE_FAILED
-        else:
-            status = MSG_STATE_SENT
+        window = self.windowForViewer(viewer).window()
 
         viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
 
