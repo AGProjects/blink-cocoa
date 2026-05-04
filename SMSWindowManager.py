@@ -561,8 +561,10 @@ class SMSWindowManagerClass(NSObject):
             
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
+        # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed enter (%s)' % account.id)
         if account is not BonjourAccount():
             call_later(10, self.syncConversations, account)
+        # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed exit')
 
 
     @objc.python_method
@@ -851,11 +853,31 @@ class SMSWindowManagerClass(NSObject):
                 
                for uri in sync_contacts:
                    self.saveContact(uri)
-                   for window in self.windows:
-                       for viewer in window.viewers:
-                           if viewer.remote_uri == uri and account == viewer.account:
-                               BlinkLogger().log_info('Refresh viewer for %s' % uri)
-                               viewer.scroll_back_in_time()
+
+               # Post-sync history refresh — limit it to the viewer the
+               # user is actually looking at right now. The live path
+               # (_presentJournalIncomingMessage -> gotMessage) already
+               # appends new messages to every open viewer as the burst
+               # is processed, so non-focused tabs aren't going to miss
+               # anything — they just don't get a re-render. When the
+               # user clicks a stale tab next, replay_history runs as
+               # part of the existing chat-view-load flow and the panel
+               # catches up.
+               #
+               # Old behaviour (one scroll_back_in_time per contact in
+               # sync_contacts × per viewer) is what stacked thousands
+               # of run_in_gui_thread render calls onto the main thread
+               # at the tail end of a big sync and pushed the app into
+               # a 1–2 minute beachball.
+               for window in self.windows:
+                   if not window.window().isVisible():
+                       continue
+                   focused = window.selectedSessionController()
+                   if focused is None or focused.account != account:
+                       continue
+                   if focused.remote_uri in sync_contacts:
+                       BlinkLogger().log_info('Refresh focused viewer for %s' % focused.remote_uri)
+                       focused.scroll_back_in_time()
             
                self.addContactsToMessagesGroup()
                self.contacts_queue.unpause()
@@ -937,6 +959,48 @@ class SMSWindowManagerClass(NSObject):
         self.new_contacts = set()
 
     @objc.python_method
+    def _decrypt_pgp_for_account(self, account_id, body):
+        """Decrypt a PGP-armoured body using the account's private key.
+
+        Returns the decoded plaintext on success, ``None`` if there is
+        no key or decryption fails. Reuses the per-account ``private_keys``
+        cache that handle_contacts_queue already populates so we don't
+        re-read the key file on every journal entry.
+        """
+        try:
+            private_key = self.private_keys[account_id]
+        except KeyError:
+            private_key_path = "%s/%s.privkey" % (self.keys_path, account_id)
+            try:
+                private_key, _ = pgpy.PGPKey.from_file(private_key_path)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
+                self.private_keys[account_id] = None
+                return None
+            self.private_keys[account_id] = private_key
+
+        if not private_key:
+            return None
+
+        try:
+            pgpMessage = pgpy.PGPMessage.from_blob(body.strip())
+            decrypted_message = private_key.decrypt(pgpMessage)
+        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError):
+            return None
+
+        try:
+            plaintext = bytes(decrypted_message.message, 'latin1')
+        except (TypeError, UnicodeEncodeError):
+            try:
+                plaintext = bytes(decrypted_message.message, 'utf-8')
+            except (TypeError, UnicodeEncodeError):
+                return None
+        try:
+            return plaintext.decode('utf-8')
+        except UnicodeDecodeError:
+            return plaintext.decode('utf-8', errors='replace')
+
+    @objc.python_method
     def _persist_journal_message(self, account, msg, direction, status, encryption,
                                  cpim_from, cpim_to):
         """Insert (or fold) a journal message into chat_messages.
@@ -948,12 +1012,33 @@ class SMSWindowManagerClass(NSObject):
         history.update_message_body. Result: one row per share, holding
         the latest known position, regardless of how many ticks the
         journal hands us.
+
+        Sylk Mobile encrypts metadata payloads at the PGP layer just
+        like ordinary text messages, so we have to decrypt before we
+        can decide whether the body is a location tick. Encrypted
+        bodies whose key we can't access are dropped on the floor —
+        persisting opaque ciphertext only bloats history and triggers
+        nothing on display.
         """
         body = msg['content']
         content_type = msg['content_type']
         msgid = msg['message_id']
 
         if content_type == 'application/sylk-message-metadata':
+            stripped = body.strip() if isinstance(body, str) else body
+            is_armoured = (
+                isinstance(stripped, str)
+                and stripped.startswith('-----BEGIN PGP MESSAGE-----')
+                and stripped.endswith('-----END PGP MESSAGE-----')
+            )
+            if is_armoured:
+                plaintext = self._decrypt_pgp_for_account(str(account.id), stripped)
+                if plaintext is None:
+                    # Can't decrypt — skip persist entirely so we don't
+                    # bloat chat_messages with rows we'll never render.
+                    return
+                body = plaintext
+
             try:
                 data = json.loads(body)
             except (TypeError, ValueError):
@@ -968,6 +1053,14 @@ class SMSWindowManagerClass(NSObject):
                 # Origin tick — persist under the bubble id so subsequent
                 # update ticks (live or journaled) all rewrite this row.
                 msgid = bubble_id
+            else:
+                # Non-location metadata (rotation / consumed / label /
+                # meeting_end / location_request / reply / caregiver / …
+                # or anything we can't parse). Sylk Mobile uses these
+                # for internal state changes; Blink doesn't render any
+                # of them, so persisting just bloats chat_messages with
+                # rows render_history_messages will skip anyway.
+                return
 
         self.history.add_message(
             msgid, 'sms', str(account.id), msg['contact'],
@@ -1024,7 +1117,10 @@ class SMSWindowManagerClass(NSObject):
     @run_in_gui_thread
     def _presentJournalIncomingMessage(self, account, msg, status, create_if_needed):
         direction = 'incoming'
-        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], status, msg['message_id'], msg['contact']))
+        # Per-message journal log; demoted to debug because a single sync
+        # batch can deliver thousands of these and each line was being
+        # fanned out to the GUI Activity panel via run_in_gui_thread.
+        BlinkLogger().log_debug('Sync %s %s message %s with %s' % (msg['direction'], status, msg['message_id'], msg['contact']))
 
         sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
         viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=True, is_replication_message=False)
@@ -1086,7 +1182,7 @@ class SMSWindowManagerClass(NSObject):
     @run_in_gui_thread
     def _presentJournalOutgoingMessage(self, account, msg, status, create_if_needed, last_id):
         direction = 'outgoing'
-        BlinkLogger().log_info('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
+        BlinkLogger().log_debug('Sync %s %s message %s with %s' % (msg['direction'], msg['state'], msg['message_id'], msg['contact']))
 
         sender_identity = ChatIdentity(account.uri, account.display_name)
         remote_identity = SIPURI.parse(str('sip:%s' % msg['contact']))

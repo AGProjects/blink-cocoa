@@ -529,7 +529,7 @@ class SMSViewController(NSObject):
                             self.sendIMDNNotification(id, 'failed')
                         return
                     else:
-                        self.log_info('PGP message %s decrypted' % id)
+                        self.log_debug('PGP message %s decrypted' % id)
                         if not self.pgp_encrypted:
                             self.pgp_encrypted = True
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
@@ -732,6 +732,40 @@ class SMSViewController(NSObject):
         except Exception:
             text_content = ''
 
+        # Sylk Mobile PGP-encrypts the metadata body the same way it
+        # encrypts a normal text message — bodies that arrive over the
+        # wire start with -----BEGIN PGP MESSAGE-----. We have to decrypt
+        # before we can tell whether action=='location' (and what its
+        # coordinates are), and before we persist anything: storing the
+        # ciphertext just litters chat_messages with rows render code
+        # can't do anything with. If decryption fails (no key, peer used
+        # a different key) we drop the message — there's nothing
+        # actionable for this client to do with a metadata blob it
+        # cannot read.
+        stripped = text_content.strip()
+        if stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----'):
+            if not self.private_key:
+                self.log_debug('Discarding encrypted metadata message %s — no PGP key available' % id)
+                return
+            try:
+                pgpMessage = pgpy.PGPMessage.from_blob(stripped)
+                decrypted_message = self.private_key.decrypt(pgpMessage)
+            except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                self.log_debug('Discarding encrypted metadata message %s — PGP decrypt failed: %s' % (id, str(e)))
+                return
+            try:
+                plaintext = bytes(decrypted_message.message, 'latin1')
+            except (TypeError, UnicodeEncodeError):
+                try:
+                    plaintext = bytes(decrypted_message.message, 'utf-8')
+                except (TypeError, UnicodeEncodeError):
+                    self.log_debug('Discarding metadata message %s — cannot encode decrypted body' % id)
+                    return
+            try:
+                text_content = plaintext.decode('utf-8')
+            except UnicodeDecodeError:
+                text_content = plaintext.decode('utf-8', errors='replace')
+
         try:
             timestamp = ISOTimestamp(imdn_timestamp)
         except (DateParserError, TypeError):
@@ -746,15 +780,14 @@ class SMSViewController(NSObject):
         status_label = status or MSG_STATE_DELIVERED
 
         if location is None:
-            # Non-location metadata — fall back to the basic dedup +
-            # persist-only behaviour. We use the wire SIP id here because
-            # there is no stable bubble id to lean on.
-            wire_id = imdn_message_id if imdn_message_id and is_replication_message else id
-            if wire_id in self.msg_id_list:
-                return
-            self.msg_id_list.add(wire_id)
-            self.log_info('Persisting non-location metadata message %s (content_type=%s)' % (wire_id, content_type))
-            self._persist_metadata_message(wire_id, call_id, direction, sender_identity, timestamp, text_content, content_type, status_label)
+            # Non-location metadata (rotation / consumed / label /
+            # meeting_end / location_request / reply / caregiver / …).
+            # Sylk Mobile uses these for internal state transitions;
+            # Blink doesn't act on any of them today. Discard outright —
+            # don't persist the row (history would just clutter) and
+            # don't render anything. If a later Blink build wants to
+            # handle one of these actions, this is the place to add it.
+            self.log_debug('Discarding non-location metadata message %s (action=%s)' % (id, content_type))
             return
 
         bubble_id = location['meta_id'] or id
@@ -965,7 +998,7 @@ class SMSViewController(NSObject):
         except Exception as e:
             BlinkLogger().log_info('Cannot import my own PGP public key: %s' % str(e))
         else:
-            self.log_info('Send my public key')
+            self.log_debug('Send my public key')
             self.public_key_sent = True
             self.sendMessage(public_key.decode(), 'text/pgp-public-key')
 
@@ -1850,9 +1883,12 @@ class SMSViewController(NSObject):
                             call_id = message.sip_callid
                             last_media_type = 'sms'
                             continue
-                        # Fall through to the regular renderer for non-location
-                        # metadata rows so the user at least sees them as raw
-                        # text instead of an empty bubble.
+                        # Non-location metadata (rotation / consumed / label /
+                        # meeting_end / etc.). These are state-change events
+                        # Sylk Mobile uses internally; Blink has nothing to
+                        # render for them, and showing the raw JSON in the
+                        # chat is worse than nothing. Skip the row entirely.
+                        continue
 
                     self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption, before=before)
 
