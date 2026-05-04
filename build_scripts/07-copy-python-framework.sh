@@ -4,6 +4,7 @@
 # This script assumes packages are installed using pip3 in user folder 
 
 pver=`./get_python_version.sh`
+cver=`echo $pver|sed -r 's/\.//g'`
 
 cd ../Distribution
 
@@ -54,7 +55,8 @@ rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/distutils
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/idlelib
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/ensurepip
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/pkgconfig 
-rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_tkinter.cpython-$pver/-darwin.so
+rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_tkinter.cpython-$cver-darwin.so
+rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_test*
 
 #rm -f Frameworks/Python.framework/Versions/$pver/lib/libssl*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libformw*
@@ -64,7 +66,7 @@ rm -f Frameworks/Python.framework/Versions/$pver/lib/libmenuw*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/python$pver/config-$pver-darwin/python.o
 rm -f Frameworks/Python.framework/Versions/$pver/lib/itcl4.1.1/libitclstub4.1.1.a
 rm -f Frameworks/Python.framework/Versions/$pver/lib/tdbc1.0.6/libtdbcstub1.0.6.a
-rm -f Frameworks/Python.framework/Versions/$pver/lib/python$pver/config-$pver-darwin/libpython$pver.a
+rm -f Frameworks/Python.framework/Versions/$pver/lib/python$pver/config-$pver-darwin/libpython$cver.a
 
 find Frameworks/Python.framework -name *ncurses* -exec rm -rf {} \; >/dev/null 2>&1
 

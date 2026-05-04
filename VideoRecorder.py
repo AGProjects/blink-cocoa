@@ -1,8 +1,5 @@
-# Copyright (C) 2014 AG Projects. See LICENSE for details.
+# Copyright (C) 2025 AG Projects. See LICENSE for details.
 #
-
-
-# TODO: Video broken since 10.13
 from AVFoundation import (AVCaptureScreenInput,
                           AVCaptureDeviceInput,
                           AVCaptureDevice,

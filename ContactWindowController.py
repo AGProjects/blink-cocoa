@@ -225,6 +225,18 @@ class ContactWindowController(NSWindowController):
     loggerModel = None
     participants = []
 
+    # Notification-storm dampers. Bonjour neighbour adds, account
+    # registrations and presence updates can each post BlinkContactsHaveChanged
+    # within a few ms of each other; without coalescing the GUI thread runs
+    # refreshContactsList (full NSOutlineView reloadData) per notification,
+    # which adds ~50–130 ms each and was driving startup beachballs.
+    # _contacts_refresh_timer is the pending NSTimer (None when no flush
+    # is queued); _contacts_dirty_senders accumulates the union of senders
+    # so the flush callback knows whether to do a full reload or a single
+    # subtree reload.
+    _contacts_refresh_timer = None
+    _contacts_dirty_senders = None
+
     searchResultsModel = objc.IBOutlet()
     fileTransfersWindow = None
 
@@ -654,6 +666,7 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     @run_in_gui_thread
     def refreshAccountList(self):
+        # BlinkLogger().log_info('startup: refreshAccountList enter')
         if not self.sessionControllersManager.isMediaTypeSupported('video'):
             self.actionButtonsNoVideo.setHidden_(False)
             self.actionButtons.setHidden_(True)
@@ -734,6 +747,7 @@ class ContactWindowController(NSWindowController):
             self.updateNameLabel(account_manager.default_account.display_name or account_manager.default_account.id)
         else:
             self.updateNameLabel('')
+        # BlinkLogger().log_info('startup: refreshAccountList exit')
 
     @objc.python_method
     def activeAccount(self):
@@ -745,6 +759,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def refreshContactsList(self, sender=None):
+        # BlinkLogger().log_info('startup: refreshContactsList enter')
         if sender is None:
             sender = self.model
         if sender is self.model:
@@ -754,6 +769,7 @@ class ContactWindowController(NSWindowController):
                     self.contactOutline.expandItem_expandChildren_(group, False)
         else:
             self.contactOutline.reloadItem_reloadChildren_(sender, True)
+        # BlinkLogger().log_info('startup: refreshContactsList exit')
 
     @objc.python_method
     def getSelectedContacts(self, includeGroups=False):
@@ -2750,6 +2766,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def setupFinished(self):
+        # BlinkLogger().log_info('startup: setupFinished mute/silent state')
         if self.backend.is_muted():
             self.muteButton.setImage_(NSImage.imageNamed_("muted"))
             self.muteButton.setState_(NSOnState)
@@ -2767,7 +2784,9 @@ class ContactWindowController(NSWindowController):
         if active and active.display_name != self.nameText.stringValue():
             self.updateNameLabel(active.display_name or "")
 
+        # BlinkLogger().log_info('startup: contactOutline.reloadData')
         self.contactOutline.reloadData()
+        # BlinkLogger().log_info('startup: setupFinished done')
 
         # selected_tab = NSUserDefaults.standardUserDefaults().stringForKey_("MainWindowSelectedTabView")
         # self.setMainTabView(selected_tab if selected_tab else "contacts")
@@ -3161,13 +3180,24 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def searchContacts(self):
+        # BlinkLogger().log_info('startup: searchContacts(noarg) body enter')
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
             self.updateStartSessionButtons()
+            # BlinkLogger().log_info('startup: searchContacts(noarg) body exit (dialpad)')
             return
 
         text = self.searchBox.stringValue().strip()
         if text == "":
+            # Nothing to search for. Switch back to the contacts tab and
+            # bail before touching matchesURI — that list comprehension
+            # iterates every contact in every group and was the single
+            # hottest frame in the py-spy startup profile (~18% of CPU
+            # samples). Running it for an empty query produced an empty
+            # result set anyway.
             self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
+            self.updateStartSessionButtons()
+            # BlinkLogger().log_info('startup: searchContacts(noarg) body exit (empty query)')
+            return
         else:
             self.contactOutline.deselectAll_(None)
             self.mainTabView.selectTabViewItemWithIdentifier_("search")
@@ -3222,6 +3252,7 @@ class ContactWindowController(NSWindowController):
 
                 self.searchResultsModel.groupsList = self.local_found_contacts
                 self.searchOutline.reloadData()
+        # BlinkLogger().log_info('startup: searchContacts(noarg) body exit')
 
     @objc.python_method
     def startSessionToSelectedContact(self, media_type, uri=None):
@@ -5778,18 +5809,23 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_SIPAccountWillRegister(self, notification):
+        # BlinkLogger().log_info('startup: ContactWindowController._NH_SIPAccountWillRegister enter (%s)' % notification.sender.id)
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
+            # BlinkLogger().log_info('startup: ContactWindowController._NH_SIPAccountWillRegister exit (no match)')
             return
         self.accounts[position].register_state = 'started'
         self.refreshAccountList()
+        # BlinkLogger().log_info('startup: ContactWindowController._NH_SIPAccountWillRegister exit')
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
+        # BlinkLogger().log_info('startup: ContactWindowController._NH_SIPAccountRegistrationDidSucceed enter (%s)' % notification.sender.id)
         try:
             position = self.accounts.index(notification.sender)
         except ValueError:
+            # BlinkLogger().log_info('startup: ContactWindowController._NH_SIPAccountRegistrationDidSucceed exit (no match)')
             return
         self.accounts[position].register_state = 'succeeded'
 
@@ -5799,12 +5835,14 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].registrar = registrar
             self.accounts[position].register_expires = notification.data.expires
             self.accounts[position].register_timestamp = time.time()
-        
+
             BlinkLogger().log_info('Account %s registration succeeded' % notification.sender.id)
         else:
             BlinkLogger().log_info('Published Bonjour %s neighbour %s <%s>' % (notification.data.transport.upper(), notification.sender.display_name, notification.data.name))
 
+        # BlinkLogger().log_info('startup: ContactWindowController.refreshAccountList enter')
         self.refreshAccountList()
+        # BlinkLogger().log_info('startup: ContactWindowController._NH_SIPAccountRegistrationDidSucceed exit')
 
     @objc.python_method
     def _NH_SIPAccountRegistrationGotAnswer(self, notification):
@@ -6009,25 +6047,38 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_SIPApplicationWillStart(self, notification):
+        # BlinkLogger().log_info('startup: SIPApplicationWillStart enter')
         self.alertPanel = AlertPanel.alloc().init()
+        # BlinkLogger().log_info('startup: loadUserIcon')
         self.loadUserIcon()
+        # BlinkLogger().log_info('startup: loadPresenceStates')
         self.loadPresenceStates()
+        # BlinkLogger().log_info('startup: setSpeechSynthesis')
         self.setSpeechSynthesis()
 
         if not NSApp.delegate().wait_for_enrollment:
             BlinkLogger().log_debug('Starting main user interface')
+            # BlinkLogger().log_info('startup: showWindow')
             self.showWindow_(None)
+        # BlinkLogger().log_info('startup: SIPApplicationWillStart exit')
 
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, notification):
+        # BlinkLogger().log_info('startup: SIPApplicationDidStart enter')
         self.ready = True
         BlinkLogger().log_info('Application is ready')
+        # BlinkLogger().log_info('startup: callPendingURIs')
         self.callPendingURIs()
+        # BlinkLogger().log_info('startup: refreshLdapDirectory')
         self.refreshLdapDirectory()
         #self.updateHistoryMenu()
+        # BlinkLogger().log_info('startup: updateStartSessionButtons')
         self.updateStartSessionButtons()
+        # BlinkLogger().log_info('startup: removePresenceContactForOurselves')
         self.removePresenceContactForOurselves()
+        # BlinkLogger().log_info('startup: FileTransferWindowController()')
         self.fileTransfersWindow = FileTransferWindowController()
+        # BlinkLogger().log_info('startup: SIPApplicationDidStart exit')
         
     @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):
@@ -6069,8 +6120,43 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, notification):
-        self.refreshContactsList(notification.sender)
+        # Mark the contact tree as dirty and schedule a single refresh on
+        # the next run-loop tick. Multiple notifications arriving in the
+        # same 50 ms window collapse into one NSOutlineView.reloadData
+        # instead of one per sender — the difference between 8 redundant
+        # full reloads during a Bonjour storm and a single one.
+        # BlinkLogger().log_info('startup: _NH_BlinkContactsHaveChanged enter (sender=%s)' % type(notification.sender).__name__)
+        if self._contacts_dirty_senders is None:
+            self._contacts_dirty_senders = set()
+        self._contacts_dirty_senders.add(notification.sender)
+        if self._contacts_refresh_timer is None:
+            self._contacts_refresh_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                0.05, self, 'flushContactsRefresh:', None, False
+            )
+        # BlinkLogger().log_info('startup: _NH_BlinkContactsHaveChanged exit (queued)')
+
+    def flushContactsRefresh_(self, timer):
+        # Drain the accumulated dirty-sender set into a single
+        # refreshContactsList call (full reload when multiple senders
+        # touched the tree, subtree reload when only one did) plus a
+        # single searchContacts pass.
+        senders = self._contacts_dirty_senders or set()
+        self._contacts_dirty_senders = None
+        self._contacts_refresh_timer = None
+        # BlinkLogger().log_info('startup: flushContactsRefresh enter (n=%d)' % len(senders))
+
+        if len(senders) > 1 or self.model in senders or not senders:
+            # Full reload covers every accumulated subtree change.
+            self.refreshContactsList()
+        else:
+            # Single sender — reload just its subtree (cheaper than a
+            # full reloadData when only one group/contact changed).
+            (sender,) = tuple(senders)
+            self.refreshContactsList(sender)
+
+        # BlinkLogger().log_info('startup: searchContacts enter')
         self.searchContacts()
+        # BlinkLogger().log_info('startup: flushContactsRefresh exit')
 
     @objc.python_method
     def _NH_BlinkSessionChangedState(self, notification):

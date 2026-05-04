@@ -523,7 +523,7 @@ class ChatMessage(SQLObject):
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 6
+    __version__ = 8
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -634,6 +634,52 @@ class ChatHistory(object, metaclass=Singleton):
                 self.db.queryAll(query)
             except Exception as e:
                 pass
+
+        if next_upgrade_version < 7:
+            # One-shot cleanup of encrypted application/sylk-message-metadata
+            # rows. Earlier client builds persisted these as raw PGP-armoured
+            # ciphertext because the metadata branch in _receive_message ran
+            # before the PGP-decrypt block and the journal-sync persist path
+            # had no decryption step at all. Result: chat_messages quietly
+            # accumulated thousands of opaque blobs (each Sylk-Mobile peer
+            # routinely sends action=consumed/meeting_end/label etc.). The
+            # current build decrypts before persisting so new entries are
+            # always cleartext, but the existing rows still need clearing —
+            # they parse to nothing usable on every history replay and just
+            # add cost to render_history_messages. Match exactly the rows
+            # we're sure about: PGP-armoured bodies under the metadata
+            # content type. Any non-encrypted metadata is preserved.
+            query = (
+                "delete from chat_messages "
+                "where content_type = 'application/sylk-message-metadata' "
+                "and body like '-----BEGIN PGP MESSAGE-----%'"
+            )
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error pruning encrypted metadata rows: %s" % e)
+
+        if next_upgrade_version < 8:
+            # Drop every previously-persisted application/sylk-message-metadata
+            # row whose action is not 'location'. Sylk Mobile sends a flurry
+            # of action=rotation / consumed / meeting_end / label / reply /
+            # location_request / caregiver events that Blink doesn't render —
+            # the v6→v7 build kept storing them as cleartext "for forward
+            # compat", but the next replay leaked the raw JSON into the chat
+            # bubble (e.g. {"messageId":"…","action":"rotation"}). Now that
+            # both the live and journal-sync paths discard non-location
+            # metadata at receive time, clean up the historical rows so they
+            # also disappear from open conversations.
+            query = (
+                "delete from chat_messages "
+                "where content_type = 'application/sylk-message-metadata' "
+                "and body not like '%\"action\": \"location\"%' "
+                "and body not like '%\"action\":\"location\"%'"
+            )
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error pruning non-location metadata rows: %s" % e)
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 

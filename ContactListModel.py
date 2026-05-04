@@ -3792,6 +3792,7 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def _NH_BonjourAccountDidAddNeighbour(self, notification):
+        # BlinkLogger().log_info('startup: BonjourAccountDidAddNeighbour enter')
         neighbour = notification.data.neighbour
         record = notification.data.record
         display_name = record.name
@@ -3839,9 +3840,11 @@ class ContactListModel(CustomListModel):
 
         self.bonjour_group.sortContacts()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
+        # BlinkLogger().log_info('startup: BonjourAccountDidAddNeighbour exit')
 
     @objc.python_method
     def _NH_BonjourAccountDidUpdateNeighbour(self, notification):
+        # BlinkLogger().log_info('startup: BonjourAccountDidUpdateNeighbour enter')
         neighbour = notification.data.neighbour
         record = notification.data.record
         display_name = record.name
@@ -3851,10 +3854,11 @@ class ContactListModel(CustomListModel):
         settings = SIPSimpleSettings()
 
         if uri.transport not in settings.sip.transport_list:
+            # BlinkLogger().log_info('startup: BonjourAccountDidUpdateNeighbour exit (transport filtered)')
             return
 
         display_name = '%s (%s)' % ((display_name or 'Unknown'), host)
-        
+
         BlinkLogger().log_debug("Update Bonjour neighbour %s: %s" % (id, uri))
 
         note = record.presence.note if record.presence is not None else None
@@ -3864,6 +3868,7 @@ class ContactListModel(CustomListModel):
         try:
             blink_contact = next((blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.bonjour_neighbour==neighbour))
         except StopIteration:
+            # BlinkLogger().log_info('startup: BonjourAccountDidUpdateNeighbour exit (no match)')
             return
         else:
             blink_contact.name = display_name
@@ -3873,9 +3878,11 @@ class ContactListModel(CustomListModel):
             self.bonjour_group.sortContacts()
             BlinkLogger().log_info("%s Bonjour neighbour %s updated: %s <%s>" % (uri.transport.upper(), id, display_name, blink_contact.uri))
             self.nc.post_notification("BlinkContactsHaveChanged", sender=blink_contact)
+        # BlinkLogger().log_info('startup: BonjourAccountDidUpdateNeighbour exit')
 
     @objc.python_method
     def _NH_BonjourAccountDidRemoveNeighbour(self, notification):
+        # BlinkLogger().log_info('startup: BonjourAccountDidRemoveNeighbour enter')
         record = notification.data.record
         display_name = record.name
         uri = record.uri
@@ -3916,6 +3923,7 @@ class ContactListModel(CustomListModel):
             blink_contact.destroy()
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
+        # BlinkLogger().log_info('startup: BonjourAccountDidRemoveNeighbour exit')
 
     @objc.python_method
     def _NH_BlinkOnlineContactMustBeRemoved(self, notification):

@@ -147,18 +147,37 @@ class DebugWindow(NSObject):
         for label in [self.activityInfoLabel, self.sipInfoLabel, self.rtpInfoLabel, self.msrpInfoLabel, self.xcapInfoLabel, self.notificationsInfoLabel, self.pjsipInfoLabel]:
             label.setStringValue_('')
 
-        BlinkLogger().set_gui_logger(self.renderActivity)
+        # Become the window's delegate so we get windowWillClose_ and can
+        # detach BlinkLogger.gui_logger when the panel goes off-screen.
+        # Without this, every log_info would still post a run_in_gui_thread
+        # block to append to the (invisible) NSTextView — exactly the
+        # over-scheduling that turns a journal-sync burst into a beachball.
+        self.window.setDelegate_(self)
+
+        # Don't attach to BlinkLogger yet. The DebugWindow object is
+        # created eagerly at app launch (BlinkAppDelegate.init), but the
+        # user typically never opens the Activity panel during a normal
+        # session. Stay detached — log lines accumulate cheaply in the
+        # backlog buffer — and only attach when the panel is shown.
+        BlinkLogger().detach_gui_logger()
 
         settings = SIPSimpleSettings()
 
+        # Lightweight session-related observers stay attached for the
+        # life of the app — they fire rarely and feed RTP / quality
+        # tracking state. The high-frequency *trace* observers
+        # (SIPEngineSIPTrace, SIPEngineLog, MSRPLibraryLog,
+        # MSRPTransportTrace) are deliberately NOT registered here.
+        # Each SIP/MSRP packet triggers _NH_SIPEngineSIPTrace etc. which
+        # appends to a (possibly hidden) NSTextView on the GUI thread —
+        # 7%+ of total CPU during startup per a py-spy profile. We
+        # attach those only while the panel is visible (show() /
+        # windowWillClose_) so a closed Activity / Trace tab pays no
+        # main-thread cost. The on-disk sip_trace.txt / pjsip_trace.txt
+        # files keep capturing every packet regardless via FileLogger.
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="SIPSessionDidStart")
-        notification_center.add_observer(self, name="SIPEngineSIPTrace")
-        notification_center.add_observer(self, name="MSRPLibraryLog")
-        notification_center.add_observer(self, name="MSRPTransportTrace")
-        
-        notification_center.add_observer(self, name="SIPEngineLog")
 
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
@@ -167,10 +186,15 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
         notification_center.add_observer(self, name="RTPStreamICENegotiationStateDidChange")
 
+        # Tracks whether the high-frequency trace observers are
+        # currently attached. show() flips this on, windowWillClose_
+        # flips it off; both are idempotent thanks to add_observer /
+        # discard_observer being idempotent themselves.
+        self._trace_observers_attached = False
+
         if settings.logs.trace_notifications_in_gui:
             notification_center.add_observer(self)
 
-        self.syncSIPtrace(settings.logs.trace_sip_in_gui)
         self.msrpRadio.selectCellWithTag_(settings.logs.trace_msrp_in_gui or Disabled)
         self.xcapRadio.selectCellWithTag_(settings.logs.trace_xcap_in_gui or Disabled)
         self.pjsipCheckBox.setState_(NSOnState if settings.logs.trace_pjsip_in_gui  else NSOffState)
@@ -178,11 +202,65 @@ class DebugWindow(NSObject):
 
         return self
 
+    @objc.python_method
+    def _attach_trace_observers(self):
+        """Subscribe to the per-packet trace notifications so the
+        SIP / MSRP / pjsip tabs render live data while visible.
+
+        DNSLookupTrace is also re-added when the SIP-trace radio is
+        Simplified / Full — the radio handler (syncSIPtrace) is what
+        normally flips it on, but we have to honour the persisted
+        radio state when the panel re-opens after being hidden.
+        """
+        if self._trace_observers_attached:
+            return
+        nc = NotificationCenter()
+        nc.add_observer(self, name="SIPEngineSIPTrace")
+        nc.add_observer(self, name="SIPEngineLog")
+        nc.add_observer(self, name="MSRPLibraryLog")
+        nc.add_observer(self, name="MSRPTransportTrace")
+        if SIPSimpleSettings().logs.trace_sip_in_gui != Disabled:
+            nc.add_observer(self, name="DNSLookupTrace")
+        self._trace_observers_attached = True
+
+    @objc.python_method
+    def _detach_trace_observers(self):
+        """Unsubscribe from per-packet trace notifications when the
+        panel goes off-screen so the GUI thread isn't doing live
+        rendering work no one can see."""
+        if not self._trace_observers_attached:
+            return
+        nc = NotificationCenter()
+        nc.discard_observer(self, name="SIPEngineSIPTrace")
+        nc.discard_observer(self, name="SIPEngineLog")
+        nc.discard_observer(self, name="MSRPLibraryLog")
+        nc.discard_observer(self, name="MSRPTransportTrace")
+        nc.discard_observer(self, name="DNSLookupTrace")
+        self._trace_observers_attached = False
+
     def show(self):
+        # Re-attach to BlinkLogger so live activity flows back into the
+        # NSTextView. set_gui_logger flushes any backlog accumulated
+        # while the panel was hidden.
+        BlinkLogger().set_gui_logger(self.renderActivity)
+        # Re-arm the per-packet trace observers so the SIP / MSRP /
+        # pjsip tabs update in real time again.
+        self._attach_trace_observers()
         self.window.makeKeyAndOrderFront_(self)
 
     def close_(self, sender):
         self.window.close()
+
+    def windowWillClose_(self, notification):
+        # Detach so we stop scheduling run_in_gui_thread NSTextView
+        # appends for log lines no one can see. activity.txt continues
+        # to capture every line regardless.
+        BlinkLogger().detach_gui_logger()
+        # And stop processing per-packet SIP/MSRP/pjsip traces — those
+        # ran unconditionally before, contributing ~7% of CPU during
+        # startup according to py-spy. The on-disk sip_trace.txt /
+        # pjsip_trace.txt files are still being written by FileLogger.
+        self._detach_trace_observers()
 
     def tabView_didSelectTabViewItem_(self, tabView, item):
         pass

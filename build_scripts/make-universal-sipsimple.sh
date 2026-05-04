@@ -11,13 +11,11 @@ if [ $curent_dir != "Distribution" ]; then
     exit 1
 fi
 
-cd Resources
+lipo -create -output Resources/lib/sipsimple/core/_core.cpython-$cver-darwin.so Resources/lib-arm64/_core.cpython-$cver-darwin.so Resources/lib-x86_64/_core.cpython-$cver-darwin.so
+lipo -create -output Resources/lib/sipsimple/util/_sha1.cpython-$cver-darwin.so Resources/lib-arm64/_sha1.cpython-$cver-darwin.so Resources/lib-x86_64/_sha1.cpython-$cver-darwin.so
 
-lipo -create -output lib/sipsimple/core/_core.cpython-$cver-darwin.so lib-arm64/_core.cpython-$cver-darwin.so lib-x86_64/_core.cpython-$cver-darwin.so
-lipo -create -output lib/sipsimple/util/_sha1.cpython-$cver-darwin.so lib-arm64/_sha1.cpython-$cver-darwin.so lib-x86_64/_sha1.cpython-$cver-darwin.so
+lipo -info Resources/lib/sipsimple/core/_core.cpython-$cver-darwin.so
+lipo -info Resources/lib/sipsimple/util/_sha1.cpython-$cver-darwin.so
 
-lipo -info lib/sipsimple/core/_core.cpython-$cver-darwin.so
-lipo -info lib/sipsimple/util/_sha1.cpython-$cver-darwin.so
-
-codesign -f --timestamp -s "Developer ID Application" lib/sipsimple/core/_core.cpython-$cver-darwin.so
-codesign -f --timestamp -s "Developer ID Application" lib/sipsimple/util/_sha1.cpython-$cver-darwin.so
+codesign -f --timestamp -s "Developer ID Application" Resources/lib/sipsimple/core/_core.cpython-$cver-darwin.so
+codesign -f --timestamp -s "Developer ID Application" Resources/lib/sipsimple/util/_sha1.cpython-$cver-darwin.so

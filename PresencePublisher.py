@@ -149,6 +149,7 @@ class PresencePublisher(object):
         handler(notification)
 
     def _NH_SIPApplicationWillStart(self, notification):
+        # BlinkLogger().log_info('startup: PresencePublisher._NH_SIPApplicationWillStart enter')
         nc = NotificationCenter()
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="SIPAccountDidDiscoverXCAPSupport")
@@ -156,22 +157,28 @@ class PresencePublisher(object):
         nc.add_observer(self, name="SystemWillSleep")
         nc.add_observer(self, name="XCAPManagerDidReloadData")
         nc.add_observer(self, name="XCAPManagerDidDiscoverServerCapabilities")
+        # BlinkLogger().log_info('startup: PresencePublisher._NH_SIPApplicationWillStart exit')
 
     def _NH_SIPApplicationDidEnd(self, notification):
         self.application_ended = True
 
     def _NH_SIPApplicationDidStart(self, notification):
+        # BlinkLogger().log_info('startup: PresencePublisher._NH_SIPApplicationDidStart enter')
         settings = SIPSimpleSettings()
         if settings.presence_state.timestamp is None:
             settings.presence_state.timestamp = ISOTimestamp.now()
             settings.save()
 
+        # BlinkLogger().log_info('startup: PresencePublisher.get_location enter')
         self.get_location([account for account in AccountManager().iter_accounts() if account is not BonjourAccount()])
+        # BlinkLogger().log_info('startup: PresencePublisher.publish enter')
         self.publish()
+        # BlinkLogger().log_info('startup: PresencePublisher.publish exit')
 
         idle_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, "updateIdleTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(idle_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(idle_timer, NSEventTrackingRunLoopMode)
+        # BlinkLogger().log_info('startup: PresencePublisher._NH_SIPApplicationDidStart exit')
 
     def _NH_SIPAccountDidDiscoverXCAPSupport(self, notification):
         account = notification.sender
@@ -233,8 +240,17 @@ class PresencePublisher(object):
         except (AttributeError, StopIteration):
             offline_note = None
 
-        settings.presence_state.offline_note = offline_note
-        settings.save()
+        # Each settings.save() / account.save() posts
+        # CFGSettingsObjectDidChange to every observer in the app
+        # (file logger, iCloud manager, every account, every chat
+        # session). py-spy showed this notification cascade dominating
+        # ~800 samples during startup because XCAP reloads on every
+        # SIP account at boot and each reload unconditionally fired all
+        # three saves below — even when nothing had changed since last
+        # run. Save only when the persisted value differs.
+        if settings.presence_state.offline_note != offline_note:
+            settings.presence_state.offline_note = offline_note
+            settings.save()
 
         if status_icon:
             user_icon = UserIcon(status_icon.url, status_icon.etag)
@@ -244,13 +260,13 @@ class PresencePublisher(object):
         else:
             user_icon = None
             if settings.presence_state.icon:
-               unlink(settings.presence_state.icon.path)
+                unlink(settings.presence_state.icon.path)
+                settings.presence_state.icon = None
+                settings.save()
 
-            settings.presence_state.icon = None
-            settings.save()
-
-        account.xcap.icon = user_icon
-        account.save()
+        if account.xcap.icon != user_icon:
+            account.xcap.icon = user_icon
+            account.save()
 
         # Cleanup old base64 encoded icons from payload
         if account.id not in self._cleanedup_accounts:

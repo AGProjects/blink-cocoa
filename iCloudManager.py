@@ -387,5 +387,7 @@ class iCloudManager(NSObject):
 
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
+        # BlinkLogger().log_info('startup: iCloudManager._NH_SIPApplicationDidStart enter')
         self.sync()
+        # BlinkLogger().log_info('startup: iCloudManager._NH_SIPApplicationDidStart exit')
 

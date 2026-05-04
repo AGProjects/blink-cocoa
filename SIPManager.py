@@ -402,13 +402,16 @@ class SIPManager(object, metaclass=Singleton):
 
     @objc.python_method
     def _NH_SIPApplicationWillStart(self, sender, data):
+        # BlinkLogger().log_info('startup: SIPManager.SIPApplicationWillStart enter')
         settings = SIPSimpleSettings()
         _version = str(NSBundle.mainBundle().infoDictionary().objectForKey_("CFBundleShortVersionString"))
         settings.user_agent = "%s %s (MacOSX)" % (NSApp.delegate().applicationName, _version)
         BlinkLogger().log_debug("SIP User Agent: %s" % settings.user_agent)
         settings.save()
 
+        # BlinkLogger().log_info('startup: migratePasswordsToKeychain')
         self.migratePasswordsToKeychain()
+        # BlinkLogger().log_info('startup: cleanupIcons')
         self.cleanupIcons()
 
         # Set audio settings compatible with AEC and Noise Suppression
@@ -446,9 +449,12 @@ class SIPManager(object, metaclass=Singleton):
                 account.rtp.encryption.key_negotiation = 'zrtp'
             account.save()
 
+        # BlinkLogger().log_info('startup: FileLogger.start')
         logger = FileLogger()
         logger.start()
+        # BlinkLogger().log_info('startup: ip_address_monitor.start')
         self.ip_address_monitor.start()
+        # BlinkLogger().log_info('startup: SIPManager.SIPApplicationWillStart exit')
 
     def _NH_SIPAccountManagerWillStart(self, sender, data):
         if data.bonjour_available:
@@ -474,6 +480,7 @@ class SIPManager(object, metaclass=Singleton):
 
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
+        # BlinkLogger().log_info('startup: SIPManager.SIPApplicationDidStart enter')
         settings = SIPSimpleSettings()
         settings.audio.enable_aec = settings.audio.echo_canceller.enabled
         settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
@@ -531,7 +538,9 @@ class SIPManager(object, metaclass=Singleton):
                 except KeyError:
                     pass
 
+        # BlinkLogger().log_info('startup: init_configurations')
         self.init_configurations()
+        # BlinkLogger().log_info('startup: SIPManager.SIPApplicationDidStart exit')
 
     @objc.python_method
     def _NH_SIPApplicationWillEnd(self, sender, data):
@@ -555,9 +564,11 @@ class SIPManager(object, metaclass=Singleton):
 
     @objc.python_method
     def _NH_TLSTransportHasChanged(self, sender, data):
+        # BlinkLogger().log_info('startup: SIPManager._NH_TLSTransportHasChanged enter')
         BlinkLogger().log_info("TLS transport verify server: %s" % data.verify_server)
         BlinkLogger().log_info("TLS transport certificate: %s" % data.certificate)
         BlinkLogger().log_info("TLS transport authorities: %s" % data.ca_file)
+        # BlinkLogger().log_info('startup: SIPManager._NH_TLSTransportHasChanged exit')
 
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
@@ -576,6 +587,7 @@ class SIPManager(object, metaclass=Singleton):
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
+        # BlinkLogger().log_info('startup: SIPManager._NH_SIPAccountRegistrationDidSucceed enter (%s)' % account.id)
         #contact_header_list = data.contact_header_list
         #if len(contact_header_list) > 1:
         #    message += u'Other registered Contact Addresses:\n%s\n' % '\n'.join('  %s (expires in %s seconds)' % (other_contact_header.uri, other_contact_header.expires) for other_contact_header in contact_header_list if other_contact_header.uri!=data.contact_header.uri)
@@ -618,6 +630,7 @@ class SIPManager(object, metaclass=Singleton):
         if account.contact.temporary_gruu is not None:
             message = 'Account %s has temporary SIP GRUU %s' % (account.id, account.contact.temporary_gruu)
             BlinkLogger().log_debug(message)
+        # BlinkLogger().log_info('startup: SIPManager._NH_SIPAccountRegistrationDidSucceed exit')
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidEnd(self, account, data):

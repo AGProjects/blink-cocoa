@@ -9,8 +9,11 @@ from Foundation import (NSAppleEventManager,
                         NSImageView,
                         NSMakeRect,
                         NSNotificationSuspensionBehaviorDeliverImmediately,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
                         NSThread,
                         NSObject,
+                        NSTimer,
                         NSUserDefaults,
                         NSLocalizedString,
                         NSURL)
@@ -322,6 +325,7 @@ class BlinkAppDelegate(NSObject):
 
     def applicationDidFinishLaunching_(self, sender):
         BlinkLogger().log_debug("Application launched")
+        # BlinkLogger().log_info('startup: applicationDidFinishLaunching enter')
 
         branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")
         try:
@@ -340,18 +344,25 @@ class BlinkAppDelegate(NSObject):
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 
         config_file = ApplicationData.get('config')
+        # BlinkLogger().log_info('startup: iCloudManager()')
         self.icloud_manager = iCloudManager()
+        # BlinkLogger().log_info('startup: SIPManager()')
         self.backend = SIPManager()
 
+        # BlinkLogger().log_info('startup: contactsWindowController.setup(backend)')
         self.contactsWindowController.setup(self.backend)
+        # BlinkLogger().log_info('startup: contactsWindowController.setup done')
 
         while True:
             try:
                 first_run = not os.path.exists(config_file)
                 self.contactsWindowController.first_run = first_run
 
+                # BlinkLogger().log_info('startup: backend.init()')
                 self.backend.init()
+                # BlinkLogger().log_info('startup: backend.fetch_account()')
                 self.backend.fetch_account()
+                # BlinkLogger().log_info('startup: backend init done')
                 accounts = AccountManager().get_accounts()
                 if not accounts or (first_run and accounts == [BonjourAccount()]):
                     self.wait_for_enrollment = True
@@ -382,10 +393,19 @@ class BlinkAppDelegate(NSObject):
             self.contactsWindowController.showWindow_(None)
             self.wait_for_enrollment = False
 
+        # BlinkLogger().log_info('startup: contactsWindowController.setupFinished enter')
         self.contactsWindowController.setupFinished()
+        # BlinkLogger().log_info('startup: contactsWindowController.setupFinished exit')
+        # BlinkLogger().log_info('startup: SMSWindowManager.setOwner enter')
         SMSWindowManager.SMSWindowManager().setOwner_(self.contactsWindowController)
+        # BlinkLogger().log_info('startup: SMSWindowManager.setOwner exit')
+        # BlinkLogger().log_info('startup: DebugWindow.init enter')
         self.debugWindow = DebugWindow.alloc().init()
+        # BlinkLogger().log_info('startup: DebugWindow.init exit')
+        # BlinkLogger().log_info('startup: ChatWindowController.init enter')
         self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
+        # BlinkLogger().log_info('startup: ChatWindowController.init exit')
+        # BlinkLogger().log_info('startup: applicationDidFinishLaunching exit')
 
     def killSelfAfterTimeout_(self, arg):
         time.sleep(15)

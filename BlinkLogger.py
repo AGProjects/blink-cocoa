@@ -4,6 +4,7 @@
 import datetime
 import os
 import sys
+import threading
 
 from AppKit import NSApp
 
@@ -21,6 +22,15 @@ class BlinkLogger(object, metaclass=Singleton):
     def __init__(self):
         self.gui_backlog = []
         self.gui_logger = self.backlog_keeper
+        # logs/activity.txt mirrors every line that goes to the in-app
+        # Activity panel. Always on (no setting gate) — when the GUI
+        # thread is stuck the panel can't redraw, but the file write
+        # happens off the GUI thread, so the on-disk log keeps growing
+        # right up to the moment the process actually freezes. That's
+        # how we pinpoint where it got stuck after a beachball.
+        self._activity_file = None
+        self._activity_filename = None
+        self._activity_lock = threading.Lock()
 
     @property
     def app_delegate(self):
@@ -30,7 +40,12 @@ class BlinkLogger(object, metaclass=Singleton):
             return self.__dict__.setdefault('app_delegate', NSApp.delegate())
 
     def backlog_keeper(self, text):
+        # Cap the in-memory backlog so an app that never opens the
+        # Activity panel doesn't accumulate every log line for the
+        # entire session. Older lines remain available in activity.txt.
         self.gui_backlog.append(text)
+        if len(self.gui_backlog) > 5000:
+            del self.gui_backlog[:len(self.gui_backlog) - 5000]
 
     def set_gui_logger(self, logger):
         self.gui_logger = logger
@@ -40,21 +55,85 @@ class BlinkLogger(object, metaclass=Singleton):
 
         self.gui_backlog = []
 
+    def detach_gui_logger(self):
+        """Stop fanning log lines out to the Activity panel.
+
+        Called by DebugWindow when its window is closed: every
+        ``run_in_gui_thread`` dispatch saved during a journal-sync burst
+        adds up to a noticeable beachball, and the panel can't be read
+        while it's hidden anyway. We swap the gui_logger back to the
+        in-memory ``backlog_keeper`` so when the user reopens the panel,
+        ``set_gui_logger`` flushes the buffered lines and resumes live
+        rendering.
+        """
+        self.gui_logger = self.backlog_keeper
+
+    def _write_activity(self, level, message):
+        """Append a single line to logs/activity.txt.
+
+        Lazily opens the file from settings.logs.directory the first
+        time it's called (skipping silently if SIPSimpleSettings or the
+        filesystem isn't ready yet, so we never block app startup on
+        log-file errors). Holds a short lock around the write so calls
+        from worker / DB / GUI threads serialise without corrupting the
+        line stream. On write errors we close and reset so the next
+        call can retry — useful when the log directory has been moved
+        out from under us.
+        """
+        try:
+            text = message if isinstance(message, str) else str(message)
+        except Exception:
+            return
+
+        with self._activity_lock:
+            if self._activity_file is None:
+                try:
+                    settings = SIPSimpleSettings()
+                    log_directory = settings.logs.directory.normalized
+                    makedirs(log_directory)
+                    self._activity_filename = os.path.join(log_directory, 'activity.txt')
+                    self._activity_file = open(self._activity_filename, 'a')
+                except Exception:
+                    # Settings not loaded yet, or filesystem unhappy.
+                    # Don't latch an error flag — keep retrying on the
+                    # next call so the file opens as soon as possible.
+                    return
+            try:
+                ts = datetime.datetime.now()
+                self._activity_file.write('%s [%s] %s\n' % (ts, level, text))
+                self._activity_file.flush()
+            except Exception:
+                try:
+                    self._activity_file.close()
+                except Exception:
+                    pass
+                self._activity_file = None
+
     def log_error(self, message):
         print(message)
+        self._write_activity('ERROR', message)
         self.gui_logger("Error: "+message)
 
     def log_warning(self, message):
         print(message)
+        self._write_activity('WARN', message)
         self.gui_logger("Warning: "+message)
 
     def log_info(self, message):
         print(message)
+        self._write_activity('INFO', message)
         self.gui_logger(message)
 
     def log_debug(self, message):
+        # The Activity file should still capture debug lines whenever
+        # they actually fire (i.e. once app_delegate.debug is set), so
+        # gate the file write on the same flag as the GUI / stdout
+        # path. The early log_debug calls that pre-date app_delegate
+        # initialisation are still dropped, matching the historical
+        # behaviour callers rely on.
         if self.app_delegate.debug:  # todo: log_debug is called 13-14 times before this flag is initialized from the configuration, meaning they can never be displayed
             print(message)
+            self._write_activity('DEBUG', message)
             self.gui_logger(message)
 
     def get_status_messages(self):
